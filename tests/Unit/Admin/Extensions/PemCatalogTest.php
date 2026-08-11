@@ -316,7 +316,8 @@ test('getLocallyMergedExtensions returns an empty array, not a crash, when the l
         chmod($listFile, 0o644);
     }
 
-    expect($merged)->toBe([]);
+    expect($merged)
+        ->toBe([]);
 });
 
 function pem_catalog_delete_obsolete_files(ExtensionType $type, string $extractPath): void
@@ -368,13 +369,18 @@ test('deleteObsoleteFiles logs the real function name and old-files list, not ju
 
         $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
         $method = new ReflectionMethod($catalog, 'deleteObsoleteFiles');
-        $method->invoke($catalog, ExtensionType::Plugin, $extractPath, new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'old-files.log']));
+        $method->invoke($catalog, ExtensionType::Plugin, $extractPath, new Logger([
+            'severity' => Logger::DEBUG,
+            'directory' => $logDir,
+            'filename' => 'old-files.log',
+        ]));
 
         $logContent = file_get_contents($logDir . '/old-files.log');
         if ($logContent === false) {
             throw new RuntimeException('Failed to read the real log file written by deleteObsoleteFiles().');
         }
-        expect($logContent)->toContain('deleteObsoleteFiles, $old_files = {old-file.php},{obsolete.list}');
+        expect($logContent)
+            ->toContain('deleteObsoleteFiles, $old_files = {old-file.php},{obsolete.list}');
     } finally {
         pem_catalog_rrmdir($logDir);
     }
@@ -395,13 +401,18 @@ test('deleteObsoleteFiles logs the real function name and full path before delet
 
         $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
         $method = new ReflectionMethod($catalog, 'deleteObsoleteFiles');
-        $method->invoke($catalog, ExtensionType::Plugin, $extractPath, new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'to-delete.log']));
+        $method->invoke($catalog, ExtensionType::Plugin, $extractPath, new Logger([
+            'severity' => Logger::DEBUG,
+            'directory' => $logDir,
+            'filename' => 'to-delete.log',
+        ]));
 
         $logContent = file_get_contents($logDir . '/to-delete.log');
         if ($logContent === false) {
             throw new RuntimeException('Failed to read the real log file written by deleteObsoleteFiles().');
         }
-        expect($logContent)->toContain('deleteObsoleteFiles, to delete = ' . $extractPath . '/old-file.php');
+        expect($logContent)
+            ->toContain('deleteObsoleteFiles, to delete = ' . $extractPath . '/old-file.php');
     } finally {
         pem_catalog_rrmdir($logDir);
     }
@@ -537,5 +548,6 @@ test('deleteObsoleteFiles does nothing, not a crash, when obsolete.list exists b
     }
 
     expect(file_exists($extractPath . '/keep-me.php'))->toBeTrue()
-        ->and(file_exists($listFile))->toBeTrue();
+        ->and(file_exists($listFile))
+        ->toBeTrue();
 });

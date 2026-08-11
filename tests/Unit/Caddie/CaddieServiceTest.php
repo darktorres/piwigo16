@@ -57,11 +57,14 @@ test('fillCurrentUserCaddie() inserts rows for the current user id', function ()
     $conn = DbConnection::build();
 
     try {
-        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
+            'id' => 3,
+        ]));
 
         CaddieService::fillCurrentUserCaddie([2, 4, 1], CurrentUserTestFactory::get());
 
-        expect(caddieServiceTestFetchElementIds($conn, 3))->toBe([1, 2, 4]);
+        expect(caddieServiceTestFetchElementIds($conn, 3))
+            ->toBe([1, 2, 4]);
     } finally {
         caddieServiceTestClear($conn, 3);
     }
@@ -71,14 +74,20 @@ test('fillCurrentUserCaddie() scopes to whichever user is current', function ():
     $conn = DbConnection::build();
 
     try {
-        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
+            'id' => 3,
+        ]));
         CaddieService::fillCurrentUserCaddie([5], CurrentUserTestFactory::get());
 
-        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 4]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
+            'id' => 4,
+        ]));
         CaddieService::fillCurrentUserCaddie([2, 3], CurrentUserTestFactory::get());
 
-        expect(caddieServiceTestFetchElementIds($conn, 3))->toBe([5])
-            ->and(caddieServiceTestFetchElementIds($conn, 4))->toBe([2, 3]);
+        expect(caddieServiceTestFetchElementIds($conn, 3))
+            ->toBe([5])
+            ->and(caddieServiceTestFetchElementIds($conn, 4))
+            ->toBe([2, 3]);
     } finally {
         caddieServiceTestClear($conn, 3);
         caddieServiceTestClear($conn, 4);
@@ -87,9 +96,12 @@ test('fillCurrentUserCaddie() scopes to whichever user is current', function ():
 
 test('fillCurrentUserCaddie() does nothing for an empty element list', function (): void {
     $conn = DbConnection::build();
-    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3]));
+    CurrentUserTestFactory::get()->set(User::fromUserArray([
+        'id' => 3,
+    ]));
 
     CaddieService::fillCurrentUserCaddie([], CurrentUserTestFactory::get());
 
-    expect(caddieServiceTestFetchElementIds($conn, 3))->toBe([]);
+    expect(caddieServiceTestFetchElementIds($conn, 3))
+        ->toBe([]);
 });

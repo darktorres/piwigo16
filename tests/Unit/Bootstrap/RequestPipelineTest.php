@@ -55,8 +55,10 @@ test('handle returns a real 404 for a path matching no real route, without invok
     try {
         $response = RequestPipeline::handle(new ServerRequest('GET', '/this-route-does-not-exist-xyz'));
 
-        expect($response->getStatusCode())->toBe(404)
-            ->and((string) $response->getBody())->toBe('Not Found');
+        expect($response->getStatusCode())
+            ->toBe(404)
+            ->and((string) $response->getBody())
+            ->toBe('Not Found');
     } finally {
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();

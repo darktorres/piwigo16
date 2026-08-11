@@ -13,13 +13,13 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -118,11 +118,13 @@ test('handle() delegates to PictureFormatsPageRenderer::render(), which fatal-er
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect((string) $exception->response()->getBody())->toContain('image_id does not exist');
+        expect((string) $exception->response()->getBody())
+            ->toContain('image_id does not exist');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

@@ -23,9 +23,13 @@ test('execute lists real users from the real test database', function (): void {
 
     $exitCode = $tester->execute([]);
 
-    expect($exitCode)->toBe(Command::SUCCESS);
+    expect($exitCode)
+        ->toBe(Command::SUCCESS);
     $display = $tester->getDisplay();
-    expect($display)->toContain('ID')
-        ->and($display)->toContain('Username')
-        ->and($display)->toContain('Status');
+    expect($display)
+        ->toContain('ID')
+        ->and($display)
+        ->toContain('Username')
+        ->and($display)
+        ->toContain('Status');
 });

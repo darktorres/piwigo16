@@ -14,9 +14,9 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\WsContext;
 use Piwigo\Lang\Translator;
-use Piwigo\Session\SessionService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -1700,7 +1700,9 @@ test('parseSectionUrl collects a numeric category token as $category, and a seco
     // $page['category'] never gets set at all) and stuffing BOTH ids
     // into combined_categories instead of just the second one.
     KernelContainerOverride::with(
-        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
         static function (): void {
             $service = UrlServiceTestFactory::build();
             $i = 0;
@@ -1712,9 +1714,11 @@ test('parseSectionUrl collects a numeric category token as $category, and a seco
                 throw new RuntimeException('Expected $page[\'combined_categories\'] to be an array.');
             }
 
-            expect($i)->toBe(3)
+            expect($i)
+                ->toBe(3)
                 ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1)
-                ->and($combinedCategories)->toHaveCount(1)
+                ->and($combinedCategories)
+                ->toHaveCount(1)
                 ->and(urlServiceTestCategoryId($combinedCategories[0] ?? null))->toBe(2);
         }
     );
@@ -1730,16 +1734,21 @@ test('parseSectionUrl captures the dashed suffix of a category token as cat_url_
     // distinguish Line 718's own isset($matches[2]) from an
     // IncrementInteger mutation checking $matches[3] instead.
     KernelContainerOverride::with(
-        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
         static function (): void {
             $service = UrlServiceTestFactory::build();
             $i = 0;
 
             $page = $service->parseSectionUrl(['category', '1-sample-album'], $i, new UrlServiceTestRedirectService());
 
-            expect($i)->toBe(2)
+            expect($i)
+                ->toBe(2)
                 ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1)
-                ->and($page['hit_by'] ?? null)->toBe(['cat_url_name' => 'sample-album']);
+                ->and($page['hit_by'] ?? null)->toBe([
+                    'cat_url_name' => 'sample-album',
+                ]);
         }
     );
 });
@@ -1749,14 +1758,17 @@ test('parseSectionUrl stops the categories loop at a "created-" continuation tok
     // same reasoning as the tags-loop "created-"/"posted-" tests, for
     // the categories loop's own break condition (Line 708).
     KernelContainerOverride::with(
-        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
         static function (): void {
             $service = UrlServiceTestFactory::build();
             $i = 0;
 
             $page = $service->parseSectionUrl(['category', '1', 'created-x'], $i, new UrlServiceTestRedirectService());
 
-            expect($i)->toBe(2)
+            expect($i)
+                ->toBe(2)
                 ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1);
         }
     );
@@ -1766,14 +1778,17 @@ test('parseSectionUrl stops the categories loop at a "posted-" continuation toke
     // Real gap, newly surfaced -- same reasoning as the sibling
     // "created-" test above, for Line 709's own break check.
     KernelContainerOverride::with(
-        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
         static function (): void {
             $service = UrlServiceTestFactory::build();
             $i = 0;
 
             $page = $service->parseSectionUrl(['category', '1', 'posted-x'], $i, new UrlServiceTestRedirectService());
 
-            expect($i)->toBe(2)
+            expect($i)
+                ->toBe(2)
                 ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1);
         }
     );
@@ -1783,14 +1798,17 @@ test('parseSectionUrl stops the categories loop at a "start-" continuation token
     // Real gap, newly surfaced by the SECOND verify rerun (Line 710's own
     // break check) -- same reasoning as the sibling "created-" test above.
     KernelContainerOverride::with(
-        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
         static function (): void {
             $service = UrlServiceTestFactory::build();
             $i = 0;
 
             $page = $service->parseSectionUrl(['category', '1', 'start-5'], $i, new UrlServiceTestRedirectService());
 
-            expect($i)->toBe(2)
+            expect($i)
+                ->toBe(2)
                 ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1);
         }
     );
@@ -1800,14 +1818,17 @@ test('parseSectionUrl stops the categories loop at a "startcat-" continuation to
     // Real gap, newly surfaced -- same reasoning as the sibling
     // "created-" test above, for Line 711's own break check.
     KernelContainerOverride::with(
-        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
         static function (): void {
             $service = UrlServiceTestFactory::build();
             $i = 0;
 
             $page = $service->parseSectionUrl(['category', '1', 'startcat-5'], $i, new UrlServiceTestRedirectService());
 
-            expect($i)->toBe(2)
+            expect($i)
+                ->toBe(2)
                 ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1);
         }
     );
@@ -1839,7 +1860,8 @@ test('parseSectionUrl collects every tag token via the while loop before advanci
 
     $page = $service->parseSectionUrl(['tags', '3', '5'], $i, new UrlServiceTestRedirectService());
 
-    expect($i)->toBe(3)
+    expect($i)
+        ->toBe(3)
         ->and($page['tags'])->toHaveCount(1)
         ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
 });
@@ -1856,7 +1878,8 @@ test('parseSectionUrl stops collecting tag tokens at a "start-" continuation tok
 
     $page = $service->parseSectionUrl(['tags', '3', 'start-5'], $i, new UrlServiceTestRedirectService());
 
-    expect($i)->toBe(2)
+    expect($i)
+        ->toBe(2)
         ->and($page['tags'])->toHaveCount(1)
         ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
 });
@@ -1872,7 +1895,8 @@ test('parseSectionUrl stops collecting tag tokens at a "posted-" continuation to
 
     $page = $service->parseSectionUrl(['tags', '3', 'posted-5'], $i, new UrlServiceTestRedirectService());
 
-    expect($i)->toBe(2)
+    expect($i)
+        ->toBe(2)
         ->and($page['tags'])->toHaveCount(1)
         ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
 });

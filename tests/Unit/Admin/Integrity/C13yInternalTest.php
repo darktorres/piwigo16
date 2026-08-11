@@ -71,15 +71,18 @@ test('registerHandlers wires all 3 checkers onto the container-shared EventDispa
     // none of the 3 checkers add an anomaly -- this only proves all 3
     // handlers actually ran (no exception, no missing dependency),
     // not their individual pass/fail logic (covered per-checker below).
-    expect($checkIntegrity->retrieve_list)->toBe([]);
+    expect($checkIntegrity->retrieve_list)
+        ->toBe([]);
 });
 
 test('c13y_version adds no anomaly against this environment\'s real, above-minimum PHP and DB versions', function (): void {
     $checkIntegrity = c13yInternalTestCheckIntegrity();
 
-    c13yInternalTestSubject()->c13y_version(new ListCheckIntegrity($checkIntegrity));
+    c13yInternalTestSubject()
+        ->c13y_version(new ListCheckIntegrity($checkIntegrity));
 
-    expect($checkIntegrity->retrieve_list)->toBe([]);
+    expect($checkIntegrity->retrieve_list)
+        ->toBe([]);
 });
 
 test('c13y_exif adds no anomaly since this environment\'s real exif_read_data function exists', function (): void {
@@ -87,15 +90,19 @@ test('c13y_exif adds no anomaly since this environment\'s real exif_read_data fu
     CurrentConfigTestFactory::get()->setUseExif(true);
     $checkIntegrity = c13yInternalTestCheckIntegrity();
 
-    c13yInternalTestSubject()->c13y_exif(new ListCheckIntegrity($checkIntegrity));
+    c13yInternalTestSubject()
+        ->c13y_exif(new ListCheckIntegrity($checkIntegrity));
 
-    expect($checkIntegrity->retrieve_list)->toBe([]);
+    expect($checkIntegrity->retrieve_list)
+        ->toBe([]);
 });
 
 test('c13y_user adds no anomaly for the real, correctly-provisioned guest/default/webmaster user rows', function (): void {
     $checkIntegrity = c13yInternalTestCheckIntegrity();
 
-    c13yInternalTestSubject()->c13y_user(new ListCheckIntegrity($checkIntegrity));
+    c13yInternalTestSubject()
+        ->c13y_user(new ListCheckIntegrity($checkIntegrity));
 
-    expect($checkIntegrity->retrieve_list)->toBe([]);
+    expect($checkIntegrity->retrieve_list)
+        ->toBe([]);
 });

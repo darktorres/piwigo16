@@ -13,13 +13,13 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -102,13 +102,18 @@ test('render() assigns the comments page context and tabsheet without any real t
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
 
-        new CommentsPageRenderer()->render(LangTestFactory::get(), commentsPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, CurrentTemplate::current(), $eventDispatcher, CurrentConfigTestFactory::get());
+        new CommentsPageRenderer()
+            ->render(LangTestFactory::get(), commentsPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, CurrentTemplate::current(), $eventDispatcher, CurrentConfigTestFactory::get());
 
-        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))->toBe('User comments')
-            ->and($template->get_template_vars('F_ACTION'))->toContain('admin.php?page=comments')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('title=User comments');
+        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))
+            ->toBe('User comments')
+            ->and($template->get_template_vars('F_ACTION'))
+            ->toContain('admin.php?page=comments')
+            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->toBe('title=User comments');
         $pwgToken = $template->get_template_vars('PWG_TOKEN');
-        expect(is_string($pwgToken) && $pwgToken !== '')->toBeTrue();
+        expect(is_string($pwgToken) && $pwgToken !== '')
+            ->toBeTrue();
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

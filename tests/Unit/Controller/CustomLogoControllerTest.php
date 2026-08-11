@@ -53,6 +53,8 @@ test('__invoke returns 404 when no custom logo is configured', function (): void
 
     $response = $controller(new ServerRequest('GET', '/logo.php'));
 
-    expect($response->getStatusCode())->toBe(404)
-        ->and((string) $response->getBody())->toBe('Not found');
+    expect($response->getStatusCode())
+        ->toBe(404)
+        ->and((string) $response->getBody())
+        ->toBe('Not found');
 });

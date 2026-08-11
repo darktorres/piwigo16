@@ -18,10 +18,10 @@ use Piwigo\Menu\MenubarRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -145,8 +145,10 @@ test('render skips every real DB-backed block when no listener has registered an
             $currentLogger,
         );
 
-        expect($countCategories)->toBeNull()
-            ->and($template->get_template_vars('MENUBAR'))->toContain('menubar_rendered=yes');
+        expect($countCategories)
+            ->toBeNull()
+            ->and($template->get_template_vars('MENUBAR'))
+            ->toContain('menubar_rendered=yes');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

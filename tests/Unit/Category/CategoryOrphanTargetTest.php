@@ -25,24 +25,30 @@ test('tableAndColumn maps every case to its real table/column pair', function ()
 
 test('entityClassAndProperty maps every DQL-backed case to its real entity/property pair, and OldPermalinks to null', function (): void {
     $imageCategory = CategoryOrphanTarget::ImageCategory->entityClassAndProperty();
-    expect($imageCategory)->not->toBeNull();
+    expect($imageCategory)
+        ->not->toBeNull();
     if ($imageCategory !== null) {
         expect($imageCategory->entityClass)->toBe(ImageCategoryEntity::class)
-            ->and($imageCategory->property)->toBe('categoryId');
+            ->and($imageCategory->property)
+            ->toBe('categoryId');
     }
 
     $userAccess = CategoryOrphanTarget::UserAccess->entityClassAndProperty();
-    expect($userAccess)->not->toBeNull();
+    expect($userAccess)
+        ->not->toBeNull();
     if ($userAccess !== null) {
         expect($userAccess->entityClass)->toBe(UserAccessEntity::class)
-            ->and($userAccess->property)->toBe('catId');
+            ->and($userAccess->property)
+            ->toBe('catId');
     }
 
     $groupAccess = CategoryOrphanTarget::GroupAccess->entityClassAndProperty();
-    expect($groupAccess)->not->toBeNull();
+    expect($groupAccess)
+        ->not->toBeNull();
     if ($groupAccess !== null) {
         expect($groupAccess->entityClass)->toBe(GroupAccessEntity::class)
-            ->and($groupAccess->property)->toBe('catId');
+            ->and($groupAccess->property)
+            ->toBe('catId');
     }
 
     expect(CategoryOrphanTarget::OldPermalinks->entityClassAndProperty())->toBeNull();

@@ -52,8 +52,10 @@ test('getForUser computes and caches a real value on a cache miss', function ():
     $result = $cache->getForUser(UserId::from(999999)->value, 'guest');
 
     $item = $pool->getItem('forbidden_999999');
-    expect($item->isHit())->toBeTrue()
-        ->and($item->get())->toBe($result);
+    expect($item->isHit())
+        ->toBeTrue()
+        ->and($item->get())
+        ->toBe($result);
 });
 
 test('getForUser returns the cached value verbatim on a cache hit, without recomputing it', function (): void {
@@ -65,5 +67,6 @@ test('getForUser returns the cached value verbatim on a cache hit, without recom
 
     $result = $cache->getForUser(UserId::from(999999)->value, 'guest');
 
-    expect($result)->toBe('SENTINEL-CACHED-VALUE-NOT-RECOMPUTED');
+    expect($result)
+        ->toBe('SENTINEL-CACHED-VALUE-NOT-RECOMPUTED');
 });

@@ -17,11 +17,11 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -80,13 +80,17 @@ test('invoke returns a real 403 forbidden page when web services are disabled', 
         if (! $lang instanceof Lang) {
             throw new LogicException('Container returned an unexpected type for ' . Lang::class);
         }
-        $lang->setLangInfo(['code' => 'en_UK']);
+        $lang->setLangInfo([
+            'code' => 'en_UK',
+        ]);
 
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if (! $currentLogger instanceof CurrentLogger) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
-        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $currentLogger->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
 
         $conn = DbConnection::build();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService(
@@ -126,12 +130,15 @@ test('invoke returns a real 403 forbidden page when web services are disabled', 
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect($exception->response()->getStatusCode())->toBe(403)
-            ->and((string) $exception->response()->getBody())->toContain('redirect_rendered=yes');
+        expect($exception->response()->getStatusCode())
+            ->toBe(403)
+            ->and((string) $exception->response()->getBody())
+            ->toContain('redirect_rendered=yes');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

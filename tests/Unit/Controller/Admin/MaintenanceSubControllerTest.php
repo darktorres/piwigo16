@@ -7,9 +7,9 @@ use Piwigo\Controller\Admin\MaintenanceSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 
 /**
  * Piwigo\Controller\Admin\MaintenanceSubController -- 13 constructor
@@ -77,11 +77,13 @@ test('handle() redirects when a maintenance action is submitted with the wrong C
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect($exception->response()->getStatusCode())->toBe(302);
+        expect($exception->response()->getStatusCode())
+            ->toBe(302);
     } finally {
         unset($_GET['action'], $_REQUEST['pwg_token']);
         CurrentTemplate::current()->reset();

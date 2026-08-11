@@ -33,7 +33,8 @@ test('resolveLoggedUserId returns null for a cookie value with no matching sessi
 
     $userId = $resolver->resolveLoggedUserId($cookieValue, useIpAddressInKey: false);
 
-    expect($userId)->toBeNull();
+    expect($userId)
+        ->toBeNull();
 });
 
 test('resolveLoggedUserId extracts the real pwg_uid from a real logged-in session row', function (): void {
@@ -46,7 +47,8 @@ test('resolveLoggedUserId extracts the real pwg_uid from a real logged-in sessio
     try {
         $userId = $resolver->resolveLoggedUserId($cookieValue, useIpAddressInKey: false);
 
-        expect($userId)->toBe(42);
+        expect($userId)
+            ->toBe(42);
     } finally {
         $repo->destroy($cookieValue);
     }
@@ -62,7 +64,8 @@ test('resolveLoggedUserId returns null for a real anonymous session row with no 
     try {
         $userId = $resolver->resolveLoggedUserId($cookieValue, useIpAddressInKey: false);
 
-        expect($userId)->toBeNull();
+        expect($userId)
+            ->toBeNull();
     } finally {
         $repo->destroy($cookieValue);
     }

@@ -8,9 +8,9 @@ use Piwigo\Controller\Admin\SiteManagerSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 
 /**
  * Piwigo\Controller\Admin\SiteManagerSubController -- 13 constructor deps.
@@ -76,11 +76,13 @@ test('handle() fatal-errors when synchronization is disabled', function (): void
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect((string) $exception->response()->getBody())->toContain('synchronization is disabled');
+        expect((string) $exception->response()->getBody())
+            ->toContain('synchronization is disabled');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

@@ -27,7 +27,8 @@ test('needsEmptying returns false when loungeActive is disabled', function (): v
 
     $result = LoungeMaintenance::needsEmptying($currentConfig);
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });
 
 test('needsEmptying returns false during an in-progress pwg.images.upload request', function (): void {
@@ -37,7 +38,8 @@ test('needsEmptying returns false during an in-progress pwg.images.upload reques
 
     $result = LoungeMaintenance::needsEmptying($currentConfig);
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });
 
 test('needsEmptying returns false during an in-progress pwg.images.uploadAsync request', function (): void {
@@ -47,5 +49,6 @@ test('needsEmptying returns false during an in-progress pwg.images.uploadAsync r
 
     $result = LoungeMaintenance::needsEmptying($currentConfig);
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });

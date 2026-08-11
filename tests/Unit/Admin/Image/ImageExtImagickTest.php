@@ -281,12 +281,15 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
     $realBinaryPath = imageExtImagickTestRealBinaryPath('identify');
     $privateBinPath = imageExtImagickTestMarker() . '/identify';
     symlink($realBinaryPath, $privateBinPath);
-    imageExtImagickTestCurrentConfig()->setExtImagickDir(imageExtImagickTestMarker() . '/');
+    imageExtImagickTestCurrentConfig()
+        ->setExtImagickDir(imageExtImagickTestMarker() . '/');
 
     $image = imageExtImagickTestMake($path);
 
-    expect($image->get_width())->toBe(12)
-        ->and($image->get_height())->toBe(9);
+    expect($image->get_width())
+        ->toBe(12)
+        ->and($image->get_height())
+        ->toBe(9);
 });
 
 // [Mutation] Line 88's EmptyStringToNotEmpty mutant (the
@@ -786,7 +789,12 @@ test('write logs a real ERROR line via the logger when the CLI call fails, with 
     // assumed): a non-empty message would put real text there instead.
     $logDir = sys_get_temp_dir() . '/piwigo-imageextimagick-test-log-' . bin2hex(random_bytes(8));
     mkdir($logDir, 0o777, true);
-    imageExtImagickTestCurrentLogger()->set(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'error-line.log']));
+    imageExtImagickTestCurrentLogger()
+        ->set(new Logger([
+            'severity' => Logger::DEBUG,
+            'directory' => $logDir,
+            'filename' => 'error-line.log',
+        ]));
 
     try {
         $path = imageExtImagickTestMarker() . '/error-line-src.jpg';
@@ -806,8 +814,10 @@ test('write logs a real ERROR line via the logger when the CLI call fails, with 
         if ($logContent === false) {
             throw new RuntimeException('Failed to read the real log file written by write().');
         }
-        expect($logContent)->toContain("\t[ERROR]\t")
-            ->and($logContent)->toContain("[i.php]\t\n");
+        expect($logContent)
+            ->toContain("\t[ERROR]\t")
+            ->and($logContent)
+            ->toContain("[i.php]\t\n");
     } finally {
         imageExtImagickTestRrmdir($logDir);
     }

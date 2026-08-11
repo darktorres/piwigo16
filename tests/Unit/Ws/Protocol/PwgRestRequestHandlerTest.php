@@ -93,7 +93,8 @@ test('handleRequest sends an INVALID_METHOD error when no method name is present
     $handler->handleRequest($server);
     $output = ob_get_clean();
 
-    expect($output)->toBe('{"stat":"fail","err":501,"message":"Missing \"method\" name"}');
+    expect($output)
+        ->toBe('{"stat":"fail","err":501,"message":"Missing \"method\" name"}');
 });
 
 test('handleRequest invokes the requested GET method with its params and sends the real response', function (): void {
@@ -103,14 +104,17 @@ test('handleRequest invokes the requested GET method with its params and sends t
     ];
     $_POST = [];
     $server = pwgRestRequestHandlerTestServer();
-    $server->addMethod('test.echo', fn (array $params, PwgServer &$service): array => ['name' => $params['name']], ['name']);
+    $server->addMethod('test.echo', fn (array $params, PwgServer &$service): array => [
+        'name' => $params['name'],
+    ], ['name']);
     $handler = new PwgRestRequestHandler();
 
     ob_start();
     $handler->handleRequest($server);
     $output = ob_get_clean();
 
-    expect($output)->toBe('{"stat":"ok","result":{"name":"Alps"}}');
+    expect($output)
+        ->toBe('{"stat":"ok","result":{"name":"Alps"}}');
 });
 
 test('handleRequest reads params from $_POST instead of $_GET when the request is a POST', function (): void {
@@ -120,12 +124,15 @@ test('handleRequest reads params from $_POST instead of $_GET when the request i
         'name' => 'Pyrenees',
     ];
     $server = pwgRestRequestHandlerTestServer();
-    $server->addMethod('test.echo', fn (array $params, PwgServer &$service): array => ['name' => $params['name']], ['name']);
+    $server->addMethod('test.echo', fn (array $params, PwgServer &$service): array => [
+        'name' => $params['name'],
+    ], ['name']);
     $handler = new PwgRestRequestHandler();
 
     ob_start();
     $handler->handleRequest($server);
     $output = ob_get_clean();
 
-    expect($output)->toBe('{"stat":"ok","result":{"name":"Pyrenees"}}');
+    expect($output)
+        ->toBe('{"stat":"ok","result":{"name":"Pyrenees"}}');
 });

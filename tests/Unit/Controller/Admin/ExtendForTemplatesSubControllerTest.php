@@ -21,16 +21,16 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -145,9 +145,12 @@ test('handle() delegates to ExtendForTemplatesPageRenderer::render() with nothin
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))->toBe('Extend for templates')
-            ->and($template->get_template_vars('extents'))->toBeNull()
-            ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('title=Extend for templates');
+        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))
+            ->toBe('Extend for templates')
+            ->and($template->get_template_vars('extents'))
+            ->toBeNull()
+            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->toBe('title=Extend for templates');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

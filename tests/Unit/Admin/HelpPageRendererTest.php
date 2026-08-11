@@ -14,13 +14,13 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -118,12 +118,17 @@ test('render() shows the English documentation message for an en_ user and defau
             enabledHigh: false,
         ));
 
-        new HelpPageRenderer()->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplate::current());
+        new HelpPageRenderer()
+            ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplate::current());
 
-        expect($template->get_template_vars('HELP_CONTENT'))->toBe('')
-            ->and($template->get_template_vars('HELP_SECTION_TITLE'))->toBe('Add Photos')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('content=|title=Add Photos')
-            ->and($pageState->messages)->toHaveCount(1)
+        expect($template->get_template_vars('HELP_CONTENT'))
+            ->toBe('')
+            ->and($template->get_template_vars('HELP_SECTION_TITLE'))
+            ->toBe('Add Photos')
+            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->toBe('content=|title=Add Photos')
+            ->and($pageState->messages)
+            ->toHaveCount(1)
             ->and($pageState->messages[0])->toContain('Check the online documentation');
     } finally {
         CurrentTemplate::current()->reset();

@@ -8,8 +8,8 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\AdminContext;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\AdminContext;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
@@ -21,10 +21,11 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Page\NoPhotoYetRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -33,7 +34,6 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -145,7 +145,8 @@ test('render() does nothing when the admin context is active', function (): void
         // CurrentTemplate::current() is still the exact same instance
         // set above, not replaced by render()'s own real-theme Template
         // construction inside the guarded block.
-        noPhotoYetTestRenderer(new AdminContext(active: true))->render();
+        noPhotoYetTestRenderer(new AdminContext(active: true))
+            ->render();
 
         expect(CurrentTemplate::current()->get())->toBe($template);
     } finally {
@@ -174,13 +175,16 @@ test('render() does nothing when photos already exist, only refreshing the no_ph
         $template = TemplateTestFactory::build();
         CurrentTemplate::current()->set($template);
         $conn = DbConnection::build();
-        $before = $conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'no_photo_yet'");
+        $before = $conn->fetchOne('SELECT value FROM config' . " WHERE param = 'no_photo_yet'");
 
-        noPhotoYetTestRenderer(new AdminContext(active: false))->render();
+        noPhotoYetTestRenderer(new AdminContext(active: false))
+            ->render();
 
-        $after = $conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'no_photo_yet'");
-        expect($after)->toBe($before)
-            ->and($after)->toBe('"false"');
+        $after = $conn->fetchOne('SELECT value FROM config' . " WHERE param = 'no_photo_yet'");
+        expect($after)
+            ->toBe($before)
+            ->and($after)
+            ->toBe('"false"');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

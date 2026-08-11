@@ -75,7 +75,8 @@ test('isInvokeAllowed always permits reflection.* methods, even for a below-Gues
 
     $result = $helper->isInvokeAllowed($event);
 
-    expect($result->value)->toBeTrue();
+    expect($result->value)
+        ->toBeTrue();
 });
 
 test('isInvokeAllowed always permits pwg.session.* methods, even for a below-Guest user', function (): void {
@@ -84,7 +85,8 @@ test('isInvokeAllowed always permits pwg.session.* methods, even for a below-Gue
 
     $result = $helper->isInvokeAllowed($event);
 
-    expect($result->value)->toBeTrue();
+    expect($result->value)
+        ->toBeTrue();
 });
 
 test('isInvokeAllowed denies a real method for a guest user when guestAccess is disabled', function (): void {
@@ -93,10 +95,13 @@ test('isInvokeAllowed denies a real method for a guest user when guestAccess is 
 
     $result = $helper->isInvokeAllowed($event);
 
-    expect($result->value)->toBeInstanceOf(PwgError::class);
+    expect($result->value)
+        ->toBeInstanceOf(PwgError::class);
     if ($result->value instanceof PwgError) {
-        expect($result->value->code())->toBe(401)
-            ->and($result->value->message())->toBe('Access denied');
+        expect($result->value->code())
+            ->toBe(401)
+            ->and($result->value->message())
+            ->toBe('Access denied');
     }
 });
 
@@ -106,7 +111,8 @@ test('isInvokeAllowed permits a real method for an admin user regardless of gues
 
     $result = $helper->isInvokeAllowed($event);
 
-    expect($result->value)->toBeTrue();
+    expect($result->value)
+        ->toBeTrue();
 });
 
 test('isInvokeAllowed permits a real method for a guest user when guestAccess is enabled', function (): void {
@@ -115,7 +121,8 @@ test('isInvokeAllowed permits a real method for a guest user when guestAccess is
 
     $result = $helper->isInvokeAllowed($event);
 
-    expect($result->value)->toBeTrue();
+    expect($result->value)
+        ->toBeTrue();
 });
 
 // --------------------------------------------------------------- stdImageSqlFilterCriteria
@@ -138,11 +145,16 @@ test('stdImageSqlFilterCriteria builds the criteria from valid params, with no d
 
     $criteria = $helper->stdImageSqlFilterCriteria($params, wsHelperTestServer());
 
-    expect($criteria->minRate)->toBe(1.5)
-        ->and($criteria->maxRate)->toBe(5.0)
-        ->and($criteria->minHit)->toBe(0)
-        ->and($criteria->maxHit)->toBe(100)
-        ->and($criteria->minDateAvailable)->toBeNull();
+    expect($criteria->minRate)
+        ->toBe(1.5)
+        ->and($criteria->maxRate)
+        ->toBe(5.0)
+        ->and($criteria->minHit)
+        ->toBe(0)
+        ->and($criteria->maxHit)
+        ->toBe(100)
+        ->and($criteria->minDateAvailable)
+        ->toBeNull();
 });
 
 test('stdImageSqlFilterCriteria accepts a valid MySQL datetime for a date field', function (): void {
@@ -163,7 +175,8 @@ test('stdImageSqlFilterCriteria accepts a valid MySQL datetime for a date field'
 
     $criteria = $helper->stdImageSqlFilterCriteria($params, wsHelperTestServer());
 
-    expect($criteria->minDateAvailable)->toBe('2026-01-01 00:00:00');
+    expect($criteria->minDateAvailable)
+        ->toBe('2026-01-01 00:00:00');
 });
 
 // --------------------------------------------------------------- stdImageSqlOrder
@@ -171,41 +184,59 @@ test('stdImageSqlFilterCriteria accepts a valid MySQL datetime for a date field'
 test('stdImageSqlOrder returns an empty string for a null/empty/zero order', function (): void {
     $helper = wsHelperTestSubject(isAdmin: true);
 
-    expect($helper->stdImageSqlOrder(['order' => null]))->toBe('')
-        ->and($helper->stdImageSqlOrder(['order' => '']))->toBe('')
-        ->and($helper->stdImageSqlOrder(['order' => '0']))->toBe('');
+    expect($helper->stdImageSqlOrder([
+        'order' => null,
+    ]))->toBe('')
+        ->and($helper->stdImageSqlOrder([
+            'order' => '',
+        ]))->toBe('')
+        ->and($helper->stdImageSqlOrder([
+            'order' => '0',
+        ]))->toBe('');
 });
 
 test('stdImageSqlOrder resolves a single known token with its direction', function (): void {
     $helper = wsHelperTestSubject(isAdmin: true);
 
-    $result = $helper->stdImageSqlOrder(['order' => 'file desc'], 'i.');
+    $result = $helper->stdImageSqlOrder([
+        'order' => 'file desc',
+    ], 'i.');
 
-    expect($result)->toBe('i.file desc');
+    expect($result)
+        ->toBe('i.file desc');
 });
 
 test('stdImageSqlOrder resolves multiple comma-separated tokens, table-prefixing each', function (): void {
     $helper = wsHelperTestSubject(isAdmin: true);
 
-    $result = $helper->stdImageSqlOrder(['order' => 'hit asc, id desc'], 'i.');
+    $result = $helper->stdImageSqlOrder([
+        'order' => 'hit asc, id desc',
+    ], 'i.');
 
-    expect($result)->toBe('i.hit asc, i.id desc');
+    expect($result)
+        ->toBe('i.hit asc, i.id desc');
 });
 
 test('stdImageSqlOrder skips the table prefix for the random field', function (): void {
     $helper = wsHelperTestSubject(isAdmin: true);
 
-    $result = $helper->stdImageSqlOrder(['order' => 'random'], 'i.');
+    $result = $helper->stdImageSqlOrder([
+        'order' => 'random',
+    ], 'i.');
 
-    expect($result)->toBe('RAND() ');
+    expect($result)
+        ->toBe('RAND() ');
 });
 
 test('stdImageSqlOrder silently ignores an unrecognized token', function (): void {
     $helper = wsHelperTestSubject(isAdmin: true);
 
-    $result = $helper->stdImageSqlOrder(['order' => 'not_a_real_field'], 'i.');
+    $result = $helper->stdImageSqlOrder([
+        'order' => 'not_a_real_field',
+    ], 'i.');
 
-    expect($result)->toBe('');
+    expect($result)
+        ->toBe('');
 });
 
 // --------------------------------------------------------------- stdGetXmlAttributes
@@ -213,25 +244,28 @@ test('stdImageSqlOrder silently ignores an unrecognized token', function (): voi
 test('stdGetImageXmlAttributes returns the fixed image attribute list', function (): void {
     $helper = wsHelperTestSubject(isAdmin: true);
 
-    expect($helper->stdGetImageXmlAttributes())->toBe([
-        'id', 'element_url', 'page_url', 'file', 'width', 'height', 'hit', 'date_available', 'date_creation',
-    ]);
+    expect($helper->stdGetImageXmlAttributes())
+        ->toBe([
+            'id', 'element_url', 'page_url', 'file', 'width', 'height', 'hit', 'date_available', 'date_creation',
+        ]);
 });
 
 test('stdGetCategoryXmlAttributes returns the fixed category attribute list', function (): void {
     $helper = wsHelperTestSubject(isAdmin: true);
 
-    expect($helper->stdGetCategoryXmlAttributes())->toBe([
-        'id', 'url', 'nb_images', 'total_nb_images', 'nb_categories', 'date_last', 'max_date_last', 'status',
-    ]);
+    expect($helper->stdGetCategoryXmlAttributes())
+        ->toBe([
+            'id', 'url', 'nb_images', 'total_nb_images', 'nb_categories', 'date_last', 'max_date_last', 'status',
+        ]);
 });
 
 test('stdGetTagXmlAttributes returns the fixed tag attribute list', function (): void {
     $helper = wsHelperTestSubject(isAdmin: true);
 
-    expect($helper->stdGetTagXmlAttributes())->toBe([
-        'id', 'name', 'url_name', 'counter', 'url', 'page_url',
-    ]);
+    expect($helper->stdGetTagXmlAttributes())
+        ->toBe([
+            'id', 'name', 'url_name', 'counter', 'url', 'page_url',
+        ]);
 });
 
 // --------------------------------------------------------------- categoriesFlatlistToTree
@@ -239,13 +273,21 @@ test('stdGetTagXmlAttributes returns the fixed tag attribute list', function ():
 test('categoriesFlatlistToTree attaches a child under its real parent, root-level categories go straight into the tree', function (): void {
     $helper = wsHelperTestSubject(isAdmin: true);
     $categories = [
-        ['id' => 1, 'name' => 'Root'],
-        ['id' => 2, 'name' => 'Child', 'id_uppercat' => 1],
+        [
+            'id' => 1,
+            'name' => 'Root',
+        ],
+        [
+            'id' => 2,
+            'name' => 'Child',
+            'id_uppercat' => 1,
+        ],
     ];
 
     $tree = $helper->categoriesFlatlistToTree($categories);
 
-    expect($tree)->toHaveCount(1)
+    expect($tree)
+        ->toHaveCount(1)
         ->and($tree[0]['name'])->toBe('Root')
         ->and($tree[0]['sub_categories'])->toBeInstanceOf(PwgNamedArray::class);
     $subCategories = $tree[0]['sub_categories'];
@@ -261,13 +303,20 @@ test('categoriesFlatlistToTree attaches a child under its real parent, root-leve
 test('categoriesFlatlistToTree skips a row with a non-scalar id', function (): void {
     $helper = wsHelperTestSubject(isAdmin: true);
     $categories = [
-        ['id' => 1, 'name' => 'Root'],
-        ['id' => null, 'name' => 'Malformed'],
+        [
+            'id' => 1,
+            'name' => 'Root',
+        ],
+        [
+            'id' => null,
+            'name' => 'Malformed',
+        ],
     ];
 
     $tree = $helper->categoriesFlatlistToTree($categories);
 
-    expect($tree)->toHaveCount(1)
+    expect($tree)
+        ->toHaveCount(1)
         ->and($tree[0]['name'])->toBe('Root');
 });
 

@@ -95,12 +95,19 @@ test('getList rejects a malformed order parameter', function (): void {
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
-    $result = $ws->getList(['per_page' => 10, 'page' => 0, 'order' => '!!!not-a-real-order!!!'], $server);
+    $result = $ws->getList([
+        'per_page' => 10,
+        'page' => 0,
+        'order' => '!!!not-a-real-order!!!',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(WsError::INVALID_PARAM)
-            ->and($result->message())->toBe('Invalid input parameter order');
+        expect($result->code())
+            ->toBe(WsError::INVALID_PARAM)
+            ->and($result->message())
+            ->toBe('Invalid input parameter order');
     }
 });
 
@@ -108,9 +115,15 @@ test('getList returns an empty groups list for a group_id with no real matches',
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
-    $result = $ws->getList(['group_id' => [999999], 'per_page' => 10, 'page' => 0, 'order' => 'name'], $server);
+    $result = $ws->getList([
+        'group_id' => [999999],
+        'per_page' => 10,
+        'page' => 0,
+        'order' => 'name',
+    ], $server);
 
-    expect($result)->toBeArray();
+    expect($result)
+        ->toBeArray();
     if (is_array($result)) {
         expect($result['groups']->_content)->toBe([]);
     }
@@ -120,11 +133,16 @@ test('delete returns a 403 PwgError when the submitted pwg_token does not match 
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
-    $result = $ws->delete(['group_id' => [1], 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->delete([
+        'group_id' => [1],
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -132,11 +150,16 @@ test('setInfo returns a 403 PwgError when the submitted pwg_token does not match
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
-    $result = $ws->setInfo(['group_id' => 1, 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->setInfo([
+        'group_id' => 1,
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -144,11 +167,17 @@ test('addUser returns a 403 PwgError when the submitted pwg_token does not match
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
-    $result = $ws->addUser(['group_id' => 1, 'user_id' => [1], 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->addUser([
+        'group_id' => 1,
+        'user_id' => [1],
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -156,11 +185,17 @@ test('merge returns a 403 PwgError when the submitted pwg_token does not match t
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
-    $result = $ws->merge(['destination_group_id' => 1, 'merge_group_id' => [2], 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->merge([
+        'destination_group_id' => 1,
+        'merge_group_id' => [2],
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -168,11 +203,17 @@ test('duplicate returns a 403 PwgError when the submitted pwg_token does not mat
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
-    $result = $ws->duplicate(['group_id' => 1, 'copy_name' => 'copy', 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->duplicate([
+        'group_id' => 1,
+        'copy_name' => 'copy',
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -180,10 +221,16 @@ test('deleteUser returns a 403 PwgError when the submitted pwg_token does not ma
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
-    $result = $ws->deleteUser(['group_id' => 1, 'user_id' => [1], 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->deleteUser([
+        'group_id' => 1,
+        'user_id' => [1],
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });

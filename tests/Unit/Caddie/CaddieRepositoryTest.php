@@ -127,8 +127,10 @@ test('addElements() skips elements already in the caddie', function (): void {
 
         $added = $repo->addElements(2, [2, 3, 4]);
 
-        expect($added)->toBe(2)
-            ->and(caddieTestFetchElementIds($conn, 2))->toBe([1, 2, 3, 4]);
+        expect($added)
+            ->toBe(2)
+            ->and(caddieTestFetchElementIds($conn, 2))
+            ->toBe([1, 2, 3, 4]);
     } finally {
         caddieTestClear($conn, 2);
     }
@@ -158,8 +160,10 @@ test('addElements() scopes to the given user', function (): void {
         $repo->addElements(1, [1]);
         $repo->addElements(2, [1]);
 
-        expect(caddieTestFetchElementIds($conn, 1))->toBe([1])
-            ->and(caddieTestFetchElementIds($conn, 2))->toBe([1]);
+        expect(caddieTestFetchElementIds($conn, 1))
+            ->toBe([1])
+            ->and(caddieTestFetchElementIds($conn, 2))
+            ->toBe([1]);
     } finally {
         caddieTestClear($conn, 1);
         caddieTestClear($conn, 2);
@@ -209,8 +213,10 @@ test('findElementIdsForUser() returns only that user\'s own elements', function 
         $repo->addElements(1, [1, 2]);
         $repo->addElements(2, [3]);
 
-        expect($repo->findElementIdsForUser(1))->toBe([1, 2])
-            ->and($repo->findElementIdsForUser(2))->toBe([3]);
+        expect($repo->findElementIdsForUser(1))
+            ->toBe([1, 2])
+            ->and($repo->findElementIdsForUser(2))
+            ->toBe([3]);
     } finally {
         caddieTestClear($conn, 1);
         caddieTestClear($conn, 2);
@@ -218,7 +224,8 @@ test('findElementIdsForUser() returns only that user\'s own elements', function 
 });
 
 test('findElementIdsForUser() returns empty for a user with no caddie', function (): void {
-    expect(caddieTestRepo()->findElementIdsForUser(2))->toBe([]);
+    expect(caddieTestRepo()->findElementIdsForUser(2))
+        ->toBe([]);
 });
 
 test('replaceForUser() empties the existing caddie then inserts the new elements', function (): void {

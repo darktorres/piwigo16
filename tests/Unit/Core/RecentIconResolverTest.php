@@ -33,13 +33,15 @@ function recentIconResolverTestLang(): Lang
 test('getIcon returns false for an empty date string', function (): void {
     $result = RecentIconResolver::getIcon('', 7, new ProcessCache(), recentIconResolverTestLang());
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });
 
 test('getIcon returns false for a "0" date string', function (): void {
     $result = RecentIconResolver::getIcon('0', 7, new ProcessCache(), recentIconResolverTestLang());
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });
 
 test('getIcon returns the icon with the cached title when the date is already cached as recent', function (): void {
@@ -51,10 +53,11 @@ test('getIcon returns the icon with the cached title when the date is already ca
 
     $result = RecentIconResolver::getIcon('2026-01-01 00:00:00', 7, $processCache, recentIconResolverTestLang(), isChildDate: true);
 
-    expect($result)->toBe([
-        'TITLE' => 'SENTINEL-CACHED-TITLE',
-        'IS_CHILD_DATE' => true,
-    ]);
+    expect($result)
+        ->toBe([
+            'TITLE' => 'SENTINEL-CACHED-TITLE',
+            'IS_CHILD_DATE' => true,
+        ]);
 });
 
 test('getIcon returns an empty array when the date is already cached as not recent', function (): void {
@@ -66,7 +69,8 @@ test('getIcon returns an empty array when the date is already cached as not rece
 
     $result = RecentIconResolver::getIcon('2020-01-01 00:00:00', 7, $processCache, recentIconResolverTestLang());
 
-    expect($result)->toBe([]);
+    expect($result)
+        ->toBe([]);
 });
 
 test('getIcon computes and caches a fresh comparison against a cached sql_recent_date cutoff', function (): void {
@@ -79,14 +83,17 @@ test('getIcon computes and caches a fresh comparison against a cached sql_recent
     $recentResult = RecentIconResolver::getIcon('2025-12-01 00:00:00', 7, $processCache, recentIconResolverTestLang());
     $oldResult = RecentIconResolver::getIcon('2024-01-01 00:00:00', 7, $processCache, recentIconResolverTestLang());
 
-    expect($recentResult)->toBe([
-        'TITLE' => 'SENTINEL-CACHED-TITLE',
-        'IS_CHILD_DATE' => false,
-    ])
-        ->and($oldResult)->toBe([]);
+    expect($recentResult)
+        ->toBe([
+            'TITLE' => 'SENTINEL-CACHED-TITLE',
+            'IS_CHILD_DATE' => false,
+        ])
+        ->and($oldResult)
+        ->toBe([]);
 
     $cached = $processCache->get('get_icon');
-    expect($cached)->toBeArray();
+    expect($cached)
+        ->toBeArray();
     if (is_array($cached)) {
         expect($cached['2025-12-01 00:00:00'])->toBeTrue()
             ->and($cached['2024-01-01 00:00:00'])->toBeFalse();

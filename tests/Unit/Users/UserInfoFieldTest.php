@@ -40,7 +40,9 @@ test('dqlPropertyAndIsBoolean maps every case to its real DQL property path and 
 
     foreach ($cases as [$case, $expectedProperty, $expectedIsBoolean]) {
         $result = $case->dqlPropertyAndIsBoolean();
-        expect($result->property)->toBe($expectedProperty)
-            ->and($result->isBoolean)->toBe($expectedIsBoolean);
+        expect($result->property)
+            ->toBe($expectedProperty)
+            ->and($result->isBoolean)
+            ->toBe($expectedIsBoolean);
     }
 });

@@ -86,11 +86,16 @@ test('delete returns a 403 PwgError when the submitted pwg_token does not match 
     $ws = pwgTagsTestSubject();
     $server = pwgTagsTestServer();
 
-    $result = $ws->delete(['tag_id' => [1], 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->delete([
+        'tag_id' => [1],
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -98,11 +103,17 @@ test('rename returns a 403 PwgError when the submitted pwg_token does not match 
     $ws = pwgTagsTestSubject();
     $server = pwgTagsTestServer();
 
-    $result = $ws->rename(['tag_id' => 1, 'new_name' => 'new', 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->rename([
+        'tag_id' => 1,
+        'new_name' => 'new',
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -110,11 +121,17 @@ test('duplicate returns a 403 PwgError when the submitted pwg_token does not mat
     $ws = pwgTagsTestSubject();
     $server = pwgTagsTestServer();
 
-    $result = $ws->duplicate(['tag_id' => 1, 'copy_name' => 'copy', 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->duplicate([
+        'tag_id' => 1,
+        'copy_name' => 'copy',
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -122,10 +139,16 @@ test('merge returns a 403 PwgError when the submitted pwg_token does not match t
     $ws = pwgTagsTestSubject();
     $server = pwgTagsTestServer();
 
-    $result = $ws->merge(['destination_tag_id' => 1, 'merge_tag_id' => [2], 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->merge([
+        'destination_tag_id' => 1,
+        'merge_tag_id' => [2],
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });

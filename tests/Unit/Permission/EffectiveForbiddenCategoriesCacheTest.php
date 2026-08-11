@@ -80,8 +80,10 @@ test('getForUser computes and caches a real snapshot on a cache miss', function 
     $result = $cache->getForUser(UserId::from(999999)->value, 'guest', 0);
 
     $item = $pool->getItem('effective_999999');
-    expect($item->isHit())->toBeTrue()
-        ->and($item->get())->toEqual($result);
+    expect($item->isHit())
+        ->toBeTrue()
+        ->and($item->get())
+        ->toEqual($result);
 });
 
 test('getForUser returns the cached snapshot verbatim on a cache hit, without recomputing it', function (): void {
@@ -100,5 +102,6 @@ test('getForUser returns the cached snapshot verbatim on a cache hit, without re
 
     $result = $cache->getForUser(UserId::from(999999)->value, 'guest', 0);
 
-    expect($result)->toEqual($sentinel);
+    expect($result)
+        ->toEqual($sentinel);
 });

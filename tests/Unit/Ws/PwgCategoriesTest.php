@@ -106,12 +106,24 @@ test('getList rejects an unknown thumbnail_size', function (): void {
     $ws = pwgCategoriesTestSubject();
     $server = pwgCategoriesTestServer();
 
-    $result = $ws->getList(['cat_id' => null, 'recursive' => false, 'public' => false, 'tree_output' => false, 'fullname' => false, 'thumbnail_size' => 'not-a-real-size', 'search' => null, 'limit' => null], $server);
+    $result = $ws->getList([
+        'cat_id' => null,
+        'recursive' => false,
+        'public' => false,
+        'tree_output' => false,
+        'fullname' => false,
+        'thumbnail_size' => 'not-a-real-size',
+        'search' => null,
+        'limit' => null,
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(WsError::INVALID_PARAM)
-            ->and($result->message())->toBe('Invalid thumbnail_size');
+        expect($result->code())
+            ->toBe(WsError::INVALID_PARAM)
+            ->and($result->message())
+            ->toBe('Invalid thumbnail_size');
     }
 });
 
@@ -119,12 +131,24 @@ test('getList rejects recursive combined with a non-null limit', function (): vo
     $ws = pwgCategoriesTestSubject();
     $server = pwgCategoriesTestServer();
 
-    $result = $ws->getList(['cat_id' => null, 'recursive' => true, 'public' => false, 'tree_output' => false, 'fullname' => false, 'thumbnail_size' => 'medium', 'search' => null, 'limit' => 5], $server);
+    $result = $ws->getList([
+        'cat_id' => null,
+        'recursive' => true,
+        'public' => false,
+        'tree_output' => false,
+        'fullname' => false,
+        'thumbnail_size' => 'medium',
+        'search' => null,
+        'limit' => 5,
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(WsError::INVALID_PARAM)
-            ->and($result->message())->toBe('Cannot use both recursive and limit parameters at the same time');
+        expect($result->code())
+            ->toBe(WsError::INVALID_PARAM)
+            ->and($result->message())
+            ->toBe('Cannot use both recursive and limit parameters at the same time');
     }
 });
 
@@ -151,10 +175,13 @@ test('getImages returns a 404 PwgError for a cat_id with no real match', functio
         'f_max_date_created' => null,
     ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(404)
-            ->and($result->message())->toBe('cat_id {999999} not found');
+        expect($result->code())
+            ->toBe(404)
+            ->and($result->message())
+            ->toBe('cat_id {999999} not found');
     }
 });
 
@@ -162,11 +189,22 @@ test('add returns a 403 PwgError when a submitted pwg_token does not match the r
     $ws = pwgCategoriesTestSubject();
     $server = pwgCategoriesTestServer();
 
-    $result = $ws->add(['name' => 'New album', 'parent' => null, 'comment' => null, 'visible' => true, 'status' => null, 'commentable' => true, 'position' => null, 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->add([
+        'name' => 'New album',
+        'parent' => null,
+        'comment' => null,
+        'visible' => true,
+        'status' => null,
+        'commentable' => true,
+        'position' => null,
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -174,11 +212,22 @@ test('setInfo returns a 403 PwgError when a submitted pwg_token does not match t
     $ws = pwgCategoriesTestSubject();
     $server = pwgCategoriesTestServer();
 
-    $result = $ws->setInfo(['category_id' => 1, 'name' => null, 'comment' => null, 'status' => null, 'visible' => null, 'commentable' => null, 'apply_commentable_to_subalbums' => null, 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->setInfo([
+        'category_id' => 1,
+        'name' => null,
+        'comment' => null,
+        'status' => null,
+        'visible' => null,
+        'commentable' => null,
+        'apply_commentable_to_subalbums' => null,
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -186,11 +235,17 @@ test('delete returns a 403 PwgError when the submitted pwg_token does not match 
     $ws = pwgCategoriesTestSubject();
     $server = pwgCategoriesTestServer();
 
-    $result = $ws->delete(['category_id' => '1', 'photo_deletion_mode' => 'no_delete', 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->delete([
+        'category_id' => '1',
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -198,10 +253,16 @@ test('move returns a 403 PwgError when the submitted pwg_token does not match th
     $ws = pwgCategoriesTestSubject();
     $server = pwgCategoriesTestServer();
 
-    $result = $ws->move(['category_id' => '1', 'parent' => 0, 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->move([
+        'category_id' => '1',
+        'parent' => 0,
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });

@@ -52,10 +52,16 @@ test('parse returns an empty, unrecognized-section result for an empty request',
 
     $result = $initializer->parse();
 
-    expect($result->rootPath)->toBe('')
-        ->and($result->sectionUrl)->toBe('')
-        ->and($result->tokens)->toBe([''])
-        ->and($result->imageId)->toBeNull()
-        ->and($result->imageFile)->toBeNull()
-        ->and($result->parsed)->toBe([]);
+    expect($result->rootPath)
+        ->toBe('')
+        ->and($result->sectionUrl)
+        ->toBe('')
+        ->and($result->tokens)
+        ->toBe([''])
+        ->and($result->imageId)
+        ->toBeNull()
+        ->and($result->imageFile)
+        ->toBeNull()
+        ->and($result->parsed)
+        ->toBe([]);
 });

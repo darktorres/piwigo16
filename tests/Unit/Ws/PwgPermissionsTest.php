@@ -18,9 +18,9 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
@@ -135,12 +135,18 @@ test('getList rejects more than one of cat_id/group_id/user_id at once', functio
     $ws = pwgPermissionsTestSubject();
     $server = pwgPermissionsTestServer();
 
-    $result = $ws->getList(['cat_id' => [1], 'group_id' => [1]], $server);
+    $result = $ws->getList([
+        'cat_id' => [1],
+        'group_id' => [1],
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(WsError::INVALID_PARAM)
-            ->and($result->message())->toBe('Too many parameters, provide cat_id OR user_id OR group_id');
+        expect($result->code())
+            ->toBe(WsError::INVALID_PARAM)
+            ->and($result->message())
+            ->toBe('Too many parameters, provide cat_id OR user_id OR group_id');
     }
 });
 
@@ -148,9 +154,12 @@ test('getList returns an empty categories list for a cat_id with no real access 
     $ws = pwgPermissionsTestSubject();
     $server = pwgPermissionsTestServer();
 
-    $result = $ws->getList(['cat_id' => [999999]], $server);
+    $result = $ws->getList([
+        'cat_id' => [999999],
+    ], $server);
 
-    expect($result)->toBeArray();
+    expect($result)
+        ->toBeArray();
     if (is_array($result)) {
         expect($result['categories']->_content)->toBe([]);
     }
@@ -160,12 +169,19 @@ test('add returns a 403 PwgError when the submitted pwg_token does not match the
     $ws = pwgPermissionsTestSubject();
     $server = pwgPermissionsTestServer();
 
-    $result = $ws->add(['cat_id' => [1], 'recursive' => false, 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->add([
+        'cat_id' => [1],
+        'recursive' => false,
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403)
-            ->and($result->message())->toBe('Invalid security token');
+        expect($result->code())
+            ->toBe(403)
+            ->and($result->message())
+            ->toBe('Invalid security token');
     }
 });
 
@@ -173,11 +189,17 @@ test('remove returns a 403 PwgError when the submitted pwg_token does not match 
     $ws = pwgPermissionsTestSubject();
     $server = pwgPermissionsTestServer();
 
-    $result = $ws->remove(['cat_id' => [1], 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->remove([
+        'cat_id' => [1],
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403)
-            ->and($result->message())->toBe('Invalid security token');
+        expect($result->code())
+            ->toBe(403)
+            ->and($result->message())
+            ->toBe('Invalid security token');
     }
 });

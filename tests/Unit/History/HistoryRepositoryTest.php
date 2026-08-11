@@ -666,7 +666,7 @@ test('search() maps every optional column when a row actually has them populated
     // is only ever transiently occupied -- confirmed live (a genuine
     // ForeignKeyConstraintViolationException when the literal id this
     // test used to hardcode wasn't currently occupied).
-    $conn->executeStatement('INSERT INTO ' . 'search' . ' (search_uuid) VALUES (NULL)');
+    $conn->executeStatement('INSERT INTO search (search_uuid) VALUES (NULL)');
     $searchId = (int) $conn->lastInsertId();
 
     try {
@@ -700,7 +700,7 @@ test('search() maps every optional column when a row actually has them populated
             ->toBe('picture');
     } finally {
         historyTestClearHistory();
-        $conn->executeStatement('DELETE FROM ' . 'search' . ' WHERE id = ?', [$searchId]);
+        $conn->executeStatement('DELETE FROM search WHERE id = ?', [$searchId]);
     }
 });
 

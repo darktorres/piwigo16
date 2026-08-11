@@ -15,13 +15,13 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -118,9 +118,12 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
         $today = Env::now()->format('Y-m-d');
-        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))->toBe('History')
-            ->and($template->get_template_vars('START'))->toBe($today)
-            ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('start=' . $today);
+        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))
+            ->toBe('History')
+            ->and($template->get_template_vars('START'))
+            ->toBe($today)
+            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->toBe('start=' . $today);
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

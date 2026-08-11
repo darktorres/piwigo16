@@ -12,15 +12,15 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -116,10 +116,14 @@ test('renderToString() returns the parsed footer output and always sends telemet
 
         $output = $renderer->renderToString(microtime(true));
 
-        expect($telemetrySender->sendWasCalled)->toBeTrue()
-            ->and($template->get_template_vars('contactMail'))->toBeNull()
-            ->and($template->get_template_vars('toggleMobileThemeUrl'))->toBeNull()
-            ->and($output)->toContain('version=');
+        expect($telemetrySender->sendWasCalled)
+            ->toBeTrue()
+            ->and($template->get_template_vars('contactMail'))
+            ->toBeNull()
+            ->and($template->get_template_vars('toggleMobileThemeUrl'))
+            ->toBeNull()
+            ->and($output)
+            ->toContain('version=');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

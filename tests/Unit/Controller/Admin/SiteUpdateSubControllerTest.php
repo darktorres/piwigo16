@@ -9,9 +9,9 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 
 /**
  * Piwigo\Controller\Admin\SiteUpdateSubController -- 22 constructor deps.
@@ -67,7 +67,9 @@ test('handle() fatal-errors when the site query param is missing', function (): 
         if (! $currentLogger instanceof CurrentLogger) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
-        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $currentLogger->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
 
         $subController = Kernel::container()->get(SiteUpdateSubController::class);
         if (! $subController instanceof SiteUpdateSubController) {
@@ -81,11 +83,13 @@ test('handle() fatal-errors when the site query param is missing', function (): 
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect((string) $exception->response()->getBody())->toContain('site param missing or invalid');
+        expect((string) $exception->response()->getBody())
+            ->toContain('site param missing or invalid');
     } finally {
         unset($_GET['site']);
         CurrentTemplate::current()->reset();

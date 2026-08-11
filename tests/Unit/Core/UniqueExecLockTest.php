@@ -28,12 +28,15 @@ afterEach(function (): void {
 });
 
 test('begins acquires the lock, isRunning reflects it held, ends releases it', function (): void {
-    $logger = new Logger(['severity' => Logger::OFF]);
+    $logger = new Logger([
+        'severity' => Logger::OFF,
+    ]);
     $tokenName = 'unique-exec-lock-test-' . bin2hex(random_bytes(8));
 
     $acquired = UniqueExecLock::begins($logger, $tokenName);
 
-    expect($acquired)->toBeTrue()
+    expect($acquired)
+        ->toBeTrue()
         ->and(UniqueExecLock::isRunning($tokenName))->toBeTrue();
 
     UniqueExecLock::ends($logger, $tokenName);

@@ -14,13 +14,17 @@ use Piwigo\Group\GroupAccessEntity;
 test('entityClassAndFieldProperty maps UserAccess to the user_id keep column on UserAccessEntity', function (): void {
     $target = CategoryAccessTarget::UserAccess->entityClassAndFieldProperty();
 
-    expect($target->entityClass)->toBe(UserAccessEntity::class)
-        ->and($target->property)->toBe('userId');
+    expect($target->entityClass)
+        ->toBe(UserAccessEntity::class)
+        ->and($target->property)
+        ->toBe('userId');
 });
 
 test('entityClassAndFieldProperty maps GroupAccess to the group_id keep column on GroupAccessEntity', function (): void {
     $target = CategoryAccessTarget::GroupAccess->entityClassAndFieldProperty();
 
-    expect($target->entityClass)->toBe(GroupAccessEntity::class)
-        ->and($target->property)->toBe('groupId');
+    expect($target->entityClass)
+        ->toBe(GroupAccessEntity::class)
+        ->and($target->property)
+        ->toBe('groupId');
 });

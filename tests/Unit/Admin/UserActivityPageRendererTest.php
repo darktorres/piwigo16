@@ -34,17 +34,17 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
@@ -256,10 +256,10 @@ test('render() lists real activity aggregated by user and skips the additional-f
     // this test's own assertions are written against, then restore the
     // original snapshot verbatim in finally regardless of outcome.
     $conn = DbConnection::build();
-    $originalActivityRows = $conn->fetchAllAssociative('SELECT * FROM ' . 'activity');
-    $conn->executeStatement('DELETE FROM ' . 'activity');
+    $originalActivityRows = $conn->fetchAllAssociative('SELECT * FROM activity');
+    $conn->executeStatement('DELETE FROM activity');
     $conn->executeStatement(
-        "INSERT INTO " . 'activity' . " VALUES "
+        'INSERT INTO activity VALUES '
         . "(1,'system',3,'activate',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL),"
         . "(2,'system',1,'install',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"16.3.0\"}',NULL),"
         . "(3,'user',1,'login',1,'8681675b2a4136fb177e08193dcc5043','::1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0'),"
@@ -303,33 +303,50 @@ test('render() lists real activity aggregated by user and skips the additional-f
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
 
-        new UserActivityPageRenderer()->render(
-            userActivityTestLang(),
-            userActivityTestAccessControl(),
-            UrlServiceTestFactory::build(),
-            $coreTabs,
-            CurrentTemplate::current(),
-            CurrentConfigTestFactory::get(),
-            $activityService,
-            userActivityTestUserService($activityService),
-            userActivityTestImageService(),
-            userActivityTestCategoryService(),
-            userActivityTestGroupService($activityService),
-            HtmlServiceTestFactory::build(),
-            new InputValidator(),
-            $eventDispatcher,
-        );
+        new UserActivityPageRenderer()
+            ->render(
+                userActivityTestLang(),
+                userActivityTestAccessControl(),
+                UrlServiceTestFactory::build(),
+                $coreTabs,
+                CurrentTemplate::current(),
+                CurrentConfigTestFactory::get(),
+                $activityService,
+                userActivityTestUserService($activityService),
+                userActivityTestImageService(),
+                userActivityTestCategoryService(),
+                userActivityTestGroupService($activityService),
+                HtmlServiceTestFactory::build(),
+                new InputValidator(),
+                $eventDispatcher,
+            );
 
         // The real fixture's own piwigo_activity data: 17 non-system rows,
         // all performed_by user 1 (fixture_admin), all sharing the exact
         // same occured_on '2026-08-01 03:00:00'.
-        expect($template->get_template_vars('nb_users'))->toBe(4)
-            ->and($template->get_template_vars('ulist'))->toBe([
-                ['id' => 1, 'username' => 'fixture_admin', 'nb_lines' => 17],
+        expect($template->get_template_vars('nb_users'))
+            ->toBe(4)
+            ->and($template->get_template_vars('ulist'))
+            ->toBe([
+                [
+                    'id' => 1,
+                    'username' => 'fixture_admin',
+                    'nb_lines' => 17,
+                ],
             ])
-            ->and($template->get_template_vars('ACTIVITY_DATES'))->toBe(['min' => '2026-08-01', 'max' => '2026-08-01'])
-            ->and($template->get_template_vars('ADDITIONAL_FILT'))->toBe(['type' => false, 'name' => null, 'value' => null])
-            ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('users=4');
+            ->and($template->get_template_vars('ACTIVITY_DATES'))
+            ->toBe([
+                'min' => '2026-08-01',
+                'max' => '2026-08-01',
+            ])
+            ->and($template->get_template_vars('ADDITIONAL_FILT'))
+            ->toBe([
+                'type' => false,
+                'name' => null,
+                'value' => null,
+            ])
+            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->toBe('users=4');
 
         $actions = $template->get_template_vars('ACTIONS');
         if (! is_array($actions)) {
@@ -339,9 +356,10 @@ test('render() lists real activity aggregated by user and skips the additional-f
             static fn (mixed $row): int => is_array($row) && isset($row['counter']) && is_numeric($row['counter']) ? (int) $row['counter'] : 0,
             $actions
         ));
-        expect($totalActionCount)->toBe(17);
+        expect($totalActionCount)
+            ->toBe(17);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'activity');
+        $conn->executeStatement('DELETE FROM activity');
         foreach ($originalActivityRows as $row) {
             $conn->createQueryBuilder()
                 ->insert('activity')

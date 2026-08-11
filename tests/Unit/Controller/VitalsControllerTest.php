@@ -24,12 +24,18 @@ use Psr\Log\AbstractLogger;
  */
 final class VitalsTestSpyLogger extends AbstractLogger
 {
-    /** @var list<array{level: mixed, message: string|Stringable, context: array<mixed>}> */
+    /**
+     * @var list<array{level: mixed, message: string|Stringable, context: array<mixed>}>
+     */
     public array $records = [];
 
     public function log($level, string|Stringable $message, array $context = []): void
     {
-        $this->records[] = ['level' => $level, 'message' => $message, 'context' => $context];
+        $this->records[] = [
+            'level' => $level,
+            'message' => $message,
+            'context' => $context,
+        ];
     }
 }
 
@@ -57,7 +63,13 @@ function vitalsTestAccessControl(): AccessControl
 test('__invoke logs a well-formed known metric and returns an empty 204 response', function (): void {
     $logger = new VitalsTestSpyLogger();
     $controller = new VitalsController(vitalsTestAccessControl(), $logger);
-    $body = json_encode(['name' => 'LCP', 'value' => 1234.5, 'id' => 'v1-abc', 'rating' => 'good', 'url' => 'https://example.test/']);
+    $body = json_encode([
+        'name' => 'LCP',
+        'value' => 1234.5,
+        'id' => 'v1-abc',
+        'rating' => 'good',
+        'url' => 'https://example.test/',
+    ]);
     if (! is_string($body)) {
         throw new LogicException('expected a JSON string');
     }
@@ -65,9 +77,12 @@ test('__invoke logs a well-formed known metric and returns an empty 204 response
 
     $response = $controller($request);
 
-    expect($response->getStatusCode())->toBe(204)
-        ->and((string) $response->getBody())->toBe('')
-        ->and($logger->records)->toHaveCount(1)
+    expect($response->getStatusCode())
+        ->toBe(204)
+        ->and((string) $response->getBody())
+        ->toBe('')
+        ->and($logger->records)
+        ->toHaveCount(1)
         ->and($logger->records[0]['message'])->toBe('web_vitals.metric')
         ->and($logger->records[0]['context'])->toBe([
             'name' => 'LCP',
@@ -81,7 +96,13 @@ test('__invoke logs a well-formed known metric and returns an empty 204 response
 test('__invoke silently skips an unknown metric name and still returns 204', function (): void {
     $logger = new VitalsTestSpyLogger();
     $controller = new VitalsController(vitalsTestAccessControl(), $logger);
-    $body = json_encode(['name' => 'NOT_A_REAL_METRIC', 'value' => 1.0, 'id' => 'v1', 'rating' => 'good', 'url' => 'https://example.test/']);
+    $body = json_encode([
+        'name' => 'NOT_A_REAL_METRIC',
+        'value' => 1.0,
+        'id' => 'v1',
+        'rating' => 'good',
+        'url' => 'https://example.test/',
+    ]);
     if (! is_string($body)) {
         throw new LogicException('expected a JSON string');
     }
@@ -89,8 +110,10 @@ test('__invoke silently skips an unknown metric name and still returns 204', fun
 
     $response = $controller($request);
 
-    expect($response->getStatusCode())->toBe(204)
-        ->and($logger->records)->toBe([]);
+    expect($response->getStatusCode())
+        ->toBe(204)
+        ->and($logger->records)
+        ->toBe([]);
 });
 
 test('__invoke silently skips malformed JSON and an empty body alike', function (): void {
@@ -100,7 +123,10 @@ test('__invoke silently skips malformed JSON and an empty body alike', function 
     $malformed = $controller(new ServerRequest('POST', '/vitals', [], '{not valid json'));
     $empty = $controller(new ServerRequest('POST', '/vitals', [], ''));
 
-    expect($malformed->getStatusCode())->toBe(204)
-        ->and($empty->getStatusCode())->toBe(204)
-        ->and($logger->records)->toBe([]);
+    expect($malformed->getStatusCode())
+        ->toBe(204)
+        ->and($empty->getStatusCode())
+        ->toBe(204)
+        ->and($logger->records)
+        ->toBe([]);
 });

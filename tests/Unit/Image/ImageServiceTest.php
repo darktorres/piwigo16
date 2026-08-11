@@ -32,10 +32,10 @@ use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
-use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\Projection\SlideshowParams;
 use Piwigo\Lang\Translator;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -322,18 +322,21 @@ test('countOrphans computes the real difference (not sum) between all images and
 
     try {
         expect(CurrentConfigTestFactory::get()->countOrphans())->toBeNull();
-        expect($repo->countImagesInCategories())->toBeGreaterThan(0);
+        expect($repo->countImagesInCategories())
+            ->toBeGreaterThan(0);
 
         $service = imageServiceTestNewService($repo, $conn);
         $result = $service->countOrphans();
         $totalImagesNearby = $repo->countAllImages();
 
-        expect($result)->toBeGreaterThan(0)
-            ->and($result)->toBeLessThanOrEqual($totalImagesNearby)
+        expect($result)
+            ->toBeGreaterThan(0)
+            ->and($result)
+            ->toBeLessThanOrEqual($totalImagesNearby)
             ->and(CurrentConfigTestFactory::get()->countOrphans())->toBe($result);
     } finally {
-        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'count_orphans'");
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$orphanId]);
+        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'count_orphans'");
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$orphanId]);
         CurrentConfigServiceTestFactory::get()->reset();
         Kernel::reset();
     }
@@ -355,13 +358,15 @@ test('getRowWithCondition returns the real image row when one genuinely matches,
 
         $row = $service->getRowWithCondition(ImageId::from($imageId), new PermissionCriteria(null, null, null, null, null, null));
 
-        expect($row)->toBeArray();
+        expect($row)
+            ->toBeArray();
         if (is_array($row)) {
             $rowId = $row['id'] ?? null;
-            expect(is_numeric($rowId) ? (int) $rowId : null)->toBe($imageId);
+            expect(is_numeric($rowId) ? (int) $rowId : null)
+                ->toBe($imageId);
         }
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
@@ -635,9 +640,17 @@ test('encodeSlideshowParams filters out a non-scalar value under a key shared wi
     // array_diff_assoc(), not just that a non-scalar value happens to
     // also be caught by this method's own downstream loop guard.
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $encoded = imageServiceTestNewService($repo, $conn)->encodeSlideshowParams(['period' => 4, 'repeat' => ['nested' => 'array'], 'play' => true]);
+    $encoded = imageServiceTestNewService($repo, $conn)
+        ->encodeSlideshowParams([
+            'period' => 4,
+            'repeat' => [
+                'nested' => 'array',
+            ],
+            'play' => true,
+        ]);
 
-    expect($encoded)->not->toContain('repeat');
+    expect($encoded)
+        ->not->toContain('repeat');
 });
 
 // encodeSlideshowParams()'s own `if (! is_scalar($value)) { continue; }`

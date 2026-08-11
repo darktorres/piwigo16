@@ -11,12 +11,12 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -95,11 +95,14 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
         $template->set_template_dir($tplDir);
         $pageState = new PageState();
 
-        new MaintenanceSysPageRenderer()->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Admin), [], $pageState, CurrentTemplate::current(), CurrentConfigTestFactory::get());
+        new MaintenanceSysPageRenderer()
+            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Admin), [], $pageState, CurrentTemplate::current(), CurrentConfigTestFactory::get());
 
-        expect($pageState->warnings)->toHaveCount(1)
+        expect($pageState->warnings)
+            ->toHaveCount(1)
             ->and($pageState->warnings[0])->toContain('status is required to edit parameters.')
-            ->and($template->get_template_vars('isWebmaster'))->toBe(0);
+            ->and($template->get_template_vars('isWebmaster'))
+            ->toBe(0);
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();
@@ -121,10 +124,13 @@ test('render() adds no warning for a webmaster and reaches the template tail wit
         $template->set_template_dir($tplDir);
         $pageState = new PageState();
 
-        new MaintenanceSysPageRenderer()->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Webmaster), [], $pageState, CurrentTemplate::current(), CurrentConfigTestFactory::get());
+        new MaintenanceSysPageRenderer()
+            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Webmaster), [], $pageState, CurrentTemplate::current(), CurrentConfigTestFactory::get());
 
-        expect($pageState->warnings)->toBe([])
-            ->and($template->get_template_vars('isWebmaster'))->toBe(1);
+        expect($pageState->warnings)
+            ->toBe([])
+            ->and($template->get_template_vars('isWebmaster'))
+            ->toBe(1);
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

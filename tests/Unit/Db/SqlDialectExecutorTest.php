@@ -20,7 +20,8 @@ test('fetchRecentCutoffDate returns a real, non-empty cutoff date', function ():
 
     $result = $executor->fetchRecentCutoffDate(7);
 
-    expect($result)->not->toBe('');
+    expect($result)
+        ->not->toBe('');
 });
 
 test('fetchTomorrow returns a real date one day ahead of the DB server\'s current date', function (): void {
@@ -28,7 +29,8 @@ test('fetchTomorrow returns a real date one day ahead of the DB server\'s curren
 
     $result = $executor->fetchTomorrow();
 
-    expect($result)->not->toBe('');
+    expect($result)
+        ->not->toBe('');
 });
 
 test('fetchFutureDatesFor returns an empty array for an empty day list, with no DB access', function (): void {
@@ -36,7 +38,8 @@ test('fetchFutureDatesFor returns an empty array for an empty day list, with no 
 
     $result = $executor->fetchFutureDatesFor([]);
 
-    expect($result)->toBe([]);
+    expect($result)
+        ->toBe([]);
 });
 
 test('fetchFutureDatesFor returns a real future date keyed by each requested day count', function (): void {
@@ -44,7 +47,8 @@ test('fetchFutureDatesFor returns a real future date keyed by each requested day
 
     $result = $executor->fetchFutureDatesFor([1, 7, 30]);
 
-    expect($result)->toHaveKeys([1, 7, 30]);
+    expect($result)
+        ->toHaveKeys([1, 7, 30]);
     foreach ([1, 7, 30] as $day) {
         expect($result[$day])->not->toBeNull();
     }

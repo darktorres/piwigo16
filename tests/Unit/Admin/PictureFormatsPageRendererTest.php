@@ -12,13 +12,13 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -114,16 +114,19 @@ test('render() fatal-errors when image_id is missing from the request', function
 
         $exception = null;
         try {
-            new PictureFormatsPageRenderer()->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplate::current(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get());
+            new PictureFormatsPageRenderer()
+                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplate::current(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get());
         } catch (ResponseReadyException $e) {
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect((string) $exception->response()->getBody())->toContain('image_id does not exist');
+        expect((string) $exception->response()->getBody())
+            ->toContain('image_id does not exist');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();
@@ -142,16 +145,19 @@ test('render() fatal-errors when image_id does not match any real image', functi
 
         $exception = null;
         try {
-            new PictureFormatsPageRenderer()->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplate::current(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get());
+            new PictureFormatsPageRenderer()
+                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplate::current(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get());
         } catch (ResponseReadyException $e) {
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect((string) $exception->response()->getBody())->toContain('image_id #999999 does not exist');
+        expect((string) $exception->response()->getBody())
+            ->toContain('image_id #999999 does not exist');
     } finally {
         unset($_GET['image_id']);
         CurrentTemplate::current()->reset();

@@ -12,10 +12,10 @@ use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -109,12 +109,15 @@ test('handle() denies access with a 401 for a logged-in non-admin user', functio
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect($exception->response()->getStatusCode())->toBe(401)
-            ->and((string) $exception->response()->getBody())->toContain('You are not authorized to access the requested page');
+        expect($exception->response()->getStatusCode())
+            ->toBe(401)
+            ->and((string) $exception->response()->getBody())
+            ->toContain('You are not authorized to access the requested page');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

@@ -744,8 +744,10 @@ test('compose\'s alpha-dimming step genuinely changes the composited pixel color
 
     $result = $base->compose($overlay, 0, 0, 37);
 
-    expect($result)->toBeTrue();
-    $pixel = $base->image->getImagePixelColor(25, 25)->getColor();
+    expect($result)
+        ->toBeTrue();
+    $pixel = $base->image->getImagePixelColor(25, 25)
+        ->getColor();
     expect($pixel['r'])->toBeGreaterThan(50)->toBeLessThan(140)
         ->and($pixel['g'])->toBe($pixel['r'])
         ->and($pixel['b'])->toBe($pixel['r']);

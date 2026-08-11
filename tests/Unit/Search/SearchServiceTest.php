@@ -336,7 +336,8 @@ afterEach(function (): void {
     // own tests ever produce is genuinely date-shaped (either a literal
     // 'psk-2026...' or the real generator's own output), so this narrower
     // pattern loses no real coverage.
-    searchServiceTestConn()->executeStatement("DELETE FROM " . 'search' . " WHERE search_uuid REGEXP '^psk-[0-9]{8}-'");
+    searchServiceTestConn()
+        ->executeStatement('DELETE FROM search' . " WHERE search_uuid REGEXP '^psk-[0-9]{8}-'");
     CachePools::searchResults()->clear();
     CurrentUserTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->reset();
@@ -1281,16 +1282,17 @@ test('getQuickSearchResultsNoCache() a term matching a real category with zero c
     // the only way to populate cat_ids while crtIds itself stays
     // empty.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('zqualifiesonlycat')");
+    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('zqualifiesonlycat')");
     $catId = (int) $conn->lastInsertId();
 
     try {
-        $results = searchServiceTestService()->getQuickSearchResultsNoCache('zqualifiesonlycat', []);
+        $results = searchServiceTestService()
+            ->getQuickSearchResultsNoCache('zqualifiesonlycat', []);
 
         expect($results['items'])->toBe([])
             ->and($results['qs']['unmatched_terms'])->toBe([]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$catId]);
+        $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$catId]);
     }
 });
 
@@ -1642,7 +1644,8 @@ test('getQuickSearchResultsNoCache() escapes a literal percent sign in the file 
     // instead be interpreted as SQL's own "match anything" wildcard,
     // and 'fixture%1' would incorrectly match 'fixture-photo-1.jpg'
     // (starts with 'fixture', has a '1' later).
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('file:fixture%1', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('file:fixture%1', []);
 
     expect($results['items'])->toBe([]);
 });
@@ -1652,7 +1655,8 @@ test('getQuickSearchResultsNoCache() escapes a literal underscore in the file sc
     // an underscore -- if str_replace()'s own '_' => '\_' escaping pair
     // were dropped, the raw '_' would match any single character
     // (including that real hyphen) instead of a literal underscore.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('file:photo_1', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('file:photo_1', []);
 
     expect($results['items'])->toBe([]);
 });

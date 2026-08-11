@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
@@ -17,10 +17,9 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
-use Piwigo\Lang\Translator;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
@@ -29,10 +28,8 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Users\CurrentUser;
 
 /**
  * Piwigo\Admin\BatchManager\FilterPanelRenderer -- has no constructor
@@ -118,20 +115,21 @@ test('render() shows every built-in prefilter and no active filter/selection whe
         $template = TemplateTestFactory::build();
         $pageState = new PageState();
 
-        new FilterPanelRenderer()->render(
-            LangTestFactory::get(),
-            $template,
-            '/admin.php?page=batch_manager',
-            [],
-            [],
-            0,
-            UrlServiceTestFactory::build(),
-            new EventDispatcher(),
-            $pageState,
-            filterPanelTestTagService(),
-            HtmlServiceTestFactory::build(),
-            CurrentConfigTestFactory::get(),
-        );
+        new FilterPanelRenderer()
+            ->render(
+                LangTestFactory::get(),
+                $template,
+                '/admin.php?page=batch_manager',
+                [],
+                [],
+                0,
+                UrlServiceTestFactory::build(),
+                new EventDispatcher(),
+                $pageState,
+                filterPanelTestTagService(),
+                HtmlServiceTestFactory::build(),
+                CurrentConfigTestFactory::get(),
+            );
 
         $prefilters = $template->get_template_vars('prefilters');
         if (! is_array($prefilters)) {
@@ -143,12 +141,18 @@ test('render() shows every built-in prefilter and no active filter/selection whe
         // untranslated Lang here just echoes the English key back) -- a
         // fresh CurrentConfig defaults enableSynchronization() to true,
         // adding 'no_sync_md5sum'/'no_virtual_album' to the built-in 7.
-        expect($ids)->toBe(['all_photos', 'caddie', 'duplicates', 'last_import', 'no_album', 'no_sync_md5sum', 'no_tag', 'no_virtual_album', 'favorites'])
-            ->and($template->get_template_vars('filter'))->toBe([])
-            ->and($template->get_template_vars('selection'))->toBe([])
-            ->and($template->get_template_vars('associated_categories'))->toBe([])
-            ->and($template->get_template_vars('filter_tags'))->toBe([])
-            ->and($template->get_template_vars('ADMIN_PAGE_TITLE'))->toBe('Batch Manager');
+        expect($ids)
+            ->toBe(['all_photos', 'caddie', 'duplicates', 'last_import', 'no_album', 'no_sync_md5sum', 'no_tag', 'no_virtual_album', 'favorites'])
+            ->and($template->get_template_vars('filter'))
+            ->toBe([])
+            ->and($template->get_template_vars('selection'))
+            ->toBe([])
+            ->and($template->get_template_vars('associated_categories'))
+            ->toBe([])
+            ->and($template->get_template_vars('filter_tags'))
+            ->toBe([])
+            ->and($template->get_template_vars('ADMIN_PAGE_TITLE'))
+            ->toBe('Batch Manager');
     } finally {
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();

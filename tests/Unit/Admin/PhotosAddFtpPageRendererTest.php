@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Piwigo\Admin\PhotosAddFtpPageRenderer;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 
 /**
  * Piwigo\Admin\PhotosAddFtpPageRenderer -- zero-constructor, every
@@ -63,11 +63,15 @@ test('render() falls back to empty ftp help content when the real language file 
         $template->set_template_dir($tplDir);
         $template->set_filename('photos_add', 'photos_add.tpl');
 
-        new PhotosAddFtpPageRenderer()->render(LangTestFactory::get(), CurrentTemplate::current());
+        new PhotosAddFtpPageRenderer()
+            ->render(LangTestFactory::get(), CurrentTemplate::current());
 
-        expect($template->get_template_vars('FTP_HELP_CONTENT'))->toBe('')
-            ->and($template->get_template_vars('ADMIN_PAGE_TITLE'))->toBe('Upload Photos')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('ftp=|title=Upload Photos');
+        expect($template->get_template_vars('FTP_HELP_CONTENT'))
+            ->toBe('')
+            ->and($template->get_template_vars('ADMIN_PAGE_TITLE'))
+            ->toBe('Upload Photos')
+            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->toBe('ftp=|title=Upload Photos');
     } finally {
         photosAddFtpTestRrmdir($root);
         CurrentTemplate::current()->reset();

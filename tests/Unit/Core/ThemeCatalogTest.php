@@ -51,7 +51,8 @@ test('checkThemeInstalled returns true when the theme directory has a real theme
 
         $result = ThemeCatalog::checkThemeInstalled('my_theme', Paths::fromRoot($root), $currentConfig);
 
-        expect($result)->toBeTrue();
+        expect($result)
+            ->toBeTrue();
     } finally {
         themeCatalogTestRrmdir($root);
     }
@@ -67,7 +68,8 @@ test('checkThemeInstalled returns false when the theme directory has no themecon
 
         $result = ThemeCatalog::checkThemeInstalled('empty_theme', Paths::fromRoot($root), $currentConfig);
 
-        expect($result)->toBeFalse();
+        expect($result)
+            ->toBeFalse();
     } finally {
         themeCatalogTestRrmdir($root);
     }
@@ -83,7 +85,8 @@ test('checkThemeInstalled returns false for a theme id with no real directory at
 
         $result = ThemeCatalog::checkThemeInstalled('not_a_real_theme', Paths::fromRoot($root), $currentConfig);
 
-        expect($result)->toBeFalse();
+        expect($result)
+            ->toBeFalse();
     } finally {
         themeCatalogTestRrmdir($root);
     }

@@ -81,11 +81,13 @@ test('handle() fatal-errors when the requested theme is not among the scanned th
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect((string) $exception->response()->getBody())->toContain('Invalid theme');
+        expect((string) $exception->response()->getBody())
+            ->toContain('Invalid theme');
     } finally {
         unset($_GET['theme']);
         $currentConfig->setThemesDir($originalThemesDir);

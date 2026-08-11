@@ -103,7 +103,9 @@ function pwgImageTestMake(string $sourceFilepath, ?string $library = null): PwgI
  */
 final class PwgImageSpyImageFileControl implements ImageInterface
 {
-    /** @var list<string> */
+    /**
+     * @var list<string>
+     */
     public array $calls = [];
 
     public function __construct(
@@ -1482,8 +1484,10 @@ test('get_resize_result falls back to "0 KB" when the destination file is genuin
         restore_error_handler();
     }
 
-    expect($spy->calls)->toContain('write');
-    expect($result->size)->toBe('0 KB');
+    expect($spy->calls)
+        ->toContain('write');
+    expect($result->size)
+        ->toBe('0 KB');
 });
 
 test('get_resize_result computes the exact "X KB" size, floor not round/ceil', function (): void {
@@ -1496,7 +1500,8 @@ test('get_resize_result computes the exact "X KB" size, floor not round/ceil', f
 
     $result = $img->pwg_resize($dest, 100, 50, 77, automatic_rotation: false);
 
-    expect($result->size)->toBe('1 KB');
+    expect($result->size)
+        ->toBe('1 KB');
 });
 
 test('get_resize_result divides the destination size by exactly 1024, not 1023 or 1025', function (): void {
@@ -1510,7 +1515,8 @@ test('get_resize_result divides the destination size by exactly 1024, not 1023 o
 
     $result = $img->pwg_resize($dest, 100, 50, 77, automatic_rotation: false);
 
-    expect($result->size)->toBe('512 KB');
+    expect($result->size)
+        ->toBe('512 KB');
 });
 
 test('get_resize_result reports a real, accurately-scaled elapsed-time measurement', function (): void {
@@ -1526,9 +1532,10 @@ test('get_resize_result reports a real, accurately-scaled elapsed-time measureme
     // format (DecrementInteger/IncrementInteger on number_format()'s own
     // literal 2) via the regex itself.
     $slowImage = new class(200, 100) implements ImageInterface {
-        public function __construct(private readonly int|float $width, private readonly int|float $height)
-        {
-        }
+        public function __construct(
+            private readonly int|float $width,
+            private readonly int|float $height
+        ) {}
 
         public function get_width(): int|float
         {
@@ -1597,10 +1604,13 @@ test('get_resize_result reports a real, accurately-scaled elapsed-time measureme
 
         $result = $img->pwg_resize($dest, 100, 50, 77, automatic_rotation: false);
 
-        expect($result->time)->toMatch('/^\d+\.\d{2} ms$/');
+        expect($result->time)
+            ->toMatch('/^\d+\.\d{2} ms$/');
         $reportedMs = (float) $result->time;
-        expect($reportedMs)->toBeGreaterThanOrEqual(35.0)
-            ->and($reportedMs)->toBeLessThan(5000.0);
+        expect($reportedMs)
+            ->toBeGreaterThanOrEqual(35.0)
+            ->and($reportedMs)
+            ->toBeLessThan(5000.0);
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
     }
@@ -1665,8 +1675,10 @@ test('get_graphics_library_label formats the imagick-extension library and versi
         // the version number) into $match[0] -- a real, pre-existing
         // quirk of this codebase, not something this test is asserting
         // as newly-introduced behavior.
-        expect($label)->toStartWith('ImageMagick ')
-            ->and($label)->toMatch('/^ImageMagick ImageMagick \d+\.\d+\.\d+/');
+        expect($label)
+            ->toStartWith('ImageMagick ')
+            ->and($label)
+            ->toMatch('/^ImageMagick ImageMagick \d+\.\d+\.\d+/');
     } finally {
         CurrentConfigTestFactory::get()->setExtImagickDir($original);
         Kernel::reset();
@@ -1729,12 +1741,13 @@ test('get_ext_imagick_command/is_ext_imagick/get_graphics_library correctly loca
 
         expect($proc['exit'])->toBe(0, 'subprocess failed: ' . $proc['stderr']);
         $decoded = json_decode($proc['stdout'], true);
-        expect($decoded)->toBe([
-            'command' => 'magick',
-            'is_ext' => true,
-            'version' => '7.1.0-49',
-            'library' => 'ext_imagick/7.1.0-49',
-        ]);
+        expect($decoded)
+            ->toBe([
+                'command' => 'magick',
+                'is_ext' => true,
+                'version' => '7.1.0-49',
+                'library' => 'ext_imagick/7.1.0-49',
+            ]);
     } finally {
         unlink($fakeMagick);
         rmdir($dir);
@@ -1747,7 +1760,7 @@ test('destroy falls back to true when the underlying image has no destroy method
     // test uses a GD-backed image (which DOES implement destroy()), never
     // an image without one (e.g. a plugin-provided backend, per this
     // method's own docblock).
-    $fake = new class implements ImageInterface {
+    $fake = new class() implements ImageInterface {
         public function get_width(): int
         {
             return 1;
@@ -1810,7 +1823,8 @@ test('destroy falls back to true when the underlying image has no destroy method
     try {
         $img = pwgImageTestMake(pwgImageTestMarker() . '/no-destroy.whatever-unsupported-ext');
 
-        expect($img->destroy())->toBeTrue();
+        expect($img->destroy())
+            ->toBeTrue();
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
     }
@@ -1829,7 +1843,7 @@ test('destroy coerces and genuinely forwards the underlying image\'s own destroy
     // strict_types is a real TypeError; without the early return, this
     // method falls through to its own unconditional `return true;`
     // regardless of what the real destroy() returned.
-    $fake = new class implements ImageInterface {
+    $fake = new class() implements ImageInterface {
         public function get_width(): int
         {
             return 1;
@@ -1897,7 +1911,8 @@ test('destroy coerces and genuinely forwards the underlying image\'s own destroy
     try {
         $img = pwgImageTestMake(pwgImageTestMarker() . '/coerce-destroy.whatever-unsupported-ext');
 
-        expect($img->destroy())->toBeFalse();
+        expect($img->destroy())
+            ->toBeFalse();
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
     }

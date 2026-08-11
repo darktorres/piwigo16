@@ -355,7 +355,8 @@ test('scan skips a directory entry with an invalid id but keeps scanning the res
         $found = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
 
-        expect($found)->toHaveCount(20, 'break instead of continue on the invalid-id check would stop the scan early and miss some valid entries');
+        expect($found)
+            ->toHaveCount(20, 'break instead of continue on the invalid-id check would stop the scan early and miss some valid entries');
         for ($i = 0; $i < 20; $i++) {
             expect($found)->toHaveKey('valid_plugin_' . $i);
         }

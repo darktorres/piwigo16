@@ -14,11 +14,11 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -73,7 +73,9 @@ test('renderToString returns the real parsed footer output, with update-check an
         if (! $currentLogger instanceof CurrentLogger) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
-        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $currentLogger->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
 
         $conn = DbConnection::build();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService(
@@ -101,7 +103,8 @@ test('renderToString returns the real parsed footer output, with update-check an
 
         $output = PageTail::renderToString();
 
-        expect($output)->toContain('version=');
+        expect($output)
+            ->toContain('version=');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

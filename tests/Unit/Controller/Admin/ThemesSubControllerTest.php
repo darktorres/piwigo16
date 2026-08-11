@@ -11,10 +11,10 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -104,7 +104,8 @@ test('handle dispatches ?tab=standard_pages to the real standard-pages renderer'
 
         $subController->handle(new ServerRequest('GET', '/admin.php?page=themes&tab=standard_pages'));
 
-        expect($template->get_template_vars('ADMIN_CONTENT'))->toContain('themes_standard_pages_rendered=yes');
+        expect($template->get_template_vars('ADMIN_CONTENT'))
+            ->toContain('themes_standard_pages_rendered=yes');
     } finally {
         $_GET = $get;
         $_POST = $post;

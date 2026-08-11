@@ -46,8 +46,10 @@ test('initialize sets date_field/date_field_dql to date_available for a "posted"
 
     $calendar->initialize(calendarMonthlyTestScope());
 
-    expect($calendar->date_field)->toBe('date_available')
-        ->and($calendar->date_field_dql)->toBe('i.dateAvailable');
+    expect($calendar->date_field)
+        ->toBe('date_available')
+        ->and($calendar->date_field_dql)
+        ->toBe('i.dateAvailable');
 });
 
 test('initialize builds the real year/month/day SQL expressions, with Lang::months()\'s own real output as the month labels', function (): void {
@@ -82,8 +84,10 @@ test('get_date_where returns the real IS NOT NULL fallback for an empty chronolo
 
     $condition = $calendar->get_date_where();
 
-    expect($condition->sql)->toBe(' AND date_creation IS NOT NULL')
-        ->and($condition->parameters)->toBe([]);
+    expect($condition->sql)
+        ->toBe(' AND date_creation IS NOT NULL')
+        ->and($condition->parameters)
+        ->toBe([]);
 });
 
 test('get_date_where builds a real full-year range for a single-level chronology_date', function (): void {
@@ -94,8 +98,13 @@ test('get_date_where builds a real full-year range for a single-level chronology
 
     $condition = $calendar->get_date_where();
 
-    expect($condition->sql)->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
-        ->and($condition->parameters)->toBe(['dateWhereStart' => '2026-01-01', 'dateWhereEnd' => '2026-12-31 23:59:59']);
+    expect($condition->sql)
+        ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
+        ->and($condition->parameters)
+        ->toBe([
+            'dateWhereStart' => '2026-01-01',
+            'dateWhereEnd' => '2026-12-31 23:59:59',
+        ]);
 });
 
 test('get_date_where builds a real full-month range when only year+month are set', function (): void {
@@ -107,8 +116,13 @@ test('get_date_where builds a real full-month range when only year+month are set
     $condition = $calendar->get_date_where();
 
     // 2026 is not a leap year (2026 / 4 is not an integer) -- February has 28 days.
-    expect($condition->sql)->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
-        ->and($condition->parameters)->toBe(['dateWhereStart' => '2026-02-01', 'dateWhereEnd' => '2026-02-28 23:59:59']);
+    expect($condition->sql)
+        ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
+        ->and($condition->parameters)
+        ->toBe([
+            'dateWhereStart' => '2026-02-01',
+            'dateWhereEnd' => '2026-02-28 23:59:59',
+        ]);
 });
 
 test('get_date_where builds a real single-day range for a full year+month+day chronology_date', function (): void {
@@ -120,9 +134,15 @@ test('get_date_where builds a real single-day range for a full year+month+day ch
     $sqlCondition = $calendar->get_date_where(3, false);
     $dqlCondition = $calendar->get_date_where(3, true);
 
-    expect($sqlCondition->sql)->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
-        ->and($sqlCondition->parameters)->toBe(['dateWhereStart' => '2026-02-14', 'dateWhereEnd' => '2026-02-14 23:59:59'])
-        ->and($dqlCondition->sql)->toBe('i.dateCreation BETWEEN :dateWhereStart AND :dateWhereEnd');
+    expect($sqlCondition->sql)
+        ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
+        ->and($sqlCondition->parameters)
+        ->toBe([
+            'dateWhereStart' => '2026-02-14',
+            'dateWhereEnd' => '2026-02-14 23:59:59',
+        ])
+        ->and($dqlCondition->sql)
+        ->toBe('i.dateCreation BETWEEN :dateWhereStart AND :dateWhereEnd');
 });
 
 test('get_date_where filters by month/day alone (via calendar_levels) when the year is "any"', function (): void {
@@ -133,8 +153,13 @@ test('get_date_where filters by month/day alone (via calendar_levels) when the y
 
     $condition = $calendar->get_date_where();
 
-    expect($condition->sql)->toBe(' AND date_creation IS NOT NULL AND MONTH(date_creation)= :dateWhereMonth AND DAYOFMONTH(date_creation)= :dateWhereDay')
-        ->and($condition->parameters)->toBe(['dateWhereMonth' => 6, 'dateWhereDay' => 15]);
+    expect($condition->sql)
+        ->toBe(' AND date_creation IS NOT NULL AND MONTH(date_creation)= :dateWhereMonth AND DAYOFMONTH(date_creation)= :dateWhereDay')
+        ->and($condition->parameters)
+        ->toBe([
+            'dateWhereMonth' => 6,
+            'dateWhereDay' => 15,
+        ]);
 });
 
 test('get_date_where respects max_levels, dropping the day component from a full chronology_date', function (): void {
@@ -145,6 +170,11 @@ test('get_date_where respects max_levels, dropping the day component from a full
 
     $condition = $calendar->get_date_where(2);
 
-    expect($condition->sql)->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
-        ->and($condition->parameters)->toBe(['dateWhereStart' => '2026-02-01', 'dateWhereEnd' => '2026-02-28 23:59:59']);
+    expect($condition->sql)
+        ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
+        ->and($condition->parameters)
+        ->toBe([
+            'dateWhereStart' => '2026-02-01',
+            'dateWhereEnd' => '2026-02-28 23:59:59',
+        ]);
 });

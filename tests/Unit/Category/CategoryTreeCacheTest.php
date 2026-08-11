@@ -74,21 +74,36 @@ test('getForUser computes and caches a real value on a cache miss', function ():
     $pool = new ArrayAdapter();
     $cache = new CategoryTreeCache(categoryTreeCacheTestService(), categoryTreeCacheTestRepo(), $pool);
 
-    $result = $cache->getForUser(['id' => 999999, 'level' => 0, 'forbidden_categories' => '']);
+    $result = $cache->getForUser([
+        'id' => 999999,
+        'level' => 0,
+        'forbidden_categories' => '',
+    ]);
 
     $item = $pool->getItem('tree_999999');
-    expect($item->isHit())->toBeTrue()
-        ->and($item->get())->toBe($result);
+    expect($item->isHit())
+        ->toBeTrue()
+        ->and($item->get())
+        ->toBe($result);
 });
 
 test('getForUser returns the cached value verbatim on a cache hit, without recomputing it', function (): void {
     $pool = new ArrayAdapter();
     $item = $pool->getItem('tree_999999');
-    $item->set(['SENTINEL' => 'CACHED-VALUE-NOT-RECOMPUTED']);
+    $item->set([
+        'SENTINEL' => 'CACHED-VALUE-NOT-RECOMPUTED',
+    ]);
     $pool->save($item);
     $cache = new CategoryTreeCache(categoryTreeCacheTestService(), categoryTreeCacheTestRepo(), $pool);
 
-    $result = $cache->getForUser(['id' => 999999, 'level' => 0, 'forbidden_categories' => '']);
+    $result = $cache->getForUser([
+        'id' => 999999,
+        'level' => 0,
+        'forbidden_categories' => '',
+    ]);
 
-    expect($result)->toBe(['SENTINEL' => 'CACHED-VALUE-NOT-RECOMPUTED']);
+    expect($result)
+        ->toBe([
+            'SENTINEL' => 'CACHED-VALUE-NOT-RECOMPUTED',
+        ]);
 });

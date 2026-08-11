@@ -88,23 +88,35 @@ afterEach(function (): void {
 test('getInfo returns a 404 PwgError for an image_id with no real match', function (): void {
     $ws = pwgImagesTestSubject();
 
-    $result = $ws->getInfo(['image_id' => 999999, 'comments_page' => 0, 'comments_per_page' => 10], pwgImagesTestServer());
+    $result = $ws->getInfo([
+        'image_id' => 999999,
+        'comments_page' => 0,
+        'comments_per_page' => 10,
+    ], pwgImagesTestServer());
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(404)
-            ->and($result->message())->toBe('image_id not found');
+        expect($result->code())
+            ->toBe(404)
+            ->and($result->message())
+            ->toBe('image_id not found');
     }
 });
 
 test('delete returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgImagesTestSubject();
 
-    $result = $ws->delete(['image_id' => '1', 'pwg_token' => 'wrong-token'], pwgImagesTestServer());
+    $result = $ws->delete([
+        'image_id' => '1',
+        'pwg_token' => 'wrong-token',
+    ], pwgImagesTestServer());
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -126,41 +138,60 @@ test('setInfo returns a 403 PwgError when a submitted pwg_token does not match t
         'pwg_token' => 'wrong-token',
     ], pwgImagesTestServer());
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
 test('formatsDelete returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgImagesTestSubject();
 
-    $result = $ws->formatsDelete(['format_id' => 1, 'pwg_token' => 'wrong-token'], pwgImagesTestServer());
+    $result = $ws->formatsDelete([
+        'format_id' => 1,
+        'pwg_token' => 'wrong-token',
+    ], pwgImagesTestServer());
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
 test('deleteOrphans returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgImagesTestSubject();
 
-    $result = $ws->deleteOrphans(['block_size' => 1000, 'pwg_token' => 'wrong-token'], pwgImagesTestServer());
+    $result = $ws->deleteOrphans([
+        'block_size' => 1000,
+        'pwg_token' => 'wrong-token',
+    ], pwgImagesTestServer());
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
 test('setCategory returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgImagesTestSubject();
 
-    $result = $ws->setCategory(['image_id' => [1], 'category_id' => 1, 'action' => 'associate', 'pwg_token' => 'wrong-token'], pwgImagesTestServer());
+    $result = $ws->setCategory([
+        'image_id' => [1],
+        'category_id' => 1,
+        'action' => 'associate',
+        'pwg_token' => 'wrong-token',
+    ], pwgImagesTestServer());
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });

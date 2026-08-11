@@ -98,7 +98,8 @@ test('register wires up a large, representative set of real pwg.* methods', func
     $registrar->register(new WsAddMethods($server));
 
     foreach (['pwg.getVersion', 'pwg.categories.getList', 'pwg.categories.getImages', 'pwg.images.getInfo', 'pwg.tags.getList', 'pwg.groups.getList', 'pwg.users.getList', 'pwg.session.login', 'pwg.session.logout', 'pwg.plugins.performAction', 'pwg.themes.performAction'] as $methodName) {
-        expect($server->hasMethod($methodName))->toBeTrue("expected {$methodName} to be registered");
+        expect($server->hasMethod($methodName))
+            ->toBeTrue("expected {$methodName} to be registered");
     }
 });
 
@@ -111,8 +112,14 @@ test('register marks pwg.plugins.performAction/pwg.themes.performAction admin_on
 
     $registrar->register(new WsAddMethods($server));
 
-    expect($server->getMethodOptions('pwg.plugins.performAction'))->toBe(['admin_only' => true])
-        ->and($server->getMethodOptions('pwg.themes.performAction'))->toBe(['admin_only' => true]);
+    expect($server->getMethodOptions('pwg.plugins.performAction'))
+        ->toBe([
+            'admin_only' => true,
+        ])
+        ->and($server->getMethodOptions('pwg.themes.performAction'))
+        ->toBe([
+            'admin_only' => true,
+        ]);
 });
 
 test('register marks pwg.users.setInfo both admin_only and post_only', function (): void {
@@ -124,7 +131,11 @@ test('register marks pwg.users.setInfo both admin_only and post_only', function 
 
     $registrar->register(new WsAddMethods($server));
 
-    expect($server->getMethodOptions('pwg.users.setInfo'))->toBe(['admin_only' => true, 'post_only' => true]);
+    expect($server->getMethodOptions('pwg.users.setInfo'))
+        ->toBe([
+            'admin_only' => true,
+            'post_only' => true,
+        ]);
 });
 
 test('register marks pwg.session.login post_only, with no admin_only restriction', function (): void {
@@ -136,7 +147,10 @@ test('register marks pwg.session.login post_only, with no admin_only restriction
 
     $registrar->register(new WsAddMethods($server));
 
-    expect($server->getMethodOptions('pwg.session.login'))->toBe(['post_only' => true]);
+    expect($server->getMethodOptions('pwg.session.login'))
+        ->toBe([
+            'post_only' => true,
+        ]);
 });
 
 test('register leaves pwg.categories.getList unrestricted (no admin_only/post_only)', function (): void {
@@ -148,7 +162,8 @@ test('register leaves pwg.categories.getList unrestricted (no admin_only/post_on
 
     $registrar->register(new WsAddMethods($server));
 
-    expect($server->getMethodOptions('pwg.categories.getList'))->toBe([]);
+    expect($server->getMethodOptions('pwg.categories.getList'))
+        ->toBe([]);
 });
 
 test('register merges the shared f_* filter params into pwg.categories.getImages\' signature', function (): void {
@@ -162,5 +177,6 @@ test('register merges the shared f_* filter params into pwg.categories.getImages
 
     $signature = $server->getMethodSignature('pwg.categories.getImages');
 
-    expect($signature)->toHaveKeys(['cat_id', 'recursive', 'per_page', 'page', 'order', 'f_min_rate', 'f_max_rate', 'f_min_hit', 'f_max_hit', 'f_min_ratio', 'f_max_ratio', 'f_max_level', 'f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created']);
+    expect($signature)
+        ->toHaveKeys(['cat_id', 'recursive', 'per_page', 'page', 'order', 'f_min_rate', 'f_max_rate', 'f_min_hit', 'f_max_hit', 'f_min_ratio', 'f_max_ratio', 'f_max_level', 'f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created']);
 });

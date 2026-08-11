@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Category\CategoryDefaultRenderer;
+use Piwigo\Comment\CommentEntity;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
@@ -11,7 +12,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
-use Piwigo\Comment\CommentEntity;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
@@ -19,13 +19,13 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -121,8 +121,10 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
         // parsing the handle -- 'thumbnails' itself is genuinely gone by
         // the time render() returns; THUMBNAILS (the parsed output) is
         // the real, lasting observable.
-        expect($slideshowUrl)->toBeNull()
-            ->and($template->get_template_vars('THUMBNAILS'))->toBe('count=0');
+        expect($slideshowUrl)
+            ->toBeNull()
+            ->and($template->get_template_vars('THUMBNAILS'))
+            ->toBe('count=0');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

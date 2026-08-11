@@ -14,13 +14,13 @@ use Piwigo\Core\Paths;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -103,11 +103,16 @@ test('render() returns a no-op result for a non-categories section with no items
 
         $result = $renderer->render(Section::Tags, null, [], 'posted', null, null, [], false);
 
-        expect($result->items)->toBe([])
-            ->and($result->comment)->toBe('')
-            ->and($result->chronologyDate)->toBe([])
-            ->and($result->chronologyStyle)->toBeNull()
-            ->and($result->chronologyView)->toBeNull();
+        expect($result->items)
+            ->toBe([])
+            ->and($result->comment)
+            ->toBe('')
+            ->and($result->chronologyDate)
+            ->toBe([])
+            ->and($result->chronologyStyle)
+            ->toBeNull()
+            ->and($result->chronologyView)
+            ->toBeNull();
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

@@ -7,8 +7,8 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\AppInfo;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsError;
@@ -94,7 +94,8 @@ test('getVersion returns the real app version constant', function (): void {
 
     $result = $ws->getVersion([], $server);
 
-    expect($result)->toBe(AppInfo::VERSION);
+    expect($result)
+        ->toBe(AppInfo::VERSION);
 });
 
 test('getMissingDerivatives rejects a types list with no real defined type match', function (): void {
@@ -119,10 +120,13 @@ test('getMissingDerivatives rejects a types list with no real defined type match
         'f_max_date_created' => null,
     ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(WsError::INVALID_PARAM)
-            ->and($result->message())->toBe('Invalid types');
+        expect($result->code())
+            ->toBe(WsError::INVALID_PARAM)
+            ->and($result->message())
+            ->toBe('Invalid types');
     }
 });
 
@@ -135,12 +139,18 @@ test('sessionLogin returns a 401 PwgError when called with an active API key', f
     }
     $apiKeyRequestFlag->activate();
 
-    $result = $ws->sessionLogin(['username' => 'someone', 'password' => 'anything'], $server);
+    $result = $ws->sessionLogin([
+        'username' => 'someone',
+        'password' => 'anything',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(401)
-            ->and($result->message())->toBe('Cannot use this method with an api key');
+        expect($result->code())
+            ->toBe(401)
+            ->and($result->message())
+            ->toBe('Cannot use this method with an api key');
     }
 });
 
@@ -155,10 +165,13 @@ test('sessionLogout returns a 401 PwgError when called with an active API key', 
 
     $result = $ws->sessionLogout([], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(401)
-            ->and($result->message())->toBe('Cannot use this method with an api key');
+        expect($result->code())
+            ->toBe(401)
+            ->and($result->message())
+            ->toBe('Cannot use this method with an api key');
     }
 });
 
@@ -177,9 +190,12 @@ test('getActivityList rejects an unparsable date_min', function (): void {
         'action' => null,
     ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(WsError::INVALID_PARAM)
-            ->and($result->message())->toBe('Invalid date_min');
+        expect($result->code())
+            ->toBe(WsError::INVALID_PARAM)
+            ->and($result->message())
+            ->toBe('Invalid date_min');
     }
 });

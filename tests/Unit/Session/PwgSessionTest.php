@@ -28,14 +28,21 @@ test('open/write/read/close/destroy/gc all delegate to a real SessionService rou
     $pwgSession = new PwgSession($service, new CurrentLogger());
     $sessionId = str_replace('.', '-', uniqid('pwg-session-test-', true));
 
-    expect($pwgSession->open('', ''))->toBeTrue()
-        ->and($pwgSession->write($sessionId, 'pwg_uid|i:7;'))->toBeTrue()
-        ->and($pwgSession->read($sessionId))->toBe('pwg_uid|i:7;')
-        ->and($pwgSession->close())->toBeTrue();
+    expect($pwgSession->open('', ''))
+        ->toBeTrue()
+        ->and($pwgSession->write($sessionId, 'pwg_uid|i:7;'))
+        ->toBeTrue()
+        ->and($pwgSession->read($sessionId))
+        ->toBe('pwg_uid|i:7;')
+        ->and($pwgSession->close())
+        ->toBeTrue();
 
     $gcResult = $pwgSession->gc(1440);
-    expect($gcResult)->toBeGreaterThanOrEqual(0);
+    expect($gcResult)
+        ->toBeGreaterThanOrEqual(0);
 
-    expect($pwgSession->destroy($sessionId))->toBeTrue()
-        ->and($pwgSession->read($sessionId))->toBe('');
+    expect($pwgSession->destroy($sessionId))
+        ->toBeTrue()
+        ->and($pwgSession->read($sessionId))
+        ->toBe('');
 });

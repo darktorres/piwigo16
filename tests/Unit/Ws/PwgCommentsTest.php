@@ -108,10 +108,13 @@ test('getList returns a 403 PwgError when comments are disabled', function (): v
 
     $result = $ws->getList(pwgCommentsTestBaseParams(), $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403)
-            ->and($result->message())->toBe('Comments are disabled');
+        expect($result->code())
+            ->toBe(403)
+            ->and($result->message())
+            ->toBe('Comments are disabled');
     }
 });
 
@@ -120,12 +123,18 @@ test('getList returns a 401 PwgError for a status outside the allowlist', functi
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
-    $result = $ws->getList([...pwgCommentsTestBaseParams(), 'status' => 'not-a-real-status'], $server);
+    $result = $ws->getList([
+        ...pwgCommentsTestBaseParams(),
+        'status' => 'not-a-real-status',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(401)
-            ->and($result->message())->toBe('Status must be: all, pending or validated');
+        expect($result->code())
+            ->toBe(401)
+            ->and($result->message())
+            ->toBe('Status must be: all, pending or validated');
     }
 });
 
@@ -134,12 +143,18 @@ test('getList returns a 401 PwgError for a per_page outside the allowed set', fu
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
-    $result = $ws->getList([...pwgCommentsTestBaseParams(), 'per_page' => 7], $server);
+    $result = $ws->getList([
+        ...pwgCommentsTestBaseParams(),
+        'per_page' => 7,
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(401)
-            ->and($result->message())->toBe('Per page must be: 5, 10, 25 or 50');
+        expect($result->code())
+            ->toBe(401)
+            ->and($result->message())
+            ->toBe('Per page must be: 5, 10, 25 or 50');
     }
 });
 
@@ -148,12 +163,18 @@ test('getList returns a 401 PwgError for an unparsable f_min_date', function ():
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
-    $result = $ws->getList([...pwgCommentsTestBaseParams(), 'f_min_date' => 'not-a-real-date'], $server);
+    $result = $ws->getList([
+        ...pwgCommentsTestBaseParams(),
+        'f_min_date' => 'not-a-real-date',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(401)
-            ->and($result->message())->toBe('Invalid f_min_date');
+        expect($result->code())
+            ->toBe(401)
+            ->and($result->message())
+            ->toBe('Invalid f_min_date');
     }
 });
 
@@ -162,12 +183,18 @@ test('getList returns a 401 PwgError for an unparsable f_max_date', function ():
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
-    $result = $ws->getList([...pwgCommentsTestBaseParams(), 'f_max_date' => 'not-a-real-date'], $server);
+    $result = $ws->getList([
+        ...pwgCommentsTestBaseParams(),
+        'f_max_date' => 'not-a-real-date',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(401)
-            ->and($result->message())->toBe('Invalid f_max_date');
+        expect($result->code())
+            ->toBe(401)
+            ->and($result->message())
+            ->toBe('Invalid f_max_date');
     }
 });
 
@@ -175,11 +202,16 @@ test('delete returns a 403 PwgError when the submitted pwg_token does not match 
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
-    $result = $ws->delete(['comment_id' => [1], 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->delete([
+        'comment_id' => [1],
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });
 
@@ -187,10 +219,15 @@ test('validate returns a 403 PwgError when the submitted pwg_token does not matc
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
-    $result = $ws->validate(['comment_id' => [1], 'pwg_token' => 'wrong-token'], $server);
+    $result = $ws->validate([
+        'comment_id' => [1],
+        'pwg_token' => 'wrong-token',
+    ], $server);
 
-    expect($result)->toBeInstanceOf(PwgError::class);
+    expect($result)
+        ->toBeInstanceOf(PwgError::class);
     if ($result instanceof PwgError) {
-        expect($result->code())->toBe(403);
+        expect($result->code())
+            ->toBe(403);
     }
 });

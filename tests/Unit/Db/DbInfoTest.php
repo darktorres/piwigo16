@@ -23,7 +23,8 @@ test('version returns a real, non-empty DB server version string', function (): 
 
     $result = $dbInfo->version();
 
-    expect($result)->not->toBe('');
+    expect($result)
+        ->not->toBe('');
 });
 
 test('currentDateTime returns the real DB server\'s current datetime', function (): void {
@@ -31,7 +32,8 @@ test('currentDateTime returns the real DB server\'s current datetime', function 
 
     $result = $dbInfo->currentDateTime();
 
-    expect($result)->toBeString();
+    expect($result)
+        ->toBeString();
     if (is_string($result)) {
         expect($result)->not->toBe('');
     }
@@ -42,7 +44,8 @@ test('getTableFingerprint returns a real "<epoch>_<count>" fingerprint for a rea
 
     $result = $dbInfo->getTableFingerprint('categories');
 
-    expect($result)->toMatch('/^\d+_\d+$/');
+    expect($result)
+        ->toMatch('/^\d+_\d+$/');
 });
 
 test('resyncIdentitySequence runs cleanly against the real users table on either platform', function (): void {

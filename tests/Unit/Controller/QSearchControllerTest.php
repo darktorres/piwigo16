@@ -160,13 +160,16 @@ test('__invoke redirects to search.php with the given q parameter', function ():
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
         $response = $exception->response();
-        expect($response->getStatusCode())->toBe(302)
-            ->and($response->getHeaderLine('Location'))->toContain('search.php?q=nature');
+        expect($response->getStatusCode())
+            ->toBe(302)
+            ->and($response->getHeaderLine('Location'))
+            ->toContain('search.php?q=nature');
     } finally {
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
@@ -189,11 +192,13 @@ test('__invoke redirects with an empty q when the query param is missing', funct
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect($exception->response()->getHeaderLine('Location'))->toContain('search.php?q=');
+        expect($exception->response()->getHeaderLine('Location'))
+            ->toContain('search.php?q=');
     } finally {
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();

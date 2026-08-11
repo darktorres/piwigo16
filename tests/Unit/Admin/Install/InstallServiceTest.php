@@ -125,7 +125,8 @@ test('executeSqlfile() creates tables, applies prefix replacement, and skips DRO
             throw new LogicException('expected an array row');
         }
         $id = $row['id'];
-        expect(is_numeric($id) ? (int) $id : null)->toBe(42)
+        expect(is_numeric($id) ? (int) $id : null)
+            ->toBe(42)
             ->and($row['label'])->toBe('widget-forty-two');
     } finally {
         $conn->executeStatement('DROP TABLE IF EXISTS ' . $prefix . 'gizmo');
@@ -178,9 +179,12 @@ test('installDbConnect() returns a working connection and records no errors for 
     if (! $conn instanceof Doctrine\DBAL\Connection) {
         throw new LogicException('expected a working Connection, got null');
     }
-    expect($errors)->toBe([])
-        ->and($infos)->toBe([])
-        ->and($conn->fetchOne('SELECT 1'))->toBe(1);
+    expect($errors)
+        ->toBe([])
+        ->and($infos)
+        ->toBe([])
+        ->and($conn->fetchOne('SELECT 1'))
+        ->toBe(1);
 });
 
 test('installDbConnect() returns null and records an error for a wrong password', function (): void {
@@ -196,8 +200,10 @@ test('installDbConnect() returns null and records an error for a wrong password'
     $user = getenv('PIWIGO_DB_USER');
     $user = $user === false ? '' : $user;
 
-    expect($conn)->toBeNull()
-        ->and($errors)->toHaveCount(1);
+    expect($conn)
+        ->toBeNull()
+        ->and($errors)
+        ->toHaveCount(1);
     // Specific content, not just "some non-empty string" -- proves this
     // really is the driver's authentication failure, distinct from the
     // "unknown database" branch below. Real wording (and username
@@ -211,7 +217,8 @@ test('installDbConnect() returns null and records an error for a wrong password'
         expect($errors[0])->toContain('Access denied')
             ->toContain("'" . $user . "'");
     }
-    expect($infos)->toBe([]);
+    expect($infos)
+        ->toBe([]);
 });
 
 test('installDbConnect() returns null and records an error for an unknown database name', function (): void {
@@ -228,8 +235,10 @@ test('installDbConnect() returns null and records an error for an unknown databa
     $driver = getenv('PIWIGO_DB_DRIVER');
     $driver = $driver === false || $driver === '' ? 'mysqli' : $driver;
 
-    expect($conn)->toBeNull()
-        ->and($errors)->toHaveCount(1)
+    expect($conn)
+        ->toBeNull()
+        ->and($errors)
+        ->toHaveCount(1)
         ->and($errors[0])->toContain($driver === 'pgsql' ? 'does not exist' : 'Unknown database')
         ->toContain('piwigo_test_db_that_does_not_exist_xyz');
 });
@@ -301,7 +310,7 @@ test('activateCoreThemes() does not activate the non-selectable default placehol
         InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
         $conn = DbConnection::build();
-        expect($conn->fetchAssociative('SELECT id FROM ' . 'themes' . ' WHERE id = ' . $conn->quote($themeId)))->toBeFalse();
+        expect($conn->fetchAssociative('SELECT id FROM themes WHERE id = ' . $conn->quote($themeId)))->toBeFalse();
     } finally {
         FilesystemHelper::deltree($themesDir);
         installServiceTestResetKernel();
@@ -317,7 +326,7 @@ test('activateCoreThemes() activates nothing when no default template theme dire
         InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
         $conn = DbConnection::build();
-        expect($conn->fetchAssociative('SELECT id FROM ' . 'themes' . ' WHERE id = ' . $conn->quote(AppInfo::DEFAULT_TEMPLATE)))->toBeFalse();
+        expect($conn->fetchAssociative('SELECT id FROM themes WHERE id = ' . $conn->quote(AppInfo::DEFAULT_TEMPLATE)))->toBeFalse();
     } finally {
         FilesystemHelper::deltree($emptyThemesDir);
         installServiceTestResetKernel();
@@ -341,7 +350,7 @@ test('activateCorePlugins() scans but auto-activates nothing, even when a real f
         InstallService::activateCorePlugins(LangTestFactory::get(), Paths::fromRoot($root), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
 
         $conn = DbConnection::build();
-        expect($conn->fetchAssociative('SELECT id FROM ' . 'plugins' . ' WHERE id = ' . $conn->quote($pluginId)))->toBeFalse();
+        expect($conn->fetchAssociative('SELECT id FROM plugins WHERE id = ' . $conn->quote($pluginId)))->toBeFalse();
     } finally {
         FilesystemHelper::deltree($root);
         installServiceTestResetKernel();
@@ -360,7 +369,7 @@ test('activateCorePlugins() is a no-op for an empty plugins directory', function
         // via a different, simpler route (nothing found at all, rather
         // than something found and then deliberately not activated).
         $conn = DbConnection::build();
-        expect($conn->fetchAssociative('SELECT id FROM ' . 'plugins' . ' WHERE id = ' . $conn->quote('p17_unit_install_test_plugin')))->toBeFalse();
+        expect($conn->fetchAssociative('SELECT id FROM plugins WHERE id = ' . $conn->quote('p17_unit_install_test_plugin')))->toBeFalse();
     } finally {
         FilesystemHelper::deltree($root);
         installServiceTestResetKernel();

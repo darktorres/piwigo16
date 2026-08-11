@@ -49,16 +49,23 @@ afterEach(function (): void {
 test('add_anomaly records a new anomaly with a stable md5 id and reflects a real callable correction_fct', function (): void {
     $checkIntegrity = checkIntegrityTestSubject();
 
-    $checkIntegrity->add_anomaly('Something is wrong', 'strtoupper', ['arg' => 'x'], 'Fix it');
+    $checkIntegrity->add_anomaly('Something is wrong', 'strtoupper', [
+        'arg' => 'x',
+    ], 'Fix it');
 
-    expect($checkIntegrity->retrieve_list)->toHaveCount(1);
+    expect($checkIntegrity->retrieve_list)
+        ->toHaveCount(1);
     $entry = $checkIntegrity->retrieve_list[0];
     expect($entry['anomaly'])->toBe('Something is wrong')
         ->and($entry['correction_fct'])->toBe('strtoupper')
-        ->and($entry['correction_fct_args'])->toBe(['arg' => 'x'])
+        ->and($entry['correction_fct_args'])->toBe([
+            'arg' => 'x',
+        ])
         ->and($entry['correction_msg'])->toBe('Fix it')
         ->and($entry['is_callable'])->toBeTrue()
-        ->and($entry['id'])->toBe(md5('Something is wrong' . 'strtoupper' . serialize(['arg' => 'x']) . 'Fix it'));
+        ->and($entry['id'])->toBe(md5('Something is wrongstrtoupper' . serialize([
+            'arg' => 'x',
+        ]) . 'Fix it'));
 });
 
 test('add_anomaly marks is_callable false for a non-existent correction function', function (): void {
@@ -71,13 +78,15 @@ test('add_anomaly marks is_callable false for a non-existent correction function
 
 test('add_anomaly diverts an already-ignored anomaly id into build_ignore_list instead of retrieve_list', function (): void {
     $checkIntegrity = checkIntegrityTestSubject();
-    $alreadyIgnoredId = md5('Already known' . '' . serialize(null) . '');
+    $alreadyIgnoredId = md5('Already known' . serialize(null) . '');
     $checkIntegrity->ignore_list = [$alreadyIgnoredId];
 
     $checkIntegrity->add_anomaly('Already known');
 
-    expect($checkIntegrity->retrieve_list)->toBe([])
-        ->and($checkIntegrity->build_ignore_list)->toBe([$alreadyIgnoredId]);
+    expect($checkIntegrity->retrieve_list)
+        ->toBe([])
+        ->and($checkIntegrity->build_ignore_list)
+        ->toBe([$alreadyIgnoredId]);
 });
 
 test('get_htlm_links_more_info returns real forum/wiki links composed via AdminUiHelper::pwgUrl', function (): void {
@@ -85,6 +94,8 @@ test('get_htlm_links_more_info returns real forum/wiki links composed via AdminU
 
     $result = $checkIntegrity->get_htlm_links_more_info();
 
-    expect($result)->toContain('href="' . AppInfo::URL . '/forum"')
-        ->and($result)->toContain('href="' . AppInfo::URL . '/doc"');
+    expect($result)
+        ->toContain('href="' . AppInfo::URL . '/forum"')
+        ->and($result)
+        ->toContain('href="' . AppInfo::URL . '/doc"');
 });

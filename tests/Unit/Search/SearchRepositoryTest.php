@@ -78,7 +78,7 @@ function searchTestUuid(): string
 }
 
 afterEach(function (): void {
-    DbConnection::build()->executeStatement("DELETE FROM " . 'search' . " WHERE search_uuid LIKE 'psk-rt%'");
+    DbConnection::build()->executeStatement('DELETE FROM search' . " WHERE search_uuid LIKE 'psk-rt%'");
 });
 
 test('findSavedSearchByUuid() returns null for no match', function (): void {

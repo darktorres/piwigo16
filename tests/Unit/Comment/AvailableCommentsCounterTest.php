@@ -39,13 +39,16 @@ test('count returns the memoized value directly, without recomputing it', functi
         theme: '',
         status: UserStatus::Admin,
         enabledHigh: false,
-        rawAttributes: ['nb_available_comments' => 987654],
+        rawAttributes: [
+            'nb_available_comments' => 987654,
+        ],
     ));
     $counter = availableCommentsCounterTestSubject($currentUser, $currentConfig);
 
     $result = $counter->count();
 
-    expect($result)->toBe(987654);
+    expect($result)
+        ->toBe(987654);
 });
 
 test('count computes a real value on a cache miss and memoizes it back onto the CurrentUser', function (): void {
@@ -64,6 +67,7 @@ test('count computes a real value on a cache miss and memoizes it back onto the 
 
     $result = $counter->count();
 
-    expect($result)->toBeGreaterThanOrEqual(0)
+    expect($result)
+        ->toBeGreaterThanOrEqual(0)
         ->and($currentUser->get()->rawAttributes['nb_available_comments'] ?? null)->toBe($result);
 });

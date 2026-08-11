@@ -6,10 +6,10 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\PwgError;
@@ -101,11 +101,17 @@ test('pluginsPerformAction returns a 403 PwgError when the submitted pwg_token d
             throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
         }
 
-        $result = $ws->pluginsPerformAction(['action' => 'activate', 'plugin' => 'my_plugin', 'pwg_token' => 'wrong-token'], $server);
+        $result = $ws->pluginsPerformAction([
+            'action' => 'activate',
+            'plugin' => 'my_plugin',
+            'pwg_token' => 'wrong-token',
+        ], $server);
 
-        expect($result)->toBeInstanceOf(PwgError::class);
+        expect($result)
+            ->toBeInstanceOf(PwgError::class);
         if ($result instanceof PwgError) {
-            expect($result->code())->toBe(403);
+            expect($result->code())
+                ->toBe(403);
         }
     } finally {
         CurrentTemplate::current()->reset();
@@ -128,11 +134,17 @@ test('themesPerformAction returns a 403 PwgError when the submitted pwg_token do
             throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
         }
 
-        $result = $ws->themesPerformAction(['action' => 'activate', 'theme' => 'my_theme', 'pwg_token' => 'wrong-token'], $server);
+        $result = $ws->themesPerformAction([
+            'action' => 'activate',
+            'theme' => 'my_theme',
+            'pwg_token' => 'wrong-token',
+        ], $server);
 
-        expect($result)->toBeInstanceOf(PwgError::class);
+        expect($result)
+            ->toBeInstanceOf(PwgError::class);
         if ($result instanceof PwgError) {
-            expect($result->code())->toBe(403);
+            expect($result->code())
+                ->toBe(403);
         }
     } finally {
         CurrentTemplate::current()->reset();
@@ -154,12 +166,20 @@ test('update returns a 401 PwgError when extensions install is disabled', functi
             throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
         }
 
-        $result = $ws->update(['type' => 'plugins', 'id' => 'my_plugin', 'revision' => '1', 'pwg_token' => 'anything'], $server);
+        $result = $ws->update([
+            'type' => 'plugins',
+            'id' => 'my_plugin',
+            'revision' => '1',
+            'pwg_token' => 'anything',
+        ], $server);
 
-        expect($result)->toBeInstanceOf(PwgError::class);
+        expect($result)
+            ->toBeInstanceOf(PwgError::class);
         if ($result instanceof PwgError) {
-            expect($result->code())->toBe(401)
-                ->and($result->message())->toBe('Piwigo extensions install/update system is disabled');
+            expect($result->code())
+                ->toBe(401)
+                ->and($result->message())
+                ->toBe('Piwigo extensions install/update system is disabled');
         }
     } finally {
         CurrentConfigTestFactory::get()->reset();
@@ -180,12 +200,20 @@ test('ignoreUpdate returns a 401 PwgError when the user is not a webmaster', fun
             throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
         }
 
-        $result = $ws->ignoreUpdate(['type' => null, 'id' => null, 'reset' => false, 'pwg_token' => 'anything'], $server);
+        $result = $ws->ignoreUpdate([
+            'type' => null,
+            'id' => null,
+            'reset' => false,
+            'pwg_token' => 'anything',
+        ], $server);
 
-        expect($result)->toBeInstanceOf(PwgError::class);
+        expect($result)
+            ->toBeInstanceOf(PwgError::class);
         if ($result instanceof PwgError) {
-            expect($result->code())->toBe(401)
-                ->and($result->message())->toBe('Access denied');
+            expect($result->code())
+                ->toBe(401)
+                ->and($result->message())
+                ->toBe('Access denied');
         }
     } finally {
         Kernel::reset();
@@ -205,11 +233,18 @@ test('ignoreUpdate returns a 403 PwgError when the submitted pwg_token does not 
             throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
         }
 
-        $result = $ws->ignoreUpdate(['type' => null, 'id' => null, 'reset' => false, 'pwg_token' => 'wrong-token'], $server);
+        $result = $ws->ignoreUpdate([
+            'type' => null,
+            'id' => null,
+            'reset' => false,
+            'pwg_token' => 'wrong-token',
+        ], $server);
 
-        expect($result)->toBeInstanceOf(PwgError::class);
+        expect($result)
+            ->toBeInstanceOf(PwgError::class);
         if ($result instanceof PwgError) {
-            expect($result->code())->toBe(403);
+            expect($result->code())
+                ->toBe(403);
         }
     } finally {
         Kernel::reset();

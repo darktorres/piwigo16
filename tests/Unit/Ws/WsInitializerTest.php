@@ -52,12 +52,17 @@ afterEach(function (): void {
 test('init defaults to a REST request handler and REST response encoder when no format is requested', function (): void {
     unset($_GET['format']);
 
-    $server = wsInitializerTestGet()->init();
+    $server = wsInitializerTestGet()
+        ->init();
 
-    expect($server->_requestFormat)->toBe('rest')
-        ->and($server->_requestHandler)->toBeInstanceOf(PwgRestRequestHandler::class)
-        ->and($server->_responseFormat)->toBe('rest')
-        ->and($server->_responseEncoder)->toBeInstanceOf(PwgRestEncoder::class);
+    expect($server->_requestFormat)
+        ->toBe('rest')
+        ->and($server->_requestHandler)
+        ->toBeInstanceOf(PwgRestRequestHandler::class)
+        ->and($server->_responseFormat)
+        ->toBe('rest')
+        ->and($server->_responseEncoder)
+        ->toBeInstanceOf(PwgRestEncoder::class);
 });
 
 test('init memoizes the built PwgServer across repeated calls on the same instance', function (): void {
@@ -66,41 +71,54 @@ test('init memoizes the built PwgServer across repeated calls on the same instan
     $first = $wsInitializer->init();
     $second = $wsInitializer->init();
 
-    expect($second)->toBe($first);
+    expect($second)
+        ->toBe($first);
 });
 
 test('init selects the response encoder matching ?format=json', function (): void {
     $_GET['format'] = 'json';
 
-    $server = wsInitializerTestGet()->init();
+    $server = wsInitializerTestGet()
+        ->init();
 
-    expect($server->_responseFormat)->toBe('json')
-        ->and($server->_responseEncoder)->toBeInstanceOf(PwgJsonEncoder::class);
+    expect($server->_responseFormat)
+        ->toBe('json')
+        ->and($server->_responseEncoder)
+        ->toBeInstanceOf(PwgJsonEncoder::class);
 });
 
 test('init selects the response encoder matching ?format=php', function (): void {
     $_GET['format'] = 'php';
 
-    $server = wsInitializerTestGet()->init();
+    $server = wsInitializerTestGet()
+        ->init();
 
-    expect($server->_responseFormat)->toBe('php')
-        ->and($server->_responseEncoder)->toBeInstanceOf(PwgSerialPhpEncoder::class);
+    expect($server->_responseFormat)
+        ->toBe('php')
+        ->and($server->_responseEncoder)
+        ->toBeInstanceOf(PwgSerialPhpEncoder::class);
 });
 
 test('init selects the response encoder matching ?format=xmlrpc', function (): void {
     $_GET['format'] = 'xmlrpc';
 
-    $server = wsInitializerTestGet()->init();
+    $server = wsInitializerTestGet()
+        ->init();
 
-    expect($server->_responseFormat)->toBe('xmlrpc')
-        ->and($server->_responseEncoder)->toBeInstanceOf(PwgXmlRpcEncoder::class);
+    expect($server->_responseFormat)
+        ->toBe('xmlrpc')
+        ->and($server->_responseEncoder)
+        ->toBeInstanceOf(PwgXmlRpcEncoder::class);
 });
 
 test('init leaves the response encoder null for an unrecognized format', function (): void {
     $_GET['format'] = 'not-a-real-format';
 
-    $server = wsInitializerTestGet()->init();
+    $server = wsInitializerTestGet()
+        ->init();
 
-    expect($server->_responseFormat)->toBe('not-a-real-format')
-        ->and($server->_responseEncoder)->toBeNull();
+    expect($server->_responseFormat)
+        ->toBe('not-a-real-format')
+        ->and($server->_responseEncoder)
+        ->toBeNull();
 });

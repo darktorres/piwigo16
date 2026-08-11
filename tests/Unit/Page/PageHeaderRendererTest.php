@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 
 /**
  * Piwigo\Page\PageHeaderRenderer -- has no constructor at all (matches
@@ -67,12 +66,17 @@ test('render() assigns the page title and gallery chrome with no refresh meta an
         $pageState = new PageState();
         $eventDispatcher = new EventDispatcher();
 
-        new PageHeaderRenderer()->render('<b>My Gallery</b>', $eventDispatcher, $pageState, CurrentTemplate::current(), CurrentConfigTestFactory::get());
+        new PageHeaderRenderer()
+            ->render('<b>My Gallery</b>', $eventDispatcher, $pageState, CurrentTemplate::current(), CurrentConfigTestFactory::get());
 
-        expect($template->get_template_vars('PAGE_TITLE'))->toBe('My Gallery')
-            ->and($template->get_template_vars('meta_ref'))->toBe(1)
-            ->and($template->get_template_vars('page_refresh'))->toBeNull()
-            ->and($template->get_template_vars('header_notes'))->toBeNull();
+        expect($template->get_template_vars('PAGE_TITLE'))
+            ->toBe('My Gallery')
+            ->and($template->get_template_vars('meta_ref'))
+            ->toBe(1)
+            ->and($template->get_template_vars('page_refresh'))
+            ->toBeNull()
+            ->and($template->get_template_vars('header_notes'))
+            ->toBeNull();
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

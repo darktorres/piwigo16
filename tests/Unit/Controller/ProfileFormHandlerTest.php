@@ -7,10 +7,10 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -78,10 +78,14 @@ test('saveFromPost returns false immediately when the form was never submitted',
         $handler = profileFormHandlerTestSubject();
         $errors = [];
 
-        $result = $handler->saveFromPost(['id' => 1], $errors);
+        $result = $handler->saveFromPost([
+            'id' => 1,
+        ], $errors);
 
-        expect($result)->toBeFalse()
-            ->and($errors)->toBe([]);
+        expect($result)
+            ->toBeFalse()
+            ->and($errors)
+            ->toBe([]);
     } finally {
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
@@ -121,8 +125,10 @@ test('loadIntoTemplate populates the real profile form template context', functi
             'show_nb_hits' => false,
         ]);
 
-        expect($template->get_template_vars('USERNAME'))->toBe('fixture_user')
-            ->and($template->get_template_vars('F_ACTION'))->toBe('admin.php?page=user_list');
+        expect($template->get_template_vars('USERNAME'))
+            ->toBe('fixture_user')
+            ->and($template->get_template_vars('F_ACTION'))
+            ->toBe('admin.php?page=user_list');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

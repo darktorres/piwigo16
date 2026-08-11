@@ -20,16 +20,16 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -137,21 +137,25 @@ test('render() has nothing to show when no extents are configured, no theme temp
 
         $conn = DbConnection::build();
 
-        new ExtendForTemplatesPageRenderer()->render(
-            LangTestFactory::get(),
-            extendForTemplatesTestAccessControl(),
-            UrlServiceTestFactory::build(),
-            new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), new EventDispatcher(), new CurrentConfig()),
-            new PageState(),
-            CurrentTemplate::current(),
-            extendForTemplatesTestCategoryService(),
-            CurrentConfigTestFactory::get(),
-            Paths::fromRoot($root),
-        );
+        new ExtendForTemplatesPageRenderer()
+            ->render(
+                LangTestFactory::get(),
+                extendForTemplatesTestAccessControl(),
+                UrlServiceTestFactory::build(),
+                new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), new EventDispatcher(), new CurrentConfig()),
+                new PageState(),
+                CurrentTemplate::current(),
+                extendForTemplatesTestCategoryService(),
+                CurrentConfigTestFactory::get(),
+                Paths::fromRoot($root),
+            );
 
-        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))->toBe('Extend for templates')
-            ->and($template->get_template_vars('extents'))->toBeNull()
-            ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('title=Extend for templates');
+        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))
+            ->toBe('Extend for templates')
+            ->and($template->get_template_vars('extents'))
+            ->toBeNull()
+            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->toBe('title=Extend for templates');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

@@ -14,12 +14,12 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -107,8 +107,10 @@ test('__invoke returns the raw help content directly for output=content_only, sk
 
         $response = $controller(new ServerRequest('GET', '/admin/popuphelp.php?page=&output=content_only'));
 
-        expect($response->getStatusCode())->toBe(200)
-            ->and((string) $response->getBody())->toBe('');
+        expect($response->getStatusCode())
+            ->toBe(200)
+            ->and((string) $response->getBody())
+            ->toBe('');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();
@@ -144,13 +146,16 @@ test('__invoke returns a 400 "Hacking attempt!" response for an invalid page val
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
         $response = $exception->response();
-        expect($response->getStatusCode())->toBe(400)
-            ->and((string) $response->getBody())->toBe('Hacking attempt!');
+        expect($response->getStatusCode())
+            ->toBe(400)
+            ->and((string) $response->getBody())
+            ->toBe('Hacking attempt!');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

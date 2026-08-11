@@ -15,11 +15,11 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -69,7 +69,9 @@ test('invoke renders the real about page for a guest visitor, with menubar/updat
         if (! $currentLogger instanceof CurrentLogger) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
-        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $currentLogger->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
 
         $conn = DbConnection::build();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService(
@@ -105,9 +107,12 @@ test('invoke renders the real about page for a guest visitor, with menubar/updat
 
         $response = $controller(new ServerRequest('GET', '/about.php'));
 
-        expect($response->getStatusCode())->toBe(200)
-            ->and((string) $response->getBody())->toContain('about_rendered=yes')
-            ->and($template->get_template_vars('PAGE_TITLE'))->toBe('About Piwigo');
+        expect($response->getStatusCode())
+            ->toBe(200)
+            ->and((string) $response->getBody())
+            ->toContain('about_rendered=yes')
+            ->and($template->get_template_vars('PAGE_TITLE'))
+            ->toBe('About Piwigo');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

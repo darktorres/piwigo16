@@ -14,13 +14,13 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -116,9 +116,12 @@ test('handle() delegates to CommentsPageRenderer::render() with every one of its
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))->toBe('User comments')
-            ->and($template->get_template_vars('F_ACTION'))->toContain('admin.php?page=comments')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('title=User comments');
+        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))
+            ->toBe('User comments')
+            ->and($template->get_template_vars('F_ACTION'))
+            ->toContain('admin.php?page=comments')
+            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->toBe('title=User comments');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

@@ -34,7 +34,6 @@ use Piwigo\Permalink\Projection\OldPermalink;
  * intermittent failure when its own category-1 UPDATE raced against
  * that file's concurrently-running clearCategoryPermalink(1) calls.
  *
-
  * Confirmed-equivalent mutations, not individually tested:
  * findCategoryIdByPermalink()/findOldCategoryId()'s own `is_numeric($ids[0])
  * ? (int) $ids[0] : null` casts are unreachable -- getSingleColumnResult()
@@ -100,8 +99,10 @@ test('setCategoryPermalink() then findCategoryIdByPermalink() round-trips', func
     $repo->setCategoryPermalink(2, $slug);
 
     try {
-        expect($repo->findCategoryIdByPermalink($slug))->toBe(2)
-            ->and($repo->findPermalinkByCategoryId(2))->toBe($slug);
+        expect($repo->findCategoryIdByPermalink($slug))
+            ->toBe(2)
+            ->and($repo->findPermalinkByCategoryId(2))
+            ->toBe($slug);
     } finally {
         $repo->clearCategoryPermalink(2);
     }
@@ -116,7 +117,8 @@ test('findPermalinkByCategoryId() returns null when unset', function (): void {
     $repo = permalinkRepoTest();
     $repo->clearCategoryPermalink(2);
 
-    expect($repo->findPermalinkByCategoryId(2))->toBeNull();
+    expect($repo->findPermalinkByCategoryId(2))
+        ->toBeNull();
 });
 
 test('findPermalinkByCategoryId() returns null for a category that does not exist at all', function (): void {
@@ -135,8 +137,10 @@ test('clearCategoryPermalink() removes it', function (): void {
 
     $repo->clearCategoryPermalink(2);
 
-    expect($repo->findPermalinkByCategoryId(2))->toBeNull()
-        ->and($repo->findCategoryIdByPermalink($slug))->toBeNull();
+    expect($repo->findPermalinkByCategoryId(2))
+        ->toBeNull()
+        ->and($repo->findCategoryIdByPermalink($slug))
+        ->toBeNull();
 });
 
 test('insertOldPermalinkDeleted() then findOldCategoryId() round-trips', function (): void {
@@ -413,7 +417,7 @@ test('findPermalinkMatches() finds old and current permalinks', function (): voi
     // correctly tagged via is_old), without needing the 2 permalinks to
     // share a category.
     $conn = DbConnection::build();
-    $conn->executeStatement("UPDATE " . 'categories' . " SET permalink = 'p17-unit-sample-album' WHERE id = 2");
+    $conn->executeStatement('UPDATE categories' . " SET permalink = 'p17-unit-sample-album' WHERE id = 2");
 
     try {
         $matches = permalinkRepoTest()
@@ -426,7 +430,7 @@ test('findPermalinkMatches() finds old and current permalinks', function (): voi
             ->and($matches['p17-unit-sample-album']['id'])->toBe(2)
             ->and($matches['p17-unit-sample-album']['is_old'])->toBe(0);
     } finally {
-        $conn->executeStatement('UPDATE ' . 'categories' . ' SET permalink = NULL WHERE id = 2');
+        $conn->executeStatement('UPDATE categories SET permalink = NULL WHERE id = 2');
     }
 });
 
@@ -485,7 +489,8 @@ test('deleteOldPermalinksForCategories() is a no-op for no ids', function (): vo
     try {
         $repo->deleteOldPermalinksForCategories([]);
 
-        expect($repo->findOldCategoryId($slug))->toBe(2);
+        expect($repo->findOldCategoryId($slug))
+            ->toBe(2);
     } finally {
         $repo->deleteOldPermalink(2, $slug);
     }

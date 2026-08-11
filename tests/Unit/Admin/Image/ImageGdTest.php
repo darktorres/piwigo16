@@ -506,7 +506,8 @@ test('resize preserves the real alpha channel via imagecopyresampled(), not sile
     $img = new ImageGd($path);
     $result = $img->resize(10, 10);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
     $color = imagecolorat($img->image, 5, 5);
     if ($color === false) {
         throw new RuntimeException('imagecolorat failed');

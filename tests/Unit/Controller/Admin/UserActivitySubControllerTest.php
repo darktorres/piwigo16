@@ -6,10 +6,10 @@ use Nyholm\Psr7\ServerRequest;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
-use Piwigo\Auth\AccessControl;
-use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditService;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\LangCode;
@@ -35,17 +35,17 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
@@ -226,10 +226,10 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
     // Same "own the table for this test's duration" technique
     // UserActivityPageRendererTest.php already established.
     $conn = DbConnection::build();
-    $originalActivityRows = $conn->fetchAllAssociative('SELECT * FROM ' . 'activity');
-    $conn->executeStatement('DELETE FROM ' . 'activity');
+    $originalActivityRows = $conn->fetchAllAssociative('SELECT * FROM activity');
+    $conn->executeStatement('DELETE FROM activity');
     $conn->executeStatement(
-        "INSERT INTO " . 'activity' . " VALUES "
+        'INSERT INTO activity VALUES '
         . "(1,'system',3,'activate',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL),"
         . "(2,'system',1,'install',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"16.3.0\"}',NULL),"
         . "(3,'user',1,'login',1,'8681675b2a4136fb177e08193dcc5043','::1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0'),"
@@ -284,13 +284,20 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        expect($template->get_template_vars('nb_users'))->toBe(4)
-            ->and($template->get_template_vars('ulist'))->toBe([
-                ['id' => 1, 'username' => 'fixture_admin', 'nb_lines' => 17],
+        expect($template->get_template_vars('nb_users'))
+            ->toBe(4)
+            ->and($template->get_template_vars('ulist'))
+            ->toBe([
+                [
+                    'id' => 1,
+                    'username' => 'fixture_admin',
+                    'nb_lines' => 17,
+                ],
             ])
-            ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('users=4');
+            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->toBe('users=4');
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'activity');
+        $conn->executeStatement('DELETE FROM activity');
         foreach ($originalActivityRows as $row) {
             $conn->createQueryBuilder()
                 ->insert('activity')

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\CoreTabs;
 use Nyholm\Psr7\ServerRequest;
+use Piwigo\Admin\CoreTabs;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
@@ -15,6 +15,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -22,7 +23,6 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -123,8 +123,10 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        expect($template->get_template_vars('HELP_SECTION_TITLE'))->toBe('Add Photos')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('title=Add Photos');
+        expect($template->get_template_vars('HELP_SECTION_TITLE'))
+            ->toBe('Add Photos')
+            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->toBe('title=Add Photos');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

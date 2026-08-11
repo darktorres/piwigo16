@@ -52,8 +52,10 @@ test('initialize sets date_field/date_field_dql to date_available for a "posted"
 
     $calendar->initialize(calendarWeeklyTestScope());
 
-    expect($calendar->date_field)->toBe('date_available')
-        ->and($calendar->date_field_dql)->toBe('i.dateAvailable');
+    expect($calendar->date_field)
+        ->toBe('date_available')
+        ->and($calendar->date_field_dql)
+        ->toBe('i.dateAvailable');
 });
 
 test('initialize sets date_field/date_field_dql to date_creation for any non-"posted" chronology field', function (): void {
@@ -62,8 +64,10 @@ test('initialize sets date_field/date_field_dql to date_creation for any non-"po
 
     $calendar->initialize(calendarWeeklyTestScope());
 
-    expect($calendar->date_field)->toBe('date_creation')
-        ->and($calendar->date_field_dql)->toBe('i.dateCreation');
+    expect($calendar->date_field)
+        ->toBe('date_creation')
+        ->and($calendar->date_field_dql)
+        ->toBe('i.dateCreation');
 });
 
 test('initialize builds the Monday-first week/day SQL expressions when weekStartsOn is monday', function (): void {
@@ -95,7 +99,8 @@ test('initialize populates 53 real week-number labels', function (): void {
     $calendar->initialize(calendarWeeklyTestScope());
 
     $weekLabels = $calendar->calendar_levels[CalendarWeekly::CWEEK]['labels'];
-    expect($weekLabels)->toHaveCount(53);
+    expect($weekLabels)
+        ->toHaveCount(53);
     if (is_array($weekLabels)) {
         expect($weekLabels[1])->not->toBe('')
             ->and($weekLabels[53])->not->toBe('');
@@ -110,8 +115,10 @@ test('get_date_where returns the real IS NOT NULL fallback for an empty chronolo
 
     $condition = $calendar->get_date_where();
 
-    expect($condition->sql)->toBe(' AND date_creation IS NOT NULL')
-        ->and($condition->parameters)->toBe([]);
+    expect($condition->sql)
+        ->toBe(' AND date_creation IS NOT NULL')
+        ->and($condition->parameters)
+        ->toBe([]);
 });
 
 test('get_date_where builds a real year-range condition for a single-level chronology_date', function (): void {
@@ -122,8 +129,13 @@ test('get_date_where builds a real year-range condition for a single-level chron
 
     $condition = $calendar->get_date_where();
 
-    expect($condition->sql)->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd')
-        ->and($condition->parameters)->toBe(['dateWhereYearStart' => '2026-01-01', 'dateWhereYearEnd' => '2026-12-31 23:59:59']);
+    expect($condition->sql)
+        ->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd')
+        ->and($condition->parameters)
+        ->toBe([
+            'dateWhereYearStart' => '2026-01-01',
+            'dateWhereYearEnd' => '2026-12-31 23:59:59',
+        ]);
 });
 
 test('get_date_where builds a year+week+day condition, stripping the leading AND for DQL', function (): void {
@@ -135,14 +147,17 @@ test('get_date_where builds a year+week+day condition, stripping the leading AND
     $sqlCondition = $calendar->get_date_where(3, false);
     $dqlCondition = $calendar->get_date_where(3, true);
 
-    expect($sqlCondition->sql)->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd AND WEEK(date_creation, 5)+1= :dateWhereWeek AND WEEKDAY(date_creation)= :dateWhereDay')
-        ->and($sqlCondition->parameters)->toBe([
+    expect($sqlCondition->sql)
+        ->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd AND WEEK(date_creation, 5)+1= :dateWhereWeek AND WEEKDAY(date_creation)= :dateWhereDay')
+        ->and($sqlCondition->parameters)
+        ->toBe([
             'dateWhereYearStart' => '2026-01-01',
             'dateWhereYearEnd' => '2026-12-31 23:59:59',
             'dateWhereWeek' => 15,
             'dateWhereDay' => 3,
         ])
-        ->and($dqlCondition->sql)->toBe('i.dateCreation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd AND WEEK(i.dateCreation, 5)+1= :dateWhereWeek AND WEEKDAY(i.dateCreation)= :dateWhereDay');
+        ->and($dqlCondition->sql)
+        ->toBe('i.dateCreation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd AND WEEK(i.dateCreation, 5)+1= :dateWhereWeek AND WEEKDAY(i.dateCreation)= :dateWhereDay');
 });
 
 test('get_date_where respects max_levels, dropping deeper chronology_date components', function (): void {
@@ -153,8 +168,10 @@ test('get_date_where respects max_levels, dropping deeper chronology_date compon
 
     $condition = $calendar->get_date_where(1);
 
-    expect($condition->sql)->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd')
-        ->and($condition->parameters)->not->toHaveKey('dateWhereWeek');
+    expect($condition->sql)
+        ->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd')
+        ->and($condition->parameters)
+        ->not->toHaveKey('dateWhereWeek');
 });
 
 test('get_date_where treats an "any" chronology_date component as unset', function (): void {
@@ -165,5 +182,6 @@ test('get_date_where treats an "any" chronology_date component as unset', functi
 
     $condition = $calendar->get_date_where();
 
-    expect($condition->sql)->toBe(' AND date_creation IS NOT NULL');
+    expect($condition->sql)
+        ->toBe(' AND date_creation IS NOT NULL');
 });

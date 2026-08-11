@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\ServerRequest;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\UpdatesSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -75,11 +74,13 @@ test('handle() fatal-errors when both extension install and core update are disa
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect((string) $exception->response()->getBody())->toContain('update system is disabled');
+        expect((string) $exception->response()->getBody())
+            ->toContain('update system is disabled');
     } finally {
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();

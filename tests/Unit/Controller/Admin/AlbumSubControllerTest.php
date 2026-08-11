@@ -7,9 +7,9 @@ use Piwigo\Controller\Admin\AlbumSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Template\CurrentTemplate;
 
 /**
  * Piwigo\Controller\Admin\AlbumSubController -- 14 constructor deps.
@@ -65,7 +65,9 @@ test('handle() fatal-errors when cat_id does not match a real album', function (
         }
 
         $request = new ServerRequest('GET', '/admin.php?cat_id=999999999');
-        $request = $request->withQueryParams(['cat_id' => '999999999']);
+        $request = $request->withQueryParams([
+            'cat_id' => '999999999',
+        ]);
 
         $exception = null;
         try {
@@ -74,11 +76,13 @@ test('handle() fatal-errors when cat_id does not match a real album', function (
             $exception = $e;
         }
 
-        expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+        expect($exception)
+            ->toBeInstanceOf(ResponseReadyException::class);
         if (! $exception instanceof ResponseReadyException) {
             return; // unreachable -- the assertion above already failed the test otherwise.
         }
-        expect((string) $exception->response()->getBody())->toContain('unknown album');
+        expect((string) $exception->response()->getBody())
+            ->toContain('unknown album');
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

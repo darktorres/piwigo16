@@ -134,13 +134,13 @@
     ],
     "test:browser": [
       "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=install-flow"
+      "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow"
     ],
     "test:coverage:web": [
       "rm -rf _data/coverage-raw/web",
       "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Contract",
       "bash tools/reimport-fixture.sh",
-      "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=install-flow"
+      "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow"
     ],
     "test:coverage:all": [
       "@test:coverage",
@@ -152,6 +152,10 @@
     "test:visual": [
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Browser --group=visual-regression"
+    ],
+    "test:golden-html": [
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite Browser --group=golden-html-snapshot"
     ],
     "test:install": "@php vendor/bin/pest --testsuite Browser --group=install-flow",
     "test:mutate": "@php vendor/bin/pest --mutate --testsuite Unit --parallel --everything --covered-only",

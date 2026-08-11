@@ -48,3 +48,19 @@ whatever real timestamp this run baked in — `pwg_now()` (`include/env.inc.php`
 `time_since()`-based "N units ago" text to that fixed instant, and a `PIWIGO_TEST_NOW`
 left in the past relative to the fixture's own timestamps would render as "in the
 future" instead. Same idea as bumping a baseline alongside the file it protects.
+
+## `GoldenHtml/`
+
+Raw HTML response bodies for every route in `Helpers/VisualRegressionRoutes.php`,
+captured while the app is still 100% Smarty-rendered — the P31 (Smarty → Latte)
+migration's baseline. Written by `tests/Browser/GoldenHtmlSnapshotTest.php`
+(`composer test:golden-html`), one file per route name.
+
+Not a byte-identical assertion target: Latte's auto-escaping is deliberately enabled
+during the migration (see `docs/PLAN.md`'s P31 section), so a converted template's
+output is *expected* to differ here wherever escaping now applies where Smarty ran raw.
+Each template's own conversion sub-item diffs its new output against its file here and
+a human classifies every changed line — an escaping-related change or a real
+regression. Only re-run `composer test:golden-html` once a template's diff against the
+existing file has been fully accounted for; regenerating unconditionally would silently
+erase the parity baseline the diff exists to check against.

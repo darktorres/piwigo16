@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta name="apple-itunes-app" content="app-id=472225196">
+<meta charset="utf-8">
+<title>Fixture Gallery :: Piwigo Administration</title>
+<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
+<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+
+  
+
+<!-- BEGIN get_combined -->
+<link rel="stylesheet" type="text/css" href="_data/combined/10pqx6v.css">
+
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<!-- END get_combined -->
+
+</head>
+
+<body id="theAdminPage">
+
+<div id="the_page">
+
+
+<div id="pwgHead">
+  <a href="/piwigo17-sql/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
+  <div class="pwgHead-gallery-title">Fixture Gallery</div>
+
+  <div id="headActions">
+    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+
+<a href="admin.php?change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
+
+    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
+    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
+  </div>
+</div>
+
+<div style="clear:both;"></div>
+
+
+<div id="pwgMain">
+
+<div id="menubar">
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+
+	<dl>
+		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+			<ul>
+				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
+        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
+				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
+				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
+				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
+			</ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
+				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
+				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
+				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
+				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
+          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
+        </a></li>
+        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
+        				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+      </ul>
+    </dd>
+  </dl>
+</div> <!-- menubar -->
+
+<div id="content" class="content">
+
+  <h1>Piwigo Administration Page<span class="admin-object-id"></span></h1>
+
+<div class="eiw">
+</div> 
+  <h2>Manage permissions for the user "fixture_admin"</h2>
+
+<fieldset>
+  <legend>Albums authorized thanks to group associations</legend>
+
+  <ul>
+    <li>Sample Album</li>
+    <li>Sample Album<span> / </span>Nested Sub Album</li>
+  </ul>
+</fieldset>
+
+
+<fieldset>
+  <legend>Other private albums</legend>
+
+  <form method="post" action="admin.php?page=user_perm&amp;user_id=1">
+    <table class="doubleSelect">
+  <tr>
+    <td>
+      <h3>Authorized</h3>
+      <select class="categoryList" name="cat_true[]" multiple="multiple" size="30">
+        
+      </select>
+      <p><input class="submit" type="submit" value="&raquo;" name="falsify" style="font-size:15px;"></p>
+    </td>
+
+    <td>
+      <h3>Forbidden</h3>
+      <select class="categoryList" name="cat_false[]" multiple="multiple" size="30">
+        
+      </select>
+      <p><input class="submit" type="submit" value="&laquo;" name="trueify" style="font-size:15px;"></p>
+    </td>
+  </tr>
+</table>
+
+    <input type="hidden" name="pwg_token" value="791c6fdfbdc972cedb7ac011471720383de7a76b917c56725bff095fe9c63b49">
+  </form>
+</fieldset>
+
+</div>
+</div>
+
+
+<div id="footer">
+  <div>
+    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What's new in version 16?">
+      <i class="icon-bell"></i>
+    </span>
+  </div>
+  <div id="pageInfos">
+    Contact
+    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+  </div>
+</div></div>
+<div id="whats_new">
+    <div id="whats_new_popin">
+      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <h3>What's new in version 16?</h3>
+      <div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-blue whats_new_block_w_60">
+            <h4>Brand new login & preferences with Standard pages!</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
+          </div>
+          <div class="whats_new_block icon-purple whats_new_block_w_40">
+            <h4>Two factor authentication is here</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
+          </div>
+        </div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-green whats_new_block_w_100">
+            <h4>UI redesigns that make a difference</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
+          </div>
+                </div>
+      <div class="whats_new_buttons">
+        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
+        <a class="buttonLike" href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+      </div>
+    </div>
+</div>
+
+<style>
+
+
+</style>
+
+
+
+
+<!-- BEGIN get_combined -->
+<script type="text/javascript" src="themes/default/js/plugins/jquery.tipTip.minified.js?v16.3.0"></script>
+<script type="text/javascript">//<![CDATA[
+
+jQuery.fn.lightAccordion = function(options) {
+  var settings = $.extend({
+    header: 'dt',
+    content: 'dd',
+    active: 0
+  }, options);
+  
+  return this.each(function() {
+    var self = jQuery(this);
+    
+    var contents = self.find(settings.content),
+        headers = self.find(settings.header);
+    
+    contents.not(contents[settings.active]).hide();
+  
+    self.on('click', settings.header, function() {
+        var content = jQuery(this).next(settings.content);
+        content.slideDown();
+        contents.not(content).slideUp();
+    });
+  });
+};
+
+$('#menubar').lightAccordion({
+  active: 2
+});
+
+/* in case we have several infos/errors/warnings display bullets */
+jQuery(document).ready(function() {
+  var eiw = ["infos","erros","warnings", "messages"];
+
+  for (var i = 0; i < eiw.length; i++) {
+    var boxType = eiw[i];
+
+    if (jQuery("."+boxType+" ul li").length > 1) {
+      jQuery("."+boxType+" ul li").css("list-style-type", "square");
+      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
+    }
+  }
+
+  if (jQuery('h2').length > 0) {
+    jQuery('h1').html(jQuery('h2').html());
+  }
+});
+jQuery('.tiptip').tipTip({
+  delay: 0,
+  fadeIn: 200,
+  fadeOut: 200
+});
+
+jQuery('a.externalLink').click(function() {
+  window.open(jQuery(this).attr("href"));
+  return false;
+});
+
+function hide_user_whats_new() {
+  $.ajax({
+    url: "ws.php?format=json&method=pwg.users.preferences.set",
+    type: "POST",
+    dataType: "JSON",
+    data: {
+      param: 'show_whats_new_16',
+      value: false,
+    }
+  })
+  $('#whats_new').hide();
+}
+
+function show_user_whats_new() {
+  $('#whats_new').show();
+}
+//]]></script>
+<!-- END get_combined -->
+
+<script type="module" src="dist/vitals.js"></script>
+
+</body>
+</html>

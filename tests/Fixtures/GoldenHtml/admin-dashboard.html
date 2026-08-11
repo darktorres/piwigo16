@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta name="apple-itunes-app" content="app-id=472225196">
+<meta charset="utf-8">
+<title>Fixture Gallery :: Piwigo Administration</title>
+<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
+<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+
+  
+
+<!-- BEGIN get_combined -->
+<link rel="stylesheet" type="text/css" href="_data/combined/1bqlst3.css">
+
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<!-- END get_combined -->
+
+<style type="text/css">
+.eiw .messages ul li {
+  list-style-type:none !important;
+}
+
+.eiw .messages .eiw-icon {
+  margin-right:10px !important;
+}</style>
+</head>
+
+<body id="theAdminPage">
+
+<div id="the_page">
+
+
+<div id="pwgHead">
+  <a href="/piwigo17-sql/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
+  <div class="pwgHead-gallery-title">Fixture Gallery</div>
+
+  <div id="headActions">
+    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+
+<a href="admin.php?change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
+
+    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
+    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
+  </div>
+</div>
+
+<div style="clear:both;"></div>
+
+
+<div id="pwgMain">
+
+<div id="menubar">
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+
+	<dl>
+		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+			<ul>
+				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
+        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
+				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
+				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
+				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
+			</ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
+				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
+				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
+				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
+				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
+          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
+        </a></li>
+        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
+        				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+      </ul>
+    </dd>
+  </dl>
+</div> <!-- menubar -->
+
+<div id="content" class="content">
+
+  <h1>Piwigo Administration Page<span class="admin-object-id"></span></h1>
+
+  <div id="tabsheet">
+<ul class="tabsheet">
+  <li class="selected_tab">
+    <a href="admin.php"><span>Administration Home</span></a>
+  </li>
+</ul>
+</div>
+
+<div class="eiw">
+  <div class="messages">
+    <i class="eiw-icon icon-info-circled-1"></i>
+    <ul>
+      <li>User comments <i class="icon-chat"></i> <a href="admin.php?page=comments">1 waiting for validation <i class="icon-right"></i></a></li>
+    </ul>
+  </div>
+</div> 
+  
+
+
+
+
+
+
+
+<h2>Piwigo Administration</h2>
+
+<div class="intro-page-container">
+<div class="stat-boxes">
+
+<a class="stat-box" href="admin.php?page=photos_add">
+<i class="icon-picture icon-yellow"></i>
+<span class="number">5</span><span class="caption">Photos</span>
+</a>
+
+<a class="stat-box" href="admin.php?page=albums">
+<i class="icon-sitemap icon-red"></i>
+<span class="number">2</span><span class="caption">Albums</span>
+</a>
+
+<a class="stat-box" href="admin.php?page=tags">
+<i class="icon-tags icon-yellow"></i>
+<span class="number">3</span><span class="caption" title="5 associations">Tags</span>
+</a>
+
+<a class="stat-box" href="admin.php?page=user_list">
+<i class="icon-users icon-purple"></i>
+<span class="number">3</span><span class="caption">Users</span>
+</a>
+
+<a class="stat-box" href="admin.php?page=group_list">
+<i class="icon-group icon-purple"></i>
+<span class="number">3</span><span class="caption">Groups</span>
+</a>
+
+<a class="stat-box" href="admin.php?page=comments">
+<i class="icon-chat icon-blue"></i>
+<span class="number">5</span><span class="caption">Comments</span>
+</a>
+
+<a class="stat-box" href="admin.php?page=rating">
+<i class="icon-star icon-yellow"></i>
+<span class="number">5</span><span class="caption">Rating</span>
+</a>
+
+
+
+<div class="stat-box">
+<i class="icon-hdd icon-blue"></i>
+<span class="number">0.0&nbsp;GB</span><span class="caption">Storage used</span>
+</div>
+
+</div> 
+<div class="intro-charts">
+
+  <div class="chart-title"> Activity peak in the last weeks</div>
+  <div class="activity-chart" style="grid-template-rows: repeat(5, 5vw);">
+      <div id="week-0-legend" class="row-legend"><div>Week 28</div></div>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+      <div id="week-1-legend" class="row-legend"><div>Week 29</div></div>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+      <div id="week-2-legend" class="row-legend"><div>Week 30</div></div>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+      <div id="week-3-legend" class="row-legend"><div>Week 31</div></div>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+        </span>
+        <span class="activity_tooltips">
+                              <div id="day3-6" style="height:6vw;width:6vw;"></div>
+          <p class="tooltip" style="transform: translate(-50%,3vw);">
+            <span class="tooltip-arrow"></span>
+            <span class="tooltip-header"> 
+              <span class="tooltip-title">22 Activities</span>
+              <span class="tooltip-date">Saturday, August 1, 2026</span>
+            </span>
+            <span class="tooltip-details">
+              <span class="tooltip-details-cont">
+                 <span class="icon-sitemap icon-red tooltip-details-title">Album</span>
+                
+                   <span class="icon-plus tooltip-detail" title="2 additions">2</span>
+                                  </span>
+              <span class="tooltip-details-cont">
+                 <span class="icon-group icon-purple tooltip-details-title">Group</span>
+                
+                   <span class="icon-plus tooltip-detail" title="3 additions">3</span>
+                                  </span>
+              <span class="tooltip-details-cont">
+                 <span class="icon-picture icon-yellow tooltip-details-title">Photo </span>
+                
+                   <span class="icon-plus tooltip-detail" title="5 additions">5</span>
+                                  </span>
+              <span class="tooltip-details-cont">
+                 <span class="tooltip-details-title"> System </span> 
+                   <span> (Activate) 1 </span> 
+                   <span> (Install) 1 </span> 
+                </span>
+              <span class="tooltip-details-cont">
+                 <span class="icon-tags icon-green tooltip-details-title">Tag </span>
+                
+                   <span class="icon-plus tooltip-detail" title="3 additions">3</span>
+                                  </span>
+              <span class="tooltip-details-cont">
+                 <span class="icon-users icon-purple tooltip-details-title"> User</span>
+                
+                   <span class="icon-key tooltip-detail" title="5 login">5</span>
+                                     <span class="icon-plus tooltip-detail" title="2 additions">2</span>
+                                  </span>
+          </p>
+        </span>
+        <span class="activity_tooltips">
+        </span>
+    <div></div>
+      <div class="col-legend">Mon <div class="line-vertical" style="height: 350%;"></div></div>
+      <div class="col-legend">Tue <div class="line-vertical" style="height: 350%;"></div></div>
+      <div class="col-legend">Wed <div class="line-vertical" style="height: 350%;"></div></div>
+      <div class="col-legend">Thu <div class="line-vertical" style="height: 350%;"></div></div>
+      <div class="col-legend">Fri <div class="line-vertical" style="height: 350%;"></div></div>
+      <div class="col-legend">Sat <div class="line-vertical" style="height: 350%;"></div></div>
+      <div class="col-legend">Sun <div class="line-vertical" style="height: 350%;"></div></div>
+  </div>
+
+  <div id="chart-title-storage" class="chart-title"> Storage <span class="chart-title-infos"> 0 MB used </span></div>
+
+  <div class="storage-chart">
+      <span data-type="storage-Photos" style="width:100%">
+        <p>100%</p>
+      </span>  
+  </div>
+
+  <div class="storage-tooltips">
+      <p id="storage-Photos" class="tooltip">
+      <span class="tooltip-arrow"></span>
+        <span class="tooltip-header">
+          <span id="storage-title-Photos" class="tooltip-title"></span>
+          <span id="storage-size-Photos" class="tooltip-size"></span>
+          <span id="storage-files-Photos" class="tooltip-files"></span>
+        </span>
+        <span class="separated"></span>
+        <span id="storage-detail-Photos" class="tooltip-details"></span>
+      </p>
+  </div>
+
+  <div class="storage-chart-legend">
+      <div><span></span> <p>Photos</p></div>
+  </div>
+
+</div> 
+</div> 
+<p class="showCreateAlbum">
+  <a href="admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=e3273f945b300b769f20c663846601c75fb391ee2261cb3be972b130c386a736" class="icon-exchange">Quick Local Synchronization</a>
+
+
+</p>
+</div>
+</div>
+
+
+<div id="footer">
+  <div>
+    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What's new in version 16?">
+      <i class="icon-bell"></i>
+    </span>
+  </div>
+  <div id="pageInfos">
+    Contact
+    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+  </div>
+</div></div>
+<div id="whats_new">
+    <div id="whats_new_popin">
+      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <h3>What's new in version 16?</h3>
+      <div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-blue whats_new_block_w_60">
+            <h4>Brand new login & preferences with Standard pages!</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
+          </div>
+          <div class="whats_new_block icon-purple whats_new_block_w_40">
+            <h4>Two factor authentication is here</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
+          </div>
+        </div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-green whats_new_block_w_100">
+            <h4>UI redesigns that make a difference</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
+          </div>
+                </div>
+      <div class="whats_new_buttons">
+        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
+        <a class="buttonLike" href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+      </div>
+    </div>
+</div>
+
+<style>
+
+
+</style>
+
+
+
+
+<!-- BEGIN get_combined -->
+<script type="text/javascript" src="_data/combined/1m8536l.js"></script>
+<script type="text/javascript">//<![CDATA[
+
+var piwigo_need_update_msg = '<a href="admin.php?page=updates">A new version of Piwigo is available. <i class="icon-right"></i></a>';
+var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">Some upgrades are available for extensions. <i class="icon-right"></i></a>';
+const str_gb_used = "%s GB used";
+const str_mb_used = "%s MB used";
+const str_gb = "%s GB".replace(' ', '&nbsp;');
+const str_mb = "%s MB".replace(' ', '&nbsp;');
+const storage_total = 5;
+const storage_details = {"Photos":{"total":{"filesize":5,"nb_files":5},"details":{"JPG":{"filesize":5,"nb_files":5}}}};
+const translate_files = "%d files";
+let translate_type = {};
+
+jQuery().ready(function(){
+	jQuery('.cluetip').cluetip({
+		width: 300,
+		splitTitle: '|',
+		positionBy: 'bottomTop'
+	});
+
+
+
+
+
+  jQuery("#newsletterSubscribeInput").change(function(){
+    jQuery("#newsletterSubscribeLink").attr("href", newsletter_base_url + jQuery("#newsletterSubscribeInput").val())
+  })
+
+  jQuery('.newsletter-hide').click(function() {
+    jQuery('.promote-newsletter').hide();
+
+    jQuery.ajax({
+      type: 'GET',
+      url: 'admin.php?action=hide_newsletter_subscription'
+    });
+
+    if (jQuery(this).hasClass('newsletter-hide')) {
+      return false;
+    }
+  });
+  let size_info = storage_total > 1000000 ? str_gb_used : str_mb_used;
+  let size_nb = storage_total > 1000000 ? (storage_total / 1000000).toFixed(2) : (storage_total / 1000).toFixed(0);
+  $(".chart-title-infos").html(size_info.replace("%s", size_nb));
+});
+
+translate_type['Photos'] = "Photos";
+jQuery.fn.lightAccordion = function(options) {
+  var settings = $.extend({
+    header: 'dt',
+    content: 'dd',
+    active: 0
+  }, options);
+  
+  return this.each(function() {
+    var self = jQuery(this);
+    
+    var contents = self.find(settings.content),
+        headers = self.find(settings.header);
+    
+    contents.not(contents[settings.active]).hide();
+  
+    self.on('click', settings.header, function() {
+        var content = jQuery(this).next(settings.content);
+        content.slideDown();
+        contents.not(content).slideUp();
+    });
+  });
+};
+
+$('#menubar').lightAccordion({
+  active: -1
+});
+
+/* in case we have several infos/errors/warnings display bullets */
+jQuery(document).ready(function() {
+  var eiw = ["infos","erros","warnings", "messages"];
+
+  for (var i = 0; i < eiw.length; i++) {
+    var boxType = eiw[i];
+
+    if (jQuery("."+boxType+" ul li").length > 1) {
+      jQuery("."+boxType+" ul li").css("list-style-type", "square");
+      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
+    }
+  }
+
+  if (jQuery('h2').length > 0) {
+    jQuery('h1').html(jQuery('h2').html());
+  }
+});
+jQuery('.tiptip').tipTip({
+  delay: 0,
+  fadeIn: 200,
+  fadeOut: 200
+});
+
+jQuery('a.externalLink').click(function() {
+  window.open(jQuery(this).attr("href"));
+  return false;
+});
+
+function hide_user_whats_new() {
+  $.ajax({
+    url: "ws.php?format=json&method=pwg.users.preferences.set",
+    type: "POST",
+    dataType: "JSON",
+    data: {
+      param: 'show_whats_new_16',
+      value: false,
+    }
+  })
+  $('#whats_new').hide();
+}
+
+function show_user_whats_new() {
+  $('#whats_new').show();
+}
+//]]></script>
+<!-- END get_combined -->
+
+<script type="module" src="dist/vitals.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta name="apple-itunes-app" content="app-id=472225196">
+<meta charset="utf-8">
+<title>Fixture Gallery :: Piwigo Administration</title>
+<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
+<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+
+  
+
+<!-- BEGIN get_combined -->
+<link rel="stylesheet" type="text/css" href="_data/combined/1hi201h.css">
+
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<!-- END get_combined -->
+
+</head>
+
+<body id="theAdminPage">
+
+<div id="the_page">
+
+
+<div id="pwgHead">
+  <a href="/piwigo17-sql/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
+  <div class="pwgHead-gallery-title">Fixture Gallery</div>
+
+  <div id="headActions">
+    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+
+<a href="admin.php?page=history&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
+
+    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
+    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
+  </div>
+</div>
+
+<div style="clear:both;"></div>
+
+
+<div id="pwgMain">
+
+<div id="menubar">
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+
+	<dl>
+		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+			<ul>
+				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
+        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
+				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
+				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
+				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
+			</ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
+				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
+				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
+				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
+				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
+          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
+        </a></li>
+        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
+        				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+      </ul>
+    </dd>
+  </dl>
+</div> <!-- menubar -->
+
+<div id="content" class="content">
+
+  <h1>History<span class="admin-object-id"></span></h1>
+
+  <div id="tabsheet">
+<ul class="tabsheet">
+  <li class="normal_tab">
+    <a href="admin.php?page=stats"><span><span class="icon-signal"></span>Statistics</span></a>
+  </li>
+  <li class="selected_tab">
+    <a href="admin.php?page=history"><span><span class="icon-search"></span>Search</span></a>
+  </li>
+</ul>
+</div>
+
+<div class="eiw">
+</div> 
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+<form class="filter" method="post" name="filter" action="">
+<fieldset class="history-filter">
+  <div class="selectable-filter">
+    <div class="filter-part date-start">
+      <label>Start date</label>
+        <input type="hidden" name="start" value="2026-08-01">
+        <label>
+          <input type="text" data-datepicker="start" data-datepicker-end="end" data-datepicker-unset="start_unset" readonly>
+        </label>
+        <a href="#" class="icon-cancel-circled" id="start_unset">unset</a>
+    </div>
+    <div class="filter-part date-end">
+      <label>End date</label>
+        <input type="hidden" name="end" value="2026-08-01">
+        <label>
+          <input type="text" data-datepicker="end" data-datepicker-start="start" data-datepicker-unset="end_unset" readonly>
+        </label>
+        <a href="#" class="icon-cancel-circled" id="end_unset">unset</a>
+    </div>
+    <div class="filter-part elem-type advanced-filter-select-container">
+      <label>
+        Action
+        <select name="types[]" class="elem-type-select user-action-select advanced-filter-select">
+          <option value=""></option>
+          <option value="visited">Visited </option>
+          <option value="downloaded">Downloaded </option>
+        </select>
+      </label>
+    </div>
+  </div>
+  <div class="filter-tags">
+    <label>Additional filters</label>
+    <div class="filter-container">
+      <div id="default-filter" class="filter-item hide">
+        <span class="filter-icon"></span><span class="filter-title"> test </span><span class="remove-filter icon-cancel"></span>
+      </div>
+    </div>
+  </div>
+  <div class="refresh-results icon-arrows-cw tiptip" title="Refresh">
+  </div>
+</fieldset>
+</form>
+
+
+<span id="-2" class="icon-green summary-user-item hide">
+  <i class="icon-user-1"> </i>
+  <i class="icon-plus-circled"> </i> 
+  <span class="user-item-name"> User test </span>
+</span>
+
+<div class="search-summary">
+  <div class="summary-lines">
+    <span class="icon-yellow icon-menu summary-icons"></span>
+    <span class="summary-data"> </span>
+  </div>
+  <div class="summary-weight">
+    <span class="icon-purple icon-download summary-icons"></span>
+    <span class="summary-data"> </span>
+  </div>
+  <div class="summary-users">
+    <span class="icon-green icon-user-1 summary-icons"></span>
+    <span class="summary-data"> </span>
+    <div class="user-list">
+    </div>
+    <span class="user-dot icon-green summary-user-item">...</span>
+  </div>
+  <div class="summary-guests">
+    <span class="icon-blue icon-user-secret summary-icons"></span>
+    <span class="summary-data"> </span>
+    <span class="addGuestFilter"> </span>
+  </div>
+</div>
+
+
+<div class="loading hide"> 
+  <span class="icon-spin6 animate-spin"> </span>
+</div>
+<div class="noResults">
+  No results
+</div>
+<div class="container">
+  <div class="tab-title">
+    <div class="date-title">
+        Date
+    </div>
+    <div class="user-title">
+        User
+    </div>
+    <div class="type-title">
+        Object
+    </div>
+    <div class="detail-title">
+        Details
+    </div>
+  </div>
+
+    <div class="search-line hide" id="-1">
+      <div class="date-section">
+        <i class="date-dwld-icon"> </i>
+        <div class="date-infos">
+          <span class="date-day bold"> July 4th, 2042 </span>
+          <span> at <span class="date-hour">23:59:59</span> </span>
+        </div>
+      </div>
+
+      <div class="user-section">
+        <span class="user-name bold" title="Add as filter"> Zac le boss <i class="add-filter icon-plus-circled"></i></span>
+        <span class="user-ip" title="Add as filter"> 192.168.0.0 <i class="add-filter icon-plus-circled"></i></span>
+      </div>
+
+      <div class="type-section">
+        <a class="type-icon no-img" target="_blank"> <i class="icon-file-image"> </i> </a>
+        <span class="icon-ellipsis-vert toggle-img-option">
+          <div class="img-option">
+            <a class="add-img-as-filter icon-filter"> Add as filter </a>
+            <a class="edit-img icon-pencil" href="" target="_blank">Edit</a>
+          </div>
+        </span>
+
+        <div class="type-desc">
+          <span class="type-name bold"> WIP </span>
+          <span class="type-id"> tag #99 </span>
+        </div>
+        
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-item detail-item-1 hide">
+          detail 1
+        </div>
+        <div class="detail-item detail-item-2 hide">
+          detail 2
+        </div>
+        <div class="detail-item detail-item-3 hide">
+          detail 3
+        </div>
+      </div>
+    </div>
+
+  <div class="tab">
+  </div>
+  <div class="pagination-container">
+    <div class="pagination-arrow left">
+      <span class="icon-left-open"></span>
+    </div>
+    <div class="pagination-item-container">
+    
+    </div>
+    <div class="pagination-arrow rigth">
+      <span class="icon-left-open"></span>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<style>
+
+.notClickable {
+  opacity: 0.5;
+}
+
+.no-img {
+  cursor: default !important;
+}
+
+.container {
+  padding: 0 20px;
+}
+
+.container,
+.tab {
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-title {
+  display: flex;
+  flex-direction: row;
+}
+
+.hide {
+  display: none !important;
+}
+
+.noResults {
+  font-size: 14px;
+  display: none;
+  font-weight: bold;
+  color: #777;
+  margin-top: 20px;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.refresh-results {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 17px;
+}
+
+.history-filter {
+  display: flex;
+  flex-direction: row;
+}
+
+.hasDatepicker {
+  border: solid 1px #D4D4D4;
+  padding: 5px 10px;
+  max-width: 180px;
+}
+
+.filter-part {
+  display: flex;
+  flex-direction: column;
+  margin: 0 10px;
+}
+
+.filter-part.elem-type label {
+  display: flex;
+  flex-direction: column;
+}
+
+.elem-type-select{
+  border: solid 1px #D4D4D4;
+  padding: 5px 10px;
+  margin-bottom: 5px;
+}
+
+.selectable-filter {
+  width: calc(50%-20px);
+  display: flex;
+  flex-direction: row;
+  margin-right: 20px;
+}
+
+.selectable-filter label {
+  white-space: nowrap;
+}
+
+.filter-tags {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.filter-item {
+  margin: 10px 5px 0 0;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.filter-title {
+  padding-right: 2px;
+}
+
+.remove-filter {
+  border-bottom-right-radius: 25px;
+  border-top-right-radius: 25px;
+  padding-right: 10px;
+  padding-left: 5px;
+}
+.remove-filter:hover {
+  cursor: pointer;
+}
+
+.filter-icon {
+  padding-left: 10px;
+  border-bottom-left-radius: 25px;;
+  border-top-left-radius: 25px;;
+}
+
+.user-name, .user-ip {
+  cursor: pointer;
+  max-width: fit-content;
+}
+
+.search-line {
+  box-shadow: 0px 2px 4px #00000024;
+
+  display: flex;
+  flex-direction: row;
+
+  height: 80px;
+
+  align-items: center;
+
+  margin-bottom: 10px;
+}
+
+.line-icon {
+  padding: 10px;
+  border-radius: 50%;
+  white-space: nowrap;
+}
+
+.tab-title div {
+  text-align: left;
+  font-size: 1.1em;
+  font-weight: bold;
+
+  margin: 0 20px 10px 0px;
+
+  color: #9e9e9e;
+
+  padding-bottom: 5px;
+}
+
+.date-title,
+.date-section {
+  text-align: left;
+  padding-left: 10px;
+}
+.date-title {
+  width: 300px;
+}
+
+.user-title,
+.user-section {
+  text-align: left;
+  padding-left: 10px;
+}
+.user-title {
+  width: 200px;
+}
+
+.type-title,
+.type-section {
+  text-align: left;
+  padding-left: 10px;
+}
+.type-title {
+  width: 250px;
+}
+
+.detail-title,
+.detail-section {
+  width: 500px;
+  text-align: left;
+  padding-left: 10px;
+}
+
+.detail-item {
+  margin: 0 10px 0 0;
+  padding: 4px 8px;
+  border-radius: 5px;
+
+  max-width: 130px;
+  height: 20px;
+
+  text-align: center;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+
+  white-space: nowrap;
+}
+.detail-item::before {
+  margin: 0 5px 0 0px;
+}
+
+.add-filter {
+  display: none;
+}
+
+.user-name:hover .add-filter {
+  display: inline;
+  margin-left: 4px;
+}
+
+.user-ip:hover .add-filter {
+  display: inline;
+  margin-left: 4px;
+}
+
+.user-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 60%;
+  width: 220px;
+}
+
+.date-section {
+  display: flex;
+  flex-direction: row;
+  height: 60%;
+  width: 320px;
+  align-items: center;
+}
+
+.date-infos {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  justify-content: center;
+}
+
+.date-dwld-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.date-dwld-icon::before {
+  transform: scale(1.2);
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-right: none;
+}
+
+.type-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 60%;
+  width: 270px;
+}
+
+.type-desc {
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+}
+
+.type-name {
+  overflow: hidden;
+  max-height: 80px;
+  max-width: 190px;
+  vertical-align: middle;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.toggle-img-option {
+  cursor: pointer;
+  position: absolute;
+  margin-left: 51px;
+}
+
+.toggle-img-option::before{
+  transform: scale(1.3);
+}
+
+.img-option {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(130deg, #ff7700 0%, #ffa744 100%);
+  left: 20px;
+  top: -80%;
+  width: max-content;
+  border-radius: 10px;
+}
+
+.img-option span, .img-option a {
+  padding: 5px 10px;
+  text-decoration: none;
+  color: white;
+  font-weight: 600;
+}
+
+.img-option:after {
+  content: " ";
+  position: absolute;
+  top: 35%;
+  left: -10px;
+  transform: rotate(270deg);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #ff7700 transparent;
+}
+
+.img-option a:first-child::before {
+  margin-right: -1px;
+}
+
+.img-option a:hover:first-child {
+  color: white;
+  background-color: #00000012;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.img-option a:hover:last-child {
+  color: white;
+  background-color: #00000012;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.type-icon img {
+  width: 50px;
+  height: 50px;
+  margin-bottom: -5px;
+}
+
+/* Summary */
+
+.search-summary {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100px;
+}
+
+.summary-lines,
+.summary-weight,
+.summary-users,
+.summary-guests {
+  white-space: nowrap;
+}
+
+.summary-icons {
+  padding: 10px;
+  border-radius: 50%;
+  margin: 0 5px 0 15px;
+}
+
+.summary-lines .summary-icons {
+  margin-left: 5px;
+}
+
+.summary-users {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.summary-user-item {
+  padding: 3px 6px;
+  border-radius: 20px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.summary-user-item .icon-plus-circled {
+  display: none;
+}
+
+.summary-user-item:hover .icon-plus-circled {
+  display: inline-block;
+}
+
+.summary-user-item:hover .icon-user-1 {
+  display: none;
+}
+
+.summary-users .summary-data {
+  margin: 0 5px 0 0 !important;
+}
+
+.summary-data {
+  font-weight: bold;
+}
+
+
+#start_unset, #end_unset {
+  text-decoration: none;
+}
+
+#start_unset:hover, #end_unset:hover {
+  color: #ffa500;
+}
+
+.loading {
+  font-size: 25px;
+}
+@media (min-width: 1600px) {
+  .detail-title,
+  .detail-section {
+    max-width: 500px;
+  }
+  .detail-item {
+    max-width: 170px;
+  }
+}
+</style>
+</div>
+</div>
+
+
+<div id="footer">
+  <div>
+    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What's new in version 16?">
+      <i class="icon-bell"></i>
+    </span>
+  </div>
+  <div id="pageInfos">
+    Contact
+    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+  </div>
+</div></div>
+<div id="whats_new">
+    <div id="whats_new_popin">
+      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <h3>What's new in version 16?</h3>
+      <div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-blue whats_new_block_w_60">
+            <h4>Brand new login & preferences with Standard pages!</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
+          </div>
+          <div class="whats_new_block icon-purple whats_new_block_w_40">
+            <h4>Two factor authentication is here</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
+          </div>
+        </div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-green whats_new_block_w_100">
+            <h4>UI redesigns that make a difference</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
+          </div>
+                </div>
+      <div class="whats_new_buttons">
+        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
+        <a class="buttonLike" href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+      </div>
+    </div>
+</div>
+
+<style>
+
+
+</style>
+
+
+
+
+<!-- BEGIN get_combined -->
+<script type="text/javascript" src="_data/combined/uyvfz1.js"></script>
+<script type="text/javascript">//<![CDATA[
+
+jQuery(function(){   jQuery('[data-datepicker]').pwgDatepicker();
+});
+
+var dateObj = new Date();
+var month = dateObj.getUTCMonth() + 1; //months from 1-12
+var day = dateObj.getUTCDate();
+var year = dateObj.getUTCFullYear();
+
+var filter_user_name = "";
+
+if (month < 10) month = "0" + month;
+if (day < 10) day = "0" + day;
+
+today = year + "-" + month + "-" + day;
+var current_param = {
+  start: "",
+  end: today,
+  types: {
+    0: "none",
+    1: "picture",
+    2: "high",
+    3: "other"
+  },
+  user_id: -1,
+  image_id: "",
+  filename: "",
+  ip: "",
+  display_thumbnail: "display_thumbnail_classic",
+  pageNumber: 0 }
+
+const API_METHOD = "ws.php?format=json&method=pwg.history.search";
+const str_dwld = "Downloaded";
+const str_most_visited = "Most visited";
+const str_best_rated = "Best rated";
+const str_list = "Random photo";
+const str_favorites = "My favorites";
+const str_recent_cats = "Recent albums";
+const str_recent_pics = "Recent photos";
+const str_memories = "Souvenirs";
+const str_no_longer_exist_photo = "This photo no longer exists";
+const str_tags = "Tags";
+const unit_MB = "%s MB";
+const str_guest = 'guest';
+const str_contact_form = 'Contact Form';
+const str_edit_img = 'Edit photo';
+
+const str_search_details = {
+    "allwords": "Search for words",
+    "date_posted": "Post date",
+    "tags": str_tags,
+    "cat": "Album",
+    "author": "Author",
+    "added_by": "Added by",
+    "filetypes": "File type",
+};
+const str_and_more = "and %d more"
+
+const guest_id = 2;
+jQuery(document).ready( function() {
+  jQuery(".IP").one( "mouseenter", function(){
+  	var that = $(this);
+  	that
+  		.data("isOver", true)
+  		.one("mouseleave", function() {
+  			that.removeData("isOver");
+  		});
+  	GeoIp.get( that.text(), function(data) {
+  		if (!data.fullName) return;
+  
+      var content = data.fullName;
+      if (data.latitude && data.region_name) {
+        content += '<br><a class="ipGeoOpen" data-lat="'+data.latitude+'" data-lon="'+data.longitude+'"';
+        content += ' href="#">show on a Google Map</a>';
+      }
+  
+  		that.tipTip( {
+  			content: content,
+        keepAlive: true,
+        defaultPosition: "right",
+        maxWidth: 320,
+  			}	);
+  		if (that.data("isOver"))
+  			that.trigger("mouseenter");
+  	});
+  } );
+  
+  jQuery(document).on('click', '.ipGeoOpen',  function() {
+    var lat = jQuery(this).data("lat");
+    var lon = jQuery(this).data("lon");
+    var parent = jQuery(this).parent();
+    jQuery(this).remove();
+  
+    var append = '<br><img width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
+    append += '?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C' + lat + ',' + lon + '">';
+  
+    jQuery(parent).append(append);
+    return false;
+  });
+});
+jQuery.fn.lightAccordion = function(options) {
+  var settings = $.extend({
+    header: 'dt',
+    content: 'dd',
+    active: 0
+  }, options);
+  
+  return this.each(function() {
+    var self = jQuery(this);
+    
+    var contents = self.find(settings.content),
+        headers = self.find(settings.header);
+    
+    contents.not(contents[settings.active]).hide();
+  
+    self.on('click', settings.header, function() {
+        var content = jQuery(this).next(settings.content);
+        content.slideDown();
+        contents.not(content).slideUp();
+    });
+  });
+};
+
+$('#menubar').lightAccordion({
+  active: 3
+});
+
+/* in case we have several infos/errors/warnings display bullets */
+jQuery(document).ready(function() {
+  var eiw = ["infos","erros","warnings", "messages"];
+
+  for (var i = 0; i < eiw.length; i++) {
+    var boxType = eiw[i];
+
+    if (jQuery("."+boxType+" ul li").length > 1) {
+      jQuery("."+boxType+" ul li").css("list-style-type", "square");
+      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
+    }
+  }
+
+  if (jQuery('h2').length > 0) {
+    jQuery('h1').html(jQuery('h2').html());
+  }
+});
+jQuery('.tiptip').tipTip({
+  delay: 0,
+  fadeIn: 200,
+  fadeOut: 200
+});
+
+jQuery('a.externalLink').click(function() {
+  window.open(jQuery(this).attr("href"));
+  return false;
+});
+
+function hide_user_whats_new() {
+  $.ajax({
+    url: "ws.php?format=json&method=pwg.users.preferences.set",
+    type: "POST",
+    dataType: "JSON",
+    data: {
+      param: 'show_whats_new_16',
+      value: false,
+    }
+  })
+  $('#whats_new').hide();
+}
+
+function show_user_whats_new() {
+  $('#whats_new').show();
+}
+//]]></script>
+<script type="text/javascript">
+(function() {
+var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
+s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='themes/admin/default/js/jquery.geoip.js?v16.3.0';
+after = after.parentNode.insertBefore(s, after);
+})();
+</script>
+<!-- END get_combined -->
+
+<script type="module" src="dist/vitals.js"></script>
+
+</body>
+</html>

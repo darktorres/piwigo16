@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="generator" content="Piwigo (aka PWG), see piwigo.org">
+
+ 
+<meta name="description" content="Your gallery customization">
+
+<title>Your gallery customization | Fixture Gallery</title>
+<link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">
+
+<link rel="start" title="Home" href="/piwigo17-sql/" >
+<link rel="search" title="Search" href="search.php" >
+
+
+
+
+ 
+	<!--[if lt IE 7]>
+		<link rel="stylesheet" type="text/css" href="themes/default/fix-ie5-ie6.css">
+	<![endif]-->
+	<!--[if IE 7]>
+		<link rel="stylesheet" type="text/css" href="themes/default/fix-ie7.css">
+	<![endif]-->
+	
+
+
+<!-- BEGIN get_combined -->
+<link rel="stylesheet" type="text/css" href="_data/combined/1utz01c.css">
+
+
+<!-- END get_combined -->
+
+<!--[if lt IE 7]>
+<script type="text/javascript" src="themes/default/js/pngfix.js"></script>
+<![endif]-->
+
+</head>
+
+<body id="theProfilePage" class=""  data-infos='[]'>
+
+<div id="the_page">
+
+
+<div id="theHeader"><h1>Fixture Gallery</h1>
+
+<p>Welcome to my photo gallery</p></div>
+
+<div id="menubar">
+	<dl id="mbLinks">
+		
+	</dl>
+	<dl id="mbCategories">
+<dt>
+	<a href="index.php?/categories">Albums</a>
+</dt>
+<dd>
+  <ul>
+    <li >
+      <a href="index.php?/category/1"  title="3 photos in this album / 2 photos in 1 sub-album">Sample Album</a>
+      <span class="menuInfoCat badge" title="3 photos in this album / 2 photos in 1 sub-album">5</span>
+      <img title="photos posted during the last 7 days" src="themes/default/icon/recent.png" class="icon" alt="(!)">
+  </li></ul>
+
+	<p class="totalImages">5 photos</p>
+</dd>
+	</dl>
+	<dl id="mbTags">
+<dt>Tags</dt>
+<dd>
+	<div id="menuTagCloud">
+		<span><a class="tagLevel " href="index.php?/tags/1-nature" title="display photos linked to this tag">nature</a></span>
+		<span><a class="tagLevel " href="index.php?/tags/2-travel" title="display photos linked to this tag">travel</a></span>
+		<span><a class="tagLevel " href="index.php?/tags/3-family" title="display photos linked to this tag">family</a></span>
+	</div>
+</dd>
+	</dl>
+	<dl id="mbSpecials">
+<dt>Specials</dt>
+<dd>
+	<ul><li><a href="index.php?/favorites" title="display my favorites">My favorites</a></li><li><a href="index.php?/most_visited" title="display most visited photos">Most visited</a></li><li><a href="index.php?/best_rated" title="display best rated photos">Best rated</a></li><li><a href="index.php?/recent_pics" title="display most recent photos">Recent photos</a></li><li><a href="index.php?/recent_cats" title="display recently updated albums">Recent albums</a></li><li><a href="random.php" title="display a set of random photos" rel="nofollow">Random photos</a></li><li><a href="index.php?/created-monthly-calendar" title="display each day with photos, month per month" rel="nofollow">Calendar</a></li></ul>
+</dd>
+	</dl>
+	<dl id="mbMenu">
+<dt>Menu</dt>
+<dd>
+	<form action="qsearch.php" method="get" id="quicksearch" onsubmit="return this.q.value!='' && this.q.value!=qsearch_prompt;">
+		<p style="margin:0;padding:0">
+			<input type="text" name="q" id="qsearchInput" onfocus="if (value==qsearch_prompt) value='';" onblur="if (value=='') value=qsearch_prompt;" style="width:90%">
+		</p>
+	</form>
+	<script type="text/javascript">var qsearch_prompt="Quick search";document.getElementById('qsearchInput').value=qsearch_prompt;</script>
+	<ul><li><a href="tags.php" title="display available tags">Tags</a> (3)</li><li><a href="search.php" title="search" rel="search">Search</a></li><li><a href="comments.php" title="display last user comments">Comments</a> (5)</li><li><a href="about.php" title="About Piwigo">About</a></li><li><a href="notification.php" title="RSS feed" rel="nofollow">Notification</a></li></ul>
+</dd>
+	</dl>
+	<dl id="mbRelatedCategories">
+		
+	</dl>
+	<dl id="mbIdentification">
+<dt>Identification</dt>
+<dd>
+<p>Hello fixture_admin !</p><ul><li><a href="?act=logout">Logout</a></li><li><a href="profile.php" title="edit user preferences">Profile</a></li><li><a href="admin.php" title="available for administrators only">Administration</a></li></ul>
+</dd>
+	</dl>
+</div><div id="menuSwitcher"></div>
+<div id="content" class="content contentWithMenu">
+
+<div class="titrePage">
+	<ul class="categoryActions">
+	</ul>
+	<h2><a href="/piwigo17-sql/">Home</a> / Profile</h2>
+</div>
+
+
+
+<form method="post" name="profile" action="profile.php" id="profile" class="properties">
+
+  <fieldset>
+    <legend>Registration</legend>
+    <input type="hidden" name="redirect" value="/piwigo17-sql/">
+    <ul>
+      <li>
+        <span class="property">Username</span>
+        fixture_admin
+      </li>
+           <li>
+        <span class="property">
+          <label for="mail_address">Email address</label>
+        </span>
+        <input type="text" name="mail_address" id="mail_address" value="fixture_admin@example.test">
+      </li>
+      <li>
+        <span class="property">
+          <label for="password">Password</label>
+        </span>
+        <input type="password" name="password" id="password" value="">
+      </li>
+      <li>
+        <span class="property">
+          <label for="use_new_pwd">New password</label>
+        </span>
+        <input type="password" name="use_new_pwd" id="use_new_pwd" value="">
+      </li>
+      <li>
+        <span class="property">
+          <label for="passwordConf">Confirm Password</label>
+        </span>
+        <input type="password" name="passwordConf" id="passwordConf" value="">
+      </li>
+    </ul>
+  </fieldset>
+
+  <fieldset>
+    <legend>Preferences</legend>
+
+    <ul>
+      <li>
+        <span class="property">
+          <label for="nb_image_page">Number of photos per page</label>
+        </span>
+        <input type="text" size="4" maxlength="3" name="nb_image_page" id="nb_image_page" value="15">
+      </li>
+      <li>
+        <span class="property">
+          <label for="template">Theme</label>
+        </span>
+        <select name="theme">
+<option value="default" selected="selected">Default</option>
+</select>
+
+      </li>
+      <li>
+        <span class="property">
+          <label for="Language">Language</label>
+        </span>
+        <select name="language">
+<option value="en_UK" selected="selected">English (Great Britain)</option>
+</select>
+
+      </li>
+      <li>
+        <span class="property">
+          <label for="Recent period">Recent period</label>
+        </span>
+        <input type="text" size="3" maxlength="2" name="recent_period" id="recent_period" value="7">
+      </li>
+      <li>
+        <span class="property">Expand all albums</span>
+        <label><input type="radio" name="expand" value="true" />Yes</label>
+<label><input type="radio" name="expand" value="false" checked="checked" />No</label>
+      </li>
+      <li>
+        <span class="property">Show number of comments</span>
+        <label><input type="radio" name="show_nb_comments" value="true" />Yes</label>
+<label><input type="radio" name="show_nb_comments" value="false" checked="checked" />No</label>
+      </li>
+      <li>
+        <span class="property">Show number of hits</span>
+        <label><input type="radio" name="show_nb_hits" value="true" />Yes</label>
+<label><input type="radio" name="show_nb_hits" value="false" checked="checked" />No</label>
+      </li>
+    </ul>
+  </fieldset>
+
+
+  <p class="bottomButtons">
+    <input type="hidden" name="pwg_token" value="32dc4aa5120d80c79ce78d8dae91be9ab07f8c4426a2d1ac909e4b16176fb7e2">
+    <input class="submit" type="submit" name="validate" value="Submit">
+    <input class="submit" type="reset" name="reset" value="Reset">
+    <input class="submit" type="submit" name="reset_to_default" value="Reset to default values">
+  </p>
+
+</form>
+
+</div> <!-- content -->
+<div id="copyright">
+
+  Powered by	<a href="https://upstream.example.invalid" class="Piwigo">Piwigo</a>
+  
+  - <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Contact webmaster</a>
+</div>
+</div>
+<!-- BEGIN get_combined -->
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<!-- END get_combined -->
+
+<script type="module" src="dist/vitals.js"></script>
+
+</body>
+</html>

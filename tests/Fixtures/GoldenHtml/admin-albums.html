@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta name="apple-itunes-app" content="app-id=472225196">
+<meta charset="utf-8">
+<title>Fixture Gallery :: Piwigo Administration</title>
+<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
+<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+
+  
+
+<!-- BEGIN get_combined -->
+<link rel="stylesheet" type="text/css" href="_data/combined/1mdm12z.css">
+
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<!-- END get_combined -->
+
+</head>
+
+<body id="theAdminPage">
+
+<div id="the_page">
+
+
+<div id="pwgHead">
+  <a href="/piwigo17-sql/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
+  <div class="pwgHead-gallery-title">Fixture Gallery</div>
+
+  <div id="headActions">
+    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+
+<a href="admin.php?page=albums&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
+
+    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
+    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
+  </div>
+</div>
+
+<div style="clear:both;"></div>
+
+
+<div id="pwgMain">
+
+<div id="menubar">
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+
+	<dl>
+		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+			<ul>
+				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
+        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
+				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
+				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
+				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
+			</ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
+				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
+				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
+				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
+				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
+          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
+        </a></li>
+        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
+        				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+      </ul>
+    </dd>
+  </dl>
+</div> <!-- menubar -->
+
+<div id="content" class="content">
+
+  <h1>Albums<span class="admin-object-id"></span></h1>
+
+  <div id="tabsheet">
+<ul class="tabsheet">
+  <li class="selected_tab">
+    <a href="admin.php?page=albums"><span><span class="icon-menu"></span>List</span></a>
+  </li>
+  <li class="normal_tab">
+    <a href="admin.php?page=permalinks"><span><span class="icon-link-1"></span>Permalinks</span></a>
+  </li>
+</ul>
+</div>
+
+<div class="eiw">
+</div> 
+  
+
+
+
+
+
+ 
+
+
+
+
+
+
+<div class="cat-move-order-popin">
+  <div class="order-popin-container">
+    <a class="close-popin icon-cancel" onClick="$('.cat-move-order-popin').fadeOut()"> </a>
+    <div class="popin-title"><span class="icon-sort-name-up icon-purple"></span><span class="popin-title-text">apply automatic sort order</span></div>
+    <div class="album-name icon-sitemap"></div>
+    <form action="admin.php?page=albums" method="post">
+      <input type="hidden" name="id" value="-1">
+      <div class="choice-container">
+        <label class="font-checkbox">
+          <span class="icon-dot-circled"> </span>
+          <input type="radio" value="name ASC" name="order" checked>
+          Album name, A &rarr; Z
+        </label>
+
+        <label class="font-checkbox">
+          <span class="icon-dot-circled"> </span>
+          <input type="radio" value="name DESC" name="order">
+          Album name, Z &rarr; A
+        </label>
+
+        <label class="font-checkbox">
+          <span class="icon-dot-circled"> </span>
+          <input type="radio" value="natural_order ASC" name="order">
+          Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100
+        </label>
+        
+        <label class="font-checkbox">
+          <span class="icon-dot-circled"> </span>
+          <input type="radio" value="natural_order DESC" name="order">
+          Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1
+        </label>
+        
+        <label class="font-checkbox">
+          <span class="icon-dot-circled"> </span>
+          <input type="radio" value="date_creation DESC" name="order">
+          Date created, new &rarr; old
+        </label>
+
+        <label class="font-checkbox">
+          <span class="icon-dot-circled"> </span>
+          <input type="radio" value="date_creation ASC" name="order">
+          Date created, old &rarr; new
+        </label>
+
+        <label class="font-checkbox">
+          <span class="icon-dot-circled"> </span>
+          <input type="radio" value="date_available DESC" name="order">
+          Date posted, new &rarr; old
+        </label>
+
+        <label class="font-checkbox">
+          <span class="icon-dot-circled"> </span>
+          <input type="radio" value="date_available ASC" name="order">
+          Date posted, old &rarr; new
+        </label>
+      </div>
+      <input type="submit" name="simpleAutoOrder" value="Apply to direct sub-albums"/>
+      <input type="submit" name="recursiveAutoOrder" value="Apply to the whole hierarchy"/>
+    </form>
+  </div>
+</div>
+
+<div class="cat-move-header"> 
+  <div class="add-album-button">
+    <label class="head-button-2 icon-add-album">
+      <p>Add Album</p>
+    </label>
+  </div>
+  <div class="order-root-button">
+    <label class="order-root head-button-2 icon-sort-name-up">
+      <p>Automatic sort order</p>
+    </label>
+  </div>
+    <div class="cat-move-info search-album">
+    <div class="search-album-cont">
+            <span class="search-album-num-result"></span>
+      <div class="search-album-input-container" style="position:relative">
+        <span class="icon-search search-icon"></span>
+        <span class="icon-cancel search-cancel"></span>
+        <input id="cat_search_input" class='search-input' type="text" placeholder="Search">
+      </div>
+      <span class="search-album-help icon-help-circled" title="Enter a term to search for album"></span>
+    </div>
+  </div>
+</div>
+
+<div id="AddAlbum" class="AddAlbumPopIn">
+  <div class="AddAlbumPopInContainer">
+    <a class="icon-cancel CloseAddAlbum"></a>
+    
+    <div class="AddIconContainer">
+      <span class="AddIcon icon-blue icon-add-album"></span>
+    </div>
+    <div class="AddIconTitle">
+      <span></span>
+    </div>
+
+    <div class="AddAlbumInputContainer">
+      <label class="user-property-label AddAlbumLabelUsername">Album name
+        <input class="user-property-input" />
+      </label>
+    </div>
+
+    <div class="AddAlbumInputContainer">
+      <label class="user-property-label AddAlbumLabelUsername">Position
+
+      <div class="AddAlbumPositionSelect">
+        <div class="AddAlbumRadioInput">
+          <input type="radio" id="place-start"
+          name="position" value="first"  checked >
+          <label for="place-start">Place first</label>
+        </div>
+        <div class="AddAlbumRadioInput">
+          <input type="radio" id="place-end"
+          name="position" value="last" >
+          <label for="place-end">Place last</label>
+        </div>
+      </div>
+    </div>
+    
+
+    <div class="AddAlbumErrors icon-cancel">
+    </div>
+
+    <div class="AddAlbumFormValidation">
+      <div class="AddAlbumSubmit">
+        <span>Add</span>
+      </div>
+
+      <div class="AddAlbumCancel">
+        <span>Cancel</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="RenameAlbum" class="RenameAlbumPopIn">
+  <div class="RenameAlbumPopInContainer">
+    <a class="icon-cancel CloseRenameAlbum"></a>
+    
+    <div class="AddIconContainer">
+      <span class="AddIcon icon-blue icon-pencil"></span>
+    </div>
+    <div class="RenameAlbumTitle">
+      <span></span>
+    </div>
+
+    <div class="RenameAlbumInputContainer">
+      <label class="user-property-label RenameAlbumLabelUsername">Rename album
+        <input class="user-property-input" />
+      </label>
+    </div>
+
+    <div class="RenameAlbumErrors icon-cancel">
+    </div>
+
+    <div class="RenameAlbumFormValidation">
+      <div class="RenameAlbumSubmit">
+        <span>Yes, rename</span>
+      </div>
+
+      <div class="RenameAlbumCancel">
+        <span>Cancel</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="DeleteAlbum" class="DeleteAlbumPopIn">
+  <div class="DeleteAlbumPopInContainer">
+    <div class="DeleteIconTitle">
+      <span>Supprimer l'album : tatatatattata</span>
+    </div>
+
+    <div class="DeleteAlbumInputContainer">
+      <ul class="deleteAlbumOptions">
+        <li id="IMAGES_ASSOCIATED_OUTSIDE"><label class=""><input type="radio" name="photo_deletion_mode" value="force_delete"><span class="innerText"></span></label></li>
+        <li id="IMAGES_BECOMING_ORPHAN"><label class=""><input type="radio" name="photo_deletion_mode" value="delete_orphans"><span class="innerText"></span></label></li>
+        <li id="IMAGES_RECURSIVE"><label class=""><input type="radio" name="photo_deletion_mode" value="no_delete" checked="checked">delete only album, not photos</label></li>
+      </ul>
+    </div>
+    
+
+    <div class="DeleteAlbumErrors icon-cancel">
+    </div>
+
+    <div class="DeleteAlbumFormValidation">
+      <div class="DeleteAlbumSubmit">
+        <span>Confirm deletion</span>
+      </div>
+
+      <div class="DeleteAlbumCancel">
+        <span>Cancel</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class='tree'> </div>
+
+<div class="album-search-result-container" style="display: none;">
+  <div class="search-album-result"></div>
+  <div class="search-album-elem limit-album-reached" style="display: none;"></div>
+
+  <div class="search-album-noresult">
+    No albums found
+  </div>
+</div>
+
+<div class="search-album-elem-template" style="display:none">
+  <div class="search-album-elem" style="display:none">
+    <span class='search-album-icon'></span>
+    <p class='search-album-name'></p>
+    <div class="search-album-action-cont">
+      <div class="search-album-action">
+        <a class="icon-pencil search-album-edit">Edit album</a>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+
+.animateFocus {
+  position: relative;
+  border-left: 4px solid #ff7700;
+}
+
+.animateFocus .icon-grip-vertical-solid {
+  color: #ff7700;
+}
+
+.animateFocus:before {
+  content: '';
+  width: 100%;
+  height: 100%;
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform: translate(-50%,-50%);
+  animation: ripples .8s ease-out 0.3s  ;
+  opacity: 0;
+  border-radius: 5px;
+}
+
+.jqtree_element {
+  transition: 1s;
+}
+
+@keyframes ripples {
+  0% {
+      border: 0px solid #ff7700;
+      opacity: 0.7;
+  }
+  100% {
+      border: 20px solid #ff7700;
+      opacity: 0;
+  }
+}
+
+.add-album-button label::before {
+  margin-right: 7px;
+}
+
+#AddAlbum, #DeleteAlbum, #RenameAlbum {
+  display: none;
+}
+
+.AddAlbumPopIn, .DeleteAlbumPopIn, .RenameAlbumPopIn{
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%; 
+  height: 100%;
+  overflow: auto; 
+  background-color: rgba(0,0,0,0.7);
+}
+
+.AddAlbumPopInContainer, .DeleteAlbumPopInContainer, .RenameAlbumPopInContainer{
+  display:flex;
+  position:absolute;
+  left:50%;
+  top: 50%;
+  transform:translate(-50%, -48%);
+  text-align:left;
+  padding:20px;
+  flex-direction:column;
+  border-radius:15px;
+  align-items:center;
+  width: 270px;
+}
+.DeleteAlbumPopInContainer {
+  width: 40%;
+  border-radius: 4px;
+  border-top: solid 7px #e74c3c;
+}
+.RenameAlbumPopInContainer {
+  width: auto;
+  min-width: 270px;
+  max-width: 700px;
+}
+
+.AddIconContainer, .DeleteIconContainer, .AddIconContainer {
+  margin-top: 10px;
+}
+
+.AddIcon {
+  border-radius:50%;
+  padding:10px;
+  font-size: 2em;
+}
+
+.AddIconTitle, .RenameAlbumTitle {
+  font-size:1.4em;
+  font-weight:bold;
+  margin-bottom:20px;
+  margin-top:15px;
+  text-align: center;
+}
+.DeleteIconTitle {
+  font-size:1.7em;
+  font-weight:bold;
+  margin-bottom:10px;
+  margin-top:15px;
+  text-align: center;
+}
+
+.AddAlbumSubmit,
+.DeleteAlbumSubmit,
+.RenameAlbumSubmit {
+  cursor:pointer;
+  font-weight:bold;
+  padding: 10px;
+  margin: 20px;
+  font-size:1em;
+  margin-bottom:0;
+}
+
+.DeleteAlbumSubmit {
+  border-radius: 4px;
+  transition: .1s;
+}
+
+.AddAlbumCancel, .RenameAlbumCancel {
+  font-weight: bold;
+  cursor: pointer;
+  font-size:1em;
+}
+
+.CloseAddAlbum, .CloseRenameAlbum {
+  position:absolute;
+  right:-40px;
+  top:-40px;
+  font-size:30px;
+}
+
+.AddAlbumPositionSelect {
+  display: flex;
+  flex-direction: column;
+}
+.AddAlbumInputContainer {
+  width: 100%;
+  margin: 15px 0;
+}
+.DeleteAlbumInputContainer {
+  width: 70%;
+  margin: 15px auto;
+}
+input[name="position"] {
+  margin-right: 5px;
+}
+
+.AddAlbumRadioInput {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 10px;
+}
+.AddAlbumRadioInput label {
+  font-size: 12px;
+  font-weight: 600;
+}
+.deleteAlbumOptions label {
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.AddAlbumFormValidation,
+.DeleteAlbumFormValidation,
+.RenameAlbumFormValidation {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+.AddAlbumCancel,
+.DeleteAlbumCancel,
+.RenameAlbumCancel {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 10px 20px;
+  margin: 20px;
+  margin-bottom: 20px;
+  margin-left: 10px;
+  font-size: 1em;
+  margin-bottom: 0;
+}
+.DeleteAlbumCancel {
+  background-color: #ecf0f1;
+  color: #000;
+  border-radius: 4px;
+  transition: .1s;
+}
+.DeleteAlbumCancel:hover {
+  background: #bdc3c7;
+}
+.AddAlbumSubmit,
+.DeleteAlbumSubmit,
+.RenameAlbumSubmit {
+  margin-right: 10px;
+  padding: 10px 20px;
+}
+.DeleteAlbumSubmit:hover {
+  background: #c0392b;
+}
+
+.deleteAlbumOptions {
+  list-style-type: none;
+}
+.deleteAlbumOptions input{
+  margin-right: 5px;
+}
+
+.album-add-button-label, .order-root-button-label {
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  display: flex;
+  align-items: baseline;
+  cursor: pointer;
+  font-size: 13px;
+  height: 18px;
+}
+.album-add-button-label p,
+.order-root-button-label p {
+  white-space: nowrap;
+  margin: 0 !important;
+}
+
+.badge-container {
+  position: absolute;
+  right: 275px;
+}
+
+.badge-container i {
+  padding: 2px 6px 2px 4px!important;
+  border-radius: 10px !important;
+  font-size: 0.85em !important;
+  margin: 0 2px !important;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.notClickable {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.notClickable:hover {
+  cursor: not-allowed;
+}
+
+.move-cat-container, .move-cat-container .badge-container i {
+  transition: 0.2s;
+}
+
+.jqtree-moving .move-cat-container {
+  background-color: #ffd7ad;
+}
+
+.jqtree-moving .move-cat-container .badge-container i,
+.jqtree-moving .move-cat-container .node-icon {
+  color: #ffd7ad;
+  background-color: #f98100;
+}
+
+.dragging .move-cat-container {
+  pointer-events: none;
+}
+
+.dragging .move-cat-container .move-cat-toogler,
+.dragging .move-cat-container .move-cat-action-cont a,
+.dragging .move-cat-container .move-cat-title-container{
+  pointer-events: all;
+}
+
+
+.last-update {
+    display: none;
+}
+
+.badge-container:hover .badge-dropdown {
+  display: flex;
+}
+
+.badge-dropdown {
+  position: absolute;
+  display: none;
+  flex-direction: column;
+  right: 50%;
+  top: 30px;
+  width: max-content;
+  border-radius: 10px;
+  z-index: 10;
+  transform: translateX(48%);
+  box-shadow: 0px 3px 3px 1px rgba(0,0,0,0.2);
+  padding: 10px 20px;
+}
+
+.badge-dropdown:after {
+  content: " ";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: rotate(0);
+  border-width: 5px;
+  border-style: solid;
+}
+
+.badge-dropdown span {
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 5px 0;
+}
+.badge-dropdown span::before {
+  margin: 0 8px 0 0;
+  width: 20px;
+}
+
+@media (max-width: 1415px) { 
+  .badge-container  .last-update {
+    display: none;
+  }
+
+  .badge-container .nb-sub-photos {
+    display: none;
+  }
+}
+
+@media (max-width: 1300px) { 
+  .badge-container {
+    display: none;
+  }
+}
+
+@media (max-width: 1230px) { 
+  .badge-container {
+    display: none;
+  }
+
+  ul.jqtree-tree ul.jqtree_common {
+    margin-left: 20px !important;
+  }
+
+  .move-cat-title-container {
+    max-width: 60%;
+  }
+}
+
+@media (max-width: 1100px) { 
+  .move-cat-title-container {
+    max-width: 50%;
+  }
+}
+
+@media (max-width: 850px) { 
+  .move-cat-title-container {
+    max-width: 40%;
+  }
+}
+
+</style>
+</div>
+</div>
+
+
+<div id="footer">
+  <div>
+    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What's new in version 16?">
+      <i class="icon-bell"></i>
+    </span>
+  </div>
+  <div id="pageInfos">
+    Contact
+    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+  </div>
+</div></div>
+<div id="whats_new">
+    <div id="whats_new_popin">
+      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <h3>What's new in version 16?</h3>
+      <div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-blue whats_new_block_w_60">
+            <h4>Brand new login & preferences with Standard pages!</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
+          </div>
+          <div class="whats_new_block icon-purple whats_new_block_w_40">
+            <h4>Two factor authentication is here</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
+          </div>
+        </div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-green whats_new_block_w_100">
+            <h4>UI redesigns that make a difference</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
+          </div>
+                </div>
+      <div class="whats_new_buttons">
+        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
+        <a class="buttonLike" href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+      </div>
+    </div>
+</div>
+
+<style>
+
+
+</style>
+
+
+
+
+<!-- BEGIN get_combined -->
+<script type="text/javascript" src="_data/combined/hapglt.js"></script>
+<script type="text/javascript">//<![CDATA[
+
+var data = [{"rank":1,"name":"Sample Album","status":"public","id":"1","visible":"true","uppercats":"1","nb_images":3,"last_updates":"1 day in the future","has_not_access":false,"nb_sub_photos":2,"nb_subcats":1,"children":[{"rank":1,"name":"Nested Sub Album","status":"public","id":"2","visible":"true","uppercats":"1,2","nb_images":2,"last_updates":"1 day in the future","has_not_access":false,"nb_sub_photos":0}]}];
+var pwg_token = "92342e3f5d7f5965d895ce8dc14505a754b67177b51ea745a02fe0811a302caa";
+var str_show_sub = "Show sub-albums";
+var str_hide_sub = "Hide sub-albums";
+var str_manage_sub_album = "Manage sub-albums";
+var str_apply_order_raw = "apply automatic sort order";
+var str_apply_order = str_apply_order_raw.charAt(0).toUpperCase() + str_apply_order_raw.slice(1);
+var str_edit = "Edit album";
+var str_are_you_sure = "The status of the album \'%s\' and its sub-albums will change to private. Are you sure?";
+var str_yes_change_parent = "Yes change parent anyway";
+var str_no_change_parent = "No, don\'t move this album here";
+var str_root = "Root";
+var openCat = -1;
+var nb_albums = 2;
+var light_album_manager = 0;
+
+var x_nb_subcats = "%d sub-albums";
+var x_nb_images = "%d photos";
+var x_nb_sub_photos = "%d pictures in sub-albums";
+
+var str_albums_found = '<b>%d<\/b> albums found';
+var str_album_found = '<b>1<\/b> album found';
+var str_result_limit = '<b>%d+<\/b> albums found, try to refine the search';
+const str_albs_drag_drop = 'Drag and drop to reorder albums';
+
+var delay_autoOpen = 3000
+
+const categoriesforSearch = Object.values(data);
+const delete_album_with_name = 'Delete album \"%s\".';
+const delete_album_with_subs = 'Delete album \"%s\" and its %d sub-albums.'
+const has_images_associated_outside = 'delete album and all %d photos, even the %d associated to other albums';
+const has_images_becomming_orphans = 'delete album and the %d orphan photos';
+const has_images_recursives = 'delete only album, not photos';
+const rename_item = 'Rename \"%s\"';
+
+const str_add_album = 'Add Album';
+const str_edit_album = 'Edit album';
+const str_add_photo = 'Add Photos';
+const str_visit_gallery = 'Visit the gallery';
+const str_sort_order = 'Automatic sort order';
+const str_delete_album = 'Delete album';
+const str_root_order = 'Apply to root albums';
+str_sub_album_order = 'Apply to direct sub-albums';
+str_album_name_empty = 'Album name must not be empty'
+
+const add_album_root_title = 'Create a new album at root';
+const add_sub_album_of = 'Create a sub-album of \"%s\"';
+const tiptip_locked_album = "Locked album";
+jQuery.fn.lightAccordion = function(options) {
+  var settings = $.extend({
+    header: 'dt',
+    content: 'dd',
+    active: 0
+  }, options);
+  
+  return this.each(function() {
+    var self = jQuery(this);
+    
+    var contents = self.find(settings.content),
+        headers = self.find(settings.header);
+    
+    contents.not(contents[settings.active]).hide();
+  
+    self.on('click', settings.header, function() {
+        var content = jQuery(this).next(settings.content);
+        content.slideDown();
+        contents.not(content).slideUp();
+    });
+  });
+};
+
+$('#menubar').lightAccordion({
+  active: 1
+});
+
+/* in case we have several infos/errors/warnings display bullets */
+jQuery(document).ready(function() {
+  var eiw = ["infos","erros","warnings", "messages"];
+
+  for (var i = 0; i < eiw.length; i++) {
+    var boxType = eiw[i];
+
+    if (jQuery("."+boxType+" ul li").length > 1) {
+      jQuery("."+boxType+" ul li").css("list-style-type", "square");
+      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
+    }
+  }
+
+  if (jQuery('h2').length > 0) {
+    jQuery('h1').html(jQuery('h2').html());
+  }
+});
+jQuery('.tiptip').tipTip({
+  delay: 0,
+  fadeIn: 200,
+  fadeOut: 200
+});
+
+jQuery('a.externalLink').click(function() {
+  window.open(jQuery(this).attr("href"));
+  return false;
+});
+
+function hide_user_whats_new() {
+  $.ajax({
+    url: "ws.php?format=json&method=pwg.users.preferences.set",
+    type: "POST",
+    dataType: "JSON",
+    data: {
+      param: 'show_whats_new_16',
+      value: false,
+    }
+  })
+  $('#whats_new').hide();
+}
+
+function show_user_whats_new() {
+  $('#whats_new').show();
+}
+//]]></script>
+<!-- END get_combined -->
+
+<script type="module" src="dist/vitals.js"></script>
+
+</body>
+</html>

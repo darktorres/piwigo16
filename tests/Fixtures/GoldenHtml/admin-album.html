@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta name="apple-itunes-app" content="app-id=472225196">
+<meta charset="utf-8">
+<title>Fixture Gallery :: Piwigo Administration</title>
+<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
+<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+
+  
+
+<!-- BEGIN get_combined -->
+<link rel="stylesheet" type="text/css" href="_data/combined/x9r7ks.css">
+
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<!-- END get_combined -->
+
+</head>
+
+<body id="theAdminPage">
+
+<div id="the_page">
+
+
+<div id="pwgHead">
+  <a href="/piwigo17-sql/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
+  <div class="pwgHead-gallery-title">Fixture Gallery</div>
+
+  <div id="headActions">
+    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+
+<a href="admin.php?change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
+
+    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
+    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
+  </div>
+</div>
+
+<div style="clear:both;"></div>
+
+
+<div id="pwgMain">
+
+<div id="menubar">
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+
+	<dl>
+		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+			<ul>
+				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
+        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
+				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
+				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
+				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
+			</ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
+				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
+				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
+				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
+				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
+          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
+        </a></li>
+        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
+        				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+      </ul>
+    </dd>
+  </dl>
+</div> <!-- menubar -->
+
+<div id="content" class="content">
+
+  <h1>Edit album <strong>Sample Album</strong><span class="admin-object-id">#1</span></h1>
+
+  <div id="tabsheet">
+<ul class="tabsheet">
+  <li class="selected_tab">
+    <a href="admin.php?page=album-1-properties"><span><span class="icon-pencil"></span>Properties</span></a>
+  </li>
+  <li class="normal_tab">
+    <a href="admin.php?page=album-1-sort_order"><span><span class="icon-shuffle"></span>Photos sort order</span></a>
+  </li>
+  <li class="normal_tab">
+    <a href="admin.php?page=album-1-permissions"><span><span class="icon-lock"></span>Permissions</span></a>
+  </li>
+  <li class="normal_tab">
+    <a href="admin.php?page=album-1-notification"><span><span class="icon-mail-alt"></span>Notification</span></a>
+  </li>
+</ul>
+</div>
+
+<div class="eiw">
+  <div class="warnings">
+    <i class="eiw-icon icon-attention"></i>
+    <ul>
+      <li>This album is currently locked, visible only to administrators.<span class="icon-cone unlock-album">Unlock it</span></li>
+    </ul>
+  </div>
+</div> 
+  
+
+
+
+ 
+
+
+<div class="cat-modify" id="cat-modify">
+
+  <div class="cat-modify-header">
+    <div class="cat-modify-ariane">
+    <span class="icon-home"> /</span>
+       <a href="admin.php?page=album-1">Sample Album</a>
+    </div>
+
+    <div class="cat-modify-actions">
+
+      <a class="icon-pulse tiptip" href="admin.php?page=user_activity&album=1" title="Activity"></a>
+
+        <a class="icon-th tiptip" href="admin.php?page=batch_manager&amp;filter=album-1" title="Manage album photos"></a>
+      <a class="icon-plus-circled tiptip" href="admin.php?page=photos_add&amp;album=1" title="Add Photos"></a>
+
+      <a class="icon-sitemap tiptip" href="admin.php?page=albums&amp;parent_id=1" title="Manage sub-albums"></a>
+
+        <a class="icon-trash deleteAlbum tiptip" href="#" title="Delete album"></a>
+      
+      <span class="icon-ellipsis-vert toggle-comment-option">
+        <div class="comment-option">
+          <span class="allow-comments icon-ok"> Allow comments for sub-albums </span>
+          <span class="disallow-comments icon-cancel" target="_blank">Disallow comments for sub-albums</span>
+        </div>
+      </span>
+
+          </div>
+  </div>
+
+  <div class="cat-modify-content">
+
+    <div class="cat-modify-infos">
+      <div class="cat-modify-info-card cat-creation">
+        <span class="cat-modify-info-title">Created</span>
+        <span class="cat-modify-info-content"> ago</span>
+        <span class="cat-modify-info-subcontent">August 1, 2026</span>
+      </div>
+      <div class="cat-modify-info-card cat-modification">
+        <span class="cat-modify-info-title">Modified</span>
+        <span class="cat-modify-info-content">1 day in the future</span>
+        <span class="cat-modify-info-subcontent">August 2, 2026</span>
+      </div>
+      <div title="This album contains 3 photos, added on Saturday, August 1, 2026." class="cat-modify-info-card cat-photos">
+        <span class="cat-modify-info-title">Photos</span>
+        <span class="cat-modify-info-content">3 photos</span>
+        <span class="cat-modify-info-subcontent">5 including sub-albums</span>
+      </div>
+      <div class="cat-modify-info-card cat-albums">
+        <span class="cat-modify-info-title">sub-albums</span>
+        <span class="cat-modify-info-content">1 sub-albums</span>
+        <span class="cat-modify-info-subcontent">1 in whole branch</span>
+      </div>
+    </div>
+
+    <div 
+      class="cat-modify-representative " 
+       
+      style="background-image:url('action.php?id=1&amp;part=e')"      >
+      <div class="cat-modify-representative-actions">
+          <a class="refreshRepresentative buttonLike" id="refreshRepresentative" title="Find a new random album thumbnail">
+            <i class="icon-ccw"></i>
+            Refresh thumbnail
+          </a>
+      </div>
+    </div>
+
+    <div class="cat-modify-form">
+      <div class="cat-modify-input-container">
+        <label for="cat-name">Name</label>
+        <input type="text" id="cat-name" value="Sample Album" maxlength="255">
+      </div>
+
+      <div class="cat-modify-input-container">
+        <label for="cat-comment">Description <span id="desc-zoom-square" class="icon-resize-full tiptip" title="Expand"></span></label>
+        <textarea class="sync-textarea" resize="false" rows="5" name="comment" id="cat-comment"></textarea>
+      </div>
+
+      <div class="cat-modify-input-container">
+        <label for="cat-parent">Parent album</label>
+        <div class="icon-pencil" id="cat-parent">Root</div>
+      </div>
+
+
+
+
+
+
+
+
+<div id="addLinkedAlbum" class="linkedAlbumPopIn">
+  <div class="linkedAlbumPopInContainer">
+    <a class="gallery-icon-cancel ClosePopIn" id="closeAlbumPopIn"></a>
+
+    <div class="AddIconContainer">
+      <span class="AddIcon icon-blue gallery-icon-plus-circled"></span>
+    </div>
+    <div class="AddIconTitle">
+      <span id="linkedModalTitle"></span>
+    </div>
+
+    <div class="album-selector" id="linkedAlbumSelector">
+      <label class="head-button-2 put-to-root-container notClickable" id="put-to-root">
+        <p class="icon-home">Put at the root</p>
+      </label>
+      <p class="put-to-root-container">or</p>
+
+      <div id="linkedAlbumSearch">
+        <span class='icon-search search-icon'> </span>
+        <span class="icon-cancel search-cancel-linked-album" style="display: none;"></span>
+        <input class='search-input' type='text' id="search-input-ab" placeholder="">
+      </div>
+      <div class="limitReached"></div>
+      <div class="noSearch"></div>
+      <div class="searching gallery-icon-spin6 animate-spin"> </div>
+    </div>
+
+    <div id="searchResult">
+    </div>
+
+    <div class="album-create" id="linkedAlbumCreate" style="display: none;">
+      <div class="linked-album-subtitle">
+        <p id="linkedAlbumSubtitle">Add a sub-album of “Album 3”</p>
+      </div>
+
+      <div class="linked-album-input-container album-name">
+        <label class="user-property-label">Album name
+          <input class="user-property-input" id="linkedAlbumInput" />
+        </label>
+      </div>
+
+      <div class="linked-album-input-container">
+        <label class="user-property-label">Position
+          <div class="linked-add-radio-input">
+            <input type="radio" id="place-start" name="position" value="first" checked>
+            <label for="place-start">Place first</label>
+          </div>
+          <div class="linked-add-radio-input">
+            <input type="radio" id="place-end" name="position" value="last">
+            <label for="place-end">Place last</label>
+          </div>
+        </label>
+      </div>
+
+      <div class="AddAlbumErrors">
+        <p class="icon-cancel" id="linkedAddAlbumErrors">omg big big error</p>
+      </div>
+
+      <div class="linked-album-create-btn">
+        <p class="linked-button-cancel" id="linkedAlbumCancel">Cancel</p>
+        <p class="buttonLike icon-plus" id="linkedAddNewAlbum">Create and select</p>
+      </div>
+    </div>
+
+    <div class="album-switch-bottom" id="linkedAlbumSwitch">
+      <div class="album-switch-container">
+        <div class="switch-input">
+          <label class="switch">
+            <input type="checkbox" name="locked" id="album-create-check" value="true">
+            <span class="slider round"></span>
+          </label>
+          <label class="switch-label" for="album-create-check"><span>Creation mode</span> <i
+              class="icon-help-circled tiptip" style="cursor:help"
+              title="Activate create mode to create and select an album"></i></label>
+        </div>
+        <p class="head-button-2 icon-plus-circled linked-add-album" id="linkedAddAlbum">
+          Create a root album</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+      <div class="cat-modify-switch-container">
+        <div class="switch-input">
+          <label class="switch">
+            <input type="checkbox" name="commentable" id="cat-commentable" value="true" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <label class="switch-label" for="cat-commentable"><span>Authorize comments</span> <i class="icon-help-circled tiptip" title="A photo can receive comments from your visitors if it belongs to an album with comments activated." style="cursor:help"></i></label>
+      </div>
+      <div class="cat-modify-switch-container">
+        <div class="switch-input">
+          <label class="switch">
+            <input type="checkbox" name="locked" id="cat-locked" value="true" >
+            <span class="slider round"></span>
+          </label>
+          
+        </div>    
+        <label class="switch-label" for="cat-locked"><span>Locked album</span> <i class="icon-help-circled tiptip" title="Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Locking this album will also lock its sub-albums." style="cursor:help"></i></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-modify-footer">
+   <div class="cat-modify-footer-start">
+      <a class="cat-modify-footer-see-out" href="index.php?/category/1"><i class="icon-left-open"></i>Open in gallery</a>
+   </div>
+   <div class="cat-modify-footer-end">
+    <div class="info-message icon-ok">Album updated</div>
+    <div class="info-error icon-cancel">An error has occured while saving album settings</div>
+    <span class="buttonLike" id="cat-properties-save"><i class="icon-floppy"></i> Save Settings</span>
+   </div>
+  </div>
+  <div class="desc-modal" id="desc-modal">
+    <div class="desc-modal-content">
+      <div class="desc-modal-header">
+        <p>Description</p>
+      </div>
+      <div class="desc-modal-body">
+        <textarea class="sync-textarea" name="comment-modal" id="cat-comment-modal"></textarea>
+        </div>
+      <div class="desc-modal-footer">
+        <p id="desc-modal-close" class="cat-modify-footer-see-out"><span class="icon-resize-small"></span>Shrink</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+
+.toggle-comment-option {
+  cursor: pointer;
+  position: relative;
+}
+
+.toggle-comment-option::before{
+  transform: scale(1.3);
+}
+
+.comment-option {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(130deg, #ff7700 0%, #ffa744 100%);
+  right: -10px;
+  top: 45px;
+  width: max-content;
+  border-radius: 10px;
+}
+
+.comment-option span, .comment-option a {
+  padding: 5px 10px;
+  text-decoration: none;
+  color: white;
+  font-weight: 600;
+  text-align: initial;
+}
+
+.comment-option::after {
+  content: " ";
+  position: absolute;
+  top: -10px;
+  right: 21px;
+  transform: rotate(0deg);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #ff7700 transparent;
+}
+
+.comment-option span:first-child::before {
+  margin-right: -1px;
+}
+
+.comment-option span:hover:first-child {
+  color: white;
+  background-color: #00000012;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.comment-option span:hover:last-child {
+  color: white;
+  background-color: #00000012;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.cat-modify-footer .spinner {
+  width: 20px;
+  height: 20px;
+}
+
+.warnings {
+  display: none;
+}
+
+.directory {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cat-modify-infos .cat-modify-info-content.directory::first-letter {
+    text-transform: none;
+}
+</style>
+</div>
+</div>
+
+
+<div id="footer">
+  <div>
+    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What's new in version 16?">
+      <i class="icon-bell"></i>
+    </span>
+  </div>
+  <div id="pageInfos">
+    Contact
+    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+  </div>
+</div></div>
+<div id="whats_new">
+    <div id="whats_new_popin">
+      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <h3>What's new in version 16?</h3>
+      <div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-blue whats_new_block_w_60">
+            <h4>Brand new login & preferences with Standard pages!</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
+          </div>
+          <div class="whats_new_block icon-purple whats_new_block_w_40">
+            <h4>Two factor authentication is here</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
+          </div>
+        </div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-green whats_new_block_w_100">
+            <h4>UI redesigns that make a difference</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
+          </div>
+                </div>
+      <div class="whats_new_buttons">
+        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
+        <a class="buttonLike" href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+      </div>
+    </div>
+</div>
+
+<style>
+
+
+</style>
+
+
+
+
+<!-- BEGIN get_combined -->
+<script type="text/javascript" src="_data/combined/1qerqi9.js"></script>
+<script type="text/javascript">//<![CDATA[
+
+const has_images_associated_outside = 'delete album and all %d photos, even the %d associated to other albums';
+const has_images_becomming_orphans = 'delete album and the %d orphan photos';
+const has_images_recursives = 'delete only album, not photos';
+const cat_nav = ' <a href=\"admin.php?page=album-1\">Sample Album<\/a>';
+const album_id = 1
+var parent_album = 0
+var default_parent_album = 0
+const album_name = "Sample Album"
+const nb_sub_albums = 1
+const pwg_token = '1672d1590fccd3da06cb151aafd1ba424146e36f82162ff9e66a54974844f0fb'
+const u_delete = 'admin.php?page=albums'
+var is_visible = 'true'
+let related_categories_ids = ["1", "0"];
+
+const str_cancel = 'No, I have changed my mind'
+const str_delete_album = 'Delete album'
+const str_delete_album_and_his_x_subalbums = 'Delete album \"%s\" and its %d sub-albums.'
+const str_just_now = 'Just now'
+
+const str_dont_delete_photos = 'delete only album, not photos';
+const str_delete_orphans = 'delete album and the %d orphan photos';
+const str_delete_all_photos = 'delete album and all %d photos, even the %d associated to other albums';
+
+str_orphan = 'This photo is an orphan';
+str_album_comment_allow = 'Comments allowed for sub-albums';
+str_album_comment_disallow = 'Comments disallowed for sub-albums';
+const str_modal_ab = 'New parent album';
+const str_plus_albums_found = "Only the first %d albums are displayed, out of %d."
+  const str_album_selected = "Album already selected"
+  const str_already_in_related_cats = 'This albums is already in related albums list';
+  const str_no_search_in_progress = 'No search in progress';
+  const str_albums_found = '<b>%d<\/b> albums found';
+  const str_album_found = '<b>1<\/b> album found';
+  const str_result_limit = '<b>%d+<\/b> albums found, try to refine the search';
+  const str_add_subcat_of = 'Add a sub-album to “%s”';
+  const str_create_and_select = 'Create and select';
+  const str_root_album_select = 'Root';
+  const str_complete_name_field = 'Name field must not be empty';
+  const str_an_error_has_occured = 'An error has occured';
+  const str_album_modal_title = 'Select an album';
+  const str_album_modal_placeholder = 'Search';
+  const str_root = 'Root';
+jQuery.fn.lightAccordion = function(options) {
+  var settings = $.extend({
+    header: 'dt',
+    content: 'dd',
+    active: 0
+  }, options);
+  
+  return this.each(function() {
+    var self = jQuery(this);
+    
+    var contents = self.find(settings.content),
+        headers = self.find(settings.header);
+    
+    contents.not(contents[settings.active]).hide();
+  
+    self.on('click', settings.header, function() {
+        var content = jQuery(this).next(settings.content);
+        content.slideDown();
+        contents.not(content).slideUp();
+    });
+  });
+};
+
+$('#menubar').lightAccordion({
+  active: 1
+});
+
+/* in case we have several infos/errors/warnings display bullets */
+jQuery(document).ready(function() {
+  var eiw = ["infos","erros","warnings", "messages"];
+
+  for (var i = 0; i < eiw.length; i++) {
+    var boxType = eiw[i];
+
+    if (jQuery("."+boxType+" ul li").length > 1) {
+      jQuery("."+boxType+" ul li").css("list-style-type", "square");
+      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
+    }
+  }
+
+  if (jQuery('h2').length > 0) {
+    jQuery('h1').html(jQuery('h2').html());
+  }
+});
+jQuery('.tiptip').tipTip({
+  delay: 0,
+  fadeIn: 200,
+  fadeOut: 200
+});
+
+jQuery('a.externalLink').click(function() {
+  window.open(jQuery(this).attr("href"));
+  return false;
+});
+
+function hide_user_whats_new() {
+  $.ajax({
+    url: "ws.php?format=json&method=pwg.users.preferences.set",
+    type: "POST",
+    dataType: "JSON",
+    data: {
+      param: 'show_whats_new_16',
+      value: false,
+    }
+  })
+  $('#whats_new').hide();
+}
+
+function show_user_whats_new() {
+  $('#whats_new').show();
+}
+//]]></script>
+<!-- END get_combined -->
+
+<script type="module" src="dist/vitals.js"></script>
+
+</body>
+</html>

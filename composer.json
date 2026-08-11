@@ -106,6 +106,7 @@
   },
   "scripts": {
     "lint:php": "@php vendor/bin/ecs check",
+    "lint:psr4": "@composer dump-autoload --optimize --strict-psr",
     "analyse:phpstan": "@php vendor/bin/phpstan analyse",
     "analyse": [
       "@analyse:phpstan"

@@ -12,7 +12,7 @@ use Piwigo\Core\UrlServiceInterface;
 /**
  * baseUrl() only ever calls getRootUrl() -- every other UrlServiceInterface
  * method throws so a regression that starts reaching one is caught
- * immediately, matching PwgTOTPTestFakeUrlService's own established shape.
+ * immediately, matching TotpTestFakeUrlService's own established shape.
  */
 final class PhotosAddDirectPageRendererTestFakeUrlService implements UrlServiceInterface
 {

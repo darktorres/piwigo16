@@ -763,12 +763,12 @@ final readonly class AuthService
     public function generateUserCode(): array
     {
 
-        $secret = PwgTOTP::generateSecret();
+        $secret = Totp::generateSecret();
         // password_reset_code_duration defaults to 5*60 (int) in
         // include/config_default.inc.php, but once persisted to the config DB
         // table it comes back as a raw string (see load_conf_from_db())
         $password_reset_code_duration = $this->currentConfig->passwordResetCodeDuration;
-        $code = PwgTOTP::generateCode($secret, min($password_reset_code_duration, 900)); // max 15 minutes
+        $code = Totp::generateCode($secret, min($password_reset_code_duration, 900)); // max 15 minutes
 
         return [
             'secret' => $secret,
@@ -781,6 +781,6 @@ final readonly class AuthService
 
         // see generateUserCode() for why this needs numeric narrowing
         $password_reset_code_duration = $this->currentConfig->passwordResetCodeDuration;
-        return PwgTOTP::verifyCode($code, $secret, min($password_reset_code_duration, 900), 1);
+        return Totp::verifyCode($code, $secret, min($password_reset_code_duration, 900), 1);
     }
 }

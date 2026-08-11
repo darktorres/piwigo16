@@ -17,7 +17,7 @@ use Piwigo\Core\UrlServiceInterface;
  * regression that starts reaching one is caught immediately, matching
  * DerivativeImageTestFakeUrlService's own established shape.
  */
-final class PwgTOTPTestFakeUrlService implements UrlServiceInterface
+final class TotpTestFakeUrlService implements UrlServiceInterface
 {
     #[Override]
     public function getRootUrl(): string

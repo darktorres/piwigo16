@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use PgSql\Connection;
-use Piwigo\Auth\PwgTOTP;
+use Piwigo\Auth\Totp;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -323,7 +323,7 @@ function passwordSessionData(string $pwgIdCookieValue): string
  * Extracts `$_SESSION['reset_password_code']['secret']` straight out of the
  * real session row PHP's own default (non-igbinary) session serialize
  * format -- lets this suite compute a genuinely valid verification code
- * with \Piwigo\Auth\PwgTOTP::generateCode() (the exact same algorithm
+ * with \Piwigo\Auth\Totp::generateCode() (the exact same algorithm
  * AuthService::verifyUserCode() itself calls) without ever needing to read
  * a real, undeliverable test email, mirroring how passwordInsertResetUser()
  * above sidesteps mail for the reset-key flow. 'secret' is written first in
@@ -353,7 +353,7 @@ function passwordComputeValidCode(string $secret): string
     $durationRaw = H::configValue('password_reset_code_duration');
     $duration = $durationRaw !== null && is_numeric($durationRaw) ? (int) $durationRaw : 300;
 
-    return PwgTOTP::generateCode($secret, min($duration, 900));
+    return Totp::generateCode($secret, min($duration, 900));
 }
 
 /**
@@ -785,7 +785,7 @@ it('switches to a valid, different lang cookie and shows the French translation'
  * (see its own docblock) instead of Playwright, so a real
  * $_SESSION['reset_password_code']['secret'] can be read directly out of
  * the DB-backed `sessions` table between requests and fed through the same
- * \Piwigo\Auth\PwgTOTP::generateCode() algorithm AuthService::
+ * \Piwigo\Auth\Totp::generateCode() algorithm AuthService::
  * verifyUserCode() itself uses -- without ever needing to read a real,
  * undeliverable test email (see this file's own top-of-file docblock for
  * why mail delivery isn't observable in this environment either).

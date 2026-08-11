@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Auth\PwgBase32;
+use Piwigo\Auth\Base32;
 
 /**
  * RFC 4648 section 10 publishes canonical base32 test vectors for the
@@ -36,55 +36,55 @@ use Piwigo\Auth\PwgBase32;
  *   boundary round-trip test below.
  */
 test('encode returns an empty string for empty input', function (): void {
-    expect(PwgBase32::encode(''))->toBe('');
+    expect(Base32::encode(''))->toBe('');
 });
 
 test('encode pads a single byte to the RFC 4648 vector', function (): void {
-    expect(PwgBase32::encode('f'))->toBe('MY======');
+    expect(Base32::encode('f'))->toBe('MY======');
 });
 
 test('encode without padding omits the trailing = characters', function (): void {
-    expect(PwgBase32::encode('f', false))->toBe('MY');
+    expect(Base32::encode('f', false))->toBe('MY');
 });
 
 test('encode a 3-byte input matches the RFC 4648 vector', function (): void {
-    expect(PwgBase32::encode('foo'))->toBe('MZXW6===');
+    expect(Base32::encode('foo'))->toBe('MZXW6===');
 });
 
 test('encode a 6-byte input matches the RFC 4648 vector', function (): void {
-    expect(PwgBase32::encode('foobar'))->toBe('MZXW6YTBOI======');
+    expect(Base32::encode('foobar'))->toBe('MZXW6YTBOI======');
 });
 
 test('encode a 2-byte input (16-bit remainder) matches the RFC 4648 vector', function (): void {
     // 2 bytes = 16 bits, so strlen($binaryString) % 40 === 16 -- a
     // distinct padding branch from the 1-byte (x=8) and 3-byte (x=24)
     // cases above, exercising the 4-padding-char '$x === 16' branch.
-    expect(PwgBase32::encode('fo'))->toBe('MZXQ====');
+    expect(Base32::encode('fo'))->toBe('MZXQ====');
 });
 
 test('encode a 4-byte input (32-bit remainder) matches the RFC 4648 vector', function (): void {
     // 4 bytes = 32 bits, so strlen($binaryString) % 40 === 32 -- the
     // remaining untested padding branch, appending a single '=' char.
-    expect(PwgBase32::encode('foob'))->toBe('MZXW6YQ=');
+    expect(Base32::encode('foob'))->toBe('MZXW6YQ=');
 });
 
 test('decode returns null for empty input', function (): void {
-    expect(PwgBase32::decode(''))->toBeNull();
+    expect(Base32::decode(''))->toBeNull();
 });
 
 test('decode rejects a padding-character count RFC 4648 never produces', function (): void {
     // Valid trailing '=' counts are 6, 4, 3, 1 or 0 -- 2 is never valid.
-    expect(PwgBase32::decode('ABCDEF=='))->toBeFalse();
+    expect(Base32::decode('ABCDEF=='))->toBeFalse();
 });
 
 test('decode rejects padding characters that are not at the very end', function (): void {
     // One '=' is a valid count, but it must be the last character.
-    expect(PwgBase32::decode('AB=CDEFG'))->toBeFalse();
+    expect(Base32::decode('AB=CDEFG'))->toBeFalse();
 });
 
 test('decode rejects an invalid leading character of an 8-char block', function (): void {
     // '1' and '0' are not in the base32 alphabet (only 2-7 are used).
-    expect(PwgBase32::decode('1AAAAAAA'))->toBeFalse();
+    expect(Base32::decode('1AAAAAAA'))->toBeFalse();
 });
 
 test('decode rejects a padding count of 6 when those chars are not the true trailing block', function (): void {
@@ -95,7 +95,7 @@ test('decode rejects a padding count of 6 when those chars are not the true trai
     // === 6) is the only thing that rejects this; without it, rtrim()
     // silently strips the misplaced '=' run per-block and this decodes
     // "successfully" to a wrong value instead of failing.
-    expect(PwgBase32::decode('AB======ABCDEFGH'))->toBeFalse();
+    expect(Base32::decode('AB======ABCDEFGH'))->toBeFalse();
 });
 
 test('decode rejects a padding count of 1 when that char is not the true trailing block', function (): void {
@@ -103,14 +103,14 @@ test('decode rejects a padding count of 1 when that char is not the true trailin
     // 1 -- 'ABCDEFG=' ends its own (non-final) block in a single '=',
     // followed by a full valid block, so the misplaced pad char would
     // otherwise rtrim() away silently instead of being rejected.
-    expect(PwgBase32::decode('ABCDEFG=ABCDEFGH'))->toBeFalse();
+    expect(Base32::decode('ABCDEFG=ABCDEFGH'))->toBeFalse();
 });
 
 test('decode a lone padding character returns an empty string', function (): void {
     // A single '=' passes the padding-count/position checks (count 1,
     // at the end), then str_replace strips it to '', leaving nothing
     // for the byte-decoding loop to iterate over.
-    expect(PwgBase32::decode('='))->toBe('');
+    expect(Base32::decode('='))->toBe('');
 });
 
 test('encode/decode round-trip correctly for a 5-byte input needing no padding', function (): void {
@@ -118,8 +118,8 @@ test('encode/decode round-trip correctly for a 5-byte input needing no padding',
     // ever produced and the decode loop's fixed 8-char stride lines up
     // exactly with the real data -- this is the aligned case where the
     // round trip is correct end to end.
-    expect(PwgBase32::encode('world'))->toBe('O5XXE3DE')
-        ->and(PwgBase32::decode('O5XXE3DE'))->toBe('world');
+    expect(Base32::encode('world'))->toBe('O5XXE3DE')
+        ->and(Base32::decode('O5XXE3DE'))->toBe('world');
 });
 
 test('decode correctly decodes a padded value (regression test for a fixed bug)', function (): void {
@@ -130,11 +130,11 @@ test('decode correctly decodes a padded value (regression test for a fixed bug)'
     // declare(strict_types=1)) -- fixed to decode block-by-block
     // against the un-stripped input instead. Covers all 4 non-zero
     // padding levels RFC 4648 defines, plus the zero-padding case.
-    expect(PwgBase32::decode('MY======'))->toBe('f')
-        ->and(PwgBase32::decode('MZXQ===='))->toBe('fo')
-        ->and(PwgBase32::decode('MZXW6==='))->toBe('foo')
-        ->and(PwgBase32::decode('MZXW6YQ='))->toBe('foob')
-        ->and(PwgBase32::decode('MZXW6YTBOI======'))->toBe('foobar');
+    expect(Base32::decode('MY======'))->toBe('f')
+        ->and(Base32::decode('MZXQ===='))->toBe('fo')
+        ->and(Base32::decode('MZXW6==='))->toBe('foo')
+        ->and(Base32::decode('MZXW6YQ='))->toBe('foob')
+        ->and(Base32::decode('MZXW6YTBOI======'))->toBe('foobar');
 });
 
 test('encode/decode round-trips for every input length from 1 to 8 bytes', function (): void {
@@ -143,7 +143,7 @@ test('encode/decode round-trips for every input length from 1 to 8 bytes', funct
     // a padded one), proving the fix generalizes beyond the single-block
     // RFC 4648 vectors above.
     foreach (['a', 'ab', 'abc', 'abcd', 'abcde', 'abcdef', 'abcdefg', 'abcdefgh'] as $plaintext) {
-        expect(PwgBase32::decode(PwgBase32::encode($plaintext)))->toBe($plaintext);
+        expect(Base32::decode(Base32::encode($plaintext)))->toBe($plaintext);
     }
 });
 
@@ -154,8 +154,8 @@ test('encode/decode round-trips the byte value boundaries 0x00 and 0xFF', functi
     // contributes an all-one 5-bit chunk (can yield codepoint 255).
     // Tightening either clamp bound (0->1 or 255->254) would silently
     // corrupt exactly these two byte values.
-    expect(PwgBase32::decode(PwgBase32::encode("\x00")))->toBe("\x00")
-        ->and(PwgBase32::decode(PwgBase32::encode("\xFF")))->toBe("\xFF");
+    expect(Base32::decode(Base32::encode("\x00")))->toBe("\x00")
+        ->and(Base32::decode(Base32::encode("\xFF")))->toBe("\xFF");
 });
 
 test('encode/decode round-trips without padding too', function (): void {
@@ -164,6 +164,6 @@ test('encode/decode round-trips without padding too', function (): void {
     // the padded cases above, also handled by decode()'s per-block
     // chunking (str_split()'s own shorter-final-chunk behavior).
     foreach (['a', 'ab', 'abc', 'abcd', 'abcde', 'abcdef'] as $plaintext) {
-        expect(PwgBase32::decode(PwgBase32::encode($plaintext, false)))->toBe($plaintext);
+        expect(Base32::decode(Base32::encode($plaintext, false)))->toBe($plaintext);
     }
 });

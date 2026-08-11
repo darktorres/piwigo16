@@ -9,7 +9,7 @@ use InvalidArgumentException;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Users\CurrentUser;
 
-final class PwgTOTP
+final class Totp
 {
     /**
      * Generate a TOTP code for a given 30s-interval timestamp
@@ -20,7 +20,7 @@ final class PwgTOTP
      */
     private static function generateCodeFromTimestamp(string $secret, float $timestamp): string
     {
-        $key = PwgBase32::decode($secret);
+        $key = Base32::decode($secret);
 
         $msg = pack('N*', 0) . pack('N*', $timestamp); // hash_hmac need this form
         $hash = hash_hmac('sha1', $msg, (string) $key, true);
@@ -50,7 +50,7 @@ final class PwgTOTP
             throw new InvalidArgumentException('generateSecret(): $length must be at least 1');
         }
         $random = random_bytes($length);
-        return PwgBase32::encode($random, false);
+        return Base32::encode($random, false);
     }
 
     /**

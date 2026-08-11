@@ -18,7 +18,7 @@ use Piwigo\Ws\WsErrorResponse;
 final class SerialPhpEncoder extends ResponseEncoder
 {
     #[Override]
-    public function encodeResponse($response): string
+    public function encodeResponse(mixed $response): string
     {
         if ($response instanceof WsErrorResponse) {
             return serialize(

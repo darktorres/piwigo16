@@ -25,7 +25,7 @@ final class NamedArray
     /**
      * @var array<string, int>
      */
-    public $xmlAttributes;
+    public array $xmlAttributes;
 
     /**
      * Constructs a named array

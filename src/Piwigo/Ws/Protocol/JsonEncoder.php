@@ -18,7 +18,7 @@ use Piwigo\Ws\WsErrorResponse;
 final class JsonEncoder extends ResponseEncoder
 {
     #[Override]
-    public function encodeResponse($response): string|false
+    public function encodeResponse(mixed $response): string|false
     {
         if ($response instanceof WsErrorResponse) {
             return json_encode(

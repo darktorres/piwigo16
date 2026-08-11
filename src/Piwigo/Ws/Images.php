@@ -292,9 +292,6 @@ final readonly class Images
 
     /**
      * Deletes chunks added with pwg.images.addChunk
-     * @param string $original_sum
-     * @param string $type
-     *
      * Function introduced for Piwigo 2.4 and the new "multiple size"
      * (derivatives) feature. As we only need the biggest sent photo as
      * "original", we remove chunks for smaller sizes. We can't make it earlier
@@ -302,7 +299,7 @@ final readonly class Images
      * will be the biggest (we could remove the thumb, but let's use the same
      * algorithm)
      */
-    private function removeChunks($original_sum, string $type): void
+    private function removeChunks(string $original_sum, string $type): void
     {
 
         $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir;

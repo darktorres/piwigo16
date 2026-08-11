@@ -19,30 +19,18 @@ namespace Piwigo\Ws\Protocol;
  */
 final class XmlWriter
 {
-    /**
-     * @var string
-     */
-    public $indentStr;
+    public string $indentStr;
 
     /**
      * @var string[]
      */
-    public $elementStack;
+    public array $elementStack;
 
-    /**
-     * @var bool
-     */
-    public $lastTagOpen;
+    public bool $lastTagOpen;
 
-    /**
-     * @var int
-     */
-    public $indentLevel;
+    public int $indentLevel;
 
-    /**
-     * @var string
-     */
-    public $encodedXml;
+    public string $encodedXml;
 
     public function __construct()
     {

@@ -25,7 +25,7 @@ final class NamedStruct
     /**
      * @var array<array-key, int>
      */
-    public $xmlAttributes;
+    public array $xmlAttributes;
 
     /**
      * Constructs a named struct (usually returned by web service function

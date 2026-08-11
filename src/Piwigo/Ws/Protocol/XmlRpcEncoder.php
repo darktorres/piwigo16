@@ -22,7 +22,7 @@ use Piwigo\Ws\WsErrorResponse;
 final class XmlRpcEncoder extends ResponseEncoder
 {
     #[Override]
-    public function encodeResponse($response): string
+    public function encodeResponse(mixed $response): string
     {
         if ($response instanceof WsErrorResponse) {
             $code = $response->code();

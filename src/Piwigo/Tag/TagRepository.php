@@ -101,7 +101,7 @@ final class TagRepository extends EntityRepository
      * Accepts either query-builder flavor -- {@see SqlCondition}'s own
      * `sql`/`parameters`/`types` shape (a raw fragment string + named
      * bound parameters) applies identically via `andWhere()`/
-     * `setParameter()` on both, confirmed empirically: neither
+     * `setParameter()` on both; neither
      * {@see PermissionCriteria} nor `SqlCondition` needed any new
      * DQL-specific contract -- a DQL consumer just passes a DQL property
      * path (e.g. `ic.categoryId`) instead of a raw SQL column

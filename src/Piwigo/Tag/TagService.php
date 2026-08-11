@@ -672,9 +672,9 @@ final readonly class TagService
             // separately-constructed TagId(5) instances would never be
             // considered equal -- would silently mark every image as
             // "changed" on every call. Compare the unwrapped value lists
-            // instead (empirically verified: sort() itself DOES order
-            // same-class objects correctly by property value under
-            // SORT_REGULAR, so only the equality check needed fixing).
+            // instead -- sort() itself DOES order same-class objects
+            // correctly by property value under SORT_REGULAR, so only the
+            // equality check needed fixing.
             $valuesAfter = array_map(static fn (TagId $id): int => $id->value, $listAfter);
             $valuesBefore = array_map(static fn (TagId $id): int => $id->value, $listBefore);
 

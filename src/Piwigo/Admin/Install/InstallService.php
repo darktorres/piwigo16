@@ -141,10 +141,9 @@ final class InstallService
             $version = new DbInfo($conn)
                 ->version();
 
-            // Real bug found live -- this ran
-            // unconditionally against every driver, so a genuine
-            // PostgreSQL 18.4 server failed here with "your MySQL version
-            // is too old, you have "PostgreSQL 18.4 (...)..." (version_compare()
+            // Unconditionally comparing against the MySQL floor would fail
+            // for a genuine PostgreSQL server with "your MySQL version is
+            // too old, you have "PostgreSQL 18.4 (...)..." (version_compare()
             // can't parse Postgres's own full descriptive version() string
             // against a bare MySQL-shaped floor at all). PostgreSQL's
             // version() output isn't a bare X.Y.Z the way MySQL's is

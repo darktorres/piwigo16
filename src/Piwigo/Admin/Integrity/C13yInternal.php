@@ -71,13 +71,12 @@ final readonly class C13yInternal
         $rawDbVersion = new DbInfo($conn)
             ->version();
 
-        // Real bug found live -- Postgres's own
-        // SELECT version() output is a full descriptive string
-        // ("PostgreSQL 18.4 (Ubuntu ...) on x86_64-pc-linux-gnu,
+        // Postgres's own SELECT version() output is a full descriptive
+        // string ("PostgreSQL 18.4 (Ubuntu ...) on x86_64-pc-linux-gnu,
         // compiled by gcc ..."), not a bare parseable version number the
         // way MySQL's is -- version_compare() against the raw string
-        // always reported "less than" any real required version,
-        // flagging a false anomaly on every real Postgres install.
+        // always reports "less than" any real required version, flagging
+        // a false anomaly on every real Postgres install.
         // Extracts just the leading X.Y(.Z) numeric version for the
         // comparison itself; the anomaly message (if one fires) still
         // reports the full raw string, unchanged -- more useful

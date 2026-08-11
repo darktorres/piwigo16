@@ -201,7 +201,7 @@ final class InstallWizard
         // connection via Piwigo\Db\DbConnection::build() (which reads
         // DbCredentials::current()) would otherwise silently see whatever
         // was already in the process environment instead of the real
-        // submitted credentials. Found live: get_default_user_value() ->
+        // submitted credentials -- e.g. get_default_user_value() ->
         // UserService -> UserRepository -> DbConnection::build(), reached
         // from InstallService::activateCoreThemes() during step-2 theme
         // activation, fatals with "Access denied for user ''@'localhost'"
@@ -231,12 +231,10 @@ final class InstallWizard
         // Same reasoning again, different dependency: this request never
         // goes through RequestBootstrap::bootEntryPoint()/bootConfigOnly()
         // (only InstallBootstrap::boot(), which doesn't touch CurrentUser),
-        // so CurrentUser is never guest-
-        // initialized either. Found live (real
-        // fixture-regen run, not assumed): InstallService::
-        // activateCoreThemes() -> ExtensionScanner::scan()'s missing-
-        // screenshot fallback -> PreferencesService::getParam() ->
-        // CurrentUser::get() -> uncaught "CurrentUser not initialised".
+        // so CurrentUser is never guest-initialized either -- without this,
+        // InstallService::activateCoreThemes() -> ExtensionScanner::scan()'s
+        // missing-screenshot fallback -> PreferencesService::getParam() ->
+        // CurrentUser::get() throws uncaught "CurrentUser not initialised".
         // attachGlobals() is exactly the safe guest default this no-boot
         // path needs (idempotent; a later real CurrentUser::set() in
         // render() is never clobbered by this).
@@ -477,10 +475,9 @@ final class InstallWizard
         // real MigrateCommand programmatically (ArrayInput/setInteractive
         // (false) skips its confirmation prompt, matching --no-interaction)
         // rather than calling AliasResolver::resolveVersionAlias()/
-        // Migrator::migrate()/MigratorConfiguration directly -- confirmed
-        // via a real PHPStan run that all 3 are internal Doctrine APIs
-        // (method.internalInterface/new.internalClass), off limits from
-        // outside the Doctrine root namespace; MigrateCommand itself is
+        // Migrator::migrate()/MigratorConfiguration directly -- all 3 are
+        // internal Doctrine APIs (method.internalInterface/new.internalClass),
+        // off limits from outside the Doctrine root namespace; MigrateCommand itself is
         // the sanctioned public entry point, and running it this way also
         // means a future point release adding a new migration file here
         // becomes the real upgrade path for an existing install (bin/
@@ -497,9 +494,9 @@ final class InstallWizard
         // docblock above for why), not through a full Symfony Application --
         // unlike a real CLI invocation, that does NOT guarantee every
         // failure is caught internally and converted to a plain exit code.
-        // Confirmed live: a driver-level exception (mysqli's own
-        // exception-throwing mode, e.g. a genuine "table already exists")
-        // can still escape run() uncaught. public/install.php's own
+        // A driver-level exception (mysqli's own exception-throwing mode,
+        // e.g. a genuine "table already exists") can still escape run()
+        // uncaught. public/install.php's own
         // top-level catch only handles ResponseReadyException, so letting
         // that propagate would reach the client as a raw fatal error/blank
         // page instead of the installer's own error UI -- caught here and
@@ -663,9 +660,8 @@ final class InstallWizard
             // The former top-level code wrapped everything below in
             // `if (isset($error_copy)) { $errors[] = $error_copy; } else {...}`;
             // $error_copy was a relic of the long-removed copy-of-files
-            // install step and is assigned nowhere in the whole codebase
-            // (verified by full-repo grep in the 8f-6 port), so the isset()
-            // was always false and the guard was dropped.
+            // install step and is assigned nowhere in the whole codebase,
+            // so the isset() was always false and the guard was dropped.
 
             // See Piwigo\Bootstrap\SessionBootstrap (kept inline here: at
             // this point of the install InstallationFlag was only just
@@ -696,9 +692,7 @@ final class InstallWizard
             } else {
                 $login_user_id = false;
             }
-            // Real bug, found via a fixture-regeneration discrepancy (an
-            // activity row expected to be attributed to the new admin came
-            // back performed_by=NULL instead): this install flow never goes
+            // This install flow never goes
             // through Bootstrap\UserBootstrap::initialize() (the only place
             // that normally syncs Users\CurrentUser from the session for a
             // request), so ActivityService::record()'s own

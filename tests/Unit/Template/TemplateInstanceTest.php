@@ -1925,6 +1925,18 @@ test('funcCombineScript keeps a real string version', function (): void {
     expect($t->scriptLoader->getAll()['x']->version)->toBe('3.2');
 });
 
+test('funcCombineScript keeps version=false as-is, mirroring funcCombineCss', function (): void {
+    $t = TemplateTestFactory::build();
+
+    $t->funcCombineScript([
+        'id' => 'x',
+        'path' => 'x.js',
+        'version' => false,
+    ]);
+
+    expect($t->scriptLoader->getAll()['x']->version)->toBeFalse();
+});
+
 test('funcCombineScript defaults is_template to false when the template param is missing', function (): void {
     $t = TemplateTestFactory::build();
 
@@ -2007,9 +2019,10 @@ test('funcGetCombinedScripts returns the combined-scripts placeholder for the he
 });
 
 test('funcGetCombinedScripts renders sync footer scripts from get_footer_scripts()[0] as plain script tags', function (): void {
-    // funcCombineScript() never lets a script's version become the
-    // literal false (unlike funcCombineCss()) -- it always falls back to
-    // a string, so makeScriptSrc() always appends a "?v..." suffix here.
+    // No explicit 'version' param here, so it defaults to '0' (falsy),
+    // and makeScriptSrc() falls back to AppInfo::VERSION -- see
+    // "funcCombineScript keeps version=false as-is" below for the
+    // version=false path, which omits the "?v..." suffix entirely.
     // Exact match (not toContain) so positional mutations (dropping or
     // reordering the surrounding markup) are distinguishable too.
     $t = TemplateTestFactory::build();

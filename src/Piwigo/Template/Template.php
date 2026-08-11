@@ -1214,7 +1214,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $path = is_string($path) ? $path : null;
 
         $version = $params['version'] ?? '0';
-        $version = is_string($version) ? $version : '0';
+        $version = ($version === false || is_string($version)) ? $version : '0';
 
         $this->scriptLoader->add(
             $id,

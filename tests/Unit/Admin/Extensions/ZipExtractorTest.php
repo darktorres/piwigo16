@@ -49,6 +49,76 @@ function zip_extractor_rrmdir(string $dir): void
     rmdir($dir);
 }
 
+// [Mutation] Remaining untested mutations after mutation testing, all
+// verified genuinely inert via hand-mutation + a full filtered rerun --
+// zero new tests needed, triaged into 4 groups:
+//
+// 1. For-loop bound mutations on `for ($i = 0; $i < $zip->numFiles;
+//    $i++)` (SmallerToSmallerOrEqual, DecrementInteger -- listFilenames()
+//    Line 46, extract()'s size-accumulation loop Line 92, extract()'s
+//    main loop Line 121) plus their sibling `$stat === false` guards
+//    (FalseToTrue, Lines 48/94/123): confirmed via a direct probe
+//    (`ZipArchive::statIndex()` on an out-of-range index, negative or
+//    >= numFiles) that it returns `false` just like any other stat
+//    failure -- the existing `if ($stat === false) { continue; }` guard
+//    already absorbs one extra out-of-bounds iteration at either end
+//    with zero observable difference in the final result.
+//
+// 2. `$zip->close()` removal (RemoveMethodCall -- Lines 53/86/99/136/
+//    158/198, one per early-return/success path): pure resource
+//    cleanup, confirmed via a direct probe that an unclosed ZipArchive
+//    doesn't hold any OS-level lock preventing the underlying file from
+//    being unlinked afterward -- no black-box assertion in this suite
+//    (or any suite, short of inspecting open file descriptors) can
+//    distinguish a closed archive from an unclosed one. Same reasoning
+//    for the 3 `fclose($source)`/`fclose($dest)` removals (Lines
+//    182/189/190) -- also confirmed `stream_copy_to_stream()` itself
+//    fully flushes without needing the later fclose() (the existing
+//    "extract writes files..." test still passes byte-for-byte with
+//    Line 190's fclose($dest) removed).
+//
+// 3. EmptyStringToNotEmpty on `$removePrefix !== ''` (Lines 110/141/147)
+//    and `$destPath === ''` (Line 151), each traced through to a
+//    DIFFERENT reason it can't manifest observably:
+//    - Line 110: mutating this makes `$removePrefix` become '/' instead
+//      of staying '' when the caller passes '.'  -- but Line 135
+//      already rejects the WHOLE archive for any entry whose stored
+//      name starts with '/', so no entry that survives to the
+//      prefix-stripping logic below can ever start with '/' either,
+//      making the '' vs '/' distinction unreachable downstream.
+//    - Line 141: with the real, correct $removePrefix === '', no real
+//      archive entry is ever stored as the literal empty string, so
+//      `$storedName === $removePrefix` is false regardless of which
+//      value the mutated first clause lets through.
+//    - Line 147: with $removePrefix === '', `str_starts_with($storedName,
+//      '')` is ALWAYS true (every string starts with the empty string)
+//      -- so `substr($storedName, 0)` (0-length prefix) is itself a
+//      no-op, making it irrelevant whether the branch is entered or not.
+//    - Line 151: confirmed via a direct, real extract() call that
+//      `$destPath === ''` always makes EVERY entry fail the zip-slip
+//      containment check a few lines later (normalizePath('') resolves
+//      to the bare root '/', and no real entry's own normalized path
+//      can satisfy containment under just '/') -- extract() returns
+//      null regardless of whether this specific ternary takes its true
+//      or false branch, confirmed both with and without the mutation.
+//
+// 4. Lines 179/180 (`$source`/`$dest` failure detection,
+//    `if ($source === false || $dest === false)`): when $source
+//    genuinely fails, the ternary on the line above ALSO sets $dest to
+//    false, so mutating either half of this `||` individually still
+//    lets the other half catch the same real failure -- confirmed via
+//    hand-mutation of each independently.
+//
+// Line 227's ConcatRemoveLeft (`'/' . implode('/', $resolved)` in
+// normalizePath(), dropping the leading '/') is genuinely inert too,
+// for a security-relevant reason worth calling out explicitly: this
+// function's ONLY real use is comparing two of its own outputs against
+// each other (the zip-slip containment check), never against an
+// externally-supplied absolute path -- dropping the leading '/'
+// uniformly from BOTH sides of that self-consistent comparison changes
+// nothing. Confirmed via the full zip-slip test suite still passing
+// byte-for-byte with the mutation applied.
+
 beforeEach(function (): void {
     mkdir(zip_extractor_test_marker(), 0o777, true);
 });

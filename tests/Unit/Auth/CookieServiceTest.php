@@ -11,6 +11,62 @@ beforeEach(function (): void {
 });
 
 /**
+ * [Mutation] A scoped `pest --mutate` rerun leaves 35 mutations
+ * "untested" beyond the real gap this file's own tests close (the
+ * REDIRECT_SCRIPT_NAME isset()+is_string() guard, tested below). Every
+ * one was individually hand-mutation-verified (temporary `sed` edit
+ * against the real source + a full rerun of this file, reverted after)
+ * rather than assumed from the pattern alone:
+ *
+ * 1. requestMountDepth()'s `return 0;` fallback (Line 45,
+ *    DecrementInteger) and cookiePath()'s own `$mountDepth > 0` boundary
+ *    (Line 115, DecrementInteger/GreaterToGreaterOrEqual): already
+ *    documented in the source's own inline comment above Line 115 --
+ *    entering the `../`-normalization block with mountDepth=0 is a
+ *    provable no-op (str_repeat('../', 0) === '', and the while loop's
+ *    own preg_replace() finds nothing to normalize), so $scr comes out
+ *    identical whether the boundary is `> 0`, `>= 0`, or `> -1`.
+ * 2. The 4 EmptyStringToNotEmpty mutations on cookiePath()'s own
+ *    string-typed fallbacks (Lines 63, 66, 71, 98 -- $redirect_url,
+ *    $path_info, the `path_info !== ''` guard, and $scr itself): each
+ *    replaces a literal `''` with pest's own placeholder text ('PEST
+ *    Mutator was here!'), which contains no '/' character -- every
+ *    consumer of these values (str_ends_with(), strrpos(), substr())
+ *    treats any slash-free string identically to '', so the exact
+ *    placeholder text (or any real-world non-'/'-containing fallback)
+ *    produces byte-identical output. Line 98 additionally matches this
+ *    file's own already-documented substr(X, 0, strlen(X)) === X
+ *    reasoning for the mountDepth boundary above.
+ * 3. Line 103's DecrementInteger/IncrementInteger (the trailing-slash
+ *    check's `strlen($scr) - 1` index) are BOTH already killed by
+ *    existing tests ("does not double the trailing slash..." and
+ *    "strips a trailing non-slash character..." respectively) --
+ *    confirmed live via hand-mutation (each produces a real, distinct
+ *    assertion failure when this file is rerun standalone) despite the
+ *    live scoped scan reporting them untested. Not chased further: this
+ *    is a tool-attribution quirk on already-covered code, not a gap.
+ * 4. The entire setCookieVar() setcookie() call-construction cluster
+ *    (Lines 162-186: both cookie-name concatenations, every options-
+ *    array key removal/cast-removal, the $expire is_numeric() ternary,
+ *    and the $value_str is_scalar() ternary) is the SAME already-
+ *    documented "not independently verifiable from CLI" limitation this
+ *    file's own inline comments above Lines 149 and 172 already
+ *    establish: setcookie() doesn't emit real, inspectable headers under
+ *    CLI SAPI (headers_list() stays empty after a real call), its own
+ *    bool return value doesn't vary with any of these mutations
+ *    (confirmed for the full cluster via a batched hand-mutation rerun),
+ *    and $_COOKIE itself is written via a SEPARATE statement unaffected
+ *    by any of them. A real web-server test (the technique
+ *    HtmlServiceTest.php established for setStatusHeader()) could
+ *    observe the actual Set-Cookie header content, but per
+ *    feedback_pest_mutate_invisible_to_subprocess_tests that would still
+ *    be permanently uncredited by `pest --mutate` itself (subprocess
+ *    execution is invisible to its per-test coverage attribution) --
+ *    not worth building for a mutation score that structurally cannot
+ *    move either way.
+ */
+
+/**
  * CookieService's own private lazy requestMountDepth() helper gracefully
  * falls back to 0 when Kernel hasn't booted -- most tests in this file
  * need no container at all. Tests needing a non-zero depth boot a real
@@ -36,6 +92,22 @@ test('cookiePath prefers REDIRECT_SCRIPT_NAME when set', function (): void {
 
     expect(new CookieService()->cookiePath())
         ->toBe('/redirected/');
+});
+
+test('cookiePath falls through to REDIRECT_URL when REDIRECT_SCRIPT_NAME is set but not a string', function (): void {
+    // isset() + is_string() must both hold (a real AND, not an OR) --
+    // a crafted `cookie[]=a&cookie[]=b`-style header can make
+    // REDIRECT_SCRIPT_NAME a set-but-non-string value. With `&&`, that
+    // correctly falls back to '' and lets REDIRECT_URL take over. With
+    // `||`, isset() alone (true) would short-circuit the ternary into
+    // using the raw array, which line 98's is_string() guard then
+    // narrows to '' anyway -- skipping REDIRECT_URL entirely and
+    // producing a bare '/' instead of the real REDIRECT_URL-derived path.
+    $_SERVER['REDIRECT_SCRIPT_NAME'] = ['not', 'a', 'string'];
+    $_SERVER['REDIRECT_URL'] = '/some/real/path/index.php';
+
+    expect(new CookieService()->cookiePath())
+        ->toBe('/some/real/path/');
 });
 
 test('cookiePath strips the PATH_INFO suffix from REDIRECT_URL before deriving the directory', function (): void {

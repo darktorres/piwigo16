@@ -1521,9 +1521,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 // pre-setting $tmp = null makes PHPStan conclude isset($tmp)
                 // is always false (a variable PHPStan believes always exists
                 // and is always null), so the ?: 'string cast' branch became
-                // unreachable *NEVER* instead. Confirmed empirically; this
-                // is a genuine static-analysis blind spot on eval(), not a
-                // missed narrowing opportunity.
+                // unreachable *NEVER* instead. This is a genuine
+                // static-analysis blind spot on eval(), not a missed
+                // narrowing opportunity.
                 // @phpstan-ignore cast.string, isset.variable, variable.undefined
                 return isset($tmp) ? (string) $tmp : '';
             },
@@ -1538,8 +1538,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Registered against a real Smarty compile pass (see the constructor's
      * own setPrefilter() call below), Smarty always invokes this with the
      * currently-compiling Smarty\Template, not the top-level Smarty\Smarty
-     * engine -- confirmed live (a bare `Smarty $smarty` closure param there
-     * throws a real TypeError). This method's own $smarty param is typed to
+     * engine (a bare `Smarty $smarty` closure param there throws a real
+     * TypeError). This method's own $smarty param is typed to
      * their shared common ancestor instead of the narrower Smarty\Template,
      * since it only ever calls getTemplateVars() (declared on that shared
      * base), and this file's own Unit tests call it directly against

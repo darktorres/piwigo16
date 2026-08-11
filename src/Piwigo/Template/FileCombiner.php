@@ -237,8 +237,7 @@ final class FileCombiner
             // single-combinable template request would silently fail to
             // write here (file_put_contents() against a non-existent
             // directory) while still pointing $combinable->path at the
-            // never-written file. Found live while adding coverage for this
-            // branch.
+            // never-written file.
             FilesystemHelper::mkgetdir(dirname($this->paths->root . $file), $this->currentConfig);
             file_put_contents($this->paths->root . $file, $content);
             $combinable->path = $file;

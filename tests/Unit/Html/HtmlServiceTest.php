@@ -111,6 +111,50 @@ function htmlServiceTestRootPathOverride(): RootPathOverride
     return $rootPathOverride;
 }
 
+// [Mutation] Remaining untested mutations after mutation testing, all
+// verified genuinely inert via hand-mutation, triaged into groups:
+//
+// 1. ConcatEqualToEqual (`.=` -> `=`, Line 283, getCatDisplayNameCache()'s
+//    own singleLink anchor-opening): $output is freshly initialized to
+//    '' immediately above the `if ($singleLink)` block, same universal
+//    finding as every other file in this campaign.
+//
+// 2. TernaryNegated/CoalesceRemoveLeft (Line 459, tagAlphaCompare()'s
+//    own $translit_b lookup): the loop right above this line already
+//    guarantees $transliterated[$name_b] is a real string (either
+//    already-cached or freshly computed via the same
+//    StringHelper::pwgTransliterate() call this ternary's own false
+//    branch would call again) -- pwgTransliterate() is a pure,
+//    deterministic function (mb_strtolower + removeAccents, no
+//    randomness/state), so forcing the false branch produces the
+//    identical value either way.
+//
+// 3. GreaterToGreaterOrEqual/DecrementInteger (Line 675,
+//    getCombinedCategoriesContentTitle()'s own `count($other_cats) > 0`
+//    check): only reachable inside the outer `count($all_categories) >
+//    1` gate (2+ total categories), and exactly one entry is always
+//    unset() from $other_cats per iteration -- so count($other_cats) is
+//    provably always >= 1 whenever this line runs, making `> 0`,
+//    `>= 0`, and `> -1` all equivalent in the only reachable state.
+//
+// 4. EmptyStringToNotEmpty (Line 992, pwgNl2br()'s own `$string === ''`
+//    sentinel clause): losing this one specific clause from the
+//    strict-equality OR-chain doesn't change the OUTPUT for an empty
+//    string -- it falls through to `nl2br((string) '')`, which also
+//    returns '', identical to the direct passthrough the real clause
+//    takes.
+//
+// A 5th cluster (Lines 726-732, setStatusHeader()'s own SERVER_PROTOCOL
+// handling) is NOT inert -- those 10 mutations are already killed by
+// this file's own real-localhost-server tests further below
+// ("setStatusHeader sends a real HTTP/1.1 status line..." and its
+// siblings), just invisible to `pest --mutate`'s coverage collection
+// (the same subprocess-invisibility blind spot documented in
+// feedback_pest_mutate_invisible_to_subprocess_tests) -- spot-verified
+// live via hand-mutation against Line 726 specifically to confirm the
+// existing tests still catch it after this session's method renames,
+// not just trusted from the old comment.
+
 test('lang() throws when the container returns an unexpected type for Lang', function (): void {
     // Kills line 141's InstanceOfToTrue -- lang() is a private,
     // container-resolving helper (same shape as urlService() below); its
@@ -182,6 +226,78 @@ test('renderCommentContent converts newlines to br tags', function (): void {
 
     expect(htmlServiceTestRenderCommentContent($service, "a\nb"))
         ->toBe('a<br />' . "\n" . 'b');
+});
+
+// --- renderCommentContent: (string) casts guarding a real preg_replace() ---
+// null-on-failure -----------------------------------------------------------
+//
+// Real gaps: renderCommentContent() pipes $content through 4 preg_replace()
+// calls, each preceded/followed by a (string) cast -- preg_replace() can
+// genuinely return null on a real PCRE backtrack-limit failure (same
+// technique already established in SearchServiceTest.php's own
+// "throws when preg_split() hits the backtrack limit" test). Confirmed
+// empirically (direct probe of the exact real pipeline): on the REAL code,
+// the cast coerces that null straight to '', so a failed stage silently
+// degrades to an empty result instead of throwing -- the whole comment is
+// lost, not preserved, but no exception. Each of the 4 tests below isolates
+// exactly ONE preg_replace() call as the failure point (via
+// pcre.backtrack_limit=0 + an input crafted to force backtracking on ONLY
+// that call's own pattern) and asserts this real, silent-degradation-to-''
+// behavior. RenderCommentContent::$commentContent is a native, non-nullable
+// `string` property -- removing any one of these casts lets a real null
+// reach it directly, throwing a TypeError instead (confirmed via
+// hand-mutation), which is what these tests actually catch.
+
+test('renderCommentContent silently drops to an empty string when the URL-linkify preg_replace() hits the backtrack limit', function (): void {
+    $service = HtmlServiceTestFactory::build();
+    $originalLimit = ini_get('pcre.backtrack_limit');
+    ini_set('pcre.backtrack_limit', '0');
+
+    try {
+        expect(htmlServiceTestRenderCommentContent($service, 'visit http://example.test/' . str_repeat('a', 100) . ' more text after that'))
+            ->toBe('');
+    } finally {
+        ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
+    }
+});
+
+test('renderCommentContent silently drops to an empty string when the underline preg_replace() hits the backtrack limit', function (): void {
+    $service = HtmlServiceTestFactory::build();
+    $originalLimit = ini_get('pcre.backtrack_limit');
+    ini_set('pcre.backtrack_limit', '0');
+
+    try {
+        expect(htmlServiceTestRenderCommentContent($service, '_' . str_repeat('a', 100) . '_ text'))
+            ->toBe('');
+    } finally {
+        ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
+    }
+});
+
+test('renderCommentContent silently drops to an empty string when the bold preg_replace() hits the backtrack limit', function (): void {
+    $service = HtmlServiceTestFactory::build();
+    $originalLimit = ini_get('pcre.backtrack_limit');
+    ini_set('pcre.backtrack_limit', '0');
+
+    try {
+        expect(htmlServiceTestRenderCommentContent($service, '*' . str_repeat('a', 100) . 'b*c' . str_repeat('d', 100) . '* text'))
+            ->toBe('');
+    } finally {
+        ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
+    }
+});
+
+test('renderCommentContent silently drops to an empty string when the italic preg_replace() hits the backtrack limit', function (): void {
+    $service = HtmlServiceTestFactory::build();
+    $originalLimit = ini_get('pcre.backtrack_limit');
+    ini_set('pcre.backtrack_limit', '0');
+
+    try {
+        expect(htmlServiceTestRenderCommentContent($service, '/' . str_repeat('a', 100) . '/ text'))
+            ->toBe('');
+    } finally {
+        ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
+    }
 });
 
 /**
@@ -624,6 +740,22 @@ test('renderElementName falls back to an empty string when neither name nor file
     expect($service->renderElementName([]))->toBe('');
 });
 
+test('renderElementName falls back to the filename when name is set but not a string', function (): void {
+    // Real gap: a BooleanAndToBooleanOr mutation on this guard's own first
+    // `&&` (isset(name) && is_string(name)) groups the first two clauses
+    // into an `or` instead -- isset(name) alone being true is enough to
+    // reach `new RenderElementName($info['name'], ...)` even when name
+    // isn't a string, which throws a TypeError since that constructor
+    // param is natively typed `string`. A non-string, non-empty name
+    // proves the real `&&` (not `||`) is what prevents that call.
+    $service = HtmlServiceTestFactory::build();
+
+    expect($service->renderElementName([
+        'name' => 42,
+        'file' => 'my-photo.jpg',
+    ]))->toBe('my-photo');
+});
+
 test('renderElementName throws when a render_element_name handler returns something other than a RenderElementName instance', function (): void {
     // dispatchChange() enforces this itself: the class-string key +
     // instanceof check make returning a non-matching type structurally
@@ -650,6 +782,20 @@ test('renderElementDescription returns empty string when comment is not set', fu
     $service = HtmlServiceTestFactory::build();
 
     expect($service->renderElementDescription([]))->toBe('');
+});
+
+test('renderElementDescription returns empty string when comment is set but not a string', function (): void {
+    // Real gap: same BooleanAndToBooleanOr shape as
+    // renderElementName()'s own sibling test above -- isset(comment)
+    // alone being true is enough to reach
+    // `new RenderElementDescription($info['comment'], ...)` under the
+    // mutant even when comment isn't a string, throwing a TypeError
+    // against that constructor's natively-typed `string` param.
+    $service = HtmlServiceTestFactory::build();
+
+    expect($service->renderElementDescription([
+        'comment' => 42,
+    ]))->toBe('');
 });
 
 test('renderElementDescription uses the given comment when it is genuinely non-empty', function (): void {
@@ -950,6 +1096,50 @@ test('getThumbnailTitle casts a numeric-string nb_comments to int before passing
 
     expect($title)
         ->toBe('My Photo (5 comments)');
+});
+
+test('getThumbnailTitle omits the visit count when hit is set but not numeric', function (): void {
+    // Real gap: a BooleanAndToBooleanOr mutation on this guard's own first
+    // `&&` (isset(hit) && is_numeric(hit)) groups the first two clauses
+    // into an `or` instead -- isset(hit) alone being true is enough to
+    // reach the "%d visits" detail even when hit isn't numeric, since
+    // (int) true !== 0. A set, non-numeric, cast-to-nonzero value (true)
+    // proves the real `&&` (not `||`) is what keeps it excluded.
+    $service = HtmlServiceTestFactory::build();
+
+    $title = $service->getThumbnailTitle([
+        'hit' => true,
+    ], 'My Photo');
+
+    expect($title)
+        ->toBe('My Photo');
+});
+
+test('getThumbnailTitle omits the rating score when rating_score is set but not numeric', function (): void {
+    // Same BooleanAndToBooleanOr shape as the sibling "hit" test above,
+    // for rating_score's own guard -- (float) true !== 0.0 makes a bare
+    // `true` value the distinguishing case here too.
+    $service = HtmlServiceTestFactory::build();
+
+    $title = $service->getThumbnailTitle([
+        'rating_score' => true,
+    ], 'My Photo');
+
+    expect($title)
+        ->toBe('My Photo');
+});
+
+test('getThumbnailTitle omits the comment count when nb_comments is set but not numeric', function (): void {
+    // Same BooleanAndToBooleanOr shape as the sibling "hit"/"rating_score"
+    // tests above, for nb_comments's own guard.
+    $service = HtmlServiceTestFactory::build();
+
+    $title = $service->getThumbnailTitle([
+        'nb_comments' => true,
+    ], 'My Photo');
+
+    expect($title)
+        ->toBe('My Photo');
 });
 
 test('getThumbnailTitle truncates a long comment to 100 characters with an ellipsis', function (): void {
@@ -1880,7 +2070,7 @@ test('pageForbidden computes the default alternate url via makeIndexUrl when non
  * no-op under Pest's own CLI SAPI (confirmed live: headers_list() stays
  * empty after a real header() call), so setStatusHeader()'s
  * SERVER_PROTOCOL fallback/validation logic (lines 611-613) and the
- * header() call itself (line 617) have no in-process side channel to
+ * header() call itself (line 732) have no in-process side channel to
  * observe. A real HTTP request against a real running server, however,
  * DOES let a raw socket read back the exact status line PHP's SAPI
  * sends -- header() with a leading "HTTP/..." string is specially
@@ -1970,10 +2160,10 @@ function htmlServiceTestRawStatusLine(int $port, string $query): string
  * as UNTESTED even though they are, in fact, killed.
  */
 test('setStatusHeader sends a real HTTP/1.1 status line, with the given code and reason phrase, for a genuine HTTP/1.1 request', function (): void {
-    // Kills line 611's CoalesceRemoveLeft (would discard the real,
+    // Kills line 726's CoalesceRemoveLeft (would discard the real,
     // genuinely-set SERVER_PROTOCOL and always fall through to the
-    // '' branch), line 612's TernaryNegated (would discard the real
-    // string value instead of keeping it), and line 613's IfNegated /
+    // '' branch), line 727's TernaryNegated (would discard the real
+    // string value instead of keeping it), and line 728's IfNegated /
     // first NotIdenticalToIdentical / BooleanAndToBooleanOr (each would
     // force the validation branch to fire even for this genuinely-valid
     // 'HTTP/1.1' value, overwriting it with 'HTTP/1.0'). A real request
@@ -2003,7 +2193,7 @@ test('setStatusHeader sends a real HTTP/1.1 status line, with the given code and
 });
 
 test('setStatusHeader falls back to HTTP/1.0 for a SERVER_PROTOCOL value that is neither well-known version', function (): void {
-    // Kills line 613's second NotIdenticalToIdentical
+    // Kills line 728's second NotIdenticalToIdentical
     // (`$protocol === 'HTTP/1.0'` instead of `!==`) -- indistinguishable
     // from the sibling test above using a genuinely-empty/missing
     // SERVER_PROTOCOL (both '' and 'HTTP/1.0' collapse to the same
@@ -2037,18 +2227,18 @@ test('setStatusHeader falls back to HTTP/1.0 for a SERVER_PROTOCOL value that is
 });
 
 /**
- * Confirmed-equivalent: line 611's EmptyStringToNotEmpty
+ * Confirmed-equivalent: line 726's EmptyStringToNotEmpty
  * (`$_SERVER['SERVER_PROTOCOL'] ?? 'PEST Mutator was here!'` instead of
- * `?? ''`) and line 612's EmptyStringToNotEmpty (the `is_string()`
+ * `?? ''`) and line 727's EmptyStringToNotEmpty (the `is_string()`
  * ternary's own false-branch placeholder). Whatever fallback string
- * either produces, line 613 unconditionally normalizes ANY value that
+ * either produces, line 728 unconditionally normalizes ANY value that
  * isn't exactly 'HTTP/1.1' or 'HTTP/1.0' to 'HTTP/1.0' -- and
  * "PEST Mutator was here!" is neither, so it collapses to the exact
  * same final 'HTTP/1.0' the real '' fallback also collapses to. Live
  * sed-verified against the "falls back to HTTP/1.0" test above with
  * each mutation applied in turn: both pass identically.
  *
- * Also confirmed-equivalent: line 617's TrueToFalse (`header(...,
+ * Also confirmed-equivalent: line 732's TrueToFalse (`header(...,
  * false, $code)` instead of `true`). Empirically confirmed live (two
  * consecutive real setStatusHeader() calls with the $replace parameter
  * hand-mutated to false, requested through this same real-server
@@ -2060,7 +2250,7 @@ test('setStatusHeader falls back to HTTP/1.0 for a SERVER_PROTOCOL value that is
  * artifact.
  */
 test('setStatusHeader actually calls header(), not a no-op, for a real request', function (): void {
-    // Kills line 617's RemoveFunctionCall -- without a real header()
+    // Kills line 732's RemoveFunctionCall -- without a real header()
     // call, the server's default 200 status line would be sent
     // regardless of the requested code.
     $docRoot = sys_get_temp_dir() . '/pwg-html-statusheader-test-' . bin2hex(random_bytes(8));
@@ -2156,6 +2346,34 @@ test('flushPageMessages filters out non string session flash values defensively'
         expect(CurrentTemplate::current()->get()->getTemplateVars('infos'))->toBe(['Real info']);
     } finally {
         unset($_SESSION['page_infos']);
+    }
+});
+
+test('flushPageMessages leaves a non-array session flash value untouched, without merging it in', function (): void {
+    // Real gap: a LogicalAndToLogicalOr mutation on flushMessageMode()'s
+    // own guard (isset($_SESSION[...]) and is_array($_SESSION[...]))
+    // only differs from the real `and` once the session value is set but
+    // genuinely NOT an array -- the sibling "filters out non string
+    // session flash values" test above only ever uses a real array
+    // (with mixed-type elements INSIDE it), never a non-array value at
+    // the top level. A non-array session value proves the real `and`
+    // (not `or`) is what keeps array_filter()/array_merge() from ever
+    // being reached with it (array_filter()'s own $array param is
+    // natively typed `array`, so reaching it here would throw a
+    // TypeError under this file's declare(strict_types=1)).
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    PageStateTestFactory::get()->reset();
+    $_SESSION['page_warnings'] = 'not an array';
+
+    try {
+        HtmlServiceTestFactory::build()->flushPageMessages();
+
+        expect(CurrentTemplate::current()->get()->getTemplateVars('warnings'))->toBeNull()
+            ->and($_SESSION)
+            ->toHaveKey('page_warnings');
+    } finally {
+        unset($_SESSION['page_warnings']);
     }
 });
 

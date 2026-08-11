@@ -228,15 +228,13 @@ final readonly class NotificationRepository
      */
     public function findRecentElementsForDate(SqlCondition $restrictCondition, string $dateAvailable, int $maxElements): array
     {
-        // Real bug found live -- Postgres requires
-        // every ORDER BY expression to appear in the SELECT list for a
-        // SELECT DISTINCT query ("for SELECT DISTINCT, ORDER BY
-        // expressions must appear in select list"), which RAND()/
+        // Postgres requires every ORDER BY expression to appear in the
+        // SELECT list for a SELECT DISTINCT query ("for SELECT DISTINCT,
+        // ORDER BY expressions must appear in select list"), which RAND()/
         // RANDOM() never does by design; MySQL has no such restriction.
         // GROUP BY has no equivalent rule on either platform and
-        // deduplicates i.id identically here (confirmed live) since the
-        // join can otherwise produce duplicate rows for an image in
-        // multiple categories.
+        // deduplicates i.id identically here since the join can otherwise
+        // produce duplicate rows for an image in multiple categories.
         $qb = $this->em->createQueryBuilder()
             ->select('i.id')
             ->from(ImageEntity::class, 'i')

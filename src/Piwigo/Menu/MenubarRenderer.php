@@ -82,9 +82,9 @@ final class MenubarRenderer
 
         // if guest_access is disabled, we only display the menus if the user is identified
         if ($currentConfig->guestAccess or ! $accessLevelChecker->isAGuest()) {
-            $menu->load_registered_blocks();
+            $menu->loadRegisteredBlocks();
         }
-        $menu->prepare_display();
+        $menu->prepareDisplay();
 
         $query_search = null;
         if ($section_context !== null && $section_context->section === Section::Search && $section_context->qsearchDetails !== []) {
@@ -94,7 +94,7 @@ final class MenubarRenderer
         }
 
         // --------------------------------------------------------------- external links
-        if ((bool) ($block = $menu->get_block('mbLinks')) and ! self::emptyValue($currentConfig->links)) {
+        if ((bool) ($block = $menu->getBlock('mbLinks')) and ! self::emptyValue($currentConfig->links)) {
             $block->data = [];
             foreach ($currentConfig->links as $url => $link) {
                 if ($link->evalVisible === null or eval($link->evalVisible)) {
@@ -119,7 +119,7 @@ final class MenubarRenderer
         }
 
         // -------------------------------------------------------------- categories
-        $block = $menu->get_block('mbCategories');
+        $block = $menu->getBlock('mbCategories');
         // ------------------------------------------------------------------------ filter
         $u_stop_filter = null;
         $u_start_filter = null;
@@ -154,7 +154,7 @@ final class MenubarRenderer
         }
 
         // ------------------------------------------------------------ related categories
-        $block = $menu->get_block('mbRelatedCategories');
+        $block = $menu->getBlock('mbRelatedCategories');
 
         $page_items = $section_context?->items;
 
@@ -193,7 +193,7 @@ final class MenubarRenderer
         }
 
         // ------------------------------------------------------------------------ tags
-        $block = $menu->get_block('mbTags');
+        $block = $menu->getBlock('mbTags');
         if ($block !== null and PageFilterHelper::scriptBasename($currentConfig) !== 'picture') {
             $block->data = [];
             $tags = $tagService->getAvailableTags();
@@ -217,7 +217,7 @@ final class MenubarRenderer
         }
 
         // ----------------------------------------------------------- special categories
-        if (($block = $menu->get_block('mbSpecials')) !== null) {
+        if (($block = $menu->getBlock('mbSpecials')) !== null) {
             $block->data = [];
             if (! $accessLevelChecker->isAGuest()) {// favorites
                 $block->data['favorites'] =
@@ -294,7 +294,7 @@ final class MenubarRenderer
         }
 
         // ---------------------------------------------------------------------- summary
-        if (($block = $menu->get_block('mbMenu')) !== null) {
+        if (($block = $menu->getBlock('mbMenu')) !== null) {
             $block->data = [];
             // quick search block will be displayed only if data['qsearch'] is set
             // to "yes"
@@ -382,7 +382,7 @@ final class MenubarRenderer
                 $u_admin = $urlService->getRootUrl() . 'admin.php';
             }
         }
-        if (($block = $menu->get_block('mbIdentification')) !== null) {
+        if (($block = $menu->getBlock('mbIdentification')) !== null) {
             $block->template = 'menubar_identification.tpl';
         }
 

@@ -28,7 +28,7 @@ use Piwigo\Users\UserStatus;
  * gates every page slug) -- only an `isWebmaster()` warning, so this
  * covers the real happy path. Same "no listener has registered any
  * block" mechanism as `Menu\MenubarRendererTest.php` makes
- * `BlockManager::load_registered_blocks()`/`get_registered_blocks()` a
+ * `BlockManager::loadRegisteredBlocks()`/`getRegisteredBlocks()` a
  * real no-op here too, and no `$_POST` submission skips the real DB
  * `ConfigEntry` upsert entirely. Needs the same `CoreTabs::addCoreTabs()`
  * `TabsheetBeforeSelect` registration as `GroupListSubControllerTest.php`

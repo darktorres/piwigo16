@@ -33,12 +33,12 @@ use Piwigo\Users\UserStatus;
  * every Browser test that loads a themed page).
  *
  * `render()` itself has no early guard, but `BlockManager::
- * load_registered_blocks()` only ever populates `registered_blocks` via
+ * loadRegisteredBlocks()` only ever populates `registered_blocks` via
  * a `BlockManagerRegisterBlocks` notify's own listeners calling
- * `register_block()` back -- a bare, freshly-booted test container has
+ * `registerBlock()` back -- a bare, freshly-booted test container has
  * no plugin/listener registered to do that, so `display_blocks` stays
  * empty regardless of the guest-access config value. Every block
- * section is gated behind `$menu->get_block($id) !== null`, so this
+ * section is gated behind `$menu->getBlock($id) !== null`, so this
  * deterministically skips the real DB-backed `TagService::
  * getAvailableTags()`/`CategoryService::getCategoriesMenu()` calls
  * entirely, leaving only the pure identification-vars computation and a

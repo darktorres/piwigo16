@@ -93,7 +93,7 @@ final class MenubarRendererTest extends IntegrationTestCase
 
         // Real menu-block registration (normally wired by
         // RequestBootstrap::finalize(), never booted here) -- without it
-        // every $menu->get_block(...) call in render() returns null and
+        // every $menu->getBlock(...) call in render() returns null and
         // the whole method is a no-op.
         EventDispatcherTestFactory::get()->reset();
         EventDispatcherTestFactory::get()->addTypedHandler(BlockManagerRegisterBlocks::class, (HtmlServiceTestFactory::build())->registerDefaultMenubarBlocks(...));

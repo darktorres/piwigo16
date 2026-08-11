@@ -46,8 +46,8 @@ final class MenubarPageRenderer
         $tabsheet->assign($currentTemplate);
 
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig);
-        $menu->load_registered_blocks();
-        $reg_blocks = $menu->get_registered_blocks();
+        $menu->loadRegisteredBlocks();
+        $reg_blocks = $menu->getRegisteredBlocks();
 
         // blk_menubar is the only real BlockManager id anywhere in this
         // codebase (confirmed by grepping every `new BlockManager(...)`
@@ -90,7 +90,7 @@ final class MenubarPageRenderer
             $encodedPositions = json_encode($mb_conf_db);
             assert($encodedPositions !== false);
             EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class)
-                ->upsert('blk_' . $menu->get_id(), $encodedPositions);
+                ->upsert('blk_' . $menu->getId(), $encodedPositions);
 
             // The upsert() above bypasses ConfigService::confUpdateParam()
             // entirely (no DI dependency here), so its own cache-clearing

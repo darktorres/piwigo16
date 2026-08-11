@@ -1569,7 +1569,7 @@ test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is n
 
     $service->registerDefaultMenubarBlocks(new BlockManagerRegisterBlocks($menu));
 
-    expect($menu->get_registered_blocks())
+    expect($menu->getRegisteredBlocks())
         ->toBe([]);
 });
 

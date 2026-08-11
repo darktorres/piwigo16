@@ -22,8 +22,8 @@ final class DisplayBlock
     private $position;
 
     /**
-     * @var string|null null until set_title() is called (the constructor
-     *   never sets it) — get_title() falls back to the registered block's
+     * @var string|null null until setTitle() is called (the constructor
+     *   never sets it) — getTitle() falls back to the registered block's
      *   own name in that case
      */
     private $title;
@@ -68,7 +68,7 @@ final class DisplayBlock
     /**
      * @return RegisteredBlock
      */
-    public function get_block()
+    public function getBlock()
     {
         return $this->registeredBlock;
     }
@@ -76,7 +76,7 @@ final class DisplayBlock
     /**
      * @return int
      */
-    public function get_position()
+    public function getPosition()
     {
         return $this->position;
     }
@@ -84,7 +84,7 @@ final class DisplayBlock
     /**
      * @param int $position
      */
-    public function set_position($position): void
+    public function setPosition($position): void
     {
         $this->position = $position;
     }
@@ -92,19 +92,19 @@ final class DisplayBlock
     /**
      * @return string
      */
-    public function get_title()
+    public function getTitle()
     {
         if (isset($this->title)) {
             return $this->title;
         } else {
-            return $this->registeredBlock->get_name();
+            return $this->registeredBlock->getName();
         }
     }
 
     /**
      * @param string $title
      */
-    public function set_title($title): void
+    public function setTitle($title): void
     {
         $this->title = $title;
     }

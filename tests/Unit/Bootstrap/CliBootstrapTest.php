@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Bootstrap\CliBootstrap;
+use Piwigo\Bootstrap\CommandDefinitions;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
@@ -16,15 +17,16 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 
 /**
- * config/commands.php's own three defensive guards --
- * `! is_array($commandClasses)`, `! is_string($commandClass)` per entry,
- * and the "did not resolve to a Symfony Console Command" \LogicException
- * -- are exercised below via `buildApplication()`'s `$commandsFile`
- * parameter (mirrors its existing `$paths` parameter's own shape:
- * defaults to null, falls back to the real, hardcoded
- * `dirname(__DIR__, 3) . '/config/commands.php'`), pointed at a disposable
- * fixture file under sys_get_temp_dir() instead of ever touching the
- * real, shared production file.
+ * CommandDefinitions::all()'s own two remaining defensive guards --
+ * `! is_string($commandClass)` per entry, and the "did not resolve to a
+ * Symfony Console Command" \LogicException -- are exercised below via
+ * `buildApplication()`'s `$overrideCommands` parameter (mirrors its
+ * existing `$paths` parameter's own shape: defaults to null, falls back
+ * to the real `CommandDefinitions::all()`), passed a disposable fixture
+ * array instead of ever touching the real, shared production command
+ * list. The "must return an array" guard no longer applies --
+ * `CommandDefinitions::all(): array` is return-type-hinted, so PHP itself
+ * makes a non-array return impossible.
  */
 beforeEach(function (): void {
     Kernel::reset();
@@ -40,11 +42,10 @@ afterEach(function (): void {
     pcntl_signal(SIGTERM, SIG_DFL);
 });
 
-test('config/commands.php entries resolve to registered command names', function (): void {
+test('CommandDefinitions entries resolve to registered command names', function (): void {
     $application = CliBootstrap::buildApplication();
 
-    /** @var list<class-string<Command>> $commandClasses */
-    $commandClasses = require dirname(__DIR__, 3) . '/config/commands.php';
+    $commandClasses = CommandDefinitions::all();
     expect($commandClasses)
         ->not->toBe([]);
 
@@ -129,39 +130,14 @@ test('buildApplication throws when the container returns an unexpected type for 
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfigService::class);
 
-test('buildApplication throws when the commands file does not return an array', function (): void {
-    $commandsFile = sys_get_temp_dir() . '/piwigo-commands-not-array-' . bin2hex(random_bytes(8)) . '.php';
-    file_put_contents($commandsFile, "<?php\n\ndeclare(strict_types=1);\n\nreturn 'not-an-array';\n");
+test('buildApplication throws when an override commands entry is not a class-string', function (): void {
+    CliBootstrap::buildApplication(overrideCommands: [123]);
+})->throws(RuntimeException::class, 'CommandDefinitions entries must be class-strings.');
 
-    try {
-        CliBootstrap::buildApplication(commandsFile: $commandsFile);
-    } finally {
-        unlink($commandsFile);
-    }
-})->throws(RuntimeException::class, 'config/commands.php must return an array of Command class-strings.');
-
-test('buildApplication throws when a commands file entry is not a class-string', function (): void {
-    $commandsFile = sys_get_temp_dir() . '/piwigo-commands-bad-entry-' . bin2hex(random_bytes(8)) . '.php';
-    file_put_contents($commandsFile, "<?php\n\ndeclare(strict_types=1);\n\nreturn [123];\n");
-
-    try {
-        CliBootstrap::buildApplication(commandsFile: $commandsFile);
-    } finally {
-        unlink($commandsFile);
-    }
-})->throws(RuntimeException::class, 'config/commands.php entries must be class-strings.');
-
-test('buildApplication throws when a commands file entry does not resolve to a Command', function (): void {
+test('buildApplication throws when an override commands entry does not resolve to a Command', function (): void {
     // stdClass is a real, container-autowirable class (no constructor
     // args) that is deliberately not a Symfony Console Command -- proves
     // the guard checks the *resolved instance*, not just that the
     // class-string exists/autowires.
-    $commandsFile = sys_get_temp_dir() . '/piwigo-commands-not-command-' . bin2hex(random_bytes(8)) . '.php';
-    file_put_contents($commandsFile, "<?php\n\ndeclare(strict_types=1);\n\nreturn [stdClass::class];\n");
-
-    try {
-        CliBootstrap::buildApplication(commandsFile: $commandsFile);
-    } finally {
-        unlink($commandsFile);
-    }
-})->throws(LogicException::class, 'config/commands.php entry stdClass did not resolve to a Symfony Console Command.');
+    CliBootstrap::buildApplication(overrideCommands: [stdClass::class]);
+})->throws(LogicException::class, 'CommandDefinitions entry stdClass did not resolve to a Symfony Console Command.');

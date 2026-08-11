@@ -69,15 +69,22 @@ final class CliBootstrap
      * arguments keep working -- passing a null Paths to the container
      * builder simply skips registering `Paths::class`.
      *
-     * `$commandsFile` likewise defaults to null and falls back to the real
-     * `config/commands.php`, mirroring `$paths`'s own shape -- the only seam
-     * for tests/Unit/Bootstrap/CliBootstrapTest.php to exercise this
-     * method's three defensive guards (must-return-an-array,
-     * entries-must-be-class-strings, entry-must-resolve-to-a-Command)
-     * against a disposable fixture file instead of ever having to
-     * overwrite the real, shared production file mid-suite.
+     * `$overrideCommands` likewise defaults to null and falls back to the
+     * real `CommandDefinitions::all()`, mirroring `$paths`'s own shape --
+     * the only seam for tests/Unit/Bootstrap/CliBootstrapTest.php to
+     * exercise this method's two remaining defensive guards
+     * (entries-must-be-class-strings, entry-must-resolve-to-a-Command)
+     * against a disposable fixture array instead of ever having to
+     * overwrite the real, shared production command list. Typed
+     * `list<mixed>`, not `list<string>` -- the two guards below exist
+     * specifically because PHP doesn't enforce a generic array shape at
+     * runtime, so a test deliberately passes non-conforming elements
+     * (e.g. an int) to prove the guards catch what the type system alone
+     * cannot.
+     *
+     * @param list<mixed>|null $overrideCommands
      */
-    public static function buildApplication(?Paths $paths = null, ?string $commandsFile = null): Application
+    public static function buildApplication(?Paths $paths = null, ?array $overrideCommands = null): Application
     {
         // Both calls are genuine no-ops today (see ConfigLoader's own
         // docblocks on each) -- kept as real, callable steps in the
@@ -103,23 +110,20 @@ final class CliBootstrap
         }
         $currentConfigService->set($configService);
 
-        $commandClasses = require $commandsFile ?? dirname(__DIR__, 3) . '/config/commands.php';
-        if (! is_array($commandClasses)) {
-            throw new RuntimeException('config/commands.php must return an array of Command class-strings.');
-        }
+        $commandClasses = $overrideCommands ?? CommandDefinitions::all();
 
         $application = new Application('piwigo');
         $application->setAutoExit(false);
 
         foreach ($commandClasses as $commandClass) {
             if (! is_string($commandClass)) {
-                throw new RuntimeException('config/commands.php entries must be class-strings.');
+                throw new RuntimeException('CommandDefinitions entries must be class-strings.');
             }
 
             $command = $container->get($commandClass);
             if (! $command instanceof Command) {
                 throw new LogicException(
-                    "config/commands.php entry {$commandClass} did not resolve to a Symfony Console Command."
+                    "CommandDefinitions entry {$commandClass} did not resolve to a Symfony Console Command."
                 );
             }
 

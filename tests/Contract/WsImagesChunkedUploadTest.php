@@ -441,7 +441,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
             // ..."), independent of and in addition to the JSON body's own
             // 'ok' status -- callWsAllowingServerError() is needed here
             // just to skip callWs()'s own `assertLessThan(500, $status)`
-            // guard, not because of a deliberately-returned PwgError (its
+            // guard, not because of a deliberately-returned WsErrorResponse (its
             // usual rationale, see its own docblock).
             $response = $this->callWsAllowingServerError('pwg.images.add', [
                 'original_sum' => $sum,

@@ -128,7 +128,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         }
 
         if (! $this->requestHandler instanceof RequestHandler) {
-            $this->sendResponse(new PwgError(400, 'Unknown request format'));
+            $this->sendResponse(new WsErrorResponse(400, 'Unknown request format'));
             return;
         }
 
@@ -296,7 +296,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         }
     }
 
-    public static function checkType(mixed &$param, int $type, string $name): ?PwgError
+    public static function checkType(mixed &$param, int $type, string $name): ?WsErrorResponse
     {
         // pre-seed the 'options' sub-array so the nested writes below
         // ($opts['options']['min_range'] = ...) target a known array type
@@ -320,14 +320,14 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
             if (self::hasFlag($type, WsParamType::BOOL)) {
                 foreach ($param as &$value) {
                     if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
-                        return new PwgError(WsError::INVALID_PARAM, $name . ' must only contain booleans');
+                        return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must only contain booleans');
                     }
                 }
                 unset($value);
             } elseif (self::hasFlag($type, WsParamType::INT)) {
                 foreach ($param as &$value) {
                     if (($value = filter_var($value, FILTER_VALIDATE_INT, $opts)) === false) {
-                        return new PwgError(WsError::INVALID_PARAM, $name . ' must only contain' . $msg . ' integers');
+                        return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must only contain' . $msg . ' integers');
                     }
                 }
                 unset($value);
@@ -337,7 +337,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
                         ($value = filter_var($value, FILTER_VALIDATE_FLOAT)) === false
                         or (isset($opts['options']['min_range']) and $value < $opts['options']['min_range'])
                     ) {
-                        return new PwgError(WsError::INVALID_PARAM, $name . ' must only contain' . $msg . ' floats');
+                        return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must only contain' . $msg . ' floats');
                     }
                 }
                 unset($value);
@@ -345,18 +345,18 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         } elseif ($param !== '') {
             if (self::hasFlag($type, WsParamType::BOOL)) {
                 if (($param = filter_var($param, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
-                    return new PwgError(WsError::INVALID_PARAM, $name . ' must be a boolean');
+                    return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must be a boolean');
                 }
             } elseif (self::hasFlag($type, WsParamType::INT)) {
                 if (($param = filter_var($param, FILTER_VALIDATE_INT, $opts)) === false) {
-                    return new PwgError(WsError::INVALID_PARAM, $name . ' must be an' . $msg . ' integer');
+                    return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must be an' . $msg . ' integer');
                 }
             } elseif (self::hasFlag($type, WsParamType::FLOAT)) {
                 if (
                     ($param = filter_var($param, FILTER_VALIDATE_FLOAT)) === false
                     or (isset($opts['options']['min_range']) and $param < $opts['options']['min_range'])
                 ) {
-                    return new PwgError(WsError::INVALID_PARAM, $name . ' must be a' . $msg . ' float');
+                    return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must be a' . $msg . ' float');
                 }
             }
         }
@@ -371,28 +371,28 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
 
     /**
      *  Invokes a registered method. Returns the return of the method (or
-     *  a PwgError object if the method is not found)
+     *  a WsErrorResponse object if the method is not found)
      *  @param string $methodName the name of the method to invoke
      *  @param array<string, mixed> $params array of parameters to pass to the invoked method
      */
     public function invoke(string $methodName, array $params): mixed
     {
         if (! isset($this->methods[$methodName])) {
-            return new PwgError(WsError::INVALID_METHOD, 'Method name is not valid');
+            return new WsErrorResponse(WsError::INVALID_METHOD, 'Method name is not valid');
         }
 
         $method = $this->methods[$methodName];
 
         if (isset($method['options']['post_only']) and (bool) $method['options']['post_only'] and ! self::isPost()) {
-            return new PwgError(405, 'This method requires HTTP POST');
+            return new WsErrorResponse(405, 'This method requires HTTP POST');
         }
 
         if (isset($method['options']['admin_only']) and (bool) $method['options']['admin_only'] and ! $this->accessControl->isAdmin()) {
-            return new PwgError(401, 'Access denied');
+            return new WsErrorResponse(401, 'Access denied');
         }
 
         if (! $this->isAuthorizedMethodForAPIKEY($methodName)) {
-            return new PwgError(401, 'Access denied');
+            return new WsErrorResponse(401, 'Access denied');
         }
 
         // parameter check and data correction
@@ -426,7 +426,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
                 $the_param = $params[$name];
 
                 if (is_array($the_param) and ! self::hasFlag($flags, WsParamFlag::ACCEPT_ARRAY)) {
-                    return new PwgError(WsError::INVALID_PARAM, $name . ' must be scalar');
+                    return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must be scalar');
                 }
 
                 if (self::hasFlag($flags, WsParamFlag::FORCE_ARRAY)) {
@@ -438,7 +438,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
                 $type = $options['type'];
                 $type = is_int($type) ? $type : 0;
                 if ($type > 0) {
-                    if (($ret = self::checkType($the_param, $type, $name)) instanceof PwgError) {
+                    if (($ret = self::checkType($the_param, $type, $name)) instanceof WsErrorResponse) {
                         return $ret;
                     }
                 }
@@ -452,14 +452,14 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         }
 
         if ((bool) count($missing_params)) {
-            return new PwgError(WsError::MISSING_PARAM, 'Missing parameters: ' . implode(',', $missing_params));
+            return new WsErrorResponse(WsError::MISSING_PARAM, 'Missing parameters: ' . implode(',', $missing_params));
         }
 
         $result = $this->eventDispatcher->dispatchChange(new WsInvokeAllowed(true, $methodName, $params))
             ->value;
 
         $is_error = false;
-        if ($result instanceof PwgError) {
+        if ($result instanceof WsErrorResponse) {
             $is_error = true;
         }
 
@@ -495,9 +495,9 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
      * WS reflection method implementation: gets information about a given method
      *
      * @param array<string, mixed> $params
-     * @return PwgError|array<string, mixed>
+     * @return WsErrorResponse|array<string, mixed>
      */
-    public static function wsGetMethodDetails(array $params, self &$service): PwgError|array
+    public static function wsGetMethodDetails(array $params, self &$service): WsErrorResponse|array
     {
         $methodName = $params['methodName'];
 
@@ -505,7 +505,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         // never coerces it; narrow it here instead of trusting the raw
         // request value.
         if (! is_string($methodName) or ! $service->hasMethod($methodName)) {
-            return new PwgError(WsError::INVALID_PARAM, 'Requested method does not exist');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Requested method does not exist');
         }
 
         $res = [

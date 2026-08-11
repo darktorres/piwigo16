@@ -6,7 +6,7 @@ use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Protocol\RestEncoder;
-use Piwigo\Ws\PwgError;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * Piwigo\Ws\Protocol\RestEncoder has no DB/HTTP dependency of its own --
@@ -152,26 +152,26 @@ test('encode() trigger_error()s an E_USER_WARNING for a resource value and write
 });
 
 /**
- * Mutation-sweep closure notes (encodeResponse()'s PwgError branch,
+ * Mutation-sweep closure notes (encodeResponse()'s WsErrorResponse branch,
  * encodeStruct()'s twin scan loops, and encode()'s array/object
  * dispatch). Each test below is built to fail under one specific
  * mutant, traced by hand against the source before being written --
  * see each test's own comment for which mutant(s) it targets and why.
  */
-test('encodeResponse renders a PwgError as a stat="fail" response, never routing it through the normal struct/object encode path', function (): void {
-    // Kills `if ($response instanceof PwgError)` -> InstanceOfToFalse:
+test('encodeResponse renders a WsErrorResponse as a stat="fail" response, never routing it through the normal struct/object encode path', function (): void {
+    // Kills `if ($response instanceof WsErrorResponse)` -> InstanceOfToFalse:
     // a false-forced check would fall through to `$this->encode($response)`,
-    // which (PwgError not being a NamedArray/NamedStruct) would hit
-    // the generic get_object_vars() fallback -- and PwgError's properties
+    // which (WsErrorResponse not being a NamedArray/NamedStruct) would hit
+    // the generic get_object_vars() fallback -- and WsErrorResponse's properties
     // are all private, so get_object_vars() from outside the class sees
     // none of them, producing an empty stat="ok" response instead.
     //
     // WsError-style code (>= 1000), not an HTTP-range 400-599 code, so
-    // PwgError's own constructor doesn't reach for a booted
+    // WsErrorResponse's own constructor doesn't reach for a booted
     // PresentationAccessor container -- same convention as the sibling
     // XmlRpcEncoder/SerialPhpEncoder unit tests.
     $encoder = new RestEncoder();
-    $error = new PwgError(1003, 'Bad param <x>');
+    $error = new WsErrorResponse(1003, 'Bad param <x>');
 
     $result = $encoder->encodeResponse($error);
 

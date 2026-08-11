@@ -22,7 +22,7 @@ namespace Piwigo\Tests\Contract;
  * a PHP null skips straight past every real encodeStruct() call before
  * ever reaching encode() itself), the generic get_object_vars() object
  * fallback (every real response object is a NamedArray/NamedStruct/
- * PwgError), and the `default` resource/unknown-type trigger_error()
+ * WsErrorResponse), and the `default` resource/unknown-type trigger_error()
  * branch (no real WS method ever returns a resource).
  */
 final class WsRestFormatTest extends ContractTestCase

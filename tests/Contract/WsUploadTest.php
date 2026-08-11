@@ -493,7 +493,7 @@ final class WsUploadTest extends ContractTestCase
 
     /**
      * A multipart request with no $_FILES['file'] entry returns a
-     * `PwgError(103, ...)`, the same mechanism every other error in this
+     * `WsErrorResponse(103, ...)`, the same mechanism every other error in this
      * method uses, honoring the request's real format= for both json and
      * rest (RestEncoder's XML output; 'xml' itself isn't a recognized
      * format= value, see WsInitializer's switch).

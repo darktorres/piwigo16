@@ -14,9 +14,9 @@ namespace Piwigo\Ws;
 use Piwigo\Bootstrap\PresentationAccessor;
 
 /**
- * PwgError object can be returned from any web service function implementation.
+ * WsErrorResponse object can be returned from any web service function implementation.
  */
-final class PwgError
+final class WsErrorResponse
 {
     private readonly int $code;
 

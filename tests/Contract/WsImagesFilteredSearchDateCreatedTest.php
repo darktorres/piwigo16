@@ -13,7 +13,7 @@ namespace Piwigo\Tests\Contract;
  * separate set of source lines).
  *
  * The 'tags'/'categories'/'added_by' "must only contain digits"
- * PwgError(INVALID_PARAM, 'Invalid parameter X') branches are NOT chased
+ * WsErrorResponse(INVALID_PARAM, 'Invalid parameter X') branches are NOT chased
  * here: all three are registered with 'type' => WsParamType::ID (see
  * WsDefaultMethods), so Server::invoke() itself already rejects any
  * non-positive-integer element with its own "X must only contain positive

@@ -330,10 +330,10 @@ abstract class ContractTestCase extends IntegrationTestCase
 
     /**
      * Same as callWs(), but without the HTTP-status sanity check --
-     * PwgError's constructor mirrors any WS err code >= 400 onto the real
+     * WsErrorResponse's constructor mirrors any WS err code >= 400 onto the real
      * HTTP response status (HtmlService::setStatusHeader()), so a
      * deliberately-triggered WS error >= 500 (e.g. WsError::INVALID_METHOD
-     * = 501, or the many business-rule `new PwgError(500, ...)` returns
+     * = 501, or the many business-rule `new WsErrorResponse(500, ...)` returns
      * across the Ws\Pwg* classes) is a real, correct HTTP 500/501 response,
      * not the server-crashed condition callWs()'s guard exists to catch.
      * @param array<string, mixed> $params

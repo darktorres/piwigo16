@@ -42,7 +42,7 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Core;
-use Piwigo\Ws\PwgError;
+use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\WsInitializer;
 
 /**
@@ -52,7 +52,7 @@ use Piwigo\Ws\WsInitializer;
  *
  * A sibling to RequestBootstrap, not a method on Piwigo\Auth\AuthService:
  * AuthService is L2aCoreDomain, and this orchestration's WS API-key branch
- * instantiates Piwigo\Ws\PwgError (L4Integration) -- Bootstrap and Ws are
+ * instantiates Piwigo\Ws\WsErrorResponse (L4Integration) -- Bootstrap and Ws are
  * matched by the same deptrac collector (same layer), so this is the only
  * violation-free home for the whole orchestration. AuthService's own
  * login/logout/remember-me building blocks (autoLogin()/logUser()/
@@ -217,7 +217,7 @@ final class UserBootstrap
                         throw new LogicException('Container returned an unexpected type for ' . WsInitializer::class);
                     }
                     $service = $wsInitializer->init();
-                    $service->sendResponse(new PwgError(401, 'Invalid api_key'));
+                    $service->sendResponse(new WsErrorResponse(401, 'Invalid api_key'));
                     exit;
                 }
                 $this->apiKeyRequestFlag->activate();

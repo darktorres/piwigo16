@@ -13,8 +13,8 @@ use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Ws\Protocol\JsonEncoder;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * Ws\Server -- the generic WS dispatcher itself (invoke()'s own gates,
@@ -121,7 +121,7 @@ final class WsServerTest extends ContractTestCase
      * this one returns instead of calling die(), so it's safe to invoke
      * in-process.
      *
-     * PwgError's own constructor mirrors a >= 400 code onto a real HTTP
+     * WsErrorResponse's own constructor mirrors a >= 400 code onto a real HTTP
      * status via PresentationAccessor::htmlService(), which needs
      * Kernel::boot() -- every other test in this file reaches that
      * through the live Apache process's own bootstrap instead, but this
@@ -224,7 +224,7 @@ final class WsServerTest extends ContractTestCase
 
     public function testInvokeWithAnUnknownMethodNameReturnsInvalidMethod(): void
     {
-        // PwgError's constructor mirrors this WS err (501) onto the real
+        // WsErrorResponse's constructor mirrors this WS err (501) onto the real
         // HTTP status -- callWs()'s generic "< 500" sanity guard would
         // wrongly reject this well-formed 501, so this uses the
         // guard-free variant instead (see its own docblock).
@@ -416,7 +416,7 @@ final class WsServerTest extends ContractTestCase
         $param = ['1', 'not-a-boolean'];
         $result = Server::checkType($param, WsParamType::BOOL, 'flags');
 
-        self::assertInstanceOf(PwgError::class, $result);
+        self::assertInstanceOf(WsErrorResponse::class, $result);
         self::assertSame(WsError::INVALID_PARAM, $result->code());
         self::assertSame('flags must only contain booleans', $result->message());
     }
@@ -453,7 +453,7 @@ final class WsServerTest extends ContractTestCase
         $param = ['1.5', '-3.5'];
         $result = Server::checkType($param, WsParamType::FLOAT | WsParamType::POSITIVE, 'ratios');
 
-        self::assertInstanceOf(PwgError::class, $result);
+        self::assertInstanceOf(WsErrorResponse::class, $result);
         self::assertSame(WsError::INVALID_PARAM, $result->code());
         self::assertSame('ratios must only contain positive floats', $result->message());
     }

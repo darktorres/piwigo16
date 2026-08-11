@@ -646,7 +646,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     }
 
     // refreshRepresentative()'s own `$representative_picture_id === null`
-    // guard (-> `PwgError(500, 'unable to determine a new representative
+    // guard (-> `WsErrorResponse(500, 'unable to determine a new representative
     // picture for this category')`) is NOT chased: `setRandomRepresentant()`
     // (CategoryService::setRandomRepresentant() ->
     // CategoryRepository::findRandomImageIdInCategory()) queries
@@ -856,7 +856,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
      * cannot move a category into a sub-category or itself`) records its
      * failure onto its own `PageState $pageState` parameter via addError()
      * rather than returning it directly -- move()'s own `$pageState->hasErrors()` check
-     * afterwards is what turns that into the WS-level PwgError this test
+     * afterwards is what turns that into the WS-level WsErrorResponse this test
      * verifies. Genuinely reachable via a real WS call: attempting to move
      * a parent album into its own child.
      */

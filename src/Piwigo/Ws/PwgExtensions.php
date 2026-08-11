@@ -121,21 +121,21 @@ final class PwgExtensions
      *   none has a 'default' key -- all mandatory, always present, no 'type'
      *   flag.
      */
-    public function pluginsPerformAction(array $params, Server &$service): PwgError|true
+    public function pluginsPerformAction(array $params, Server &$service): WsErrorResponse|true
     {
         $template = $this->currentTemplate->get();
 
         /** @var Template $template */
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (! $this->accessControl->isWebmaster()) {
-            return new PwgError(403, $this->lang->t('Webmaster status is required.'));
+            return new WsErrorResponse(403, $this->lang->t('Webmaster status is required.'));
         }
 
         if (! $this->currentConfig->enableExtensionsInstall and $params['action'] === 'delete') {
-            return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
+            return new WsErrorResponse(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
         // No define('IN_ADMIN', true) call here: Template::__construct()
@@ -170,7 +170,7 @@ final class PwgExtensions
         $errors = $lifecycle->performAction(ExtensionType::Plugin, $params['action'], $params['plugin'], $fsEntry);
 
         if ($errors !== []) {
-            return new PwgError(500, implode(', ', array_filter($errors, is_string(...))));
+            return new WsErrorResponse(500, implode(', ', array_filter($errors, is_string(...))));
         } else {
             if (in_array($params['action'], ['activate', 'deactivate'], true)) {
                 $template->deleteCompiledTemplates();
@@ -187,17 +187,17 @@ final class PwgExtensions
      *   none has a 'default' key -- all mandatory, always present, no 'type'
      *   flag.
      */
-    public function themesPerformAction(array $params, Server &$service): PwgError|true
+    public function themesPerformAction(array $params, Server &$service): WsErrorResponse|true
     {
         $template = $this->currentTemplate->get();
 
         /** @var Template $template */
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (! $this->currentConfig->enableExtensionsInstall and $params['action'] === 'delete') {
-            return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
+            return new WsErrorResponse(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
         // See pluginsPerformAction()'s own comment -- a
@@ -227,7 +227,7 @@ final class PwgExtensions
         $errors = $lifecycle->performAction(ExtensionType::Theme, $params['action'], $params['theme'], $fsEntry);
 
         if ($errors !== []) {
-            return new PwgError(500, implode(', ', $errors));
+            return new WsErrorResponse(500, implode(', ', $errors));
         } else {
             if (in_array($params['action'], ['activate', 'deactivate'], true)) {
                 $template->deleteCompiledTemplates();
@@ -247,22 +247,22 @@ final class PwgExtensions
      *   self-redirect a few lines below that appends it as a raw extra query
      *   param) -- covered by the shape's open tail, never explicitly typed.
      */
-    public function update(array $params, Server &$service): PwgError|string
+    public function update(array $params, Server &$service): WsErrorResponse|string
     {
         if (! $this->currentConfig->enableExtensionsInstall) {
-            return new PwgError(401, 'Piwigo extensions install/update system is disabled');
+            return new WsErrorResponse(401, 'Piwigo extensions install/update system is disabled');
         }
 
         if (! $this->accessControl->isWebmaster()) {
-            return new PwgError(401, $this->lang->t('Webmaster status is required.'));
+            return new WsErrorResponse(401, $this->lang->t('Webmaster status is required.'));
         }
 
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (! in_array($params['type'], ['plugins', 'themes', 'languages'], true)) {
-            return new PwgError(403, 'invalid extension type');
+            return new WsErrorResponse(403, 'invalid extension type');
         }
 
         $extension_id = $params['id'];
@@ -357,10 +357,10 @@ final class PwgExtensions
 
         return match ($upgrade_status) {
             'ok' => $this->lang->t('%s has been successfully updated.', $extension_name),
-            'temp_path_error' => new PwgError(500, $this->lang->t('Can\'t create temporary file.')),
-            'dl_archive_error' => new PwgError(500, $this->lang->t('Can\'t download archive.')),
-            'archive_error' => new PwgError(500, $this->lang->t('Can\'t read or extract archive.')),
-            default => new PwgError(500, $this->lang->t('An error occured during extraction (%s).', $upgrade_status)),
+            'temp_path_error' => new WsErrorResponse(500, $this->lang->t('Can\'t create temporary file.')),
+            'dl_archive_error' => new WsErrorResponse(500, $this->lang->t('Can\'t download archive.')),
+            'archive_error' => new WsErrorResponse(500, $this->lang->t('Can\'t read or extract archive.')),
+            default => new WsErrorResponse(500, $this->lang->t('An error occured during extraction (%s).', $upgrade_status)),
         };
     }
 
@@ -372,7 +372,7 @@ final class PwgExtensions
      *   reset: non-null bool default, WsParamType::BOOL -- always present.
      *   pwg_token: no 'default' key -- mandatory, always present.
      */
-    public function ignoreUpdate(array $params, Server &$service): PwgError|true
+    public function ignoreUpdate(array $params, Server &$service): WsErrorResponse|true
     {
         // No define('IN_ADMIN', true) or include_once
         // admin/include/functions.php here: IN_ADMIN has no reader left in
@@ -380,11 +380,11 @@ final class PwgExtensions
         // comment).
 
         if (! $this->accessControl->isWebmaster()) {
-            return new PwgError(401, 'Access denied');
+            return new WsErrorResponse(401, 'Access denied');
         }
 
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $updateChecker = $this->extensionUpdateChecker;
@@ -403,7 +403,7 @@ final class PwgExtensions
         }
 
         if (in_array($params['id'], [null, ''], true) or $type === null) {
-            return new PwgError(403, 'Invalid parameters');
+            return new WsErrorResponse(403, 'Invalid parameters');
         }
 
         // Add extension to ignore list -- ignoreUpdate() is itself an

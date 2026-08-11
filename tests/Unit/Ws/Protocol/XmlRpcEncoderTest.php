@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\Protocol\XmlRpcEncoder;
-use Piwigo\Ws\PwgError;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * XmlRpcEncoder::xmlrpcEncode() switches on gettype() per value
@@ -17,9 +17,9 @@ use Piwigo\Ws\PwgError;
  * (string) float casting) via standalone `php -r` calls -- never by
  * running the encoder itself and copying its output.
  *
- * As with the SerialPhpEncoder tests, PwgError fixtures use a
+ * As with the SerialPhpEncoder tests, WsErrorResponse fixtures use a
  * WsError-style code (>= 1000), not an HTTP-range 400-599 code, to
- * avoid PwgError's constructor reaching for a booted container.
+ * avoid WsErrorResponse's constructor reaching for a booted container.
  *
  * Deliberately NOT tested: the `(string)` cast on the 'double' case's
  * `return '<double>' . (string) $data . '</double>';`. $data is only
@@ -34,9 +34,9 @@ use Piwigo\Ws\PwgError;
  * that cast is a true equivalent mutant here: no input can distinguish
  * the two, so no test is added to "kill" it.
  */
-test('encodeResponse renders a PwgError as a methodResponse/fault', function (): void {
+test('encodeResponse renders a WsErrorResponse as a methodResponse/fault', function (): void {
     $encoder = new XmlRpcEncoder();
-    $error = new PwgError(1003, 'Bad param <x>');
+    $error = new WsErrorResponse(1003, 'Bad param <x>');
 
     $result = $encoder->encodeResponse($error);
 

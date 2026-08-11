@@ -5,23 +5,23 @@ declare(strict_types=1);
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Protocol\JsonEncoder;
-use Piwigo\Ws\PwgError;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * JsonEncoder -- the JSON sibling of SerialPhpEncoder/RestEncoder
- * (see PwgSerialPhpEncoderTest.php for the shared flatten()/PwgError
+ * (see PwgSerialPhpEncoderTest.php for the shared flatten()/WsErrorResponse
  * fixture rationale, reused verbatim here). No dedicated Integration/
  * Browser spec of its own.
  *
- * WsError::INVALID_PARAM-style codes (>= 1000) are used for the PwgError
+ * WsError::INVALID_PARAM-style codes (>= 1000) are used for the WsErrorResponse
  * fixture, not an HTTP-range code (400-599), for the same reason as
- * PwgSerialPhpEncoderTest.php: PwgError's constructor calls
+ * PwgSerialPhpEncoderTest.php: WsErrorResponse's constructor calls
  * PresentationAccessor::htmlService() for HTTP-range codes, which needs
  * a booted container this Unit test doesn't set up.
  */
-test('encodeResponse json-encodes a PwgError as a fail/err/message triple', function (): void {
+test('encodeResponse json-encodes a WsErrorResponse as a fail/err/message triple', function (): void {
     $encoder = new JsonEncoder();
-    $error = new PwgError(1003, 'Invalid param foo');
+    $error = new WsErrorResponse(1003, 'Invalid param foo');
 
     $result = $encoder->encodeResponse($error);
 

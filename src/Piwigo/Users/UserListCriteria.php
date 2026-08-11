@@ -24,7 +24,7 @@ use Piwigo\Common\ValueObject\UserId;
  * $minRegister/$maxRegister are `SqlDateTime`-typed --
  * `Ws\PwgUsers::getList()` validates the raw `min_register`/
  * `max_register` WS params through `SqlDateTime::from()` itself (a real
- * PwgError on an invalid calendar date, e.g. `min_register=9999-13-99`,
+ * WsErrorResponse on an invalid calendar date, e.g. `min_register=9999-13-99`,
  * which the WS layer's own shape-only regex doesn't catch) before ever
  * constructing this criteria object.
  */

@@ -15,7 +15,7 @@ use Override;
 use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
-use Piwigo\Ws\PwgError;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * mixed values/params throughout are by design -- see the parent class's
@@ -39,7 +39,7 @@ final class RestEncoder extends ResponseEncoder
     #[Override]
     public function encodeResponse($response): string
     {
-        if ($response instanceof PwgError) {
+        if ($response instanceof WsErrorResponse) {
             $code = $response->code();
             $msg = htmlspecialchars($response->message());
             $ret = <<<XML

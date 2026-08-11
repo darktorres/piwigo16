@@ -100,14 +100,14 @@ final class PwgUsers
      * Genuinely dynamic response shape: which per-user fields are present
      * depends on the client-controlled 'display' param (a comma-separated
      * field list), not a single fixed row shape.
-     * @return PwgError|array<int|string, mixed>
+     * @return WsErrorResponse|array<int|string, mixed>
      */
-    public function getList(array $params, Server &$service): PwgError|array
+    public function getList(array $params, Server &$service): WsErrorResponse|array
     {
         $available_permission_levels = $this->currentConfig->availablePermissionLevels;
 
         if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
-            return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter order');
         }
 
         // Insensitive case sort order
@@ -143,7 +143,7 @@ final class PwgUsers
         $minRegister = null;
         if (isset($params['min_register']) && $params['min_register'] !== '') {
             if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['min_register'])) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter min_register');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter min_register');
             }
 
             $date_tokens = explode('-', $params['min_register']);
@@ -161,14 +161,14 @@ final class PwgUsers
             try {
                 $minRegister = SqlDateTime::from($min_date . ' 00:00:00');
             } catch (InvalidArgumentException) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter min_register');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter min_register');
             }
         }
 
         $maxRegister = null;
         if (isset($params['max_register']) && $params['max_register'] !== '') {
             if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['max_register'])) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter max_register');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter max_register');
             }
 
             $max_date_tokens = explode('-', $params['max_register']);
@@ -190,7 +190,7 @@ final class PwgUsers
             try {
                 $maxRegister = SqlDateTime::from($max_date . ' 23:59:59');
             } catch (InvalidArgumentException) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter max_register');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter max_register');
             }
         }
 
@@ -208,7 +208,7 @@ final class PwgUsers
         $minLevel = null;
         if ($params['min_level'] !== 0) {
             if (! in_array($params['min_level'], $available_permission_levels, true)) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid level');
             }
             $minLevel = $params['min_level'];
         }
@@ -216,7 +216,7 @@ final class PwgUsers
         $maxLevel = null;
         if (! in_array($params['max_level'] ?? null, [null, false, 0, '0', '', []], true)) {
             if (! in_array(is_numeric($params['max_level']) ? (int) $params['max_level'] : null, $available_permission_levels, true)) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid level');
             }
             // 'max_level' is not a registered ws.php param (see this function's
             // @param docblock) -- reachable only via the shape's open tail, so
@@ -420,22 +420,22 @@ final class PwgUsers
      *   default, no 'type' flag -- always present, string|null.
      *   password_confirm: WsParamFlag::OPTIONAL with no 'default' key -- may be
      *   entirely absent.
-     * @return PwgError|array<int|string, mixed> PwgError, or the result of
+     * @return WsErrorResponse|array<int|string, mixed> WsErrorResponse, or the result of
      *   the pwg.users.getList invocation
      */
-    public function add(array $params, Server &$service): PwgError|array
+    public function add(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (strlen(str_replace(' ', '', $params['username'])) === 0) {
-            return new PwgError(WsError::INVALID_PARAM, 'Name field must not be empty');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Name field must not be empty');
         }
 
         if ($this->currentConfig->doublePasswordTypeInAdmin) {
             if (($params['password'] ?? '') !== ($params['password_confirm'] ?? '')) {
-                return new PwgError(WsError::INVALID_PARAM, $this->lang->t('The passwords do not match'));
+                return new WsErrorResponse(WsError::INVALID_PARAM, $this->lang->t('The passwords do not match'));
             }
         }
 
@@ -448,7 +448,7 @@ final class PwgUsers
         // otherwise reach it with null and crash inside pwg_password_hash() ->
         // password_hash() (a real string-typed native function).
         if ($params['password'] === null) {
-            return new PwgError(WsError::INVALID_PARAM, $this->lang->t('Please, enter a password'));
+            return new WsErrorResponse(WsError::INVALID_PARAM, $this->lang->t('Please, enter a password'));
         }
 
         // Preserves the pre-SEC-31 behavior for this real caller (admin-
@@ -475,7 +475,7 @@ final class PwgUsers
         $user_id = $result->userId ?? false;
 
         if (! (bool) $user_id) {
-            return new PwgError(WsError::INVALID_PARAM, $errors[0] ?? '');
+            return new WsErrorResponse(WsError::INVALID_PARAM, $errors[0] ?? '');
         }
 
         return $this->narrowGetListResult($service->invoke('pwg.users.getList', [
@@ -491,18 +491,18 @@ final class PwgUsers
      *   'default' key -- both mandatory, always present. user_id: WsParamType::ID,
      *   not FORCE_ARRAY here -- a plain int.
      *
-     * @return PwgError|array{auth_key: string, user_id: int, created_on: string, duration: int, expired_on: string, key_type: string, auth_key_id: string}
+     * @return WsErrorResponse|array{auth_key: string, user_id: int, created_on: string, duration: int, expired_on: string, key_type: string, auth_key_id: string}
      */
-    public function getAuthKey(array $params, Server &$service): PwgError|array
+    public function getAuthKey(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $authkey = $this->authService->createUserAuthKey($params['user_id']);
 
         if ($authkey === false) {
-            return new PwgError(WsError::INVALID_PARAM, 'invalid user_id');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'invalid user_id');
         }
 
         return $authkey;
@@ -516,10 +516,10 @@ final class PwgUsers
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces user_id to a list of positive ints.
      */
-    public function delete(array $params, Server &$service): PwgError|string
+    public function delete(array $params, Server &$service): WsErrorResponse|string
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $currentUser = $this->currentUser->get();
@@ -570,13 +570,13 @@ final class PwgUsers
      *   other key: WsParamFlag::OPTIONAL with no 'default' key -- may be entirely
      *   absent; group_id: WsParamType::INT only (no POSITIVE) since -1 is a valid
      *   value ("dissociate from all groups").
-     * @return PwgError|array<int|string, mixed> PwgError, or the result of
+     * @return WsErrorResponse|array<int|string, mixed> WsErrorResponse, or the result of
      *   the pwg.users.getList invocation
      */
-    public function setInfo(array $params, Server &$service): PwgError|array
+    public function setInfo(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $updated_users = $this->userService->checkAndSaveUserInfos($params, $this->pageState);
@@ -590,7 +590,7 @@ final class PwgUsers
             $error = $updated_users['error'];
             $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WsError::INVALID_PARAM;
             $error_message = is_array($error) && is_string($error['message'] ?? null) ? $error['message'] : 'Invalid parameters';
-            return new PwgError($error_code, $error_message);
+            return new WsErrorResponse($error_code, $error_message);
         }
 
         $updated_infos = is_array($updated_users['infos'] ?? null) ? $updated_users['infos'] : [];
@@ -606,16 +606,16 @@ final class PwgUsers
      * Server's own class docblock) -- its declared return type is
      * `mixed` by design. This narrows it to the real shape this specific
      * sub-invocation (always 'pwg.users.getList', which itself really
-     * does return PwgError|array<int|string, mixed>) is known to return,
+     * does return WsErrorResponse|array<int|string, mixed>) is known to return,
      * the same "resolve, narrow, or throw" idiom already used throughout
      * this codebase for other statically-unknowable-but-really-fixed-shape
      * values (e.g. PwgImage::currentConfig()'s container resolve).
      *
-     * @return PwgError|array<int|string, mixed>
+     * @return WsErrorResponse|array<int|string, mixed>
      */
-    private function narrowGetListResult(mixed $result): PwgError|array
+    private function narrowGetListResult(mixed $result): WsErrorResponse|array
     {
-        if (! $result instanceof PwgError && ! is_array($result)) {
+        if (! $result instanceof WsErrorResponse && ! is_array($result)) {
             throw new LogicException('pwg.users.getList returned an unexpected type');
         }
 
@@ -634,14 +634,14 @@ final class PwgUsers
      *   ws.php registration at all -- harmless no-ops, not part of the real
      *   shape.)
      */
-    public function setMyInfo(array $params, Server &$service): PwgError|string
+    public function setMyInfo(array $params, Server &$service): WsErrorResponse|string
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if ($this->accessControl->isAGuest()) {
-            return new PwgError(401, 'Access Denied');
+            return new WsErrorResponse(401, 'Access Denied');
         }
 
         $currentUser = $this->currentUser->get();
@@ -676,7 +676,7 @@ final class PwgUsers
 
         if (isset($params['password']) && $params['password'] !== '') {
             if (($params['new_password'] ?? '') !== ($params['conf_new_password'] ?? '')) {
-                return new PwgError(403, $this->lang->t('The passwords do not match'));
+                return new WsErrorResponse(403, $this->lang->t('The passwords do not match'));
             }
 
             $current_password = $this->authService->getPasswordHash($currentUser->id);
@@ -689,7 +689,7 @@ final class PwgUsers
             $params_password = is_string($params['password']) ? $params['password'] : '';
 
             if (! $this->passwordService->verify($params_password, $current_password)) {
-                return new PwgError(403, $this->lang->t('Current password is wrong'));
+                return new WsErrorResponse(403, $this->lang->t('Current password is wrong'));
             }
 
             $params['password'] = $params['new_password'] ?? null;
@@ -718,7 +718,7 @@ final class PwgUsers
             $error = $updated_users['error'];
             $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WsError::INVALID_PARAM;
             $error_message = is_array($error) && is_string($error['message'] ?? null) ? $error['message'] : 'Invalid parameters';
-            return new PwgError($error_code, $error_message);
+            return new WsErrorResponse($error_code, $error_message);
         }
 
         return $this->lang->t('Your changes have been applied.');
@@ -733,14 +733,14 @@ final class PwgUsers
      *   WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
      *   is_json: non-null bool default, WsParamType::BOOL -- always present.
      *
-     * @return PwgError|array<string, mixed> matches
+     * @return WsErrorResponse|array<string, mixed> matches
      *   Users\User::$preferences' own by-design arbitrary per-user
      *   key-value shape (User.php's own $preferences docblock)
      */
-    public function preferencesSet(array $params, Server &$service): PwgError|array
+    public function preferencesSet(array $params, Server &$service): WsErrorResponse|array
     {
         if (! (bool) preg_match('/^[a-zA-Z0-9_-]+$/', $params['param'])) {
-            return new PwgError(WsError::INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
         }
 
         $value = stripslashes($params['value'] ?? '');
@@ -761,15 +761,15 @@ final class PwgUsers
      * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
      */
-    public function favoritesAdd(array $params, Server &$service): PwgError|true
+    public function favoritesAdd(array $params, Server &$service): WsErrorResponse|true
     {
         if ($this->accessControl->isAGuest()) {
-            return new PwgError(403, 'User must be logged in.');
+            return new WsErrorResponse(403, 'User must be logged in.');
         }
 
         // does the image really exist?
         if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
-            return new PwgError(404, 'image_id not found');
+            return new WsErrorResponse(404, 'image_id not found');
         }
 
         $this->userService->addFavorite($this->currentUser->get()->id, $params['image_id'], ignoreDuplicate: true);
@@ -784,15 +784,15 @@ final class PwgUsers
      * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
      */
-    public function favoritesRemove(array $params, Server &$service): PwgError|true
+    public function favoritesRemove(array $params, Server &$service): WsErrorResponse|true
     {
         if ($this->accessControl->isAGuest()) {
-            return new PwgError(403, 'User must be logged in.');
+            return new WsErrorResponse(403, 'User must be logged in.');
         }
 
         // does the image really exist?
         if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
-            return new PwgError(404, 'image_id not found');
+            return new WsErrorResponse(404, 'image_id not found');
         }
 
         $this->userService->removeFavorite($this->currentUser->get()->id, $params['image_id']);
@@ -868,19 +868,19 @@ final class PwgUsers
      *   user_id/pwg_token: no 'default' key -- mandatory, always present,
      *   WsParamType::ID guarantees a plain int for user_id. send_by_mail: non-null
      *   bool default, WsParamType::BOOL -- always present.
-     * @return PwgError|array{generated_link: string, send_by_mail: string|false|null, time_validation: string}
+     * @return WsErrorResponse|array{generated_link: string, send_by_mail: string|false|null, time_validation: string}
      */
-    public function generatePasswordLink(array $params, Server &$service): PwgError|array
+    public function generatePasswordLink(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $lost_user_id = UserId::from($params['user_id']);
 
         // check if user exist
         if ($this->userService->getUsername($lost_user_id) === null) {
-            return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 
         // UserService::getUserData() is declared to return
@@ -891,12 +891,12 @@ final class PwgUsers
 
         // Cannot perform this action for a guest or generic user
         if ($this->accessControl->isAGuest($user_lost_status) or $this->accessControl->isGeneric($user_lost_status)) {
-            return new PwgError(403, 'Password reset is not allowed for this user');
+            return new WsErrorResponse(403, 'Password reset is not allowed for this user');
         }
 
         // Only webmaster can perform this action for another webmaster
         if ($this->currentUser->get()->status === UserStatus::Admin && $user_lost_status === 'webmaster') {
-            return new PwgError(403, 'You cannot perform this action');
+            return new WsErrorResponse(403, 'You cannot perform this action');
         }
 
         $conn = DbConnection::build();
@@ -950,30 +950,30 @@ final class PwgUsers
      *   'default' key -- both mandatory, always present, WsParamType::ID guarantees
      *   a plain int for user_id.
      */
-    public function setMainUser(array $params, Server &$service): PwgError|string
+    public function setMainUser(array $params, Server &$service): WsErrorResponse|string
     {
         // check if not webmaster
         if (! $this->accessControl->isWebmaster()) {
-            return new PwgError(403, 'You cannot perform this action');
+            return new WsErrorResponse(403, 'You cannot perform this action');
         }
 
         // check pwg_token
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $new_main_user_id = UserId::from($params['user_id']);
 
         // checl if user exist
         if ($this->userService->getUsername($new_main_user_id) === null) {
-            return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 
         $new_main_user = $this->userService->getUserData($new_main_user_id);
 
         // check if the user to set as main user is not webmaster
         if ($new_main_user['status'] !== 'webmaster') {
-            return new PwgError(403, 'This user cannot become a main user because he is not a webmaster.');
+            return new WsErrorResponse(403, 'This user cannot become a main user because he is not a webmaster.');
         }
 
         $this->configService->confUpdateParam('webmaster_id', $params['user_id']);
@@ -987,26 +987,26 @@ final class PwgUsers
      * @param array{key_name: string, duration: int, pwg_token: string, ...} $params
      *   none has a 'default' key -- all mandatory, always present; duration:
      *   WsParamType::INT|WsParamType::POSITIVE guarantees a plain int.
-     * @return PwgError|array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}
+     * @return WsErrorResponse|array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}
      */
-    public function createApiKey(array $params, Server &$service): PwgError|array
+    public function createApiKey(array $params, Server &$service): WsErrorResponse|array
     {
         $logger = $this->currentLogger->get();
 
         if ($this->accessControl->isAGuest() or ! $this->apiKeyService->connectedWithPwgUi()) {
-            return new PwgError(401, 'Acces Denied');
+            return new WsErrorResponse(401, 'Acces Denied');
         }
 
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if ($params['duration'] < 1 or $params['duration'] > 999999) {
-            return new PwgError(400, 'Invalid duration max days is 999999');
+            return new WsErrorResponse(400, 'Invalid duration max days is 999999');
         }
 
         if (strlen($params['key_name']) > 100) {
-            return new PwgError(400, 'Key name is too long');
+            return new WsErrorResponse(400, 'Key name is too long');
         }
 
         // realEscapeString() dropped: ApiKeyRepository::insert() parameterizes
@@ -1034,20 +1034,20 @@ final class PwgUsers
      * @param array{pkid: string, pwg_token: string, ...} $params neither has a
      *   'default' key -- both mandatory, always present, no 'type' flag.
      */
-    public function revokeApiKey(array $params, Server &$service): PwgError|string
+    public function revokeApiKey(array $params, Server &$service): WsErrorResponse|string
     {
         $logger = $this->currentLogger->get();
 
         if ($this->accessControl->isAGuest() or ! $this->apiKeyService->connectedWithPwgUi()) {
-            return new PwgError(401, 'Acces Denied');
+            return new WsErrorResponse(401, 'Acces Denied');
         }
 
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, $this->lang->t('Invalid security token'));
+            return new WsErrorResponse(403, $this->lang->t('Invalid security token'));
         }
 
         if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
-            return new PwgError(403, $this->lang->t('Invalid pkid format'));
+            return new WsErrorResponse(403, $this->lang->t('Invalid pkid format'));
         }
 
         $user_id = $this->currentUser->get()
@@ -1056,7 +1056,7 @@ final class PwgUsers
         $revoked_key = $this->apiKeyService->revoke($user_id, $params['pkid']);
 
         if ($revoked_key !== true) {
-            return new PwgError(403, $revoked_key);
+            return new WsErrorResponse(403, $revoked_key);
         }
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=revoke][pkid=' . $params['pkid'] . ']');
@@ -1072,24 +1072,24 @@ final class PwgUsers
      *   none has a 'default' key -- all mandatory, always present, no 'type'
      *   flag.
      */
-    public function editApiKey(array $params, Server &$service): PwgError|string
+    public function editApiKey(array $params, Server &$service): WsErrorResponse|string
     {
         $logger = $this->currentLogger->get();
 
         if ($this->accessControl->isAGuest()) {
-            return new PwgError(401, 'Acces Denied');
+            return new WsErrorResponse(401, 'Acces Denied');
         }
 
         if (! $this->apiKeyService->connectedWithPwgUi()) {
-            return new PwgError(401, 'Acces Denied');
+            return new WsErrorResponse(401, 'Acces Denied');
         }
 
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, $this->lang->t('Invalid security token'));
+            return new WsErrorResponse(403, $this->lang->t('Invalid security token'));
         }
 
         if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
-            return new PwgError(403, $this->lang->t('Invalid pkid format'));
+            return new WsErrorResponse(403, $this->lang->t('Invalid pkid format'));
         }
 
         // realEscapeString() dropped: ApiKeyRepository::updateName()
@@ -1101,7 +1101,7 @@ final class PwgUsers
         $edited_key = $this->apiKeyService->edit($user_id, $params['pkid'], $key_name);
 
         if ($edited_key !== true) {
-            return new PwgError(403, $edited_key);
+            return new WsErrorResponse(403, $edited_key);
         }
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=edit][pkid=' . $params['pkid'] . '][new_name=' . $key_name . ']');
@@ -1115,20 +1115,20 @@ final class PwgUsers
      *
      * @param array{pwg_token: string, ...} $params no 'default' key --
      *   mandatory, always present, no 'type' flag.
-     * @return PwgError|string|list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>
+     * @return WsErrorResponse|string|list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>
      */
-    public function getApiKey(array $params, Server &$service): PwgError|array|string
+    public function getApiKey(array $params, Server &$service): WsErrorResponse|array|string
     {
         if ($this->accessControl->isAGuest()) {
-            return new PwgError(401, 'Acces Denied');
+            return new WsErrorResponse(401, 'Acces Denied');
         }
 
         if (! $this->apiKeyService->connectedWithPwgUi()) {
-            return new PwgError(401, 'Acces Denied');
+            return new WsErrorResponse(401, 'Acces Denied');
         }
 
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         // ApiKeyService::get() takes a native int $userId, same as

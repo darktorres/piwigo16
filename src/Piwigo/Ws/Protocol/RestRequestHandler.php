@@ -13,10 +13,10 @@ namespace Piwigo\Ws\Protocol;
 
 use Override;
 use Piwigo\Core\WsError;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\Request\WsRawRequest;
 use Piwigo\Ws\RequestHandler;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 
 final class RestRequestHandler extends RequestHandler
 {
@@ -27,7 +27,7 @@ final class RestRequestHandler extends RequestHandler
 
         if ($wsRequest->method === null) {
             $service->sendResponse(
-                new PwgError(WsError::INVALID_METHOD, 'Missing "method" name')
+                new WsErrorResponse(WsError::INVALID_METHOD, 'Missing "method" name')
             );
             return;
         }

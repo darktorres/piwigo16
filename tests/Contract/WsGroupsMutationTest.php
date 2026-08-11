@@ -8,7 +8,7 @@ use Override;
 
 /**
  * Ws\PwgGroups::delete()'s own `if ($deleted_groups === false) { return
- * new PwgError(500, 'There is no group to delete'); }` branch is NOT
+ * new WsErrorResponse(500, 'There is no group to delete'); }` branch is NOT
  * chased here: GroupService::delete() only returns `false` when
  * `count($groupIds) === 0`, but `group_id` is registered with
  * WsParamFlag::FORCE_ARRAY and no WsParamFlag::OPTIONAL/'default' key

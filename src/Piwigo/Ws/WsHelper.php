@@ -37,7 +37,7 @@ final class WsHelper
 
     /**
      * Event handler for method invocation security check. Sets $event->value
-     * to a PwgError if the preconditions are not satisfied for method
+     * to a WsErrorResponse if the preconditions are not satisfied for method
      * invocation.
      */
     public function isInvokeAllowed(WsInvokeAllowed $event): WsInvokeAllowed
@@ -48,7 +48,7 @@ final class WsHelper
 
         if (! $this->accessControl->isAuthorizeStatus(AccessLevel::Guest) and
             ! str_starts_with($event->methodName, 'pwg.session.')) {
-            $event->value = new PwgError(401, 'Access denied');
+            $event->value = new WsErrorResponse(401, 'Access denied');
             return $event;
         }
 
@@ -78,7 +78,7 @@ final class WsHelper
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
             if (isset($params[$datefield]) and ! DateHelper::isValidMysqlDatetime($params[$datefield])) {
-                $service->sendResponse(new PwgError(WsError::INVALID_PARAM, 'Invalid ' . $datefield));
+                $service->sendResponse(new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid ' . $datefield));
                 exit;
             }
         }

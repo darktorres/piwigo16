@@ -18,9 +18,9 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgGroups;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * Piwigo\Ws\PwgGroups -- the `pwg.groups.*` WS methods (8 registrations).
@@ -103,8 +103,8 @@ test('getList rejects a malformed order parameter', function (): void {
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(WsError::INVALID_PARAM)
             ->and($result->message())
@@ -130,7 +130,7 @@ test('getList returns an empty groups list for a group_id with no real matches',
     }
 });
 
-test('delete returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('delete returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
@@ -140,14 +140,14 @@ test('delete returns a 403 PwgError when the submitted pwg_token does not match 
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }
 });
 
-test('setInfo returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('setInfo returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
@@ -157,14 +157,14 @@ test('setInfo returns a 403 PwgError when the submitted pwg_token does not match
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }
 });
 
-test('addUser returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('addUser returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
@@ -175,14 +175,14 @@ test('addUser returns a 403 PwgError when the submitted pwg_token does not match
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }
 });
 
-test('merge returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('merge returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
@@ -193,14 +193,14 @@ test('merge returns a 403 PwgError when the submitted pwg_token does not match t
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }
 });
 
-test('duplicate returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('duplicate returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
@@ -211,14 +211,14 @@ test('duplicate returns a 403 PwgError when the submitted pwg_token does not mat
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }
 });
 
-test('deleteUser returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('deleteUser returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgGroupsTestSubject();
     $server = pwgGroupsTestServer();
 
@@ -229,8 +229,8 @@ test('deleteUser returns a 403 PwgError when the submitted pwg_token does not ma
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }

@@ -1107,7 +1107,7 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // mechanism reached from Bootstrap/UserBootstrap.php's api_key
         // gate and Admin/Upload/UploadService.php's IN_WS branch.
         // Ws/PwgImages.php's own upload-error sites return `new
-        // PwgError(...)` instead of a raw die(), the same real
+        // WsErrorResponse(...)` instead of a raw die(), the same real
         // error-response mechanism this file already uses everywhere
         // else, so upload errors honor the request's real format=/
         // protocol instead of hardcoding raw JSON regardless.

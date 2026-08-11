@@ -19,8 +19,8 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\PwgComments;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * Piwigo\Ws\PwgComments -- the `pwg.userComments.*` WS methods (3
@@ -102,7 +102,7 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-test('getList returns a 403 PwgError when comments are disabled', function (): void {
+test('getList returns a 403 WsErrorResponse when comments are disabled', function (): void {
     CurrentConfigTestFactory::get()->activateComments = false;
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
@@ -110,8 +110,8 @@ test('getList returns a 403 PwgError when comments are disabled', function (): v
     $result = $ws->getList(pwgCommentsTestBaseParams(), $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403)
             ->and($result->message())
@@ -119,7 +119,7 @@ test('getList returns a 403 PwgError when comments are disabled', function (): v
     }
 });
 
-test('getList returns a 401 PwgError for a status outside the allowlist', function (): void {
+test('getList returns a 401 WsErrorResponse for a status outside the allowlist', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
@@ -130,8 +130,8 @@ test('getList returns a 401 PwgError for a status outside the allowlist', functi
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(401)
             ->and($result->message())
@@ -139,7 +139,7 @@ test('getList returns a 401 PwgError for a status outside the allowlist', functi
     }
 });
 
-test('getList returns a 401 PwgError for a per_page outside the allowed set', function (): void {
+test('getList returns a 401 WsErrorResponse for a per_page outside the allowed set', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
@@ -150,8 +150,8 @@ test('getList returns a 401 PwgError for a per_page outside the allowed set', fu
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(401)
             ->and($result->message())
@@ -159,7 +159,7 @@ test('getList returns a 401 PwgError for a per_page outside the allowed set', fu
     }
 });
 
-test('getList returns a 401 PwgError for an unparsable f_min_date', function (): void {
+test('getList returns a 401 WsErrorResponse for an unparsable f_min_date', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
@@ -170,8 +170,8 @@ test('getList returns a 401 PwgError for an unparsable f_min_date', function ():
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(401)
             ->and($result->message())
@@ -179,7 +179,7 @@ test('getList returns a 401 PwgError for an unparsable f_min_date', function ():
     }
 });
 
-test('getList returns a 401 PwgError for an unparsable f_max_date', function (): void {
+test('getList returns a 401 WsErrorResponse for an unparsable f_max_date', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
@@ -190,8 +190,8 @@ test('getList returns a 401 PwgError for an unparsable f_max_date', function ():
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(401)
             ->and($result->message())
@@ -199,7 +199,7 @@ test('getList returns a 401 PwgError for an unparsable f_max_date', function ():
     }
 });
 
-test('delete returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('delete returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
@@ -209,14 +209,14 @@ test('delete returns a 403 PwgError when the submitted pwg_token does not match 
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }
 });
 
-test('validate returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('validate returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
@@ -226,8 +226,8 @@ test('validate returns a 403 PwgError when the submitted pwg_token does not matc
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }

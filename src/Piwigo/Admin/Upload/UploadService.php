@@ -50,8 +50,8 @@ use Piwigo\Metadata\MetadataService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * [SEC-21] The SVG upload branch validates that the sniffed MIME type
@@ -452,7 +452,7 @@ final class UploadService
                         unlink($source_filepath);
                         $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
                         if ($this->wsContext->isActive() && $service !== null) {
-                            $service->sendResponse(new PwgError(415, $error_msg));
+                            $service->sendResponse(new WsErrorResponse(415, $error_msg));
                             exit;
                         }
 

@@ -246,7 +246,7 @@ final class WsExtensionsTest extends ContractTestCase
         );
 
         try {
-            // PwgError(500, ...) mirrors onto a real HTTP 500 status --
+            // WsErrorResponse(500, ...) mirrors onto a real HTTP 500 status --
             // callWs()'s generic "< 500" guard would wrongly reject this
             // well-formed business-rule error.
             $response = $this->callWsAllowingServerError('pwg.themes.performAction', [

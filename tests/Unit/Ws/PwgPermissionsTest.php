@@ -28,9 +28,9 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgPermissions;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * Piwigo\Ws\PwgPermissions -- the `pwg.permissions.*` WS methods (3
@@ -49,7 +49,7 @@ use Piwigo\Ws\Server;
  * therefore a cheap, DB-free 403 branch, same shape as this campaign's
  * established CSRF-mismatch pattern (`MaintenanceSubControllerTest.php`)
  * even though `CsrfService::checkOrFail()` isn't used here (this class
- * compares the token directly and returns a `PwgError` rather than
+ * compares the token directly and returns a `WsErrorResponse` rather than
  * throwing). Their real permission-grant/deny logic needs real
  * category/group/user rows and is not attempted here.
  *
@@ -142,8 +142,8 @@ test('getList rejects more than one of cat_id/group_id/user_id at once', functio
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(WsError::INVALID_PARAM)
             ->and($result->message())
@@ -166,7 +166,7 @@ test('getList returns an empty categories list for a cat_id with no real access 
     }
 });
 
-test('add returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('add returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgPermissionsTestSubject();
     $server = pwgPermissionsTestServer();
 
@@ -177,8 +177,8 @@ test('add returns a 403 PwgError when the submitted pwg_token does not match the
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403)
             ->and($result->message())
@@ -186,7 +186,7 @@ test('add returns a 403 PwgError when the submitted pwg_token does not match the
     }
 });
 
-test('remove returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('remove returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgPermissionsTestSubject();
     $server = pwgPermissionsTestServer();
 
@@ -196,8 +196,8 @@ test('remove returns a 403 PwgError when the submitted pwg_token does not match 
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403)
             ->and($result->message())

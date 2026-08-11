@@ -58,7 +58,7 @@ final class WsImagesTest extends ContractTestCase
 
     public function testGetInfoOnMissingImageReturns404(): void
     {
-        // ws.php sends HTTP 404 for PwgError(404, ...) — not 200+stat=fail.
+        // ws.php sends HTTP 404 for WsErrorResponse(404, ...) — not 200+stat=fail.
         // The contract is: HTTP 404, body may or may not be valid JSON.
         $url = $this->baseUrl . '/ws.php?format=json';
         $ch = curl_init($url);

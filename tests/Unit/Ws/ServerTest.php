@@ -20,8 +20,8 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * Piwigo\Ws\Server -- the WS framework's own generic method registry/
@@ -42,9 +42,9 @@ use Piwigo\Ws\Server;
  * PwgSerialPhpEncoderTest.php/etc).
  *
  * Kernel::boot() is required file-wide (same reasoning as PwgErrorTest.php):
- * several PwgError codes constructed by invoke() itself (401, 405, and
+ * several WsErrorResponse codes constructed by invoke() itself (401, 405, and
  * WsError::INVALID_METHOD = 501) fall in the HTTP range, which routes
- * PwgError's own constructor through PresentationAccessor::htmlService(),
+ * WsErrorResponse's own constructor through PresentationAccessor::htmlService(),
  * needing a booted DI container.
  */
 beforeEach(function (): void {
@@ -219,12 +219,12 @@ test('checkType accepts a valid scalar of each type and coerces it', function ()
         ->toBe(4.5);
 });
 
-test('checkType rejects an invalid scalar of each type with a descriptive PwgError', function (): void {
+test('checkType rejects an invalid scalar of each type with a descriptive WsErrorResponse', function (): void {
     $bool = 'not-a-bool';
     $error = Server::checkType($bool, WsParamType::BOOL, 'flag');
     expect($error)
-        ->toBeInstanceOf(PwgError::class);
-    if ($error instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($error instanceof WsErrorResponse) {
         expect($error->code())
             ->toBe(WsError::INVALID_PARAM)
             ->and($error->message())
@@ -234,8 +234,8 @@ test('checkType rejects an invalid scalar of each type with a descriptive PwgErr
     $int = 'not-an-int';
     $error = Server::checkType($int, WsParamType::INT, 'count');
     expect($error)
-        ->toBeInstanceOf(PwgError::class);
-    if ($error instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($error instanceof WsErrorResponse) {
         expect($error->message())
             ->toBe('count must be an integer');
     }
@@ -243,8 +243,8 @@ test('checkType rejects an invalid scalar of each type with a descriptive PwgErr
     $float = 'not-a-float';
     $error = Server::checkType($float, WsParamType::FLOAT, 'ratio');
     expect($error)
-        ->toBeInstanceOf(PwgError::class);
-    if ($error instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($error instanceof WsErrorResponse) {
         expect($error->message())
             ->toBe('ratio must be a float');
     }
@@ -254,8 +254,8 @@ test('checkType enforces POSITIVE/NOTNULL as a minimum range of 1, appending the
     $zero = '0';
     $error = Server::checkType($zero, WsParamType::ID, 'category_id');
     expect($error)
-        ->toBeInstanceOf(PwgError::class);
-    if ($error instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($error instanceof WsErrorResponse) {
         expect($error->message())
             ->toBe('category_id must be an positive and not null integer');
     }
@@ -270,8 +270,8 @@ test('checkType validates every element when the param is an array', function ()
     $ints = ['1', '2', 'not-an-int'];
     $error = Server::checkType($ints, WsParamType::INT, 'ids');
     expect($error)
-        ->toBeInstanceOf(PwgError::class);
-    if ($error instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($error instanceof WsErrorResponse) {
         expect($error->message())
             ->toBe('ids must only contain integers');
     }
@@ -297,8 +297,8 @@ test('invoke returns INVALID_METHOD for an unregistered method name', function (
     $result = $server->invoke('does.not.exist', []);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(WsError::INVALID_METHOD);
     }
@@ -315,8 +315,8 @@ test('invoke returns a 405 for a post_only method called without POST data', fun
     $result = $server->invoke('test.postOnly', []);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(405);
     }
@@ -332,8 +332,8 @@ test('invoke returns a 401 for an admin_only method called by a non-admin', func
     $result = $server->invoke('test.adminOnly', []);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(401);
     }
@@ -352,8 +352,8 @@ test('invoke returns a 401 when an active API key request targets a config-forbi
     $result = $server->invoke('test.forbidden', []);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(401);
     }
@@ -365,8 +365,8 @@ test('invoke returns MISSING_PARAM when a required param is absent, and again wh
 
     $absent = $server->invoke('test.method', []);
     expect($absent)
-        ->toBeInstanceOf(PwgError::class);
-    if ($absent instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($absent instanceof WsErrorResponse) {
         expect($absent->code())
             ->toBe(WsError::MISSING_PARAM)
             ->and($absent->message())
@@ -377,8 +377,8 @@ test('invoke returns MISSING_PARAM when a required param is absent, and again wh
         'name' => '',
     ]);
     expect($empty)
-        ->toBeInstanceOf(PwgError::class);
-    if ($empty instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($empty instanceof WsErrorResponse) {
         expect($empty->code())
             ->toBe(WsError::MISSING_PARAM);
     }
@@ -413,8 +413,8 @@ test('invoke rejects an array value for a param that does not accept arrays', fu
     ]);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(WsError::INVALID_PARAM)
             ->and($result->message())
@@ -457,8 +457,8 @@ test('invoke rejects a param that fails its declared type check', function (): v
     ]);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(WsError::INVALID_PARAM);
     }
@@ -531,8 +531,8 @@ test('wsGetMethodDetails returns INVALID_PARAM for a non-existent method name', 
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(WsError::INVALID_PARAM);
     }

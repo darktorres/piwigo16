@@ -13,9 +13,9 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgExtensions;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * Piwigo\Ws\PwgExtensions -- the `pwg.plugins.*`/`pwg.themes.performAction`/
@@ -89,7 +89,7 @@ function pwgExtensionsTestSetUser(bool $isWebmaster): void
     ));
 }
 
-test('pluginsPerformAction returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('pluginsPerformAction returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $root = pwgExtensionsTestRoot();
 
     try {
@@ -109,8 +109,8 @@ test('pluginsPerformAction returns a 403 PwgError when the submitted pwg_token d
         ], $server);
 
         expect($result)
-            ->toBeInstanceOf(PwgError::class);
-        if ($result instanceof PwgError) {
+            ->toBeInstanceOf(WsErrorResponse::class);
+        if ($result instanceof WsErrorResponse) {
             expect($result->code())
                 ->toBe(403);
         }
@@ -122,7 +122,7 @@ test('pluginsPerformAction returns a 403 PwgError when the submitted pwg_token d
     }
 });
 
-test('themesPerformAction returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('themesPerformAction returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $root = pwgExtensionsTestRoot();
 
     try {
@@ -142,8 +142,8 @@ test('themesPerformAction returns a 403 PwgError when the submitted pwg_token do
         ], $server);
 
         expect($result)
-            ->toBeInstanceOf(PwgError::class);
-        if ($result instanceof PwgError) {
+            ->toBeInstanceOf(WsErrorResponse::class);
+        if ($result instanceof WsErrorResponse) {
             expect($result->code())
                 ->toBe(403);
         }
@@ -155,7 +155,7 @@ test('themesPerformAction returns a 403 PwgError when the submitted pwg_token do
     }
 });
 
-test('update returns a 401 PwgError when extensions install is disabled', function (): void {
+test('update returns a 401 WsErrorResponse when extensions install is disabled', function (): void {
     $root = pwgExtensionsTestRoot();
 
     try {
@@ -175,8 +175,8 @@ test('update returns a 401 PwgError when extensions install is disabled', functi
         ], $server);
 
         expect($result)
-            ->toBeInstanceOf(PwgError::class);
-        if ($result instanceof PwgError) {
+            ->toBeInstanceOf(WsErrorResponse::class);
+        if ($result instanceof WsErrorResponse) {
             expect($result->code())
                 ->toBe(401)
                 ->and($result->message())
@@ -189,7 +189,7 @@ test('update returns a 401 PwgError when extensions install is disabled', functi
     }
 });
 
-test('ignoreUpdate returns a 401 PwgError when the user is not a webmaster', function (): void {
+test('ignoreUpdate returns a 401 WsErrorResponse when the user is not a webmaster', function (): void {
     $root = pwgExtensionsTestRoot();
 
     try {
@@ -209,8 +209,8 @@ test('ignoreUpdate returns a 401 PwgError when the user is not a webmaster', fun
         ], $server);
 
         expect($result)
-            ->toBeInstanceOf(PwgError::class);
-        if ($result instanceof PwgError) {
+            ->toBeInstanceOf(WsErrorResponse::class);
+        if ($result instanceof WsErrorResponse) {
             expect($result->code())
                 ->toBe(401)
                 ->and($result->message())
@@ -222,7 +222,7 @@ test('ignoreUpdate returns a 401 PwgError when the user is not a webmaster', fun
     }
 });
 
-test('ignoreUpdate returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token, for a real webmaster', function (): void {
+test('ignoreUpdate returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token, for a real webmaster', function (): void {
     $root = pwgExtensionsTestRoot();
 
     try {
@@ -242,8 +242,8 @@ test('ignoreUpdate returns a 403 PwgError when the submitted pwg_token does not 
         ], $server);
 
         expect($result)
-            ->toBeInstanceOf(PwgError::class);
-        if ($result instanceof PwgError) {
+            ->toBeInstanceOf(WsErrorResponse::class);
+        if ($result instanceof WsErrorResponse) {
             expect($result->code())
                 ->toBe(403);
         }

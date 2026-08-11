@@ -20,8 +20,8 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Core;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * Piwigo\Ws\Core -- the `pwg.getVersion`/`pwg.getInfos`/
@@ -122,8 +122,8 @@ test('getMissingDerivatives rejects a types list with no real defined type match
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(WsError::INVALID_PARAM)
             ->and($result->message())
@@ -131,7 +131,7 @@ test('getMissingDerivatives rejects a types list with no real defined type match
     }
 });
 
-test('sessionLogin returns a 401 PwgError when called with an active API key', function (): void {
+test('sessionLogin returns a 401 WsErrorResponse when called with an active API key', function (): void {
     $ws = pwgCoreTestSubject();
     $server = pwgCoreTestServer();
     $apiKeyRequestFlag = Kernel::container()->get(ApiKeyRequestFlag::class);
@@ -146,8 +146,8 @@ test('sessionLogin returns a 401 PwgError when called with an active API key', f
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(401)
             ->and($result->message())
@@ -155,7 +155,7 @@ test('sessionLogin returns a 401 PwgError when called with an active API key', f
     }
 });
 
-test('sessionLogout returns a 401 PwgError when called with an active API key', function (): void {
+test('sessionLogout returns a 401 WsErrorResponse when called with an active API key', function (): void {
     $ws = pwgCoreTestSubject();
     $server = pwgCoreTestServer();
     $apiKeyRequestFlag = Kernel::container()->get(ApiKeyRequestFlag::class);
@@ -167,8 +167,8 @@ test('sessionLogout returns a 401 PwgError when called with an active API key', 
     $result = $ws->sessionLogout([], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(401)
             ->and($result->message())
@@ -192,8 +192,8 @@ test('getActivityList rejects an unparsable date_min', function (): void {
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(WsError::INVALID_PARAM)
             ->and($result->message())

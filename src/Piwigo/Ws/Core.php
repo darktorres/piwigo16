@@ -118,16 +118,16 @@ final class Core
      *    POSITIVE, null default -- int|null. f_* (see
      *    WsHelper::stdImageSqlFilterCriteria()'s docblock): shared filter set merged in
      *    via ws.php's $f_params.
-     * @return PwgError|array{next_page?: int|string, urls?: string[]}
+     * @return WsErrorResponse|array{next_page?: int|string, urls?: string[]}
      */
-    public function getMissingDerivatives(array $params, Server &$service): PwgError|array
+    public function getMissingDerivatives(array $params, Server &$service): WsErrorResponse|array
     {
         if ($params['types'] === []) {
             $types = array_keys($this->imageStdParams->getDefinedTypeMap());
         } else {
             $types = array_intersect(array_keys($this->imageStdParams->getDefinedTypeMap()), $params['types']);
             if (count($types) === 0) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid types');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid types');
             }
         }
 
@@ -418,10 +418,10 @@ final class Core
      *    username: no WS_TYPE flag, mandatory -- always a plain string.
      *    password: no WS_TYPE flag, null default -- string|null.
      */
-    public function sessionLogin(array $params, Server &$service): PwgError|true
+    public function sessionLogin(array $params, Server &$service): WsErrorResponse|true
     {
         if ($this->apiKeyRequestFlag->isActive()) {
-            return new PwgError(401, 'Cannot use this method with an api key');
+            return new WsErrorResponse(401, 'Cannot use this method with an api key');
         }
 
         if ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username'])) {
@@ -437,7 +437,7 @@ final class Core
             $_SESSION['connected_with'] = 'ws_session_login';
             return true;
         }
-        return new PwgError(999, 'Invalid username/password');
+        return new WsErrorResponse(999, 'Invalid username/password');
     }
 
     /**
@@ -445,10 +445,10 @@ final class Core
      * Performs a logout
      * @param mixed[] $params
      */
-    public function sessionLogout(array $params, Server &$service): PwgError|true
+    public function sessionLogout(array $params, Server &$service): WsErrorResponse|true
     {
         if ($this->apiKeyRequestFlag->isActive()) {
-            return new PwgError(401, 'Cannot use this method with an api key');
+            return new WsErrorResponse(401, 'Cannot use this method with an api key');
         }
 
         if (! $this->accessControl->isAGuest()) {
@@ -529,14 +529,14 @@ final class Core
      * an entity-agnostic per-action payload, same rationale as
      * Admin\Maintenance\ActivityLogEntryFormatter's own $details); 'params'
      * echoes $param back for the WS client, same by-design shape.
-     * @return PwgError|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}
+     * @return WsErrorResponse|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}
      */
-    public function getActivityList(array $param, Server &$service): PwgError|array
+    public function getActivityList(array $param, Server &$service): WsErrorResponse|array
     {
         foreach (['date_min', 'date_max'] as $datefield) {
             $datefield_value = $param[$datefield];
             if (! in_array($datefield_value, [null, ''], true) and ! DateHelper::isValidMysqlDatetime($datefield_value)) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
             }
         }
 

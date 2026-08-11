@@ -146,9 +146,9 @@ final class PwgCategories
      *   -- makeArrayParam() converts the null default to [], always a list of
      *   positive ints. f_* keys: the shared $f_params block merged into this
      *   registration, see WsHelper::stdImageSqlFilterCriteria()/WsHelper::stdImageSqlOrder().
-     * @return PwgError|array{paging: NamedStruct, images: NamedArray}
+     * @return WsErrorResponse|array{paging: NamedStruct, images: NamedArray}
      */
-    public function getImages(array $params, Server &$service): PwgError|array
+    public function getImages(array $params, Server &$service): WsErrorResponse|array
     {
         $urlService = $this->urlService;
 
@@ -160,7 +160,7 @@ final class PwgCategories
             $missing_cat_ids = array_diff($params['cat_id'], $db_cat_ids);
 
             if (count($missing_cat_ids) > 0) {
-                return new PwgError(404, 'cat_id {' . implode(',', $missing_cat_ids) . '} not found');
+                return new WsErrorResponse(404, 'cat_id {' . implode(',', $missing_cat_ids) . '} not found');
             }
         }
 
@@ -360,20 +360,20 @@ final class PwgCategories
      * Genuinely dynamic response shape: tree_output controls whether
      * categories nest recursively or come back flat, same rationale as
      * Ws\PwgUsers::getList()'s own client-controlled response shape.
-     * @return PwgError|array<int|string, mixed>
+     * @return WsErrorResponse|array<int|string, mixed>
      */
-    public function getList(array $params, Server &$service): PwgError|array
+    public function getList(array $params, Server &$service): WsErrorResponse|array
     {
         $currentUser = $this->currentUser->get();
 
         $categoryService = $this->categoryService;
 
         if (! in_array($params['thumbnail_size'], array_keys($this->imageStdParams->getDefinedTypeMap()), true)) {
-            return new PwgError(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
         }
 
         if (! in_array($params['limit'], [null, 0], true) and $params['recursive']) {
-            return new PwgError(WsError::INVALID_PARAM, 'Cannot use both recursive and limit parameters at the same time');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Cannot use both recursive and limit parameters at the same time');
         }
 
         $output = [];
@@ -830,12 +830,12 @@ final class PwgCategories
      *   name: no 'default' key in ws.php's registration -- mandatory, always
      *   present. pwg_token: WsParamFlag::OPTIONAL with no 'default' key -- may be
      *   entirely absent.
-     * @return PwgError|array{info: string, id: int|string}
+     * @return WsErrorResponse|array{info: string, id: int|string}
      */
-    public function add(array $params, Server &$service): PwgError|array
+    public function add(array $params, Server &$service): WsErrorResponse|array
     {
         if (isset($params['pwg_token']) and new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (! in_array($params['position'], [null, ''], true) and in_array($params['position'], ['first', 'last'], true)) {
@@ -872,7 +872,7 @@ final class PwgCategories
         );
 
         if ($creation_output->error !== null) {
-            return new PwgError(500, $creation_output->error);
+            return new WsErrorResponse(500, $creation_output->error);
         }
 
         PermissionCacheInvalidator::invalidate();
@@ -894,13 +894,13 @@ final class PwgCategories
      *   always coerces to a list of positive ints. rank: WsParamFlag::OPTIONAL
      *   (explicit flag) with no 'default' key -- may be entirely absent.
      */
-    public function setRank(array $params, Server &$service): ?PwgError
+    public function setRank(array $params, Server &$service): ?WsErrorResponse
     {
         // does the category really exist?
         $categories = $this->categoryService->getRankInfoByIds(array_values($params['category_id']));
 
         if (count($categories) === 0) {
-            return new PwgError(404, 'category_id not found');
+            return new WsErrorResponse(404, 'category_id not found');
         }
 
         $category = $categories[0];
@@ -915,7 +915,7 @@ final class PwgCategories
             $cat_asc = $this->categoryService->getIdsByParentOrderedById($parent_id);
 
             if (strcmp(implode(',', $cat_asc), implode(',', $order_new_by_id)) !== 0) {
-                return new PwgError(WsError::INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
             }
         } else {
             $params['category_id'] = implode('', $params['category_id']);
@@ -956,24 +956,24 @@ final class PwgCategories
      *   always present. pwg_token: WsParamFlag::OPTIONAL with no 'default' key --
      *   may be entirely absent.
      */
-    public function setInfo(array $params, Server &$service): ?PwgError
+    public function setInfo(array $params, Server &$service): ?WsErrorResponse
     {
 
         if (isset($params['pwg_token']) and new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         // does the category really exist?
         $category = $this->categoryRepository->findById($params['category_id']);
         if ($category === null) {
-            return new PwgError(404, 'category_id not found');
+            return new WsErrorResponse(404, 'category_id not found');
         }
 
         $categoryService = $this->categoryService;
 
         if (! in_array($params['status'], [null, ''], true)) {
             if (! in_array($params['status'], ['private', 'public'], true)) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid status, only public/private');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid status, only public/private');
             }
 
             if ($params['status'] !== $category->status) {
@@ -987,7 +987,7 @@ final class PwgCategories
 
         foreach (['visible', 'commentable'] as $param_name) {
             if (isset($params[$param_name]) and ! (bool) preg_match('/^(true|false)$/i', $params[$param_name])) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid param ' . $param_name . ' : ' . $params[$param_name]);
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid param ' . $param_name . ' : ' . $params[$param_name]);
             }
         }
 
@@ -1040,16 +1040,16 @@ final class PwgCategories
      *   'default' key -- both mandatory, always present, WsParamType::ID guarantees
      *   plain ints.
      */
-    public function setRepresentative(array $params, Server &$service): ?PwgError
+    public function setRepresentative(array $params, Server &$service): ?WsErrorResponse
     {
         // does the category really exist?
         if (! $this->categoryService->existsById($params['category_id'])) {
-            return new PwgError(404, 'category_id not found');
+            return new WsErrorResponse(404, 'category_id not found');
         }
 
         // does the image really exist?
         if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
-            return new PwgError(404, 'image_id not found');
+            return new WsErrorResponse(404, 'image_id not found');
         }
 
         // apply change
@@ -1081,17 +1081,17 @@ final class PwgCategories
      * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
      */
-    public function deleteRepresentative(array $params, Server &$service): ?PwgError
+    public function deleteRepresentative(array $params, Server &$service): ?WsErrorResponse
     {
         // does the category really exist?
         if (! $this->categoryService->existsById($params['category_id'])) {
-            return new PwgError(404, 'category_id not found');
+            return new WsErrorResponse(404, 'category_id not found');
         }
 
         $has_images = $this->categoryService->hasImages($params['category_id']);
 
         if (! $this->currentConfig->allowRandomRepresentative and $has_images) {
-            return new PwgError(401, 'not permitted');
+            return new WsErrorResponse(401, 'not permitted');
         }
 
         $this->categoryService->clearRepresentativeImage(CategoryId::from($params['category_id']));
@@ -1109,21 +1109,21 @@ final class PwgCategories
      *
      * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
-     * @return PwgError|array{src: string|array<int|string, mixed>, url: string} matches
+     * @return WsErrorResponse|array{src: string|array<int|string, mixed>, url: string} matches
      *   CategoryService::getCategoryRepresentantProperties()'s own
      *   already-precise return type (this method's only real array return)
      */
-    public function refreshRepresentative(array $params, Server &$service): PwgError|array
+    public function refreshRepresentative(array $params, Server &$service): WsErrorResponse|array
     {
         $categoryService = $this->categoryService;
 
         // does the category really exist?
         if (! $categoryService->existsById($params['category_id'])) {
-            return new PwgError(404, 'category_id not found');
+            return new WsErrorResponse(404, 'category_id not found');
         }
 
         if (! $categoryService->hasImages($params['category_id'])) {
-            return new PwgError(401, 'not permitted');
+            return new WsErrorResponse(401, 'not permitted');
         }
 
         $categoryService->setRandomRepresentant([$params['category_id']]);
@@ -1141,7 +1141,7 @@ final class PwgCategories
         // guard for real instead of assuming the update landed.
         $representative_picture_id = $category->representativePictureId;
         if ($representative_picture_id === null) {
-            return new PwgError(500, 'unable to determine a new representative picture for this category');
+            return new WsErrorResponse(500, 'unable to determine a new representative picture for this category');
         }
 
         return $categoryService->getCategoryRepresentantProperties($representative_picture_id, $this->urlService, ImageStdParams::SMALL);
@@ -1158,15 +1158,15 @@ final class PwgCategories
      *   'type' flag, non-null default -- always a plain string. pwg_token: no
      *   'default' key, no flags -- mandatory, always present, plain string.
      */
-    public function delete(array $params, Server &$service): ?PwgError
+    public function delete(array $params, Server &$service): ?WsErrorResponse
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $modes = ['no_delete', 'delete_orphans', 'force_delete'];
         if (! in_array($params['photo_deletion_mode'], $modes, true)) {
-            return new PwgError(
+            return new WsErrorResponse(
                 500,
                 '[ws_categories_delete]'
       . ' invalid parameter photo_deletion_mode "' . $params['photo_deletion_mode'] . '"'
@@ -1230,12 +1230,12 @@ final class PwgCategories
      *   caller value. parent: WsParamType::INT|WsParamType::POSITIVE, no 'default' key --
      *   mandatory, always a plain int. pwg_token: no 'default' key, no flags --
      *   mandatory, always present, plain string.
-     * @return PwgError|array{new_ariane_string: string, updated_cats: array<int, array{cat_id: string, nb_sub_photos: int}>}
+     * @return WsErrorResponse|array{new_ariane_string: string, updated_cats: array<int, array{cat_id: string, nb_sub_photos: int}>}
      */
-    public function move(array $params, Server &$service): PwgError|array
+    public function move(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (! is_array($params['category_id'])) {
@@ -1259,7 +1259,7 @@ final class PwgCategories
         }
 
         if (count($category_ids) === 0) {
-            return new PwgError(403, 'Invalid category_id input parameter, no category to move');
+            return new WsErrorResponse(403, 'Invalid category_id input parameter, no category to move');
         }
 
         // we can't move physical categories
@@ -1276,7 +1276,7 @@ final class PwgCategories
                 $moveNameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($row->name, 'ws_categories_move'));
                 $row_name = strip_tags($moveNameEvent->categoryName);
 
-                return new PwgError(
+                return new WsErrorResponse(
                     403,
                     sprintf(
                         'Category %s (%u) is not a virtual category, you cannot move it',
@@ -1290,7 +1290,7 @@ final class PwgCategories
         if (count($categories_in_db) !== count($category_ids)) {
             $unknown_category_ids = array_diff($category_ids, array_keys($categories_in_db));
 
-            return new PwgError(
+            return new WsErrorResponse(
                 403,
                 sprintf(
                     'Category %u does not exist',
@@ -1305,7 +1305,7 @@ final class PwgCategories
         if ($params['parent'] !== 0) {
             $subcat_ids = $this->categoryService->getSubcatIds([$params['parent']]);
             if (count($subcat_ids) === 0) {
-                return new PwgError(403, 'Unknown parent category id');
+                return new WsErrorResponse(403, 'Unknown parent category id');
             }
         }
 
@@ -1329,7 +1329,7 @@ final class PwgCategories
         // property as still statically `[]` from the reset a few lines
         // above -- it has no visibility into moveCategories()'s internals.
         if ($pageState->hasErrors()) {
-            return new PwgError(403, implode('; ', $pageState->errors));
+            return new WsErrorResponse(403, implode('; ', $pageState->errors));
         }
 
         $cat_display_name = '';

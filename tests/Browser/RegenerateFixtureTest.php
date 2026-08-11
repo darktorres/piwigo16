@@ -620,7 +620,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
      * returns int|string (see CategoryService::createVirtualCategory()/
      * TagService::createTag(), backing pwg.categories.add/pwg.tags.add,
      * and Ws\PwgImages::addSimple()'s own declared return shape of
-     * PwgError or array{image_id: int|string, url: string}), while ids
+     * WsErrorResponse or array{image_id: int|string, url: string}), while ids
      * that come back through a getList-style response (pwg.groups.add ->
      * pwg.groups.getList, pwg.users.add -> pwg.users.getList) are either
      * intval()'d server-side (real int) or, for pwg.groups.add, surfaced

@@ -369,9 +369,9 @@ final class WsImagesSetInfoTest extends ContractTestCase
 
     /**
      * Regression test for a real, pre-existing bug: setInfo() calls
-     * addImageCategoryRelations() (which CAN return a PwgError for an
+     * addImageCategoryRelations() (which CAN return a WsErrorResponse for an
      * unknown category id -- confirmed via its own source) but never
-     * checks or propagates that return value. PwgError's own constructor
+     * checks or propagates that return value. WsErrorResponse's own constructor
      * still sets a real "500" HTTP status header as a side effect of
      * simply being constructed, so the response ends up with the
      * genuinely misleading combination of a 500 HTTP status alongside a

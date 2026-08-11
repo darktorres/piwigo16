@@ -13,14 +13,14 @@ namespace Piwigo\Ws\Protocol;
 
 use Override;
 use Piwigo\Ws\Encoder\ResponseEncoder;
-use Piwigo\Ws\PwgError;
+use Piwigo\Ws\WsErrorResponse;
 
 final class SerialPhpEncoder extends ResponseEncoder
 {
     #[Override]
     public function encodeResponse($response): string
     {
-        if ($response instanceof PwgError) {
+        if ($response instanceof WsErrorResponse) {
             return serialize(
                 [
                     'stat' => 'fail',

@@ -28,7 +28,7 @@ use Piwigo\Db\DbConnection;
  * without a 'name' parameter produces a raw, unhandled
  * Doctrine\DBAL\Exception\NotNullConstraintViolationException ("Column
  * 'file' cannot be null") deep in the Image repository insert path, not a
- * graceful PwgError -- out of scope to chase here (same category as the
+ * graceful WsErrorResponse -- out of scope to chase here (same category as the
  * two branches WsImagesUploadGapsTest's own
  * docblock already documents this way).
  *
@@ -257,7 +257,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
 
         try {
             // Unlike the >= 500 PwgErrors elsewhere in this file, err=102
-            // isn't mirrored onto the real HTTP status (PwgError's
+            // isn't mirrored onto the real HTTP status (WsErrorResponse's
             // constructor only does that for codes >= 400) -- a plain
             // callWs() is fine here, confirmed live (HTTP 200).
             $response = $this->callWs('pwg.images.upload', [

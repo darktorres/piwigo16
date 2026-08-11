@@ -111,7 +111,7 @@ final class PwgImages
      * @param string $categories_string - "cat_id[,rank];cat_id[,rank]"
      * @param bool $replace_mode - removes old associations
      */
-    private function addImageCategoryRelations(ImageId $image_id, string $categories_string, bool $replace_mode = false): true|PwgError
+    private function addImageCategoryRelations(ImageId $image_id, string $categories_string, bool $replace_mode = false): true|WsErrorResponse
     {
         $categoryService = $this->categoryService;
 
@@ -168,7 +168,7 @@ final class PwgImages
 
         $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
         if (count($unknown_cat_ids) !== 0) {
-            return new PwgError(
+            return new WsErrorResponse(
                 500,
                 '[ws_add_image_category_relations] the following categories are unknown: ' . implode(', ', $unknown_cat_ids)
             );
@@ -227,7 +227,7 @@ final class PwgImages
     /**
      * Merge chunks added by pwg.images.addChunk
      */
-    private function mergeChunks(string $output_filepath, string $original_sum, string $type): ?PwgError
+    private function mergeChunks(string $output_filepath, string $original_sum, string $type): ?WsErrorResponse
     {
         $logger = $this->currentLogger->get();
 
@@ -237,7 +237,7 @@ final class PwgImages
             unlink($output_filepath);
 
             if (is_file($output_filepath)) {
-                return new PwgError(500, '[merge_chunks] error while trying to remove existing ' . $output_filepath);
+                return new WsErrorResponse(500, '[merge_chunks] error while trying to remove existing ' . $output_filepath);
             }
         }
 
@@ -272,7 +272,7 @@ final class PwgImages
             }
 
             if ($string === false || ! (bool) file_put_contents($output_filepath, $string, FILE_APPEND)) {
-                return new PwgError(500, '[merge_chunks] error while writting chunks for ' . $output_filepath);
+                return new WsErrorResponse(500, '[merge_chunks] error while writting chunks for ' . $output_filepath);
             }
 
             unlink($chunk);
@@ -328,19 +328,19 @@ final class PwgImages
      *    value for any registered param without WsParamFlag::ACCEPT_ARRAY, so
      *    they're always plain strings too (author has a string default,
      *    content/key are mandatory)
-     * @return PwgError|array{comment: NamedStruct}
+     * @return WsErrorResponse|array{comment: NamedStruct}
      */
-    public function addComment(array $params, Server $service): PwgError|array
+    public function addComment(array $params, Server $service): WsErrorResponse|array
     {
 
         if (! $this->currentConfig->activateComments) {
-            return new PwgError(403, 'Comments are disabled');
+            return new WsErrorResponse(403, 'Comments are disabled');
         }
 
         $permissionCriteria = $this->permissionService->getPermissionCriteria();
 
         if (! $this->imageService->isImageCommentableWithCondition(ImageId::from($params['image_id']), $permissionCriteria)) {
-            return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid image_id');
         }
 
         $comm = [
@@ -356,7 +356,7 @@ final class PwgImages
         switch ($comment_action) {
             case 'reject':
                 $infos[] = $this->lang->t('Your comment has NOT been registered because it did not pass the validation rules');
-                return new PwgError(403, implode('; ', $infos));
+                return new WsErrorResponse(403, implode('; ', $infos));
 
             case 'validate':
             case 'moderate':
@@ -369,7 +369,7 @@ final class PwgImages
                 ];
 
             default:
-                return new PwgError(500, 'Unknown comment action ' . $comment_action);
+                return new WsErrorResponse(500, 'Unknown comment action ' . $comment_action);
         }
     }
 
@@ -380,9 +380,9 @@ final class PwgImages
      *    all three are WsParamType::INT|WsParamType::POSITIVE (image_id: WsParamType::ID) --
      *    always plain ints by the time this runs (comments_page/
      *    comments_per_page have defaults, so always present too)
-     * @return PwgError|array<string, mixed>
+     * @return WsErrorResponse|array<string, mixed>
      */
-    public function getInfo(array $params, Server $service): PwgError|array
+    public function getInfo(array $params, Server $service): WsErrorResponse|array
     {
 
         $image_row = $this->imageService->getRowWithCondition(
@@ -390,7 +390,7 @@ final class PwgImages
             $this->permissionService->getPermissionCriteria()
         );
         if ($image_row === null) {
-            return new PwgError(404, 'image_id not found');
+            return new WsErrorResponse(404, 'image_id not found');
         }
 
         // id is the 'images' primary key, guaranteed numeric; captured
@@ -456,7 +456,7 @@ final class PwgImages
         if ($related_categories === [] and ! $this->accessControl->isAdmin()) {
             // photo might be in the lounge? or simply orphan. A standard user should not get
             // info. An admin should still be able to get info.
-            return new PwgError(401, 'Access denied');
+            return new WsErrorResponse(401, 'Access denied');
         }
 
         // -------------------------------------------------------------- related tags
@@ -587,17 +587,17 @@ final class PwgImages
      * @param array{image_id: int, rate: float, ...} $params both mandatory
      *    (WsParamType::ID / WsParamType::FLOAT, no 'default') -- always plain scalars by
      *    the time this runs
-     * @return PwgError|array<string, mixed> matches
+     * @return WsErrorResponse|array<string, mixed> matches
      *   Rate\RateService::rate()'s own already-reviewed by-design shape
      */
-    public function rate(array $params, Server $service): PwgError|array
+    public function rate(array $params, Server $service): WsErrorResponse|array
     {
         $accessible = $this->imageService->isImageAccessibleWithCondition(
             ImageId::from($params['image_id']),
             $this->permissionService->getPermissionCriteria()
         );
         if (! $accessible) {
-            return new PwgError(404, 'Invalid image_id or access denied');
+            return new WsErrorResponse(404, 'Invalid image_id or access denied');
         }
 
         $res = $this->rateService
@@ -605,7 +605,7 @@ final class PwgImages
 
         if ($res === false) {
             $rate_items = $this->currentConfig->rateItems;
-            return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
+            return new WsErrorResponse(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
         }
         return $res;
     }
@@ -743,9 +743,9 @@ final class PwgImages
      * arrays (never a bare scalar).
      *
      * @param array{search_id?: string, allwords?: string, allwords_mode?: string, allwords_fields?: array<int, string>, tags?: array<int, int>, tags_mode?: string, categories?: array<int, int>, categories_withsubs?: bool, authors?: array<int, string>, added_by?: array<int, int>, filetypes?: array<int, string>, date_posted_preset?: string, date_posted_custom?: array<int, string>, date_created_preset?: string, date_created_custom?: array<int, string>, ratios?: array<int, string>, ratings?: array<int, string>, filesize_min?: int, filesize_max?: int, height_min?: int, height_max?: int, width_min?: int, width_max?: int, ...} $params
-     * @return PwgError|array{search_id: string, search_url: string}
+     * @return WsErrorResponse|array{search_id: string, search_url: string}
      */
-    public function filteredSearchCreate(array $params, Server $service): PwgError|array
+    public function filteredSearchCreate(array $params, Server $service): WsErrorResponse|array
     {
 
         $searchService = $this->searchService;
@@ -754,12 +754,12 @@ final class PwgImages
         $search_info = null;
         if (isset($params['search_id'])) {
             if (in_array(SearchService::getSearchIdPattern($params['search_id']), [null, ''], true)) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid search_id input parameter.');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid search_id input parameter.');
             }
 
             $search_info = $searchService->getValidatedSearchInfo($params['search_id'], null);
             if ($search_info === null) {
-                return new PwgError(WsError::INVALID_PARAM, 'This search does not exist.');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'This search does not exist.');
             }
         }
 
@@ -783,7 +783,7 @@ final class PwgImages
                 $params['allwords_mode'] = 'AND';
             }
             if (! (bool) preg_match('/^(OR|AND)$/', $params['allwords_mode'])) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter allwords_mode');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter allwords_mode');
             }
             $search['fields']['allwords']['mode'] = $params['allwords_mode'];
 
@@ -793,7 +793,7 @@ final class PwgImages
             }
             foreach ($params['allwords_fields'] as $field) {
                 if (! in_array($field, $allwords_fields_available, true)) {
-                    return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter allwords_fields');
+                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter allwords_fields');
                 }
             }
             $search['fields']['allwords']['fields'] = $params['allwords_fields'];
@@ -804,7 +804,7 @@ final class PwgImages
         if (isset($params['tags'])) {
             foreach ($params['tags'] as $tag_id) {
                 if (! (bool) preg_match('/^\d+$/', (string) $tag_id)) {
-                    return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter tags');
+                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter tags');
                 }
             }
 
@@ -812,7 +812,7 @@ final class PwgImages
                 $params['tags_mode'] = 'AND';
             }
             if (! (bool) preg_match('/^(OR|AND)$/', $params['tags_mode'])) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter tags_mode');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter tags_mode');
             }
 
             $search['fields']['tags'] = [
@@ -824,7 +824,7 @@ final class PwgImages
         if (isset($params['categories'])) {
             foreach ($params['categories'] as $cat_id) {
                 if (! (bool) preg_match('/^\d+$/', (string) $cat_id)) {
-                    return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter categories');
+                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter categories');
                 }
             }
 
@@ -850,7 +850,7 @@ final class PwgImages
         if (isset($params['filetypes'])) {
             foreach ($params['filetypes'] as $ext) {
                 if (! (bool) preg_match('/^[a-z0-9]+$/i', $ext)) {
-                    return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter filetypes');
+                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter filetypes');
                 }
             }
 
@@ -860,7 +860,7 @@ final class PwgImages
         if (isset($params['added_by'])) {
             foreach ($params['added_by'] as $user_id) {
                 if (! (bool) preg_match('/^\d+$/', (string) $user_id)) {
-                    return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter added_by');
+                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter added_by');
                 }
             }
 
@@ -869,19 +869,19 @@ final class PwgImages
 
         if (isset($params['date_posted_preset'])) {
             if (! (bool) preg_match('/^(24h|7d|30d|3m|6m|custom|)$/', $params['date_posted_preset'])) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter date_posted_preset');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter date_posted_preset');
             }
 
             @$search['fields']['date_posted']['preset'] = $params['date_posted_preset'];
 
             if ($search['fields']['date_posted']['preset'] === 'custom' and (! isset($params['date_posted_custom']) or $params['date_posted_custom'] === [])) {
-                return new PwgError(WsError::INVALID_PARAM, 'date_posted_custom is missing');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'date_posted_custom is missing');
             }
         }
 
         if (isset($params['date_posted_custom'])) {
             if (! isset($search['fields']['date_posted']['preset']) or $search['fields']['date_posted']['preset'] !== 'custom') {
-                return new PwgError(WsError::INVALID_PARAM, 'date_posted_custom provided date_posted_preset is not custom');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'date_posted_custom provided date_posted_preset is not custom');
             }
 
             foreach ($params['date_posted_custom'] as $date) {
@@ -909,7 +909,7 @@ final class PwgImages
                 }
 
                 if (! $correct_format) {
-                    return new PwgError(WsError::INVALID_PARAM, 'date_posted_custom, invalid option ' . $date);
+                    return new WsErrorResponse(WsError::INVALID_PARAM, 'date_posted_custom, invalid option ' . $date);
                 }
 
                 @$search['fields']['date_posted']['custom'][] = $date;
@@ -918,19 +918,19 @@ final class PwgImages
 
         if (isset($params['date_created_preset'])) {
             if (! (bool) preg_match('/^(7d|30d|3m|6m|12m|custom|)$/', $params['date_created_preset'])) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter date_created_preset');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter date_created_preset');
             }
 
             @$search['fields']['date_created']['preset'] = $params['date_created_preset'];
 
             if ($search['fields']['date_created']['preset'] === 'custom' and (! isset($params['date_created_custom']) or $params['date_created_custom'] === [])) {
-                return new PwgError(WsError::INVALID_PARAM, 'date_created_custom is missing');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'date_created_custom is missing');
             }
         }
 
         if (isset($params['date_created_custom'])) {
             if (! isset($search['fields']['date_created']['preset']) or $search['fields']['date_created']['preset'] !== 'custom') {
-                return new PwgError(WsError::INVALID_PARAM, 'date_created_custom provided date_created_preset is not custom');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'date_created_custom provided date_created_preset is not custom');
             }
 
             foreach ($params['date_created_custom'] as $date) {
@@ -958,7 +958,7 @@ final class PwgImages
                 }
 
                 if (! $correct_format) {
-                    return new PwgError(WsError::INVALID_PARAM, 'date_created_custom, invalid option ' . $date);
+                    return new WsErrorResponse(WsError::INVALID_PARAM, 'date_created_custom, invalid option ' . $date);
                 }
 
                 @$search['fields']['date_created']['custom'][] = $date;
@@ -968,7 +968,7 @@ final class PwgImages
         if (isset($params['ratios'])) {
             foreach ($params['ratios'] as $ext) {
                 if (! (bool) preg_match('/^[a-z0-9]+$/i', $ext)) {
-                    return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter ratios');
+                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter ratios');
                 }
             }
 
@@ -1027,13 +1027,13 @@ final class PwgImages
      *    level: WsParamType::INT|WsParamType::POSITIVE, mandatory (no 'default') -- always
      *      a plain int by the time this runs
      */
-    public function setPrivacyLevel(array $params, Server $service): PwgError|int
+    public function setPrivacyLevel(array $params, Server $service): WsErrorResponse|int
     {
 
         $available_permission_levels = $this->currentConfig->availablePermissionLevels;
 
         if (! in_array($params['level'], $available_permission_levels, true)) {
-            return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid level');
         }
 
         $affected_rows = $this->imageService->updateLevelForImages($params['image_id'], $params['level']);
@@ -1055,13 +1055,13 @@ final class PwgImages
      *    ints. category_id: WsParamType::ID, mandatory. rank: WsParamType::INT|POSITIVE|
      *    NOTNULL with a null default -- int when the caller provides it, null
      *    otherwise
-     * @return PwgError|array{image_id: list<int|string>, category_id: int}|array{image_id: int, category_id: int, rank: int}
+     * @return WsErrorResponse|array{image_id: list<int|string>, category_id: int}|array{image_id: int, category_id: int, rank: int}
      *   the 2 real return sites have genuinely different shapes -- the
      *   multi-image branch above returns the reordered id list (no rank),
      *   the single-image branch below returns the one image_id plus its
      *   new rank
      */
-    public function setRank(array $params, Server $service): array|PwgError
+    public function setRank(array $params, Server $service): array|WsErrorResponse
     {
         if (count($params['image_id']) > 1) {
             $this->imageService
@@ -1083,11 +1083,11 @@ final class PwgImages
         $params['image_id'] = array_shift($params['image_id']);
 
         if ($params['image_id'] === null) {
-            return new PwgError(WsError::MISSING_PARAM, 'image_id is missing');
+            return new WsErrorResponse(WsError::MISSING_PARAM, 'image_id is missing');
         }
 
         if ($params['rank'] === null || $params['rank'] === 0) {
-            return new PwgError(WsError::MISSING_PARAM, 'rank is missing');
+            return new WsErrorResponse(WsError::MISSING_PARAM, 'rank is missing');
         }
 
         $imageId = ImageId::from($params['image_id']);
@@ -1095,12 +1095,12 @@ final class PwgImages
 
         // does the image really exist?
         if (! $this->imageService->existsById($imageId)) {
-            return new PwgError(404, 'image_id not found');
+            return new WsErrorResponse(404, 'image_id not found');
         }
 
         // is the image associated to this category?
         if (! $this->imageService->isImageInCategory($imageId, $categoryId)) {
-            return new PwgError(404, 'This image is not associated to this category');
+            return new WsErrorResponse(404, 'This image is not associated to this category');
         }
 
         // what is the current higher rank for this category?
@@ -1136,7 +1136,7 @@ final class PwgImages
      *    mandatory (no 'default'), type defaults to 'file' -- all always plain
      *    strings (see Server::invoke()'s array-rejection check)
      */
-    public function addChunk(array $params, Server $service): ?PwgError
+    public function addChunk(array $params, Server $service): ?WsErrorResponse
     {
         $logger = $this->currentLogger->get();
 
@@ -1157,7 +1157,7 @@ final class PwgImages
 
         // create the upload directory tree if not exists
         if (! FilesystemHelper::mkgetdir($upload_dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
-            return new PwgError(500, 'error during buffer directory creation');
+            return new WsErrorResponse(500, 'error during buffer directory creation');
         }
 
         $filename = sprintf(
@@ -1176,7 +1176,7 @@ final class PwgImages
         );
 
         if ($bytes_written === false) {
-            return new PwgError(
+            return new WsErrorResponse(
                 500,
                 'an error has occured while writting chunk ' . $params['position'] . ' for ' . $params['type']
             );
@@ -1191,7 +1191,7 @@ final class PwgImages
      *    image_id: WsParamType::ID, mandatory. type: no WS_TYPE flag, defaults to
      *    'file'. sum: no WS_TYPE flag, mandatory -- both always plain strings
      */
-    public function addFile(array $params, Server $service): PwgError|bool|null
+    public function addFile(array $params, Server $service): WsErrorResponse|bool|null
     {
         $logger = $this->currentLogger->get();
 
@@ -1200,14 +1200,14 @@ final class PwgImages
         // what is the path and other infos about the photo?
         $image = $this->imageService->getUploadInfoById(ImageId::from($params['image_id']));
         if ($image === null) {
-            return new PwgError(404, 'image_id not found');
+            return new WsErrorResponse(404, 'image_id not found');
         }
 
         // this legacy chunked-upload flow locates buffered chunks by md5sum, so
         // it cannot proceed for a photo that has none (e.g. added before the
         // md5sum feature was enabled, see pwg.images.setMd5sum).
         if (! is_string($image->md5sum)) {
-            return new PwgError(500, '[ws_images_addFile] image_id ' . $params['image_id'] . ' has no md5sum');
+            return new WsErrorResponse(500, '[ws_images_addFile] image_id ' . $params['image_id'] . ' has no md5sum');
         }
 
         // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
@@ -1274,9 +1274,9 @@ final class PwgImages
      *    check). level: WsParamType::INT|POSITIVE, default 0 (non-null) -- always
      *    int. check_uniqueness: WsParamType::BOOL, default true -- always bool.
      *    image_id: WsParamType::ID, null default -- int|null.
-     * @return PwgError|array{image_id: int|string, url: string}
+     * @return WsErrorResponse|array{image_id: int|string, url: string}
      */
-    public function add(array $params, Server $service): PwgError|array
+    public function add(array $params, Server $service): WsErrorResponse|array
     {
         $logger = $this->currentLogger->get();
 
@@ -1290,7 +1290,7 @@ final class PwgImages
 
         if ($params['image_id'] > 0) {
             if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
-                return new PwgError(404, 'image_id not found');
+                return new WsErrorResponse(404, 'image_id not found');
             }
         }
 
@@ -1347,7 +1347,7 @@ final class PwgImages
                     if ($uniqueness_lock_ok) {
                         AdvisorySessionLock::release($uniqueness_lock_conn, $uniqueness_lock_name);
                     }
-                    return new PwgError(500, 'file already exists');
+                    return new WsErrorResponse(500, 'file already exists');
                 }
             }
         }
@@ -1456,15 +1456,15 @@ final class PwgImages
      *    FORCE), no WS_TYPE flag, null default -- string, array (if the
      *    caller uses bracket syntax), or null. image_id: WsParamType::ID, null
      *    default -- int|null.
-     * @return PwgError|array{image_id: int|string, url: string}
+     * @return WsErrorResponse|array{image_id: int|string, url: string}
      */
-    public function addSimple(array $params, Server $service): PwgError|array
+    public function addSimple(array $params, Server $service): WsErrorResponse|array
     {
         $logger = $this->currentLogger->get();
 
         $uploaded_image = UploadedFileRequest::fromFilesKey('image');
         if (! $uploaded_image->present) {
-            return new PwgError(405, 'The image (file) is missing');
+            return new WsErrorResponse(405, 'The image (file) is missing');
         }
 
         if ($uploaded_image->error !== null && $uploaded_image->error !== 0) {
@@ -1483,18 +1483,18 @@ final class PwgImages
             };
 
             $logger->error(__FUNCTION__ . ' ' . $message);
-            return new PwgError(500, $message);
+            return new WsErrorResponse(500, $message);
         }
 
         if ($params['image_id'] > 0) {
             if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
-                return new PwgError(404, 'image_id not found');
+                return new WsErrorResponse(404, 'image_id not found');
             }
         }
 
         $uploaded_tmp_name = $uploaded_image->tmpName;
         if ($uploaded_tmp_name === null) {
-            return new PwgError(500, '[ws_images_addSimple] missing uploaded file temp name');
+            return new WsErrorResponse(500, '[ws_images_addSimple] missing uploaded file temp name');
         }
 
         $image_id = $this->uploadService
@@ -1582,20 +1582,20 @@ final class PwgImages
      * (a format_of upload returns image_id/src/square_src/name/add_status;
      * a new-photo upload adds a 'category' sub-array on top) -- left as
      * array<string, mixed> rather than an unverified 2-branch union.
-     * @return PwgError|array<string, mixed>|null
+     * @return WsErrorResponse|array<string, mixed>|null
      */
-    public function upload(array $params, Server $service): PwgError|array|null
+    public function upload(array $params, Server $service): WsErrorResponse|array|null
     {
         $format_ext = null;
 
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (isset($params['format_of'])) {
             // are formats enabled?
             if (! $this->currentConfig->isFormatsEnabled) {
-                return new PwgError(401, 'formats are disabled');
+                return new WsErrorResponse(401, 'formats are disabled');
             }
 
             $format_ext_list = $this->currentConfig->formatExtensions;
@@ -1606,7 +1606,7 @@ final class PwgImages
             }
 
             if (! is_string($format_ext) || $format_ext === '') {
-                return new PwgError(401, 'unexpected format extension of file "' . $params['name'] . '" (authorized extensions: ' . implode(', ', $format_ext_list) . ')');
+                return new WsErrorResponse(401, 'unexpected format extension of file "' . $params['name'] . '" (authorized extensions: ' . implode(', ', $format_ext_list) . ')');
             }
         }
 
@@ -1615,7 +1615,7 @@ final class PwgImages
 
         // create the upload directory tree if not exists
         if (! FilesystemHelper::mkgetdir($upload_dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
-            return new PwgError(500, 'error during buffer directory creation');
+            return new WsErrorResponse(500, 'error during buffer directory creation');
         }
 
         $chunkedUploadRequest = ChunkedUploadRequest::fromGlobals();
@@ -1642,7 +1642,7 @@ final class PwgImages
 
         // Open temp file
         if (! (bool) ($out = @fopen("{$filePath}.part", ((bool) $chunks) ? 'ab' : 'wb'))) {
-            return new PwgError(102, 'Failed to open output stream.');
+            return new WsErrorResponse(102, 'Failed to open output stream.');
         }
 
         // $_FILES having ANY entry at all (even one not named 'file')
@@ -1652,21 +1652,21 @@ final class PwgImages
         // Ws\Server::isPost()'s own raw $_POST read.
         if ($_FILES !== []) {
             if (! $uploaded_file->present) {
-                return new PwgError(103, 'Failed to move uploaded file.');
+                return new WsErrorResponse(103, 'Failed to move uploaded file.');
             }
             $uploaded_file_tmp_name = $uploaded_file->tmpName;
 
             if (($uploaded_file->error !== null && $uploaded_file->error !== 0) || $uploaded_file_tmp_name === null || ! is_uploaded_file($uploaded_file_tmp_name)) {
-                return new PwgError(103, 'Failed to move uploaded file.');
+                return new WsErrorResponse(103, 'Failed to move uploaded file.');
             }
 
             // Read binary input stream and append it to temp file
             if (! (bool) ($in = @fopen($uploaded_file_tmp_name, 'rb'))) {
-                return new PwgError(101, 'Failed to open input stream.');
+                return new WsErrorResponse(101, 'Failed to open input stream.');
             }
         } else {
             if (! (bool) ($in = @fopen('php://input', 'rb'))) {
-                return new PwgError(101, 'Failed to open input stream.');
+                return new WsErrorResponse(101, 'Failed to open input stream.');
             }
         }
 
@@ -1687,7 +1687,7 @@ final class PwgImages
                 $formatOfId = ImageId::tryFrom($params['format_of']);
                 $imageRow = $formatOfId === null ? null : $this->imageRepository->findById($formatOfId);
                 if ($imageRow === null) {
-                    return new PwgError(404, __FUNCTION__ . ' : image_id not found');
+                    return new WsErrorResponse(404, __FUNCTION__ . ' : image_id not found');
                 }
                 $image = $imageRow->toArray();
 
@@ -1769,12 +1769,12 @@ final class PwgImages
      *    date_creation/tag_ids: no WS_TYPE flag, null default -- string|null.
      *    level: WsParamType::INT|POSITIVE, default 0 (non-null) -- always int.
      *    image_id: WsParamType::ID, null default -- int|null.
-     * @return PwgError|array<array-key, mixed> PwgError, an in-progress
+     * @return WsErrorResponse|array<array-key, mixed> WsErrorResponse, an in-progress
      *   {message: string} status while chunks are still arriving, or the
      *   result of the pwg.images.getInfo invocation once the upload is
      *   complete
      */
-    public function uploadAsync(array $params, Server &$service): PwgError|array
+    public function uploadAsync(array $params, Server &$service): WsErrorResponse|array
     {
         $logger = $this->currentLogger->get();
 
@@ -1783,12 +1783,12 @@ final class PwgImages
 
         // additional check for some parameters
         if (! (bool) preg_match('/^[a-fA-F0-9]{32}$/', $params['original_sum'])) {
-            return new PwgError(WsError::INVALID_PARAM, 'Invalid original_sum');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid original_sum');
         }
 
         if ($params['image_id'] > 0) {
             if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
-                return new PwgError(404, __FUNCTION__ . ' : image_id not found');
+                return new WsErrorResponse(404, __FUNCTION__ . ' : image_id not found');
             }
         }
 
@@ -1800,14 +1800,14 @@ final class PwgImages
 
         // create the upload directory tree if not exists
         if (! FilesystemHelper::mkgetdir(dirname($chunkfile_path), $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
-            return new PwgError(500, 'error during buffer directory creation');
+            return new WsErrorResponse(500, 'error during buffer directory creation');
         }
         FilesystemHelper::secureDirectory(dirname($chunkfile_path));
 
         // move uploaded file
         $uploaded_chunk_tmp_name = UploadedFileRequest::fromFilesKey('file')->tmpName;
         if ($uploaded_chunk_tmp_name === null) {
-            return new PwgError(500, 'missing uploaded chunk file');
+            return new WsErrorResponse(500, 'missing uploaded chunk file');
         }
         // $chunkfile_path is already absolute ($upload_dir_conf above
         // includes the $this->paths->root prefix) -- just normalize
@@ -1832,7 +1832,7 @@ final class PwgImages
         if ($chunk_md5 !== $params['chunk_sum']) {
             unlink($chunkfile_path);
             $logger->error(__FUNCTION__ . ' ' . $chunkfile_path . ' MD5 checksum mismatched');
-            return new PwgError(500, 'MD5 checksum chunk file mismatched');
+            return new WsErrorResponse(500, 'MD5 checksum chunk file mismatched');
         }
 
         // are all chunks uploaded?
@@ -1872,7 +1872,7 @@ final class PwgImages
         if (! (bool) $fp) {
             // unable to create file and open it for writing only
             $logger->error(__FUNCTION__ . ' ' . $chunkfile_path . ' unable to create merge file');
-            return new PwgError(500, 'error while creating merged ' . $chunkfile_path);
+            return new WsErrorResponse(500, 'error while creating merged ' . $chunkfile_path);
         }
 
         // acquire an exclusive lock and keep it until merge completes
@@ -1881,7 +1881,7 @@ final class PwgImages
             // unable to obtain lock
             fclose($fp);
             $logger->error(__FUNCTION__ . ' ' . $chunkfile_path . ' unable to obtain lock');
-            return new PwgError(500, 'error while locking merged ' . $chunkfile_path);
+            return new WsErrorResponse(500, 'error while locking merged ' . $chunkfile_path);
         }
 
         $logger->debug(__FUNCTION__ . ' lock obtained to merge chunks');
@@ -1910,7 +1910,7 @@ final class PwgImages
 
                 // delete merge file without returning an error
                 @unlink($output_filepath);
-                return new PwgError(500, 'error while merging chunk ' . $chunk_id);
+                return new WsErrorResponse(500, 'error while merging chunk ' . $chunk_id);
             }
 
             $logger->debug(__FUNCTION__ . ' original_sum=' . $params['original_sum'] . ', chunk ' . $chunk_id . '/' . $params['chunks'] . ' merged');
@@ -1932,7 +1932,7 @@ final class PwgImages
         if ($merged_md5 !== $params['original_sum']) {
             unlink($output_filepath);
             $logger->error(__FUNCTION__ . ' ' . $output_filepath . ' MD5 checksum mismatched!');
-            return new PwgError(500, 'MD5 checksum merged file mismatched');
+            return new WsErrorResponse(500, 'MD5 checksum merged file mismatched');
         }
 
         $logger->debug(__FUNCTION__ . ' ' . $output_filepath . ' MD5 checksum OK');
@@ -2021,12 +2021,12 @@ final class PwgImages
         // (see Server's own class docblock) -- its declared return type
         // is `mixed` by design. This narrows it to the real shape this
         // specific sub-invocation (always 'pwg.images.getInfo', which
-        // itself really does return PwgError|array<string, mixed>) is
+        // itself really does return WsErrorResponse|array<string, mixed>) is
         // known to return, the same "resolve, narrow, or throw" idiom
         // already used throughout this codebase for other statically-
         // unknowable-but-really-fixed-shape values (e.g. PwgImage::
         // currentConfig()'s container resolve).
-        if (! $result instanceof PwgError && ! is_array($result)) {
+        if (! $result instanceof WsErrorResponse && ! is_array($result)) {
             throw new LogicException('pwg.images.getInfo returned an unexpected type');
         }
 
@@ -2201,10 +2201,10 @@ final class PwgImages
      *    plain int, a list of ints, or null. pwg_token: no WS_TYPE flag,
      *    mandatory -- always a plain string.
      */
-    public function formatsDelete(array $params, Server $service): PwgError|bool
+    public function formatsDelete(array $params, Server $service): WsErrorResponse|bool
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (! is_array($params['format_id'])) {
@@ -2244,7 +2244,7 @@ final class PwgImages
         }
 
         if (count($image_ids) === 0) {
-            return new PwgError(404, 'No format found for the id(s) given');
+            return new WsErrorResponse(404, 'No format found for the id(s) given');
         }
 
         $urlService = $this->urlService;
@@ -2285,9 +2285,9 @@ final class PwgImages
      * @param array{image_id: int, file_sum: string|null, thumbnail_sum: string|null, high_sum: string|null, ...} $params
      *    image_id: WsParamType::ID, mandatory -- always int. file_sum/
      *    thumbnail_sum/high_sum: no WS_TYPE flag, null default -- string|null.
-     * @return PwgError|array<string, string>
+     * @return WsErrorResponse|array<string, string>
      */
-    public function checkFiles(array $params, Server $service): PwgError|array
+    public function checkFiles(array $params, Server $service): WsErrorResponse|array
     {
         $logger = $this->currentLogger->get();
 
@@ -2296,7 +2296,7 @@ final class PwgImages
         $path = $this->imageService->getPathById(ImageId::from($params['image_id']));
 
         if ($path === null) {
-            return new PwgError(404, 'image_id not found');
+            return new WsErrorResponse(404, 'image_id not found');
         }
         // `path` is stored root-relative (e.g. "upload/2026/.../foo.jpg") --
         // resolve it to a real filesystem path the same way
@@ -2354,18 +2354,18 @@ final class PwgImages
      *    non-null string defaults -- always string. pwg_token:
      *    WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
      */
-    public function setInfo(array $params, Server $service): ?PwgError
+    public function setInfo(array $params, Server $service): ?WsErrorResponse
     {
 
         if (isset($params['pwg_token']) and new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $imageId = ImageId::tryFrom($params['image_id']);
         $imageRow = $imageId === null ? null : $this->imageRepository->findById($imageId);
 
         if ($imageRow === null) {
-            return new PwgError(404, 'image_id not found');
+            return new WsErrorResponse(404, 'image_id not found');
         }
         // Unboxed here rather than kept as the typed object -- this method
         // reads $image_row[$key] for a dynamically-iterated column name
@@ -2400,7 +2400,7 @@ final class PwgImages
                 } elseif ($params['single_value_mode'] === 'replace') {
                     $update[$key] = $params[$key];
                 } else {
-                    return new PwgError(
+                    return new WsErrorResponse(
                         500,
                         '[ws_images_setInfo]'
           . ' invalid parameter single_value_mode "' . $params['single_value_mode'] . '"'
@@ -2412,7 +2412,7 @@ final class PwgImages
 
         if (isset($params['file'])) {
             if (($image_row['storage_category_id'] ?? 0) !== 0) {
-                return new PwgError(
+                return new WsErrorResponse(
                     500,
                     '[ws_images_setInfo] updating "file" is forbidden on photos added by synchronization'
                 );
@@ -2465,7 +2465,7 @@ final class PwgImages
                     [$params['image_id']]
                 );
             } else {
-                return new PwgError(
+                return new WsErrorResponse(
                     500,
                     '[ws_images_setInfo]'
         . ' invalid parameter multiple_value_mode "' . $params['multiple_value_mode'] . '"'
@@ -2480,7 +2480,7 @@ final class PwgImages
         $tagListRequest = TagListRequest::fromGlobals();
         if ($tagListRequest->present) {
             if (isset($params['tag_ids'])) {
-                return new PwgError(WsError::INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
             }
 
             // TagService::getTagIds()/tagIdFromTagName() go through
@@ -2508,10 +2508,10 @@ final class PwgImages
      *    mandatory -- a plain string or an array, never null. pwg_token: no
      *    WS_TYPE flag, mandatory -- always a plain string.
      */
-    public function delete(array $params, Server $service): PwgError|int
+    public function delete(array $params, Server $service): WsErrorResponse|int
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (! is_array($params['image_id'])) {
@@ -2587,12 +2587,12 @@ final class PwgImages
      *    default -- string, array, or null. pwg_token: no WS_TYPE flag,
      *    mandatory -- always string. category_id: WsParamType::ID, mandatory --
      *    always int.
-     * @return PwgError|array{moved_from_lounge: list<array{image_id: int, category_id: int}>|null, category: array{id: int, nb_photos: int, label: string}}
+     * @return WsErrorResponse|array{moved_from_lounge: list<array{image_id: int, category_id: int}>|null, category: array{id: int, nb_photos: int, label: string}}
      */
-    public function uploadCompleted(array $params, Server $service): PwgError|array
+    public function uploadCompleted(array $params, Server $service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if ($params['image_id'] === null) {
@@ -2652,12 +2652,12 @@ final class PwgImages
      * @param array{block_size: int, pwg_token: string, ...} $params
      *    block_size: WsParamType::INT|POSITIVE, default is a non-null $conf value
      *    -- always int. pwg_token: no WS_TYPE flag, mandatory -- always string.
-     * @return PwgError|array{nb_added: int, nb_no_md5sum: int}
+     * @return WsErrorResponse|array{nb_added: int, nb_no_md5sum: int}
      */
-    public function setMd5sum(array $params, Server $service): PwgError|array
+    public function setMd5sum(array $params, Server $service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $imageService = $this->imageService;
@@ -2682,12 +2682,12 @@ final class PwgImages
      * @param array{image_id: string|array<array-key, string>, pwg_token: string, ...} $params
      *    image_id: WsParamFlag::ACCEPT_ARRAY, no WS_TYPE flag, mandatory -- a
      *    plain string or an array, never null. pwg_token: mandatory string.
-     * @return PwgError|array{nb_synchronized: int}
+     * @return WsErrorResponse|array{nb_synchronized: int}
      */
-    public function syncMetadata(array $params, Server $service): PwgError|array
+    public function syncMetadata(array $params, Server $service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (! is_array($params['image_id'])) {
@@ -2708,20 +2708,20 @@ final class PwgImages
             $image_id = trim($image_id);
 
             if (! (bool) preg_match(ValidationPattern::ID, $image_id)) {
-                return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id "' . $image_id . '"');
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid image_id "' . $image_id . '"');
             }
 
             $image_ids[] = $image_id;
         }
 
         if ($image_ids === []) {
-            return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id (no value after filters)');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid image_id (no value after filters)');
         }
 
         $image_ids = $this->imageService->getExistingIds($image_ids);
 
         if ($image_ids === []) {
-            return new PwgError(403, 'No image found');
+            return new WsErrorResponse(403, 'No image found');
         }
 
         $this->metadataService
@@ -2738,12 +2738,12 @@ final class PwgImages
      * @param array{block_size: int, pwg_token: string, ...} $params
      *    block_size: WsParamType::INT|POSITIVE, default 1000 (non-null) -- always
      *    int. pwg_token: no WS_TYPE flag, mandatory -- always string.
-     * @return PwgError|array{nb_deleted: int, nb_orphans: int}
+     * @return WsErrorResponse|array{nb_deleted: int, nb_orphans: int}
      */
-    public function deleteOrphans(array $params, Server $service): PwgError|array
+    public function deleteOrphans(array $params, Server $service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $imageService = $this->imageService;
@@ -2769,15 +2769,15 @@ final class PwgImages
      *    WS_TYPE flag, but always plain strings (action has a string default,
      *    pwg_token is mandatory)
      */
-    public function setCategory(array $params, Server $service): ?PwgError
+    public function setCategory(array $params, Server $service): ?WsErrorResponse
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         // does the category really exist?
         if (! $this->categoryService->existsById($params['category_id'])) {
-            return new PwgError(404, 'category_id not found');
+            return new WsErrorResponse(404, 'category_id not found');
         }
 
         $imageService = $this->imageService;

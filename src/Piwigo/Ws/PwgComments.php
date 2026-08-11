@@ -62,24 +62,24 @@ final class PwgComments
      * rows, a built-up comment list, computed paging) -- genuinely complex
      * enough that forcing one precise shape risked getting it wrong
      * unverified; left as array<string, mixed>.
-     * @return PwgError|array<string, mixed>
+     * @return WsErrorResponse|array<string, mixed>
      */
-    public function getList(array $params, Server &$service): PwgError|array
+    public function getList(array $params, Server &$service): WsErrorResponse|array
     {
         if (! $this->currentConfig->activateComments) {
-            return new PwgError(403, 'Comments are disabled');
+            return new WsErrorResponse(403, 'Comments are disabled');
         }
 
         // accepted status values
         $accepted_status = ['all', 'pending', 'validated'];
         if (! in_array($params['status'], $accepted_status, true)) {
-            return new PwgError(401, 'Status must be: all, pending or validated');
+            return new WsErrorResponse(401, 'Status must be: all, pending or validated');
         }
 
         // accepted values must match pagination options (5,10,25,50)
         $items_number = [5, 10, 25, 50];
         if (! in_array($params['per_page'], $items_number, true)) {
-            return new PwgError(401, 'Per page must be: 5, 10, 25 or 50');
+            return new WsErrorResponse(401, 'Per page must be: 5, 10, 25 or 50');
         }
 
         // author_id/image_id/f_min_date/f_max_date/search/status collapse
@@ -98,7 +98,7 @@ final class PwgComments
         if (! in_array($params['f_min_date'], [null, ''], true)) {
             $min_date = date_create($params['f_min_date']);
             if ($min_date === false) {
-                return new PwgError(401, 'Invalid f_min_date');
+                return new WsErrorResponse(401, 'Invalid f_min_date');
             }
             $minDate = SqlDateTime::from(date_format($min_date, 'Y-m-d 00:00:00'));
         }
@@ -107,7 +107,7 @@ final class PwgComments
         if (! in_array($params['f_max_date'], [null, ''], true)) {
             $max_date = date_create($params['f_max_date']);
             if ($max_date === false) {
-                return new PwgError(401, 'Invalid f_max_date');
+                return new WsErrorResponse(401, 'Invalid f_max_date');
             }
             $maxDate = SqlDateTime::from(date_format($max_date, 'Y-m-d 23:59:59'));
         }
@@ -128,7 +128,7 @@ final class PwgComments
         // (same bug class as Category's own commentable/visible columns).
         $summary = $this->commentService->getSummaryCounts($criteria);
         if ($summary === null) {
-            return new PwgError(500, 'Unable to compute comments summary');
+            return new WsErrorResponse(500, 'Unable to compute comments summary');
         }
         $total_comments = $summary->allComments;
 
@@ -205,7 +205,7 @@ final class PwgComments
         // filters
         $dates = $this->commentService->getDateRange($criteria);
         if ($dates === null) {
-            return new PwgError(500, 'Unable to compute comments date range');
+            return new WsErrorResponse(500, 'Unable to compute comments date range');
         }
 
         // getAuthorCounts() ignores $criteria->authorId internally -- see
@@ -241,10 +241,10 @@ final class PwgComments
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
      */
-    public function delete(array $params, Server &$service): PwgError|string
+    public function delete(array $params, Server &$service): WsErrorResponse|string
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, $this->lang->t('Invalid security token'));
+            return new WsErrorResponse(403, $this->lang->t('Invalid security token'));
         }
 
         $commentIds = array_values(array_map(CommentId::from(...), array_unique($params['comment_id'])));
@@ -261,10 +261,10 @@ final class PwgComments
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
      */
-    public function validate(array $params, Server &$service): PwgError|string
+    public function validate(array $params, Server &$service): WsErrorResponse|string
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, $this->lang->t('Invalid security token'));
+            return new WsErrorResponse(403, $this->lang->t('Invalid security token'));
         }
 
         $commentIds = array_values(array_map(CommentId::from(...), array_unique($params['comment_id'])));

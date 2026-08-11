@@ -6,10 +6,10 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Template\SetStatusHeader;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Ws\PwgError;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
- * PwgError's constructor has exactly one branch: it only calls
+ * WsErrorResponse's constructor has exactly one branch: it only calls
  * PresentationAccessor::htmlService()->setStatusHeader() for HTTP-range
  * codes (`$code >= 400 and $code < 600`). header() itself is a genuine
  * no-op under CLI SAPI (confirmed live in HtmlServiceTest.php's own
@@ -23,7 +23,7 @@ use Piwigo\Ws\PwgError;
  *
  * Kernel::boot() with a real Paths (same minimal setup as
  * PresentationAccessorTest.php/PwgSerialPhpEncoderTest.php's own
- * docblock) is required here because PwgError goes through the real
+ * docblock) is required here because WsErrorResponse goes through the real
  * PresentationAccessor::htmlService() accessor, which needs a booted DI
  * container -- a fake/spy HtmlService isn't an option since HtmlService
  * is `final` and PresentationAccessor's own instanceof guard requires the
@@ -45,7 +45,7 @@ test('code just below the HTTP range (399) does not call setStatusHeader', funct
     EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
-        $error = new PwgError(399, 'Not an HTTP code');
+        $error = new WsErrorResponse(399, 'Not an HTTP code');
 
         expect($calls)
             ->toBe([])
@@ -66,7 +66,7 @@ test('code at the lower HTTP boundary (400) calls setStatusHeader', function ():
     EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
-        $error = new PwgError(400, 'Bad request');
+        $error = new WsErrorResponse(400, 'Bad request');
 
         expect($calls)
             ->toBe([[400, 'Bad request']])
@@ -90,7 +90,7 @@ test('code comfortably inside the HTTP range (404) calls setStatusHeader', funct
     EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
-        $error = new PwgError(404, 'Not found');
+        $error = new WsErrorResponse(404, 'Not found');
 
         expect($calls)
             ->toBe([[404, 'Not found']])
@@ -111,7 +111,7 @@ test('code at the upper HTTP boundary (599) calls setStatusHeader', function ():
     EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
-        $error = new PwgError(599, 'Custom 599');
+        $error = new WsErrorResponse(599, 'Custom 599');
 
         expect($calls)
             ->toBe([[599, 'Custom 599']])
@@ -132,7 +132,7 @@ test('code just past the HTTP range (600) does not call setStatusHeader', functi
     EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
-        $error = new PwgError(600, 'Not an HTTP code either');
+        $error = new WsErrorResponse(600, 'Not an HTTP code either');
 
         expect($calls)
             ->toBe([])
@@ -157,7 +157,7 @@ test('code comfortably outside the HTTP range (1003) does not call setStatusHead
     EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
-        $error = new PwgError(1003, 'Invalid param foo');
+        $error = new WsErrorResponse(1003, 'Invalid param foo');
 
         expect($calls)
             ->toBe([])

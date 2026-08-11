@@ -377,7 +377,7 @@ final class WsTopLevelTest extends ContractTestCase
      * Deliberately not '3xlarge'/'4xlarge': both are disabled by default
      * (ImageStdParams::$disabled_types_by_default), so
      * getMissingDerivatives()'s own array_intersect() against the enabled
-     * type map would reject either as an "Invalid types" PwgError before
+     * type map would reject either as an "Invalid types" WsErrorResponse before
      * ever reaching the skip logic this test targets -- 'xxlarge' is the
      * largest type that's still enabled by default, and 200x150 is well
      * under it too, so it exercises the exact same code path.

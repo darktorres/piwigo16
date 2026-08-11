@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Protocol\SerialPhpEncoder;
-use Piwigo\Ws\PwgError;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * SerialPhpEncoder wraps the response in ['stat'=>..., ...] and hands
@@ -16,8 +16,8 @@ use Piwigo\Ws\PwgError;
  * should produce.
  *
  * WsError::INVALID_PARAM-style codes (>= 1000) are used for the
- * PwgError fixture, not an HTTP-range code (400-599), because
- * PwgError's constructor calls PresentationAccessor::htmlService() for
+ * WsErrorResponse fixture, not an HTTP-range code (400-599), because
+ * WsErrorResponse's constructor calls PresentationAccessor::htmlService() for
  * HTTP-range codes, which needs a booted container this Unit test
  * doesn't set up.
  *
@@ -36,9 +36,9 @@ use Piwigo\Ws\PwgError;
  * narrowing-loss guard, provably unreachable in real usage -- not a gap
  * in test coverage.
  */
-test('encodeResponse serializes a PwgError as a fail/err/message triple', function (): void {
+test('encodeResponse serializes a WsErrorResponse as a fail/err/message triple', function (): void {
     $encoder = new SerialPhpEncoder();
-    $error = new PwgError(1003, 'Invalid param foo');
+    $error = new WsErrorResponse(1003, 'Invalid param foo');
 
     $result = $encoder->encodeResponse($error);
 

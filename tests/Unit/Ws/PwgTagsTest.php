@@ -17,9 +17,9 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgTags;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
  * Piwigo\Ws\PwgTags -- the `pwg.tags.*` WS methods (8 registrations).
@@ -83,7 +83,7 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-test('delete returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('delete returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgTagsTestSubject();
     $server = pwgTagsTestServer();
 
@@ -93,14 +93,14 @@ test('delete returns a 403 PwgError when the submitted pwg_token does not match 
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }
 });
 
-test('rename returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('rename returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgTagsTestSubject();
     $server = pwgTagsTestServer();
 
@@ -111,14 +111,14 @@ test('rename returns a 403 PwgError when the submitted pwg_token does not match 
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }
 });
 
-test('duplicate returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('duplicate returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgTagsTestSubject();
     $server = pwgTagsTestServer();
 
@@ -129,14 +129,14 @@ test('duplicate returns a 403 PwgError when the submitted pwg_token does not mat
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }
 });
 
-test('merge returns a 403 PwgError when the submitted pwg_token does not match the real CSRF token', function (): void {
+test('merge returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgTagsTestSubject();
     $server = pwgTagsTestServer();
 
@@ -147,8 +147,8 @@ test('merge returns a 403 PwgError when the submitted pwg_token does not match t
     ], $server);
 
     expect($result)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
         expect($result->code())
             ->toBe(403);
     }

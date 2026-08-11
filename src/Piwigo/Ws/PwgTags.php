@@ -256,14 +256,14 @@ final class PwgTags
      *
      * @param array{name: string, ...} $params no 'default' key -- mandatory,
      *   always present.
-     * @return PwgError|array{info: string, id: int|string, name: string, url_name: string}
+     * @return WsErrorResponse|array{info: string, id: int|string, name: string, url_name: string}
      */
-    public function add(array $params, Server &$service): PwgError|array
+    public function add(array $params, Server &$service): WsErrorResponse|array
     {
         $creation_output = $this->tagService->createTag($params['name']);
 
         if ($creation_output->error !== null) {
-            return new PwgError(WsError::INVALID_PARAM, $creation_output->error);
+            return new WsErrorResponse(WsError::INVALID_PARAM, $creation_output->error);
         }
 
         // success()'s own contract guarantees info/id are non-null whenever
@@ -290,16 +290,16 @@ final class PwgTags
      * @param array{tag_id: array<int, int>, pwg_token: string, ...} $params
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces tag_id to a list of positive ints.
-     * @return PwgError|array{id: array<int, int>}
+     * @return WsErrorResponse|array{id: array<int, int>}
      */
-    public function delete(array $params, Server &$service): PwgError|array
+    public function delete(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if ($this->tagService->countExistingIds(array_values($params['tag_id'])) !== count($params['tag_id'])) {
-            return new PwgError(WsError::INVALID_PARAM, 'All tags does not exist.');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'All tags does not exist.');
         }
 
         $tag_ids = $params['tag_id'];
@@ -323,12 +323,12 @@ final class PwgTags
      * @param array{tag_id: int, new_name: string, pwg_token: string, ...} $params
      *   none has a 'default' key -- all mandatory, always present, WsParamType::ID
      *   guarantees a plain int for tag_id.
-     * @return PwgError|array<string, mixed>
+     * @return WsErrorResponse|array<string, mixed>
      */
-    public function rename(array $params, Server &$service): PwgError|array
+    public function rename(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $tag_id = $params['tag_id'];
@@ -336,13 +336,13 @@ final class PwgTags
 
         // does the tag exist ?
         if (! $this->tagService->existsById($tag_id)) {
-            return new PwgError(WsError::INVALID_PARAM, 'This tag does not exist.');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'This tag does not exist.');
         }
 
         $existing_names = $this->tagService->getOtherNames($tag_id);
 
         if (in_array($tag_name, $existing_names, true)) {
-            return new PwgError(WsError::INVALID_PARAM, 'This name is already token');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'This name is already token');
         }
 
         $this->activityService->record('tag', $tag_id, 'edit');
@@ -379,12 +379,12 @@ final class PwgTags
      * id/name/count are real (id is explicitly (int)-cast from
      * lastInsertId(), name is the mandatory string $params['copy_name'],
      * count is count($inserts)).
-     * @return PwgError|array{id: int, name: string, url_name: string, count: int}
+     * @return WsErrorResponse|array{id: int, name: string, url_name: string, count: int}
      */
-    public function duplicate(array $params, Server &$service): PwgError|array
+    public function duplicate(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $tag_id = $params['tag_id'];
@@ -392,11 +392,11 @@ final class PwgTags
 
         // does the tag exist ?
         if (! $this->tagService->existsById($tag_id)) {
-            return new PwgError(WsError::INVALID_PARAM, 'This tag does not exist.');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'This tag does not exist.');
         }
 
         if ($this->tagService->existsByName($copy_name)) {
-            return new PwgError(WsError::INVALID_PARAM, 'This name is already taken.');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'This name is already taken.');
         }
 
         $copyUrlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($copy_name));
@@ -444,12 +444,12 @@ final class PwgTags
      *   none has a 'default' key -- all mandatory, always present;
      *   destination_tag_id: WsParamType::ID guarantees a plain int; merge_tag_id:
      *   FORCE_ARRAY always coerces to a list of positive ints.
-     * @return PwgError|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: list<int>}
+     * @return WsErrorResponse|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: list<int>}
      */
-    public function merge(array $params, Server &$service): PwgError|array
+    public function merge(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $all_tags = $params['merge_tag_id'];
@@ -459,7 +459,7 @@ final class PwgTags
         $merge_tag = array_diff($params['merge_tag_id'], [$params['destination_tag_id']]);
 
         if ($this->tagService->countExistingIds(array_values($all_tags)) !== count($all_tags)) {
-            return new PwgError(WsError::INVALID_PARAM, 'All tags does not exist.');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'All tags does not exist.');
         }
 
         $image_in_merge_tags = array_values(array_unique(

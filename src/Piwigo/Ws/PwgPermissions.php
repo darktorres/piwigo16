@@ -38,16 +38,16 @@ final class PwgPermissions
      *   all three keys: WsParamFlag::OPTIONAL with no 'default' key -- may be
      *   entirely absent; FORCE_ARRAY always coerces to a list of positive
      *   ints when present.
-     * @return PwgError|array{categories: NamedArray}
+     * @return WsErrorResponse|array{categories: NamedArray}
      */
-    public function getList(array $params, Server &$service): PwgError|array
+    public function getList(array $params, Server &$service): WsErrorResponse|array
     {
         $my_params = array_filter(
             ['cat_id', 'group_id', 'user_id'],
             static fn (string $key): bool => array_key_exists($key, $params)
         );
         if (count($my_params) > 1) {
-            return new PwgError(WsError::INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
         }
 
         $cat_ids_filter = array_values($params['cat_id'] ?? []);
@@ -125,7 +125,7 @@ final class PwgPermissions
      *   same FORCE_ARRAY coercion when present. recursive: non-null bool
      *   default, WsParamType::BOOL -- always present. pwg_token: no 'default'
      *   key -- mandatory, always present.
-     * @return PwgError|array<array-key, mixed> PwgError, or the result of the
+     * @return WsErrorResponse|array<array-key, mixed> WsErrorResponse, or the result of the
      *   pwg.permissions.getList invocation (really always
      *   array{categories: NamedArray} at runtime, but narrowGetListResult()
      *   can't prove the sealed shape from a re-narrowed value, only that
@@ -135,10 +135,10 @@ final class PwgPermissions
      * PermissionService::addPermissionOnCategory() -- this WS method has no
      * `$_POST` state of its own.
      */
-    public function add(array $params, Server &$service): PwgError|array
+    public function add(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         if (isset($params['group_id']) && $params['group_id'] !== []) {
@@ -181,16 +181,16 @@ final class PwgPermissions
      *   FORCE_ARRAY always coerces cat_id to a list of positive ints.
      *   group_id/user_id: WsParamFlag::OPTIONAL with no 'default' key -- may be
      *   entirely absent, same FORCE_ARRAY coercion when present.
-     * @return PwgError|array<array-key, mixed> PwgError, or the result of the
+     * @return WsErrorResponse|array<array-key, mixed> WsErrorResponse, or the result of the
      *   pwg.permissions.getList invocation (really always
      *   array{categories: NamedArray} at runtime, but narrowGetListResult()
      *   can't prove the sealed shape from a re-narrowed value, only that
      *   it's a real array)
      */
-    public function remove(array $params, Server &$service): PwgError|array
+    public function remove(array $params, Server &$service): WsErrorResponse|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, 'Invalid security token');
+            return new WsErrorResponse(403, 'Invalid security token');
         }
 
         $cat_ids = $this->categoryService->getSubcatIds($params['cat_id']);
@@ -213,7 +213,7 @@ final class PwgPermissions
      * Server's own class docblock) -- its declared return type is
      * `mixed` by design. This narrows it to the real shape this specific
      * sub-invocation (always 'pwg.permissions.getList', which itself
-     * really does return PwgError|array{categories: NamedArray}) is
+     * really does return WsErrorResponse|array{categories: NamedArray}) is
      * known to return, the same "resolve, narrow, or throw" idiom already
      * used throughout this codebase for other statically-unknowable-but-
      * really-fixed-shape values (e.g. PwgImage::currentConfig()'s
@@ -222,11 +222,11 @@ final class PwgPermissions
      * array, only narrows an already-built one, so PHPStan can't verify
      * the sealed `array{categories: ...}` shape from this call site alone.
      *
-     * @return PwgError|array<array-key, mixed>
+     * @return WsErrorResponse|array<array-key, mixed>
      */
-    private function narrowGetListResult(mixed $result): PwgError|array
+    private function narrowGetListResult(mixed $result): WsErrorResponse|array
     {
-        if (! $result instanceof PwgError && ! is_array($result)) {
+        if (! $result instanceof WsErrorResponse && ! is_array($result)) {
             throw new LogicException('pwg.permissions.getList returned an unexpected type');
         }
 

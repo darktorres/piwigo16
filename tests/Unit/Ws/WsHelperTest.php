@@ -19,8 +19,8 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 use Piwigo\Ws\NamedArray;
-use Piwigo\Ws\PwgError;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\WsHelper;
 
 /**
@@ -97,8 +97,8 @@ test('isInvokeAllowed denies a real method for a guest user when guestAccess is 
     $result = $helper->isInvokeAllowed($event);
 
     expect($result->value)
-        ->toBeInstanceOf(PwgError::class);
-    if ($result->value instanceof PwgError) {
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result->value instanceof WsErrorResponse) {
         expect($result->value->code())
             ->toBe(401)
             ->and($result->value->message())

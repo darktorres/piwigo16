@@ -124,7 +124,7 @@ final readonly class GroupService
      * Creates a group. Throws InvalidArgumentException, message matching
      * one of ws_groups_add()'s two distinct validation failures in the
      * same order (name-already-used checked before empty-name) -- callers
-     * translate the message into their own error shape (e.g. PwgError).
+     * translate the message into their own error shape (e.g. WsErrorResponse).
      */
     public function create(string $name, bool $isDefault): GroupId
     {

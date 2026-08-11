@@ -11,7 +11,7 @@ use Piwigo\Db\DbConnection;
 
 /**
  * Ws\PwgComments::getList()'s summary/date-range "unable to compute" guards
- * (`$summary === null` / `$dates === null`, PwgError 500) are NOT chased
+ * (`$summary === null` / `$dates === null`, WsErrorResponse 500) are NOT chased
  * here: CommentRepository::findSummaryCounts()/findDateRange() each run a
  * bare `SELECT count(*)/sum(...)/MIN()/MAX() FROM ... WHERE ...` with no
  * GROUP BY -- an aggregate query with no GROUP BY always returns exactly

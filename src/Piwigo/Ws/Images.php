@@ -421,7 +421,6 @@ final readonly class Images
         $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image_row['comment']) ? $image_row['comment'] : '', __FUNCTION__));
         $image_row['comment'] = $descriptionEvent->elementDescription;
 
-        // -------------------------------------------------------- related categories
         $related_category_rows = $this->imageService->getRelatedCategoriesForImage(
             ImageId::from($image_id),
             $this->permissionService->getPermissionCriteria()
@@ -464,7 +463,6 @@ final readonly class Images
             return new WsErrorResponse(401, 'Access denied');
         }
 
-        // -------------------------------------------------------------- related tags
         $related_tags = $this->tagService
             ->getCommonTags([$image_id], -1, $this->htmlService);
         foreach ($related_tags as $i => $tag) {
@@ -485,7 +483,6 @@ final readonly class Images
             $related_tags[$i] = $tag;
         }
 
-        // ------------------------------------------------------------- related rates
         $rating_score_raw = $image_row['rating_score'];
         $rating = [
             'score' => $rating_score_raw,
@@ -501,7 +498,6 @@ final readonly class Images
             $rating['count'] = $rate_summary->count;
         }
 
-        // ---------------------------------------------------------- related comments
         $related_comments = [];
 
         $only_validated_comments = ! $this->accessControl->isAdmin();

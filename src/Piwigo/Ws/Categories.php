@@ -233,8 +233,7 @@ final readonly class Categories
             $rows = $paginated_images->rows;
 
             foreach ($rows as $image_row) {
-                // id is images.id, a NOT NULL primary key -- verified against
-                // install/piwigo_structure-mysql.sql. Native int under DBAL
+                // id is images.id, a NOT NULL primary key. Native int under DBAL
                 // (vs. guaranteed string under legacy mysqli), so cast
                 // instead of asserting string.
                 assert(is_numeric($image_row['id']));
@@ -389,8 +388,7 @@ final readonly class Categories
         // IN (forbidden)` condition against $forbiddenCategoryIds.
         //
         // nb_images/count_images/count_categories/date_last/max_date_last
-        // are NOT real `categories` columns (verified against
-        // install/piwigo_structure-mysql.sql) -- $rollupByCatId supplies
+        // are NOT real `categories` columns -- $rollupByCatId supplies
         // them per-row below, computed per-branch since each identity's
         // forbidden-categories value differs (see each branch's own
         // comment).
@@ -521,8 +519,7 @@ final readonly class Categories
             $row['user_representative_picture_id'] = self::getCachedRepresentative($repr_user_id, $row['id']);
 
             // uppercats is a NOT NULL column of the categories table --
-            // verified against install/piwigo_structure-mysql.sql. Asserted
-            // here (unconditionally) rather than only inside the
+            // asserted here (unconditionally) rather than only inside the
             // $params['fullname'] branch below, since it's also read
             // further down outside that branch (the representative-picture
             // LIKE query).
@@ -754,9 +751,8 @@ final readonly class Categories
         $cats = [];
         foreach ($rows as $row) {
             // id/uppercats are NOT NULL columns of the categories table --
-            // verified against install/piwigo_structure-mysql.sql. Native
-            // int under DBAL (vs. guaranteed string under legacy mysqli),
-            // so is_int()||is_string() instead of asserting string -- both
+            // native int under DBAL (vs. guaranteed string under legacy
+            // mysqli), so is_int()||is_string() instead of asserting string -- both
             // are valid array-key types (unlike is_numeric(), which also
             // allows float).
             $id = $row['id'];
@@ -1408,10 +1404,9 @@ final readonly class Categories
             }
             // else it's better to avoid sending a huge SQL request, we compute the orphan list with PHP
             else {
-                // image_id is a NOT NULL column of image_category -- verified
-                // against install/piwigo_structure-mysql.sql. $image_ids_recursive
-                // is already list<int> (cast at extraction above), safe to
-                // flip directly.
+                // image_id is a NOT NULL column of image_category --
+                // $image_ids_recursive is already list<int> (cast at
+                // extraction above), safe to flip directly.
                 $image_ids_recursive_keys = array_flip($image_ids_recursive);
 
                 $image_ids_associated_outside = $this->categoryService->getImageIdsOutsideCategories($subcat_ids);

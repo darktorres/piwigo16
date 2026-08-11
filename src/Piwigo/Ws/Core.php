@@ -831,7 +831,7 @@ final readonly class Core
      *    skips an empty-string param (`elseif ($param !== '')`), so the
      *    real, uncoerced string '' also reaches here whenever a caller
      *    sends the key with no value (a real browser client, unlike a WS
-     *    caller that just omits the key entirely -- confirmed live).
+     *    caller that just omits the key entirely).
      *    display_thumbnail: no WS_TYPE flag, non-null string default --
      *    always string. pageNumber: WsParamType::INT|POSITIVE, null
      *    default -- int|null.
@@ -855,10 +855,6 @@ final readonly class Core
             'display_thumbnail_classic' => $this->lang->t('Classic display'),
             'display_thumbnail_hoverbox' => $this->lang->t('Hoverbox display'),
         ];
-
-        // +-----------------------------------------------------------------------+
-        // | Build search criteria and redirect to results                         |
-        // +-----------------------------------------------------------------------+
 
         $page['errors'] = [];
         $search = [];
@@ -900,10 +896,10 @@ final readonly class Core
         // sibling filename/ip checks below already excluded '' too),
         // so intval('') = 0 got stored into $search['fields']['image_id']
         // and persisted -- HistoryRepository::search() later reads it back
-        // as a real, non-null 0 and calls ImageId::from(0), which throws
-        // (confirmed live: this was a genuine, always-triggered 500 on
+        // as a real, non-null 0 and calls ImageId::from(0), which throws:
+        // a genuine, always-triggered 500 on
         // admin.php?page=history's default, unfiltered search, not a test-only
-        // issue).
+        // issue.
         if (! in_array($param['image_id'], [null, '', 0], true)) {
             $search['fields']['image_id'] = intval($param['image_id']);
         }

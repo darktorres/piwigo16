@@ -8,7 +8,7 @@ namespace Piwigo\Ws\Request;
  * Validated `$_FILES[$key]` shape for Images::addSimple()/upload()/
  * uploadAsync(). `Server::invoke()`'s own
  * `call_user_func_array($method['callback'], [$params, &$this])` dispatch
- * (confirmed by reading it directly) calls every `Ws\*` method with
+ * calls every `Ws\*` method with
  * exactly those 2 fixed arguments, so `$_FILES` can't be threaded in as
  * a 3rd parameter the way a page controller's own DTO is -- constructed
  * inside each method's own body instead, same as every other Request DTO

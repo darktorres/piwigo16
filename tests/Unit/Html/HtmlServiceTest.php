@@ -34,6 +34,7 @@ use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -63,14 +64,14 @@ beforeEach(function (): void {
         $processCache->reset();
     }
     CurrentUserTestFactory::get()->reset();
-    CurrentTemplate::current()->reset();
+    CurrentTemplateTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->reset();
 });
 
 afterEach(function (): void {
     Kernel::reset();
     CurrentUserTestFactory::get()->reset();
-    CurrentTemplate::current()->reset();
+    CurrentTemplateTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->reset();
 });
 
@@ -1548,7 +1549,7 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
         $template->smarty->assign('themeconf', [
             'icon_dir' => '/my-theme/icons',
         ]);
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         // A non-empty root url is required to kill line 576's
         // ConcatRemoveRight (drops getRootUrl() from the src entirely) and
         // ConcatSwitchSides (moves getRootUrl() to prefix the whole `$title
@@ -1603,7 +1604,7 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
                 );
         } finally {
             htmlServiceTestRootPathOverride()->reset();
-            CurrentTemplate::current()->reset();
+            CurrentTemplateTestFactory::get()->reset();
             $iterator = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
                 RecursiveIteratorIterator::CHILD_FIRST,
@@ -1755,7 +1756,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
 
 test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is not "menubar"', function (): void {
     $service = HtmlServiceTestFactory::build();
-    $menu = new BlockManager('sidebar', new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
+    $menu = new BlockManager('sidebar', new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
     $service->registerDefaultMenubarBlocks(new BlockManagerRegisterBlocks($menu));
 
@@ -2283,14 +2284,14 @@ test('setStatusHeader actually calls header(), not a no-op, for a real request',
  */
 test('flushPageMessages assigns only the non-empty PageState fields', function (): void {
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Something went wrong');
     PageStateTestFactory::get()->addInfo('Saved successfully');
 
     HtmlServiceTestFactory::build()->flushPageMessages();
 
-    $template = CurrentTemplate::current()->get();
+    $template = CurrentTemplateTestFactory::get()->get();
     expect($template->getTemplateVars('errors'))
         ->toBe(['Something went wrong'])
         ->and($template->getTemplateVars('infos'))
@@ -2303,22 +2304,22 @@ test('flushPageMessages assigns only the non-empty PageState fields', function (
 
 test('flushPageMessages does nothing when a page refresh is already assigned', function (): void {
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Should not appear');
-    CurrentTemplate::current()->get()->smarty->assign('page_refresh', [
+    CurrentTemplateTestFactory::get()->get()->smarty->assign('page_refresh', [
         'TIME' => '5',
         'U_REFRESH' => '/next',
     ]);
 
     HtmlServiceTestFactory::build()->flushPageMessages();
 
-    expect(CurrentTemplate::current()->get()->getTemplateVars('errors'))->toBeNull();
+    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('errors'))->toBeNull();
 });
 
 test('flushPageMessages merges in and clears the session flash channel', function (): void {
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Live error');
     $_SESSION['page_errors'] = ['Flashed error'];
@@ -2326,7 +2327,7 @@ test('flushPageMessages merges in and clears the session flash channel', functio
     try {
         HtmlServiceTestFactory::build()->flushPageMessages();
 
-        expect(CurrentTemplate::current()->get()->getTemplateVars('errors'))->toBe(['Live error', 'Flashed error'])
+        expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('errors'))->toBe(['Live error', 'Flashed error'])
             ->and($_SESSION)
             ->not->toHaveKey('page_errors');
     } finally {
@@ -2336,14 +2337,14 @@ test('flushPageMessages merges in and clears the session flash channel', functio
 
 test('flushPageMessages filters out non string session flash values defensively', function (): void {
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     $_SESSION['page_infos'] = ['Real info', 42, null];
 
     try {
         HtmlServiceTestFactory::build()->flushPageMessages();
 
-        expect(CurrentTemplate::current()->get()->getTemplateVars('infos'))->toBe(['Real info']);
+        expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('infos'))->toBe(['Real info']);
     } finally {
         unset($_SESSION['page_infos']);
     }
@@ -2379,24 +2380,24 @@ test('flushPageMessages leaves a non-array session flash value untouched, withou
 
 test('flushKeyedErrors assigns the keyed error bag under errors', function (): void {
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 
     HtmlServiceTestFactory::build()->flushKeyedErrors([
         'login_page_error' => 'Invalid username or password!',
     ]);
 
-    expect(CurrentTemplate::current()->get()->getTemplateVars('errors'))->toBe([
+    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('errors'))->toBe([
         'login_page_error' => 'Invalid username or password!',
     ]);
 });
 
 test('flushKeyedErrors does nothing for an empty error bag', function (): void {
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 
     HtmlServiceTestFactory::build()->flushKeyedErrors([]);
 
-    expect(CurrentTemplate::current()->get()->getTemplateVars('errors'))->toBeNull();
+    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('errors'))->toBeNull();
 });
 
 /**
@@ -2409,7 +2410,7 @@ test('flushKeyedErrors does nothing for an empty error bag', function (): void {
  */
 test('flushPageMessages then flushKeyedErrors overwrites errors but leaves infos untouched', function (): void {
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Generic page error');
     PageStateTestFactory::get()->addInfo('Some info');
@@ -2420,7 +2421,7 @@ test('flushPageMessages then flushKeyedErrors overwrites errors but leaves infos
         'login_page_error' => 'Invalid username or password!',
     ]);
 
-    $template = CurrentTemplate::current()->get();
+    $template = CurrentTemplateTestFactory::get()->get();
     expect($template->getTemplateVars('errors'))
         ->toBe([
             'login_page_error' => 'Invalid username or password!',

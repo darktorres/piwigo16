@@ -15,8 +15,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -97,7 +97,7 @@ test('render() shows the English documentation message for an en_ user and defau
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'help.tpl', 'content={$HELP_CONTENT}|title={$HELP_SECTION_TITLE}');
@@ -120,7 +120,7 @@ test('render() shows the English documentation message for an en_ user and defau
         ));
 
         new HelpPageRenderer()
-            ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplate::current());
+            ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplateTestFactory::get());
 
         expect($template->getTemplateVars('HELP_CONTENT'))
             ->toBe('')
@@ -132,7 +132,7 @@ test('render() shows the English documentation message for an en_ user and defau
             ->toHaveCount(1)
             ->and($pageState->messages[0])->toContain('Check the online documentation');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         helpPageTestRrmdir($root);

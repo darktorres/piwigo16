@@ -15,8 +15,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -97,7 +97,7 @@ test('render() defaults the date range to today and skips the user-id lookup whe
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'history.tpl', 'start={$START}|end={$END}');
@@ -109,7 +109,7 @@ test('render() defaults the date range to today and skips the user-id lookup whe
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
 
         new HistoryPageRenderer()
-            ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplate::current(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator());
+            ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator());
 
         $today = Env::now()->format('Y-m-d');
         expect($template->getTemplateVars('START'))
@@ -127,7 +127,7 @@ test('render() defaults the date range to today and skips the user-id lookup whe
             ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('start=' . $today . '|end=' . $today);
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         historyPageTestRrmdir($root);

@@ -53,6 +53,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
+    use Piwigo\Tests\Support\CurrentTemplateTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -283,7 +284,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
             $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
-            $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplate::current(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new Translator(CurrentConfigTestFactory::get()), new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn)), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), LangTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), CurrentPathsTestFactory::get());
+            $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new Translator(CurrentConfigTestFactory::get()), new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn)), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), LangTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), CurrentPathsTestFactory::get());
         }
 
         #[Override]
@@ -292,7 +293,7 @@ namespace Piwigo\Tests\Integration {
             // Harmless for every other test in this file, which never sets it
             // -- same nullable-safe reset() shape as CurrentConfigService's own
             // base-class reset (see IntegrationTestCase's own docblock).
-            CurrentTemplate::current()->reset();
+            CurrentTemplateTestFactory::get()->reset();
             Kernel::reset();
             parent::tearDown();
         }
@@ -596,7 +597,7 @@ namespace Piwigo\Tests\Integration {
             // deleteCompiledTemplates() runs before the persistent-cache
             // guard -- needs a real Template instance, unset by default since
             // this test never boots a full RequestBootstrap.
-            CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
+            CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
             // HtmlService::fatalError() always throws ResponseReadyException
             // regardless of ErrorCollector::isActive() (see its own docblock)
@@ -664,7 +665,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testCompiledTemplatesPurgesARealInitializedPersistentCache(): void
         {
-            CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
+            CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
             // A dedicated local instance, not $this->dispatcher (built in
             // setUp() with no persistent cache) -- constructor injection means
@@ -675,12 +676,12 @@ namespace Piwigo\Tests\Integration {
                 new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()),
                 UrlServiceTestFactory::build(),
                 $configService,
-                new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplate::current(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()),
+                new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()),
                 new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 new Translator(CurrentConfigTestFactory::get()),
                 new EventDispatcher(),
                 PageStateTestFactory::get(),
-                CurrentTemplate::current(),
+                CurrentTemplateTestFactory::get(),
                 new DbMaintenanceRepository(EntityManagerFactory::build($this->conn)),
                 $this->maintenanceActionDispatcherTestActivityService(),
                 $this->maintenanceActionDispatcherTestRateService(),

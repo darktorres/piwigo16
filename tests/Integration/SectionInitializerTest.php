@@ -25,10 +25,10 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Section\SectionInitializer;
     use Piwigo\Section\SectionRepository;
-    use Piwigo\Template\CurrentTemplate;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
+    use Piwigo\Tests\Support\CurrentTemplateTestFactory;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
@@ -90,7 +90,7 @@ namespace Piwigo\Tests\Integration {
         {
             unset($_SERVER['PATH_INFO'], $_SERVER['SCRIPT_NAME']);
             UniqueExecLock::reset();
-            CurrentTemplate::current()->reset();
+            CurrentTemplateTestFactory::get()->reset();
             LangTestFactory::get()->reset();
             Kernel::reset();
             parent::tearDown();
@@ -126,7 +126,7 @@ namespace Piwigo\Tests\Integration {
                 'code' => 'en_UK',
                 'direction' => 'ltr',
             ]);
-            CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
+            CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
             CurrentConfigTestFactory::get()->sendPiwigoInfos = false;
         }
 

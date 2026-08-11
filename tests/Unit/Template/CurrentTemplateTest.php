@@ -8,6 +8,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
@@ -98,10 +99,10 @@ test('reset clears the published instance so get throws again', function (): voi
     $currentTemplate->get();
 })->throws(LogicException::class);
 
-test('current() falls back to a memoized instance when Kernel is not booted', function (): void {
+test('CurrentTemplateTestFactory::get falls back to a memoized instance when Kernel is not booted', function (): void {
     // Memoized (not fresh-per-call), same reasoning as
-    // CurrentUserTestFactory::get(): a caller that writes via current() in
-    // one call and reads via current() in a later call must see the same
+    // CurrentUserTestFactory::get(): a caller that writes via get() in
+    // one call and reads via get() in a later call must see the same
     // instance, or the write would be lost. Kernel is
     // already booted by this file's own beforeEach() (real Template
     // construction needs a writable data dir) -- build the Template
@@ -112,10 +113,10 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
     $root = CurrentPathsTestFactory::get()->root;
     Kernel::reset();
 
-    $first = CurrentTemplate::current();
+    $first = CurrentTemplateTestFactory::get();
     $first->set($template);
 
-    $second = CurrentTemplate::current();
+    $second = CurrentTemplateTestFactory::get();
 
     expect($second)
         ->toBe($first)
@@ -127,15 +128,15 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
     Kernel::boot(Paths::fromRoot($root));
 });
 
-test('current() resolves the container-shared instance once Kernel is booted', function (): void {
+test('CurrentTemplateTestFactory::get resolves the container-shared instance once Kernel is booted', function (): void {
     $instance = Kernel::container()->get(CurrentTemplate::class);
 
-    expect(CurrentTemplate::current())->toBe($instance);
+    expect(CurrentTemplateTestFactory::get())->toBe($instance);
 });
 
-test('current() throws when the container returns an unexpected type', function (): void {
-    // Kills line 49's InstanceOfToTrue (`if (!true)`, never taking the
-    // throw branch): the mutant's guard can never fire regardless of
+test('CurrentTemplateTestFactory::get throws when the container returns an unexpected type', function (): void {
+    // Kills the factory's InstanceOfToTrue (`if (!true)`, never taking
+    // the throw branch): the mutant's guard can never fire regardless of
     // what the container actually resolved, silently returning the
     // wrong-typed value instead of throwing. The real container,
     // correctly wired, never legitimately resolves CurrentTemplate::class
@@ -157,7 +158,7 @@ test('current() throws when the container returns an unexpected type', function 
     try {
         KernelContainerOverride::withWrongTypeFor(
             CurrentTemplate::class,
-            static fn () => CurrentTemplate::current(),
+            static fn () => CurrentTemplateTestFactory::get(),
         );
     } finally {
         Kernel::boot(Paths::fromRoot($root));

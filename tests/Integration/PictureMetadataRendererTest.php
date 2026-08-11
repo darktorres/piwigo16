@@ -17,9 +17,9 @@ use Piwigo\Core\Paths;
 use Piwigo\Image\SrcImage;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
@@ -59,7 +59,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig));
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 
         $this->scratchDir = dirname(__DIR__, 2) . '/_data/picture-metadata-renderer-test-scratch';
         @mkdir($this->scratchDir, 0o777, true);
@@ -80,7 +80,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         }
         @rmdir($this->scratchDir);
 
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         LangTestFactory::get()->restore(null);
 
         parent::tearDown();
@@ -209,9 +209,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             ]))
         );
 
-        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplateTestFactory::get(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
-        $metadata = CurrentTemplate::current()->get()->getTemplateVars('metadata');
+        $metadata = CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
         self::assertIsArray($metadata[0]);
@@ -252,9 +252,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment([]))
         );
 
-        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplateTestFactory::get(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
-        $metadata = CurrentTemplate::current()->get()->getTemplateVars('metadata');
+        $metadata = CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
         self::assertIsArray($metadata[0]);
@@ -276,9 +276,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             'Artist' => 'Jane',
         ])));
 
-        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplateTestFactory::get(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
-        self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('metadata'));
+        self::assertNull(CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata'));
     }
 
     public function testRenderAppendsIptcMetadataTranslatingKnownFields(): void
@@ -310,9 +310,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp13IptcSegment([[5, 'Sunset Over The Bay'], [80, 'Jane Photographer']]))
         );
 
-        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplateTestFactory::get(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
-        $metadata = CurrentTemplate::current()->get()->getTemplateVars('metadata');
+        $metadata = CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
         self::assertIsArray($metadata[0]);
@@ -344,9 +344,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         );
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);
 
-        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplateTestFactory::get(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
-        $metadata = CurrentTemplate::current()->get()->getTemplateVars('metadata');
+        $metadata = CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(2, $metadata);
         self::assertIsArray($metadata[0]);

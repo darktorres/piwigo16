@@ -34,9 +34,9 @@ use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -104,7 +104,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // Smarty's template_dir at the real themes/default/template/
         // directory that file lives in (same root shape every real
         // Template() call site uses, e.g. RequestBootstrap.php:568).
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
         // A literal id here would collide across concurrent worktrees sharing
         // one machine-wide /var/lib/php/sessions directory (see
         // Tests\Unit\Csrf\CsrfServiceTest's own docblock) -- CsrfService::getToken()
@@ -120,7 +120,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -151,7 +151,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->userCanEditComment = true;
 
         $this->renderer()
-            ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+            ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
         $rows = $this->renderedComments();
         $rowA = $this->findRenderedRow($rows, $commentIdA);
@@ -197,7 +197,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(200, $e->response()->getStatusCode());
@@ -216,7 +216,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             $this->renderer()
                 ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), [[
                     'commentable' => false,
-                ]], '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ]], '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(403, $e->response()->getStatusCode());
@@ -242,7 +242,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(
                 [
@@ -272,7 +272,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
         } finally {
@@ -298,14 +298,14 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(
                 ['Your comment has NOT been registered because it did not pass the validation rules'],
                 PageStateTestFactory::get()->errors
             );
 
-            $commentAdd = CurrentTemplate::current()->get()->getTemplateVars('comment_add');
+            $commentAdd = CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add');
             self::assertIsArray($commentAdd);
             self::assertSame('Some Author', $commentAdd['AUTHOR']);
             // stripslashes() is a no-op here (no backslashes); htmlspecialchars()
@@ -328,12 +328,12 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame('desc', SessionServiceTestFactory::get()->getCommentsOrder());
             // The nav link toggles to the opposite of whatever order is now
             // active ('desc' -> offers 'ASC').
-            $orderUrl = CurrentTemplate::current()->get()->getTemplateVars('COMMENTS_ORDER_URL');
+            $orderUrl = CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENTS_ORDER_URL');
             self::assertIsString($orderUrl);
             self::assertStringContainsString('comments_order=ASC', $orderUrl);
         } finally {
@@ -433,11 +433,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         try {
             $this->seedUser(1, UserStatus::Admin);
             $this->renderComments($imageId);
-            $adminCount = CurrentTemplate::current()->get()->getTemplateVars('COMMENT_COUNT');
+            $adminCount = CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENT_COUNT');
 
             $this->seedUser(3, UserStatus::Normal);
             $this->renderComments($imageId);
-            $normalCount = CurrentTemplate::current()->get()->getTemplateVars('COMMENT_COUNT');
+            $normalCount = CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENT_COUNT');
 
             self::assertSame(2, $adminCount);
             self::assertSame(1, $normalCount);
@@ -459,8 +459,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $this->renderComments($imageId);
 
-        self::assertSame(0, CurrentTemplate::current()->get()->getTemplateVars('COMMENT_COUNT'));
-        self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('COMMENTS_ORDER_URL'));
+        self::assertSame(0, CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENT_COUNT'));
+        self::assertNull(CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENTS_ORDER_URL'));
     }
 
     public function testRenderSetsTheCommentsOrderUrlWhenTheImageHasExactlyOneComment(): void
@@ -475,8 +475,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         try {
             $this->renderComments($imageId);
 
-            self::assertSame(1, CurrentTemplate::current()->get()->getTemplateVars('COMMENT_COUNT'));
-            self::assertIsString(CurrentTemplate::current()->get()->getTemplateVars('COMMENTS_ORDER_URL'));
+            self::assertSame(1, CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENT_COUNT'));
+            self::assertIsString(CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENTS_ORDER_URL'));
         } finally {
             $this->conn->executeStatement('DELETE FROM comments WHERE id = ?', [$commentId->value]);
         }
@@ -506,8 +506,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         try {
             $this->renderComments($imageId);
 
-            self::assertSame(3, CurrentTemplate::current()->get()->getTemplateVars('COMMENT_COUNT'));
-            $navbar = CurrentTemplate::current()->get()->getTemplateVars('navbar');
+            self::assertSame(3, CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENT_COUNT'));
+            $navbar = CurrentTemplateTestFactory::get()->get()->getTemplateVars('navbar');
             self::assertIsArray($navbar);
             self::assertArrayHasKey('URL_NEXT', $navbar);
             self::assertIsString($navbar['URL_NEXT']);
@@ -543,7 +543,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $this->renderComments($imageId);
 
-        $commentAdd = CurrentTemplate::current()->get()->getTemplateVars('comment_add');
+        $commentAdd = CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add');
         self::assertIsArray($commentAdd);
         self::assertArrayHasKey('KEY', $commentAdd);
         self::assertIsString($commentAdd['KEY']);
@@ -580,9 +580,9 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $commentId, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $commentId, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
-            self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('comment_add'));
+            self::assertNull(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add'));
         } finally {
             $this->conn->executeStatement('DELETE FROM comments WHERE id = ?', [$commentId->value]);
         }
@@ -596,7 +596,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $this->renderComments($imageId);
 
-        self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('comment_add'));
+        self::assertNull(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add'));
     }
 
     public function testRenderHidesTheEmailPromptForAClassicUserWithARealRegisteredEmail(): void
@@ -606,7 +606,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $this->renderComments($imageId);
 
-        $commentAdd = CurrentTemplate::current()->get()->getTemplateVars('comment_add');
+        $commentAdd = CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add');
         self::assertIsArray($commentAdd);
         self::assertFalse($commentAdd['SHOW_EMAIL']);
     }
@@ -623,7 +623,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $this->renderComments($imageId);
 
-        $commentAdd = CurrentTemplate::current()->get()->getTemplateVars('comment_add');
+        $commentAdd = CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add');
         self::assertIsArray($commentAdd);
         self::assertTrue($commentAdd['SHOW_AUTHOR']);
         self::assertTrue($commentAdd['SHOW_EMAIL']);
@@ -643,9 +643,9 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
-            $commentAdd = CurrentTemplate::current()->get()->getTemplateVars('comment_add');
+            $commentAdd = CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add');
             self::assertIsArray($commentAdd);
             self::assertSame('', $commentAdd['AUTHOR']);
             self::assertSame('mutation-check.example.test', $commentAdd['WEBSITE_URL']);
@@ -677,7 +677,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame([[403, 'Forbidden']], $captured);
         } finally {
@@ -708,7 +708,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), $eventDispatcher, PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), $eventDispatcher, PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertIsArray($captured);
             self::assertArrayHasKey('action', $captured);
@@ -734,7 +734,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             $row = $this->findCommentRowByContent('Trimmed mutation content check.');
             self::assertSame('MutationTestAuthor', $row['author']);
@@ -758,7 +758,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             $row = $this->findCommentRowByContent('Zero author fallback check.');
             self::assertSame('guest', $row['author']);
@@ -781,7 +781,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(
                 ['Your comment has NOT been registered because it did not pass the validation rules'],
@@ -807,7 +807,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             $row = $this->findCommentRowByContent('Website url trim check.');
             self::assertSame('http://mutation-check.example.test', $row['website_url']);
@@ -835,7 +835,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
         } finally {
@@ -858,7 +858,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             $row = $this->findCommentRowByContent('Email trim check.');
             self::assertSame('mutation-check@example.test', $row['email']);
@@ -882,7 +882,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
         } finally {
@@ -897,7 +897,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     private function renderComments(int $imageId): array
     {
         $this->renderer()
-            ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+            ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
         return $this->renderedComments();
     }
@@ -969,7 +969,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
      */
     private function renderedComments(): array
     {
-        $vars = CurrentTemplate::current()->get()->getTemplateVars('comments');
+        $vars = CurrentTemplateTestFactory::get()->get()->getTemplateVars('comments');
 
         return is_array($vars) ? array_values($vars) : [];
     }

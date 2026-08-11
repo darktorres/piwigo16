@@ -15,8 +15,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -94,7 +94,7 @@ test('handle() delegates to CommentsPageRenderer::render() with every one of its
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'comments.tpl', 'title={$ADMIN_PAGE_TITLE}');
@@ -110,7 +110,7 @@ test('handle() delegates to CommentsPageRenderer::render() with every one of its
             commentsSubControllerTestAccessControl(),
             UrlServiceTestFactory::build(),
             $coreTabs,
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
             $eventDispatcher,
             CurrentConfigTestFactory::get(),
         );
@@ -124,7 +124,7 @@ test('handle() delegates to CommentsPageRenderer::render() with every one of its
             ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('title=User comments');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         commentsSubControllerTestRrmdir($root);

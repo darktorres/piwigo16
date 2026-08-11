@@ -15,8 +15,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -95,14 +95,14 @@ test('__invoke returns the raw help content directly for output=content_only, sk
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $controller = new AdminPopuphelpController(
             LangTestFactory::get(),
             adminPopuphelpTestAccessControl(),
             new EventDispatcher(),
             new PageState(),
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
         );
 
@@ -113,7 +113,7 @@ test('__invoke returns the raw help content directly for output=content_only, sk
             ->and((string) $response->getBody())
             ->toBe('');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         adminPopuphelpTestRrmdir($root);
@@ -125,7 +125,7 @@ test('__invoke returns a 400 "Hacking attempt!" response for an invalid page val
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'header.tpl', 'header');
@@ -136,7 +136,7 @@ test('__invoke returns a 400 "Hacking attempt!" response for an invalid page val
             adminPopuphelpTestAccessControl(),
             new EventDispatcher(),
             new PageState(),
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
         );
 
@@ -158,7 +158,7 @@ test('__invoke returns a 400 "Hacking attempt!" response for an invalid page val
             ->and((string) $response->getBody())
             ->toBe('Hacking attempt!');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         adminPopuphelpTestRrmdir($root);

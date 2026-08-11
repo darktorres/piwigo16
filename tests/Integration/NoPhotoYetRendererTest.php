@@ -32,9 +32,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
-    use Piwigo\Template\CurrentTemplate;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
+    use Piwigo\Tests\Support\CurrentTemplateTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -123,7 +123,7 @@ namespace Piwigo\Tests\Integration {
             if (! $userService instanceof UserService) {
                 throw new LogicException('Container returned an unexpected type for ' . UserService::class);
             }
-            $this->renderer = new NoPhotoYetRenderer(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()), new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), new PageState()), UrlServiceTestFactory::build(), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), new PageState(), new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(dirname(__DIR__, 2))), new ProcessCache(), CurrentConfigServiceTestFactory::get());
+            $this->renderer = new NoPhotoYetRenderer(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()), new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), new PageState()), UrlServiceTestFactory::build(), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new PageState(), new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(dirname(__DIR__, 2))), new ProcessCache(), CurrentConfigServiceTestFactory::get());
 
             // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
             // isAdmin() directly (real class methods), which read

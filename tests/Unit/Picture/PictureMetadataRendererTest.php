@@ -9,9 +9,9 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
@@ -69,12 +69,12 @@ beforeEach(function (): void {
         ->dataLocation = 'data/';
     picture_metadata_test_current_config()
         ->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 });
 
 afterEach(function (): void {
     picture_metadata_test_rrmdir($this->root);
-    CurrentTemplate::current()->reset();
+    CurrentTemplateTestFactory::get()->reset();
     Kernel::reset();
     CurrentConfigTestFactory::get()->reset();
 });
@@ -85,7 +85,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
         ->showIptc = false;
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), CurrentPathsTestFactory::get());
+    $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), CurrentPathsTestFactory::get());
 
-    expect(CurrentTemplate::current()->get()->getTemplateVars('metadata'))->toBeNull();
+    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata'))->toBeNull();
 });

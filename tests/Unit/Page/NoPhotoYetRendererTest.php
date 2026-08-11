@@ -23,9 +23,9 @@ use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -90,7 +90,7 @@ function noPhotoYetTestRenderer(AdminContext $adminContext): NoPhotoYetRenderer
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
         new EventDispatcher(),
         CurrentUserTestFactory::get(),
-        CurrentTemplate::current(),
+        CurrentTemplateTestFactory::get(),
         CurrentConfigTestFactory::get(),
         new PageState(),
         new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir())),
@@ -114,20 +114,20 @@ test('render() does nothing when the admin context is active', function (): void
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         // This guard is a pure early-return with almost no observable
         // side effect (matching this class's own docblock: "no message
         // inside administration") -- proven here by the fact that
-        // CurrentTemplate::current() is still the exact same instance
+        // CurrentTemplateTestFactory::get() is still the exact same instance
         // set above, not replaced by render()'s own real-theme Template
         // construction inside the guarded block.
         noPhotoYetTestRenderer(new AdminContext(active: true))
             ->render();
 
-        expect(CurrentTemplate::current()->get())->toBe($template);
+        expect(CurrentTemplateTestFactory::get()->get())->toBe($template);
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();
@@ -150,7 +150,7 @@ test('render() does nothing when photos already exist, only refreshing the no_ph
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $conn = DbConnection::build();
         $before = $conn->fetchOne('SELECT value FROM config' . " WHERE param = 'no_photo_yet'");
 
@@ -163,7 +163,7 @@ test('render() does nothing when photos already exist, only refreshing the no_ph
             ->and($after)
             ->toBe('"false"');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();

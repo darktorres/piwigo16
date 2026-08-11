@@ -12,8 +12,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
@@ -70,7 +70,7 @@ test('handle renders the real menubar-order admin screen with no registered bloc
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
@@ -108,7 +108,7 @@ test('handle renders the real menubar-order admin screen with no registered bloc
             ->toContain('menubar_admin_rendered=yes');
     } finally {
         $_POST = $post;
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();

@@ -11,6 +11,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -61,7 +62,7 @@ test('handle() fatal-errors when the site query param is missing', function (): 
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if (! $currentLogger instanceof CurrentLogger) {
@@ -92,7 +93,7 @@ test('handle() fatal-errors when the site query param is missing', function (): 
             ->toContain('site param missing or invalid');
     } finally {
         unset($_GET['site']);
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         siteUpdateSubControllerTestRrmdir($root);

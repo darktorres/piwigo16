@@ -7,8 +7,8 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
@@ -94,7 +94,7 @@ test('pluginsPerformAction returns a 403 WsErrorResponse when the submitted pwg_
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $ws = pwgExtensionsTestSubject();
         $server = Kernel::container()->get(Server::class);
@@ -115,7 +115,7 @@ test('pluginsPerformAction returns a 403 WsErrorResponse when the submitted pwg_
                 ->toBe(403);
         }
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         pwgExtensionsTestRrmdir($root);
@@ -127,7 +127,7 @@ test('themesPerformAction returns a 403 WsErrorResponse when the submitted pwg_t
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $ws = pwgExtensionsTestSubject();
         $server = Kernel::container()->get(Server::class);
@@ -148,7 +148,7 @@ test('themesPerformAction returns a 403 WsErrorResponse when the submitted pwg_t
                 ->toBe(403);
         }
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         pwgExtensionsTestRrmdir($root);

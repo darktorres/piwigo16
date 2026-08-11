@@ -7,8 +7,8 @@ use Piwigo\Controller\Admin\MaintenanceSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -63,7 +63,7 @@ test('handle() redirects when a maintenance action is submitted with the wrong C
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $subController = Kernel::container()->get(MaintenanceSubController::class);
         if (! $subController instanceof MaintenanceSubController) {
@@ -86,7 +86,7 @@ test('handle() redirects when a maintenance action is submitted with the wrong C
             ->toBe(302);
     } finally {
         unset($_GET['action'], $_REQUEST['pwg_token']);
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         maintenanceSubControllerTestRrmdir($root);

@@ -14,8 +14,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -99,14 +99,14 @@ test('handle() delegates to PictureFormatsPageRenderer::render(), which fatal-er
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $subController = new PictureFormatsSubController(
             LangTestFactory::get(),
             pictureFormatsSubControllerTestAccessControl(),
             UrlServiceTestFactory::build(),
             pictureFormatsSubControllerTestImageStdParams(),
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
             HtmlServiceTestFactory::build(),
             new InputValidator(),
             CurrentConfigTestFactory::get(),
@@ -127,7 +127,7 @@ test('handle() delegates to PictureFormatsPageRenderer::render(), which fatal-er
         expect((string) $exception->response()->getBody())
             ->toContain('image_id does not exist');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         pictureFormatsSubControllerTestRrmdir($root);

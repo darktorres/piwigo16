@@ -20,10 +20,10 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
@@ -111,7 +111,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
 
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
     }
 
     #[Override]
@@ -120,7 +120,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->removeEventHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
         DbConnection::build()->executeStatement('DELETE FROM integrity_ignored_anomalies');
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -142,7 +142,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplate::current());
+        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get());
     }
 
     public function testCheckReportsNoHeaderNoteWhenZeroAnomaliesAreFound(): void
@@ -333,7 +333,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $template = CurrentTemplate::current()->get();
+        $template = CurrentTemplateTestFactory::get()->get();
         $list = $template->getTemplateVars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
@@ -381,7 +381,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $list = CurrentTemplate::current()->get()->getTemplateVars('c13y_list');
+        $list = CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_correction_success_fct']);
@@ -405,7 +405,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $list = CurrentTemplate::current()->get()->getTemplateVars('c13y_list');
+        $list = CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
         self::assertFalse($list[0]['show_correction_success_fct']);
@@ -431,7 +431,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $template = CurrentTemplate::current()->get();
+        $template = CurrentTemplateTestFactory::get()->get();
         $list = $template->getTemplateVars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
@@ -460,7 +460,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $list = CurrentTemplate::current()->get()->getTemplateVars('c13y_list');
+        $list = CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_correction_bad_fct']);
@@ -483,7 +483,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $list = CurrentTemplate::current()->get()->getTemplateVars('c13y_list');
+        $list = CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['can_select']);
@@ -499,6 +499,6 @@ final class CheckIntegrityTest extends IntegrationTestCase
         // No 'check_integrity' filename ever gets setFilenames()'d, so
         // parse() never runs -- getTemplateVars() for a var nothing ever
         // assigned stays null.
-        self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('c13y_show_submit_ignore'));
+        self::assertNull(CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_show_submit_ignore'));
     }
 }

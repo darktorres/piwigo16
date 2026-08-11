@@ -21,6 +21,7 @@ use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\CurrentUser;
@@ -91,7 +92,7 @@ test('render skips every real DB-backed block when no listener has registered an
         ));
 
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'menubar.tpl', 'menubar_rendered=yes');
@@ -151,7 +152,7 @@ test('render skips every real DB-backed block when no listener has registered an
             ->and($template->getTemplateVars('MENUBAR'))
             ->toContain('menubar_rendered=yes');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();

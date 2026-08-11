@@ -41,8 +41,8 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -254,7 +254,7 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'user_activity.tpl', 'users={$nb_users}');
@@ -271,7 +271,7 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
             userActivitySubControllerTestAccessControl(),
             UrlServiceTestFactory::build(),
             $coreTabs,
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
             $activityService,
             userActivitySubControllerTestUserService($activityService),
             userActivitySubControllerTestImageService(),
@@ -306,7 +306,7 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
                 ->setParameters($row)
                 ->executeStatement();
         }
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         userActivitySubControllerTestRrmdir($root);

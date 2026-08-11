@@ -68,7 +68,7 @@ test('reset clears the published instance so get throws again', function (): voi
 
 test('CurrentConfigServiceTestFactory::get falls back to a memoized instance when Kernel is not booted', function (): void {
     // Memoized (not fresh-per-call), same reasoning as
-    // CurrentTemplate::current(): a caller that writes via current() in one
+    // CurrentTemplateTestFactory::get(): a caller that writes via current() in one
     // call and reads via current() in a later call must see the same
     // instance, or the write would be lost.
     $configService = current_config_service_test_config_service();

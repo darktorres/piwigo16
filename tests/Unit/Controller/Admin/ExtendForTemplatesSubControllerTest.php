@@ -25,8 +25,8 @@ use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -124,7 +124,7 @@ test('handle() delegates to ExtendForTemplatesPageRenderer::render() with nothin
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'extend_for_templates.tpl', 'title={$ADMIN_PAGE_TITLE}');
@@ -138,7 +138,7 @@ test('handle() delegates to ExtendForTemplatesPageRenderer::render() with nothin
             UrlServiceTestFactory::build(),
             new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), new EventDispatcher(), new CurrentConfig()),
             new PageState(),
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
             extendForTemplatesSubControllerTestCategoryService(),
             CurrentConfigTestFactory::get(),
             Paths::fromRoot($root),
@@ -153,7 +153,7 @@ test('handle() delegates to ExtendForTemplatesPageRenderer::render() with nothin
             ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('title=Extend for templates');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         extendForTemplatesSubControllerTestRrmdir($root);

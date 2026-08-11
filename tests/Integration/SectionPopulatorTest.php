@@ -47,11 +47,11 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -175,7 +175,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->sectionContextRegistry = $sectionContextRegistry;
 
         $this->setRegularUser();
-        CurrentTemplate::current()->set($this->makeTemplate());
+        CurrentTemplateTestFactory::get()->set($this->makeTemplate());
     }
 
     #[Override]
@@ -184,7 +184,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         unset($_SERVER['PATH_INFO'], $_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
         unset($_SESSION['pwg_image_order'], $_GET['action']);
         CurrentUserTestFactory::get()->reset();
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         PageStateTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -205,7 +205,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             LangTestFactory::get(),
             new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
             HtmlServiceTestFactory::build(),
-            CurrentTemplate::current()->get(),
+            CurrentTemplateTestFactory::get()->get(),
             $this->sectionRepo,
             $this->categoryService,
             $this->permissionService,
@@ -445,7 +445,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertSame(Section::Favorites, $ctx->section);
         // user 1's own 3 favorited images (1, 3, 5).
         self::assertCount(3, $ctx->items);
-        $favoriteVar = CurrentTemplate::current()->get()->getTemplateVars('favorite');
+        $favoriteVar = CurrentTemplateTestFactory::get()->get()->getTemplateVars('favorite');
         self::assertIsArray($favoriteVar);
         self::assertArrayHasKey('U_FAVORITE', $favoriteVar);
     }

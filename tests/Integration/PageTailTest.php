@@ -17,10 +17,10 @@ use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
@@ -80,7 +80,7 @@ final class PageTailTest extends IntegrationTestCase
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -97,7 +97,7 @@ final class PageTailTest extends IntegrationTestCase
             'severity' => Logger::OFF,
         ]), 'check_for_updates');
         UniqueExecLock::reset();
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);

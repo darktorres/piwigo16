@@ -16,6 +16,7 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Event\CombinablePreparse;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -35,7 +36,7 @@ use Piwigo\Users\UserStatus;
 // cache-miss build+write, the real-path-not-found guard, and CSS/JS
 // dispatch) is invoked directly via reflection further down, bypassing
 // combine()'s legacy-bootstrap-coupled entry points -- it only needs a
-// real, minimally-configured Template (CurrentTemplate::current()->set()), not a full
+// real, minimally-configured Template (CurrentTemplateTestFactory::get()->set()), not a full
 // themed request.
 //
 // combine() calls Piwigo\Auth\AccessControl::isAdmin() directly, which
@@ -107,7 +108,7 @@ test('computeForce stays false for a guest even when the file type would otherwi
     $_SERVER['HTTP_CACHE_CONTROL'] = 'max-age=0';
 
     try {
-        $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+        $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
         expect(invokeComputeForce($combiner))
             ->toBeFalse();
@@ -125,7 +126,7 @@ test('computeForce is true for an admin combining CSS with a cache-busting heade
     $_SERVER['HTTP_CACHE_CONTROL'] = 'max-age=0';
 
     try {
-        $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+        $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
         expect(invokeComputeForce($combiner))
             ->toBeTrue();
@@ -145,7 +146,7 @@ test('computeForce is true for an admin combining JS with templateCompileCheck o
     $_SERVER['HTTP_CACHE_CONTROL'] = 'max-age=0';
 
     try {
-        $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+        $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
         expect(invokeComputeForce($combiner))
             ->toBeTrue();
@@ -161,7 +162,7 @@ test('computeForce is false for an admin JS combine with no cache-busting header
     CurrentConfigTestFactory::get()->templateCompileCheck = false;
 
     try {
-        $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+        $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
         expect(invokeComputeForce($combiner))
             ->toBeFalse();
@@ -207,7 +208,7 @@ function invokeInitialKey(FileCombiner $combiner): array
 }
 
 test('initialKey is empty for JS combining', function (): void {
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     expect(invokeInitialKey($combiner))
         ->toBe([]);
@@ -215,7 +216,7 @@ test('initialKey is empty for JS combining', function (): void {
 
 test('initialKey seeds the scheme-less absolute root URL for CSS combining, so a scheme change alone busts the cache', function (): void {
     $urlService = UrlServiceTestFactory::build();
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', $urlService, Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', $urlService, Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     $key = invokeInitialKey($combiner);
 
@@ -227,7 +228,7 @@ test('initialKey seeds the scheme-less absolute root URL for CSS combining, so a
 });
 
 test('combine returns an empty array for no combinables', function (): void {
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     expect($combiner->combine())
         ->toBe([]);
@@ -235,7 +236,7 @@ test('combine returns an empty array for no combinables', function (): void {
 
 test('combine returns a single non-template combinable unchanged', function (): void {
     $combinable = new Combinable('my-script', 'themes/default/js/foo.js');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), [$combinable]);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), [$combinable]);
 
     $result = $combiner->combine();
 
@@ -247,7 +248,7 @@ test('combine returns a single non-template combinable unchanged', function (): 
 test('combine passes remote combinables through without combining them', function (): void {
     $remote = new Combinable('remote-script', 'https://cdn.example.com/foo.js');
     $local = new Combinable('local-script', 'themes/default/js/bar.js');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), [$remote, $local]);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), [$remote, $local]);
 
     $result = $combiner->combine();
 
@@ -266,7 +267,7 @@ test('combine flushes pending items before appending a remote combinable, preser
     CurrentConfigTestFactory::get()->templateCombineFiles = true;
     $first = new Combinable('first', 'themes/default/js/a.js');
     $remote = new Combinable('remote-script', 'https://cdn.example.com/foo.js');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), [$first, $remote]);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), [$first, $remote]);
 
     $result = $combiner->combine();
 
@@ -310,7 +311,7 @@ test('combine merges 2+ non-template files into a single combined output on disk
 
     $first = new Combinable('a', 'themes/default/js/a.js');
     $second = new Combinable('b', 'themes/default/js/b.js');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), [$first, $second]);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), [$first, $second]);
 
     try {
         $result = $combiner->combine();
@@ -354,7 +355,7 @@ test('combine does not rewrite an already-combined file on a second call (cache 
     file_put_contents($root . '/themes/default/js/b.js', "var b = 2;\n");
     CurrentConfigTestFactory::get()->templateCombineFiles = true;
 
-    $combinerFirst = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), [
+    $combinerFirst = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), [
         new Combinable('a', 'themes/default/js/a.js'),
         new Combinable('b', 'themes/default/js/b.js'),
     ]);
@@ -370,7 +371,7 @@ test('combine does not rewrite an already-combined file on a second call (cache 
         sleep(1);
         file_put_contents($root . '/themes/default/js/a.js', "var a = 999;\n");
 
-        $combinerSecond = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), [
+        $combinerSecond = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), [
             new Combinable('a', 'themes/default/js/a.js'),
             new Combinable('b', 'themes/default/js/b.js'),
         ]);
@@ -394,7 +395,7 @@ test('combine invalidates the multi-item cache when a source file\'s mtime chang
     CurrentConfigTestFactory::get()->templateCombineFiles = true;
     CurrentConfigTestFactory::get()->templateCompileCheck = true;
 
-    $combinerFirst = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), [
+    $combinerFirst = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), [
         new Combinable('a', 'themes/default/js/a.js'),
         new Combinable('b', 'themes/default/js/b.js'),
     ]);
@@ -405,7 +406,7 @@ test('combine invalidates the multi-item cache when a source file\'s mtime chang
         sleep(1);
         file_put_contents($root . '/themes/default/js/a.js', "var a = 999;\n");
 
-        $combinerSecond = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), [
+        $combinerSecond = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), [
             new Combinable('a', 'themes/default/js/a.js'),
             new Combinable('b', 'themes/default/js/b.js'),
         ]);
@@ -429,7 +430,7 @@ test('combine merges 2+ CSS files into a single combined output, with a stripped
     CurrentConfigTestFactory::get()->templateCombineFiles = true;
 
     $urlService = UrlServiceTestFactory::build();
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', $urlService, Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), [
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', $urlService, Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), [
         new Combinable('a', 'themes/default/css/a.css'),
         new Combinable('b', 'themes/default/css/b.css'),
     ]);
@@ -458,7 +459,7 @@ test('combine merges 2+ CSS files into a single combined output, with a stripped
 });
 
 test('add appends a single combinable', function (): void {
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
     $combinable = new Combinable('my-script', 'themes/default/js/foo.js');
 
     $combiner->add($combinable);
@@ -468,7 +469,7 @@ test('add appends a single combinable', function (): void {
 });
 
 test('add merges an array of combinables', function (): void {
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
     $first = new Combinable('first', 'themes/default/js/a.js');
     $second = new Combinable('second', 'themes/default/js/b.js');
 
@@ -610,10 +611,10 @@ test('combine reaches processCombinable for a single template combinable via flu
     CurrentConfigTestFactory::get()->dataLocation = '_data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $combiner->add($combinable);
@@ -630,7 +631,7 @@ test('combine reaches processCombinable for a single template combinable via flu
             ->and($result[0]->path)->not->toBe('themes/default/js/foo.js')
             ->and(file_exists($root . '/' . $result[0]->path))->toBeTrue();
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
@@ -646,10 +647,10 @@ test('processCombinable\'s single-file cache key is sensitive to the combinable\
     CurrentConfigTestFactory::get()->dataLocation = '_data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 
         $a = new Combinable('same-id', 'themes/default/js/foo.js');
         $a->is_template = true;
@@ -663,7 +664,7 @@ test('processCombinable\'s single-file cache key is sensitive to the combinable\
         expect($a->path)
             ->not->toBe($b->path);
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
@@ -678,10 +679,10 @@ test('processCombinable\'s single-file cache key is sensitive to the combinable\
     CurrentConfigTestFactory::get()->dataLocation = '_data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 
         $a = new Combinable('foo-js', 'themes/default/js/foo.js', '1.0');
         $a->is_template = true;
@@ -695,7 +696,7 @@ test('processCombinable\'s single-file cache key is sensitive to the combinable\
         expect($a->path)
             ->not->toBe($b->path);
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
@@ -714,10 +715,10 @@ test('processCombinable\'s single-file cache filename exactly matches the crc32b
     // pins the *16 and *36 base-conversion arguments precisely.
     CurrentConfigTestFactory::get()->templateCompileCheck = true;
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $header = '';
@@ -730,7 +731,7 @@ test('processCombinable\'s single-file cache filename exactly matches the crc32b
         expect($combinable->path)
             ->toBe($expectedFile);
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
@@ -749,10 +750,10 @@ test('processCombinable reuses an already-combined template file (matching a fil
     // is scoped to.
     CurrentConfigTestFactory::get()->templateCompileCheck = true;
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $header = '';
@@ -767,11 +768,11 @@ test('processCombinable reuses an already-combined template file (matching a fil
         // Second call: a *fresh* Combinable with the same original
         // path/version (so it recomputes the identical cache key), with
         // CurrentTemplate deliberately torn down first. If this fell
-        // through to the cache-miss branch, CurrentTemplate::current()->get() would
+        // through to the cache-miss branch, CurrentTemplateTestFactory::get()->get() would
         // throw LogicException -- returning cleanly instead proves the
         // cache-hit short-circuit really returns before ever touching the
         // template machinery.
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         $combinable2 = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable2->is_template = true;
         $header2 = '';
@@ -784,7 +785,7 @@ test('processCombinable reuses an already-combined template file (matching a fil
             ->and($combinable2->version)
             ->toBeFalse();
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
@@ -799,10 +800,10 @@ test('processCombinable builds and writes a new combined JS file on a cache miss
     CurrentConfigTestFactory::get()->dataLocation = '_data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $originalVersion = $combinable->version;
@@ -826,7 +827,7 @@ test('processCombinable builds and writes a new combined JS file on a cache miss
             // processJs(), not processCss().
             ->and(file_get_contents($root . '/' . $combinable->path))->toBe("var a = 1;\n");
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
@@ -844,10 +845,10 @@ test('processCombinable builds and writes a new combined CSS file on a cache mis
     CurrentConfigTestFactory::get()->dataLocation = '_data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
         $combinable = new Combinable('foo-css', 'themes/default/css/foo.css');
         $combinable->is_template = true;
         $header = '';
@@ -865,7 +866,7 @@ test('processCombinable builds and writes a new combined CSS file on a cache mis
             // happened -- processCss() (not processJs()) ran.
             ->and(file_get_contents($root . '/' . $combinable->path))->toBe("body{color:red;}\n");
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
@@ -886,12 +887,12 @@ test('processCombinable returns rendered content directly for a template combina
     CurrentConfigTestFactory::get()->dataLocation = '_data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $template = TemplateTestFactory::build();
         $template->smarty->assign('value', 42);
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $header = '';
@@ -907,7 +908,7 @@ test('processCombinable returns rendered content directly for a template combina
             ->toBe('themes/default/js/foo.js')
             ->and(is_dir($root . '/_data/combined'))->toBeFalse();
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
@@ -921,17 +922,17 @@ test('processCombinable throws when a template combinable points at a file that 
     CurrentConfigTestFactory::get()->dataLocation = '_data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
         $combinable = new Combinable('missing-js', 'themes/default/js/does-not-exist.js');
         $combinable->is_template = true;
         $header = '';
 
         invokeProcessCombinable($combiner, $combinable, false, false, $header);
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
@@ -944,7 +945,7 @@ test('processCss throws when a combined_css_postfilter listener returns somethin
     EventDispatcherTestFactory::get()->addEventHandler(CombinedCssPostfilter::class, static fn (): int => 42);
 
     $combinable = new Combinable('foo-css', 'themes/default/css/foo.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), EventDispatcherTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $header = '';
@@ -992,7 +993,7 @@ test('processCssRec resolves a nested @import file recursively into the combined
     file_put_contents($root . '/themes/default/css/main.css', "@import 'sub.css';\nbody{color:red;}\n");
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $header = '';
@@ -1016,7 +1017,7 @@ test('processCssRec strips path-traversal, remote, and unreadable @import direct
     );
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $header = '';
@@ -1054,7 +1055,7 @@ test('processCssRec still strips a "\.\." @import even when the path it traverse
     file_put_contents($root . '/themes/default/css/sibling.css', "p{color:pink;}\n");
 
     $combinable = new Combinable('main-css', 'themes/default/css/sub/main.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $header = '';
@@ -1092,7 +1093,7 @@ test('processCssRec throws when an @import target passes the is_readable() check
         ->toBeTrue();
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -1115,7 +1116,7 @@ test('processCssRec rewrites a relative url() reference into an embellished abso
     );
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $header = '';
@@ -1155,7 +1156,7 @@ test('processCssRec only rewrites url() references starting with "/" when checki
     );
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $header = '';
@@ -1186,7 +1187,7 @@ test('processCssRec resolves a relative url() reference against the CSS file\'s 
 
     $combinable = new Combinable('main-css', 'themes/default/css/sub/main.css');
     $urlService = UrlServiceTestFactory::build();
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', $urlService, Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', $urlService, Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $header = '';
@@ -1210,7 +1211,7 @@ test('processCssRec leaves a remote or data-URI url() reference untouched', func
     );
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $header = '';
@@ -1237,7 +1238,7 @@ test('processCssRec resolves a doubly-nested @import against the correct subdire
     file_put_contents($root . '/themes/default/css/subdir/nested.css', "p{color:green;}\n");
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $header = '';
@@ -1261,7 +1262,7 @@ test('processCombinable throws for a non-template combinable whose file cannot b
     mkdir($root, 0o777, true);
 
     $combinable = new Combinable('missing', 'themes/default/js/does-not-exist.js');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -1279,7 +1280,7 @@ test('processCombinable dispatches a non-template combinable to processJs when r
     file_put_contents($root . '/themes/default/js/foo.js', "  var a = 1;  ;;\n");
 
     $combinable = new Combinable('foo', 'themes/default/js/foo.js');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
         $header = '';
@@ -1301,11 +1302,11 @@ test('processCombinable registers the template file under a handle combining the
     CurrentConfigTestFactory::get()->dataLocation = '_data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
     $template = TemplateTestFactory::build();
 
     try {
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $combinable = new Combinable('my-handle-id', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $header = '';
@@ -1315,7 +1316,7 @@ test('processCombinable registers the template file under a handle combining the
         expect($template->files)
             ->toHaveKey('js.my-handle-id');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
@@ -1335,10 +1336,10 @@ test('processCombinable notifies combinable_preparse listeners before parsing a 
         $notifiedWith = $event;
     });
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), EventDispatcherTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
 
     try {
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $header = '';
@@ -1356,7 +1357,7 @@ test('processCombinable notifies combinable_preparse listeners before parsing a 
             ->toBe($combinable);
     } finally {
         EventDispatcherTestFactory::get()->reset();
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }

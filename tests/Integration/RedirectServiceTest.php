@@ -19,6 +19,7 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
@@ -80,10 +81,10 @@ final class RedirectServiceTest extends IntegrationTestCase
         $this->currentConfig()
             ->sendPiwigoInfos = false;
 
-        // Deliberately NOT initialised here: CurrentTemplate::current()->reset()/
+        // Deliberately NOT initialised here: CurrentTemplateTestFactory::get()->reset()/
         // Lang::reset() are the actual precondition the early-crash branch
         // needs, so each test below sets them up (or not) explicitly.
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         LangTestFactory::get()->reset();
     }
 
@@ -94,7 +95,7 @@ final class RedirectServiceTest extends IntegrationTestCase
             'severity' => Logger::OFF,
         ]), 'check_for_updates');
         UniqueExecLock::reset();
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         LangTestFactory::get()->reset();
         $this->currentConfig()
             ->reset();
@@ -136,7 +137,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // nor Lang's own langInfo has been initialised (setUp() already
         // reset both) -- exactly what a fatal before common.inc.php
         // finishes bootstrapping would look like.
-        self::assertFalse(CurrentTemplate::current()->isInitialized());
+        self::assertFalse(CurrentTemplateTestFactory::get()->isInitialized());
         self::assertFalse(LangTestFactory::get()->isLangInfoInitialized());
 
         $execId = UniqueExecLock::begins(new Logger([
@@ -155,11 +156,11 @@ final class RedirectServiceTest extends IntegrationTestCase
         }
 
         self::assertSame(200, $status);
-        // The early-crash branch really did build (and CurrentTemplate::current()->set())
+        // The early-crash branch really did build (and CurrentTemplateTestFactory::get()->set())
         // a fresh Template -- proven by isInitialized() now being true and
         // the rendered body containing content only a real compiled
         // header.tpl/redirect.tpl/footer.tpl chain produces.
-        self::assertTrue(CurrentTemplate::current()->isInitialized());
+        self::assertTrue(CurrentTemplateTestFactory::get()->isInitialized());
         self::assertStringContainsString('A custom redirect message', $body);
         self::assertStringContainsString('href="http://example.test/target.php"', $body);
     }
@@ -180,7 +181,7 @@ final class RedirectServiceTest extends IntegrationTestCase
             'code' => 'en_UK',
             'direction' => 'ltr',
         ]);
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
         $execId = UniqueExecLock::begins(new Logger([
             'severity' => Logger::OFF,
@@ -207,7 +208,7 @@ final class RedirectServiceTest extends IntegrationTestCase
             'code' => 'en_UK',
             'direction' => 'ltr',
         ]);
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
         // Would take the redirectHttp() branch (a bare 302, no rendered
         // body) if $refresh_time were ignored -- forcing the http method
         // here proves it's genuinely $refresh_time, not

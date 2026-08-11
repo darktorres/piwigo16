@@ -10,6 +10,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -23,7 +24,7 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * Covers the "synchronization is disabled" fatalError() guard. Unlike
  * `UpdatesSubController`'s equivalent guard, `$this->currentTemplate->get()`
  * runs BEFORE the config check, so a real Template must already be set on
- * `CurrentTemplate::current()` even to reach it. Every other branch (new
+ * `CurrentTemplateTestFactory::get()` even to reach it. Every other branch (new
  * site creation, site actions, the sites-list happy path) needs real DB
  * rows/filesystem paths and is not attempted here.
  */
@@ -59,7 +60,7 @@ test('handle() fatal-errors when synchronization is disabled', function (): void
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->enableSynchronization = false;
@@ -84,7 +85,7 @@ test('handle() fatal-errors when synchronization is disabled', function (): void
         expect((string) $exception->response()->getBody())
             ->toContain('synchronization is disabled');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         siteManagerSubControllerTestRrmdir($root);

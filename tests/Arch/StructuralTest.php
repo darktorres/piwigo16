@@ -252,7 +252,6 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Session/SessionService.php',
         '/src/Piwigo/Lang/Translator.php',
         '/src/Piwigo/PluginConfig/EventDispatcher.php',
-        '/src/Piwigo/Template/CurrentTemplate.php',
         '/src/Piwigo/Image/SrcImage.php',
         '/src/Piwigo/Image/DerivativeImage.php',
         '/src/Piwigo/Template/ScriptLoader.php',
@@ -480,32 +479,6 @@ test('CurrentTemplate::reset() is only called from tests/', function (): void {
     ];
 
     expect(describeCallSites($hits))
-        ->toBe([]);
-});
-
-test('CurrentTemplate::current() has zero remaining production callers', function (): void {
-    // `current()` has no remaining production call sites. It stays as a
-    // real, permanent accessor for the pre-boot fallback path and for
-    // ~230 Unit/Integration test call sites across ~30 files that reach
-    // the shared/fallback instance directly for setup. This test remains
-    // as a regression guard: it fails the moment any src/Piwigo or
-    // public/ file calls `current()` again outside a legitimate new
-    // addition to the allow-list.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [];
-
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentTemplate::current('),
-        ...findCallSitesOutsideComments($repoRoot . '/public', 'CurrentTemplate::current('),
-    ];
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))
         ->toBe([]);
 });
 

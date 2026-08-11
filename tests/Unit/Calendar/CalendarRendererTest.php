@@ -15,8 +15,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -86,7 +86,7 @@ test('render() returns a no-op result for a non-categories section with no items
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $renderer = new CalendarRenderer(
             LangTestFactory::get(),
@@ -115,7 +115,7 @@ test('render() returns a no-op result for a non-categories section with no items
             ->and($result->chronologyView)
             ->toBeNull();
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();

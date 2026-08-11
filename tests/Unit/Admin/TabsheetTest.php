@@ -8,9 +8,9 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
@@ -57,12 +57,12 @@ beforeEach(function (): void {
     }
     $currentConfig->dataLocation = 'data/';
     $currentConfig->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build($root));
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build($root));
 });
 
 afterEach(function (): void {
     tabsheetTestRrmdir($this->root);
-    CurrentTemplate::current()->reset();
+    CurrentTemplateTestFactory::get()->reset();
     Kernel::reset();
     CurrentConfigTestFactory::get()->reset();
 });
@@ -304,9 +304,9 @@ test('assign makes the sheets array available to the tabsheet.tpl template befor
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General Settings', '/general');
 
-    $tabsheet->assign(CurrentTemplate::current());
+    $tabsheet->assign(CurrentTemplateTestFactory::get());
 
-    $template = CurrentTemplate::current()->get();
+    $template = CurrentTemplateTestFactory::get()->get();
     expect($template->getTemplateVars('MY_TABSHEET'))
         ->toBe('CAPTION:General Settings');
 });
@@ -315,9 +315,9 @@ test('assign clears the temporary tabsheet template var after compiling it', fun
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General', '/general');
 
-    $tabsheet->assign(CurrentTemplate::current());
+    $tabsheet->assign(CurrentTemplateTestFactory::get());
 
-    $template = CurrentTemplate::current()->get();
+    $template = CurrentTemplateTestFactory::get()->get();
     expect($template->getTemplateVars('tabsheet'))
         ->toBeNull();
 });
@@ -338,9 +338,9 @@ test('assign writes the sheets, the selected key, and the bracketed selected cap
     $tabsheet->add('general', 'General Settings', '/general', true);
     $tabsheet->add('advanced', 'Advanced', '/advanced');
 
-    $tabsheet->assign(CurrentTemplate::current());
+    $tabsheet->assign(CurrentTemplateTestFactory::get());
 
-    $template = CurrentTemplate::current()->get();
+    $template = CurrentTemplateTestFactory::get()->get();
     expect($template->getTemplateVars('tabsheet_selected'))
         ->toBe('general');
     expect($template->getTemplateVars('MY_TITLE'))
@@ -351,9 +351,9 @@ test('assign does not set the titlename var when nothing is selected', function 
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General', '/general');
 
-    $tabsheet->assign(CurrentTemplate::current());
+    $tabsheet->assign(CurrentTemplateTestFactory::get());
 
-    $template = CurrentTemplate::current()->get();
+    $template = CurrentTemplateTestFactory::get()->get();
     expect($template->getTemplateVars('tabsheet_selected'))
         ->toBe('');
     expect($template->getTemplateVars('MY_TITLE'))

@@ -9,8 +9,8 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
@@ -63,7 +63,7 @@ test('runDispatch denies access with a 401 for a logged-in non-admin user', func
         CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(999),
@@ -99,7 +99,7 @@ test('runDispatch denies access with a 401 for a logged-in non-admin user', func
             ->and((string) $exception->response()->getBody())
             ->toContain('You are not authorized to access the requested page');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();

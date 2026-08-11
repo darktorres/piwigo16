@@ -14,8 +14,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -92,7 +92,7 @@ test('render() assigns the comments page context and tabsheet without any real t
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'comments.tpl', 'title={$ADMIN_PAGE_TITLE}');
@@ -104,7 +104,7 @@ test('render() assigns the comments page context and tabsheet without any real t
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
 
         new CommentsPageRenderer()
-            ->render(LangTestFactory::get(), commentsPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, CurrentTemplate::current(), $eventDispatcher, CurrentConfigTestFactory::get());
+            ->render(LangTestFactory::get(), commentsPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), $eventDispatcher, CurrentConfigTestFactory::get());
 
         expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('User comments')
@@ -116,7 +116,7 @@ test('render() assigns the comments page context and tabsheet without any real t
         expect(is_string($pwgToken) && $pwgToken !== '')
             ->toBeTrue();
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         commentsPageTestRrmdir($root);

@@ -16,8 +16,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -94,7 +94,7 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'history.tpl', 'start={$START}');
@@ -110,7 +110,7 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
             historySubControllerTestAccessControl(),
             UrlServiceTestFactory::build(),
             $coreTabs,
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
             $eventDispatcher,
             new InputValidator(),
@@ -126,7 +126,7 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
             ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('start=' . $today);
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         historySubControllerTestRrmdir($root);

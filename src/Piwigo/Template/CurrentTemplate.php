@@ -12,22 +12,14 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use LogicException;
-use Piwigo\Core\Kernel;
 
 /**
  * Container-shared instance holding the current request's page-rendering
- * `Template` instance.
- *
- * `current()` is a permanent accessor for two real, ongoing uses: (1) the
- * pre-boot fallback path itself (memoized via
- * `self::$fallback ??= new self()`, same "load once, read/write many
- * times per request" shape `Translator`/`EventDispatcher`/`ImageStdParams`/
- * `PageState`/`CurrentUser` share), and (2) Unit/Integration test setup --
- * ~230 call sites across ~30 test files reach the shared/fallback instance
- * directly through `current()` to seed or assert template state, matching
- * `reset()`'s own "test-only" role below. Neither use carries the
- * worker-mode risk of stale cross-request state, since tests never run
- * inside a FrankenPHP worker serving concurrent real requests.
+ * `Template` instance. Constructed/resolved via DI only -- every real
+ * consumer resolves it via the DI container (from within
+ * `Piwigo\Bootstrap`) or via constructor-injected `private readonly
+ * CurrentTemplate $currentTemplate`. Tests resolve it via
+ * `Piwigo\Tests\Support\CurrentTemplateTestFactory::get()` instead.
  *
  * Not every `Template` instance in the app goes through this registry --
  * e.g. `MailService`'s email-rendering `Template` instances are genuinely
@@ -38,23 +30,7 @@ use Piwigo\Core\Kernel;
  */
 final class CurrentTemplate
 {
-    private static ?self $fallback = null;
-
     private ?Template $template = null;
-
-    public static function current(): self
-    {
-        if (Kernel::isBooted()) {
-            $instance = Kernel::container()->get(self::class);
-            if (! $instance instanceof self) {
-                throw new LogicException('Container returned an unexpected type for ' . self::class);
-            }
-
-            return $instance;
-        }
-
-        return self::$fallback ??= new self();
-    }
 
     public function get(): Template
     {

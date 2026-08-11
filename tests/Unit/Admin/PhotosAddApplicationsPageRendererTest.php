@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Piwigo\Admin\PhotosAddApplicationsPageRenderer;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
@@ -63,7 +63,7 @@ test('render() assigns the page title and parses the photos_add handle into ADMI
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'photos_add.tpl', 'title={$ADMIN_PAGE_TITLE}');
@@ -71,7 +71,7 @@ test('render() assigns the page title and parses the photos_add handle into ADMI
         $template->setFilename('photos_add', 'photos_add.tpl');
 
         new PhotosAddApplicationsPageRenderer()
-            ->render(LangTestFactory::get(), CurrentTemplate::current());
+            ->render(LangTestFactory::get(), CurrentTemplateTestFactory::get());
 
         expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('Upload Photos')
@@ -79,7 +79,7 @@ test('render() assigns the page title and parses the photos_add handle into ADMI
             ->toBe('title=Upload Photos');
     } finally {
         photosAddApplicationsTestRrmdir($root);
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
     }

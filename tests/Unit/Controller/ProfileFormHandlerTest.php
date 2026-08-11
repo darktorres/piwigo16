@@ -8,8 +8,8 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
@@ -131,7 +131,7 @@ test('loadIntoTemplate populates the real profile form template context', functi
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),
             username: null,
@@ -162,7 +162,7 @@ test('loadIntoTemplate populates the real profile form template context', functi
             ->and($template->getTemplateVars('F_ACTION'))
             ->toBe('admin.php?page=user_list');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();

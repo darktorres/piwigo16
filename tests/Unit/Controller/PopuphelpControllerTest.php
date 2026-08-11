@@ -15,8 +15,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -91,7 +91,7 @@ test('__invoke returns a 400 "Hacking attempt!" response for a page value with d
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'header.tpl', 'header');
@@ -102,7 +102,7 @@ test('__invoke returns a 400 "Hacking attempt!" response for a page value with d
             popuphelpTestAccessControl(),
             new EventDispatcher(),
             new PageState(),
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
         );
 
@@ -126,7 +126,7 @@ test('__invoke returns a 400 "Hacking attempt!" response for a page value with d
             ->and((string) $response->getBody())
             ->toBe('Hacking attempt!');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         popuphelpTestRrmdir($root);

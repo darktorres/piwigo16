@@ -194,7 +194,14 @@ return [
     // per-request (runtime theme/path parameters) -- see
     // src/Piwigo/Core/TemplateInterface.php's own docblock and
     // Piwigo\Template\CurrentTemplate.
-    TemplateInterface::class => factory(static fn (): Template => CurrentTemplate::current()->get()),
+    TemplateInterface::class => factory(static function (ContainerInterface $c): Template {
+        $currentTemplate = $c->get(CurrentTemplate::class);
+        if (! $currentTemplate instanceof CurrentTemplate) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
+        }
+
+        return $currentTemplate->get();
+    }),
 
     // Interface binding -- Piwigo\Users\UserRepository provides the
     // webmaster mail address; Piwigo\Mail\MailService takes
@@ -207,7 +214,8 @@ return [
     // implementation is the request's own Piwigo\Template\Template
     // instance (constructed with runtime path/theme strings, never
     // container-managed) -- SrcImage::themeConf() reaches it via
-    // Piwigo\Template\CurrentTemplate::current()->get() instead.
+    // Piwigo\Core\CurrentThemeConfProvider::current()->get()->themeConf($key)
+    // instead.
     WebmasterMailProviderInterface::class => get(UserRepository::class),
 
     // RouteCollection has no container entry of its own -- a real

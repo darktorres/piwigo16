@@ -13,10 +13,10 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -72,7 +72,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
             'code' => 'en_UK',
             'direction' => 'ltr',
         ]);
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
         $this->renderer = new PageHeaderRenderer();
     }
@@ -80,7 +80,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         PageStateTestFactory::get()->reset();
         parent::tearDown();
     }
@@ -89,17 +89,17 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         PageStateTestFactory::get()->addHeaderNote('Photos posted within the last 3 days.');
 
-        $this->renderer->render('Header Notes Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
+        $this->renderer->render('Header Notes Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
-        $output = CurrentTemplate::current()->get()->fetchOutput();
+        $output = CurrentTemplateTestFactory::get()->get()->fetchOutput();
         self::assertStringContainsString('Photos posted within the last 3 days.', $output);
     }
 
     public function testRenderOmitsTheHeaderNotesContainerWhenPageStateHasNone(): void
     {
-        $this->renderer->render('No Header Notes Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
+        $this->renderer->render('No Header Notes Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
-        $output = CurrentTemplate::current()->get()->fetchOutput();
+        $output = CurrentTemplateTestFactory::get()->get()->fetchOutput();
         self::assertStringNotContainsString('Photos posted within the last', $output);
     }
 
@@ -111,14 +111,14 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         }
         $currentConfig->metaRef = false;
 
-        $this->renderer->render('Meta Robots Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
+        $this->renderer->render('Meta Robots Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
         self::assertSame([
             'noindex' => 1,
             'nofollow' => 1,
         ], PageStateTestFactory::get()->metaRobots);
 
-        $output = CurrentTemplate::current()->get()->fetchOutput();
+        $output = CurrentTemplateTestFactory::get()->get()->fetchOutput();
         self::assertStringContainsString('<meta name="robots" content="noindex,nofollow">', $output);
     }
 
@@ -130,7 +130,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         }
         $currentConfig->metaRef = true;
 
-        $this->renderer->render('Meta Ref Enabled Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
+        $this->renderer->render('Meta Ref Enabled Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
         self::assertSame([], PageStateTestFactory::get()->metaRobots);
     }

@@ -18,6 +18,7 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -88,7 +89,7 @@ beforeEach(function (): void {
     // this set() call is invisible to every later current()->get() read
     // in this file (same pitfall as Translator/EventDispatcher/CurrentUser).
     $template = makePictureCommentTestTemplate($root);
-    CurrentTemplate::current()->set($template);
+    CurrentTemplateTestFactory::get()->set($template);
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
         username: Username::from('torres'),
@@ -103,7 +104,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     picture_comment_test_rrmdir($this->root);
-    CurrentTemplate::current()->reset();
+    CurrentTemplateTestFactory::get()->reset();
     Kernel::reset();
     CurrentUserTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->reset();
@@ -140,10 +141,10 @@ test('render does nothing when no related category is commentable', function ():
         [
             'commentable' => 0,
         ],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
-    expect(CurrentTemplate::current()->get()->getTemplateVars('comments'))->toBeNull()
-        ->and(CurrentTemplate::current()->get()->getTemplateVars('comment_add'))->toBeNull();
+    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comments'))->toBeNull()
+        ->and(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add'))->toBeNull();
 });
 
 // A mutation-testing sweep found `(bool) $category['commentable']` inside
@@ -216,7 +217,7 @@ test('render only counts the first commentable related category then stops (`bre
             [
                 'id' => 999,
             ], // no 'commentable' key -- only reached by `continue`
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     } finally {
@@ -247,7 +248,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
             [
                 'commentable' => false,
             ],
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -284,7 +285,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
             [
                 'commentable' => true,
             ],
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -322,9 +323,9 @@ test('render lets a guest post a comment when comments_forall is on', function (
         [
             'commentable' => false,
         ],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
-    expect(CurrentTemplate::current()->get()->getTemplateVars('comments'))->toBeNull();
+    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comments'))->toBeNull();
 });
 
 test('render does not reject a logged-in (non-guest) user\'s posted comment even when comments_forall is off (`and`, not `or`)', function (): void {
@@ -356,7 +357,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     CurrentConfigTestFactory::get()->commentsForall = false;
     $_POST['content'] = 'nice photo!';
     file_put_contents(CurrentPathsTestFactory::get()->root . '/comment_list.tpl', 'STATIC-COMMENT-LIST-CONTENT');
-    CurrentTemplate::current()->get()->setTemplateDir(CurrentPathsTestFactory::get()->root);
+    CurrentTemplateTestFactory::get()->get()->setTemplateDir(CurrentPathsTestFactory::get()->root);
 
     $renderer = new PictureCommentRenderer();
     // A nonexistent image id keeps countForImage()'s real COUNT(*) query
@@ -367,8 +368,8 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
         [
             'commentable' => true,
         ],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
-    expect(CurrentTemplate::current()->get()->getTemplateVars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')
-        ->and(CurrentTemplate::current()->get()->getTemplateVars('comments'))->toBe([]);
+    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')
+        ->and(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comments'))->toBe([]);
 });

@@ -14,10 +14,10 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -94,14 +94,14 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // that reads it back with raw SQL.
         $this->conn->executeStatement("DELETE FROM config WHERE param = 'fs_quick_check_last_check'");
 
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
     }
 
     #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement("DELETE FROM config WHERE param = 'fs_quick_check_last_check'");
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -165,7 +165,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // Every fixture image resolves to a real file and none of them
         // share a path, so neither the missing-photos nor the
         // duplicate-paths branch ever assigns 'header_msgs'.
-        self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('header_msgs'));
+        self::assertNull(CurrentTemplateTestFactory::get()->get()->getTemplateVars('header_msgs'));
     }
 
     // -------------------------------------------------- run-once guard
@@ -271,7 +271,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
             self::assertSame(
                 ['We have found 2 duplicate paths. Details provided by plugin Check Uploads'],
-                CurrentTemplate::current()->get()->getTemplateVars('header_msgs')
+                CurrentTemplateTestFactory::get()->get()->getTemplateVars('header_msgs')
             );
         } finally {
             $this->conn->executeStatement(

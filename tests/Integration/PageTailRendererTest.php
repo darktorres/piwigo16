@@ -19,10 +19,10 @@ use Piwigo\Page\PageTailRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -72,7 +72,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
         CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 2,
@@ -95,7 +95,7 @@ final class PageTailRendererTest extends IntegrationTestCase
             UrlServiceTestFactory::build(),
             new EventDispatcher(),
             PageStateTestFactory::get(),
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
             new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get())
         );
@@ -104,7 +104,7 @@ final class PageTailRendererTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         PageStateTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         $_SESSION = [];

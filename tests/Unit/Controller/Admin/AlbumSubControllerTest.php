@@ -9,6 +9,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -57,7 +58,7 @@ test('handle() fatal-errors when cat_id does not match a real album', function (
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $subController = Kernel::container()->get(AlbumSubController::class);
         if (! $subController instanceof AlbumSubController) {
@@ -84,7 +85,7 @@ test('handle() fatal-errors when cat_id does not match a real album', function (
         expect((string) $exception->response()->getBody())
             ->toContain('unknown album');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         albumSubControllerTestRrmdir($root);

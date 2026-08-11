@@ -10,7 +10,7 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 /**
  * Piwigo\Core\CurrentThemeConfProvider's own current() is the exact same
  * "container-shared when booted, memoized static fallback otherwise"
- * shape as Piwigo\Template\CurrentTemplate::current() (see
+ * shape as Piwigo\Tests\Support\CurrentTemplateTestFactory::get() (see
  * CurrentTemplateTest's own equivalent pair of tests below) -- this class
  * had zero dedicated coverage of current() itself, only indirect exercise
  * via SrcImageTest's helper, which always runs with Kernel already booted

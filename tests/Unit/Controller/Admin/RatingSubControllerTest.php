@@ -10,8 +10,8 @@ use Piwigo\Controller\Admin\RatingSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
@@ -65,7 +65,7 @@ test('handle() denies access with a 401 for a logged-in non-admin user', functio
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(999),
@@ -99,7 +99,7 @@ test('handle() denies access with a 401 for a logged-in non-admin user', functio
             ->and((string) $exception->response()->getBody())
             ->toContain('You are not authorized to access the requested page');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         ratingSubControllerTestRrmdir($root);

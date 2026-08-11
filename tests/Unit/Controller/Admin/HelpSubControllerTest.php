@@ -16,8 +16,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -100,7 +100,7 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'help.tpl', 'title={$HELP_SECTION_TITLE}');
@@ -119,7 +119,7 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
             $eventDispatcher,
             new PageState(),
             CurrentUserTestFactory::get(),
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
         );
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
@@ -129,7 +129,7 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
             ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('title=Add Photos');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();

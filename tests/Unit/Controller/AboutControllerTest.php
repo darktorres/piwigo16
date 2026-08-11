@@ -16,9 +16,9 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
@@ -92,7 +92,7 @@ test('invoke renders the real about page for a guest visitor, with menubar/updat
         ));
 
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'about.tpl', 'about_rendered=yes');
@@ -115,7 +115,7 @@ test('invoke renders the real about page for a guest visitor, with menubar/updat
             ->and($template->getTemplateVars('PAGE_TITLE'))
             ->toBe('About Piwigo');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentConfigServiceTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();

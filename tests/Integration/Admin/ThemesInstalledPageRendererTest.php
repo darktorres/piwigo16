@@ -19,11 +19,11 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\WsContext;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -100,7 +100,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
         CurrentConfigServiceTestFactory::get()->set($this->configService);
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
         $urlService = UrlServiceTestFactory::build();
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
@@ -126,7 +126,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), $wsContext, CurrentUserTestFactory::get(), CurrentPathsTestFactory::get());
+        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), $wsContext, CurrentUserTestFactory::get(), CurrentPathsTestFactory::get());
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);
@@ -144,7 +144,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         EventDispatcherTestFactory::get()->reset();
         Kernel::reset();
         if (is_dir($this->fixtureRoot)) {
@@ -172,7 +172,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         $this->renderer->render('themes');
 
-        $tplThemes = CurrentTemplate::current()->get()->getTemplateVars('tpl_themes');
+        $tplThemes = CurrentTemplateTestFactory::get()->get()->getTemplateVars('tpl_themes');
         self::assertIsArray($tplThemes);
 
         $ids = array_map(

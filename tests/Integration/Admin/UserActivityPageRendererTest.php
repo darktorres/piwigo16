@@ -21,11 +21,11 @@ use Piwigo\Group\GroupService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -115,7 +115,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
         $_GET = [];
     }
@@ -130,7 +130,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             $this->deletedActivityRows = [];
         }
         $_GET = [];
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         // CoreTabs itself has no reset() (its $context/$urlService statics
         // are overwritten by whichever real request runs next -- same
         // "no reset needed" shape as every other CoreTabs-touching
@@ -189,9 +189,9 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         }
 
         new UserActivityPageRenderer()
-            ->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get());
+            ->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplateTestFactory::get(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get());
 
-        $template = CurrentTemplate::current()->get();
+        $template = CurrentTemplateTestFactory::get()->get();
         self::assertSame([], $template->getTemplateVars('ulist'));
     }
 }

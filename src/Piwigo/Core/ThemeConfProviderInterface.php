@@ -11,11 +11,11 @@ namespace Piwigo\Core;
  * direction as `HtmlRenderingInterface`/`MailerInterface`) so SrcImage can
  * depend downward on this instead. `Template implements` it;
  * `SrcImage::themeConf()` reads the request's own Template instance via
- * `Piwigo\Template\CurrentTemplate::current()->get()`, not a container
- * binding for this interface itself: Template's constructor takes runtime
- * path/theme strings and is never container-managed, unlike the
- * autowirable implementations behind the other Core interfaces in
- * config/container.php.
+ * `Piwigo\Core\CurrentThemeConfProvider::current()->get()->themeConf($key)`,
+ * not a container binding for this interface itself: Template's
+ * constructor takes runtime path/theme strings and is never
+ * container-managed, unlike the autowirable implementations behind the
+ * other Core interfaces in config/container.php.
  */
 interface ThemeConfProviderInterface
 {

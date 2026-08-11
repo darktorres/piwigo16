@@ -7,8 +7,8 @@ use Piwigo\Controller\Admin\PermalinksSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -61,7 +61,7 @@ test('handle() redirects when a permalink set is submitted with the wrong CSRF t
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $subController = Kernel::container()->get(PermalinksSubController::class);
         if (! $subController instanceof PermalinksSubController) {
@@ -84,7 +84,7 @@ test('handle() redirects when a permalink set is submitted with the wrong CSRF t
             ->toBe(302);
     } finally {
         unset($_POST['set_permalink'], $_POST['cat_id'], $_REQUEST['pwg_token']);
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         permalinksSubControllerTestRrmdir($root);

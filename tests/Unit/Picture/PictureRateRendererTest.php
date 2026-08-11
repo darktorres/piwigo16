@@ -9,9 +9,9 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Rate\RateEntity;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -53,12 +53,12 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot($root));
     CurrentConfigTestFactory::get()->dataLocation = 'data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 });
 
 afterEach(function (): void {
     picture_rate_test_rrmdir($this->root);
-    CurrentTemplate::current()->reset();
+    CurrentTemplateTestFactory::get()->reset();
     Kernel::reset();
     CurrentConfigTestFactory::get()->reset();
 });
@@ -69,10 +69,10 @@ test('render does nothing when rating is disabled', function (): void {
     if (! $accessControl instanceof AccessControl) {
         throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
     }
-    $renderer = new PictureRateRenderer($accessControl, EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
+    $renderer = new PictureRateRenderer($accessControl, EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
     $renderer->render(42, UrlServiceTestFactory::build(), [], '/picture.php');
 
-    expect(CurrentTemplate::current()->get()->getTemplateVars('rate_summary'))->toBeNull()
-        ->and(CurrentTemplate::current()->get()->getTemplateVars('rating'))->toBeNull();
+    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('rate_summary'))->toBeNull()
+        ->and(CurrentTemplateTestFactory::get()->get()->getTemplateVars('rating'))->toBeNull();
 });

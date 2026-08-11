@@ -40,8 +40,8 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -284,7 +284,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'user_activity.tpl', 'users={$nb_users}');
@@ -310,7 +310,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
                 userActivityTestAccessControl(),
                 UrlServiceTestFactory::build(),
                 $coreTabs,
-                CurrentTemplate::current(),
+                CurrentTemplateTestFactory::get(),
                 CurrentConfigTestFactory::get(),
                 $activityService,
                 userActivityTestUserService($activityService),
@@ -368,7 +368,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
                 ->setParameters($row)
                 ->executeStatement();
         }
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         userActivityTestRrmdir($root);

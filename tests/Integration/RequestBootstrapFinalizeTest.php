@@ -22,6 +22,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -88,7 +89,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         CurrentUserTestFactory::get()->reset();
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         EventDispatcherTestFactory::get()->reset();
         PageStateTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
@@ -127,10 +128,10 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         try {
             RequestBootstrap::finalize();
 
-            self::assertTrue(CurrentTemplate::current()->isInitialized());
+            self::assertTrue(CurrentTemplateTestFactory::get()->isInitialized());
             self::assertStringContainsString(
                 dirname(__DIR__, 2) . '/themes/mobile-theme-name/template',
-                CurrentTemplate::current()->get()->getTemplateDir()
+                CurrentTemplateTestFactory::get()->get()->getTemplateDir()
             );
         } finally {
             unset($_SESSION['pwg_mobile_theme']);
@@ -186,7 +187,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // template var is the only place left to observe it afterwards.
         self::assertSame(
             [LangTestFactory::get()->t('Bad status for user "guest", default status will be used. Please notify the webmaster.')],
-            CurrentTemplate::current()->get()->getTemplateVars('header_msgs')
+            CurrentTemplateTestFactory::get()->get()->getTemplateVars('header_msgs')
         );
     }
 

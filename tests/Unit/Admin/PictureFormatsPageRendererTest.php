@@ -13,8 +13,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -111,12 +111,12 @@ test('render() fatal-errors when image_id is missing from the request', function
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $exception = null;
         try {
             new PictureFormatsPageRenderer()
-                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplate::current(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get());
+                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get());
         } catch (ResponseReadyException $e) {
             $exception = $e;
         }
@@ -129,7 +129,7 @@ test('render() fatal-errors when image_id is missing from the request', function
         expect((string) $exception->response()->getBody())
             ->toContain('image_id does not exist');
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         pictureFormatsTestRrmdir($root);
@@ -142,12 +142,12 @@ test('render() fatal-errors when image_id does not match any real image', functi
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
 
         $exception = null;
         try {
             new PictureFormatsPageRenderer()
-                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplate::current(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get());
+                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get());
         } catch (ResponseReadyException $e) {
             $exception = $e;
         }
@@ -161,7 +161,7 @@ test('render() fatal-errors when image_id does not match any real image', functi
             ->toContain('image_id #999999 does not exist');
     } finally {
         unset($_GET['image_id']);
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         pictureFormatsTestRrmdir($root);

@@ -12,8 +12,8 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -89,7 +89,7 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'maintenance_sys.tpl', 'isWebmaster={$isWebmaster}');
@@ -97,7 +97,7 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
         $pageState = new PageState();
 
         new MaintenanceSysPageRenderer()
-            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Admin), [], $pageState, CurrentTemplate::current(), CurrentConfigTestFactory::get());
+            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Admin), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($pageState->warnings)
             ->toHaveCount(1)
@@ -105,7 +105,7 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
             ->and($template->getTemplateVars('isWebmaster'))
             ->toBe(0);
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         maintenanceSysTestRrmdir($root);
@@ -118,7 +118,7 @@ test('render() adds no warning for a webmaster and reaches the template tail wit
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'maintenance_sys.tpl', 'isWebmaster={$isWebmaster}');
@@ -126,14 +126,14 @@ test('render() adds no warning for a webmaster and reaches the template tail wit
         $pageState = new PageState();
 
         new MaintenanceSysPageRenderer()
-            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Webmaster), [], $pageState, CurrentTemplate::current(), CurrentConfigTestFactory::get());
+            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Webmaster), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($pageState->warnings)
             ->toBe([])
             ->and($template->getTemplateVars('isWebmaster'))
             ->toBe(1);
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
         maintenanceSysTestRrmdir($root);

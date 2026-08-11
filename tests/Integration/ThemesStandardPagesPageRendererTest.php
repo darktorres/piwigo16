@@ -22,6 +22,7 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -140,7 +141,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // for the same defensive reason PageTailRendererTest's own setUp()
         // sets it: real RequestBootstrap-only wiring this isolated test
         // never boots otherwise.
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
         $this->renderer = $this->makeRenderer();
 
@@ -153,7 +154,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     {
         $_POST = [];
         $_FILES = [];
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         foreach ($this->fixtureRootsToClean as $root) {
             if (is_dir($root)) {
                 // Fixture roots below are deliberately chmod'd unwritable by
@@ -216,7 +217,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php', CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()),
             PageStateTestFactory::get(),
-            CurrentTemplate::current(),
+            CurrentTemplateTestFactory::get(),
             HtmlServiceTestFactory::build(),
             CurrentConfigTestFactory::get(),
             CurrentPathsTestFactory::get(),
@@ -267,7 +268,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // setUp()'s own set() call populated; without reseeding here,
         // this renderer's own $this->currentTemplate->get() throws "not
         // initialised" against this fresh, unseeded container.
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
         $this->renderer = $this->makeRenderer();
     }
 
@@ -314,7 +315,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $uploadDir = $fixtureRoot . 'logo';
             self::assertSame(
                 sprintf(LangTestFactory::get()->t('Add write access to the "%s" directory'), $uploadDir),
-                CurrentTemplate::current()->get()->getTemplateVars('save_error')
+                CurrentTemplateTestFactory::get()->get()->getTemplateVars('save_error')
             );
         } finally {
             @unlink($realPng);
@@ -365,7 +366,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $uploadDir = $fixtureRoot . 'logo';
             self::assertSame(
                 "{$uploadDir}/stdpageslogo.png " . LangTestFactory::get()->t('no write access'),
-                CurrentTemplate::current()->get()->getTemplateVars('save_error')
+                CurrentTemplateTestFactory::get()->get()->getTemplateVars('save_error')
             );
 
             // confUpdateParam('standard_pages_selected_logo_path', ...)
@@ -411,7 +412,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
 
         $this->renderer->render();
 
-        $template = CurrentTemplate::current()->get();
+        $template = CurrentTemplateTestFactory::get()->get();
         self::assertTrue($template->getTemplateVars('is_standard_pages_used'));
         self::assertSame(['Uses Standard Pages Theme'], $template->getTemplateVars('standard_pages_used_by'));
     }

@@ -22,9 +22,9 @@ use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -73,7 +73,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
-        CurrentTemplate::current()->set(TemplateTestFactory::build());
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 
         // The fixture itself seeds rate rows for element_id=1 (real
         // sample data) -- each test inserts its own rows for the exact
@@ -88,13 +88,13 @@ final class PictureRateRendererTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->renderer = new PictureRateRenderer($accessControl, $this->repo, CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
+        $this->renderer = new PictureRateRenderer($accessControl, $this->repo, CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         $this->conn->executeStatement('DELETE FROM rate WHERE element_id = 1');
         parent::tearDown();
@@ -135,14 +135,14 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         $this->renderer->render(1, $this->urlService(), $this->picture(1, 87.5), '/picture.php?/1');
 
-        $rateSummary = CurrentTemplate::current()->get()->getTemplateVars('rate_summary');
+        $rateSummary = CurrentTemplateTestFactory::get()->get()->getTemplateVars('rate_summary');
         self::assertSame([
             'count' => 3,
             'score' => 87.5,
             'average' => 4.0,
         ], $rateSummary);
 
-        $rating = CurrentTemplate::current()->get()->getTemplateVars('rating');
+        $rating = CurrentTemplateTestFactory::get()->get()->getTemplateVars('rating');
         self::assertIsArray($rating);
         // Classic user (not anonymous) -- user_id=3's own vote (3), matched
         // with a null anonymous_id (isAuthorizeStatus(Classic) skips the
@@ -177,7 +177,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         try {
             $this->renderer->render(1, $this->urlService(), $this->picture(1, 90.0), '/picture.php?/1');
 
-            $rating = CurrentTemplate::current()->get()->getTemplateVars('rating');
+            $rating = CurrentTemplateTestFactory::get()->get()->getTemplateVars('rating');
             self::assertIsArray($rating);
             self::assertSame(5, $rating['USER_RATE']);
         } finally {
@@ -200,14 +200,14 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // SQL semantics, not the method's own `$row === false` fallback.
         $this->renderer->render(1, $this->urlService(), $this->picture(1, 0.0), '/picture.php?/1');
 
-        $rateSummary = CurrentTemplate::current()->get()->getTemplateVars('rate_summary');
+        $rateSummary = CurrentTemplateTestFactory::get()->get()->getTemplateVars('rate_summary');
         self::assertSame([
             'count' => 0,
             'score' => 0.0,
             'average' => null,
         ], $rateSummary);
 
-        $rating = CurrentTemplate::current()->get()->getTemplateVars('rating');
+        $rating = CurrentTemplateTestFactory::get()->get()->getTemplateVars('rating');
         self::assertIsArray($rating);
         // count === 0 -- findUserRate() is never even called.
         self::assertNull($rating['USER_RATE']);

@@ -12,8 +12,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\Translator;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
@@ -37,7 +37,7 @@ function checkIntegrityAddAnomalyNew(): CheckIntegrity
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
 
-    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplate::current());
+    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get());
 }
 
 test('addAnomaly records a new anomaly with is_callable computed from a real function name', function (): void {

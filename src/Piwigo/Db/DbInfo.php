@@ -63,13 +63,17 @@ final readonly class DbInfo
      */
     public function getTableFingerprint(string $table): string
     {
-        // {$table} is structural, not caller-controlled -- its one
-        // real caller (Admin\AdminUiHelper::getAdminClientCacheKeys())
-        // only ever passes a value drawn from a fixed literal table-name
-        // array via array_intersect() against that same array's own keys,
-        // never an arbitrary/request-derived table name. Left unquoted
-        // (no backticks/double-quotes) -- every real table name here is
-        // already lowercase snake_case, valid unquoted on both platforms.
+        // {$table} is structural, not caller-controlled -- its one real
+        // caller (Admin\AdminUiHelper::getAdminClientCacheKeys()) only
+        // ever passes a value drawn from a fixed literal table-name array
+        // via array_intersect() against that same array's own keys, never
+        // an arbitrary/request-derived table name. Still quoted via the
+        // platform's own quoteSingleIdentifier(): `groups` is a reserved
+        // word on MySQL (added 8.0.2+) -- a bare, unquoted `FROM groups`
+        // is a real syntax error there, confirmed live once the table
+        // stopped being always-prefixed and could collide with a keyword.
+        $quotedTable = $this->conn->getDatabasePlatform()
+            ->quoteSingleIdentifier($table);
         $epochExpr = $this->conn->getDatabasePlatform() instanceof PostgreSQLPlatform
             ? 'EXTRACT(EPOCH FROM MAX(lastmodified))::bigint'
             : 'UNIX_TIMESTAMP(MAX(lastmodified))';
@@ -80,7 +84,7 @@ final readonly class DbInfo
                 '_',
                 COUNT(*)
               )
-            FROM {$table}
+            FROM {$quotedTable}
             SQL);
 
         return is_string($value) ? $value : '';

@@ -363,9 +363,11 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
 
         // SHOW TABLES is MySQL-only syntax ("syntax error at or near
         // 'LIKE'" on Postgres). Postgres's real ground-truth equivalent is
-        // pg_tables.
+        // pg_tables -- a real table on Postgres, but one phpstan-dba can't
+        // resolve against this file's own live mysqli bootstrap connection.
         /** @var list<string> $rawTableNames */
         $rawTableNames = $this->dbDriver === 'pgsql'
+            // @phpstan-ignore dba.syntaxError
             ? $this->conn->fetchFirstColumn(
                 'SELECT tablename FROM pg_tables WHERE schemaname = current_schema()'
             )
@@ -401,7 +403,12 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
                 );
                 $createTableSql = is_string($createTableSql) ? $createTableSql : '';
             } else {
-                $createTableRow = $this->conn->fetchAssociative('SHOW CREATE TABLE ' . $tableName);
+                // groups is a reserved word on MySQL (added 8.0.2+) --
+                // SHOW CREATE TABLE groups is a real syntax error there
+                // unquoted.
+                $quotedTableName = $this->conn->getDatabasePlatform()
+                    ->quoteSingleIdentifier($tableName);
+                $createTableRow = $this->conn->fetchAssociative('SHOW CREATE TABLE ' . $quotedTableName);
                 self::assertIsArray($createTableRow);
                 $createTableSql = $createTableRow['Create Table'] ?? null;
                 self::assertIsString($createTableSql);

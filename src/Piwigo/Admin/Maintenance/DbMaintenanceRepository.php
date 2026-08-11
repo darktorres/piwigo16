@@ -182,17 +182,24 @@ final readonly class DbMaintenanceRepository
         $conn = $this->em->getConnection();
         $schemaManager = $conn->createSchemaManager();
 
-        // Identifier::toString() quotes (e.g. `"activity"`) -- getValue()
-        // is the real unquoted name, matching what SHOW TABLES/DESC's own
-        // output gave the original raw-splice version.
+        // getValue() is the real unquoted name; quoteSingleIdentifier()
+        // wraps it in the platform's own identifier-quote character
+        // (backtick on MySQL, double-quote on Postgres). Real bug found
+        // live: `groups` is a reserved word on MySQL (added 8.0.2+) --
+        // a bare, unquoted REPAIR/OPTIMIZE/ALTER ... TABLE groups is a
+        // real syntax error there, confirmed once the table stopped being
+        // always-prefixed and could collide with a keyword.
+        $platform = $conn->getDatabasePlatform();
         $allTableNames = $schemaManager->introspectTableNames();
         $allTables = array_map(
-            static fn (OptionallyQualifiedName $name): string => $name->getUnqualifiedName()
-                ->getValue(),
+            static fn (OptionallyQualifiedName $name): string => $platform->quoteSingleIdentifier(
+                $name->getUnqualifiedName()
+                    ->getValue()
+            ),
             $allTableNames
         );
 
-        if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+        if ($platform instanceof PostgreSQLPlatform) {
             foreach ($allTables as $table) {
                 $conn->executeStatement("VACUUM (ANALYZE) {$table}");
                 $conn->executeStatement("REINDEX TABLE {$table}");
@@ -213,12 +220,16 @@ final readonly class DbMaintenanceRepository
             }
 
             $primaryKeyCsv = implode(', ', array_map(
-                static fn (UnqualifiedName $column): string => $column->getIdentifier()
-                    ->getValue(),
+                static fn (UnqualifiedName $column): string => $platform->quoteSingleIdentifier(
+                    $column->getIdentifier()
+                        ->getValue()
+                ),
                 $primaryKey->getColumnNames()
             ));
-            $tableNameString = $tableName->getUnqualifiedName()
-                ->getValue();
+            $tableNameString = $platform->quoteSingleIdentifier(
+                $tableName->getUnqualifiedName()
+                    ->getValue()
+            );
             $conn->executeStatement(<<<SQL
                 ALTER TABLE {$tableNameString} ORDER BY {$primaryKeyCsv};
                 SQL);

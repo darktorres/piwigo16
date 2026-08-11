@@ -1115,7 +1115,9 @@ namespace Piwigo\Tests\Integration {
             // fixture's own groups 1-3 already have real access to category 1
             // (the "reference"), which would make it the *consistent* case
             // this test isn't trying to cover.
-            $this->conn->executeStatement('INSERT INTO groups' . " (name) VALUES ('zzz-16i-probe-group')");
+            $groupsTable = $this->conn->getDatabasePlatform()
+                ->quoteSingleIdentifier('groups');
+            $this->conn->executeStatement("INSERT INTO {$groupsTable} (name) VALUES ('zzz-16i-probe-group')");
             $groupId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
             $this->conn->executeStatement('INSERT INTO group_access (group_id, cat_id) VALUES (?, 2)', [$groupId]);
@@ -1133,7 +1135,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame(0, is_numeric($remaining) ? (int) $remaining : null);
             } finally {
                 $this->conn->executeStatement('DELETE FROM group_access WHERE group_id = ?', [$groupId]);
-                $this->conn->executeStatement('DELETE FROM groups WHERE id = ?', [$groupId]);
+                $this->conn->executeStatement("DELETE FROM {$groupsTable} WHERE id = ?", [$groupId]);
             }
         }
 

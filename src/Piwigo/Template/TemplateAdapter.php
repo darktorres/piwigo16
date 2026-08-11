@@ -15,7 +15,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 
-final class PwgTemplateAdapter
+final class TemplateAdapter
 {
     public function __construct(
         private readonly CurrentConfig $currentConfig,

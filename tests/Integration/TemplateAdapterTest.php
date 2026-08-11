@@ -13,24 +13,24 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\PwgTemplateAdapter;
+use Piwigo\Template\TemplateAdapter;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 
 /**
- * Piwigo\Template\PwgTemplateAdapter -- the Smarty-registered object behind
+ * Piwigo\Template\TemplateAdapter -- the Smarty-registered object behind
  * `derivative`/`derivativeUrl` template calls; had zero dedicated coverage.
  * Both need the same real DB-backed ImageStdParams/DerivativeImage::
  * setUrlService() wiring (see
  * NotificationByMailSenderTest/MailServiceTest's own docblocks) -- placed in
  * Integration, not Unit, for that reason.
  */
-final class PwgTemplateAdapterTest extends IntegrationTestCase
+final class TemplateAdapterTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
-    private PwgTemplateAdapter $adapter;
+    private TemplateAdapter $adapter;
 
     #[Override]
     protected function setUp(): void
@@ -55,7 +55,7 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->loadFromDb();
 
-        $this->adapter = new PwgTemplateAdapter(CurrentConfigTestFactory::get());
+        $this->adapter = new TemplateAdapter(CurrentConfigTestFactory::get());
     }
 
     #[Override]

@@ -233,7 +233,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $this->smarty->setCompileDir($compile_dir);
 
-        $this->smarty->assign('pwg', new PwgTemplateAdapter($this->currentConfig));
+        $this->smarty->assign('pwg', new TemplateAdapter($this->currentConfig));
         $this->smarty->registerPlugin('modifiercompiler', 'translate', $this->modcompilerTranslate(...));
         $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', $this->modcompilerTranslateDec(...));
         $this->smarty->registerPlugin('modifier', 'sprintf', 'sprintf');

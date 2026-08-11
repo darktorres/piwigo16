@@ -15,8 +15,8 @@ use Piwigo\Template\Css;
 use Piwigo\Template\CssLoader;
 use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
-use Piwigo\Template\PwgTemplateAdapter;
 use Piwigo\Template\Template;
+use Piwigo\Template\TemplateAdapter;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -425,7 +425,7 @@ test('constructor assigns the pwg template adapter', function (): void {
     $t = TemplateTestFactory::build();
 
     expect($t->getTemplateVars('pwg'))
-        ->toBeInstanceOf(PwgTemplateAdapter::class);
+        ->toBeInstanceOf(TemplateAdapter::class);
 });
 
 test('constructor registers exactly one Smarty pre-filter (prefilterWhiteSpace)', function (): void {

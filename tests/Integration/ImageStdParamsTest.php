@@ -17,7 +17,7 @@ use ReflectionProperty;
  * Piwigo\Image\ImageStdParams had zero dedicated test file. Every other
  * Integration suite that calls loadFromDb() (CalendarMonthlyTest,
  * CategoryDefaultRendererTest, NotificationByMailSenderTest,
- * PwgTemplateAdapterTest) deliberately keeps the fixture's own real
+ * TemplateAdapterTest) deliberately keeps the fixture's own real
  * `derivative_settings`/`derivative_size` rows valid so loadFromDb()
  * never needs to exercise its own "missing/invalid row" fallback branches.
  * This file needs real DB access (DerivativeSettingsRepository/

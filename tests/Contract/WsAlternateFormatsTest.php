@@ -80,7 +80,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
         self::assertMatchesRegularExpression('#<string>\d+\.\d+.*</string>#', $body);
     }
 
-    public function testFormatXmlrpcEncodesAPwgerrorAsAFault(): void
+    public function testFormatXmlrpcEncodesAWsErrorResponseAsAFault(): void
     {
         $body = $this->rawCall('xmlrpc', 'method=pwg.not.a.real.method');
 

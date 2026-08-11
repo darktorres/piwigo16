@@ -10,16 +10,16 @@ use Piwigo\Ws\NamedStruct;
  * ResponseEncoder is abstract, but isStruct() and flattenResponse()
  * are both real `public static` methods callable without subclassing --
  * this file drives them directly, same convention as the sibling
- * PwgRestEncoderTest/PwgSerialPhpEncoderTest files in ../Protocol/ but
+ * RestEncoderTest/SerialPhpEncoderTest files in ../Protocol/ but
  * without needing a concrete encodeResponse()/getContentType()
  * implementation at all.
  *
- * tests/Unit/Ws/Protocol/PwgSerialPhpEncoderTest.php already exercises
+ * tests/Unit/Ws/Protocol/SerialPhpEncoderTest.php already exercises
  * flatten()'s NamedArray/NamedStruct unwrap and the ATTRIBUTES_KEY
  * merge indirectly (through SerialPhpEncoder::encodeResponse()), but
  * that file's own docblock explicitly declines to chase the
  * is_array($value) re-assertion guard right below the isStruct() call
- * (lines 74-84), and neither that file nor PwgRestEncoderTest exercises
+ * (lines 74-84), and neither that file nor RestEncoderTest exercises
  * isStruct()'s own boundary conditions or a *nested* recursive flatten()
  * call directly. This file closes those gaps.
  */

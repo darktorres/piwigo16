@@ -22,7 +22,7 @@ use Piwigo\Ws\WsErrorResponse;
  * didn't) without needing to inspect actual HTTP headers.
  *
  * Kernel::boot() with a real Paths (same minimal setup as
- * PresentationAccessorTest.php/PwgSerialPhpEncoderTest.php's own
+ * PresentationAccessorTest.php/SerialPhpEncoderTest.php's own
  * docblock) is required here because WsErrorResponse goes through the real
  * PresentationAccessor::htmlService() accessor, which needs a booted DI
  * container -- a fake/spy HtmlService isn't an option since HtmlService
@@ -147,7 +147,7 @@ test('code just past the HTTP range (600) does not call setStatusHeader', functi
 
 test('code comfortably outside the HTTP range (1003) does not call setStatusHeader', function (): void {
     // WsError::INVALID_PARAM-style application error codes (>= 1000) are
-    // the class's other real-world usage (see PwgSerialPhpEncoderTest.php's
+    // the class's other real-world usage (see SerialPhpEncoderTest.php's
     // own docblock) -- confirms the guard also holds well clear of the
     // upper boundary, not just immediately past it.
     $calls = [];

@@ -107,10 +107,10 @@ function pwgPermissionsTestSubject(): Permissions
  * (getList()'s guard fires first; add()/remove()'s CSRF check fires
  * before their own real `$service->invoke('pwg.permissions.getList',
  * ...)` call) -- a bare, unregistered Server only needs to satisfy
- * the by-ref type, same rationale as PwgServerTest.php's own
+ * the by-ref type, same rationale as ServerTest.php's own
  * pwgServerTestServer() helper.
  */
-function pwgPermissionsTestServer(): Server
+function permissionsTestServer(): Server
 {
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
@@ -134,7 +134,7 @@ function pwgPermissionsTestServer(): Server
 
 test('getList rejects more than one of cat_id/group_id/user_id at once', function (): void {
     $ws = pwgPermissionsTestSubject();
-    $server = pwgPermissionsTestServer();
+    $server = permissionsTestServer();
 
     $result = $ws->getList([
         'cat_id' => [1],
@@ -153,7 +153,7 @@ test('getList rejects more than one of cat_id/group_id/user_id at once', functio
 
 test('getList returns an empty categories list for a cat_id with no real access rows', function (): void {
     $ws = pwgPermissionsTestSubject();
-    $server = pwgPermissionsTestServer();
+    $server = permissionsTestServer();
 
     $result = $ws->getList([
         'cat_id' => [999999],
@@ -168,7 +168,7 @@ test('getList returns an empty categories list for a cat_id with no real access 
 
 test('add returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgPermissionsTestSubject();
-    $server = pwgPermissionsTestServer();
+    $server = permissionsTestServer();
 
     $result = $ws->add([
         'cat_id' => [1],
@@ -188,7 +188,7 @@ test('add returns a 403 WsErrorResponse when the submitted pwg_token does not ma
 
 test('remove returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
     $ws = pwgPermissionsTestSubject();
-    $server = pwgPermissionsTestServer();
+    $server = permissionsTestServer();
 
     $result = $ws->remove([
         'cat_id' => [1],

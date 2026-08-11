@@ -40,7 +40,7 @@ use Piwigo\Ws\WsErrorResponse;
  * $params['pwg_token']` as its very first statement (`add()` is the
  * one exception -- see below), before touching `groupService` at all --
  * a wrong token is therefore a cheap, DB-free 403 branch, same
- * established pattern as `PwgPermissionsTest.php`. `add()` has no CSRF
+ * established pattern as `PermissionsTest.php`. `add()` has no CSRF
  * check of its own (confirmed by reading its full body) and goes
  * straight into a real `GroupService::create()` write, so it is not
  * attempted here. The real group CRUD logic behind every CSRF guard
@@ -59,7 +59,7 @@ function pwgGroupsTestSubject(): Groups
 /**
  * None of the branches under test here ever reach `$service->invoke()`
  * -- a bare, unregistered Server only needs to satisfy the by-ref
- * type, same rationale as `PwgPermissionsTest.php`'s own
+ * type, same rationale as `PermissionsTest.php`'s own
  * pwgPermissionsTestServer() helper.
  */
 function pwgGroupsTestServer(): Server

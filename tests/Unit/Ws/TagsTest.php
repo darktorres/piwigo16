@@ -32,7 +32,7 @@ use Piwigo\Ws\WsErrorResponse;
  * `CsrfService::getToken() !== $params['pwg_token']` as their very
  * first statement, before touching `tagService` at all -- a wrong
  * token is therefore a cheap, DB-free 403 branch, same established
- * pattern as `PwgPermissionsTest.php`/`PwgGroupsTest.php`. `getList()`/
+ * pattern as `PermissionsTest.php`/`GroupsTest.php`. `getList()`/
  * `getAdminList()`/`getImages()`/`add()` have no CSRF check of their
  * own and go straight into real `tagService` reads/writes, so are not
  * attempted here.
@@ -50,7 +50,7 @@ function pwgTagsTestSubject(): Tags
 /**
  * None of the branches under test here ever reach `$service->invoke()`
  * -- a bare, unregistered Server only needs to satisfy the by-ref
- * type, same rationale as `PwgPermissionsTest.php`'s own
+ * type, same rationale as `PermissionsTest.php`'s own
  * pwgPermissionsTestServer() helper.
  */
 function pwgTagsTestServer(): Server

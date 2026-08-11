@@ -87,7 +87,7 @@ test('confGetParam reads a property-backed key via its own typed getter', functi
  * against CurrentConfig's own setters, so it's invoked here directly via
  * Reflection instead, matching this repo's established
  * `invokeXxx()`-via-Reflection convention for private-static pure logic
- * (see e.g. PwgTOTPTest.php's own invokeGenerateCodeFromTimestamp()).
+ * (see e.g. TotpTest.php's own invokeGenerateCodeFromTimestamp()).
  *
  * hydrate() is `private` (instance), not `private static` -- ConfigService
  * reads and writes CurrentConfig through a constructor-injected instance,

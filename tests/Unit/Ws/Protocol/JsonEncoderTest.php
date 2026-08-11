@@ -9,13 +9,13 @@ use Piwigo\Ws\WsErrorResponse;
 
 /**
  * JsonEncoder -- the JSON sibling of SerialPhpEncoder/RestEncoder
- * (see PwgSerialPhpEncoderTest.php for the shared flatten()/WsErrorResponse
+ * (see SerialPhpEncoderTest.php for the shared flatten()/WsErrorResponse
  * fixture rationale, reused verbatim here). No dedicated Integration/
  * Browser spec of its own.
  *
  * WsError::INVALID_PARAM-style codes (>= 1000) are used for the WsErrorResponse
  * fixture, not an HTTP-range code (400-599), for the same reason as
- * PwgSerialPhpEncoderTest.php: WsErrorResponse's constructor calls
+ * SerialPhpEncoderTest.php: WsErrorResponse's constructor calls
  * PresentationAccessor::htmlService() for HTTP-range codes, which needs
  * a booted container this Unit test doesn't set up.
  */

@@ -53,7 +53,7 @@ function pwgImagesTestSubject(): Images
 /**
  * None of the branches under test here ever reach `$service->invoke()`
  * -- a bare, unregistered Server only needs to satisfy the method's
- * own type, same rationale as `PwgPermissionsTest.php`'s own
+ * own type, same rationale as `PermissionsTest.php`'s own
  * pwgPermissionsTestServer() helper. Unlike most other Ws\Pwg* classes
  * in this campaign, Images' methods take `Server $service` by
  * value (not by reference), so the container-resolved instance can be

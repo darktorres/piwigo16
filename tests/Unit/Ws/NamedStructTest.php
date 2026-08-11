@@ -11,7 +11,7 @@ use Piwigo\Ws\NamedStruct;
  * omitted (null), the constructor instead auto-detects xml-attribute
  * candidates by walking $content itself (scalar/null values, keys not
  * in ['', 0, '0']), writing $key => 1 for each. Only the
- * PwgSerialPhpEncoderTest.php fixture exercised this class before, and
+ * SerialPhpEncoderTest.php fixture exercised this class before, and
  * only via the explicit (empty-array) branch -- the null/auto-detect
  * branch had no coverage anywhere.
  */

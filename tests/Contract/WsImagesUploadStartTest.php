@@ -256,7 +256,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
         mkdir($strayDir);
 
         try {
-            // Unlike the >= 500 PwgErrors elsewhere in this file, err=102
+            // Unlike the >= 500 WsErrorResponses elsewhere in this file, err=102
             // isn't mirrored onto the real HTTP status (WsErrorResponse's
             // constructor only does that for codes >= 400) -- a plain
             // callWs() is fine here, confirmed live (HTTP 200).

@@ -325,7 +325,7 @@ test('categoriesFlatlistToTree skips a row with a non-scalar id', function (): v
  * None of the branches under test in this file's stdImageSqlFilterCriteria()
  * tests ever reach sendResponse()/exit() -- a bare, unregistered
  * Server only needs to satisfy the method's own type, same rationale
- * as PwgPermissionsTest.php's own pwgPermissionsTestServer() helper.
+ * as PermissionsTest.php's own permissionsTestServer() helper.
  */
 function wsHelperTestServer(): Server
 {

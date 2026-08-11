@@ -38,7 +38,7 @@ use Piwigo\Ws\WsErrorResponse;
  * here.
  *
  * `delete()`/`validate()` both cover their CSRF-token-mismatch 403
- * guard, same established pattern as `PwgPermissionsTest.php`.
+ * guard, same established pattern as `PermissionsTest.php`.
  */
 function pwgCommentsTestSubject(): Comments
 {
@@ -53,7 +53,7 @@ function pwgCommentsTestSubject(): Comments
 /**
  * None of the branches under test here ever reach `$service->invoke()`
  * -- a bare, unregistered Server only needs to satisfy the by-ref
- * type, same rationale as `PwgPermissionsTest.php`'s own
+ * type, same rationale as `PermissionsTest.php`'s own
  * pwgPermissionsTestServer() helper.
  */
 function pwgCommentsTestServer(): Server

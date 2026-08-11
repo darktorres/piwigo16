@@ -31,7 +31,7 @@ use ReflectionMethod;
  * 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ' (independently derived via Python's
  * standard `base64.b32encode`, not via Base32 itself, to avoid
  * circularity). It's a 20-byte secret -- 160 bits divides evenly by 5,
- * so Base32::decode() round-trips it correctly (see PwgBase32Test's
+ * so Base32::decode() round-trips it correctly (see Base32Test's
  * documented bug: decode() only round-trips cleanly when no padding was
  * needed), which is exactly why generateSecret()'s own default length
  * is 20 bytes.

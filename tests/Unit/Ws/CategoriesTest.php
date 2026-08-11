@@ -61,7 +61,7 @@ function pwgCategoriesTestSubject(): Categories
 /**
  * None of the branches under test here ever reach `$service->invoke()`
  * -- a bare, unregistered Server only needs to satisfy the by-ref
- * type, same rationale as `PwgPermissionsTest.php`'s own
+ * type, same rationale as `PermissionsTest.php`'s own
  * pwgPermissionsTestServer() helper.
  */
 function pwgCategoriesTestServer(): Server

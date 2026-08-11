@@ -39,9 +39,9 @@ use Piwigo\Ws\WsErrorResponse;
  * `sendResponse()` also isn't covered here -- it's a 3-line `header()`/
  * `print_r()`/event-dispatch wrapper around `ResponseEncoder::
  * encodeResponse()`, itself already covered per-encoder (JsonEncoder/
- * PwgSerialPhpEncoderTest.php/etc).
+ * SerialPhpEncoderTest.php/etc).
  *
- * Kernel::boot() is required file-wide (same reasoning as PwgErrorTest.php):
+ * Kernel::boot() is required file-wide (same reasoning as WsErrorResponseTest.php):
  * several WsErrorResponse codes constructed by invoke() itself (401, 405, and
  * WsError::INVALID_METHOD = 501) fall in the HTTP range, which routes
  * WsErrorResponse's own constructor through PresentationAccessor::htmlService(),

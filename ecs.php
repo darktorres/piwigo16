@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHP_CodeSniffer\Standards\PSR1\Sniffs\Methods\CamelCapsMethodNameSniff;
 use PhpCsFixer\Fixer\Alias\RandomApiMigrationFixer;
 use PhpCsFixer\Fixer\Basic\SingleLineEmptyBodyFixer;
 use PhpCsFixer\Fixer\Strict\DeclareStrictTypesFixer;
@@ -43,6 +44,13 @@ return ECSConfig::configure()
         psr12: true,
     )
     ->withRules([
+        // PHP_CodeSniffer sniff (not a php-cs-fixer fixer): ECS's psr12
+        // prepared set only covers PHP-CS-Fixer's formatting rules, which
+        // never rename identifiers -- PSR-1 3.1's camelCase method-name
+        // requirement needs this real PHPCS sniff instead. Report-only by
+        // design: renaming could break overrides/interface implementations,
+        // so this flags violations rather than auto-fixing them.
+        CamelCapsMethodNameSniff::class,
         DeclareStrictTypesFixer::class,
         LineEndingFixer::class,
         NoTrailingWhitespaceInStringFixer::class,

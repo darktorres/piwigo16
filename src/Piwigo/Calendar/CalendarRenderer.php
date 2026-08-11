@@ -217,7 +217,7 @@ final readonly class CalendarRenderer
         $comment = '';
         $must_show_list = true; // true until calendar generates its own display
         if (PageFilterHelper::scriptBasename($this->currentConfig) !== 'picture') { // basename without file extention
-            if ($calendar->generate_category_content($template)) {
+            if ($calendar->generateCategoryContent($template)) {
                 $items = [];
                 $must_show_list = false;
             }
@@ -265,7 +265,7 @@ final readonly class CalendarRenderer
             );
             $calendar_title = '<a href="' . $url . '">'
                 . $fields[$chronologyField]['label'] . '</a>';
-            $calendar_title .= $calendar->get_display_name();
+            $calendar_title .= $calendar->getDisplayName();
             $template->assignContext(new CalendarChronologyPageContext(
                 fileChronologyView: 'month_calendar.tpl',
                 chronologyTitle: $calendar_title,
@@ -312,10 +312,10 @@ final readonly class CalendarRenderer
                 $items = new CalendarRepository(EntityManagerFactory::build($conn))
                     ->findImageIds(
                         $calendar->scope->rawSqlFromWhere,
-                        $calendar->get_date_where(),
+                        $calendar->getDateWhere(),
                         $order_by,
                         $calendar->scope,
-                        $calendar->get_date_where(forDql: true)
+                        $calendar->getDateWhere(forDql: true)
                     );
                 if ($cache_item instanceof CacheItemInterface) {
                     $cache_item->set($items);

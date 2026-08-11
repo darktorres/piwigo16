@@ -41,8 +41,8 @@ namespace Piwigo\Tests\Integration {
     }
 
     /**
-     * Covers CalendarBase's shared logic (initialize()/build_nav_bar()/
-     * build_next_prev(), all on the abstract base class) through
+     * Covers CalendarBase's shared logic (initialize()/buildNavBar()/
+     * buildNextPrev(), all on the abstract base class) through
      * CalendarWeekly -- see CalendarMonthlyTest's own docblock for why there
      * is no separate CalendarBaseTest file, and for the exact same date
      * shift/Lang-reset rationale reused here.
@@ -194,7 +194,7 @@ namespace Piwigo\Tests\Integration {
             $calendar = $this->makeCalendar();
             $calendar->chronology_date = [];
 
-            $where = $calendar->get_date_where();
+            $where = $calendar->getDateWhere();
             self::assertSame(' AND date_available IS NOT NULL', $where->sql);
             self::assertSame([], $where->parameters);
         }
@@ -204,7 +204,7 @@ namespace Piwigo\Tests\Integration {
             $calendar = $this->makeCalendar();
             $calendar->chronology_date = [2024, 11, 6];
 
-            $where = $calendar->get_date_where();
+            $where = $calendar->getDateWhere();
             self::assertSame(
                 ' AND date_available BETWEEN :dateWhereYearStart AND :dateWhereYearEnd'
                 . ' AND WEEK(date_available, 5)+1= :dateWhereWeek'
@@ -224,7 +224,7 @@ namespace Piwigo\Tests\Integration {
             $calendar = $this->makeCalendar();
             $calendar->chronology_date = [2024, 'any'];
 
-            $where = $calendar->get_date_where();
+            $where = $calendar->getDateWhere();
             self::assertSame(' AND date_available BETWEEN :dateWhereYearStart AND :dateWhereYearEnd', $where->sql);
             self::assertSame([
                 'dateWhereYearStart' => '2024-01-01',
@@ -238,7 +238,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [];
             $template = TemplateTestFactory::build();
 
-            self::assertFalse($calendar->generate_category_content($template));
+            self::assertFalse($calendar->generateCategoryContent($template));
 
             $navVars = $calendar->getChronologyNavigationBars();
             self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
@@ -250,8 +250,8 @@ namespace Piwigo\Tests\Integration {
 
         /**
          * The week-level nav bar passes an explicit `[]` (not null) as its
-         * own labels argument (see CalendarWeekly::generate_category_content()),
-         * which -- unlike the year level above -- means get_nav_bar_from_items()
+         * own labels argument (see CalendarWeekly::generateCategoryContent()),
+         * which -- unlike the year level above -- means getNavBarFromItems()
          * never substitutes calendar_levels[CWEEK]['labels'] (the "Week %d"
          * text) at all: LABEL stays the raw week number.
          */
@@ -261,7 +261,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024];
             $template = TemplateTestFactory::build();
 
-            self::assertFalse($calendar->generate_category_content($template));
+            self::assertFalse($calendar->generateCategoryContent($template));
 
             $navVars = $calendar->getChronologyNavigationBars();
             self::assertSame(11, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
@@ -278,7 +278,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2025, 4];
             $template = TemplateTestFactory::build();
 
-            self::assertFalse($calendar->generate_category_content($template));
+            self::assertFalse($calendar->generateCategoryContent($template));
 
             $navVars = $calendar->getChronologyNavigationBars();
             // WEEKDAY(2025-01-20) = 0 (Monday, image 4), WEEKDAY(2025-01-25) = 5 (Saturday, image 5).
@@ -290,8 +290,8 @@ namespace Piwigo\Tests\Integration {
 
         /**
          * Regression test for the same fixed bug as CalendarMonthlyTest::
-         * test_build_next_prev_navigates_correctly_regardless_of_chronology_date_element_type()
-         * -- build_next_prev() is shared, unmodified CalendarBase code. With
+         * test_buildNextPrev_navigates_correctly_regardless_of_chronology_date_element_type()
+         * -- buildNextPrev() is shared, unmodified CalendarBase code. With
          * chronology_date holding the ints CalendarRenderer actually produces,
          * "next" used to point at the currently-viewed year instead of
          * genuinely advancing to 2025.
@@ -302,7 +302,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024];
             $template = TemplateTestFactory::build();
 
-            $calendar->generate_category_content($template);
+            $calendar->generateCategoryContent($template);
 
             $nav = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
             self::assertArrayNotHasKey('previous', $nav);
@@ -339,9 +339,9 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * get_date_where()'s own truncation loop (shared shape with
+         * getDateWhere()'s own truncation loop (shared shape with
          * CalendarMonthly's identical one) drops components beyond
-         * $max_levels -- distinct from every other get_date_where() test in
+         * $max_levels -- distinct from every other getDateWhere() test in
          * this file, which always calls it with the default (untruncated)
          * $max_levels=3.
          */
@@ -350,7 +350,7 @@ namespace Piwigo\Tests\Integration {
             $calendar = $this->makeCalendar();
             $calendar->chronology_date = [2024, 12, 3];
 
-            $where = $calendar->get_date_where(2);
+            $where = $calendar->getDateWhere(2);
             self::assertSame(
                 ' AND date_available BETWEEN :dateWhereYearStart AND :dateWhereYearEnd'
                 . ' AND WEEK(date_available, 5)+1= :dateWhereWeek',

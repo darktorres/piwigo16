@@ -14,11 +14,11 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  * years/weeks in years and days in week). No dedicated Integration/
  * Browser spec of its own.
  *
- * `initialize()` and `get_date_where()` are both real, testable logic
+ * `initialize()` and `getDateWhere()` are both real, testable logic
  * given a real, container-resolved instance: `initialize()` builds
  * `calendar_levels`/`date_field`/`date_field_dql` from real config +
  * `Lang::days()`/`Lang::t()` output (no DB access), and
- * `get_date_where()` is pure logic once `chronology_date` is set (a
+ * `getDateWhere()` is pure logic once `chronology_date` is set (a
  * public, directly-settable property, matching this file's own
  * documented mutable-state contract).
  */
@@ -107,13 +107,13 @@ test('initialize populates 53 real week-number labels', function (): void {
     }
 });
 
-test('get_date_where returns the real IS NOT NULL fallback for an empty chronology_date', function (): void {
+test('getDateWhere returns the real IS NOT NULL fallback for an empty chronology_date', function (): void {
     $calendar = calendarWeeklyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarWeeklyTestScope());
     $calendar->chronology_date = [];
 
-    $condition = $calendar->get_date_where();
+    $condition = $calendar->getDateWhere();
 
     expect($condition->sql)
         ->toBe(' AND date_creation IS NOT NULL')
@@ -121,13 +121,13 @@ test('get_date_where returns the real IS NOT NULL fallback for an empty chronolo
         ->toBe([]);
 });
 
-test('get_date_where builds a real year-range condition for a single-level chronology_date', function (): void {
+test('getDateWhere builds a real year-range condition for a single-level chronology_date', function (): void {
     $calendar = calendarWeeklyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarWeeklyTestScope());
     $calendar->chronology_date = [2026];
 
-    $condition = $calendar->get_date_where();
+    $condition = $calendar->getDateWhere();
 
     expect($condition->sql)
         ->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd')
@@ -138,14 +138,14 @@ test('get_date_where builds a real year-range condition for a single-level chron
         ]);
 });
 
-test('get_date_where builds a year+week+day condition, stripping the leading AND for DQL', function (): void {
+test('getDateWhere builds a year+week+day condition, stripping the leading AND for DQL', function (): void {
     $calendar = calendarWeeklyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarWeeklyTestScope());
     $calendar->chronology_date = [2026, 15, 3];
 
-    $sqlCondition = $calendar->get_date_where(3, false);
-    $dqlCondition = $calendar->get_date_where(3, true);
+    $sqlCondition = $calendar->getDateWhere(3, false);
+    $dqlCondition = $calendar->getDateWhere(3, true);
 
     expect($sqlCondition->sql)
         ->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd AND WEEK(date_creation, 5)+1= :dateWhereWeek AND WEEKDAY(date_creation)= :dateWhereDay')
@@ -160,13 +160,13 @@ test('get_date_where builds a year+week+day condition, stripping the leading AND
         ->toBe('i.dateCreation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd AND WEEK(i.dateCreation, 5)+1= :dateWhereWeek AND WEEKDAY(i.dateCreation)= :dateWhereDay');
 });
 
-test('get_date_where respects max_levels, dropping deeper chronology_date components', function (): void {
+test('getDateWhere respects max_levels, dropping deeper chronology_date components', function (): void {
     $calendar = calendarWeeklyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarWeeklyTestScope());
     $calendar->chronology_date = [2026, 15, 3];
 
-    $condition = $calendar->get_date_where(1);
+    $condition = $calendar->getDateWhere(1);
 
     expect($condition->sql)
         ->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd')
@@ -174,13 +174,13 @@ test('get_date_where respects max_levels, dropping deeper chronology_date compon
         ->not->toHaveKey('dateWhereWeek');
 });
 
-test('get_date_where treats an "any" chronology_date component as unset', function (): void {
+test('getDateWhere treats an "any" chronology_date component as unset', function (): void {
     $calendar = calendarWeeklyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarWeeklyTestScope());
     $calendar->chronology_date = ['any'];
 
-    $condition = $calendar->get_date_where();
+    $condition = $calendar->getDateWhere();
 
     expect($condition->sql)
         ->toBe(' AND date_creation IS NOT NULL');

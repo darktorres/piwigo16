@@ -86,7 +86,7 @@ abstract class CalendarBase
     /**
      * used to store db fields -- 'sql' is the raw SQL expression (feeds
      * {@see CalendarRepository::findImageIds()}'s own raw-DBAL path via
-     * get_date_where()), 'dql' is the DQL property-path equivalent (feeds
+     * getDateWhere()), 'dql' is the DQL property-path equivalent (feeds
      * every other query).
      *
      * @var array<int, array{sql: string, dql: string, labels: array<int|string, string>|null}>
@@ -103,7 +103,7 @@ abstract class CalendarBase
 
     /**
      * mutable chronology-date state, narrowed in place by
-     * generate_category_content() and its build_*_calendar() helpers as
+     * generateCategoryContent() and its build_*_calendar() helpers as
      * the requested period gets resolved down to a single year/month/day.
      *
      * @var array<int, int|string>
@@ -112,7 +112,7 @@ abstract class CalendarBase
 
     /**
      * chronology view (CAL_VIEW_LIST or CAL_VIEW_CALENDAR); set by
-     * CalendarRenderer before generate_category_content() is called.
+     * CalendarRenderer before generateCategoryContent() is called.
      *
      * @var string
      */
@@ -120,14 +120,14 @@ abstract class CalendarBase
 
     /**
      * `month_calendar.tpl`'s own `chronology_navigation_bars` data,
-     * shared between build_nav_bar()/build_next_prev() via a private
+     * shared between buildNavBar()/buildNextPrev() via a private
      * instance property rather than the live Smarty template variable
      * itself, avoiding an append-then-read-modify-write round trip
      * through Template::append()/get_template_vars()/assign(): both
      * methods are declared on this same class, so no subclass access is
      * needed; CalendarRenderer (an unrelated class) reads the final
      * result via {@see self::getChronologyNavigationBars()} once every
-     * build_nav_bar()/build_next_prev() call for this render has run.
+     * buildNavBar()/buildNextPrev() call for this render has run.
      *
      * @var list<array<string, mixed>>
      */
@@ -143,8 +143,8 @@ abstract class CalendarBase
 
     /**
      * The `chronology_navigation_bars` rows accumulated by every
-     * build_nav_bar()/build_next_prev() call made so far during this
-     * render -- read once generate_category_content() returns.
+     * buildNavBar()/buildNextPrev() call made so far during this
+     * render -- read once generateCategoryContent() returns.
      *
      * @return list<array<string, mixed>>
      */
@@ -161,7 +161,7 @@ abstract class CalendarBase
     // Called via CalendarRenderer.php's CalendarBase-typed $calendar --
     // polymorphic dispatch the tool doesn't trace back to this declaration.
     // @phpstan-ignore shipmonk.deadMethod
-    abstract public function generate_category_content(TemplateInterface $template);
+    abstract public function generateCategoryContent(TemplateInterface $template);
 
     /**
      * Returns a sql WHERE subquery for the date field.
@@ -172,7 +172,7 @@ abstract class CalendarBase
      *   {@see CalendarRenderer::render()}'s own findImageIds() feed passes true, since every
      *   other CalendarRepository method is real DQL (see CalendarRepository's own docblock).
      */
-    abstract public function get_date_where($max_levels = 3, bool $forDql = false): SqlCondition;
+    abstract public function getDateWhere($max_levels = 3, bool $forDql = false): SqlCondition;
 
     /**
      * Initialize the calendar.
@@ -194,7 +194,7 @@ abstract class CalendarBase
      *
      * @return string
      */
-    public function get_display_name()
+    public function getDisplayName()
     {
         $res = '';
 
@@ -217,12 +217,12 @@ abstract class CalendarBase
                 );
                 $res .=
                   '<a href="' . $url . '">'
-                  . $this->get_date_component_label($i, $date_component)
+                  . $this->getDateComponentLabel($i, $date_component)
                   . '</a>';
             } else {
                 $res .=
                   '<span class="calInHere">'
-                  . $this->get_date_component_label($i, $date_component)
+                  . $this->getDateComponentLabel($i, $date_component)
                   . '</span>';
             }
         }
@@ -234,7 +234,7 @@ abstract class CalendarBase
      *
      * @return string
      */
-    protected function get_date_component_label(int $level, string $date_component)
+    protected function getDateComponentLabel(int $level, string $date_component)
     {
         $label = $date_component;
         if (isset($this->calendar_levels[$level]['labels'][$date_component])) {
@@ -251,13 +251,13 @@ abstract class CalendarBase
      * @param string $date
      * @return string
      */
-    protected function get_date_nice_name($date)
+    protected function getDateNiceName($date)
     {
         $date_components = explode('-', $date);
         $res = '';
         for ($i = count($date_components) - 1; $i >= 0; $i--) {
             if ($date_components[$i] !== 'any') {
-                $label = $this->get_date_component_label($i, $date_components[$i]);
+                $label = $this->getDateComponentLabel($i, $date_components[$i]);
                 if ($res !== '') {
                     $res .= ' ';
                 }
@@ -277,7 +277,7 @@ abstract class CalendarBase
      * @param array<int|string, int|string>|null $labels - optional labels for items (e.g. Jan,Feb,... or day numbers)
      * @return array<int, array<string, mixed>>
      */
-    protected function get_nav_bar_from_items(
+    protected function getNavBarFromItems(
         array $date_components,
         array $items,
         $show_any,
@@ -344,16 +344,16 @@ abstract class CalendarBase
      * Creates a calendar navigation bar for a given level.
      *
      * @param int $level - 0-year, 1-month/week, 2-day
-     * @param array<int|string, int|string>|null $labels get_nav_bar_from_items()
+     * @param array<int|string, int|string>|null $labels getNavBarFromItems()
      *   only ever passes each label straight through to the template as a
      *   display value -- CalendarMonthly's own day-number labels are ints,
      *   not strings.
      */
-    protected function build_nav_bar($level, ?array $labels): void
+    protected function buildNavBar($level, ?array $labels): void
     {
         $levelDql = $this->calendar_levels[$level]['dql'];
         $scope = $this->scope;
-        $dateWhere = $this->get_date_where($level, forDql: true);
+        $dateWhere = $this->getDateWhere($level, forDql: true);
 
         $rows = $this->calendarRepository->countGroupedByLevel($levelDql, $scope, $dateWhere);
         $level_items = [];
@@ -387,7 +387,7 @@ abstract class CalendarBase
             array_pop($dates);
         }
 
-        $nav_bar = $this->get_nav_bar_from_items(
+        $nav_bar = $this->getNavBarFromItems(
             $dates,
             $level_items,
             true,
@@ -404,7 +404,7 @@ abstract class CalendarBase
      * Assigns the next/previous link to the template with regards to
      * the currently choosen date.
      */
-    protected function build_next_prev(): void
+    protected function buildNextPrev(): void
     {
         $prev = $next = null;
         if ($this->chronology_date === []) {
@@ -455,7 +455,7 @@ abstract class CalendarBase
                 $chronology_date = explode('-', $prev);
                 $tpl_var['previous'] =
                   [
-                      'LABEL' => $this->get_date_nice_name($prev),
+                      'LABEL' => $this->getDateNiceName($prev),
                       'URL' => $this->urlService->duplicateIndexUrl(
                           [
                               'chronology_date' => $chronology_date,
@@ -472,7 +472,7 @@ abstract class CalendarBase
                 $chronology_date = explode('-', $next);
                 $tpl_var['next'] =
                   [
-                      'LABEL' => $this->get_date_nice_name($next),
+                      'LABEL' => $this->getDateNiceName($next),
                       'URL' => $this->urlService->duplicateIndexUrl(
                           [
                               'chronology_date' => $chronology_date,
@@ -484,7 +484,7 @@ abstract class CalendarBase
         }
 
         if ($tpl_var !== []) {
-            // Patches the *last* row build_nav_bar() accumulated so far
+            // Patches the *last* row buildNavBar() accumulated so far
             // this render (real cross-method shared state -- see this
             // property's own docblock), rather than adding a new row.
             if ($this->chronologyNavigationBars !== []) {

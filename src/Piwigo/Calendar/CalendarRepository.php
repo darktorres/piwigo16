@@ -39,7 +39,7 @@ final class CalendarRepository
     /**
      * $fromWhereSql ({@see CalendarService::buildInnerSql()}'s own
      * `CalendarQueryScope::$rawSqlFromWhere}) and $dateWhereSql (the
-     * pre-existing `CalendarBase::get_date_where()` -- despite the name,
+     * pre-existing `CalendarBase::getDateWhere()` -- despite the name,
      * a WHERE-clause *continuation* fragment, e.g. `AND
      * (date_available BETWEEN ...)`, not an ORDER BY) are already-built
      * SqlCondition fragments; $orderBySql is a raw, already-built trusted
@@ -70,7 +70,7 @@ final class CalendarRepository
      * DQL-shaped counterparts of $fromWhere/$dateWhere (already computed
      * by the caller for every *other* real method in this file via
      * {@see CalendarQueryScope::$dqlWhere}/`CalendarBase::
-     * get_date_where($max_levels, forDql: true)`) -- null from either
+     * getDateWhere($max_levels, forDql: true)`) -- null from either
      * (this method's only other real caller,
      * `tests/Integration/CalendarRepositoryTest.php`, never passes them)
      * means "don't even attempt DQL," same as an unparseable $orderBySql.
@@ -172,12 +172,12 @@ final class CalendarRepository
      * SqlCondition/expression-string pieces. Column extraction/reduction
      * (e.g. period => nb_images) deliberately stays in the calendar
      * classes, unchanged -- some of it has subtle, real casting
-     * differences between call sites (e.g. build_month_calendar()'s
+     * differences between call sites (e.g. buildMonthCalendar()'s
      * day-count loop never casts `count` to int, unlike its
-     * build_global_calendar()/build_year_calendar() siblings), not worth
+     * buildGlobalCalendar()/buildYearCalendar() siblings), not worth
      * risking a behavior change over.
      *
-     * CalendarBase::build_nav_bar()'s own query: one row per distinct
+     * CalendarBase::buildNavBar()'s own query: one row per distinct
      * $levelDql value within the current inner/date-range filter.
      *
      * DQL's own `GroupByItem` grammar only accepts a path expression or a
@@ -227,7 +227,7 @@ final class CalendarRepository
     }
 
     /**
-     * CalendarBase::build_next_prev()'s own query -- every distinct
+     * CalendarBase::buildNextPrev()'s own query -- every distinct
      * concatenated period string within the current inner filter, dated
      * rows only. Unlike the other methods here, returns the fully
      * extracted/filtered period list directly (not raw rows): the
@@ -293,7 +293,7 @@ final class CalendarRepository
     }
 
     /**
-     * CalendarMonthly::build_global_calendar()'s own query: image count
+     * CalendarMonthly::buildGlobalCalendar()'s own query: image count
      * per year+month within the current inner/date-range filter.
      *
      * The original raw-SQL query's own `GROUP BY period, {$yearExpr},
@@ -343,7 +343,7 @@ final class CalendarRepository
     }
 
     /**
-     * CalendarMonthly::build_year_calendar()'s own query: image count per
+     * CalendarMonthly::buildYearCalendar()'s own query: image count per
      * month+day within the current inner/date-range filter.
      *
      * `period` alone is both the group key and sort key here (unlike
@@ -376,7 +376,7 @@ final class CalendarRepository
     }
 
     /**
-     * CalendarMonthly::build_month_calendar()'s own day-count query:
+     * CalendarMonthly::buildMonthCalendar()'s own day-count query:
      * image count per day-of-month within the current inner/date-range
      * filter (already scoped to a single year+month by $scope/$dateWhere).
      *
@@ -409,7 +409,7 @@ final class CalendarRepository
     }
 
     /**
-     * CalendarMonthly::build_month_calendar()'s own per-day query: one
+     * CalendarMonthly::buildMonthCalendar()'s own per-day query: one
      * random image (for the thumbnail preview) among the images available
      * on the given day, dated rows only ($dateFieldDql IS NOT NULL is
      * implicit in $dateWhere/$scope already scoping to a single day).

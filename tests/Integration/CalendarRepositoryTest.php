@@ -105,7 +105,7 @@ final class CalendarRepositoryTest extends IntegrationTestCase
 
     public function testFindImageIdsAppliesTheDateWhereContinuation(): void
     {
-        // get_date_where() (despite its name) returns a WHERE-clause
+        // getDateWhere() (despite its name) returns a WHERE-clause
         // *continuation* fragment ("AND (...)"), which must land right
         // after $fromWhereSql's own WHERE and before GROUP BY --
         // concatenating it after GROUP BY or next to ORDER BY instead

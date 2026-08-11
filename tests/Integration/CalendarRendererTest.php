@@ -254,7 +254,7 @@ namespace Piwigo\Tests\Integration {
          * "browse by date" link -- through the real, unmodified
          * CalendarRenderer::render() entry point, not just the calendar
          * class's own method in isolation (see
-         * CalendarMonthlyTest::test_build_global_calendar_groups_multiple_years_and_months_correctly()
+         * CalendarMonthlyTest::test_buildGlobalCalendar_groups_multiple_years_and_months_correctly()
          * for the underlying query). Year/month grouping must work correctly
          * under the standard ONLY_FULL_GROUP_BY sql_mode this project's own
          * DbConnection never strips.
@@ -301,7 +301,7 @@ namespace Piwigo\Tests\Integration {
          * (Piwigo\Url\UrlService::parseWellKnownParamsUrl() returns
          * list<string>) -- render() sanitizes each non-'any', non-empty token
          * into a real int before ever handing it to the calendar object (see
-         * its own sanitization loop), which CalendarBase::build_next_prev()'s
+         * its own sanitization loop), which CalendarBase::buildNextPrev()'s
          * own is_string()-based "current period" filter depends on. See
          * CalendarMonthlyTest's own matching test.
          */
@@ -324,7 +324,7 @@ namespace Piwigo\Tests\Integration {
             // Sanitized from ['2024', '3'] into real ints.
             self::assertSame([2024, 3], $result->chronologyDate);
             // Only images 1 and 2 (both in March 2024) match the resulting
-            // get_date_where() filter, oldest-first (small selected period).
+            // getDateWhere() filter, oldest-first (small selected period).
             self::assertSame([1, 2], $result->items);
 
             $nav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);

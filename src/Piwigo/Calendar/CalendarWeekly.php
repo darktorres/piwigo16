@@ -76,19 +76,19 @@ final class CalendarWeekly extends CalendarBase
      * @return bool false indicates that thumbnails where not included
      */
     #[Override]
-    public function generate_category_content(TemplateInterface $template): bool
+    public function generateCategoryContent(TemplateInterface $template): bool
     {
         $nb_date_parts = count($this->chronology_date);
         if ($nb_date_parts === 0) {
-            $this->build_nav_bar(self::CYEAR, null); // years
+            $this->buildNavBar(self::CYEAR, null); // years
         }
         if ($nb_date_parts === 1) {
-            $this->build_nav_bar(self::CWEEK, []); // week nav bar 1-53
+            $this->buildNavBar(self::CWEEK, []); // week nav bar 1-53
         }
         if ($nb_date_parts === 2) {
-            $this->build_nav_bar(self::CDAY, null); // days nav bar Mon-Sun
+            $this->buildNavBar(self::CDAY, null); // days nav bar Mon-Sun
         }
-        $this->build_next_prev();
+        $this->buildNextPrev();
         return false;
     }
 
@@ -98,7 +98,7 @@ final class CalendarWeekly extends CalendarBase
      * @param int $max_levels (e.g. 2=only year and month)
      */
     #[Override]
-    public function get_date_where($max_levels = 3, bool $forDql = false): SqlCondition
+    public function getDateWhere($max_levels = 3, bool $forDql = false): SqlCondition
     {
         $dateField = $forDql ? $this->date_field_dql : $this->date_field;
         $levelKey = $forDql ? 'dql' : 'sql';

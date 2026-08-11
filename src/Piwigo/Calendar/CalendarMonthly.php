@@ -58,39 +58,39 @@ final class CalendarMonthly extends CalendarBase
      * @return bool false indicates that thumbnails where not included
      */
     #[Override]
-    public function generate_category_content(TemplateInterface $template): bool
+    public function generateCategoryContent(TemplateInterface $template): bool
     {
         $view_type = $this->chronology_view;
         if ($view_type === self::CAL_VIEW_CALENDAR) {
             $tpl_var = [];
             $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts === 0) {// case A: no year given - display all years+months
-                if ($this->build_global_calendar($tpl_var)) {
+                if ($this->buildGlobalCalendar($tpl_var)) {
                     $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
                     return true;
                 }
             }
 
-            // build_global_calendar() may have just narrowed the current
+            // buildGlobalCalendar() may have just narrowed the current
             // selection down to a single year (see its own doc comment), so
             // chronology_date must be re-read, not cached above.
             $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts === 1) {// case B: year given - display all days in given year
-                if ($this->build_year_calendar($tpl_var)) {
+                if ($this->buildYearCalendar($tpl_var)) {
                     $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
-                    $this->build_nav_bar(self::CYEAR, null); // years
+                    $this->buildNavBar(self::CYEAR, null); // years
                     return true;
                 }
             }
 
-            // same reasoning: build_year_calendar() may have narrowed down
+            // same reasoning: buildYearCalendar() may have narrowed down
             // to a single month.
             $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts === 2) {// case C: year+month given - display a nice month calendar
-                if ($this->build_month_calendar($tpl_var)) {
+                if ($this->buildMonthCalendar($tpl_var)) {
                     $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
                 }
-                $this->build_next_prev();
+                $this->buildNextPrev();
                 return true;
             }
         }
@@ -98,10 +98,10 @@ final class CalendarMonthly extends CalendarBase
         $nb_date_parts = count($this->chronology_date);
         if ($view_type === self::CAL_VIEW_LIST or $nb_date_parts === 3) {
             if ($nb_date_parts === 0) {
-                $this->build_nav_bar(self::CYEAR, null); // years
+                $this->buildNavBar(self::CYEAR, null); // years
             }
             if ($nb_date_parts === 1) {
-                $this->build_nav_bar(self::CMONTH, null); // month
+                $this->buildNavBar(self::CMONTH, null); // month
             }
             if ($nb_date_parts === 2) {
                 $chronology_date = $this->chronology_date;
@@ -109,12 +109,12 @@ final class CalendarMonthly extends CalendarBase
                 $year = is_int($year) || is_string($year) ? $year : 0;
                 $month = $chronology_date[self::CMONTH] ?? null;
                 $month = is_int($month) || is_string($month) ? $month : 0;
-                $day_labels = range(1, $this->get_all_days_in_month($year, $month));
+                $day_labels = range(1, $this->getAllDaysInMonth($year, $month));
                 array_unshift($day_labels, 0);
                 unset($day_labels[0]);
-                $this->build_nav_bar(self::CDAY, $day_labels); // days
+                $this->buildNavBar(self::CDAY, $day_labels); // days
             }
-            $this->build_next_prev();
+            $this->buildNextPrev();
         }
         return false;
     }
@@ -125,7 +125,7 @@ final class CalendarMonthly extends CalendarBase
      * @param int $max_levels (e.g. 2=only year and month)
      */
     #[Override]
-    public function get_date_where($max_levels = 3, bool $forDql = false): SqlCondition
+    public function getDateWhere($max_levels = 3, bool $forDql = false): SqlCondition
     {
         $dateField = $forDql ? $this->date_field_dql : $this->date_field;
         $levelKey = $forDql ? 'dql' : 'sql';
@@ -152,7 +152,7 @@ final class CalendarMonthly extends CalendarBase
                     $e .= sprintf('%02d', $day);
                 } else {
                     $b .= '01';
-                    $e .= $this->get_all_days_in_month($year, $month);
+                    $e .= $this->getAllDaysInMonth($year, $month);
                 }
             } else {
                 $b .= '01-01';
@@ -204,7 +204,7 @@ final class CalendarMonthly extends CalendarBase
      *   a numeric string parsed from the URL (or the literal 'any')
      * @param int|string $month same: $page['chronology_date'][self::CMONTH]
      */
-    protected function get_all_days_in_month($year, $month): int
+    protected function getAllDaysInMonth($year, $month): int
     {
         $md = [
             1 => 31,
@@ -243,12 +243,12 @@ final class CalendarMonthly extends CalendarBase
      *
      * @param array<string, mixed> $tpl_var
      */
-    protected function build_global_calendar(array &$tpl_var): bool
+    protected function buildGlobalCalendar(array &$tpl_var): bool
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) === 0);
         $scope = $this->scope;
-        $dateWhere = $this->get_date_where(forDql: true);
+        $dateWhere = $this->getDateWhere(forDql: true);
 
         $rows = $this->calendarRepository->countByYearMonth($this->date_field_dql, $scope, $dateWhere);
         $items = [];
@@ -288,7 +288,7 @@ final class CalendarMonthly extends CalendarBase
                 'chronology_date' => $chronology_date,
             ]);
 
-            $nav_bar = $this->get_nav_bar_from_items(
+            $nav_bar = $this->getNavBarFromItems(
                 $chronology_date,
                 $year_data['children'],
                 false,
@@ -318,12 +318,12 @@ final class CalendarMonthly extends CalendarBase
      *
      * @param array<string, mixed> $tpl_var
      */
-    protected function build_year_calendar(array &$tpl_var): bool
+    protected function buildYearCalendar(array &$tpl_var): bool
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) === 1);
         $scope = $this->scope;
-        $dateWhere = $this->get_date_where(forDql: true);
+        $dateWhere = $this->getDateWhere(forDql: true);
 
         $rows = $this->calendarRepository->countByMonthDay($this->date_field_dql, $scope, $dateWhere);
         $items = [];
@@ -366,7 +366,7 @@ final class CalendarMonthly extends CalendarBase
                 'chronology_date' => $chronology_date,
             ]);
 
-            $nav_bar = $this->get_nav_bar_from_items(
+            $nav_bar = $this->getNavBarFromItems(
                 $chronology_date,
                 $month_data['children'],
                 false
@@ -394,7 +394,7 @@ final class CalendarMonthly extends CalendarBase
      *
      * @param array<string, mixed> $tpl_var
      */
-    protected function build_month_calendar(array &$tpl_var): bool
+    protected function buildMonthCalendar(array &$tpl_var): bool
     {
         // self::CYEAR/self::CMONTH are never touched below (only self::CDAY is toggled, per
         // day, inside the loop), so a single snapshot taken here stays valid
@@ -406,7 +406,7 @@ final class CalendarMonthly extends CalendarBase
         $month = is_int($month) || is_string($month) ? $month : 0;
 
         $scope = $this->scope;
-        $dateWhere = $this->get_date_where(forDql: true);
+        $dateWhere = $this->getDateWhere(forDql: true);
 
         $items = [];
         $rows = $this->calendarRepository->countByDayOfMonth($this->date_field_dql, $scope, $dateWhere);
@@ -421,7 +421,7 @@ final class CalendarMonthly extends CalendarBase
         foreach ($items as $day => $data) {
             $this->chronology_date[self::CDAY] = $day;
             $scopePerDay = $this->scope;
-            $dateWherePerDay = $this->get_date_where(forDql: true);
+            $dateWherePerDay = $this->getDateWhere(forDql: true);
             unset($this->chronology_date[self::CDAY]);
 
             $row = $this->calendarRepository->findRandomImageForDay($this->date_field_dql, $scopePerDay, $dateWherePerDay);
@@ -465,12 +465,12 @@ final class CalendarMonthly extends CalendarBase
                 $tpl_crt_week[] = [];
             }
 
-            // get_all_days_in_month() always returns >= 28, so this loop
+            // getAllDaysInMonth() always returns >= 28, so this loop
             // always runs at least once and $dow is always assigned below;
             // the initializer only keeps analysis sound.
             $dow = 0;
             for ($day = 1;
-                $day <= $this->get_all_days_in_month($year, $month);
+                $day <= $this->getAllDaysInMonth($year, $month);
                 $day++) {
                 $dow = ($first_day_dow + $day - 1) % 7;
                 if ($dow === 0 and $day !== 1) {

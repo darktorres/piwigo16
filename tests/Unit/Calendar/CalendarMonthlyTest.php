@@ -13,7 +13,7 @@ use Piwigo\Permission\SqlCondition;
  * Piwigo\Calendar\CalendarMonthly -- monthly calendar style (years/
  * months/days). No dedicated Integration/Browser spec of its own.
  *
- * `initialize()` and `get_date_where()` are both real, testable logic
+ * `initialize()` and `getDateWhere()` are both real, testable logic
  * given a real, container-resolved instance -- same rationale as
  * `CalendarWeeklyTest.php`.
  */
@@ -76,13 +76,13 @@ test('initialize builds the real year/month/day SQL expressions, with Lang::mont
         ->and($calendar->calendar_levels[CalendarMonthly::CDAY]['labels'])->toBeNull();
 });
 
-test('get_date_where returns the real IS NOT NULL fallback for an empty chronology_date', function (): void {
+test('getDateWhere returns the real IS NOT NULL fallback for an empty chronology_date', function (): void {
     $calendar = calendarMonthlyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarMonthlyTestScope());
     $calendar->chronology_date = [];
 
-    $condition = $calendar->get_date_where();
+    $condition = $calendar->getDateWhere();
 
     expect($condition->sql)
         ->toBe(' AND date_creation IS NOT NULL')
@@ -90,13 +90,13 @@ test('get_date_where returns the real IS NOT NULL fallback for an empty chronolo
         ->toBe([]);
 });
 
-test('get_date_where builds a real full-year range for a single-level chronology_date', function (): void {
+test('getDateWhere builds a real full-year range for a single-level chronology_date', function (): void {
     $calendar = calendarMonthlyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarMonthlyTestScope());
     $calendar->chronology_date = [2026];
 
-    $condition = $calendar->get_date_where();
+    $condition = $calendar->getDateWhere();
 
     expect($condition->sql)
         ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
@@ -107,13 +107,13 @@ test('get_date_where builds a real full-year range for a single-level chronology
         ]);
 });
 
-test('get_date_where builds a real full-month range when only year+month are set', function (): void {
+test('getDateWhere builds a real full-month range when only year+month are set', function (): void {
     $calendar = calendarMonthlyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarMonthlyTestScope());
     $calendar->chronology_date = [2026, 2];
 
-    $condition = $calendar->get_date_where();
+    $condition = $calendar->getDateWhere();
 
     // 2026 is not a leap year (2026 / 4 is not an integer) -- February has 28 days.
     expect($condition->sql)
@@ -125,14 +125,14 @@ test('get_date_where builds a real full-month range when only year+month are set
         ]);
 });
 
-test('get_date_where builds a real single-day range for a full year+month+day chronology_date', function (): void {
+test('getDateWhere builds a real single-day range for a full year+month+day chronology_date', function (): void {
     $calendar = calendarMonthlyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarMonthlyTestScope());
     $calendar->chronology_date = [2026, 2, 14];
 
-    $sqlCondition = $calendar->get_date_where(3, false);
-    $dqlCondition = $calendar->get_date_where(3, true);
+    $sqlCondition = $calendar->getDateWhere(3, false);
+    $dqlCondition = $calendar->getDateWhere(3, true);
 
     expect($sqlCondition->sql)
         ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
@@ -145,13 +145,13 @@ test('get_date_where builds a real single-day range for a full year+month+day ch
         ->toBe('i.dateCreation BETWEEN :dateWhereStart AND :dateWhereEnd');
 });
 
-test('get_date_where filters by month/day alone (via calendar_levels) when the year is "any"', function (): void {
+test('getDateWhere filters by month/day alone (via calendar_levels) when the year is "any"', function (): void {
     $calendar = calendarMonthlyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarMonthlyTestScope());
     $calendar->chronology_date = ['any', 6, 15];
 
-    $condition = $calendar->get_date_where();
+    $condition = $calendar->getDateWhere();
 
     expect($condition->sql)
         ->toBe(' AND date_creation IS NOT NULL AND MONTH(date_creation)= :dateWhereMonth AND DAYOFMONTH(date_creation)= :dateWhereDay')
@@ -162,13 +162,13 @@ test('get_date_where filters by month/day alone (via calendar_levels) when the y
         ]);
 });
 
-test('get_date_where respects max_levels, dropping the day component from a full chronology_date', function (): void {
+test('getDateWhere respects max_levels, dropping the day component from a full chronology_date', function (): void {
     $calendar = calendarMonthlyTestSubject();
     $calendar->chronology_field = 'created';
     $calendar->initialize(calendarMonthlyTestScope());
     $calendar->chronology_date = [2026, 2, 14];
 
-    $condition = $calendar->get_date_where(2);
+    $condition = $calendar->getDateWhere(2);
 
     expect($condition->sql)
         ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')

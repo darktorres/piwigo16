@@ -29,8 +29,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\TranslatorTestFactory;
 
     /**
-     * Covers CalendarBase's own shared logic (initialize()/get_date_where()'s
-     * shared shape/get_display_name()/build_nav_bar()/build_next_prev(), all
+     * Covers CalendarBase's own shared logic (initialize()/getDateWhere()'s
+     * shared shape/getDisplayName()/buildNavBar()/buildNextPrev(), all
      * `protected`/abstract on the base class) through CalendarMonthly, its
      * only sibling-tested concrete subclass alongside CalendarWeeklyTest --
      * CalendarBase itself is abstract and has no other real construction
@@ -59,14 +59,14 @@ namespace Piwigo\Tests\Integration {
      * Lang::reset()/Translator::reset() pin this process's translation state
      * to "nothing loaded" -- IntegrationTestCase's own setUp() doesn't manage
      * Lang at all (confirmed via a full grep), so leaving it alone would make
-     * get_date_component_label()'s month/day-name lookups depend on whichever
+     * getDateComponentLabel()'s month/day-name lookups depend on whichever
      * earlier test file in the same PHPUnit/Pest process happened to load a
      * language file first. With nothing loaded, Piwigo\Core\Lang::t() (used
      * for the week-number/"All" labels) still returns its own literal,
      * untranslated fallback text (Piwigo\Lang\Translator::translate()'s own
      * documented behaviour) -- Piwigo\Core\Lang::months()/days() (a
      * different, untranslated-by-default array) come back empty, so
-     * get_date_component_label() falls through to the raw numeric component
+     * getDateComponentLabel() falls through to the raw numeric component
      * every time. Both are asserted on below, not routed around.
      */
     final class CalendarMonthlyTest extends IntegrationTestCase
@@ -201,7 +201,7 @@ namespace Piwigo\Tests\Integration {
             $calendar = $this->makeCalendar();
             $calendar->chronology_date = [2024, 3, 10];
 
-            $where = $calendar->get_date_where();
+            $where = $calendar->getDateWhere();
 
             self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where->sql);
             self::assertSame([
@@ -211,8 +211,8 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * get_all_days_in_month()'s leap-year branch (Feb 29 vs Feb 28) is
-         * `protected` -- exercised here through the public get_date_where(),
+         * getAllDaysInMonth()'s leap-year branch (Feb 29 vs Feb 28) is
+         * `protected` -- exercised here through the public getDateWhere(),
          * which calls it to compute the month's last day when only
          * year+month are selected, exactly like real production traffic.
          */
@@ -221,7 +221,7 @@ namespace Piwigo\Tests\Integration {
             $calendar = $this->makeCalendar();
 
             $calendar->chronology_date = [2024, 2]; // 2024 is a leap year
-            $where2024 = $calendar->get_date_where();
+            $where2024 = $calendar->getDateWhere();
             self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where2024->sql);
             self::assertSame([
                 'dateWhereStart' => '2024-02-01',
@@ -229,7 +229,7 @@ namespace Piwigo\Tests\Integration {
             ], $where2024->parameters);
 
             $calendar->chronology_date = [2023, 2]; // 2023 is not a leap year
-            $where2023 = $calendar->get_date_where();
+            $where2023 = $calendar->getDateWhere();
             self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where2023->sql);
             self::assertSame([
                 'dateWhereStart' => '2023-02-01',
@@ -244,7 +244,7 @@ namespace Piwigo\Tests\Integration {
             // year 'any', month given: skips the year BETWEEN bound entirely,
             // filters only by month.
             $calendar->chronology_date = ['any', 3];
-            $whereMonthOnly = $calendar->get_date_where();
+            $whereMonthOnly = $calendar->getDateWhere();
             self::assertSame(' AND date_available IS NOT NULL AND MONTH(date_available)= :dateWhereMonth', $whereMonthOnly->sql);
             self::assertSame([
                 'dateWhereMonth' => 3,
@@ -252,7 +252,7 @@ namespace Piwigo\Tests\Integration {
 
             // year given, month 'any': the whole year, no month/day narrowing.
             $calendar->chronology_date = [2024, 'any'];
-            $whereYearOnly = $calendar->get_date_where();
+            $whereYearOnly = $calendar->getDateWhere();
             self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $whereYearOnly->sql);
             self::assertSame([
                 'dateWhereStart' => '2024-01-01',
@@ -265,7 +265,7 @@ namespace Piwigo\Tests\Integration {
             $calendar = $this->makeCalendar();
             $calendar->chronology_date = [];
 
-            $where = $calendar->get_date_where();
+            $where = $calendar->getDateWhere();
             self::assertSame(' AND date_available IS NOT NULL', $where->sql);
             self::assertSame([], $where->parameters);
         }
@@ -274,7 +274,7 @@ namespace Piwigo\Tests\Integration {
          * REAL BUG found while writing this test (reproducible against a real
          * MySQL/MariaDB connection with the standard ONLY_FULL_GROUP_BY
          * sql_mode, which this project's own DbConnection deliberately never
-         * strips -- see CalendarRepository's own docblock): build_global_calendar()'s
+         * strips -- see CalendarRepository's own docblock): buildGlobalCalendar()'s
          * `ORDER BY YEAR(date_field) DESC, MONTH(date_field) ASC` references
          * the raw date column directly while the query only `GROUP BY period`
          * (a DATE_FORMAT(...) alias) -- MySQL can't prove YEAR()/MONTH() are
@@ -286,7 +286,7 @@ namespace Piwigo\Tests\Integration {
          * CalendarRenderer::render() entry point in CalendarRendererTest.
          */
         /**
-         * Regression test for a fixed bug: build_global_calendar()'s
+         * Regression test for a fixed bug: buildGlobalCalendar()'s
          * `ORDER BY YEAR(date_field) DESC, MONTH(date_field) ASC` used to
          * reference the raw date column directly while the query only
          * `GROUP BY period` (a DATE_FORMAT(...) alias) -- MySQL couldn't prove
@@ -307,7 +307,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [];
             $template = TemplateTestFactory::build();
 
-            $ret = $calendar->generate_category_content($template);
+            $ret = $calendar->generateCategoryContent($template);
 
             self::assertTrue($ret);
             // 2 distinct years exist (2024, 2025), so no single-year bail-out --
@@ -344,10 +344,10 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024];
             $template = TemplateTestFactory::build();
 
-            $ret = $calendar->generate_category_content($template);
+            $ret = $calendar->generateCategoryContent($template);
 
             self::assertTrue($ret);
-            // 2 distinct months exist in 2024, so build_year_calendar() does
+            // 2 distinct months exist in 2024, so buildYearCalendar() does
             // NOT bail out to the single-month view -- chronology_date stays
             // exactly as given.
             self::assertSame([2024], $calendar->chronology_date);
@@ -364,7 +364,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(15, $this->dig($month3, ['items', 1, 'LABEL']));
             self::assertSame(1, $this->dig($month3, ['items', 1, 'NB_IMAGES']));
 
-            // Month 7 (July): 1 image, on day 4 -- build_year_calendar() keeps
+            // Month 7 (July): 1 image, on day 4 -- buildYearCalendar() keeps
             // the day component as a raw substr() slice ('04'), not an
             // int-cast value, unlike the month key itself (real, observed
             // behaviour: a leading-zero day never survives PHP's numeric-string
@@ -374,7 +374,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('04', $this->dig($month7, ['items', 0, 'LABEL']));
             self::assertSame(1, $this->dig($month7, ['items', 0, 'NB_IMAGES']));
 
-            // build_nav_bar(CYEAR) also ran (case B always calls it) -- 2024
+            // buildNavBar(CYEAR) also ran (case B always calls it) -- 2024
             // has 3 images total, 2025 has 2, plus the "All" link.
             $navVars = $calendar->getChronologyNavigationBars();
             self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
@@ -391,7 +391,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024, 3];
             $template = TemplateTestFactory::build();
 
-            $ret = $calendar->generate_category_content($template);
+            $ret = $calendar->generateCategoryContent($template);
 
             self::assertTrue($ret);
 
@@ -421,7 +421,7 @@ namespace Piwigo\Tests\Integration {
             // The picked-image derivative URL is the real DerivativeImage
             // algorithm's own output for image 1's known, real fixture row --
             // reconstructing it independently (rather than hardcoding the
-            // hashed filename) proves generate_category_content() picked
+            // hashed filename) proves generateCategoryContent() picked
             // *that* image, without duplicating DerivativeImage's own
             // internal path-building logic as a guess.
             $row1 = $this->conn->createQueryBuilder()
@@ -439,7 +439,7 @@ namespace Piwigo\Tests\Integration {
                 'DAY' => 1,
             ], $this->dig($calendarVars, ['month_view', 'weeks', 0, 4]));
 
-            $where = $calendar->get_date_where();
+            $where = $calendar->getDateWhere();
             self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where->sql);
             self::assertSame([
                 'dateWhereStart' => '2024-03-01',
@@ -451,12 +451,12 @@ namespace Piwigo\Tests\Integration {
                     'chronology_date' => [2024],
                 ]) . '|removed=' . json_encode(['start']) . '">2024</a>'
                 . ' / <span class="calInHere">3</span>',
-                $calendar->get_display_name()
+                $calendar->getDisplayName()
             );
         }
 
         /**
-         * Regression test for a fixed bug: CalendarBase::build_next_prev()
+         * Regression test for a fixed bug: CalendarBase::buildNextPrev()
          * used to compute its own "current period" marker as
          * `implode('-', array_filter($this->chronology_date, is_string(...)))`
          * -- silently dropping every *int*-typed component. But
@@ -485,7 +485,7 @@ namespace Piwigo\Tests\Integration {
             $withStrings->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
             $withStrings->chronology_date = ['2024', '3'];
             $templateStrings = TemplateTestFactory::build();
-            $withStrings->generate_category_content($templateStrings);
+            $withStrings->generateCategoryContent($templateStrings);
 
             $navStrings = $this->digArray($withStrings->getChronologyNavigationBars(), [0]);
             self::assertArrayNotHasKey('previous', $navStrings);
@@ -495,7 +495,7 @@ namespace Piwigo\Tests\Integration {
             $withInts->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
             $withInts->chronology_date = [2024, 3];
             $templateInts = TemplateTestFactory::build();
-            $withInts->generate_category_content($templateInts);
+            $withInts->generateCategoryContent($templateInts);
 
             $navInts = $this->digArray($withInts->getChronologyNavigationBars(), [0]);
             self::assertArrayNotHasKey('previous', $navInts);
@@ -518,7 +518,7 @@ namespace Piwigo\Tests\Integration {
             $yearLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
             $yearLevel->chronology_date = [];
             $yearTemplate = TemplateTestFactory::build();
-            self::assertFalse($yearLevel->generate_category_content($yearTemplate));
+            self::assertFalse($yearLevel->generateCategoryContent($yearTemplate));
             $yearNav = $yearLevel->getChronologyNavigationBars();
             self::assertSame(2024, $this->dig($yearNav, [0, 'items', 0, 'LABEL']));
             self::assertSame(3, $this->dig($yearNav, [0, 'items', 0, 'NB_IMAGES']));
@@ -528,7 +528,7 @@ namespace Piwigo\Tests\Integration {
             $monthLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
             $monthLevel->chronology_date = [2024];
             $monthTemplate = TemplateTestFactory::build();
-            self::assertFalse($monthLevel->generate_category_content($monthTemplate));
+            self::assertFalse($monthLevel->generateCategoryContent($monthTemplate));
             $monthNav = $monthLevel->getChronologyNavigationBars();
             self::assertSame(3, $this->dig($monthNav, [0, 'items', 0, 'LABEL']));
             self::assertSame(2, $this->dig($monthNav, [0, 'items', 0, 'NB_IMAGES']));
@@ -537,9 +537,9 @@ namespace Piwigo\Tests\Integration {
 
             // nb_date_parts=2 -> day nav bar. Unlike the year/month levels
             // above, this call passes an explicit, non-empty $day_labels
-            // array (1..31, built from get_all_days_in_month(), not from
+            // array (1..31, built from getAllDaysInMonth(), not from
             // Lang::days()) rather than null/[] -- which flips on
-            // get_nav_bar_from_items()'s "show_empty" synthesis (calendarShowEmpty()
+            // getNavBarFromItems()'s "show_empty" synthesis (calendarShowEmpty()
             // defaults true): every day 1..31 gets a real entry, with a -1
             // sentinel (no URL/NB_IMAGES key at all) for the 29 days with no
             // image, not just the 2 real ones.
@@ -547,7 +547,7 @@ namespace Piwigo\Tests\Integration {
             $dayLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
             $dayLevel->chronology_date = [2024, 3];
             $dayTemplate = TemplateTestFactory::build();
-            self::assertFalse($dayLevel->generate_category_content($dayTemplate));
+            self::assertFalse($dayLevel->generateCategoryContent($dayTemplate));
             $dayItems = $this->digArray($dayLevel->getChronologyNavigationBars(), [0, 'items']);
             self::assertCount(31, $dayItems);
             self::assertSame([
@@ -572,19 +572,19 @@ namespace Piwigo\Tests\Integration {
                     'chronology_date' => [2024],
                 ]) . '|removed=' . json_encode(['start']) . '">2024</a>'
                 . ' / <span class="calInHere">All</span>',
-                $calendar->get_display_name()
+                $calendar->getDisplayName()
             );
         }
 
         /**
          * chronology_field='created' points every image at date_creation,
          * which is NULL for all 5 fixture images (this file's own UPDATEs
-         * only ever touch date_available) -- get_date_where() with nothing
+         * only ever touch date_available) -- getDateWhere() with nothing
          * selected falls back to `AND date_creation IS NOT NULL`, matching
          * zero rows.
          *
          * Regression test for the same fixed ONLY_FULL_GROUP_BY bug documented
-         * above (test_build_global_calendar_groups_multiple_years_and_months_correctly()):
+         * above (test_buildGlobalCalendar_groups_multiple_years_and_months_correctly()):
          * confirms the query now runs to completion (rather than being
          * rejected at the SQL level before any row is ever read) even when
          * zero rows actually match -- an empty result set is a real, distinct
@@ -601,22 +601,22 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('date_creation', $calendar->date_field);
 
             $template = TemplateTestFactory::build();
-            $ret = $calendar->generate_category_content($template);
+            $ret = $calendar->generateCategoryContent($template);
 
             self::assertTrue($ret);
             self::assertSame([], $this->digArray($template->get_template_vars('chronology_calendar'), ['calendar_bars']));
         }
 
         /**
-         * Branch coverage gap closed: CalendarBase::build_nav_bar()'s own
+         * Branch coverage gap closed: CalendarBase::buildNavBar()'s own
          * "only one value exists at this level" auto-narrow
          * (`count($level_items) === 1 and count($page_chronology_date) <
          * count($this->calendar_levels) - 1`) silently sets
          * chronology_date[level] and returns *before* ever appending anything
          * to 'chronology_navigation_bars' -- a distinct branch from
-         * build_global_calendar()'s own single-year bail-out (see
-         * test_build_global_calendar_groups_multiple_years_and_months_correctly()).
-         * build_nav_bar()'s own query never has an ORDER BY, so it was never
+         * buildGlobalCalendar()'s own single-year bail-out (see
+         * test_buildGlobalCalendar_groups_multiple_years_and_months_correctly()).
+         * buildNavBar()'s own query never has an ORDER BY, so it was never
          * affected by the (now-fixed) ONLY_FULL_GROUP_BY bug either -- this is
          * the one real way in this suite to observe the auto-narrow-and-return
          * behaviour directly.
@@ -635,19 +635,19 @@ namespace Piwigo\Tests\Integration {
             $calendar->initialize($this->makeScope('id IN (4,5)'));
 
             $template = TemplateTestFactory::build();
-            $ret = $calendar->generate_category_content($template);
+            $ret = $calendar->generateCategoryContent($template);
 
             self::assertFalse($ret);
-            // Auto-narrowed from [2025] to [2025, 1]: build_nav_bar(CMONTH)
+            // Auto-narrowed from [2025] to [2025, 1]: buildNavBar(CMONTH)
             // found a single distinct month (January) across id 4 and 5.
             self::assertSame([2025, 1], $calendar->chronology_date);
-            // build_nav_bar() itself returned early, before appending anything
+            // buildNavBar() itself returned early, before appending anything
             // for the month level -- the only entry present comes from
-            // build_next_prev()'s own separate (buggy) 'next' link, not from
+            // buildNextPrev()'s own separate (buggy) 'next' link, not from
             // a real nav bar of month choices.
-            // build_nav_bar() itself returned early, before appending anything
-            // for the month level. build_next_prev() still runs immediately
-            // afterwards (unconditional, see generate_category_content()) --
+            // buildNavBar() itself returned early, before appending anything
+            // for the month level. buildNextPrev() still runs immediately
+            // afterwards (unconditional, see generateCategoryContent()) --
             // now that it's fixed, it correctly finds that 2025-1 is the only
             // period id 4/5 (the only images in scope) ever fall into, so
             // there is genuinely no next or previous period at all.
@@ -658,7 +658,7 @@ namespace Piwigo\Tests\Integration {
         /**
          * A specific day with month left as 'any' is an unusual but
          * code-supported combination -- the year-known branch of
-         * get_date_where() re-checks the day component independently of month
+         * getDateWhere() re-checks the day component independently of month
          * when month is 'any' (or unset).
          */
         public function testGetDateWhereYearKnownMonthAnyStillAppliesADayFilter(): void
@@ -666,7 +666,7 @@ namespace Piwigo\Tests\Integration {
             $calendar = $this->makeCalendar();
             $calendar->chronology_date = [2024, 'any', 15];
 
-            $where = $calendar->get_date_where();
+            $where = $calendar->getDateWhere();
             self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd AND DAYOFMONTH(date_available)= :dateWhereDay', $where->sql);
             self::assertSame([
                 'dateWhereDay' => 15,
@@ -677,14 +677,14 @@ namespace Piwigo\Tests\Integration {
 
         /**
          * Same day-filter-independent-of-month behaviour as above, but on the
-         * year='any' side of get_date_where() (a completely separate branch).
+         * year='any' side of getDateWhere() (a completely separate branch).
          */
         public function testGetDateWhereYearAnyMonthAnyStillAppliesADayFilter(): void
         {
             $calendar = $this->makeCalendar();
             $calendar->chronology_date = ['any', 'any', 15];
 
-            $where = $calendar->get_date_where();
+            $where = $calendar->getDateWhere();
             self::assertSame(' AND date_available IS NOT NULL AND DAYOFMONTH(date_available)= :dateWhereDay', $where->sql);
             self::assertSame([
                 'dateWhereDay' => 15,
@@ -692,10 +692,10 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * get_all_days_in_month()'s final fallback (neither a leap-year-aware
+         * getAllDaysInMonth()'s final fallback (neither a leap-year-aware
          * February computation nor a plain lookup-table hit) only triggers
          * when $month itself isn't numeric -- reachable through
-         * generate_category_content()'s own day-nav-bar branch when the URL's
+         * generateCategoryContent()'s own day-nav-bar branch when the URL's
          * month component is the literal 'any', not a real number.
          */
         public function testGenerateCategoryContentDefaultsTo31DaysWhenMonthIsAny(): void
@@ -705,14 +705,14 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024, 'any'];
             $template = TemplateTestFactory::build();
 
-            $calendar->generate_category_content($template);
+            $calendar->generateCategoryContent($template);
 
             $dayNav = $this->digArray($calendar->getChronologyNavigationBars(), [0, 'items']);
             self::assertCount(31, $dayNav);
         }
 
         /**
-         * build_next_prev()'s own per-index sub-query loop uses a single,
+         * buildNextPrev()'s own per-index sub-query loop uses a single,
          * uniform literal `'any'` for any chronology_date index that is
          * itself 'any' -- applied to *every* row's period, not just the
          * current one -- so with chronology_date=[2024, 'any'] the whole
@@ -722,7 +722,7 @@ namespace Piwigo\Tests\Integration {
          * how the algorithm behaves, not a documented-elsewhere edge case.
          * '2024-any' sorts before '2025-any' under version_compare(),
          * landing at rank 0 -- no previous, and 'next' pointing at the only
-         * other period, 2025 (get_date_nice_name() skips the 'any' component
+         * other period, 2025 (getDateNiceName() skips the 'any' component
          * entirely, so the label is just the year).
          */
         public function testBuildNextPrevTreatsAnAnyComponentAsAnUnmatchedCurrentPeriod(): void
@@ -732,7 +732,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024, 'any'];
             $template = TemplateTestFactory::build();
 
-            $calendar->generate_category_content($template);
+            $calendar->generateCategoryContent($template);
 
             $nav = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
             self::assertArrayNotHasKey('previous', $nav);
@@ -746,7 +746,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * build_next_prev()'s own `if (! isset($upper_items_rank[$current]))`
+         * buildNextPrev()'s own `if (! isset($upper_items_rank[$current]))`
          * guard (CalendarBase.php's own "just in case (external link)" comment
          * right above it) fires when the requested chronology_date doesn't
          * correspond to *any* real period at all -- unlike the 'any' test
@@ -767,7 +767,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [1999, 6];
             $template = TemplateTestFactory::build();
 
-            $calendar->generate_category_content($template);
+            $calendar->generateCategoryContent($template);
 
             $nav = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
             self::assertArrayNotHasKey('previous', $nav);
@@ -781,7 +781,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * build_global_calendar() (case A: no year selected) bails out and
+         * buildGlobalCalendar() (case A: no year selected) bails out and
          * auto-narrows to a single real year instead of rendering a
          * pointless one-entry "choose a year" calendar -- scoped to images
          * 1-3 (all 2024) so exactly one year exists in this query's scope,
@@ -797,13 +797,13 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [];
             $template = TemplateTestFactory::build();
 
-            $calendar->generate_category_content($template);
+            $calendar->generateCategoryContent($template);
 
             self::assertSame([2024], $calendar->chronology_date);
         }
 
         /**
-         * build_year_calendar() (case B: year selected) bails out and
+         * buildYearCalendar() (case B: year selected) bails out and
          * auto-narrows to a single real month the same way -- images 4 and 5
          * are both dated January 2025, the only month in this query's scope.
          */
@@ -816,13 +816,13 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2025];
             $template = TemplateTestFactory::build();
 
-            $calendar->generate_category_content($template);
+            $calendar->generateCategoryContent($template);
 
             self::assertSame([2025, 1], $calendar->chronology_date);
         }
 
         /**
-         * September 1, 2024 is a Sunday. build_month_calendar()'s raw
+         * September 1, 2024 is a Sunday. buildMonthCalendar()'s raw
          * DAYOFWEEK()-1 gives dow=0 for Sunday; with week_starts_on=monday
          * (the default), a raw 0 must remap to column 6 (the last column of
          * the week), not stay at column 0 -- scoped to image 1 alone, moved
@@ -840,7 +840,7 @@ namespace Piwigo\Tests\Integration {
                 $calendar->chronology_date = [2024, 9];
                 $template = TemplateTestFactory::build();
 
-                $calendar->generate_category_content($template);
+                $calendar->generateCategoryContent($template);
 
                 $weeks = $this->digArray($template->get_template_vars('chronology_calendar'), ['month_view', 'weeks']);
                 $firstWeek = $this->digArray($weeks, [0]);
@@ -867,7 +867,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024, 7];
             $template = TemplateTestFactory::build();
 
-            $calendar->generate_category_content($template);
+            $calendar->generateCategoryContent($template);
 
             $weeks = $this->digArray($template->get_template_vars('chronology_calendar'), ['month_view', 'weeks']);
             $lastWeek = $this->digArray($weeks, [count($weeks) - 1]);
@@ -894,7 +894,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024, 7];
             $template = TemplateTestFactory::build();
 
-            $calendar->generate_category_content($template);
+            $calendar->generateCategoryContent($template);
 
             $weeks = $this->digArray($template->get_template_vars('chronology_calendar'), ['month_view', 'weeks']);
             $dayCell = null;

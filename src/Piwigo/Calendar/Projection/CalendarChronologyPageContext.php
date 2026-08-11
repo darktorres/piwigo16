@@ -12,8 +12,8 @@ use Piwigo\Core\TemplatePageContext;
  * {@see \Piwigo\Calendar\CalendarRenderer::render()}'s own
  * category-calling branch. `$chronologyNavigationBars` is
  * `month_calendar.tpl`'s own `chronology_navigation_bars` var, built by
- * {@see \Piwigo\Calendar\CalendarBase::build_nav_bar()} and build_next_prev()
- * over the course of `generate_category_content()` and read back once
+ * {@see \Piwigo\Calendar\CalendarBase::buildNavBar()} and buildNextPrev()
+ * over the course of `generateCategoryContent()` and read back once
  * that call returns via
  * {@see \Piwigo\Calendar\CalendarBase::getChronologyNavigationBars()} --
  * always included (not optional) since the .tpl checks it with

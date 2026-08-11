@@ -9,9 +9,9 @@ use Piwigo\Core\TemplatePageContext;
 
 /**
  * The 'chronology_calendar' template variable assigned by
- * {@see \Piwigo\Calendar\CalendarMonthly::generate_category_content()}
+ * {@see \Piwigo\Calendar\CalendarMonthly::generateCategoryContent()}
  * -- the same single key, filled by whichever of
- * build_global_calendar()/build_year_calendar()/build_month_calendar()
+ * buildGlobalCalendar()/buildYearCalendar()/buildMonthCalendar()
  * actually ran (mutually exclusive branches).
  */
 final readonly class CalendarMonthlyCalendarPageContext implements TemplatePageContext

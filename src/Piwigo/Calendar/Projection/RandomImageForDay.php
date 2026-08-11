@@ -6,7 +6,7 @@ namespace Piwigo\Calendar\Projection;
 
 /**
  * {@see \Piwigo\Calendar\CalendarRepository::findRandomImageForDay()}'s own
- * row shape -- {@see \Piwigo\Calendar\CalendarMonthly::build_month_calendar()}'s
+ * row shape -- {@see \Piwigo\Calendar\CalendarMonthly::buildMonthCalendar()}'s
  * real (and only) consumer, its per-day thumbnail-preview pick.
  *
  * `toArray()` preserves the exact original snake_case shape (minus `dow`,

@@ -52,7 +52,7 @@ interface TemplateInterface
      * Mirrors assign()'s own arbitrary-value contract -- returns whatever
      * was assigned, unmodified.
      */
-    // Same blind spot as CalendarBase::generate_category_content() -- heavily used, just not traced through the interface.
+    // Same blind spot as CalendarBase::generateCategoryContent() -- heavily used, just not traced through the interface.
     // @phpstan-ignore shipmonk.deadMethod
     public function get_template_vars(?string $tpl_var = null): mixed;
 }

@@ -177,7 +177,7 @@ test('findImageIds() binds real parameters and types from both $fromWhere and $d
 });
 
 test('findImageIds() applies the date_where continuation', function (): void {
-    // get_date_where() (despite its name) returns a WHERE-clause
+    // getDateWhere() (despite its name) returns a WHERE-clause
     // *continuation* fragment ("AND (...)"), which must land right
     // after $fromWhereSql's own WHERE and before GROUP BY.
     $conn = DbConnection::build();

@@ -87,7 +87,7 @@ final readonly class Comment
         }
 
         // `validated` is a real boolean column -- DQL array hydration
-        // gives a native bool, not the 0/1 a raw DBAL driver read used to.
+        // gives a native bool, not the 0/1 a raw DBAL driver read gives.
         $validatedValue = $row['validated'] ?? null;
         $validated = is_bool($validatedValue) ? $validatedValue : is_numeric($validatedValue) && (int) $validatedValue !== 0;
 

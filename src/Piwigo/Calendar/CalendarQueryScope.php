@@ -7,19 +7,16 @@ namespace Piwigo\Calendar;
 use Piwigo\Permission\SqlCondition;
 
 /**
- * Replaces the old single opaque `?SqlCondition` {@see CalendarService::
- * buildInnerSql()} used to return -- a raw `FROM images [INNER JOIN
- * image_category ON ...] WHERE ...` text fragment consumed by every
- * {@see CalendarRepository} method alike. `CalendarRepository::
- * findImageIds()` alone stays on raw DBAL (its own `$orderBySql` traces
- * to `CurrentConfig::orderBy()`/`orderByCustom()`, genuinely open-ended
- * admin-typed raw SQL -- a real Item-16-scoped blocker, not a stale
- * "not worth it" claim), so it alone still needs the original raw-SQL
- * shape; every other `CalendarRepository` method is now real DQL and
- * needs DQL property paths instead. Both representations are computed
- * once by the same {@see CalendarService::buildInnerSql()} call (the
- * underlying subcategory-id-resolution/`PermissionCriteria` calls run
- * once; only the final string assembly differs per target syntax).
+ * Carries both a raw `FROM images [INNER JOIN image_category ON ...]
+ * WHERE ...` text fragment and its DQL-property-path equivalent, computed
+ * once by {@see CalendarService::buildInnerSql()} (the underlying
+ * subcategory-id-resolution/`PermissionCriteria` calls run once; only the
+ * final string assembly differs per target syntax). `CalendarRepository::
+ * findImageIds()` alone stays on raw DBAL and needs the raw-SQL shape --
+ * its own `$orderBySql` traces to `CurrentConfig::orderBy()`/
+ * `orderByCustom()`, genuinely open-ended admin-typed raw SQL that can't
+ * be safely expressed as DQL; every other `CalendarRepository` method is
+ * real DQL and needs the DQL property paths instead.
  */
 final readonly class CalendarQueryScope
 {

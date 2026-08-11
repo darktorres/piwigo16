@@ -9,13 +9,13 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Symfony\Component\Dotenv\Dotenv;
 
 /**
- * Environment/test-mode resolution, ported verbatim from the 7 free
- * functions that used to live in include/env.inc.php.
- * That file survives as a pure "require vendor/autoload.php" seam (some
- * thin entry points -- random.php, i.php, ready.php -- rely on it as
- * their only autoloader hookup); everything it used to *do* lives here.
+ * Environment/test-mode resolution, holding the 7 free functions
+ * `include/env.inc.php` once defined, bodies unchanged. That file
+ * survives as a pure "require vendor/autoload.php" seam -- some thin
+ * entry points (random.php, i.php, ready.php) rely on it as their only
+ * autoloader hookup -- but their real logic lives here.
  *
- * Method mapping (former free function -> method), all bodies unchanged:
+ * Method mapping (free function -> method):
  * - pwg_test_mode_header()          -> Env::testModeHeader()
  * - pwg_test_mode_is_active()       -> Env::testModeIsActive()
  * - pwg_test_mode_env_file()        -> Env::testModeEnvFile()

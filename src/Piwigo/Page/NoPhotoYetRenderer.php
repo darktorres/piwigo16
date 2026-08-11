@@ -84,10 +84,10 @@ final readonly class NoPhotoYetRenderer
                 //
                 // User::$theme is ThemeId-typed and can never be empty (its
                 // constructor guarantees a real value, falling back to
-                // AppInfo::DEFAULT_TEMPLATE), so the getDefaultTheme() fallback
-                // this line used to reach for an empty theme is now unreachable
-                // -- that fallback only ever checked for emptiness too, never
-                // filesystem installation, so this is a faithful simplification.
+                // AppInfo::DEFAULT_TEMPLATE), so a getDefaultTheme() fallback
+                // for an empty theme here would be unreachable -- that
+                // fallback only ever checked for emptiness too, never
+                // filesystem installation.
                 $user_theme = $this->currentUser->get()
                     ->theme->value;
                 $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->sessionService, $this->paths->root . 'themes', $user_theme);

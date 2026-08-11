@@ -119,14 +119,14 @@ abstract class CalendarBase
     public $chronology_view = '';
 
     /**
-     * `month_calendar.tpl`'s own `chronology_navigation_bars` data --
-     * formerly shared between build_nav_bar()/build_next_prev() via the
-     * live Smarty template variable itself (an append-then-read-modify-write
-     * round trip through Template::append()/get_template_vars()/assign()).
-     * A private instance property instead: both methods are declared on
-     * this same class, so no subclass access is needed; CalendarRenderer
-     * (an unrelated class) reads the final result via
-     * {@see self::getChronologyNavigationBars()} once every
+     * `month_calendar.tpl`'s own `chronology_navigation_bars` data,
+     * shared between build_nav_bar()/build_next_prev() via a private
+     * instance property rather than the live Smarty template variable
+     * itself, avoiding an append-then-read-modify-write round trip
+     * through Template::append()/get_template_vars()/assign(): both
+     * methods are declared on this same class, so no subclass access is
+     * needed; CalendarRenderer (an unrelated class) reads the final
+     * result via {@see self::getChronologyNavigationBars()} once every
      * build_nav_bar()/build_next_prev() call for this render has run.
      *
      * @var list<array<string, mixed>>

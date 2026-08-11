@@ -17,17 +17,13 @@ use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/history.php (page slug "history") -- a flat page, pure
- * delegate. Its own data access was already almost entirely factored into
- * Piwigo\History\HistoryService/HistoryRepository (the free-function
- * bridge this file used to call them through,
- * admin/include/functions_history.inc.php's get_history(), no longer
- * exists; real callers are retargeted directly to HistoryService). The
- * one remaining gap was this page's own username-lookup query, fixed by
- * adding Piwigo\Users\UserRepository::findUsernameById() (also closes a
- * real, if narrow, correctness gap: the old raw query hardcoded 'id'/
- * 'username' literally instead of reading \Piwigo\Config\CurrentConfig::userFields(), unlike
- * every sibling admin page that reads that same user table).
+ * Page slug "history" -- a flat page, pure delegate onto
+ * Piwigo\History\HistoryService/HistoryRepository. Its own
+ * username-lookup query goes through
+ * Piwigo\Users\UserRepository::findUsernameById(), which reads
+ * \Piwigo\Config\CurrentConfig::userFields() dynamically rather than
+ * hardcoding `'id'`/`'username'` literally, matching every sibling admin
+ * page that reads the same user table.
  */
 final class HistorySubController implements AdminSubControllerInterface
 {

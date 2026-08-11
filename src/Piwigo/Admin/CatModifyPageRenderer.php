@@ -365,10 +365,9 @@ final class CatModifyPageRenderer
     {
         $local_dir = '';
 
-        // The legacy $page['plain_structure'] category-structure cache key
-        // this used to read as a shortcut is confirmed dead (nothing in the
-        // codebase ever populated it) and $page is retired as a channel
-        // altogether, so this always takes the DB-lookup path now.
+        // A $page['plain_structure'] category-structure cache key shortcut
+        // would be dead code -- nothing in the codebase ever populates
+        // it -- so this always takes the DB-lookup path.
         $uppercats = $categoryService->getCategoryUppercatsById((int) $category_id);
         if ($uppercats === null) {
             throw new Exception(__FUNCTION__ . "(): category #{$category_id} not found");

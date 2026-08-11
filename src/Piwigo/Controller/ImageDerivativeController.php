@@ -110,10 +110,10 @@ final class ImageDerivativeController implements ControllerInterface
         // Config/ImageStdParams/CurrentLogger are already populated by
         // RequestBootstrap::bootEntryPoint() (called from i.php before this
         // controller is ever reached) -- ConfigService::loadConfFromDb()
-        // covers the 'derivatives'/'disabled_derivatives' keys this
-        // controller used to fetch itself, and connect() already calls
-        // ImageStdParams::load_from_db() and builds the same
-        // hashed-filename Logger this used to construct a second time.
+        // already covers the 'derivatives'/'disabled_derivatives' keys,
+        // this controller doesn't need its own fetch, and connect() already
+        // calls ImageStdParams::load_from_db() and builds the same
+        // hashed-filename Logger, so it doesn't need constructing again.
         $logger = $this->currentLogger->get();
 
         $begin = $step = microtime(true);

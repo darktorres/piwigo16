@@ -224,7 +224,7 @@ final class UrlService implements UrlServiceInterface
                     } elseif ($this->currentConfig->urlPort === 'auto') {
                         // Default to 80 (matching 16.x-rewrite's own
                         // UrlService) when SERVER_PORT is genuinely absent --
-                        // real bug: defaulting to null instead left
+                        // defaulting to null instead would leave
                         // $server_port !== 80/443 vacuously true, appending a
                         // bare trailing ':' with no port digits after it.
                         $server_port_raw = $_SERVER['SERVER_PORT'] ?? 80;

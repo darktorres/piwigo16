@@ -19,7 +19,7 @@ use Piwigo\Core\TemplatePageContext;
  * later call's non-null fields overwrite (matching the original code's
  * own "later `Template::assign()` call replaces" behavior), and its
  * null fields leave the earlier call's own values untouched. `$warnings`/
- * `$messages` are genuinely dead output (confirmed via a full-repo grep
+ * `$messages` are genuinely dead output (per a full-repo grep
  * of every theme template -- neither key is ever read), kept as a
  * faithful 1:1 port of the original 4 independently-gated
  * `Template::assign()` calls, not dropped as an out-of-scope cleanup.
@@ -28,7 +28,7 @@ final readonly class PageMessagesContext implements TemplatePageContext
 {
     /**
      * All 4 share {@see \Piwigo\Html\HtmlService::flushMessageMode()}'s
-     * own return type: array<array-key, string> (verified live against
+     * own return type: array<array-key, string> (per
      * every real PageState field declaration and every real
      * flushKeyedErrors() call site -- values are always translated
      * strings, only the key shape differs between the plain-list and

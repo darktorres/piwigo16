@@ -46,10 +46,9 @@ final class CaddieRepository extends EntityRepository
      *
      * Catches {@see ConstraintViolationException}, not just
      * {@see \Doctrine\DBAL\Exception\UniqueConstraintViolationException}
-     * -- confirmed via a real test (`addElements() silently skips a
-     * nonexistent image id`) that `INSERT IGNORE`'s tolerance here covers
-     * both the duplicate-row case and the foreign-key case, since
-     * `element_id` genuinely references `images.id`.
+     * -- a real test (`addElements() silently skips a nonexistent image
+     * id`) covers both the duplicate-row case and the foreign-key case,
+     * since `element_id` genuinely references `images.id`.
      *
      * @param array<int, int> $elementIds
      */
@@ -81,8 +80,7 @@ final class CaddieRepository extends EntityRepository
                 // from a failed flush() leaves the owning EntityManager
                 // permanently closed (Doctrine\ORM\UnitOfWork::commit()'s
                 // own finally branch calls $em->close() on any failure,
-                // and clear() cannot undo that -- verified empirically,
-                // not assumed), which would break every other repository
+                // and clear() cannot undo that), which would break every other repository
                 // sharing this request's EntityManager. A plain DBAL
                 // insert() never touches the ORM's unit of work at all,
                 // so a caught failure here has no such blast radius.

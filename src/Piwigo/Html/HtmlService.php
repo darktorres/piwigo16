@@ -196,8 +196,8 @@ final readonly class HtmlService implements HtmlRenderingInterface
      * null, returns only the categories name without links.
      *
      * Cross-domain generic-row-reader rationale, same as
-     * Category\CategoryService::compareByGlobalRank() -- confirmed by
-     * tracing all 3 real call sites: CategoryService::getCategoryInfo()'s
+     * Category\CategoryService::compareByGlobalRank() -- per
+     * all 3 real call sites: CategoryService::getCategoryInfo()'s
      * own 'upper_names' (clean id/name/permalink), a raw `SELECT id, name,
      * permalink` query (name/permalink nullable there), and
      * GalleryController's own qsearch 'matching_cats' rows (Search
@@ -923,8 +923,8 @@ final readonly class HtmlService implements HtmlRenderingInterface
      *
      * $keyedErrors' own keys exist so each controller can overwrite its
      * own named error slot (e.g. re-assigning 'login_page_error' rather
-     * than accumulating duplicates) -- confirmed live, not assumed, that
-     * no template anywhere reads `$errors` by specific key (a full-repo
+     * than accumulating duplicates) -- no template anywhere reads
+     * `$errors` by specific key (a full-repo
      * grep of every theme template found none); every real consumer
      * (`infos_errors.tpl`'s own `{foreach from=$errors item=error}`)
      * reads values only, so the keys never actually reach the rendered
@@ -950,9 +950,9 @@ final readonly class HtmlService implements HtmlRenderingInterface
     /**
      * $messages is either PageState's own list<string> (from
      * flushPageMessages()) or flushKeyedErrors()'s own string-keyed error
-     * bag -- genuinely array<array-key, string> either way (verified live
-     * against every real PageState field declaration and every real
-     * flushKeyedErrors() call site, not assumed), not a vague mixed value
+     * bag -- genuinely array<array-key, string> either way (per
+     * every real PageState field declaration and every real
+     * flushKeyedErrors() call site), not a vague mixed value
      * type. $_SESSION['page_*'] is likewise always a plain list<string>
      * in practice -- every real writer elsewhere in the codebase
      * (comments.php, picture.php, admin/batch_manager*.php, ...) guards

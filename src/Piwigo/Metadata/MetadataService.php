@@ -405,8 +405,8 @@ final readonly class MetadataService
         // `galleries_url` itself is seeded as an absolute path by
         // InstallWizard/install.php, unlike legacy Piwigo's relative
         // PHPWG_ROOT_PATH). Prepending the root a second time onto an
-        // already-absolute path produced an unreadable, doubled-up path --
-        // confirmed live: metadata sync silently failed with "File/directory
+        // already-absolute path produced an unreadable, doubled-up path:
+        // metadata sync silently failed with "File/directory
         // read error" for every photo synced via the "Synchronize" tool on a
         // fresh install.
         $originalFile = str_starts_with($path, '/') ? $path : $this->paths->root . $path;

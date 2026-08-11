@@ -22,8 +22,7 @@ use Symfony\Component\Process\Process;
  * uses instead).
  *
  * `local/config/config.inc.php` is included when present (production
- * deployments) but this dev checkout has none -- confirmed empirically,
- * not assumed. No PHPWG_VERSION in the manifest: include/constants.php
+ * deployments) but this dev checkout has none. No PHPWG_VERSION in the manifest: include/constants.php
  * itself needs `$conf` populated first to read it, which would drag in
  * the same legacy-bootstrap risk this class exists to avoid.
  *

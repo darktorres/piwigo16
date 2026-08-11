@@ -64,14 +64,14 @@ final readonly class SessionHandler implements SessionHandlerInterface
         } catch (Throwable $e) {
             // This method's own PHP-shutdown-driven invocation path (see
             // this method's own docblock) can fire after the request's
-            // CurrentLogger has already gone out of scope -- confirmed
-            // live via a full composer test:integration run, where a
-            // deferred session auto-close landed inside a *later* test's
-            // window after the earlier test's own teardown had already
-            // reset it, and this fallback ->get() itself threw
-            // "CurrentLogger not initialised", escaping uncaught exactly
-            // the way this whole try/catch exists to prevent. A failed
-            // best-effort log write is strictly better than that.
+            // CurrentLogger has already gone out of scope -- a full
+            // composer test:integration run can land a deferred session
+            // auto-close inside a *later* test's window after the earlier
+            // test's own teardown had already reset it, and this fallback
+            // ->get() itself would throw "CurrentLogger not initialised",
+            // escaping uncaught exactly the way this whole try/catch
+            // exists to prevent. A failed best-effort log write is
+            // strictly better than that.
             if ($this->currentLogger->isInitialized()) {
                 $this->currentLogger->get()
                     ->warn('SessionHandler::write() failed: ' . $e->getMessage());

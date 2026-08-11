@@ -68,13 +68,13 @@ final class SessionRepository extends EntityRepository
      * PostgreSQL-only interval syntax), unlike a raw
      * "NOW() - expiration > N seconds" comparison would require.
      *
-     * Real bug: the cutoff used
-     * to be computed from the real wall clock, invisible to Env::now()'s
-     * own PIWIGO_TEST_NOW freeze -- write() above already learned this
-     * lesson (see its own comment) but gc() didn't apply it, so once real
-     * time drifted away from a frozen PIWIGO_TEST_NOW, every session
-     * written during that freeze looked far older than it really was and
-     * got swept immediately, regardless of $sessionLength.
+     * The cutoff must not be computed from the real wall clock -- invisible
+     * to Env::now()'s own PIWIGO_TEST_NOW freeze -- write() above already
+     * accounts for this (see its own comment); gc() needs the same
+     * treatment, or once real time drifts away from a frozen
+     * PIWIGO_TEST_NOW, every session written during that freeze would look
+     * far older than it really was and get swept immediately, regardless
+     * of $sessionLength.
      */
     public function gc(int $sessionLength): int
     {

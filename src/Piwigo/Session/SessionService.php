@@ -101,10 +101,10 @@ final readonly class SessionService
 
         $remoteAddr = IpAddress::fromRemoteAddr()->value ?? '';
 
-        // Real bug, found via a new Integration test that legitimately
-        // initializes a session with no HTTP request behind it (no real
-        // REMOTE_ADDR -- e.g. a CLI-driven install/bootstrap flow):
-        // explode('.', '') yields a single-element array, and vsprintf()
+        // A session can legitimately be initialized with no HTTP request
+        // behind it (no real REMOTE_ADDR -- e.g. a CLI-driven
+        // install/bootstrap flow): explode('.', '') yields a single-element
+        // array, and vsprintf()
         // requires exactly 2 for '%02X%02X', throwing a ValueError instead
         // of the "no IP available" empty-string fallback this method
         // already uses for ipv6/no-REMOTE_ADDR below. Same pre-existing

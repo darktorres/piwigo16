@@ -9,7 +9,6 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
-use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
@@ -104,7 +103,7 @@ final readonly class NoPhotoYetRenderer
                     $this->redirectService->redirect($this->urlService->makeIndexUrl());
                 }
 
-                header('Content-Type: text/html; charset=' . CharsetHelper::getPwgCharset());
+                header('Content-Type: text/html; charset=utf-8');
                 $template->set_filenames([
                     'no_photo_yet' => 'no_photo_yet.tpl',
                 ]);

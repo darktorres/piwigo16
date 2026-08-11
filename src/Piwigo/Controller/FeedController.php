@@ -11,7 +11,6 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Request\FeedRequest;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
@@ -111,7 +110,7 @@ final class FeedController implements ControllerInterface
 
         $this->urlService->setMakeFullUrl();
 
-        $rss_encoding = CharsetHelper::getPwgCharset();
+        $rss_encoding = 'utf-8';
 
         $conf_gallery_title = $this->currentConfig->galleryTitle;
         $conf_rss_feed_author = $this->currentConfig->rssFeedAuthor;

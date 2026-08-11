@@ -7,18 +7,6 @@ namespace Piwigo\Core;
 final class CharsetHelper
 {
     /**
-     * return the character set used by Piwigo
-     */
-    public static function getPwgCharset(): string
-    {
-        $pwg_charset = 'utf-8';
-        if (defined('PWG_CHARSET')) {
-            $pwg_charset = \PWG_CHARSET;
-        }
-        return $pwg_charset;
-    }
-
-    /**
      * converts a string from a character set to another character set
      */
     public static function convertCharset(string $str, string $sourceCharset, string $destCharset): string|false

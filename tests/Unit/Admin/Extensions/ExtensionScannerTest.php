@@ -1132,15 +1132,13 @@ test('scan rejects a language directory that is a symlink even when its target i
     }
 });
 
-test('scan actually uses the caller-supplied targetCharset, not just CharsetHelper::getPwgCharset()', function (): void {
-    // Real gap, found via mutation testing: `$targetCharset ?? CharsetHelper::getPwgCharset()`
-    // -- every existing language test passes 'utf-8' as $targetCharset,
-    // which is also exactly what CharsetHelper::getPwgCharset() itself
-    // returns by default (PWG_CHARSET is never defined in this test suite
-    // -- see CharsetHelperTest's own docblock), so nothing can tell a real
+test('scan actually uses the caller-supplied targetCharset, not just the default fallback', function (): void {
+    // Real gap, found via mutation testing: `$targetCharset ?? 'utf-8'` --
+    // every existing language test passes 'utf-8' as $targetCharset, which
+    // is also exactly the default fallback, so nothing can tell a real
     // caller-supplied charset from the ignored-argument fallback.
-    // Converting to iso-8859-1 -- a charset getPwgCharset() would never
-    // return here -- actually changes the name's bytes, unlike an
+    // Converting to iso-8859-1 -- a charset the default fallback would
+    // never produce here -- actually changes the name's bytes, unlike an
     // identity utf-8-to-utf-8 "conversion".
     $root = extensionScannerFixtureRoot();
     $poFile = $root . 'language/iso_charset_lang/common.po';

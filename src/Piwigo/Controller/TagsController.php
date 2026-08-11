@@ -12,7 +12,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Projection\TagsDisplayModePageContext;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
@@ -117,7 +116,7 @@ final class TagsController implements ControllerInterface
 
             foreach ($tags as $tag) {
                 $tag_name = $tag['name'];
-                $pwgCharset = CharsetHelper::getPwgCharset();
+                $pwgCharset = 'utf-8';
                 $tag_letter = mb_strtoupper(mb_substr(StringHelper::pwgTransliterate($tag_name), 0, 1, $pwgCharset), $pwgCharset);
 
                 if ($current_tag_idx === 0) {

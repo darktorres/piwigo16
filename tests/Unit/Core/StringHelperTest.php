@@ -284,17 +284,6 @@ const DOUBLE_FIXTURE = [
     254 => 'th',
 ];
 
-/**
- * pwgTransliterate()'s `function_exists('mb_strtolower') && defined
- * ('PWG_CHARSET')` branch is deliberately NOT exercised here: same
- * reasoning as tests/Unit/Core/CharsetHelperTest.php's own documented
- * skip for PWG_CHARSET -- it stays undefined for this whole shared
- * PHPUnit/Pest process (that file's own test asserts so directly), and
- * constants can't be undefined once define()'d, so forcing it true here
- * would permanently leak into every other test file, including that
- * one's own explicit `expect(defined('PWG_CHARSET'))->toBeFalse()`
- * assertion. Not worth that risk for one branch.
- */
 test('getExtension returns the part after the last dot', function (): void {
     expect(StringHelper::getExtension('archive.tar.gz'))->toBe('gz');
     expect(StringHelper::getExtension('photo.JPG'))->toBe('JPG');
@@ -464,10 +453,10 @@ test('pwgTransliterate lowercases plain ASCII input', function (): void {
 
 test('pwgTransliterate strips accents from already-lowercase UTF-8 input', function (): void {
     // Deliberately already-lowercase input: whether this environment's
-    // mb_strtolower()/PWG_CHARSET branch or the plain strtolower()
-    // fallback fires, a lowercase accented character is a no-op for
-    // either lowercasing path, so this assertion holds regardless of
-    // which branch this environment takes.
+    // mb_strtolower() path or the plain strtolower() fallback fires, a
+    // lowercase accented character is a no-op for either lowercasing
+    // path, so this assertion holds regardless of which branch this
+    // environment takes.
     expect(StringHelper::pwgTransliterate("caf\xc3\xa9"))->toBe('cafe'); // "café"
 });
 

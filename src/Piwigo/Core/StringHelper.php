@@ -309,8 +309,8 @@ final class StringHelper
      */
     public static function pwgTransliterate(string $term): string
     {
-        if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
-            return self::removeAccents(mb_strtolower($term, PWG_CHARSET));
+        if (function_exists('mb_strtolower')) {
+            return self::removeAccents(mb_strtolower($term, 'utf-8'));
         }
 
         return self::removeAccents(strtolower($term));

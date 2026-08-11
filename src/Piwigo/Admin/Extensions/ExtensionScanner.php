@@ -323,7 +323,7 @@ final class ExtensionScanner
             return null;
         }
 
-        $targetCharset = strtolower($targetCharset ?? CharsetHelper::getPwgCharset());
+        $targetCharset = strtolower($targetCharset ?? 'utf-8');
 
         $language = [
             'name' => $languageId,

@@ -16,7 +16,6 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
-use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
@@ -160,7 +159,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         $contentType = $this->responseEncoder()
             ->getContentType();
 
-        @header('Content-Type: ' . $contentType . '; charset=' . CharsetHelper::getPwgCharset());
+        @header('Content-Type: ' . $contentType . '; charset=utf-8');
         print_r($encodedResponse);
         $this->eventDispatcher->dispatchNotify(new SendResponse($encodedResponse));
     }

@@ -7,7 +7,6 @@ namespace Piwigo\Page;
 use LogicException;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
-use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
@@ -126,7 +125,7 @@ final class PageHeaderRenderer
                 )
             ))->banner,
             bodyId: $pageState->bodyId,
-            contentEncoding: CharsetHelper::getPwgCharset(),
+            contentEncoding: 'utf-8',
             pageTitle: strip_tags($title),
             homeUrl: self::urlService()->getGalleryHomeUrl(),
             levelSeparator: $currentConfig->levelSeparator,
@@ -141,7 +140,7 @@ final class PageHeaderRenderer
 
         $eventDispatcher->dispatchNotify(new LocEndPageHeader());
 
-        header('Content-Type: text/html; charset=' . CharsetHelper::getPwgCharset());
+        header('Content-Type: text/html; charset=utf-8');
         $template->parse('header');
 
         $eventDispatcher->dispatchNotify(new LocAfterPageHeader());

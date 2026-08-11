@@ -135,7 +135,7 @@ final readonly class MetadataService
                     }
                 }
 
-                $convertedValue = CharsetHelper::convertCharset($value, $inputEncoding, CharsetHelper::getPwgCharset());
+                $convertedValue = CharsetHelper::convertCharset($value, $inputEncoding, 'utf-8');
                 // convert_charset() can fail (iconv()/mb_convert_encoding()
                 // returning false on malformed input) -- keep the
                 // unconverted value rather than propagating false.

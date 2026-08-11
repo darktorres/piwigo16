@@ -25,7 +25,6 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -954,7 +953,7 @@ final class MailService implements MailerInterface
                     galleryTitle: $this->currentConfig->galleryTitle,
                     version: $this->currentConfig->showVersion ? AppInfo::VERSION : '',
                     phpwgUrl: AppInfo::URL,
-                    contentEncoding: CharsetHelper::getPwgCharset(),
+                    contentEncoding: 'utf-8',
                     contactMail: is_string($confMail['email_webmaster']) ? $confMail['email_webmaster'] : '',
                 ));
 

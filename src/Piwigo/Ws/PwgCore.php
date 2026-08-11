@@ -28,7 +28,6 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
@@ -474,7 +473,7 @@ final class PwgCore
         $res['theme'] = $currentUser->theme->value;
         $res['language'] = $currentUser->language->value;
         $res['pwg_token'] = new CsrfService($this->currentConfig)->getToken();
-        $res['charset'] = CharsetHelper::getPwgCharset();
+        $res['charset'] = 'utf-8';
 
         // Env::now() (not SQL's NOW()) so this value can be frozen by
         // PIWIGO_TEST_NOW in tests -- SQL's NOW() reads the real,

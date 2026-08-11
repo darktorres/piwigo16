@@ -7,15 +7,6 @@ use Piwigo\Core\CharsetHelper;
 /**
  * Piwigo\Core\CharsetHelper -- had zero dedicated coverage.
  *
- * getPwgCharset()'s `defined('PWG_CHARSET')` branch is deliberately NOT
- * exercised here: PWG_CHARSET is only ever define()'d as a string embedded
- * in InstallWizard's generated config-file content (never executed live in
- * this test process), so it stays genuinely undefined throughout a normal
- * test run -- and PHP constants can't be undefined once set, so defining
- * it here would permanently leak into every other test file sharing this
- * same process (Pest runs the whole suite in one process). Not worth that
- * risk for one branch.
- *
  * convertCharset()'s ext-mbstring fallback branch (`! function_exists
  * ('iconv')`) is similarly unreachable: both ext-iconv and ext-mbstring
  * are hard composer.json requirements, and ext-iconv is checked first, so
@@ -85,12 +76,6 @@ use Piwigo\Core\CharsetHelper;
  *   returns false (a real, meaningful failure mode this project's own
  *   `string|false` return type exists to let callers detect).
  */
-test('getPwgCharset defaults to utf-8 when PWG_CHARSET is not defined', function (): void {
-    expect(defined('PWG_CHARSET'))
-        ->toBeFalse();
-    expect(CharsetHelper::getPwgCharset())->toBe('utf-8');
-});
-
 test('convertCharset is a passthrough when source and destination charsets match', function (): void {
     expect(CharsetHelper::convertCharset('hello', 'utf-8', 'utf-8'))->toBe('hello');
 });

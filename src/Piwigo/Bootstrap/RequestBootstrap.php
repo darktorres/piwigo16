@@ -39,7 +39,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\CoverageCollector;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentThemeConfProvider;
@@ -604,7 +603,7 @@ final class RequestBootstrap
                 $body .= str_repeat(' ', 512); // IE6 doesn't error output if below a size
                 throw new ResponseReadyException(ResponseFactory::raw($body, [
                     'Retry-After' => '900',
-                    'Content-Type' => 'text/html; charset=' . CharsetHelper::getPwgCharset(),
+                    'Content-Type' => 'text/html; charset=utf-8',
                 ], 503));
             }
         }

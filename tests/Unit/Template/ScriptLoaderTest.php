@@ -79,6 +79,73 @@ function file_combiner_test_rrmdir_scriptloader(string $dir): void
     rmdir($dir);
 }
 
+// [Mutation] Remaining untested mutations after mutation testing, all
+// verified genuinely inert via hand-mutation, triaged into groups:
+//
+// 1. RemoveBooleanCast (`(bool) X` -> `X`, 6 sites: Lines 205/236/260/
+//    264/466/471): batch-removed all 6 simultaneously -- the full Unit
+//    suite for this file stayed green (same universal `if((bool)X) ===
+//    if(X)` PHP semantics as every other file in this campaign), but
+//    `composer analyse:phpstan` on the mutated source reported exactly
+//    6 errors (`if.condNotBoolean`/`elseif.condNotBoolean`/
+//    `booleanNot.exprNotBoolean`/`booleanAnd.leftNotBoolean`) -- these
+//    casts exist for PHPStan's own strict boolean-condition rule, not
+//    for any runtime behavior difference.
+//
+// 2. A dead, unused parameter (Lines 298 x2, 331 x4 -- 6
+//    DecrementInteger/IncrementInteger mutations total): doCombine()'s
+//    own `int $load_mode` parameter is accepted but never read anywhere
+//    in its body (only `$scripts`/`$accessLevelChecker` feed
+//    FileCombiner's constructor) -- confirmed by reading the method
+//    directly, then verified live by passing 999/888/777 instead of the
+//    real 0/1/2 values simultaneously, full suite still green.
+//
+// 3. SmallerToSmallerOrEqual (Line 267, `$load_mode < $script->load_mode`
+//    -> `<=`): when the two values are exactly equal, entering the
+//    branch (mutant) assigns `$script->load_mode = $load_mode` back onto
+//    itself -- an observable no-op identical to not entering it (real
+//    code).
+//
+// 4. BreakToContinue (Line 289, getHeadScripts()'s own
+//    `if ($script->load_mode > 0) { break; }`): reachable only after
+//    `uasort($this->registered_scripts, self::cmpByModeAndOrder(...))`
+//    sorts by load_mode ascending -- once one entry's load_mode > 0 is
+//    seen, every remaining entry is guaranteed >= it (stable ascending
+//    sort), so `continue`-ing past each individually converges to the
+//    identical final `head_done_scripts` set as `break`-ing out
+//    immediately.
+//
+// 5. GreaterToGreaterOrEqual/DecrementInteger (Line 327, `$script->
+//    load_mode > 0`, 2 mutations): mutating to `>= 0`/`> -1` lets a
+//    load_mode=0 script wrongly pass the guard, but it then gets stored
+//    at `$result[$script->load_mode - 1]` = `$result[-1]` -- a real,
+//    valid PHP array key, but one the very next line's `return new
+//    FooterScripts($this->doCombine($result[0], ...), $this->doCombine(
+//    $result[1], ...))` never reads, so it's silently discarded either
+//    way.
+//
+// 6. TrueToFalse (Line 366, checkLoadDep()'s own async-branch
+//    `$changed = true;`): see the corrected docblock on "checkLoadDep
+//    converges over a multi-pass cascade..." below -- a prior session's
+//    claim that a specific 5-node graph proves this mutation is real was
+//    WRONG (re-verified: it doesn't catch it). Exhaustively brute-force
+//    searched (all edge sets x all load-mode assignments in {1,2} x
+//    multiple registration orders, up to 4 nodes) and found no
+//    distinguishing graph at all. The real, structural reason: the async
+//    branch's own condition is self-triggering -- any node whose own
+//    load is 2 and that requires a load=2 precedent independently
+//    triggers the identical downgrade the moment its own turn comes,
+//    regardless of whether another node already did it first, so a
+//    suppressed $changed=true here never withholds real information.
+//
+// 7. DecrementInteger (Line 446, computeScriptTopologicalOrder()'s own
+//    `$max = 0;` before the precedents loop): only reached when
+//    `count($script->precedents) > 0` (the `=== 0` case already
+//    early-returns above), and the loop's own recursive call always
+//    returns a non-negative int (base case 0, recursive case
+//    `$max+1 >= 1`) -- so `max($max, recursive_result >= 0)` is
+//    identical whether $max starts at 0 or -1.
+
 test('add registers a new script with its load_mode and precedents', function (): void {
     $loader = new ScriptLoader();
     $loader->add('my-script', 1, ['jquery'], 'themes/default/js/foo.js');
@@ -922,6 +989,49 @@ test('getFooterScripts excludes mode=0 scripts even when getHeadScripts was neve
     }
 });
 
+test('getFooterScripts computes topological order itself when getHeadScripts never ran, with names that disagree with alphabetical order', function (): void {
+    // Real gap: a ForeachEmptyIterable/RemoveMethodCall mutation on this
+    // method's own computeScriptTopologicalOrder() loop is invisible to
+    // the sibling "sorts within the same load_mode by topological order
+    // too" test above -- that test's own script ids ('base'/'dependent')
+    // happen to ALSO sort correctly alphabetically, so even with
+    // extra['order'] left entirely unset (only an "Undefined array key"
+    // warning, no assertion failure), cmpByModeAndOrder()'s own id-based
+    // strcmp() fallback still produces the same final order by
+    // coincidence. Deliberately picking ids where topological order and
+    // alphabetical order DISAGREE ('zzz-base' must sort before
+    // 'aaa-dependent' despite the reverse alphabetical order) makes the
+    // real assertion itself -- not just a side-channel warning -- fail
+    // under the mutation.
+    $root = sys_get_temp_dir() . '/piwigo-scriptloader-footer-toposort-nohead-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/base.js', 'var base=1;');
+    file_put_contents($root . '/themes/default/js/dep.js', 'var dep=1;');
+    Kernel::boot(Paths::fromRoot($root));
+    CurrentUserTestFactory::get()->attachGlobals();
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
+
+    $loader = new ScriptLoader();
+    $loader->add('aaa-dependent', 1, ['zzz-base'], 'themes/default/js/dep.js');
+    $loader->add('zzz-base', 1, [], 'themes/default/js/base.js');
+
+    try {
+        // getHeadScripts() is never called -- computeScriptTopologicalOrder()
+        // has never run for either script before this call.
+        $sync = $loader->getFooterScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()))->sync;
+
+        expect($sync)
+            ->toHaveCount(2)
+            ->and($sync[0]->id)->toBe('zzz-base')
+            ->and($sync[1]->id)->toBe('aaa-dependent');
+    } finally {
+        file_combiner_test_rrmdir_scriptloader($root);
+        CurrentConfigTestFactory::get()->reset();
+    }
+});
+
 test('checkLoadDep converges over multiple passes for a 3-level async dependency chain', function (): void {
     // c(async) <- b(async) <- a(async): the do-while must run more than
     // once for the downgrade to propagate all the way from the deepest
@@ -1270,20 +1380,27 @@ test('checkLoadDep needs a second pass to cascade an unconditional downgrade thr
     }
 });
 
-test('checkLoadDep needs a further pass unlocked by the async branch\'s own changed=true, not just the unconditional branch\'s', function (): void {
-    // A 5-node graph (n4, n1, n2, n3, n0 -- registered in exactly that
-    // order) where, within pass 1's LAST steps, n0 downgrades its
-    // precedent n3 via the ASYNC-specific branch (both sit at load=2) --
-    // if that specific `$changed = true;` were suppressed, the do-while
-    // would stop right there, even though an EARLIER unconditional-branch
-    // change in that SAME pass (n2 downgrading n4) legitimately unlocked a
-    // further, necessary pass 2+3 cascade that eventually drops n1's own
-    // load_mode from 1 to 0. Exhaustively verified via a standalone
-    // brute-force reimplementation that no 3- or 4-node graph (in any
-    // registration order) can distinguish this mutation -- only 5+ node
-    // graphs can, because it needs both an unconditional AND an async
-    // downgrade coexisting in the same pass, with the async one ending up
-    // last.
+test('checkLoadDep converges over a multi-pass cascade mixing unconditional and async downgrades', function (): void {
+    // CORRECTED 2026-08-11: this test's own docblock previously claimed
+    // this 5-node graph proves the async branch's own `$changed = true;`
+    // (Line 366) is load-bearing -- re-verified via hand-mutation and it
+    // does NOT catch that mutation; the claim was wrong. Traced why: an
+    // unconditional-branch change earlier in the SAME pass (n2 downgrading
+    // n4) already sets $changed=true regardless, masking the async
+    // branch's own contribution in THIS graph. Went further than just
+    // fixing the claim -- wrote a genuinely exhaustive brute-force search
+    // (all edge sets, all load-mode assignments in {1,2}, multiple
+    // registration orders, up to 4 nodes) and could not find ANY graph
+    // that distinguishes Line 366's mutation. The real, structural reason:
+    // the async branch's own condition (`$load === 2 && precedent's load
+    // === 2`) is self-triggering -- any node whose own load is 2 and that
+    // requires a load=2 precedent will independently trigger the SAME
+    // downgrade the moment its own turn comes in the foreach, regardless
+    // of whether some other node already did it first. There is no
+    // information a suppressed $changed=true here could withhold that
+    // isn't already recovered the same pass or the next, so this mutation
+    // is genuinely inert, not merely hard to hit. Kept as a real multi-pass
+    // convergence test in its own right, not removed.
     CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     $loader = new ScriptLoader();

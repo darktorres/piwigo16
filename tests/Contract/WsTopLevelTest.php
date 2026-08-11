@@ -202,7 +202,7 @@ final class WsTopLevelTest extends ContractTestCase
         // fixture image 1's real on-disk file (dedicated fixture asset,
         // never touched by other Contract test files) is missing its
         // 'square' derivative on disk -- confirmed live before writing this
-        // assertion (`i.php?/.../20260801000000-2e7ed018-sq.jpg` shows up
+        // assertion (`i.php?/.../20260801000000-2e7e2ce3-sq.jpg` shows up
         // in the un-filtered call's result too).
         //
         // The upload path's own hash suffix is baked into each fixture
@@ -213,7 +213,7 @@ final class WsTopLevelTest extends ContractTestCase
         // current piwigo-17.0-pgsql.sql fixture (a later regen changes
         // this value every time, since UploadService picks the suffix via
         // random_bytes()).
-        $expectedHash = $this->dbDriver === 'pgsql' ? '2e7e7413' : '2e7ed018';
+        $expectedHash = $this->dbDriver === 'pgsql' ? '2e7e2ce3' : '2e7e6c90';
         $response = $this->wsAdmin('pwg.getMissingDerivatives', ['ids' => [1], 'max_urls' => 5000]);
 
         self::assertSame('ok', $response['stat']);

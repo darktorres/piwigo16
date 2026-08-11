@@ -1107,7 +1107,10 @@ final class CategoryServiceTest extends IntegrationTestCase
             self::assertSame(CurrentPathsTestFactory::get()->root . 'galleries/sample-album/fixture-photo-1.jpg', $path);
         } finally {
             $this->conn->executeStatement("UPDATE " . 'categories' . " SET dir = NULL, site_id = NULL WHERE id = 1");
-            $this->conn->executeStatement("UPDATE " . 'images' . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-2e7e64c7.jpg' WHERE id = 1");
+            $realHash = $this->dbDriver === 'pgsql' ? '2e7e2ce3' : '2e7e6c90';
+            $this->conn->executeStatement(
+                "UPDATE " . 'images' . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-{$realHash}.jpg' WHERE id = 1"
+            );
         }
     }
 

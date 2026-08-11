@@ -232,13 +232,13 @@ return [
     // other autowired service.
     DeploymentPolicy::class => factory(static fn (Paths $paths): DeploymentPolicy => DeploymentPolicy::load($paths)),
 
-    // Factory binding -- load_from_db() calls its own repositories via a
+    // Factory binding -- loadFromDb() calls its own repositories via a
     // fresh EntityManagerFactory::build(DbConnection::build()) internally,
     // so no Paths/Connection param is needed here; see that method's own
     // docblock for why it doesn't route through the container-shared EM.
     ImageStdParams::class => factory(static function (): ImageStdParams {
         $imageStdParams = new ImageStdParams();
-        $imageStdParams->load_from_db();
+        $imageStdParams->loadFromDb();
         return $imageStdParams;
     }),
 

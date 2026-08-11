@@ -207,7 +207,7 @@ final class NotificationRepository
 
     /**
      * `i.*` (a full images row) by design -- fed straight into
-     * DerivativeImage::thumb_url(), whose array<string, mixed>|SrcImage
+     * DerivativeImage::thumbUrl(), whose array<string, mixed>|SrcImage
      * signature already documents why the array form stays generic.
      *
      * The *selection* (which image ids match $dateAvailable +
@@ -219,7 +219,7 @@ final class NotificationRepository
      * {@see \Piwigo\Image\Projection\Image::fromEntity()}/`toArray()`, a
      * mapping shim translating the DQL-hydrated `ImageEntity` back into the
      * exact raw snake_case row shape {@see \Piwigo\Image\SrcImage}'s own
-     * constructor and `DerivativeImage::thumb_url()` expect, same reasoning
+     * constructor and `DerivativeImage::thumbUrl()` expect, same reasoning
      * {@see \Piwigo\Image\ImageRepository::findRowWithCondition()}'s own
      * exclusion cites for staying array-shaped rather than switching every
      * consumer to the typed projection object outright.

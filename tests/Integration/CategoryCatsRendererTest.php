@@ -153,7 +153,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
         $configService->loadConfFromDb();
-        ImageStdParamsTestFactory::get()->load_from_db();
+        ImageStdParamsTestFactory::get()->loadFromDb();
 
         // render() builds its own internal CategoryTreeCache from
         // CachePools::categoryTree() (not injectable) -- a stale repr_*/
@@ -186,7 +186,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $htmlService = HtmlServiceTestFactory::build();
         // mainpage_categories.tpl's own {assign var=derivative
         // value=$pwg->derivative(...)} constructs a real DerivativeImage per
-        // category thumbnail, whose get_url() resolves UrlServiceInterface
+        // category thumbnail, whose getUrl() resolves UrlServiceInterface
         // live from the container -- $urlService below must share the same
         // container-shared RootPathOverride, see that class's own docblock.
         $rootPathOverride = Kernel::container()->get(RootPathOverride::class);

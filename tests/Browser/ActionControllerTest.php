@@ -257,7 +257,7 @@ it('serves a remote-storage photo through the guessMimeType() fallback when mime
 
     try {
         // A matching pwg_token flips is_admin_download=true (bypassing the
-        // is_original()-and-no-HD-access derivative check entirely, same
+        // isOriginal()-and-no-HD-access derivative check entirely, same
         // established technique as the admin-download test above) --
         // irrelevant to the remote-path branch itself, just the simplest
         // way to reach it without also needing a real, non-original image.
@@ -466,7 +466,7 @@ it('denies HD download of an oversized original to a guest with no HD access', f
     $albumId = (int) $albumResult['id'];
 
     // Bigger than the XXLARGE (1656x1242) box in both dimensions -- forces
-    // DerivativeImage::same_as_source() to be false for a non-HD user,
+    // DerivativeImage::sameAsSource() to be false for a non-HD user,
     // exercising the 401 "Access denied e" branch. `user_infos.
     // enabled_high` defaults to 1 in the schema (and the fixture's guest
     // row, user_id 2, is no exception -- confirmed live) -- a guest only
@@ -613,7 +613,7 @@ it('returns 404 naming the resolved path when the original file is missing from 
     $absolutePath = $root . $realPath;
     // The DB row (and its category membership/permission) stays intact --
     // only the on-disk original is gone, so the request sails past every
-    // earlier check (id lookup, permission, is_original()/enabledHigh --
+    // earlier check (id lookup, permission, isOriginal()/enabledHigh --
     // none of those touch the filesystem) and only fails at the
     // is_readable() guard right before the file would be streamed back.
     @unlink($absolutePath);

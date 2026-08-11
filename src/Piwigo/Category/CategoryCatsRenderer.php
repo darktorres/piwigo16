@@ -430,7 +430,7 @@ final readonly class CategoryCatsRenderer
             // pagination
             $tplThumbnailsVarSelection = $tplThumbnailsVar;
 
-            $derivativeParams = $this->eventDispatcher->dispatchChange(new GetIndexAlbumDerivativeParams($this->imageStdParams->get_by_type(ImageStdParams::THUMB)))->params;
+            $derivativeParams = $this->eventDispatcher->dispatchChange(new GetIndexAlbumDerivativeParams($this->imageStdParams->getByType(ImageStdParams::THUMB)))->params;
             $tplThumbnailsVarSelection = $this->eventDispatcher->dispatchChange(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))
                 ->tplThumbnailsVar;
             $template->assignContext(new CategoryCatsPageContext(

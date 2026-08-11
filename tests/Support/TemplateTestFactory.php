@@ -33,7 +33,7 @@ use Throwable;
  * bare instance for tests that never boot a Kernel.
  *
  * ImageStdParams is not among the resolved collaborators: its container
- * factory unconditionally hits the DB (`load_from_db()`), which is unsafe
+ * factory unconditionally hits the DB (`loadFromDb()`), which is unsafe
  * as a required constructor param before the schema exists (e.g.
  * public/install.php). Template resolves it lazily internally instead
  * (see Template::imageStdParams()).

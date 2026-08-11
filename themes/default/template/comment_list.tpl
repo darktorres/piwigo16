@@ -1,11 +1,11 @@
 {if isset($comment_derivative_params)}
 {strip}{html_style}
 .commentElement .illustration{
-	width:{$comment_derivative_params->max_width()+5}px
+	width:{$comment_derivative_params->maxWidth()+5}px
 }
 
 .content .commentElement .description{
-	min-height:{$comment_derivative_params->max_height()+5}px
+	min-height:{$comment_derivative_params->maxHeight()+5}px
 }
 {/html_style}{/strip}
 {footer_script}var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png";{/footer_script}
@@ -20,13 +20,13 @@
 	{else}
 	{assign var=derivative value=$pwg->derivative($derivative_params, $comment.src_image)}
 	{/if}
-	{if !$derivative->is_cached()}
+	{if !$derivative->isCached()}
 	{combine_script id='jquery.ajaxmanager' path='themes/default/js/plugins/jquery.ajaxmanager.js' load='footer'}
   {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
   {/if}
 	<div class="illustration">
 		<a href="{$comment.U_PICTURE}">
-		<img {if $derivative->is_cached()}src="{$derivative->get_url()}"{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->get_url()}"{/if} alt="{$comment.ALT}">
+		<img {if $derivative->isCached()}src="{$derivative->getUrl()}"{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->getUrl()}"{/if} alt="{$comment.ALT}">
 		</a>
 	</div>
 	{/if}

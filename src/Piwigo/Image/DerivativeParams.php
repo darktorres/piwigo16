@@ -57,16 +57,16 @@ final class DerivativeParams
      *
      * @param array<int, int|string> $tokens
      */
-    public function add_url_tokens(array &$tokens): void
+    public function addUrlTokens(array &$tokens): void
     {
-        $this->sizing->add_url_tokens($tokens);
+        $this->sizing->addUrlTokens($tokens);
     }
 
     /**
      * @param int[] $in_size
      * @return int[]
      */
-    public function compute_final_size(array $in_size): array
+    public function computeFinalSize(array $in_size): array
     {
         $this->sizing->compute($in_size, null, $crop_rect, $scale_size);
         return $scale_size !== null ? array_map(intval(...), $scale_size) : $in_size;
@@ -75,7 +75,7 @@ final class DerivativeParams
     /**
      * @return int
      */
-    public function max_width()
+    public function maxWidth()
     {
         return $this->sizing->ideal_size[0];
     }
@@ -83,16 +83,16 @@ final class DerivativeParams
     /**
      * @return int
      */
-    public function max_height()
+    public function maxHeight()
     {
         return $this->sizing->ideal_size[1];
     }
 
     /**
-     * @todo : description of DerivativeParams::is_identity
+     * @todo : description of DerivativeParams::isIdentity
      * @param int[] $in_size
      */
-    public function is_identity(array $in_size): bool
+    public function isIdentity(array $in_size): bool
     {
         if ($in_size[0] > $this->sizing->ideal_size[0] or
             $in_size[1] > $this->sizing->ideal_size[1]) {
@@ -105,10 +105,10 @@ final class DerivativeParams
      * @param int[] $out_size
      * @return bool
      */
-    public function will_watermark(array $out_size, ImageStdParams $imageStdParams)
+    public function willWatermark(array $out_size, ImageStdParams $imageStdParams)
     {
         if ($this->use_watermark) {
-            $min_size = $imageStdParams->get_watermark()
+            $min_size = $imageStdParams->getWatermark()
                 ->min_size;
             return $min_size[0] <= $out_size[0]
               || $min_size[1] <= $out_size[1];

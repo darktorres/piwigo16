@@ -21,8 +21,8 @@ use Piwigo\Db\EntityManagerFactory;
  * (SEC-60 forbids `define()` inside `src/Piwigo/`); this class owns the
  * canonical mapping from each identifier to its real `DerivativeParams`.
  *
- * Persistence: `load_from_db()`/`save()`/`save_disabled()`/`set_and_save()`/
- * `set_and_save_disabled()`/`restore_default()` go through
+ * Persistence: `loadFromDb()`/`save()`/`saveDisabled()`/`setAndSave()`/
+ * `setAndSaveDisabled()`/`restoreDefault()` go through
  * {@see DerivativeSettingsRepository} (the single `derivative_settings` row
  * -- quality/watermark/the on-demand custom-size throttle cache) and
  * {@see DerivativeSizeRepository} (one `derivative_size` row per named
@@ -96,8 +96,8 @@ final class ImageStdParams
 
     /**
      * Genuinely nullable, not just defensively typed: this property has no
-     * default value, and is only ever populated by set_watermark()/
-     * load_from_db() -- a caller reaching save()/apply_global() before
+     * default value, and is only ever populated by setWatermark()/
+     * loadFromDb() -- a caller reaching save()/applyGlobal() before
      * either of those ran (confirmed live, a real Integration test hits
      * this) sees a real null here, not just a theoretical one.
      */
@@ -113,7 +113,7 @@ final class ImageStdParams
     /**
      * @return string[]
      */
-    public static function get_all_types(): array
+    public static function getAllTypes(): array
     {
         return self::ALL_TYPES;
     }
@@ -121,12 +121,12 @@ final class ImageStdParams
     /**
      * @return DerivativeParams[]
      */
-    public function get_all_type_map()
+    public function getAllTypeMap()
     {
         return $this->all_type_map;
     }
 
-    public function get_quality(): int
+    public function getQuality(): int
     {
         return $this->quality;
     }
@@ -134,24 +134,24 @@ final class ImageStdParams
     /**
      * Pure in-memory write, same as the former direct `ImageStdParams::$quality
      * = ...` write it replaces -- persistence happens separately via
-     * save()/set_and_save(), not automatically here.
+     * save()/setAndSave(), not automatically here.
      */
-    public function set_quality(int $quality): void
+    public function setQuality(int $quality): void
     {
         $this->quality = $quality;
     }
 
     /**
      * The on-demand custom-size throttle cache: custom-size key => last-
-     * generated timestamp (get_custom()'s own 24h regeneration guard).
-     * Distinct from get_custom($w, $h, ...) above, which computes a
+     * generated timestamp (getCustom()'s own 24h regeneration guard).
+     * Distinct from getCustom($w, $h, ...) above, which computes a
      * DerivativeParams for a given custom size -- this returns the raw
      * timestamp map itself, e.g. for an admin page listing every
      * already-generated custom size.
      *
      * @return array<string, int>
      */
-    public function get_custom_timestamps(): array
+    public function getCustomTimestamps(): array
     {
         return $this->custom;
     }
@@ -159,10 +159,10 @@ final class ImageStdParams
     /**
      * Pure in-memory write, same as the former direct
      * `unset(ImageStdParams::$custom[$key])` write it replaces --
-     * persistence happens separately via save()/set_and_save(), not
+     * persistence happens separately via save()/setAndSave(), not
      * automatically here.
      */
-    public function unset_custom_timestamp(string $key): void
+    public function unsetCustomTimestamp(string $key): void
     {
         unset($this->custom[$key]);
     }
@@ -170,7 +170,7 @@ final class ImageStdParams
     /**
      * @return DerivativeParams[]
      */
-    public function get_defined_type_map()
+    public function getDefinedTypeMap()
     {
         return $this->type_map;
     }
@@ -178,7 +178,7 @@ final class ImageStdParams
     /**
      * @return array<string, DerivativeParams>
      */
-    public function get_disabled_type_map(): array
+    public function getDisabledTypeMap(): array
     {
         return $this->disabled_type_map;
     }
@@ -186,7 +186,7 @@ final class ImageStdParams
     /**
      * @return string[]
      */
-    public function get_undefined_type_map()
+    public function getUndefinedTypeMap()
     {
         return $this->undefined_type_map;
     }
@@ -194,7 +194,7 @@ final class ImageStdParams
     /**
      * @return DerivativeParams
      */
-    public function get_by_type(string $type)
+    public function getByType(string $type)
     {
         return $this->all_type_map[$type];
     }
@@ -206,16 +206,16 @@ final class ImageStdParams
      * @param ?int $minw
      * @param ?int $minh
      */
-    public function get_custom($w, $h, $crop = 0, $minw = null, $minh = null): DerivativeParams
+    public function getCustom($w, $h, $crop = 0, $minw = null, $minh = null): DerivativeParams
     {
         // $minw/$minh are always both null or both set together (see the
         // sole caller, Template::func_define_derivative()).
         $min_size = $minw !== null && $minh !== null ? [$minw, $minh] : null;
         $params = new DerivativeParams(new SizingParams([$w, $h], $crop, $min_size));
-        $this->apply_global($params);
+        $this->applyGlobal($params);
 
         $key = [];
-        $params->add_url_tokens($key);
+        $params->addUrlTokens($key);
         $key = implode('_', $key);
         if (($this->custom[$key] ?? 0) < time() - 24 * 3600) {
             $this->custom[$key] = time();
@@ -225,15 +225,15 @@ final class ImageStdParams
     }
 
     /**
-     * Lazily defaults $watermark the same way apply_global() does -- a
-     * caller reaching this before set_watermark()/load_from_db() ever ran
+     * Lazily defaults $watermark the same way applyGlobal() does -- a
+     * caller reaching this before setWatermark()/loadFromDb() ever ran
      * gets a sensible fresh WatermarkParams(), not null, keeping this
      * method's own return type (and every real caller's expectations)
      * unchanged.
      *
      * @return WatermarkParams
      */
-    public function get_watermark()
+    public function getWatermark()
     {
         $this->watermark ??= new WatermarkParams();
 
@@ -243,7 +243,7 @@ final class ImageStdParams
     /**
      * Loads derivative configuration from database or initializes it.
      */
-    public function load_from_db(): void
+    public function loadFromDb(): void
     {
         $settings = self::settingsRepository()->load();
 
@@ -254,17 +254,17 @@ final class ImageStdParams
             $this->type_map = self::sizesFromEntities(self::sizeRepository()->findAllEnabled());
         } else {
             $this->watermark = new WatermarkParams();
-            $this->type_map = self::get_enabled_default_sizes();
+            $this->type_map = self::getEnabledDefaultSizes();
             $this->save(false);
         }
 
         $this->disabled_type_map = self::sizesFromEntities(self::sizeRepository()->findAllDisabled());
         if ($this->disabled_type_map === []) {
-            $this->disabled_type_map = self::get_disabled_default_sizes();
-            $this->save_disabled();
+            $this->disabled_type_map = self::getDisabledDefaultSizes();
+            $this->saveDisabled();
         }
 
-        $this->build_maps();
+        $this->buildMaps();
     }
 
     /**
@@ -277,7 +277,7 @@ final class ImageStdParams
      * exist), nothing else in a request reads/writes derivative_settings/
      * derivative_size alongside this class, so there's no identity-map
      * coherency to preserve, and avoiding the container dependency means
-     * load_from_db() (called every request, very early in
+     * loadFromDb() (called every request, very early in
      * RequestBootstrap) doesn't require Kernel::boot() to have run first.
      */
     private static function settingsRepository(): DerivativeSettingsRepository
@@ -350,7 +350,7 @@ final class ImageStdParams
      * array -- it doesn't validate the shape stored inside it (a
      * hand-edited row, or a future format change, could leave a
      * non-numeric value under a key) -- so this narrows every entry the
-     * same way load_from_db() always has for DB-sourced data, rather than
+     * same way loadFromDb() always has for DB-sourced data, rather than
      * trusting customJson blindly.
      *
      * @param array<mixed> $json
@@ -392,8 +392,8 @@ final class ImageStdParams
 
         // DerivativeSizeRepository::findAllEnabled()/findAllDisabled() have
         // no ORDER BY (name is the PK, so rows come back alphabetically) --
-        // every admin-facing consumer of get_defined_type_map()/
-        // get_disabled_type_map() (e.g. MaintenanceActionsPageRenderer's
+        // every admin-facing consumer of getDefinedTypeMap()/
+        // getDisabledTypeMap() (e.g. MaintenanceActionsPageRenderer's
         // "delete multiple size images" list) expects the same canonical
         // square/thumb/.../4xlarge order the former blob-based array always
         // preserved. Re-sort by self::ALL_TYPES instead of adding a
@@ -436,7 +436,7 @@ final class ImageStdParams
     /**
      * @param WatermarkParams $watermark
      */
-    public function set_watermark($watermark): void
+    public function setWatermark($watermark): void
     {
         $this->watermark = $watermark;
     }
@@ -446,11 +446,11 @@ final class ImageStdParams
      *
      * @param DerivativeParams[] $map
      */
-    public function set_and_save($map): void
+    public function setAndSave($map): void
     {
         $this->type_map = $map;
         $this->save(false);
-        $this->build_maps();
+        $this->buildMaps();
     }
 
     /**
@@ -459,10 +459,10 @@ final class ImageStdParams
     public function save(bool $save_disabled = true): void
     {
         // $watermark can still be null here if save() is reached before
-        // load_from_db()/set_watermark() ever ran (e.g. a caller sets
-        // $type_map directly then calls set_and_save()) -- the original
+        // loadFromDb()/setWatermark() ever ran (e.g. a caller sets
+        // $type_map directly then calls setAndSave()) -- the original
         // serialize()-blob code tolerated this silently (a null 'w' entry,
-        // resolved to a fresh WatermarkParams() on the next load_from_db()
+        // resolved to a fresh WatermarkParams() on the next loadFromDb()
         // via its own instanceof check); this preserves that same
         // tolerance now that watermarkToJson() needs a real object.
         self::settingsRepository()->save(
@@ -478,14 +478,14 @@ final class ImageStdParams
         self::sizeRepository()->syncEnabled($rows);
 
         if ($save_disabled) {
-            $this->save_disabled();
+            $this->saveDisabled();
         }
     }
 
     /**
      * Saves the disabled configuration in database.
      */
-    public function save_disabled(): void
+    public function saveDisabled(): void
     {
         $rows = [];
         foreach ($this->disabled_type_map as $type => $params) {
@@ -497,24 +497,24 @@ final class ImageStdParams
     /**
      * @param array<string, DerivativeParams> $map
      */
-    public function set_and_save_disabled(array $map): void
+    public function setAndSaveDisabled(array $map): void
     {
         $this->disabled_type_map = $map;
-        $this->save_disabled();
+        $this->saveDisabled();
     }
 
-    public function restore_default(): void
+    public function restoreDefault(): void
     {
-        $this->type_map = self::get_enabled_default_sizes();
-        $this->disabled_type_map = self::get_disabled_default_sizes();
+        $this->type_map = self::getEnabledDefaultSizes();
+        $this->disabled_type_map = self::getDisabledDefaultSizes();
         $this->save();
-        $this->build_maps();
+        $this->buildMaps();
     }
 
     /**
      * @return array<string, DerivativeParams>
      */
-    public static function get_default_sizes(): array
+    public static function getDefaultSizes(): array
     {
         $arr = [
             self::SQUARE => new DerivativeParams(SizingParams::square(120)),
@@ -539,9 +539,9 @@ final class ImageStdParams
     /**
      * @return array<string, DerivativeParams>
      */
-    public static function get_enabled_default_sizes(): array
+    public static function getEnabledDefaultSizes(): array
     {
-        $default_sizes = self::get_default_sizes();
+        $default_sizes = self::getDefaultSizes();
         foreach (self::DISABLED_TYPES_BY_DEFAULT as $type) {
             unset($default_sizes[$type]);
         }
@@ -551,9 +551,9 @@ final class ImageStdParams
     /**
      * @return array<string, DerivativeParams>
      */
-    public static function get_disabled_default_sizes(): array
+    public static function getDisabledDefaultSizes(): array
     {
-        $all = self::get_default_sizes();
+        $all = self::getDefaultSizes();
         $disabled_sizes = array_intersect_key($all, array_flip(self::DISABLED_TYPES_BY_DEFAULT));
         return $disabled_sizes;
     }
@@ -563,15 +563,15 @@ final class ImageStdParams
      *
      * Pre-existing fragility, not introduced by the derivative_settings/
      * derivative_size migration: $watermark is only ever populated by
-     * set_watermark()/load_from_db(), so a caller reaching build_maps()
-     * (via set_and_save()/restore_default()/get_custom()) before either of
+     * setWatermark()/loadFromDb(), so a caller reaching buildMaps()
+     * (via setAndSave()/restoreDefault()/getCustom()) before either of
      * those ran would hit a read on null here, in the original
      * serialize()-blob code too. Lazily defaults it instead of crashing --
      * self-healing, matching the same null-tolerance save() already needs.
      *
      * @param DerivativeParams $params
      */
-    public function apply_global($params): void
+    public function applyGlobal($params): void
     {
         $this->watermark ??= new WatermarkParams();
 
@@ -583,11 +583,11 @@ final class ImageStdParams
     /**
      * Build 'type_map', 'all_type_map' and 'undefined_type_map'.
      */
-    private function build_maps(): void
+    private function buildMaps(): void
     {
         foreach ($this->type_map as $type => $params) {
             $params->type = $type;
-            $this->apply_global($params);
+            $this->applyGlobal($params);
         }
         $this->all_type_map = $this->type_map;
 

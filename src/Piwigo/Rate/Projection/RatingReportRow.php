@@ -10,7 +10,7 @@ namespace Piwigo\Rate\Projection;
  * admin "Rating" report page.
  *
  * `toArray()` preserves the exact original snake_case shape:
- * {@see \Piwigo\Image\DerivativeImage::thumb_url()} accepts
+ * {@see \Piwigo\Image\DerivativeImage::thumbUrl()} accepts
  * `array<string, mixed>|SrcImage` (not this DTO), so the report renderer
  * calls `toArray()` before handing a row to it, same boundary-unwrap
  * convention every other Projection in this codebase uses.

@@ -67,7 +67,7 @@ final class PictureFormatsPageRenderer
 
         $template->assignContext(new PictureFormatsPageContext(
             addFormatsUrl: $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,
-            imgSquareSrc: DerivativeImage::url($imageStdParams->get_by_type(ImageStdParams::SQUARE), $image),
+            imgSquareSrc: DerivativeImage::url($imageStdParams->getByType(ImageStdParams::SQUARE), $image),
             formats: $formats,
             pwgToken: new CsrfService($currentConfig)
                 ->getToken(),

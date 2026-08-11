@@ -255,7 +255,7 @@ final class WsDefaultMethods
                 ],
                 'thumbnail_size' => [
                     'default' => ImageStdParams::THUMB,
-                    'info' => implode(',', array_keys($this->imageStdParams->get_defined_type_map())),
+                    'info' => implode(',', array_keys($this->imageStdParams->getDefinedTypeMap())),
                 ],
                 'search' => [
                     'default' => null,

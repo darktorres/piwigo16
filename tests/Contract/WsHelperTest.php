@@ -362,10 +362,10 @@ final class WsHelperTest extends ContractTestCase
 
     public function testStdGetUrlsUsesTheElementUrlServiceForANonOriginalRepresentative(): void
     {
-        // representative_ext non-empty -> SrcImage::is_original() is false
+        // representative_ext non-empty -> SrcImage::isOriginal() is false
         // (IS_MIMETYPE branch instead) -- stdGetUrls()'s else branch
-        // (urlService->getElementUrl()) instead of the is_original()
-        // element_url/get_url() branch.
+        // (urlService->getElementUrl()) instead of the isOriginal()
+        // element_url/getUrl() branch.
         $this->conn->executeStatement(
             'INSERT INTO images (file, path, md5sum, representative_ext, width, height) VALUES (?, ?, ?, ?, ?, ?)',
             ['video-helper-test.mp4', 'upload/video-helper-test.mp4', md5('video-helper-test'), 'mp4', 200, 150]

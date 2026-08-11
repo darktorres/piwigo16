@@ -219,7 +219,7 @@ final readonly class CategoryDefaultRenderer
         $tplThumbnailsVar = $this->eventDispatcher->dispatchChange(new LocEndIndexThumbnails($tplThumbnailsVar, $pictures))
             ->tplThumbnailsVar;
         $template->assignContext(new CategoryDefaultThumbnailsPageContext(
-            derivativeParams: $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams($this->imageStdParams->get_by_type($indexDeriv)))
+            derivativeParams: $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams($this->imageStdParams->getByType($indexDeriv)))
                 ->params,
             maxRequests: $this->currentConfig->maxRequests,
             showThumbnailCaption: $this->currentConfig->showThumbnailCaption,

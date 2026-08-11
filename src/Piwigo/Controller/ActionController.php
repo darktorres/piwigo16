@@ -144,9 +144,9 @@ final class ActionController implements ControllerInterface
         $file = '';
         switch ($get_part) {
             case 'e':
-                if ($src_image->is_original() and ! $this->currentUser->get()->enabledHigh) {// we have a photo and the user has no access to HD
+                if ($src_image->isOriginal() and ! $this->currentUser->get()->enabledHigh) {// we have a photo and the user has no access to HD
                     $deriv = new DerivativeImage(ImageStdParams::XXLARGE, $src_image, $this->currentConfig);
-                    if (! $deriv->same_as_source()) {
+                    if (! $deriv->sameAsSource()) {
                         return $this->doError(401, 'Access denied e');
                     }
                 }

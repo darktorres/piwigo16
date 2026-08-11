@@ -6,15 +6,15 @@ use Piwigo\Image\SizingParams;
 
 /**
  * Piwigo\Image\SizingParams -- had partial coverage (compute()'s ratio_h
- * >= ratio_w / crop_v branch, and add_url_tokens() entirely, were
+ * >= ratio_w / cropV branch, and addUrlTokens() entirely, were
  * untested). Every value below was independently confirmed by invoking the
  * real class before writing the assertion.
  *
  * Real finding, not fixed here (self-consistent, no observable bug --
- * add_url_tokens()'s result is only ever used as an internal cache-key
+ * addUrlTokens()'s result is only ever used as an internal cache-key
  * string, never parsed back character-by-character, see ImageStdParams::
- * get_custom()): SizingParams::classic()/square() both construct with an
- * *int* max_crop default/literal (0 and 1), but add_url_tokens()'s fast
+ * getCustom()): SizingParams::classic()/square() both construct with an
+ * *int* max_crop default/literal (0 and 1), but addUrlTokens()'s fast
  * paths check `=== 0.0`/`=== 1.0` (float, strict). An int 0/1 never
  * satisfies a strict float comparison in PHP, so every classic()/square()
  * instance actually falls through to the general (3-token) branch instead
@@ -42,28 +42,28 @@ test('square builds an equal ideal/min size with max_crop 1', function (): void 
         ->toBe([120, 120]);
 });
 
-test('add_url_tokens takes the fast "s" single-token path only for an explicit float 0.0 max_crop', function (): void {
+test('addUrlTokens takes the fast "s" single-token path only for an explicit float 0.0 max_crop', function (): void {
     $params = new SizingParams([100, 200], 0.0, null);
     $tokens = [];
-    $params->add_url_tokens($tokens);
+    $params->addUrlTokens($tokens);
 
     expect($tokens)
         ->toBe(['s100x200']);
 });
 
-test('add_url_tokens takes the fast "e" single-token path only for an explicit float 1.0 max_crop with matching min_size', function (): void {
+test('addUrlTokens takes the fast "e" single-token path only for an explicit float 1.0 max_crop with matching min_size', function (): void {
     $params = new SizingParams([120, 120], 1.0, [120, 120]);
     $tokens = [];
-    $params->add_url_tokens($tokens);
+    $params->addUrlTokens($tokens);
 
     expect($tokens)
         ->toBe(['e120']);
 });
 
-test('add_url_tokens falls through to the general 2-token form for classic()\'s own int max_crop default', function (): void {
+test('addUrlTokens falls through to the general 2-token form for classic()\'s own int max_crop default', function (): void {
     $params = SizingParams::classic(100, 200);
     $tokens = [];
-    $params->add_url_tokens($tokens);
+    $params->addUrlTokens($tokens);
 
     // sizeToUrl + fractionToChar(0) -- NOT the 's100x200' fast form, per
     // this file's own class docblock finding above.
@@ -71,25 +71,25 @@ test('add_url_tokens falls through to the general 2-token form for classic()\'s 
         ->toBe(['100x200', 'a']);
 });
 
-test('add_url_tokens falls through to the general 3-token form for square()\'s own int max_crop literal', function (): void {
+test('addUrlTokens falls through to the general 3-token form for square()\'s own int max_crop literal', function (): void {
     $params = SizingParams::square(120);
     $tokens = [];
-    $params->add_url_tokens($tokens);
+    $params->addUrlTokens($tokens);
 
     expect($tokens)
         ->toBe([120, 'z', 120]);
 });
 
-test('add_url_tokens includes a 3rd min_size token only when min_size is set', function (): void {
+test('addUrlTokens includes a 3rd min_size token only when min_size is set', function (): void {
     $withMinSize = new SizingParams([100, 100], 0.5, [50, 50]);
     $tokensWith = [];
-    $withMinSize->add_url_tokens($tokensWith);
+    $withMinSize->addUrlTokens($tokensWith);
     expect($tokensWith)
         ->toBe([100, 'n', 50]);
 
     $withoutMinSize = new SizingParams([100, 100], 0.5, null);
     $tokensWithout = [];
-    $withoutMinSize->add_url_tokens($tokensWithout);
+    $withoutMinSize->addUrlTokens($tokensWithout);
     expect($tokensWithout)
         ->toBe([100, 'n']);
 });
@@ -184,7 +184,7 @@ test('compute crops vertically when the height ratio exceeds the width ratio', f
  * is float, regardless of which side carries the explicit (float) cast
  * -- same rule already established for ImageRect.php/DerivativeImage.php.
  * Also confirmed-equivalent: line 108's and line 115's
- * RemoveIntegerCast (the (int) cast on crop_h()/crop_v()'s own $pixels
+ * RemoveIntegerCast (the (int) cast on cropH()/cropV()'s own $pixels
  * argument) -- that parameter is untyped, and ImageRect's own crop
  * methods already do float arithmetic on it internally regardless of
  * whether the caller pre-cast it to int. All 8 live sed-verified
@@ -308,7 +308,7 @@ test('compute picks the vertical crop branch, not the horizontal one, when width
  * exact boundary, for every possible input reaching it, not just a
  * tested case. Entering the crop-application branch one comparison
  * early doesn't change anything: a 0-pixel crop is a real no-op both
- * inside ImageRect::crop_h()/crop_v() and in the final cropped
+ * inside ImageRect::cropH()/cropV() and in the final cropped
  * dimensions, whether the branch is entered or not.
  */
 test('compute\'s horizontal crop is a true no-op once available height reaches exactly min_size, not just close to it', function (): void {

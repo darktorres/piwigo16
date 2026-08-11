@@ -84,9 +84,9 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // boots.
         $currentConfig->dataDirChecked = '1';
         // thumbnails.tpl reads $derivative_params (assigned from
-        // ImageStdParams::get_by_type() by CategoryDefaultRenderer::render()
+        // ImageStdParams::getByType() by CategoryDefaultRenderer::render()
         // itself) -- ImageStdParams::$all_type_map starts empty until
-        // load_from_db() populates it. load_from_db() reaches its own
+        // loadFromDb() populates it. loadFromDb() reaches its own
         // repositories via a fresh EntityManagerFactory::build(DbConnection::
         // build()), independent of ConfigService/CurrentConfig entirely, so
         // it works here whether or not the fixture's derivative_settings/
@@ -97,7 +97,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // display flag CategoryDefaultRenderer/thumbnails.tpl reads.
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
         $configService->loadConfFromDb();
-        ImageStdParamsTestFactory::get()->load_from_db();
+        ImageStdParamsTestFactory::get()->loadFromDb();
 
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
@@ -107,7 +107,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $htmlService = HtmlServiceTestFactory::build();
         // thumbnails.tpl's own {assign var=derivative
         // value=$pwg->derivative(...)} constructs a real DerivativeImage per
-        // thumbnail, whose get_url() resolves UrlServiceInterface live from
+        // thumbnail, whose getUrl() resolves UrlServiceInterface live from
         // the container -- $urlService below must share the same
         // container-shared RootPathOverride for setMakeFullUrl()-style
         // state to be visible across both, see that class's own docblock.

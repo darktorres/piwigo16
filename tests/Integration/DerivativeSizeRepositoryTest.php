@@ -15,8 +15,8 @@ use Piwigo\Image\DerivativeSizeRepository;
 /**
  * DerivativeSizeRepository's own syncEnabled()/syncDisabled() (both
  * routed through the private syncPartition()) are already exercised for
- * their happy path by ImageStdParamsTest (ImageStdParams::set_and_save()/
- * set_and_save_disabled() -> save() -> these two methods). This file
+ * their happy path by ImageStdParamsTest (ImageStdParams::setAndSave()/
+ * setAndSaveDisabled() -> save() -> these two methods). This file
  * closes the 2 branches that path never reaches: syncPartition()'s own
  * defensive `enabled` mismatch guard, and the "delete a row that's no
  * longer in the wanted set" branch of its own cleanup loop (save() always

@@ -48,7 +48,7 @@ final class PictureMetadataRenderer
                 $exifMapping[$field] = $field;
             }
 
-            $exif = $metadataService->getExifData($picture['current']['src_image']->get_path(), $exifMapping);
+            $exif = $metadataService->getExifData($picture['current']['src_image']->getPath(), $exifMapping);
 
             if (count($exif) > 0) {
                 $tplMeta = [
@@ -83,7 +83,7 @@ final class PictureMetadataRenderer
         if ($currentConfig->showIptc) {
             $showIptcMapping = $currentConfig->showIptcMapping;
 
-            $iptc = $metadataService->getIptcData($picture['current']['src_image']->get_path(), $showIptcMapping, ', ');
+            $iptc = $metadataService->getIptcData($picture['current']['src_image']->getPath(), $showIptcMapping, ', ');
 
             if (count($iptc) > 0) {
                 $tplMeta = [

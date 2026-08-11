@@ -35,8 +35,8 @@ use stdClass;
  * icon missing -> falls back to 'unknown.png', and the ext==='svg'
  * special-case that falls back to the original path instead -- including
  * that path's own "still not a real image" Exception), and its
- * rotation-swap branch for width/height; get_path(); get_url()'s
- * mimetype-icon branch; and get_size()'s DIM_NOT_GIVEN fatalError() (both
+ * rotation-swap branch for width/height; getPath(); getUrl()'s
+ * mimetype-icon branch; and getSize()'s DIM_NOT_GIVEN fatalError() (both
  * with and without an installed HtmlRenderingInterface) plus its live
  * getimagesize() re-read.
  *
@@ -123,7 +123,7 @@ test('themeConf() throws a RuntimeException when no ThemeConfProviderInterface h
 test('urlService() throws a RuntimeException when no UrlServiceInterface has been installed yet', function (): void {
     // SrcImage's constructor needs a booted Kernel (it reads
     // pictureExtensions()) -- construct it under a real boot, then
-    // reset before calling get_url() so urlService()'s own
+    // reset before calling getUrl() so urlService()'s own
     // Kernel::isBooted() guard is what throws, not SrcImage's. $src itself
     // holds no live container reference once built, so resetting
     // afterward doesn't invalidate it.
@@ -135,14 +135,14 @@ test('urlService() throws a RuntimeException when no UrlServiceInterface has bee
     ]);
     Kernel::reset();
 
-    expect(fn () => $src->get_url())
+    expect(fn () => $src->getUrl())
         ->toThrow(RuntimeException::class, 'SrcImage: no URL service set (RequestBootstrap not run yet?)');
 });
 
-test('get_size() throws a RuntimeException carrying the untranslated message when dimensions are required but not provided and no HtmlRenderingInterface is installed', function (): void {
+test('getSize() throws a RuntimeException carrying the untranslated message when dimensions are required but not provided and no HtmlRenderingInterface is installed', function (): void {
     // SrcImage's constructor needs a booted Kernel (it reads
     // pictureExtensions()) -- construct it under a real boot, then
-    // reset before calling get_size() so fatalError()'s own
+    // reset before calling getSize() so fatalError()'s own
     // Kernel::isBooted() guard falls through to the plain, untranslated
     // RuntimeException, not the container's real HtmlRenderingInterface.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-get-size-no-renderer'));
@@ -153,11 +153,11 @@ test('get_size() throws a RuntimeException carrying the untranslated message whe
     ]);
     Kernel::reset();
 
-    expect(fn () => $src->get_size())
+    expect(fn () => $src->getSize())
         ->toThrow(RuntimeException::class, 'SrcImage dimensions required but not provided');
 });
 
-test('get_size() delegates the fatal message to the installed HtmlRenderingInterface instead of throwing RuntimeException directly', function (): void {
+test('getSize() delegates the fatal message to the installed HtmlRenderingInterface instead of throwing RuntimeException directly', function (): void {
     $renderer = new SrcImageTestFatalRenderer();
 
     KernelContainerOverride::with([
@@ -169,7 +169,7 @@ test('get_size() delegates the fatal message to the installed HtmlRenderingInter
             'file' => 'photo.jpg',
         ]);
 
-        expect(fn () => $src->get_size())
+        expect(fn () => $src->getSize())
             ->toThrow(SrcImageTestFatalSignal::class);
         expect($renderer->lastMessage)
             ->toBe('SrcImage dimensions required but not provided');
@@ -217,9 +217,9 @@ test('constructor builds a pwg_representative path when the extension is not a p
 
     expect($src->rel_path)
         ->toBe('upload/2026/07/pwg_representative/doc.jpg');
-    expect($src->is_original())
+    expect($src->isOriginal())
         ->toBeFalse();
-    expect($src->is_mimetype())
+    expect($src->isMimetype())
         ->toBeFalse();
 });
 
@@ -235,7 +235,7 @@ test('constructor matches a picture extension case-insensitively', function (): 
         'file' => 'photo.JPG',
     ]);
 
-    expect($src->is_original())
+    expect($src->isOriginal())
         ->toBeTrue();
     expect($src->rel_path)
         ->toBe('upload/2026/07/photo.JPG');
@@ -255,9 +255,9 @@ test('constructor swaps width/height for an odd rotation code but not for an eve
     ]);
     expect($rotated->rotation)
         ->toBe(1);
-    expect($rotated->has_size())
+    expect($rotated->hasSize())
         ->toBeTrue();
-    expect($rotated->get_size())
+    expect($rotated->getSize())
         ->toBe([200, 300]);
 
     $unrotated = new SrcImage([
@@ -270,11 +270,11 @@ test('constructor swaps width/height for an odd rotation code but not for an eve
     ]);
     expect($unrotated->rotation)
         ->toBe(2);
-    expect($unrotated->get_size())
+    expect($unrotated->getSize())
         ->toBe([300, 200]);
 });
 
-test('get_path() joins the current root with the resolved rel_path', function (): void {
+test('getPath() joins the current root with the resolved rel_path', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-path-only'));
 
     $src = new SrcImage([
@@ -283,11 +283,11 @@ test('get_path() joins the current root with the resolved rel_path', function ()
         'file' => 'photo.jpg',
     ]);
 
-    expect($src->get_path())
+    expect($src->getPath())
         ->toBe(CurrentPathsTestFactory::get()->root . 'upload/2026/07/photo.jpg');
 });
 
-test('constructor finds a real per-extension mimetype icon, and get_url() embellishes the root-relative icon url', function (): void {
+test('constructor finds a real per-extension mimetype icon, and getUrl() embellishes the root-relative icon url', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
     srcImageTestMakePng($root . '/themes/default/icon/mimetypes/zzz.png', 16, 12);
 
@@ -307,17 +307,17 @@ test('constructor finds a real per-extension mimetype icon, and get_url() embell
                 'file' => 'file.zzz',
             ]);
 
-            expect($src->is_mimetype())
+            expect($src->isMimetype())
                 ->toBeTrue();
-            expect($src->is_original())
+            expect($src->isOriginal())
                 ->toBeFalse();
             expect($src->rel_path)
                 ->toBe('themes/default/icon/mimetypes/zzz.png');
-            expect($src->has_size())
+            expect($src->hasSize())
                 ->toBeTrue();
-            expect($src->get_size())
+            expect($src->getSize())
                 ->toBe([16, 12]);
-            expect($src->get_url())
+            expect($src->getUrl())
                 ->toBe('/root/themes/default/icon/mimetypes/zzz.png');
         });
     } finally {
@@ -338,11 +338,11 @@ test('constructor falls back to the shared unknown.png icon when no icon exists 
             'file' => 'file.qqq',
         ]);
 
-        expect($src->is_mimetype())
+        expect($src->isMimetype())
             ->toBeTrue();
         expect($src->rel_path)
             ->toBe('themes/default/icon/mimetypes/unknown.png');
-        expect($src->get_size())
+        expect($src->getSize())
             ->toBe([20, 10]);
     } finally {
         srcImageTestRrmdir($root);
@@ -367,13 +367,13 @@ test('constructor falls back to the original path for a .svg with no icon, then 
     }
 });
 
-test('get_size() re-reads real dimensions from disk when width/height columns are present but null (not yet metadata-synced)', function (): void {
+test('getSize() re-reads real dimensions from disk when width/height columns are present but null (not yet metadata-synced)', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
     srcImageTestMakePng($root . '/upload/2026/07/synced-later.png', 33, 22);
 
     try {
-        // A nonexistent id, not the real fixture image 1 -- get_size()'s
+        // A nonexistent id, not the real fixture image 1 -- getSize()'s
         // own lazy-read path also persists back onto ImageRepository
         // (updateDimensions()), which silently no-ops for an id with no
         // matching row instead of corrupting a real fixture row this
@@ -386,11 +386,11 @@ test('get_size() re-reads real dimensions from disk when width/height columns ar
             'height' => null,
         ]);
 
-        expect($src->has_size())
+        expect($src->hasSize())
             ->toBeFalse();
-        expect($src->get_size())
+        expect($src->getSize())
             ->toBe([33, 22]);
-        expect($src->has_size())
+        expect($src->hasSize())
             ->toBeTrue();
     } finally {
         srcImageTestRrmdir($root);
@@ -490,7 +490,7 @@ test('constructor never reads $infos[\'height\'] when only width is present, lea
     // genuinely absent (not just null), the mutant's `||` would enter
     // this block on 'width' alone and hit an undefined array key
     // reading $infos['height'], setting a bogus [width, 0] size instead
-    // of correctly leaving $this->size null for get_size()'s own lazy
+    // of correctly leaving $this->size null for getSize()'s own lazy
     // disk re-read.
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -507,9 +507,9 @@ test('constructor never reads $infos[\'height\'] when only width is present, lea
             'width' => 300,
         ]);
 
-        expect($src->has_size())
+        expect($src->hasSize())
             ->toBeFalse();
-        expect($src->get_size())
+        expect($src->getSize())
             ->toBe([55, 44]);
     } finally {
         srcImageTestRrmdir($root);
@@ -532,7 +532,7 @@ test('constructor narrows a numeric-string width to a real int, and defaults a n
         'rotation' => 2,
     ]);
 
-    expect($src->get_size())
+    expect($src->getSize())
         ->toBe([150, 0]);
 });
 
@@ -554,7 +554,7 @@ test('constructor defaults a non-numeric width to exactly 0, and narrows a numer
         'rotation' => 2,
     ]);
 
-    expect($src->get_size())
+    expect($src->getSize())
         ->toBe([0, 90]);
 });
 
@@ -574,14 +574,14 @@ test('constructor defaults rotation to exactly 0 when the column is absent, not 
 
     expect($src->rotation)
         ->toBe(0);
-    expect($src->get_size())
+    expect($src->getSize())
         ->toBe([300, 200]);
 });
 
-test('get_url() for a real original image requests part "e" without download, through the non-mimetype branch', function (): void {
-    // Kills line 270's TernaryNegated (is_original() ? 'e' : 'r') and
+test('getUrl() for a real original image requests part "e" without download, through the non-mimetype branch', function (): void {
+    // Kills line 270's TernaryNegated (isOriginal() ? 'e' : 'r') and
     // line 271's FalseToTrue (the literal `false` $download argument) --
-    // every sibling get_url() test above only exercises the mimetype-icon
+    // every sibling getUrl() test above only exercises the mimetype-icon
     // branch, never this one.
     $fakeUrlService = new SrcImageTestFakeUrlService();
 
@@ -594,16 +594,16 @@ test('get_url() for a real original image requests part "e" without download, th
             'file' => 'photo.jpg',
         ]);
 
-        expect($src->is_original())
+        expect($src->isOriginal())
             ->toBeTrue();
-        expect($src->get_url())
+        expect($src->getUrl())
             ->toBe('/action/7/e');
         expect($fakeUrlService->lastActionUrlArgs)
             ->toBe([7, 'e', false]);
     });
 });
 
-test('get_url() for a real representative image requests part "r"', function (): void {
+test('getUrl() for a real representative image requests part "r"', function (): void {
     // Kills line 270's TernaryNegated from the other direction.
     $fakeUrlService = new SrcImageTestFakeUrlService();
 
@@ -617,17 +617,17 @@ test('get_url() for a real representative image requests part "r"', function ():
             'representative_ext' => 'jpg',
         ]);
 
-        expect($src->is_original())
+        expect($src->isOriginal())
             ->toBeFalse();
-        expect($src->get_url())
+        expect($src->getUrl())
             ->toBe('/action/8/r');
         expect($fakeUrlService->lastActionUrlArgs)
             ->toBe([8, 'r', false]);
     });
 });
 
-test('get_url() throws when a get_src_image_url handler returns something other than a GetSrcImageUrl instance', function (): void {
-    // Every sibling non-mimetype get_url() test above has NO handler
+test('getUrl() throws when a get_src_image_url handler returns something other than a GetSrcImageUrl instance', function (): void {
+    // Every sibling non-mimetype getUrl() test above has NO handler
     // registered for GetSrcImageUrl, so dispatchChange() returns the
     // pre-filter url unchanged (already a string), never reaching
     // dispatchChange()'s own instanceof enforcement.
@@ -649,7 +649,7 @@ test('get_url() throws when a get_src_image_url handler returns something other 
                 'file' => 'photo.jpg',
             ]);
 
-            expect(static fn () => $src->get_url())
+            expect(static fn () => $src->getUrl())
                 ->toThrow(Error::class, 'must return an instance of');
         } finally {
             EventDispatcherTestFactory::get()->removeEventHandler(GetSrcImageUrl::class, $handler);
@@ -657,7 +657,7 @@ test('get_url() throws when a get_src_image_url handler returns something other 
     });
 });
 
-test('get_size() persists the real, correctly-ordered width/height back onto the image repository', function (): void {
+test('getSize() persists the real, correctly-ordered width/height back onto the image repository', function (): void {
     // Kills line 300's 4 index-swap mutations (DecrementInteger/
     // IncrementInteger on $size[0]/$size[1]) -- a real image with
     // DISTINCT width/height (anti-transposition) and a real
@@ -682,7 +682,7 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
 
     try {
         // ImageRepository::class bound directly to this real, manually-built
-        // repository instance -- get_size()'s own container resolve must
+        // repository instance -- getSize()'s own container resolve must
         // reach the SAME EntityManager/Connection this test reads back
         // through afterward, not the container's own default (unrelated)
         // ImageRepository instance.
@@ -698,7 +698,7 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
                 'height' => null,
             ]);
 
-            expect($src->get_size())
+            expect($src->getSize())
                 ->toBe([77, 55]);
         });
 
@@ -732,7 +732,7 @@ test('urlService() throws when the container returns an unexpected type for UrlS
     ]);
 
     expect(fn () => KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, function () use ($src): void {
-        $src->get_url();
+        $src->getUrl();
     }))->toThrow(RuntimeException::class, 'SrcImage: no URL service set (RequestBootstrap not run yet?)');
 });
 
@@ -752,7 +752,7 @@ test('currentConfig() throws when the container returns an unexpected type for C
 });
 
 test('paths() throws when the container returns an unexpected type for Paths', function (): void {
-    // Kills line 109's InstanceOfToTrue -- get_path() is the simplest
+    // Kills line 109's InstanceOfToTrue -- getPath() is the simplest
     // public entry point that reaches paths() without needing anything
     // else from the container. Same reuse-a-pre-built-$src shape as
     // urlService()'s own sibling test above.
@@ -764,7 +764,7 @@ test('paths() throws when the container returns an unexpected type for Paths', f
     ]);
 
     expect(fn () => KernelContainerOverride::withWrongTypeFor(Paths::class, function () use ($src): void {
-        $src->get_path();
+        $src->getPath();
     }))->toThrow(RuntimeException::class, 'SrcImage: no Paths set (RequestBootstrap not run yet?)');
 });
 
@@ -813,11 +813,11 @@ test('constructor normalizes rotation via modulo 4, not modulo 3 or modulo 5', f
 
     expect($src->rotation)
         ->toBe(0);
-    expect($src->get_size())
+    expect($src->getSize())
         ->toBe([300, 200]);
 });
 
-test('get_size() re-read skips the persistence call when the container returns an unexpected type for ImageRepository', function (): void {
+test('getSize() re-read skips the persistence call when the container returns an unexpected type for ImageRepository', function (): void {
     // Kills line 307's InstanceOfToTrue -- the "persists the real,
     // correctly-ordered width/height" test above always binds a REAL
     // ImageRepository, where the mutant's unconditional `if (true)`
@@ -830,7 +830,7 @@ test('get_size() re-read skips the persistence call when the container returns a
     // explicitly rebound alongside ImageRepository::class here --
     // KernelContainerOverride::with() builds a brand new container with
     // no Paths::class binding of its own (Kernel::boot() is what supplies
-    // that in the real world), so get_path() would otherwise resolve a
+    // that in the real world), so getPath() would otherwise resolve a
     // different root than the one the PNG below was written under.
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
     srcImageTestMakePng($root . '/upload/2026/07/skip-persist.png', 41, 31);
@@ -848,7 +848,7 @@ test('get_size() re-read skips the persistence call when the container returns a
                 'height' => null,
             ]);
 
-            return $src->get_size();
+            return $src->getSize();
         });
 
         expect($size)

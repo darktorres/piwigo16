@@ -17,7 +17,7 @@ use LogicException;
  * (`enabled = true` / `enabled = false` respectively) -- they upsert every
  * given row and delete any existing row in *their own* partition that
  * isn't in the given set, but never touch the other partition. This
- * matters because ImageStdParams::set_and_save()/set_and_save_disabled()
+ * matters because ImageStdParams::setAndSave()/setAndSaveDisabled()
  * are two independently-callable methods (real caller:
  * ConfigurationSubController.php, two sequential but separate calls) --
  * a naive "delete everything not in this map" per call would transiently

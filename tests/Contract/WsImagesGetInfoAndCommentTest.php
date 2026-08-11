@@ -86,7 +86,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
         $imageId = $this->insertOrphanImage();
 
         // An orphan photo (DB row, no backing file) is the whole point of
-        // this fixture -- SrcImage::get_size()'s getimagesize() call warns
+        // this fixture -- SrcImage::getSize()'s getimagesize() call warns
         // "Failed to open stream" on the deliberately-missing file
         // (confirmed live, before the permission check below even runs).
         $response = $this->ws('pwg.images.getInfo', [

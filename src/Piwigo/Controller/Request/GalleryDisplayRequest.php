@@ -12,7 +12,7 @@ namespace Piwigo\Controller\Request;
  * alone in one branch (the noindex meta flag / the unconditional redirect)
  * and on the parsed, validated value in another -- collapsing both into a
  * single nullable would lose that distinction. `display`'s own
- * `array_key_exists(..., ImageStdParams::get_defined_type_map())`
+ * `array_key_exists(..., ImageStdParams::getDefinedTypeMap())`
  * membership check stays at the call site (an app-specific image-config
  * lookup, not something a generic Request DTO should embed).
  */

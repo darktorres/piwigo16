@@ -33,8 +33,8 @@ use Piwigo\Ws\WsHelper;
  * bucket), which this file deliberately does not attempt.
  *
  * `stdGetUrls()` is not covered here -- it needs a real `SrcImage`/
- * `DerivativeImage::get_all()` pair, itself needing real `ImageStdParams`
- * derivative config and (for the `is_original()` branch) a real file on
+ * `DerivativeImage::getAll()` pair, itself needing real `ImageStdParams`
+ * derivative config and (for the `isOriginal()` branch) a real file on
  * disk, disproportionate for this class's own shared-helper role.
  */
 function wsHelperTestSubject(bool $isAdmin, bool $guestAccess = true): WsHelper

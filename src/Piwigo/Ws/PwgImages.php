@@ -1696,8 +1696,8 @@ final class PwgImages
 
                 return [
                     'image_id' => $image['id'],
-                    'src' => DerivativeImage::thumb_url($image),
-                    'square_src' => DerivativeImage::url($this->imageStdParams->get_by_type(ImageStdParams::SQUARE), $image),
+                    'src' => DerivativeImage::thumbUrl($image),
+                    'square_src' => DerivativeImage::url($this->imageStdParams->getByType(ImageStdParams::SQUARE), $image),
                     'name' => $image['name'],
                     'add_status' => $add_status,
                 ];
@@ -1740,8 +1740,8 @@ final class PwgImages
 
             return [
                 'image_id' => $image_id,
-                'src' => DerivativeImage::thumb_url($image_infos->toArray()),
-                'square_src' => DerivativeImage::url($this->imageStdParams->get_by_type(ImageStdParams::SQUARE), $image_infos->toArray()),
+                'src' => DerivativeImage::thumbUrl($image_infos->toArray()),
+                'square_src' => DerivativeImage::url($this->imageStdParams->getByType(ImageStdParams::SQUARE), $image_infos->toArray()),
                 'name' => $image_infos->name,
                 'category' => [
                     'id' => $params['category'][0],

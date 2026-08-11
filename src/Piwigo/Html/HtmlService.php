@@ -862,7 +862,7 @@ final class HtmlService implements HtmlRenderingInterface
     public function getSrcImageUrlProtectionHandler(GetSrcImageUrl $event): GetSrcImageUrl
     {
         $event->url = $this->urlService()
-            ->getActionUrl($event->value->id, $event->value->is_original() ? 'e' : 'r', false);
+            ->getActionUrl($event->value->id, $event->value->isOriginal() ? 'e' : 'r', false);
 
         return $event;
     }

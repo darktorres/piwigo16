@@ -11,7 +11,7 @@ use Piwigo\Core\UrlServiceInterface;
 
 /**
  * getRootUrl() returns a fixed, non-empty prefix and embellishUrl() is the
- * identity function, so get_url() assertions below can check the exact
+ * identity function, so getUrl() assertions below can check the exact
  * concatenation.
  */
 final class SrcImageTestFakeUrlService implements UrlServiceInterface

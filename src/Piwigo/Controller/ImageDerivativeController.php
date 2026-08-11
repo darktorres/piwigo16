@@ -112,7 +112,7 @@ final class ImageDerivativeController implements ControllerInterface
         // controller is ever reached) -- ConfigService::loadConfFromDb()
         // already covers the 'derivatives'/'disabled_derivatives' keys,
         // this controller doesn't need its own fetch, and connect() already
-        // calls ImageStdParams::load_from_db() and builds the same
+        // calls ImageStdParams::loadFromDb() and builds the same
         // hashed-filename Logger, so it doesn't need constructing again.
         $logger = $this->currentLogger->get();
 
@@ -236,10 +236,10 @@ final class ImageDerivativeController implements ControllerInterface
 
         if (! $this->trySwitchSource($params, $src_mtime) && $params->type === ImageStdParams::CUSTOM) {
             $sharpen = 0.0;
-            foreach ($this->imageStdParams->get_defined_type_map() as $std_params) {
+            foreach ($this->imageStdParams->getDefinedTypeMap() as $std_params) {
                 $sharpen += $std_params->sharpen;
             }
-            $params->sharpen = round($sharpen / (float) count($this->imageStdParams->get_defined_type_map()));
+            $params->sharpen = round($sharpen / (float) count($this->imageStdParams->getDefinedTypeMap()));
         }
 
         // Same semantics as the old local mkgetdir(): recursive + index.htm
@@ -297,8 +297,8 @@ final class ImageDerivativeController implements ControllerInterface
             $timing['sharpen'] = $this->timeStep($step);
         }
 
-        if ($params->will_watermark($d_size, $this->imageStdParams)) {
-            $wm = $this->imageStdParams->get_watermark();
+        if ($params->willWatermark($d_size, $this->imageStdParams)) {
+            $wm = $this->imageStdParams->getWatermark();
             $wm_image = new PwgImage($this->paths->root . $wm->file, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
             $wm_size = [(int) $wm_image->get_width(), (int) $wm_image->get_height()];
             if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
@@ -379,11 +379,11 @@ final class ImageDerivativeController implements ControllerInterface
             $image->strip();
         }
 
-        $compression_quality = $this->imageStdParams->get_quality();
+        $compression_quality = $this->imageStdParams->getQuality();
 
         // for big sizing never go beyond 75 quality
         if (in_array($this->derivativeType, [ImageStdParams::FOUR_XLARGE, ImageStdParams::THREE_XLARGE], true)) {
-            $compression_quality = min($this->imageStdParams->get_quality(), 75);
+            $compression_quality = min($this->imageStdParams->getQuality(), 75);
         }
 
         $image->write($this->derivativePath);
@@ -565,7 +565,7 @@ final class ImageDerivativeController implements ControllerInterface
         $req = substr($req, 0, $pos);
 
         $deriv = explode('_', $deriv);
-        foreach ($this->imageStdParams->get_defined_type_map() as $type => $params) {
+        foreach ($this->imageStdParams->getDefinedTypeMap() as $type => $params) {
             if (DerivativeUrlCodec::derivativeToUrl($type) === $deriv[0]) {
                 $this->derivativeType = $type;
                 $this->derivativeParams = $params;
@@ -584,7 +584,7 @@ final class ImageDerivativeController implements ControllerInterface
 
         if ($this->derivativeType === ImageStdParams::CUSTOM) {
             $params = $this->derivativeParams = $this->parseCustomParams($deriv);
-            $this->imageStdParams->apply_global($params);
+            $this->imageStdParams->applyGlobal($params);
 
             if ($params->sizing->ideal_size[0] < 20 or $params->sizing->ideal_size[1] < 20) {
                 $this->ierror('Invalid size', 400);
@@ -594,9 +594,9 @@ final class ImageDerivativeController implements ControllerInterface
             }
 
             $key = [];
-            $params->add_url_tokens($key);
+            $params->addUrlTokens($key);
             $key = implode('_', $key);
-            if (! isset($this->imageStdParams->get_custom_timestamps()[$key])) {
+            if (! isset($this->imageStdParams->getCustomTimestamps()[$key])) {
                 $this->ierror('Size not allowed', 403);
             }
         }
@@ -632,7 +632,7 @@ final class ImageDerivativeController implements ControllerInterface
             ->getAbsoluteRootUrl(false) . '/' . $this->srcLocation;
 
         // Every non-erroring path above sets $this->derivativeParams itself
-        // (either from the ImageStdParams::get_defined_type_map() match or from
+        // (either from the ImageStdParams::getDefinedTypeMap() match or from
         // parseCustomParams()) before reaching this point; guard explicitly
         // rather than trust flow analysis across the foreach/if branches above.
         $derivative_params = $this->derivativeParams;
@@ -661,26 +661,26 @@ final class ImageDerivativeController implements ControllerInterface
             $original_size[0] = $original_size[1];
             $original_size[1] = $tmp;
         }
-        $dsize = $params->compute_final_size($original_size);
+        $dsize = $params->computeFinalSize($original_size);
 
         $use_watermark = $params->use_watermark;
         if ($use_watermark) {
-            $use_watermark = $params->will_watermark($dsize, $this->imageStdParams);
+            $use_watermark = $params->willWatermark($dsize, $this->imageStdParams);
         }
 
         $candidates = [];
-        foreach ($this->imageStdParams->get_defined_type_map() as $candidate) {
+        foreach ($this->imageStdParams->getDefinedTypeMap() as $candidate) {
             if ($candidate->type === $params->type) {
                 continue;
             }
             if ($candidate->use_watermark !== $use_watermark) {
                 continue;
             }
-            if ($candidate->max_width() < $params->max_width() || $candidate->max_height() < $params->max_height()) {
+            if ($candidate->maxWidth() < $params->maxWidth() || $candidate->maxHeight() < $params->maxHeight()) {
                 continue;
             }
-            $candidate_size = $candidate->compute_final_size($original_size);
-            if ($dsize !== $params->compute_final_size($candidate_size)) {
+            $candidate_size = $candidate->computeFinalSize($original_size);
+            if ($dsize !== $params->computeFinalSize($candidate_size)) {
                 continue;
             }
 
@@ -698,7 +698,7 @@ final class ImageDerivativeController implements ControllerInterface
             // every real request, silently disabling this entire reuse
             // optimization (always falling back to regenerating from the
             // true original) rather than just never hitting the (harmless)
-            // add_url_tokens() fast-path SizingParamsTest.php already
+            // addUrlTokens() fast-path SizingParamsTest.php already
             // documents this exact int/float quirk for. compute() itself
             // (a few lines above, in the same class) already treats
             // max_crop as a plain number via `> 0`, not a float-typed

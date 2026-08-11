@@ -428,7 +428,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
             }
         }
 
-        $watermark = $this->imageStdParams->get_watermark();
+        $watermark = $this->imageStdParams->getWatermark();
 
         $piwigoInfos['features'] = [
             'use_watermark' => $watermark->file !== '' ? 'yes' : 'no',

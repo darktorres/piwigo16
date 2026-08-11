@@ -203,7 +203,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
         // The full-row-by-id fetch is a DQL ImageEntity fetch mapped
         // back through Image\Projection\Image::fromEntity()->toArray()
-        // -- confirms the real snake_case keys DerivativeImage::thumb_url()/
+        // -- confirms the real snake_case keys DerivativeImage::thumbUrl()/
         // SrcImage's own constructor read are actually present, not
         // just 'id'.
         $byId = [];

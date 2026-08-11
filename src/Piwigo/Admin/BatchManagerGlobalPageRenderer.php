@@ -509,7 +509,7 @@ final class BatchManagerGlobalPageRenderer
 
         // derivatives
         $del_deriv_map = [];
-        foreach ($this->imageStdParams->get_defined_type_map() as $params) {
+        foreach ($this->imageStdParams->getDefinedTypeMap() as $params) {
             $del_deriv_map[$params->type] = $this->lang->t($params->type);
         }
         $gen_deriv_map = $del_deriv_map;
@@ -572,7 +572,7 @@ final class BatchManagerGlobalPageRenderer
                 }
             }
 
-            $thumb_params = $this->imageStdParams->get_by_type(ImageStdParams::SQUARE);
+            $thumb_params = $this->imageStdParams->getByType(ImageStdParams::SQUARE);
             // template thumbnail initialization
             foreach ($this->imageService->getBatchManagerThumbnails($cat_elements_id, $is_category ? $filter_category_id : null, $order_by, $nb_images, $page_start) as $row) {
                 $nb_thumbs_page++;

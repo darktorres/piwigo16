@@ -368,7 +368,7 @@ final class PwgCategories
 
         $categoryService = $this->categoryService;
 
-        if (! in_array($params['thumbnail_size'], array_keys($this->imageStdParams->get_defined_type_map()), true)) {
+        if (! in_array($params['thumbnail_size'], array_keys($this->imageStdParams->getDefinedTypeMap()), true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
         }
 

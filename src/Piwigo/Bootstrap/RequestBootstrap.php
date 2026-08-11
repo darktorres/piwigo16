@@ -888,9 +888,9 @@ final class RequestBootstrap
 
     /**
      * Resolves the container-shared instance -- its factory binding
-     * (config/container.php) already calls load_from_db() at construction,
+     * (config/container.php) already calls loadFromDb() at construction,
      * so simply resolving it here (rather than a bare
-     * ImageStdParams::load_from_db() static call) is enough to preserve
+     * ImageStdParams::loadFromDb() static call) is enough to preserve
      * this method's own "called every request, very early" semantics.
      */
     private static function imageStdParams(): ImageStdParams

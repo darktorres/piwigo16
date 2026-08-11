@@ -15,10 +15,10 @@ use ReflectionProperty;
 
 /**
  * Piwigo\Image\ImageStdParams had zero dedicated test file. Every other
- * Integration suite that calls load_from_db() (CalendarMonthlyTest,
+ * Integration suite that calls loadFromDb() (CalendarMonthlyTest,
  * CategoryDefaultRendererTest, NotificationByMailSenderTest,
  * PwgTemplateAdapterTest) deliberately keeps the fixture's own real
- * `derivative_settings`/`derivative_size` rows valid so load_from_db()
+ * `derivative_settings`/`derivative_size` rows valid so loadFromDb()
  * never needs to exercise its own "missing/invalid row" fallback branches.
  * This file needs real DB access (DerivativeSettingsRepository/
  * DerivativeSizeRepository), hence Integration rather than Unit.
@@ -102,26 +102,26 @@ final class ImageStdParamsTest extends IntegrationTestCase
         $this->conn->executeStatement('DELETE FROM derivative_settings');
         $this->conn->executeStatement('DELETE FROM derivative_size');
 
-        $this->imageStdParams->load_from_db();
+        $this->imageStdParams->loadFromDb();
 
-        self::assertSame('', $this->imageStdParams->get_watermark()->file);
+        self::assertSame('', $this->imageStdParams->getWatermark()->file);
 
-        $enabledKeys = array_keys(ImageStdParams::get_enabled_default_sizes());
-        self::assertSame($enabledKeys, array_keys($this->imageStdParams->get_defined_type_map()));
+        $enabledKeys = array_keys(ImageStdParams::getEnabledDefaultSizes());
+        self::assertSame($enabledKeys, array_keys($this->imageStdParams->getDefinedTypeMap()));
 
-        $disabledKeys = array_keys(ImageStdParams::get_disabled_default_sizes());
+        $disabledKeys = array_keys(ImageStdParams::getDisabledDefaultSizes());
         self::assertSame(['3xlarge', '4xlarge'], $disabledKeys);
-        $disabledTypeMap = $this->imageStdParams->get_disabled_type_map();
+        $disabledTypeMap = $this->imageStdParams->getDisabledTypeMap();
         self::assertSame($disabledKeys, array_keys($disabledTypeMap));
 
-        // build_maps() maps each of the 2 disabled-by-default types to the
+        // buildMaps() maps each of the 2 disabled-by-default types to the
         // nearest smaller *defined* type -- both 3xlarge and 4xlarge fall
         // back to 'xxlarge' (the largest enabled-by-default size).
         self::assertSame([
             '3xlarge' => 'xxlarge',
             '4xlarge' => 'xxlarge',
-        ], $this->imageStdParams->get_undefined_type_map());
-        $allTypeMap = $this->imageStdParams->get_all_type_map();
+        ], $this->imageStdParams->getUndefinedTypeMap());
+        $allTypeMap = $this->imageStdParams->getAllTypeMap();
         self::assertCount(11, $allTypeMap);
         self::assertSame($allTypeMap['xxlarge'], $allTypeMap['3xlarge']);
         self::assertSame($allTypeMap['xxlarge'], $allTypeMap['4xlarge']);
@@ -169,7 +169,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'sharpen' => 0.0,
             'last_mod_time' => $thumb->last_mod_time,
         ]);
-        // Non-empty so load_from_db()'s own "disabled map is empty ->
+        // Non-empty so loadFromDb()'s own "disabled map is empty ->
         // rebuild defaults" branch (covered by the previous test) isn't
         // exercised again here -- this test stays focused on settings/size
         // row parsing above.
@@ -185,26 +185,26 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'last_mod_time' => 0,
         ]);
 
-        $this->imageStdParams->load_from_db();
+        $this->imageStdParams->loadFromDb();
 
-        self::assertSame('', $this->imageStdParams->get_watermark()->file);
+        self::assertSame('', $this->imageStdParams->getWatermark()->file);
         self::assertSame([
             'my_custom_key' => 1_700_000_000,
-        ], $this->imageStdParams->get_custom_timestamps());
-        self::assertSame(90, $this->imageStdParams->get_quality());
+        ], $this->imageStdParams->getCustomTimestamps());
+        self::assertSame(90, $this->imageStdParams->getQuality());
 
-        $defined = $this->imageStdParams->get_defined_type_map();
+        $defined = $this->imageStdParams->getDefinedTypeMap();
         self::assertSame(['thumb'], array_keys($defined));
         self::assertSame([100, 100], $defined['thumb']->sizing->ideal_size);
         self::assertSame('thumb', $defined['thumb']->type);
 
-        $disabledTypeMap = $this->imageStdParams->get_disabled_type_map();
+        $disabledTypeMap = $this->imageStdParams->getDisabledTypeMap();
         self::assertSame(['3xlarge'], array_keys($disabledTypeMap));
     }
 
     public function testGetCustomReturnsADerivativeParamsMatchingTheGivenSizeAndRecordsAFreshCustomKeyOnlyOncePerSize(): void
     {
-        // Seeded non-empty so get_custom()'s own save() -> syncDisabled()
+        // Seeded non-empty so getCustom()'s own save() -> syncDisabled()
         // upserts the derivative_size disabled rows instead of deleting
         // them all (syncDisabled([]) deletes every disabled row when the
         // in-memory map is empty) -- this test's own tearDown() restores
@@ -212,30 +212,30 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // delete followed by a same-test re-read) keeps this test's own
         // assertions simple.
         new ReflectionProperty(ImageStdParams::class, 'disabled_type_map')
-            ->setValue($this->imageStdParams, ImageStdParams::get_disabled_default_sizes());
+            ->setValue($this->imageStdParams, ImageStdParams::getDisabledDefaultSizes());
 
         $watermark = new WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [80, 80];
-        $this->imageStdParams->set_watermark($watermark);
+        $this->imageStdParams->setWatermark($watermark);
 
-        $large = $this->imageStdParams->get_custom(600, 400, 0.3, 200, 150);
+        $large = $this->imageStdParams->getCustom(600, 400, 0.3, 200, 150);
 
         self::assertSame([600, 400], $large->sizing->ideal_size);
         self::assertSame(0.3, $large->sizing->max_crop);
         self::assertSame([200, 150], $large->sizing->min_size);
         self::assertSame(ImageStdParams::CUSTOM, $large->type);
-        // apply_global() compares the watermark's min_size against this
+        // applyGlobal() compares the watermark's min_size against this
         // type's own ideal_size (600x400): 80<=600, so watermarking applies.
         self::assertTrue($large->use_watermark);
-        self::assertCount(1, $this->imageStdParams->get_custom_timestamps());
-        $firstTimestamps = $this->imageStdParams->get_custom_timestamps();
+        self::assertCount(1, $this->imageStdParams->getCustomTimestamps());
+        $firstTimestamps = $this->imageStdParams->getCustomTimestamps();
         foreach ($firstTimestamps as $timestamp) {
             self::assertGreaterThanOrEqual(time() - 5, $timestamp);
             self::assertLessThanOrEqual(time() + 5, $timestamp);
         }
 
-        $small = $this->imageStdParams->get_custom(50, 40);
+        $small = $this->imageStdParams->getCustom(50, 40);
 
         self::assertSame([50, 40], $small->sizing->ideal_size);
         self::assertSame(0, $small->sizing->max_crop);
@@ -243,12 +243,12 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // 80<=50 and 80<=40 are both false -- no watermarking for this
         // much smaller size, distinct from $large's own true above.
         self::assertFalse($small->use_watermark);
-        self::assertCount(2, $this->imageStdParams->get_custom_timestamps());
+        self::assertCount(2, $this->imageStdParams->getCustomTimestamps());
 
         // The first size's own recorded key/timestamp is untouched by the
-        // second get_custom() call -- confirms the per-key freshness
+        // second getCustom() call -- confirms the per-key freshness
         // check, not just "a" write happening.
-        $customTimestamps = $this->imageStdParams->get_custom_timestamps();
+        $customTimestamps = $this->imageStdParams->getCustomTimestamps();
         foreach ($firstTimestamps as $key => $timestamp) {
             self::assertSame($timestamp, $customTimestamps[$key]);
         }
@@ -272,70 +272,70 @@ final class ImageStdParamsTest extends IntegrationTestCase
         $watermark->xrepeat = 2;
         $watermark->yrepeat = 3;
         $watermark->opacity = 50;
-        $this->imageStdParams->set_watermark($watermark);
-        $this->imageStdParams->set_quality(82);
+        $this->imageStdParams->setWatermark($watermark);
+        $this->imageStdParams->setQuality(82);
 
         $params = new DerivativeParams(new SizingParams([500, 400], 0.5, [200, 150]));
         $params->sharpen = 0.25;
         $params->last_mod_time = 1_800_000_000;
 
-        $this->imageStdParams->set_and_save([
+        $this->imageStdParams->setAndSave([
             'medium' => $params,
         ]);
-        $this->imageStdParams->set_and_save_disabled([]);
+        $this->imageStdParams->setAndSaveDisabled([]);
 
-        // Checked here, immediately after set_and_save_disabled([]) and
-        // before the reload below -- load_from_db()'s own "disabled map
+        // Checked here, immediately after setAndSaveDisabled([]) and
+        // before the reload below -- loadFromDb()'s own "disabled map
         // came back empty -> reseed the 2 defaults" fallback (preserved
         // faithfully from the original blob-based behavior) would
         // otherwise mask a real deletion bug by refilling the table right
         // back up before this test could observe the empty state.
         $sizeRowCountAfterClear = $this->conn->fetchOne('SELECT COUNT(*) FROM derivative_size WHERE enabled = 0');
-        self::assertSame(0, $sizeRowCountAfterClear, 'set_and_save_disabled([]) must delete every disabled row, not leave stale ones behind.');
+        self::assertSame(0, $sizeRowCountAfterClear, 'setAndSaveDisabled([]) must delete every disabled row, not leave stale ones behind.');
 
         // A fresh instance -- reload() must derive everything from the DB
         // rows just saved above, not from any in-memory state left behind
         // by the writes above.
         $this->imageStdParams = new ImageStdParams();
-        $this->imageStdParams->load_from_db();
+        $this->imageStdParams->loadFromDb();
 
-        self::assertSame('my-watermark.png', $this->imageStdParams->get_watermark()->file);
-        self::assertSame([300, 250], $this->imageStdParams->get_watermark()->min_size);
-        self::assertSame(10, $this->imageStdParams->get_watermark()->xpos);
-        self::assertSame(90, $this->imageStdParams->get_watermark()->ypos);
-        self::assertSame(2, $this->imageStdParams->get_watermark()->xrepeat);
-        self::assertSame(3, $this->imageStdParams->get_watermark()->yrepeat);
-        self::assertSame(50, $this->imageStdParams->get_watermark()->opacity);
-        self::assertSame(82, $this->imageStdParams->get_quality());
+        self::assertSame('my-watermark.png', $this->imageStdParams->getWatermark()->file);
+        self::assertSame([300, 250], $this->imageStdParams->getWatermark()->min_size);
+        self::assertSame(10, $this->imageStdParams->getWatermark()->xpos);
+        self::assertSame(90, $this->imageStdParams->getWatermark()->ypos);
+        self::assertSame(2, $this->imageStdParams->getWatermark()->xrepeat);
+        self::assertSame(3, $this->imageStdParams->getWatermark()->yrepeat);
+        self::assertSame(50, $this->imageStdParams->getWatermark()->opacity);
+        self::assertSame(82, $this->imageStdParams->getQuality());
 
-        $reloaded = $this->imageStdParams->get_defined_type_map()['medium'];
+        $reloaded = $this->imageStdParams->getDefinedTypeMap()['medium'];
         self::assertSame([500, 400], $reloaded->sizing->ideal_size);
         self::assertSame(0.5, $reloaded->sizing->max_crop);
         self::assertSame([200, 150], $reloaded->sizing->min_size);
         self::assertSame(0.25, $reloaded->sharpen);
         self::assertSame(1_800_000_000, $reloaded->last_mod_time);
 
-        // load_from_db()'s own reseed-on-empty fallback (see the earlier
+        // loadFromDb()'s own reseed-on-empty fallback (see the earlier
         // assertion's own comment) means the disabled set is back to the
         // 2 defaults after this reload, not empty -- that fallback is
         // pre-existing, faithfully preserved behavior, not something this
         // round-trip test is about.
-        self::assertSame(['3xlarge', '4xlarge'], array_keys($this->imageStdParams->get_disabled_type_map()));
+        self::assertSame(['3xlarge', '4xlarge'], array_keys($this->imageStdParams->getDisabledTypeMap()));
     }
 
     public function testEnablingAPreviouslyDisabledSizeMovesItInPlaceRatherThanDuplicatingTheRow(): void
     {
         $params = new DerivativeParams(SizingParams::classic(2232, 1674));
-        $this->imageStdParams->set_and_save_disabled([
+        $this->imageStdParams->setAndSaveDisabled([
             '3xlarge' => $params,
         ]);
 
-        self::assertSame(['3xlarge'], array_keys($this->imageStdParams->get_disabled_type_map()));
+        self::assertSame(['3xlarge'], array_keys($this->imageStdParams->getDisabledTypeMap()));
 
-        $this->imageStdParams->set_and_save([
+        $this->imageStdParams->setAndSave([
             '3xlarge' => $params,
         ]);
-        $this->imageStdParams->set_and_save_disabled([]);
+        $this->imageStdParams->setAndSaveDisabled([]);
 
         $rows = $this->conn->fetchAllAssociative(
             "SELECT enabled FROM derivative_size WHERE name = '3xlarge'"
@@ -367,9 +367,9 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'custom_json' => '{}',
         ]);
 
-        $this->imageStdParams->load_from_db();
+        $this->imageStdParams->loadFromDb();
 
-        self::assertSame([500, 500], $this->imageStdParams->get_watermark()->min_size);
+        self::assertSame([500, 500], $this->imageStdParams->getWatermark()->min_size);
 
         // A genuine 2-element array where the first element is numeric but
         // the second isn't -- exercises the trailing is_numeric($minSize[1])
@@ -387,15 +387,15 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'custom_json' => '{}',
         ]);
 
-        $this->imageStdParams->load_from_db();
+        $this->imageStdParams->loadFromDb();
 
-        self::assertSame([500, 500], $this->imageStdParams->get_watermark()->min_size);
+        self::assertSame([500, 500], $this->imageStdParams->getWatermark()->min_size);
     }
 
     public function testWatermarkFromJsonCastsNumericStringJsonValuesToInt(): void
     {
-        // watermarkToJson()/set_watermark() always produce/consume real PHP
-        // ints, so a save()/load_from_db() round trip through this class's
+        // watermarkToJson()/setWatermark() always produce/consume real PHP
+        // ints, so a save()/loadFromDb() round trip through this class's
         // own API never exercises these (int) casts -- only a hand-edited
         // or externally-written row (Doctrine's `json` column type only
         // guarantees valid JSON, not that every value already has the
@@ -416,12 +416,12 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'custom_json' => '{}',
         ]);
 
-        $this->imageStdParams->load_from_db();
+        $this->imageStdParams->loadFromDb();
 
-        self::assertSame([300, 250], $this->imageStdParams->get_watermark()->min_size);
-        self::assertSame(77, $this->imageStdParams->get_watermark()->xpos);
-        self::assertSame(4, $this->imageStdParams->get_watermark()->xrepeat);
-        self::assertSame(6, $this->imageStdParams->get_watermark()->yrepeat);
+        self::assertSame([300, 250], $this->imageStdParams->getWatermark()->min_size);
+        self::assertSame(77, $this->imageStdParams->getWatermark()->xpos);
+        self::assertSame(4, $this->imageStdParams->getWatermark()->xrepeat);
+        self::assertSame(6, $this->imageStdParams->getWatermark()->yrepeat);
     }
 
     public function testSizesFromEntitiesTreatsASizeWithOnlyOneOfMinWidthOrMinHeightSetAsHavingNoMinSize(): void
@@ -455,9 +455,9 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'last_mod_time' => 0,
         ]);
 
-        $this->imageStdParams->load_from_db();
+        $this->imageStdParams->loadFromDb();
 
-        self::assertNull($this->imageStdParams->get_defined_type_map()['thumb']->sizing->min_size);
+        self::assertNull($this->imageStdParams->getDefinedTypeMap()['thumb']->sizing->min_size);
     }
 
     public function testSizesFromEntitiesOrdersCanonicalTypesFirstThenAppendsAnyUnrecognizedNames(): void
@@ -519,22 +519,22 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'last_mod_time' => 0,
         ]);
 
-        $this->imageStdParams->load_from_db();
+        $this->imageStdParams->loadFromDb();
 
-        self::assertSame(['xsmall', 'medium', 'bogus_type'], array_keys($this->imageStdParams->get_defined_type_map()));
+        self::assertSame(['xsmall', 'medium', 'bogus_type'], array_keys($this->imageStdParams->getDefinedTypeMap()));
     }
 
     public function testApplyGlobalNeverEnablesWatermarkingWhenTheWatermarkFileIsEmpty(): void
     {
-        // A fresh instance's $watermark stays null until set_watermark()/
-        // load_from_db() populates it; apply_global() lazily defaults it to
+        // A fresh instance's $watermark stays null until setWatermark()/
+        // loadFromDb() populates it; applyGlobal() lazily defaults it to
         // a fresh WatermarkParams() whose file stays ''. That empty-file
         // check must short-circuit the whole expression, even for a size
         // whose ideal_size is large enough that the default min_size
         // ([500, 500]) would otherwise satisfy the size comparison below.
         $params = new DerivativeParams(SizingParams::classic(999, 999));
 
-        $this->imageStdParams->apply_global($params);
+        $this->imageStdParams->applyGlobal($params);
 
         self::assertFalse($params->use_watermark);
     }
@@ -556,14 +556,14 @@ final class ImageStdParamsTest extends IntegrationTestCase
             0 => 80,
             1 => 9000,
         ];
-        $this->imageStdParams->set_watermark($watermark);
+        $this->imageStdParams->setWatermark($watermark);
         $params = new DerivativeParams(new SizingParams([
             -1 => 1,
             0 => 80,
             1 => 1,
         ]));
 
-        $this->imageStdParams->apply_global($params);
+        $this->imageStdParams->applyGlobal($params);
 
         self::assertTrue($params->use_watermark);
 
@@ -575,14 +575,14 @@ final class ImageStdParamsTest extends IntegrationTestCase
             1 => 80,
             2 => 9999,
         ];
-        $this->imageStdParams->set_watermark($watermark);
+        $this->imageStdParams->setWatermark($watermark);
         $params2 = new DerivativeParams(new SizingParams([
             0 => 1,
             1 => 80,
             2 => 1,
         ]));
 
-        $this->imageStdParams->apply_global($params2);
+        $this->imageStdParams->applyGlobal($params2);
 
         self::assertTrue($params2->use_watermark);
     }
@@ -592,14 +592,14 @@ final class ImageStdParamsTest extends IntegrationTestCase
         $watermark = new WatermarkParams();
         $watermark->file = 'w.png';
         $watermark->min_size = [10, 10];
-        $this->imageStdParams->set_watermark($watermark);
+        $this->imageStdParams->setWatermark($watermark);
 
         $params = new DerivativeParams(SizingParams::classic(200, 200));
-        $this->imageStdParams->set_and_save([
+        $this->imageStdParams->setAndSave([
             'thumb' => $params,
         ]);
 
-        $defined = $this->imageStdParams->get_defined_type_map();
+        $defined = $this->imageStdParams->getDefinedTypeMap();
         self::assertSame('thumb', $defined['thumb']->type);
         self::assertTrue($defined['thumb']->use_watermark);
     }
@@ -608,31 +608,31 @@ final class ImageStdParamsTest extends IntegrationTestCase
     {
         // Only 'square' (index 0 in ImageStdParams::ALL_TYPES, the very
         // smallest type) is defined -- every other type must fall back to
-        // it. build_maps()'s own inner search loop starts at $i - 1 and
+        // it. buildMaps()'s own inner search loop starts at $i - 1 and
         // walks down to (and including) index 0; if that lower bound were
         // ever off by one, 'square' -- sitting at the boundary itself --
         // would never be found, and every other type would stay entirely
         // undefined.
         $square = new DerivativeParams(SizingParams::square(120));
-        $this->imageStdParams->set_and_save([
+        $this->imageStdParams->setAndSave([
             'square' => $square,
         ]);
 
-        $allTypeMap = $this->imageStdParams->get_all_type_map();
+        $allTypeMap = $this->imageStdParams->getAllTypeMap();
         self::assertCount(11, $allTypeMap);
 
         $expectedUndefined = array_fill_keys(
             ['thumb', '2small', 'xsmall', 'small', 'medium', 'large', 'xlarge', 'xxlarge', '3xlarge', '4xlarge'],
             'square',
         );
-        self::assertSame($expectedUndefined, $this->imageStdParams->get_undefined_type_map());
+        self::assertSame($expectedUndefined, $this->imageStdParams->getUndefinedTypeMap());
         self::assertSame($allTypeMap['square'], $allTypeMap['thumb']);
         self::assertSame($allTypeMap['square'], $allTypeMap['4xlarge']);
     }
 
     public function testBuildMapsNeverTreatsAnOutOfBoundsNegativeIndexAsAValidFallback(): void
     {
-        // ALL_TYPES is a plain 0..10-indexed array; build_maps()'s own inner
+        // ALL_TYPES is a plain 0..10-indexed array; buildMaps()'s own inner
         // search loop must stop once it reaches index 0 (the smallest real
         // type) rather than also reading self::ALL_TYPES[-1] (undefined ->
         // null, which PHP then coerces to the empty-string array key '').
@@ -665,12 +665,12 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'last_mod_time' => 0,
         ]);
 
-        $this->imageStdParams->load_from_db();
+        $this->imageStdParams->loadFromDb();
 
         // None of ImageStdParams::ALL_TYPES is defined (only the '' row
         // is) -- every real type must stay genuinely undefined, not
         // silently backfilled from the out-of-bounds '' entry.
-        self::assertSame([], $this->imageStdParams->get_undefined_type_map());
-        self::assertCount(1, $this->imageStdParams->get_all_type_map());
+        self::assertSame([], $this->imageStdParams->getUndefinedTypeMap());
+        self::assertCount(1, $this->imageStdParams->getAllTypeMap());
     }
 }

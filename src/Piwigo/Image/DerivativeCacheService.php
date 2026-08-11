@@ -35,7 +35,7 @@ final class DerivativeCacheService
     public function clearDerivativeCache(string|array $types = 'all'): void
     {
         if ($types === 'all') {
-            $resolvedTypes = ImageStdParams::get_all_types();
+            $resolvedTypes = ImageStdParams::getAllTypes();
             $resolvedTypes[] = ImageStdParams::CUSTOM;
         } elseif (is_array($types)) {
             $resolvedTypes = array_values($types);
@@ -47,7 +47,7 @@ final class DerivativeCacheService
             $type = $resolvedTypes[$i];
             if ($type === ImageStdParams::CUSTOM) {
                 $type = $this->derivativeToUrl($type) . '_[a-zA-Z0-9]+';
-            } elseif (in_array($type, ImageStdParams::get_all_types(), true)) {
+            } elseif (in_array($type, ImageStdParams::getAllTypes(), true)) {
                 $type = $this->derivativeToUrl($type);
             } else {
                 $type = $this->derivativeToUrl(ImageStdParams::CUSTOM) . '_' . $type;

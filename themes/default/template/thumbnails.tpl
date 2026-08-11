@@ -5,16 +5,16 @@
 .thumbnails SPAN,
 .thumbnails .wrap2 A,
 .thumbnails LABEL{ldelim}
-	width: {$derivative_params->max_width()+2}px;
+	width: {$derivative_params->maxWidth()+2}px;
 }
 
 .thumbnails .wrap2{ldelim}
-	height: {$derivative_params->max_height()+3}px;
+	height: {$derivative_params->maxHeight()+3}px;
 }
-{if $derivative_params->max_width() > 600}
+{if $derivative_params->maxWidth() > 600}
 .thumbLegend {ldelim}font-size: 130%}
 {else}
-{if $derivative_params->max_width() > 400}
+{if $derivative_params->maxWidth() > 400}
 .thumbLegend {ldelim}font-size: 110%}
 {else}
 .thumbLegend {ldelim}font-size: 90%}
@@ -26,7 +26,7 @@
 {/footer_script}
 {foreach from=$thumbnails item=thumbnail}
 {assign var=derivative value=$pwg->derivative($derivative_params, $thumbnail.src_image)}
-{if !$derivative->is_cached()}
+{if !$derivative->isCached()}
 {combine_script id='jquery.ajaxmanager' path='themes/default/js/plugins/jquery.ajaxmanager.js' load='footer'}
 {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
 {/if}
@@ -34,7 +34,7 @@
 	<span class="wrap1">
 		<span class="wrap2">
 		<a href="{$thumbnail.URL}">
-			<img class="thumbnail" {if $derivative->is_cached()}src="{$derivative->get_url()}"{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->get_url()}"{/if} alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
+			<img class="thumbnail" {if $derivative->isCached()}src="{$derivative->getUrl()}"{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->getUrl()}"{/if} alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
 		</a>
 		</span>
 		{if $SHOW_THUMBNAIL_CAPTION }

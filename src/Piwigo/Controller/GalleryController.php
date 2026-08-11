@@ -163,7 +163,7 @@ final class GalleryController implements ControllerInterface
         }
         if ($galleryDisplay->hasDisplayParam) {
             $this->pageState->setMetaRobotsFlag('noindex');
-            if ($galleryDisplay->display !== null && array_key_exists($galleryDisplay->display, $this->imageStdParams->get_defined_type_map())) {
+            if ($galleryDisplay->display !== null && array_key_exists($galleryDisplay->display, $this->imageStdParams->getDefinedTypeMap())) {
                 $this->sessionService->setSessionVar('index_deriv', $galleryDisplay->display);
             }
         }
@@ -541,7 +541,7 @@ final class GalleryController implements ControllerInterface
                 $derivative_params_var = $template->get_template_vars('derivative_params');
                 $selected_type = ($derivative_params_var instanceof DerivativeParams) ? $derivative_params_var->type : null;
                 $template->clear_assign('derivative_params');
-                $type_map = $this->imageStdParams->get_defined_type_map();
+                $type_map = $this->imageStdParams->getDefinedTypeMap();
                 unset($type_map[ImageStdParams::XXLARGE], $type_map[ImageStdParams::XLARGE]);
 
                 foreach ($type_map as $params) {

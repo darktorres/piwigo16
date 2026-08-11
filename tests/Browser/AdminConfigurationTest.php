@@ -38,12 +38,12 @@ function ctFloatFromMixed(mixed $value, float $default): float
 }
 
 /**
- * ImageStdParams::get_default_sizes()'s own w/h values, in ImageStdParams::
- * get_all_types() order -- strictly ascending in both w and h, which
+ * ImageStdParams::getDefaultSizes()'s own w/h values, in ImageStdParams::
+ * getAllTypes() order -- strictly ascending in both w and h, which
  * processSizes()'s step-2 validation (each type's w/h must exceed the
  * previous enabled type's) requires. Mirrors the real configuration_sizes.tpl
  * form, which always posts a full d[type][...] row per type (one row per
- * ImageStdParams::get_all_types() entry, unconditionally rendered).
+ * ImageStdParams::getAllTypes() entry, unconditionally rendered).
  *
  * @return array<string, array{w: int, h: int}>
  */
@@ -1726,7 +1726,7 @@ it('sizes tab: deletes a custom derivative entry when its delete flag is submitt
             'submit' => '1',
             'resize_quality' => '90',
             'd' => ctDerivativesPayload(),
-            // Mirrors ImageStdParams::get_custom()'s own key shape closely
+            // Mirrors ImageStdParams::getCustom()'s own key shape closely
             // enough for this branch's purposes -- processSizes() only
             // checks `isset($post['delete_custom_derivative_' . $custom])`
             // for each key already present in ImageStdParams::$custom, it
@@ -2141,7 +2141,7 @@ it('sizes tab: ignores a malformed non-array "d" entry instead of crashing', fun
         // must drop it rather than treat the string as an array.
         // 'bogus_type' also isn't a real ImageStdParams type, so even if
         // it survived normalization it would never be read back out by
-        // the step-2/step-3 loops (both iterate get_all_types()).
+        // the step-2/step-3 loops (both iterate getAllTypes()).
         $result = H::adminPost($page, ctConfigSection('sizes'), [
             'pwg_token' => $token,
             'submit' => '1',
@@ -2222,14 +2222,14 @@ it('sizes tab: changing an already-enabled type\'s own dimensions bumps its last
     try {
         $page = H::loginAsAdmin($this);
 
-        // ImageStdParams::load_from_db() self-heals disabled_type_map back
-        // to ImageStdParams::get_disabled_default_sizes() (3xlarge/4xlarge)
+        // ImageStdParams::loadFromDb() self-heals disabled_type_map back
+        // to ImageStdParams::getDisabledDefaultSizes() (3xlarge/4xlarge)
         // whenever it reads back empty -- a faithful port of piwigo16's own
-        // include/derivative_std_params.inc.php load_from_db(), not a
+        // include/derivative_std_params.inc.php loadFromDb(), not a
         // rewrite bug. ctDerivativesPayload()'s default submits every type
         // (including 3xlarge) as enabled, which leaves disabled_type_map
         // genuinely empty after a save -- confirmed live: the very next
-        // request's own load_from_db() then silently resets 4xlarge back
+        // request's own loadFromDb() then silently resets 4xlarge back
         // to disabled, so it can never reach the "already enabled" branch
         // this test means to exercise. Keeping 3xlarge disabled (omitting
         // its own 'enabled' key) avoids that self-heal without touching

@@ -158,7 +158,7 @@ final class WsTopLevelTest extends ContractTestCase
         $msizes = $values['msizes'];
         self::assertIsArray($msizes);
 
-        $expectedKeys = [...array_keys(ImageStdParamsTestFactory::get()->get_defined_type_map()), 'custom', 'all'];
+        $expectedKeys = [...array_keys(ImageStdParamsTestFactory::get()->getDefinedTypeMap()), 'custom', 'all'];
         foreach ($expectedKeys as $key) {
             self::assertArrayHasKey($key, $msizes, "msizes must always report a '{$key}' entry");
             self::assertIsInt($msizes[$key]);
@@ -331,7 +331,7 @@ final class WsTopLevelTest extends ContractTestCase
     }
 
     /**
-     * getMissingDerivatives()'s inner `if ($src_image->is_mimetype()) {
+     * getMissingDerivatives()'s inner `if ($src_image->isMimetype()) {
      * continue; }` -- skips a row entirely (no type is even considered)
      * when SrcImage falls back to a generic theme mimetype icon instead
      * of a real derivable photo, which only happens for a non-picture
@@ -367,13 +367,13 @@ final class WsTopLevelTest extends ContractTestCase
     }
 
     /**
-     * getMissingDerivatives()'s inner `if ($type !== $derivative->get_type())
+     * getMissingDerivatives()'s inner `if ($type !== $derivative->getType())
      * { continue; }` -- DerivativeImage::build() resolves a requested type
      * whose ideal size isn't bigger than the source image's own real size
-     * to `null` params (no upsampling), making get_type() return
+     * to `null` params (no upsampling), making getType() return
      * 'Original' instead of the requested type string. Every fixture
      * image is 200x150 (real, deliberately small px), well under
-     * 'xxlarge' (1656x1242) -- confirmed via DerivativeParams::is_identity().
+     * 'xxlarge' (1656x1242) -- confirmed via DerivativeParams::isIdentity().
      * Deliberately not '3xlarge'/'4xlarge': both are disabled by default
      * (ImageStdParams::$disabled_types_by_default), so
      * getMissingDerivatives()'s own array_intersect() against the enabled
@@ -403,7 +403,7 @@ final class WsTopLevelTest extends ContractTestCase
      * do/while loop's own top-of-loop exit (already exercised by
      * test_getMissingDerivatives_paginates_when_max_urls_is_reached
      * above). A dedicated throwaway image (6000x4500 -- bigger than every
-     * defined type up to '4xlarge', so DerivativeParams::is_identity()
+     * defined type up to '4xlarge', so DerivativeParams::isIdentity()
      * is false for all of them and every one of the 11 default types
      * genuinely needs a derivative) makes a *single* processed row
      * contribute far more URLs than max_urls=2 by itself, guaranteeing

@@ -630,7 +630,7 @@ final class PictureController implements ControllerInterface
             }
 
             $row['src_image'] = new SrcImage($row);
-            $row['derivatives'] = DerivativeImage::get_all($row['src_image']);
+            $row['derivatives'] = DerivativeImage::getAll($row['src_image']);
 
             $row['path_ext'] = strtolower(StringHelper::getExtension($row['path']));
             $row['file_ext'] = strtolower(StringHelper::getExtension($row['file']));
@@ -640,9 +640,9 @@ final class PictureController implements ControllerInterface
 
                 $row_id = $row['id'];
 
-                if ($row['src_image']->is_original()) {// we have a photo
+                if ($row['src_image']->isOriginal()) {// we have a photo
                     if ($this->currentUser->get()->enabledHigh) {
-                        $row['element_url'] = $row['src_image']->get_url();
+                        $row['element_url'] = $row['src_image']->getUrl();
                         $row['download_url'] = $urlService->getActionUrl($row_id, 'e', true);
                     }
                 } else { // not a pic - need download link
@@ -743,7 +743,7 @@ final class PictureController implements ControllerInterface
         $metadata_showable = $this->eventDispatcher->dispatchChange(new GetElementMetadataAvailable(
             (
                 ($this->currentConfig->showExif or $this->currentConfig->showIptc)
-                and ! $picture['current']['src_image']->is_mimetype()
+                and ! $picture['current']['src_image']->isMimetype()
             ),
             $picture['current']
         ))->available;
@@ -1074,7 +1074,7 @@ final class PictureController implements ControllerInterface
         }
 
         // size in pixels
-        if ($picture['current']['src_image']->is_original() and isset($picture['current']['width'])) {
+        if ($picture['current']['src_image']->isOriginal() and isset($picture['current']['width'])) {
             $info_dimensions =
               $picture['current']['width'] . '*' . $picture['current']['height'];
         }
@@ -1182,7 +1182,7 @@ final class PictureController implements ControllerInterface
             // column, root-relative (e.g. 'upload/2026/07/x.pdf'),
             // same as every other real filesystem read of this
             // column elsewhere in this codebase (e.g. SrcImage::
-            // get_path()'s own `self::paths()->root .
+            // getPath()'s own `self::paths()->root .
             // $this->rel_path`). countPdfPages() calls is_file()/
             // is_readable() on whatever path it's given with no
             // root of its own, so passing the bare relative path
@@ -1206,11 +1206,11 @@ final class PictureController implements ControllerInterface
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $http_user_agent = is_string($http_user_agent) ? $http_user_agent : '';
         if (isset($picture['next'])
-            and $picture['next']['src_image']->is_original()
+            and $picture['next']['src_image']->isOriginal()
             and $template->get_template_vars('U_PREFETCH') === null
             and ! str_contains($http_user_agent, 'Chrome/')) {
             $prefetch_deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize;
-            $u_prefetch = $picture['next']['derivatives'][$prefetch_deriv_type]->get_url();
+            $u_prefetch = $picture['next']['derivatives'][$prefetch_deriv_type]->getUrl();
         }
 
         $u_canonical = $urlService->makePictureUrl(
@@ -1316,7 +1316,7 @@ final class PictureController implements ControllerInterface
     /**
      * $event->currentPicture is always $picture['current'] (see the
      * dispatchChange() call near the end of __invoke()) -- 'derivatives' is
-     * populated by DerivativeImage::get_all()
+     * populated by DerivativeImage::getAll()
      * (src/Piwigo/Image/DerivativeImage.php), keyed by the IMG_* type
      * strings. `RenderElementContent::$currentPicture` itself stays
      * generically typed (it's a general-purpose event class); this method,
@@ -1340,7 +1340,7 @@ final class PictureController implements ControllerInterface
 
         if (isset($_COOKIE['picture_deriv'])) {
             if (is_string($_COOKIE['picture_deriv'])
-                and array_key_exists($_COOKIE['picture_deriv'], $this->imageStdParams->get_defined_type_map())) {
+                and array_key_exists($_COOKIE['picture_deriv'], $this->imageStdParams->getDefinedTypeMap())) {
                 $this->sessionService->setSessionVar('picture_deriv', $_COOKIE['picture_deriv']);
             }
             setcookie('picture_deriv', '', [
@@ -1359,15 +1359,15 @@ final class PictureController implements ControllerInterface
             if ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB) {
                 continue;
             }
-            if (! array_key_exists($type, $this->imageStdParams->get_defined_type_map())) {
+            if (! array_key_exists($type, $this->imageStdParams->getDefinedTypeMap())) {
                 continue;
             }
-            $url = $derivative->get_url();
+            $url = $derivative->getUrl();
             if (isset($added[$url])) {
                 continue;
             }
             $added[$url] = 1;
-            $show_original = $show_original && ! ($derivative->same_as_source());
+            $show_original = $show_original && ! ($derivative->sameAsSource());
 
             // in case we do not display the sizes icon, we only add the
             // selected size to unique_derivatives

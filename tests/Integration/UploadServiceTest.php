@@ -117,7 +117,7 @@ final class UploadServiceTestThemeConfProvider implements ThemeConfProviderInter
  * with image 1 linked only to category 1 (not 2) in the stock fixture.
  * config's own `lounge_active` row is 'true' in the fixture, but
  * this suite deliberately never calls ConfigService::loadConfFromDb() --
- * ImageStdParams::load_from_db() (needed for DerivativeImage::url(),
+ * ImageStdParams::loadFromDb() (needed for DerivativeImage::url(),
  * addUploadedFile()'s own "cache a derivative" tail) is independent of
  * ConfigService/CurrentConfig entirely (reaches derivative_settings/
  * derivative_size via its own fresh EntityManagerFactory::build(DbConnection::
@@ -266,12 +266,12 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfigServiceTestFactory::get()->set($configService);
         $this->configService = $configService;
         // Needed for DerivativeImage::url()'s own ImageStdParams::
-        // get_by_type() call (addUploadedFile()'s "cache a derivative"
+        // getByType() call (addUploadedFile()'s "cache a derivative"
         // tail) to resolve real sizing; falls back to sane built-in
         // defaults since the fixture's derivative_settings/derivative_size
         // rows are empty here (see this class's own docblock), matching
         // TemplateDefineDerivativeTest's own identical setup.
-        ImageStdParamsTestFactory::get()->load_from_db();
+        ImageStdParamsTestFactory::get()->loadFromDb();
 
         // Deliberate baseline, independent of the fixture's own DB-stored
         // 'lounge_active' row (see this class's own docblock) -- every test
@@ -981,7 +981,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * that helper's own per-type loop is dead in
      * tests/Unit/Admin/Upload/UploadServiceTest.php's own "returns a
      * positive width/height pair" test (that suite never calls
-     * ImageStdParams::load_from_db(), so every type's own $params stays
+     * ImageStdParams::loadFromDb(), so every type's own $params stays
      * null there), unlike here, where this class's own setUp() already
      * does -- genuinely exercising it. Whether or not this environment's
      * ImageMagick build carries a libheif delegate (unconfirmed, unlike

@@ -11,7 +11,7 @@ use Piwigo\Core\UrlServiceInterface;
 
 /**
  * getRootUrl() returns '' and embellishUrl() is the identity function, so
- * get_url() callers below can assert on the exact rel_url build() computed
+ * getUrl() callers below can assert on the exact rel_url build() computed
  * with no extra prefix/suffix to account for.
  */
 final class DerivativeImageTestFakeUrlService implements UrlServiceInterface

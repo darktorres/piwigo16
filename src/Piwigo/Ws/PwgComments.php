@@ -152,7 +152,7 @@ final class PwgComments
 
             $row_image_id = $row['image_id'];
 
-            $medium_derivative = DerivativeImage::get_one(
+            $medium_derivative = DerivativeImage::getOne(
                 ImageStdParams::MEDIUM,
                 [
                     'id' => $row_image_id,
@@ -161,9 +161,9 @@ final class PwgComments
                 ]
             );
             // MEDIUM is a standard type, always present in the defined
-            // type map — get_one() only returns null for an unknown type.
+            // type map — getOne() only returns null for an unknown type.
             assert($medium_derivative instanceof DerivativeImage);
-            $medium = $medium_derivative->get_url();
+            $medium = $medium_derivative->getUrl();
 
             $row_author = is_string($row['author']) ? $row['author'] : null;
             if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === $this->currentConfig->guestId) {

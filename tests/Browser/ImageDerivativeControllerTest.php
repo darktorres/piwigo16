@@ -434,7 +434,7 @@ it('serves a theme asset through the derivative pipeline and redirects to the ra
     // Deliberately xxlarge ('xx'), not 4xlarge ('4x') despite 4xlarge's
     // bigger box also fitting: 4xlarge is disabled by default (the
     // fixture's own derivative_size row for '4xlarge' has enabled=0), and
-    // ImageStdParams::load_from_db() self-heals the disabled set back to
+    // ImageStdParams::loadFromDb() self-heals the disabled set back to
     // its default (3xlarge/4xlarge) the moment it reads back zero disabled
     // rows -- confirmed live, deleting those rows doesn't stick past the
     // next request. xxlarge needs no config change at all.
@@ -1201,14 +1201,14 @@ it('generates a custom size once its own key is registered, averaging sharpen ac
         // parseCustomParams()'s own 's' (single WxH token, crop=0) branch --
         // SizingParams::$max_crop is untyped and stays a plain int 0 here
         // (parseCustomParams() never reassigns it in the 's' branch), so
-        // add_url_tokens()'s strict `$max_crop === 0.0` check is false for
+        // addUrlTokens()'s strict `$max_crop === 0.0` check is false for
         // this int 0 (the same int/float quirk trySwitchSource()'s own
         // docblock documents) -- both the registration key below and
         // parseRequest()'s own validation call compute the SAME
         // (non-'s'-prefixed) 2-token key via the same code, so they still
         // agree with each other even though the URL's own 's' prefix looks
         // unrelated to the persisted key shape (verified directly against
-        // DerivativeParams::add_url_tokens(), not hand-derived).
+        // DerivativeParams::addUrlTokens(), not hand-derived).
         // JSON_OBJECT(), not JSON_SET() -- verified live against the
         // fixture DB: no real production code path ever populates
         // ImageStdParams::$custom (func_define_derivative()'s width/height
@@ -1323,7 +1323,7 @@ it('applies a configured non-zero sharpen amount when generating a standard-type
         // this rewrite exposes this column at all (grep confirms it), so a
         // direct write is the only way to reach it: DerivativeParams->
         // sharpen defaults to 0.0 for every one of ImageStdParams::
-        // get_default_sizes()'s own entries, so every OTHER test in this
+        // getDefaultSizes()'s own entries, so every OTHER test in this
         // suite requesting a standard type takes the falsy `(bool)
         // $params->sharpen` branch and never actually reaches
         // $image->sharpen() itself.
@@ -1488,7 +1488,7 @@ it('reuses a larger cropped-type sibling via the max_crop!=0 candidate branch, w
         // means every classic candidate from '2small' up gets excluded at
         // trySwitchSource()'s own watermark-mismatch check, leaving
         // 'thumb' as the only surviving, structurally-matching candidate
-        // (verified directly against apply_global()/trySwitchSource(),
+        // (verified directly against applyGlobal()/trySwitchSource(),
         // not hand-derived).
         $watermarkPngPath = tempnam(sys_get_temp_dir(), 'pwg_idc_cropreuse_img_') . '.png';
         $wmImg = imagecreatetruecolor(10, 10);

@@ -79,7 +79,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * The "watermark" and "sizes" tabs' POST handlers (`processWatermark()`/
  * `processSizes()` below) write through typed abstractions
- * (`ImageStdParams::save()`/`set_and_save()`,
+ * (`ImageStdParams::save()`/`setAndSave()`,
  * `UploadService::saveUploadFormConfig()`), not raw SQL. The "default" tab
  * edits the guest user's profile via
  * `Piwigo\Controller\ProfileFormHandler::saveFromPost()`.
@@ -491,7 +491,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            $this->imageStdParams->restore_default();
+            $this->imageStdParams->restoreDefault();
             new DerivativeCacheService($this->currentConfig, $this->paths)
                 ->clearDerivativeCache();
 
@@ -663,11 +663,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     ));
 
                     // derivatives = multiple size
-                    $enabled = $this->imageStdParams->get_defined_type_map();
-                    $disabled = $this->imageStdParams->get_disabled_type_map();
+                    $enabled = $this->imageStdParams->getDefinedTypeMap();
+                    $disabled = $this->imageStdParams->getDisabledTypeMap();
 
                     $tpl_vars = [];
-                    foreach (ImageStdParams::get_all_types() as $type) {
+                    foreach (ImageStdParams::getAllTypes() as $type) {
                         $tpl_var = [];
 
                         $tpl_var['must_square'] = ($type === ImageStdParams::SQUARE ? true : false);
@@ -694,11 +694,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $tpl_vars[$type] = $tpl_var;
                     }
                     $derivatives = $tpl_vars;
-                    $resize_quality = $this->imageStdParams->get_quality();
+                    $resize_quality = $this->imageStdParams->getQuality();
 
                     $tpl_vars = [];
                     $now = time();
-                    foreach ($this->imageStdParams->get_custom_timestamps() as $custom => $time) {
+                    foreach ($this->imageStdParams->getCustomTimestamps() as $custom => $time) {
                         $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? $this->lang->t('today') : DateHelper::timeSince($time, 'day');
                     }
 
@@ -736,7 +736,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
                 $watermark = null;
                 if ($template->get_template_vars('watermark') === null) {
-                    $wm = $this->imageStdParams->get_watermark();
+                    $wm = $this->imageStdParams->getWatermark();
 
                     $position = 'custom';
                     if ($wm->xpos === 0 and $wm->ypos === 0) {
@@ -919,8 +919,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      *
      * @param array<int|string, mixed> $post handle()'s own local post
      *   working copy (see Request\ConfigurationRequest) -- read-only here,
-     *   this tab persists through its own ImageStdParams::set_and_save()/
-     *   set_and_save_disabled() calls rather than the generic config-row
+     *   this tab persists through its own ImageStdParams::setAndSave()/
+     *   setAndSaveDisabled() calls rather than the generic config-row
      *   UPDATE loop, so nothing needs to flow back out.
      */
     private function processSizes(array $post): void
@@ -1019,7 +1019,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         /** @var array<string, array<string, string>> $derivative_errors */
         $derivative_errors = [];
         $prev_w = $prev_h = 0;
-        foreach (ImageStdParams::get_all_types() as $type) {
+        foreach (ImageStdParams::getAllTypes() as $type) {
             $pderivative = $pderivatives[$type];
             if (! $pderivative['enabled']) {
                 continue;
@@ -1066,14 +1066,14 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         if (count($errors) === 0 && count($derivative_errors) === 0) {
             $resize_quality_post = $post['resize_quality'];
             $resize_quality = is_numeric($resize_quality_post) ? intval($resize_quality_post) : 0;
-            $quality_changed = $this->imageStdParams->get_quality() !== $resize_quality;
-            $this->imageStdParams->set_quality($resize_quality);
+            $quality_changed = $this->imageStdParams->getQuality() !== $resize_quality;
+            $this->imageStdParams->setQuality($resize_quality);
 
-            $enabled = $this->imageStdParams->get_defined_type_map();
-            $disabled = $this->imageStdParams->get_disabled_type_map();
+            $enabled = $this->imageStdParams->getDefinedTypeMap();
+            $disabled = $this->imageStdParams->getDisabledTypeMap();
             $changed_types = [];
 
-            foreach (ImageStdParams::get_all_types() as $type) {
+            foreach (ImageStdParams::getAllTypes() as $type) {
                 $pderivative = $pderivatives[$type];
 
                 if ($pderivative['enabled']) {
@@ -1086,7 +1086,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     );
                     $new_params->sharpen = (float) intval($pderivative['sharpen']);
 
-                    $this->imageStdParams->apply_global($new_params);
+                    $this->imageStdParams->applyGlobal($new_params);
 
                     if (isset($enabled[$type])) {
                         $old_params = $enabled[$type];
@@ -1130,21 +1130,21 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             }
 
             $enabled_by = []; // keys ordered by all types
-            foreach (ImageStdParams::get_all_types() as $type) {
+            foreach (ImageStdParams::getAllTypes() as $type) {
                 if (isset($enabled[$type])) {
                     $enabled_by[$type] = $enabled[$type];
                 }
             }
 
-            foreach (array_keys($this->imageStdParams->get_custom_timestamps()) as $custom) {
+            foreach (array_keys($this->imageStdParams->getCustomTimestamps()) as $custom) {
                 if (isset($post['delete_custom_derivative_' . $custom])) {
                     $changed_types[] = $custom;
-                    $this->imageStdParams->unset_custom_timestamp($custom);
+                    $this->imageStdParams->unsetCustomTimestamp($custom);
                 }
             }
 
-            $this->imageStdParams->set_and_save($enabled_by);
-            $this->imageStdParams->set_and_save_disabled($disabled);
+            $this->imageStdParams->setAndSave($enabled_by);
+            $this->imageStdParams->setAndSaveDisabled($disabled);
 
             if ((bool) count($changed_types)) {
                 new DerivativeCacheService($this->currentConfig, $this->paths)
@@ -1361,7 +1361,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $watermark->opacity = intval($pwatermark['opacity']);
             $watermark->min_size = [intval($pwatermark['minw']), intval($pwatermark['minh'])];
 
-            $old_watermark = $this->imageStdParams->get_watermark();
+            $old_watermark = $this->imageStdParams->getWatermark();
             $watermark_changed =
               $watermark->file !== $old_watermark->file
               || $watermark->xpos !== $old_watermark->xpos
@@ -1371,14 +1371,14 @@ final class ConfigurationSubController implements AdminSubControllerInterface
               || $watermark->opacity !== $old_watermark->opacity;
 
             // save the new watermark configuration
-            $this->imageStdParams->set_watermark($watermark);
+            $this->imageStdParams->setWatermark($watermark);
 
             // do we have to regenerate the derivatives (and which types)?
             $changed_types = [];
 
-            foreach ($this->imageStdParams->get_defined_type_map() as $type => $params) {
+            foreach ($this->imageStdParams->getDefinedTypeMap() as $type => $params) {
                 $old_use_watermark = $params->use_watermark;
-                $this->imageStdParams->apply_global($params);
+                $this->imageStdParams->applyGlobal($params);
 
                 $changed = $params->use_watermark !== $old_use_watermark;
                 if (! $changed and $params->use_watermark) {

@@ -239,24 +239,24 @@ final class SrcImage
         }
     }
 
-    public function is_original(): bool
+    public function isOriginal(): bool
     {
         return (bool) ($this->flags & self::IS_ORIGINAL);
     }
 
-    public function is_mimetype(): bool
+    public function isMimetype(): bool
     {
         return (bool) ($this->flags & self::IS_MIMETYPE);
     }
 
-    public function get_path(): string
+    public function getPath(): string
     {
         return self::paths()->root . $this->rel_path;
     }
 
-    public function get_url(): string
+    public function getUrl(): string
     {
-        if ($this->is_mimetype()) {
+        if ($this->isMimetype()) {
             // A static theme asset (e.g. themes/default/icon/mimetypes/
             // pdf.png), not user content -- themes/ is a real, deliberately
             // reachable symlink into public/ (Part II), so a direct static
@@ -276,7 +276,7 @@ final class SrcImage
             // request; UrlService::getActionUrl() is the same helper
             // Admin\PictureModifyPageRenderer/BatchManagerUnitPageRenderer
             // already use for their own action.php download links.
-            $part = $this->is_original() ? 'e' : 'r';
+            $part = $this->isOriginal() ? 'e' : 'r';
             $url = self::urlService()->getActionUrl($this->id, $part, false);
 
             $url = self::eventDispatcher()->dispatchChange(new GetSrcImageUrl($url, $this))->url;
@@ -285,7 +285,7 @@ final class SrcImage
         return self::urlService()->embellishUrl($url);
     }
 
-    public function has_size(): bool
+    public function hasSize(): bool
     {
         return $this->size !== null;
     }
@@ -293,14 +293,14 @@ final class SrcImage
     /**
      * @return int[]|null 0=width, 1=height or null if fail to compute size
      */
-    public function get_size(): ?array
+    public function getSize(): ?array
     {
         if ($this->size === null) {
             if ((bool) ($this->flags & self::DIM_NOT_GIVEN)) {
                 self::fatalError('SrcImage dimensions required but not provided');
             }
             // probably not metadata synced
-            if (($size = getimagesize($this->get_path())) !== false) {
+            if (($size = getimagesize($this->getPath())) !== false) {
                 $this->size = [$size[0], $size[1]];
                 if (Kernel::isBooted()) {
                     $imageRepository = Kernel::container()->get(ImageRepository::class);

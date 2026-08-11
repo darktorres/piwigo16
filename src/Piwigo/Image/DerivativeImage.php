@@ -49,8 +49,8 @@ final class DerivativeImage
 
     /**
      * Same "no DI, genuinely static factory API" shape as urlService()
-     * above -- the class's own public API (thumb_url()/url()/get_all()/
-     * get_one()/build()) is almost entirely static factory methods with no
+     * above -- the class's own public API (thumbUrl()/url()/getAll()/
+     * getOne()/build()) is almost entirely static factory methods with no
      * `$this` to inject through, so this stays a container resolve rather
      * than a constructor property, used consistently by both the static
      * factories and the constructor's own instance-context read below.
@@ -140,7 +140,7 @@ final class DerivativeImage
         private readonly CurrentConfig $currentConfig,
     ) {
         if (is_string($type)) {
-            $this->params = self::imageStdParams()->get_by_type($type);
+            $this->params = self::imageStdParams()->getByType($type);
         } else {
             $this->params = $type;
         }
@@ -153,7 +153,7 @@ final class DerivativeImage
      *
      * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage -- see SrcImage::__construct()'s own docblock for why the array form stays generic
      */
-    public static function thumb_url($infos): string
+    public static function thumbUrl($infos): string
     {
         return self::url(ImageStdParams::THUMB, $infos);
     }
@@ -168,12 +168,12 @@ final class DerivativeImage
     public static function url($type, $infos): string
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
-        $params = is_string($type) ? self::imageStdParams()->get_by_type($type) : $type;
+        $params = is_string($type) ? self::imageStdParams()->getByType($type) : $type;
         $rel_path = '';
         $rel_url = '';
         self::build($src_image, self::currentConfig(), $params, $rel_path, $rel_url);
         if ($params === null) {
-            return $src_image->get_url();
+            return $src_image->getUrl();
         }
         $default_url = self::urlService()->getRootUrl() . $rel_url;
         $filtered_url = self::eventDispatcher()->dispatchChange(new GetDerivativeUrl(
@@ -196,7 +196,7 @@ final class DerivativeImage
      * @param array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage[]
      */
-    public static function get_all($src_image): array
+    public static function getAll($src_image): array
     {
         if (! is_object($src_image)) {
             $src_image = new SrcImage($src_image);
@@ -204,12 +204,12 @@ final class DerivativeImage
 
         $ret = [];
         // build enabled types
-        foreach (self::imageStdParams()->get_defined_type_map() as $type => $params) {
+        foreach (self::imageStdParams()->getDefinedTypeMap() as $type => $params) {
             $derivative = new self($params, $src_image, self::currentConfig());
             $ret[$type] = $derivative;
         }
         // disabled types, fallback to enabled types
-        foreach (self::imageStdParams()->get_undefined_type_map() as $type => $type2) {
+        foreach (self::imageStdParams()->getUndefinedTypeMap() as $type => $type2) {
             $ret[$type] = $ret[$type2];
         }
 
@@ -225,18 +225,18 @@ final class DerivativeImage
      * @param array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage|null null if $type not found
      */
-    public static function get_one($type, $src_image): ?self
+    public static function getOne($type, $src_image): ?self
     {
         if (! is_object($src_image)) {
             $src_image = new SrcImage($src_image);
         }
 
-        $defined = self::imageStdParams()->get_defined_type_map();
+        $defined = self::imageStdParams()->getDefinedTypeMap();
         if (isset($defined[$type])) {
             return new self($defined[$type], $src_image, self::currentConfig());
         }
 
-        $undefined = self::imageStdParams()->get_undefined_type_map();
+        $undefined = self::imageStdParams()->getUndefinedTypeMap();
         if (isset($undefined[$type])) {
             return new self($defined[$undefined[$type]], $src_image, self::currentConfig());
         }
@@ -259,24 +259,24 @@ final class DerivativeImage
         // out-param, below.
         assert($params !== null);
 
-        if ($src->has_size()) {
-            $src_size = $src->get_size();
-            // has_size() checks the same underlying state get_size() would
-            // otherwise recompute, so a true has_size() guarantees get_size()
+        if ($src->hasSize()) {
+            $src_size = $src->getSize();
+            // hasSize() checks the same underlying state getSize() would
+            // otherwise recompute, so a true hasSize() guarantees getSize()
             // returns non-null here.
             assert($src_size !== null);
-            if ($params->is_identity($src_size)) {// the source image is smaller than what we should do - we do not upsample
-                if (! $params->will_watermark($src_size, self::imageStdParams()) && ! (bool) $src->rotation) {// no watermark, no rotation required -> we will use the source image
+            if ($params->isIdentity($src_size)) {// the source image is smaller than what we should do - we do not upsample
+                if (! $params->willWatermark($src_size, self::imageStdParams()) && ! (bool) $src->rotation) {// no watermark, no rotation required -> we will use the source image
                     $params = null;
                     $rel_path = $rel_url = $src->rel_path;
                     return;
                 }
-                $defined_types = array_keys(self::imageStdParams()->get_defined_type_map());
+                $defined_types = array_keys(self::imageStdParams()->getDefinedTypeMap());
                 for ($i = 0; $i < count($defined_types); $i++) {
                     if ($defined_types[$i] === $params->type) {
                         for ($i--; $i >= 0; $i--) {
-                            $smaller = self::imageStdParams()->get_by_type($defined_types[$i]);
-                            if ($smaller->sizing->max_crop === $params->sizing->max_crop && $smaller->is_identity($src_size)) {
+                            $smaller = self::imageStdParams()->getByType($defined_types[$i]);
+                            if ($smaller->sizing->max_crop === $params->sizing->max_crop && $smaller->isIdentity($src_size)) {
                                 $params = $smaller;
                                 self::build($src, $currentConfig, $params, $rel_path, $rel_url, $is_cached);
                                 return;
@@ -292,7 +292,7 @@ final class DerivativeImage
         $tokens[] = substr($params->type, 0, 2);
 
         if ($params->type === ImageStdParams::CUSTOM) {
-            $params->add_url_tokens($tokens);
+            $params->addUrlTokens($tokens);
         }
 
         $loc = $src->rel_path;
@@ -335,15 +335,15 @@ final class DerivativeImage
         }
     }
 
-    public function get_path(): string
+    public function getPath(): string
     {
         return self::paths()->root . $this->rel_path;
     }
 
-    public function get_url(): string
+    public function getUrl(): string
     {
         if ($this->params === null) {
-            return $this->src_image->get_url();
+            return $this->src_image->getUrl();
         }
         $default_url = self::urlService()->getRootUrl() . $this->rel_url;
         $filtered_url = self::eventDispatcher()->dispatchChange(new GetDerivativeUrl(
@@ -356,7 +356,7 @@ final class DerivativeImage
         return self::urlService()->embellishUrl($filtered_url);
     }
 
-    public function same_as_source(): bool
+    public function sameAsSource(): bool
     {
         return $this->params === null;
     }
@@ -364,7 +364,7 @@ final class DerivativeImage
     /**
      * @return string one of the ImageStdParams size-type constants or 'Original'
      */
-    public function get_type()
+    public function getType()
     {
         if ($this->params === null) {
             return 'Original';
@@ -375,13 +375,13 @@ final class DerivativeImage
     /**
      * @return int[]|null null if the source image's own size failed to compute
      */
-    public function get_size(): ?array
+    public function getSize(): ?array
     {
-        $src_size = $this->src_image->get_size();
+        $src_size = $this->src_image->getSize();
         if ($this->params === null || $src_size === null) {
             return $src_size;
         }
-        return $this->params->compute_final_size($src_size);
+        return $this->params->computeFinalSize($src_size);
     }
 
     /**
@@ -389,9 +389,9 @@ final class DerivativeImage
      *
      * @return string
      */
-    public function get_size_css()
+    public function getSizeCss()
     {
-        $size = $this->get_size();
+        $size = $this->getSize();
         if ((bool) $size) {
             return 'width:' . $size[0] . 'px; height:' . $size[1] . 'px';
         }
@@ -404,9 +404,9 @@ final class DerivativeImage
      *
      * @return string
      */
-    public function get_size_htm()
+    public function getSizeHtm()
     {
-        $size = $this->get_size();
+        $size = $this->getSize();
         if ((bool) $size) {
             return 'width="' . $size[0] . '" height="' . $size[1] . '"';
         }
@@ -419,9 +419,9 @@ final class DerivativeImage
      *
      * @return string
      */
-    public function get_size_hr()
+    public function getSizeHr()
     {
-        $size = $this->get_size();
+        $size = $this->getSize();
         if ((bool) $size) {
             return $size[0] . ' x ' . $size[1];
         }
@@ -434,9 +434,9 @@ final class DerivativeImage
      * @param int $maxh
      * @return int[]|null
      */
-    public function get_scaled_size($maxw, $maxh): ?array
+    public function getScaledSize($maxw, $maxh): ?array
     {
-        $size = $this->get_size();
+        $size = $this->getSize();
         if ((bool) $size) {
             $ratio_w = (float) $size[0] / (float) $maxw;
             $ratio_h = (float) $size[1] / (float) $maxh;
@@ -460,9 +460,9 @@ final class DerivativeImage
      * @param int $maxh
      * @return string
      */
-    public function get_scaled_size_htm($maxw = 9999, $maxh = 9999)
+    public function getScaledSizeHtm($maxw = 9999, $maxh = 9999)
     {
-        $size = $this->get_scaled_size($maxw, $maxh);
+        $size = $this->getScaledSize($maxw, $maxh);
         if ((bool) $size) {
             return 'width="' . $size[0] . '" height="' . $size[1] . '"';
         }
@@ -470,7 +470,7 @@ final class DerivativeImage
         return '';
     }
 
-    public function is_cached(): bool
+    public function isCached(): bool
     {
         return $this->is_cached;
     }

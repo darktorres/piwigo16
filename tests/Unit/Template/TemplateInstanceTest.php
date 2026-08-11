@@ -99,7 +99,7 @@ function template_instance_test_cssloader_registered(CssLoader $loader): array
  * of this class's own gap) had zero coverage. Same "point CurrentPaths at
  * a fresh temp root" construction setup as PictureRateRendererTest.php's
  * own docblock. func_define_derivative() is the one instance method that
- * genuinely needs a real DB (ImageStdParams::get_custom()'s own save()
+ * genuinely needs a real DB (ImageStdParams::getCustom()'s own save()
  * call) -- see tests/Integration/TemplateDefineDerivativeTest.php instead.
  */
 function template_instance_test_rrmdir(string $dir): void

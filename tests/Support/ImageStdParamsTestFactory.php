@@ -11,9 +11,9 @@ use Piwigo\Image\ImageStdParams;
 /**
  * Returns the container-shared instance once Kernel has booted. Before
  * boot, returns a memoized fallback instance, eagerly populated via a
- * real `load_from_db()` read on first access, rather than a fresh
- * instance per call. Tests that call `set_watermark(...)` on one call's
- * return value (e.g. DerivativeParamsTest's "will_watermark" cases) rely
+ * real `loadFromDb()` read on first access, rather than a fresh
+ * instance per call. Tests that call `setWatermark(...)` on one call's
+ * return value (e.g. DerivativeParamsTest's "willWatermark" cases) rely
  * on a later call reading the same mutation back; a fresh, independent
  * instance per call would silently break that.
  */
@@ -34,7 +34,7 @@ final class ImageStdParamsTestFactory
 
         if (! self::$fallback instanceof ImageStdParams) {
             self::$fallback = new ImageStdParams();
-            self::$fallback->load_from_db();
+            self::$fallback->loadFromDb();
         }
 
         return self::$fallback;

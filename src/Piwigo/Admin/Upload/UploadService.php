@@ -1394,7 +1394,7 @@ final class UploadService
      * a `private static` helper reached only from the static
      * uploadFileXxx() handlers. The not-booted fallback is memoized (a
      * `private static` property here, populated via a real
-     * load_from_db() read on first not-booted access): ImageStdParams is
+     * loadFromDb() read on first not-booted access): ImageStdParams is
      * "load once, read/write many times" per request, so a fresh
      * instance per call would silently lose writes between calls.
      */
@@ -1411,7 +1411,7 @@ final class UploadService
 
         if (! self::$imageStdParamsFallback instanceof ImageStdParams) {
             self::$imageStdParamsFallback = new ImageStdParams();
-            self::$imageStdParamsFallback->load_from_db();
+            self::$imageStdParamsFallback->loadFromDb();
         }
 
         return self::$imageStdParamsFallback;
@@ -1654,15 +1654,15 @@ final class UploadService
      */
     private static function getOptimalDimensionsForRepresentative(): array
     {
-        $enabled = self::imageStdParams()->get_defined_type_map();
-        $disabled = self::imageStdParams()->get_disabled_type_map();
+        $enabled = self::imageStdParams()->getDefinedTypeMap();
+        $disabled = self::imageStdParams()->getDisabledTypeMap();
 
         $w = $h = 2000; // safe default values
 
-        foreach (ImageStdParams::get_all_types() as $type) {
-            // get_all_types() includes types disabled by default (e.g.
-            // ImageStdParams::THREE_XLARGE/FOUR_XLARGE), which get_defined_type_map() genuinely
-            // omits (get_enabled_default_sizes() unsets them) -- $enabled can
+        foreach (ImageStdParams::getAllTypes() as $type) {
+            // getAllTypes() includes types disabled by default (e.g.
+            // ImageStdParams::THREE_XLARGE/FOUR_XLARGE), which getDefinedTypeMap() genuinely
+            // omits (getEnabledDefaultSizes() unsets them) -- $enabled can
             // really lack a $type key here, so this isn't PHPStan-provable
             // dead code even though its docblock-only DerivativeParams[]
             // return type makes it look that way; array_key_exists() forces a

@@ -1602,9 +1602,9 @@ test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for
         'representative_ext' => 'jpg',
     ]);
 
-    expect($original->is_original())
+    expect($original->isOriginal())
         ->toBeTrue()
-        ->and($representative->is_original())
+        ->and($representative->isOriginal())
         ->toBeFalse();
 
     expect(htmlServiceTestSrcImageUrlProtection($service, 'ignored-input-url', $original))

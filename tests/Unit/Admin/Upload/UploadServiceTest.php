@@ -1398,7 +1398,7 @@ function upload_service_optimal_dimensions(): array
 test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from a real defined type', function (): void {
     // The real default ImageStdParams state in this Unit test process
     // happens to have no enabled/disabled type actually reachable via
-    // get_all_types() (every real call so far only proved "positive
+    // getAllTypes() (every real call so far only proved "positive
     // int", the untouched 2000x2000-default*1.5 fallback either way) --
     // directly injecting one real, distinctly-sized DerivativeParams via
     // reflection (then restoring the original maps) is the only way to

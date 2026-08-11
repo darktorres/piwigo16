@@ -42,9 +42,9 @@ function changeImgSrc(url,typeSave,typeMap)
 <div id="derivativeSwitchBox" class="switchBox">
   <div class="switchBoxTitle">{'Photo sizes'|@translate}</div>
   {foreach from=$current.unique_derivatives item=derivative key=derivative_type}
-  <span class="switchCheck" id="derivativeChecked{$derivative->get_type()}"{if $derivative->get_type() ne $current.selected_derivative->get_type()} style="visibility:hidden"{/if}>&#x2714; </span>
-  <a href="javascript:changeImgSrc('{$derivative->get_url()|@escape:javascript}','{$derivative_type}','{$derivative->get_type()}')">
-    {$derivative->get_type()|@translate}<span class="derivativeSizeDetails"> ({$derivative->get_size_hr()})</span>
+  <span class="switchCheck" id="derivativeChecked{$derivative->getType()}"{if $derivative->getType() ne $current.selected_derivative->getType()} style="visibility:hidden"{/if}>&#x2714; </span>
+  <a href="javascript:changeImgSrc('{$derivative->getUrl()|@escape:javascript}','{$derivative_type}','{$derivative->getType()}')">
+    {$derivative->getType()|@translate}<span class="derivativeSizeDetails"> ({$derivative->getSizeHr()})</span>
   </a><br>
   {/foreach}
   {if isset($U_ORIGINAL)}
@@ -149,7 +149,7 @@ y.callService(
 		{if isset($previous)}
 			<a class="navThumb" id="linkPrev" href="{$previous.U_IMG}" title="{'Previous'|@translate} : {$previous.TITLE_ESC}" rel="prev">
 				<span class="thumbHover prevThumbHover"></span>
-        <img class="{if (isset($previous.path_ext) and $previous.path_ext == 'svg')}svgImg{/if}" src="{if (isset($previous.path_ext) and $previous.path_ext == 'svg')}{$previous.path}{else}{$previous.derivatives.square->get_url()}{/if}" alt="{$previous.TITLE_ESC}">
+        <img class="{if (isset($previous.path_ext) and $previous.path_ext == 'svg')}svgImg{/if}" src="{if (isset($previous.path_ext) and $previous.path_ext == 'svg')}{$previous.path}{else}{$previous.derivatives.square->getUrl()}{/if}" alt="{$previous.TITLE_ESC}">
 			</a>
 		{elseif isset($U_UP)}
 			<a class="navThumb" id="linkPrev" href="{$U_UP}" title="{'Thumbnails'|@translate}">
@@ -159,7 +159,7 @@ y.callService(
 		{if isset($next)}
 			<a class="navThumb" id="linkNext" href="{$next.U_IMG}" title="{'Next'|@translate} : {$next.TITLE_ESC}" rel="next">
 				<span class="thumbHover nextThumbHover"></span>
-				<img class="{if (isset($next.path_ext) and $next.path_ext == 'svg')}svgImg{/if}" src="{if (isset($next.path_ext) and $next.path_ext == 'svg')}{$next.path}{else}{$next.derivatives.square->get_url()}{/if}" alt="{$next.TITLE_ESC}">
+				<img class="{if (isset($next.path_ext) and $next.path_ext == 'svg')}svgImg{/if}" src="{if (isset($next.path_ext) and $next.path_ext == 'svg')}{$next.path}{else}{$next.derivatives.square->getUrl()}{/if}" alt="{$next.TITLE_ESC}">
 			</a>
 		{elseif isset($U_UP)}
 			<a class="navThumb" id="linkNext"  href="{$U_UP}"  title="{'Thumbnails'|@translate}">

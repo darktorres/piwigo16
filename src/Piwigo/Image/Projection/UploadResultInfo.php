@@ -11,7 +11,7 @@ namespace Piwigo\Image\Projection;
  * response's thumbnail URLs.
  *
  * `toArray()` preserves the exact original snake_case shape:
- * {@see \Piwigo\Image\DerivativeImage::thumb_url()}/`url()` accept
+ * {@see \Piwigo\Image\DerivativeImage::thumbUrl()}/`url()` accept
  * `array<string, mixed>|SrcImage` (not this DTO), so the caller calls
  * `toArray()` before handing a row to them, same boundary-unwrap
  * convention every other Projection in this codebase uses.

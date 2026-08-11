@@ -119,7 +119,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         CurrentConfigServiceTestFactory::get()->set($configService);
         // sendMailNotifications()'s recent-post-dates block builds real
         // thumbnail URLs (NotificationService::getHtmlDescriptionRecentPostDate()
-        // -> DerivativeImage::thumb_url()) -- needs ImageStdParams loaded
+        // -> DerivativeImage::thumbUrl()) -- needs ImageStdParams loaded
         // (below) since IntegrationTestCase never runs a full
         // RequestBootstrap. DerivativeImage::urlService() resolves
         // UrlServiceInterface live from the container once Kernel is
@@ -128,7 +128,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // CategoryDefaultRendererTest/CalendarMonthlyTest's own identical
         // setUp.
         $configService->loadConfFromDb();
-        ImageStdParamsTestFactory::get()->load_from_db();
+        ImageStdParamsTestFactory::get()->loadFromDb();
 
         $this->conn = $conn;
         $row = $this->conn->fetchAssociative(

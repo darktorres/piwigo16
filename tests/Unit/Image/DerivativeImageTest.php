@@ -29,22 +29,22 @@ use RuntimeException;
 
 /**
  * Piwigo\Image\DerivativeImage had zero dedicated test file. Covers:
- * urlService()'s not-set RuntimeException; get_all()/get_one()'s
- * array-to-SrcImage coercion plus get_one()'s undefined-type fallback and
+ * urlService()'s not-set RuntimeException; getAll()/getOne()'s
+ * array-to-SrcImage coercion plus getOne()'s undefined-type fallback and
  * not-found null; build()'s defined-type-index "smaller identity match"
  * search loop (including its recursive re-entry), its './'/'../ '
  * location-prefix stripping, its extension-missing Exception, and its
  * derivative_url_style=0 (auto) mtime-based cache-freshness check;
- * get_size_css()/get_size_hr()/get_scaled_size()/get_scaled_size_htm()'s
+ * getSizeCss()/getSizeHr()/getScaledSize()/getScaledSizeHtm()'s
  * size-present vs empty-string-fallback branches.
  *
  * Every build() test below deliberately omits 'width'/'height' from the
  * SrcImage $infos (or supplies them as null, key still present) so
- * SrcImage::has_size() is false at construction time -- this skips
- * build()'s own is_identity()/will_watermark() early-return block
+ * SrcImage::hasSize() is false at construction time -- this skips
+ * build()'s own isIdentity()/willWatermark() early-return block
  * entirely (already covered elsewhere per the coverage report), isolating
  * the token/extension/cache-style logic this file exists to close. The
- * one test that does need has_size()=true (the smaller-defined-type
+ * one test that does need hasSize()=true (the smaller-defined-type
  * search) sets width/height explicitly and says so.
  *
  * urlService() has no independently-settable static -- it resolves fresh
@@ -75,8 +75,8 @@ use RuntimeException;
 // - Every `(bool) $size`/`(bool) $url_style`/`(bool) $src->rotation`
 //   cast inside an `if`/`!` condition (RemoveBooleanCast, 6 sites:
 //   build()'s watermark check, its url_style check, and all 5 of
-//   get_size_css()/get_size_htm()/get_size_hr()/get_scaled_size()/
-//   get_scaled_size_htm()'s own "size computed" guards): the
+//   getSizeCss()/getSizeHtm()/getSizeHr()/getScaledSize()/
+//   getScaledSizeHtm()'s own "size computed" guards): the
 //   already-coercing if-condition/negation position, same established
 //   pattern as every other cast-removal finding across this campaign.
 // - build()'s `$url_style = 1;` (DecrementInteger to 0): $url_style is
@@ -96,7 +96,7 @@ use RuntimeException;
 //   substitution test above, which happens to match at index 1, not 0
 //   (the general case this file needed a fresh trace for, not that
 //   specific instance).
-// - get_scaled_size()'s ratio-vs-1 and ratio-vs-ratio comparisons
+// - getScaledSize()'s ratio-vs-1 and ratio-vs-ratio comparisons
 //   (GreaterToGreaterOrEqual x3) and their surrounding `(float)`/
 //   `floor()` casts (RemoveDoubleCast x4): the real (non-tied) scaling
 //   math is already thoroughly covered above (both the
@@ -140,10 +140,10 @@ function derivativeImageTestSnapshotStdParams(): array
  */
 function derivativeImageTestSeedStdParams(array $typeMap, array $undefinedMap = []): void
 {
-    // Matches ImageStdParams::build_maps()'s own real behavior: each
+    // Matches ImageStdParams::buildMaps()'s own real behavior: each
     // DerivativeParams' `type` property is set from its own map key --
     // it defaults to ImageStdParams::CUSTOM otherwise (its declared
-    // property default), which get_type() would then return instead.
+    // property default), which getType() would then return instead.
     foreach ($typeMap as $type => $params) {
         $params->type = $type;
     }
@@ -189,7 +189,7 @@ test('url() throws a RuntimeException when RequestBootstrap has not set a Curren
     // CurrentConfigTestFactory::get()'s own memoized pre-boot instance --
     // this guard fires before build() ever reaches urlService(), so this
     // is the RuntimeException url() actually throws first, not
-    // urlService()'s own (see the dedicated get_url() test below for that
+    // urlService()'s own (see the dedicated getUrl() test below for that
     // one, which is reachable without a CurrentConfig read). $src itself
     // holds no live container reference once built, so resetting
     // afterward doesn't invalidate it.
@@ -233,11 +233,11 @@ test('url() throws a RuntimeException when the container returns an unexpected t
 test('constructing a DerivativeImage throws a RuntimeException when the container returns an unexpected type for ImageStdParams', function (): void {
     // Kills line 64's InstanceOfToTrue -- imageStdParams()'s own
     // instanceof guard. Passing a string $type routes the constructor
-    // through `self::imageStdParams()->get_by_type($type)` before
+    // through `self::imageStdParams()->getByType($type)` before
     // self::build() ever runs, the simplest public entry point that
     // reaches imageStdParams() alone -- unlike build()'s own
-    // imageStdParams() read (only reachable via the is_identity() branch,
-    // which needs has_size()=true and a whole seeded type map).
+    // imageStdParams() read (only reachable via the isIdentity() branch,
+    // which needs hasSize()=true and a whole seeded type map).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-stdparams-wrong-type'));
     $src = new SrcImage([
         'id' => 1,
@@ -252,8 +252,8 @@ test('constructing a DerivativeImage throws a RuntimeException when the containe
     });
 });
 
-test('get_url() throws a RuntimeException when RequestBootstrap has not set a URL service yet', function (): void {
-    // Unlike url() above, the instance get_url() method never reads
+test('getUrl() throws a RuntimeException when RequestBootstrap has not set a URL service yet', function (): void {
+    // Unlike url() above, the instance getUrl() method never reads
     // currentConfig() -- constructing the DerivativeImage instance itself
     // (under a real boot, with a real CurrentConfig instance already
     // injected) is enough; resetting afterward only invalidates the
@@ -270,11 +270,11 @@ test('get_url() throws a RuntimeException when RequestBootstrap has not set a UR
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(50, 50)), $src, CurrentConfigTestFactory::get());
     Kernel::reset();
 
-    expect(fn () => $derivative->get_url())
+    expect(fn () => $derivative->getUrl())
         ->toThrow(RuntimeException::class, 'DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
 });
 
-test('get_url() throws a RuntimeException when the container returns an unexpected type for UrlServiceInterface', function (): void {
+test('getUrl() throws a RuntimeException when the container returns an unexpected type for UrlServiceInterface', function (): void {
     // Kills line 43's InstanceOfToTrue -- urlService()'s own instanceof
     // guard, paired with the "not booted" half tested by the sibling
     // test above. This half can only ever fire when the container's real
@@ -282,7 +282,7 @@ test('get_url() throws a RuntimeException when the container returns an unexpect
     // than a UrlServiceInterface instance, something that never
     // legitimately happens through Kernel::boot()'s own public API. The
     // instance is built under a real boot first (params is real and
-    // non-null, so get_url() actually reaches urlService()), then the
+    // non-null, so getUrl() actually reaches urlService()), then the
     // container is swapped out from under it via
     // KernelContainerOverride::withWrongTypeFor().
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-urlservice-wrong-type'));
@@ -294,7 +294,7 @@ test('get_url() throws a RuntimeException when the container returns an unexpect
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
     KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, function () use ($derivative): void {
-        expect(fn () => $derivative->get_url())
+        expect(fn () => $derivative->getUrl())
             ->toThrow(RuntimeException::class, 'DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
     });
 });
@@ -302,13 +302,13 @@ test('get_url() throws a RuntimeException when the container returns an unexpect
 test('eventDispatcher() throws a RuntimeException when the container returns an unexpected type for EventDispatcher', function (): void {
     // Kills line 77's InstanceOfToTrue -- eventDispatcher()'s own
     // instanceof guard. Unlike the urlService()/ImageStdParams guards
-    // above, this can't be reached through the public get_url() API: it
+    // above, this can't be reached through the public getUrl() API: it
     // calls self::urlService() first, which -- now that
     // KernelContainerOverride carries the real Paths through -- actually
     // resolves UrlService, whose own HtmlRenderingInterface dependency
     // (HtmlService) *also* constructor-injects EventDispatcher. That
     // makes HtmlService's own constructor the first thing to observe the
-    // stdClass override, as a hard TypeError, before get_url() ever
+    // stdClass override, as a hard TypeError, before getUrl() ever
     // reaches eventDispatcher()'s own instanceof guard. Calling the
     // private static method directly is the only way to isolate this
     // guard from that unrelated, earlier collaborator-construction
@@ -324,13 +324,13 @@ test('eventDispatcher() throws a RuntimeException when the container returns an 
     });
 });
 
-test('get_path() throws a RuntimeException when the container returns an unexpected type for Paths', function (): void {
+test('getPath() throws a RuntimeException when the container returns an unexpected type for Paths', function (): void {
     // Kills line 113's InstanceOfToTrue -- paths()'s own instanceof
-    // guard. get_path() is the simplest public entry point that reaches
+    // guard. getPath() is the simplest public entry point that reaches
     // paths() alone: derivativeUrlStyle() defaults to 2 (not the "auto"
     // 0 that would additionally route build() itself through paths()
     // during construction), so the instance builds cleanly under the
-    // real container before Paths::class is swapped out for get_path()'s
+    // real container before Paths::class is swapped out for getPath()'s
     // own call.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-paths-wrong-type'));
     $src = new SrcImage([
@@ -341,7 +341,7 @@ test('get_path() throws a RuntimeException when the container returns an unexpec
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
     KernelContainerOverride::withWrongTypeFor(Paths::class, function () use ($derivative): void {
-        expect(fn () => $derivative->get_path())
+        expect(fn () => $derivative->getPath())
             ->toThrow(RuntimeException::class, 'DerivativeImage: no Paths set (RequestBootstrap not run yet?)');
     });
 });
@@ -404,8 +404,8 @@ test('url() throws when a get_derivative_url handler returns something other tha
     }
 });
 
-test('get_all() coerces a plain info array into a SrcImage and keys the result by defined type', function (): void {
-    // get_all() coerces the plain array via `new SrcImage(...)`, which
+test('getAll() coerces a plain info array into a SrcImage and keys the result by defined type', function (): void {
+    // getAll() coerces the plain array via `new SrcImage(...)`, which
     // needs a booted Kernel (SrcImage's own pictureExtensions() read) --
     // boot before snapshotting/seeding ImageStdParams so every
     // ImageStdParamsTestFactory::get() call in this test resolves the same
@@ -418,7 +418,7 @@ test('get_all() coerces a plain info array into a SrcImage and keys the result b
             'square' => new DerivativeParams(SizingParams::square(120)),
         ]);
 
-        $all = DerivativeImage::get_all([
+        $all = DerivativeImage::getAll([
             'id' => 7,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
@@ -433,14 +433,14 @@ test('get_all() coerces a plain info array into a SrcImage and keys the result b
     }
 });
 
-test('get_all() maps a disabled type to the SAME instance as its fallback enabled type', function (): void {
+test('getAll() maps a disabled type to the SAME instance as its fallback enabled type', function (): void {
     // Kills line 144's ForeachEmptyIterable -- the sibling test above
     // seeds an empty undefined-type map (the default), so this second
     // foreach never has anything to iterate regardless of whether the
     // real iterable or an empty one is used.
     //
-    // Boot first for the same reason as the sibling get_all() test above --
-    // get_all() constructs a SrcImage internally, which now needs a booted
+    // Boot first for the same reason as the sibling getAll() test above --
+    // getAll() constructs a SrcImage internally, which now needs a booted
     // Kernel, and ImageStdParamsTestFactory::get() must resolve the same instance
     // throughout.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-get-all-2'));
@@ -453,7 +453,7 @@ test('get_all() maps a disabled type to the SAME instance as its fallback enable
             'thumb' => 'square',
         ]);
 
-        $all = DerivativeImage::get_all([
+        $all = DerivativeImage::getAll([
             'id' => 7,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
@@ -467,9 +467,9 @@ test('get_all() maps a disabled type to the SAME instance as its fallback enable
     }
 });
 
-test('get_one() falls back to the mapped enabled type for a disabled type, and returns null for an unknown type', function (): void {
-    // get_one() also constructs a SrcImage internally from the plain array
-    // -- same "boot before snapshot/seed" reasoning as get_all() above.
+test('getOne() falls back to the mapped enabled type for a disabled type, and returns null for an unknown type', function (): void {
+    // getOne() also constructs a SrcImage internally from the plain array
+    // -- same "boot before snapshot/seed" reasoning as getAll() above.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-get-one'));
     $snapshot = derivativeImageTestSnapshotStdParams();
 
@@ -486,14 +486,14 @@ test('get_one() falls back to the mapped enabled type for a disabled type, and r
             'file' => 'photo.jpg',
         ];
 
-        $fallback = DerivativeImage::get_one('thumb', $infos);
+        $fallback = DerivativeImage::getOne('thumb', $infos);
         if (! $fallback instanceof DerivativeImage) {
             throw new RuntimeException('expected a real DerivativeImage instance');
         }
-        expect($fallback->get_type())
+        expect($fallback->getType())
             ->toBe('square');
 
-        expect(DerivativeImage::get_one('does-not-exist', $infos))->toBeNull();
+        expect(DerivativeImage::getOne('does-not-exist', $infos))->toBeNull();
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
     }
@@ -518,7 +518,7 @@ test('build() throws when the source path has no extension', function (): void {
 });
 
 test('build() strips a leading "./" from the source location and appends the custom-type url tokens', function (): void {
-    // get_path() reads CurrentPathsTestFactory::get() -- set explicitly since this
+    // getPath() reads CurrentPathsTestFactory::get() -- set explicitly since this
     // is the first test in the file to call it.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
 
@@ -531,16 +531,16 @@ test('build() strips a leading "./" from the source location and appends the cus
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(120, 90)), $src, CurrentConfigTestFactory::get());
 
     // SizingParams::classic()'s own int max_crop=0 default never
-    // satisfies add_url_tokens()'s strict `=== 0.0` fast-path check (see
+    // satisfies addUrlTokens()'s strict `=== 0.0` fast-path check (see
     // SizingParamsTest.php's own documented finding), so the token is the
     // general 2-token form ('120x90', fractionToChar(0)='a'), not the
     // 's120x90' shorthand.
-    expect($derivative->get_path())
+    expect($derivative->getPath())
         ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_120x90_a.jpg');
     // No real cached file exists on disk at that path -- build()'s own
     // filemtime() check correctly falls back to the dynamic i.php?
     // URL style rather than a direct cached-file URL.
-    expect($derivative->get_url())
+    expect($derivative->getUrl())
         ->toBe('i.php?/gallery/photo-cu_120x90_a.jpg');
 });
 
@@ -555,11 +555,11 @@ test('build() strips a leading "../" from the source location', function (): voi
 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src, CurrentConfigTestFactory::get());
 
-    expect($derivative->get_path())
+    expect($derivative->getPath())
         ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_64_a.jpg');
     // Same reasoning as the leading-"./" test above: no cached file on
     // disk means the dynamic i.php? URL style, not a direct cached URL.
-    expect($derivative->get_url())
+    expect($derivative->getUrl())
         ->toBe('i.php?/gallery/photo-cu_64_a.jpg');
 });
 
@@ -581,7 +581,7 @@ test('build() searches the whole defined-type list without an out-of-bounds read
     // abandoned once Kernel::boot() runs later.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-defined-type-search'));
     $snapshot = derivativeImageTestSnapshotStdParams();
-    $originalWatermark = ImageStdParamsTestFactory::get()->get_watermark();
+    $originalWatermark = ImageStdParamsTestFactory::get()->getWatermark();
 
     try {
         $thumbParams = new DerivativeParams(SizingParams::classic(50, 50));
@@ -596,7 +596,7 @@ test('build() searches the whole defined-type list without an out-of-bounds read
         $watermark = new WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [5, 5];
-        ImageStdParamsTestFactory::get()->set_watermark($watermark);
+        ImageStdParamsTestFactory::get()->setWatermark($watermark);
         $mysteryParams->use_watermark = true;
 
         $src = new SrcImage([
@@ -619,13 +619,13 @@ test('build() searches the whole defined-type list without an out-of-bounds read
             restore_error_handler();
         }
 
-        expect($derivative->get_type())
+        expect($derivative->getType())
             ->toBe('mystery');
         expect($warnings)
             ->toBe([]);
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
-        ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
+        ImageStdParamsTestFactory::get()->setWatermark($originalWatermark);
     }
 });
 
@@ -654,11 +654,11 @@ test('build() uses the source image as-is, unrotated and unwatermarked, when it 
     // Kills line 201's RemoveNot -- every other
     // test in this file either skips this branch entirely (no
     // width/height, per the file's own docblock) or forces
-    // will_watermark()=true specifically to reach the smaller-type
+    // willWatermark()=true specifically to reach the smaller-type
     // search below it. This is the only test that actually reaches the
     // early-return "use source as-is" path at all: no watermark
-    // configured (a real ImageStdParams::get_watermark() default has a
-    // large min_size, so will_watermark() is false for these small
+    // configured (a real ImageStdParams::getWatermark() default has a
+    // large min_size, so willWatermark() is false for these small
     // dimensions) and rotation=0 (the SrcImage default).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-as-is-only'));
 
@@ -672,9 +672,9 @@ test('build() uses the source image as-is, unrotated and unwatermarked, when it 
 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(200, 200)), $src, CurrentConfigTestFactory::get());
 
-    expect($derivative->same_as_source())
+    expect($derivative->sameAsSource())
         ->toBeTrue();
-    expect($derivative->get_path())
+    expect($derivative->getPath())
         ->toBe(CurrentPathsTestFactory::get()->root . 'upload/2026/07/photo.jpg');
 });
 
@@ -695,7 +695,7 @@ test('build() does not strip a leading "../" look-alike that is not actually fol
 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src, CurrentConfigTestFactory::get());
 
-    expect($derivative->get_path())
+    expect($derivative->getPath())
         ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/..2026/gallery/photo-cu_64_a.jpg');
 });
 
@@ -744,9 +744,9 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
 
         $derivative = new DerivativeImage($params, $src, $currentConfig);
 
-        expect($derivative->is_cached())
+        expect($derivative->isCached())
             ->toBeTrue();
-        expect($derivative->get_url())
+        expect($derivative->getUrl())
             ->toBe('_data/i/gallery/photo-cu_80x60_a.jpg');
     } finally {
         $currentConfig->derivativeUrlStyle = 2;
@@ -755,7 +755,7 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
 });
 
 test('build() substitutes a smaller already-defined identity-matching type when watermarking would otherwise apply, recursing until none remains', function (): void {
-    // Kernel::boot() must run before the snapshot/get_watermark() reads
+    // Kernel::boot() must run before the snapshot/getWatermark() reads
     // below -- ImageStdParamsTestFactory::get() resolves a different (fresh,
     // container-built) instance once Kernel is booted than the pre-boot
     // memoized fallback it returns beforehand, and build() (inside the
@@ -763,7 +763,7 @@ test('build() substitutes a smaller already-defined identity-matching type when 
     // whichever instance is current *after* boot.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-substitute-only'));
     $snapshot = derivativeImageTestSnapshotStdParams();
-    $originalWatermark = ImageStdParamsTestFactory::get()->get_watermark();
+    $originalWatermark = ImageStdParamsTestFactory::get()->getWatermark();
 
     try {
         $thumbParams = new DerivativeParams(SizingParams::classic(50, 50));
@@ -779,14 +779,14 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         $watermark = new WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [30, 30];
-        ImageStdParamsTestFactory::get()->set_watermark($watermark);
-        // apply_global() compares the watermark's min_size against each
+        ImageStdParamsTestFactory::get()->setWatermark($watermark);
+        // applyGlobal() compares the watermark's min_size against each
         // type's own ideal_size (not the source size) -- both 'thumb'
         // (50x50) and 'medium' (200x200) satisfy 30<=ideal here, so both
-        // end up with use_watermark=true, matching real load_from_db()
+        // end up with use_watermark=true, matching real loadFromDb()
         // wiring rather than hand-setting the flag.
-        $thumbParams->use_watermark = $watermark->min_size[0] <= $thumbParams->max_width();
-        $mediumParams->use_watermark = $watermark->min_size[0] <= $mediumParams->max_width();
+        $thumbParams->use_watermark = $watermark->min_size[0] <= $thumbParams->maxWidth();
+        $mediumParams->use_watermark = $watermark->min_size[0] <= $mediumParams->maxWidth();
 
         $src = new SrcImage([
             'id' => 3,
@@ -799,29 +799,29 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         $derivative = new DerivativeImage($mediumParams, $src, CurrentConfigTestFactory::get());
 
         // 40x40 is an identity match for both 'medium' (200x200) and the
-        // smaller 'thumb' (50x50); will_watermark(40x40) is true for
+        // smaller 'thumb' (50x50); willWatermark(40x40) is true for
         // 'medium' (30<=40), so build() substitutes 'thumb' instead of
         // returning the source as-is -- then recurses on 'thumb', where
-        // will_watermark(40x40) is true again (still 30<=40) but no type
+        // willWatermark(40x40) is true again (still 30<=40) but no type
         // smaller than 'thumb' exists in the seeded map, so the inner
         // search loop's break is hit and 'thumb' is the final type.
-        expect($derivative->get_type())
+        expect($derivative->getType())
             ->toBe('thumb');
-        expect($derivative->same_as_source())
+        expect($derivative->sameAsSource())
             ->toBeFalse();
         // Kills line 213's RemoveMethodCall (the recursive self::build()
         // call that recomputes rel_path/rel_url for the substituted
-        // 'thumb' type) -- get_type()/same_as_source() alone can't tell
+        // 'thumb' type) -- getType()/sameAsSource() alone can't tell
         // it apart: $params is already reassigned to 'thumb' by the line
         // just above build()'s own call, regardless of whether build()
         // itself ever runs again. Only rel_path/rel_url (and therefore
-        // get_path()) would still reflect the never-recomputed initial
+        // getPath()) would still reflect the never-recomputed initial
         // '' otherwise.
-        expect($derivative->get_path())
+        expect($derivative->getPath())
             ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/upload/2026/07/photo-th.jpg');
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
-        ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
+        ImageStdParamsTestFactory::get()->setWatermark($originalWatermark);
     }
 });
 
@@ -830,10 +830,10 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
     // the sibling test above's only smaller candidate matches on
     // BOTH clauses, which can't tell a dropped `&&` requirement apart
     // from a kept one. 'thumb' here is deliberately identity-matching
-    // (is_identity() alone would say yes) but max_crop-mismatched --
+    // (isIdentity() alone would say yes) but max_crop-mismatched --
     // real code (requiring both) finds no valid smaller candidate at
     // all and leaves 'medium' unsubstituted; the `||` mutant would
-    // wrongly accept 'thumb' on is_identity() alone.
+    // wrongly accept 'thumb' on isIdentity() alone.
     //
     // This same test also kills line 209's PostDecrementToPostIncrement
     // (the inner loop's own per-iteration `$i--` mutated to `$i++`):
@@ -854,7 +854,7 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
     // sibling defined-type-search test above.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-same-size-mismatch'));
     $snapshot = derivativeImageTestSnapshotStdParams();
-    $originalWatermark = ImageStdParamsTestFactory::get()->get_watermark();
+    $originalWatermark = ImageStdParamsTestFactory::get()->getWatermark();
 
     try {
         $thumbParams = new DerivativeParams(SizingParams::classic(50, 50));
@@ -871,7 +871,7 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
         $watermark = new WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [5, 5];
-        ImageStdParamsTestFactory::get()->set_watermark($watermark);
+        ImageStdParamsTestFactory::get()->setWatermark($watermark);
         $thumbParams->use_watermark = true;
         $mediumParams->use_watermark = true;
 
@@ -885,13 +885,13 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
 
         $derivative = new DerivativeImage($mediumParams, $src, CurrentConfigTestFactory::get());
 
-        expect($derivative->get_type())
+        expect($derivative->getType())
             ->toBe('medium');
-        expect($derivative->same_as_source())
+        expect($derivative->sameAsSource())
             ->toBeFalse();
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
-        ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
+        ImageStdParamsTestFactory::get()->setWatermark($originalWatermark);
     }
 });
 
@@ -911,9 +911,9 @@ test('build() routes through i.php and marks itself not cached when derivative_u
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, $currentConfig);
 
-        expect($derivative->is_cached())
+        expect($derivative->isCached())
             ->toBeFalse();
-        expect($derivative->get_url())
+        expect($derivative->getUrl())
             ->toBe('i.php?/gallery/photo-cu_80x60_a.jpg');
     } finally {
         $currentConfig->derivativeUrlStyle = 2;
@@ -940,9 +940,9 @@ test('build() links directly to a static file when derivative_url_style is auto 
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, $currentConfig);
 
-        expect($derivative->is_cached())
+        expect($derivative->isCached())
             ->toBeTrue();
-        expect($derivative->get_url())
+        expect($derivative->getUrl())
             ->toBe('_data/i/gallery/photo-cu_80x60_a.jpg');
     } finally {
         $currentConfig->derivativeUrlStyle = 2;
@@ -950,9 +950,9 @@ test('build() links directly to a static file when derivative_url_style is auto 
     }
 });
 
-test('get_url() prefixes the computed rel_url with the real root url', function (): void {
+test('getUrl() prefixes the computed rel_url with the real root url', function (): void {
     // Kills line 280's ConcatRemoveLeft/ConcatSwitchSides -- every
-    // other get_url()-exercising test in this file boots a plain Kernel
+    // other getUrl()-exercising test in this file boots a plain Kernel
     // with the container's own default UrlService, whose '' root url
     // can't distinguish a dropped or reordered getRootUrl() call from a
     // kept, correctly-ordered one.
@@ -968,12 +968,12 @@ test('get_url() prefixes the computed rel_url with the real root url', function 
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
-        expect($derivative->get_url())
+        expect($derivative->getUrl())
             ->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
     });
 });
 
-test('get_url() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {
+test('getUrl() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {
     // Kernel must boot before the handler is registered -- see the sibling
     // url() test's own comment above for why.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-filter-only'));
@@ -989,7 +989,7 @@ test('get_url() throws when a get_derivative_url handler returns something other
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
-        expect(fn () => $derivative->get_url())
+        expect(fn () => $derivative->getUrl())
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
@@ -1014,16 +1014,16 @@ function derivativeCacheServiceRrmdirDerivativeImageTest(string $dir): void
 
 /**
  * Confirmed-equivalent: lines 330/345/360/375/401's RemoveBooleanCast
- * (`if ($size)` instead of `if ((bool) $size)`, across get_size_css/
- * get_size_htm/get_size_hr/get_scaled_size/get_scaled_size_htm). $size
- * is always `?array` (get_size()'s own return type) -- PHP's `if()`
+ * (`if ($size)` instead of `if ((bool) $size)`, across getSizeCss/
+ * getSizeHtm/getSizeHr/getScaledSize/getScaledSizeHtm). $size
+ * is always `?array` (getSize()'s own return type) -- PHP's `if()`
  * already treats a non-empty array as true and an empty array (or
  * null) as false with no cast needed, the exact same rule an explicit
  * `(bool)` cast would apply. True for every possible array/null value,
  * not just the tested cases; live sed-verified 2 of the 5 (structurally
  * identical across all 5) against the full suite too.
  */
-test('get_size_css()/get_size_htm()/get_size_hr() render the computed size, or an empty string when the size cannot be computed', function (): void {
+test('getSizeCss()/getSizeHtm()/getSizeHr() render the computed size, or an empty string when the size cannot be computed', function (): void {
     // Boot first, with the SAME root used for the real broken.jpg file
     // below -- SrcImage's own constructor needs a booted Kernel (its
     // pictureExtensions() read), and Kernel::boot() is idempotent, so a
@@ -1045,22 +1045,22 @@ test('get_size_css()/get_size_htm()/get_size_hr() render the computed size, or a
 
         // 400x300 scaled to fit within 100x100: width is the binding
         // dimension (ratio 4 vs 3), so height scales proportionally to 75.
-        expect($derivative->get_size())
+        expect($derivative->getSize())
             ->toBe([100, 75]);
-        expect($derivative->get_size_css())
+        expect($derivative->getSizeCss())
             ->toBe('width:100px; height:75px');
-        expect($derivative->get_size_htm())
+        expect($derivative->getSizeHtm())
             ->toBe('width="100" height="75"');
-        expect($derivative->get_size_hr())
+        expect($derivative->getSizeHr())
             ->toBe('100 x 75');
 
         file_put_contents($root . '/upload/2026/07/broken.jpg', 'not-a-real-image-payload');
 
         // width/height present as explicit nulls (array_key_exists() is
-        // true, isset() is false): SrcImage::has_size() is false at
+        // true, isset() is false): SrcImage::hasSize() is false at
         // construction (skipping build()'s identity check, same as every
         // other test above) but SrcImage::DIM_NOT_GIVEN is NOT set
-        // either, so get_size() attempts a live getimagesize() re-read
+        // either, so getSize() attempts a live getimagesize() re-read
         // instead of fatalError()-ing -- which fails silently (false, no
         // warning) against this deliberately-not-a-real-image file.
         $unknownSrc = new SrcImage([
@@ -1072,24 +1072,24 @@ test('get_size_css()/get_size_htm()/get_size_hr() render the computed size, or a
         ]);
         $unknownDerivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $unknownSrc, CurrentConfigTestFactory::get());
 
-        expect($unknownDerivative->get_size())
+        expect($unknownDerivative->getSize())
             ->toBeNull();
-        expect($unknownDerivative->get_size_css())
+        expect($unknownDerivative->getSizeCss())
             ->toBe('');
-        expect($unknownDerivative->get_size_htm())
+        expect($unknownDerivative->getSizeHtm())
             ->toBe('');
-        expect($unknownDerivative->get_size_hr())
+        expect($unknownDerivative->getSizeHr())
             ->toBe('');
-        expect($unknownDerivative->get_scaled_size(50, 50))
+        expect($unknownDerivative->getScaledSize(50, 50))
             ->toBeNull();
-        expect($unknownDerivative->get_scaled_size_htm(50, 50))
+        expect($unknownDerivative->getScaledSizeHtm(50, 50))
             ->toBe('');
     } finally {
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
     }
 });
 
-test('get_scaled_size()/get_scaled_size_htm() scale down proportionally, binding on whichever dimension overflows more', function (): void {
+test('getScaledSize()/getScaledSizeHtm() scale down proportionally, binding on whichever dimension overflows more', function (): void {
     // SrcImage's own constructor needs a booted Kernel (its
     // pictureExtensions() read).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-scaled-size'));
@@ -1105,11 +1105,11 @@ test('get_scaled_size()/get_scaled_size_htm() scale down proportionally, binding
         'height' => 300,
     ]);
     $landscape = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $landscapeSrc, CurrentConfigTestFactory::get());
-    expect($landscape->get_size())
+    expect($landscape->getSize())
         ->toBe([100, 75]);
-    expect($landscape->get_scaled_size(50, 50))
+    expect($landscape->getScaledSize(50, 50))
         ->toBe([50, 37]);
-    expect($landscape->get_scaled_size_htm(50, 50))
+    expect($landscape->getScaledSizeHtm(50, 50))
         ->toBe('width="50" height="37"');
 
     // Portrait source (dimensions swapped): height is now the
@@ -1122,20 +1122,20 @@ test('get_scaled_size()/get_scaled_size_htm() scale down proportionally, binding
         'height' => 400,
     ]);
     $portrait = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $portraitSrc, CurrentConfigTestFactory::get());
-    expect($portrait->get_size())
+    expect($portrait->getSize())
         ->toBe([75, 100]);
-    expect($portrait->get_scaled_size(50, 50))
+    expect($portrait->getScaledSize(50, 50))
         ->toBe([37, 50]);
-    expect($portrait->get_scaled_size_htm(50, 50))
+    expect($portrait->getScaledSizeHtm(50, 50))
         ->toBe('width="37" height="50"');
 
     // Within bounds already (no dimension overflows maxw/maxh): returned
-    // unchanged, same shape as the un-scaled get_size().
-    expect($landscape->get_scaled_size(200, 200))
+    // unchanged, same shape as the un-scaled getSize().
+    expect($landscape->getScaledSize(200, 200))
         ->toBe([100, 75]);
 });
 
-test('get_scaled_size() still scales when only ONE dimension overflows, not just when both do', function (): void {
+test('getScaledSize() still scales when only ONE dimension overflows, not just when both do', function (): void {
     // Kills line 378's two IncrementInteger mutations (`$ratio_w > 2`/
     // `$ratio_h > 2` instead of `> 1`) and BooleanOrToBooleanAnd (`&&`
     // instead of `||`) -- the sibling test above always has BOTH
@@ -1159,14 +1159,14 @@ test('get_scaled_size() still scales when only ONE dimension overflows, not just
         'width' => 150,
         'height' => 50,
     ]);
-    // classic(1000, 1000) never shrinks a 150x50 source -- get_size()
+    // classic(1000, 1000) never shrinks a 150x50 source -- getSize()
     // returns the real dimensions unscaled.
     $wide = new DerivativeImage(new DerivativeParams(SizingParams::classic(1000, 1000)), $wideSrc, CurrentConfigTestFactory::get());
-    expect($wide->get_size())
+    expect($wide->getSize())
         ->toBe([150, 50]);
     // ratio_w = 150/100 = 1.5 (overflows, but not > 2); ratio_h = 50/100
     // = 0.5 (comfortably within bounds).
-    expect($wide->get_scaled_size(100, 100))
+    expect($wide->getScaledSize(100, 100))
         ->toBe([100, 33]);
 
     $tallSrc = new SrcImage([
@@ -1177,11 +1177,11 @@ test('get_scaled_size() still scales when only ONE dimension overflows, not just
         'height' => 150,
     ]);
     $tall = new DerivativeImage(new DerivativeParams(SizingParams::classic(1000, 1000)), $tallSrc, CurrentConfigTestFactory::get());
-    expect($tall->get_size())
+    expect($tall->getSize())
         ->toBe([50, 150]);
     // ratio_w = 50/100 = 0.5 (within bounds); ratio_h = 150/100 = 1.5
     // (overflows, but not > 2).
-    expect($tall->get_scaled_size(100, 100))
+    expect($tall->getScaledSize(100, 100))
         ->toBe([33, 100]);
 });
 

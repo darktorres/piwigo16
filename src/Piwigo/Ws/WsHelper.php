@@ -165,9 +165,9 @@ final class WsHelper
 
         $provide_download_url = false;
 
-        if ($src_image->is_original()) {// we have a photo
+        if ($src_image->isOriginal()) {// we have a photo
             if ($this->currentUser->get()->enabledHigh) {
-                $ret['element_url'] = $src_image->get_url();
+                $ret['element_url'] = $src_image->getUrl();
                 $provide_download_url = true;
             }
         } else {
@@ -183,15 +183,15 @@ final class WsHelper
             }
         }
 
-        $derivatives = DerivativeImage::get_all($src_image);
+        $derivatives = DerivativeImage::getAll($src_image);
         $derivatives_arr = [];
         foreach ($derivatives as $type => $derivative) {
-            $size = $derivative->get_size();
+            $size = $derivative->getSize();
             if ($size === null) {
                 $size = [null, null];
             }
             $derivatives_arr[(string) $type] = [
-                'url' => $derivative->get_url(),
+                'url' => $derivative->getUrl(),
                 'width' => (int) $size[0],
                 'height' => (int) $size[1],
             ];

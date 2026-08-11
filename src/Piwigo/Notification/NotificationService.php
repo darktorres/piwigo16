@@ -364,7 +364,7 @@ final readonly class NotificationService
 
         $elements = $dateDetail['elements'] ?? [];
         foreach ($elements as $element) {
-            $tnSrc = DerivativeImage::thumb_url($element);
+            $tnSrc = DerivativeImage::thumbUrl($element);
             $description .= '<a href="' .
               $this->urlService->addUrlParams(
                   $this->urlService->makePictureUrl(

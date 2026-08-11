@@ -416,7 +416,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Container resolve, not a constructor property -- ImageStdParams's
      * own container factory (config/container.php) unconditionally calls
-     * load_from_db() against a real DB connection. A required constructor
+     * loadFromDb() against a real DB connection. A required constructor
      * param here would force that DB read merely by constructing a
      * Template, or (worse) merely by *any* caller satisfying this class's
      * own constructor signature -- InstallWizard's own real construction
@@ -1114,7 +1114,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             is_string($type) or $this->htmlRenderer()
                 ->fatalError('define_derivative type must be a string');
             $derivative = $this->imageStdParams()
-                ->get_by_type($type);
+                ->getByType($type);
             $smarty->assign($name, $derivative);
             return;
         }
@@ -1167,7 +1167,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             }
         }
 
-        $smarty->assign($name, $this->imageStdParams()->get_custom($w, $h, $crop, $minw, $minh));
+        $smarty->assign($name, $this->imageStdParams()->getCustom($w, $h, $crop, $minw, $minh));
     }
 
     /**

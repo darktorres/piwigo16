@@ -175,7 +175,7 @@ final class ElementSetRanksPageRenderer
         if (count($thumbnail_rows) > 0) {
             // template thumbnail initialization
             $current_rank = 1;
-            $derivativeParams = $this->imageStdParams->get_by_type(ImageStdParams::SQUARE);
+            $derivativeParams = $this->imageStdParams->getByType(ImageStdParams::SQUARE);
             foreach ($thumbnail_rows as $row) {
                 $derivative = new DerivativeImage($derivativeParams, new SrcImage($row), $this->currentConfig);
 
@@ -189,9 +189,9 @@ final class ElementSetRanksPageRenderer
                 $thumbnails[] = [
                     'ID' => $row['id'],
                     'NAME' => $thumbnail_name,
-                    'TN_SRC' => $derivative->get_url(),
+                    'TN_SRC' => $derivative->getUrl(),
                     'RANK' => $current_rank * 10,
-                    'SIZE' => $derivative->get_size(),
+                    'SIZE' => $derivative->getSize(),
                 ];
             }
         }

@@ -98,7 +98,7 @@ final class RatingUserPageRenderer
         // get image tn urls
         $image_urls = [];
         if (count($image_ids) > 0) {
-            $params = $imageStdParams->get_by_type(ImageStdParams::SQUARE);
+            $params = $imageStdParams->getByType(ImageStdParams::SQUARE);
             foreach ($rate_repository->findImageThumbInfoByIds(array_keys($image_ids)) as $thumb_row) {
                 $image_urls[$thumb_row->id] = [
                     'tn' => DerivativeImage::url($params, $thumb_row->toArray()),
@@ -197,7 +197,7 @@ final class RatingUserPageRenderer
             availableRates: $currentConfig->rateItems,
             ratings: $by_user_ratings,
             imageUrls: $image_urls,
-            tnWidth: $imageStdParams->get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],
+            tnWidth: $imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size[0],
             nbElements: $nb_elements,
             adminPageTitle: $lang->t('Rating'),
             orderByOptions: $order_by_options,

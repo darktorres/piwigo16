@@ -340,10 +340,10 @@ $(document).ready(function() {
 	<ul class="thumbnails">
 		{html_style}
 UL.thumbnails SPAN.wrap2{ldelim}
-  width: {$thumb_params->max_width()+2}px;
+  width: {$thumb_params->maxWidth()+2}px;
 }
 UL.thumbnails SPAN.wrap2 {ldelim}
-  height: {$thumb_params->max_height()+25}px;
+  height: {$thumb_params->maxHeight()+25}px;
 }
 		{/html_style}
 		{foreach from=$thumbnails item=thumbnail}
@@ -360,7 +360,7 @@ UL.thumbnails SPAN.wrap2 {ldelim}
 						{if $thumbnail.level > 0}
 						<em class="levelIndicatorF" title="{'Who can see these photos?'|@translate} : ">{'Level %d'|@sprintf:$thumbnail.level|@translate}</em>
 						{/if}
-						<img src="{$thumbnail.thumb->get_url()}" alt="{$thumbnail.file}" title="{$thumbnail.TITLE|@escape:'html'}" {$thumbnail.thumb->get_size_htm()}>
+						<img src="{$thumbnail.thumb->getUrl()}" alt="{$thumbnail.file}" title="{$thumbnail.TITLE|@escape:'html'}" {$thumbnail.thumb->getSizeHtm()}>
 					</span>
 				</label>
 			</span>

@@ -74,7 +74,7 @@ final class PictureCoiPageRenderer
                 $derivative_infos['representative_ext'] = $row['representative_ext'];
             }
 
-            foreach ($this->imageStdParams->get_defined_type_map() as $params) {
+            foreach ($this->imageStdParams->getDefinedTypeMap() as $params) {
                 if ($params->sizing->max_crop !== 0.0) {
                     new DerivativeCacheService($this->currentConfig, $this->paths)
                         ->deleteElementDerivatives($derivative_infos, $params->type);
@@ -109,12 +109,12 @@ final class PictureCoiPageRenderer
         }
 
         $cropped_derivatives = [];
-        foreach ($this->imageStdParams->get_defined_type_map() as $params) {
+        foreach ($this->imageStdParams->getDefinedTypeMap() as $params) {
             if ($params->sizing->max_crop !== 0.0) {
                 $derivative = new DerivativeImage($params, new SrcImage($row), $this->currentConfig);
                 $cropped_derivatives[] = [
-                    'U_IMG' => $derivative->get_url() . $uid,
-                    'HTM_SIZE' => $derivative->get_size_htm(),
+                    'U_IMG' => $derivative->getUrl() . $uid,
+                    'HTM_SIZE' => $derivative->getSizeHtm(),
                 ];
             }
         }

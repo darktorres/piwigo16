@@ -110,7 +110,7 @@ namespace Piwigo\Tests\Integration {
 
             $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
             $configService->loadConfFromDb();
-            ImageStdParamsTestFactory::get()->load_from_db();
+            ImageStdParamsTestFactory::get()->loadFromDb();
         }
 
         #[Override]
@@ -432,7 +432,7 @@ namespace Piwigo\Tests\Integration {
                 ->fetchAssociative();
             self::assertIsArray($row1);
             $expectedDerivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row1), CurrentConfigTestFactory::get());
-            self::assertSame($expectedDerivative->get_url(), $day10['IMAGE']);
+            self::assertSame($expectedDerivative->getUrl(), $day10['IMAGE']);
 
             // Empty grid cells (no images) carry only DAY, no DOW/IMAGE/etc.
             self::assertSame([

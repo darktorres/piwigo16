@@ -112,7 +112,7 @@ final class MaintenanceActionsPageRenderer
         /** @var array<string, string> $purge_urls */
         $purge_urls = [];
         $purge_urls[$this->lang->t('All')] = 'all';
-        foreach ($this->imageStdParams->get_defined_type_map() as $params) {
+        foreach ($this->imageStdParams->getDefinedTypeMap() as $params) {
             $purge_urls[$this->lang->t($params->type)] = $params->type;
         }
         $purge_urls[$this->lang->t(ImageStdParams::CUSTOM)] = ImageStdParams::CUSTOM;

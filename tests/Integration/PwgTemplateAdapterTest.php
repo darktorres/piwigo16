@@ -53,7 +53,7 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
         $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();
-        ImageStdParamsTestFactory::get()->load_from_db();
+        ImageStdParamsTestFactory::get()->loadFromDb();
 
         $this->adapter = new PwgTemplateAdapter(CurrentConfigTestFactory::get());
     }

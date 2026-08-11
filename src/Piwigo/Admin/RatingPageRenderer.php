@@ -121,7 +121,7 @@ final class RatingPageRenderer
 
         $tpl_images = [];
         foreach ($images as $image) {
-            $thumbnail_src = DerivativeImage::thumb_url($image->toArray());
+            $thumbnail_src = DerivativeImage::thumbUrl($image->toArray());
 
             $image_url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $image->id;
 

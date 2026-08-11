@@ -293,7 +293,7 @@ test('crop accepts real float width/height/x/y without a TypeError', function ()
     // passes int literals, never exercising the (int) casts this
     // method's own docblock says were added specifically because GD's
     // native functions throw a TypeError on a float argument -- a real
-    // caller (i.php's ImageRect::crop_h()/crop_v(), per that same
+    // caller (i.php's ImageRect::cropH()/cropV(), per that same
     // comment) always passes floats. Removing any of the 4 casts would
     // crash this call, not just silently misbehave.
     $path = imageGdTestMarker() . '/crop-float.png';

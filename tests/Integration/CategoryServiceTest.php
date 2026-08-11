@@ -255,15 +255,15 @@ namespace Piwigo\Tests\Integration {
                 'id' => 1,
             ]));
             $currentConfig->rateEnabled = true;
-            // getCategoryRepresentantProperties()'s own DerivativeImage::thumb_url()/
+            // getCategoryRepresentantProperties()'s own DerivativeImage::thumbUrl()/
             // url() calls need a real, populated ImageStdParams type map --
             // DerivativeImage::urlService() resolves UrlServiceInterface live
             // from the container once Kernel is booted, which this test already
             // is via parent::setUp() -- no explicit wiring needed here, same
             // reasoning as NotificationByMailSenderTest's own identical setUp.
-            // ImageStdParams::load_from_db() itself needs CurrentConfigService.
+            // ImageStdParams::loadFromDb() itself needs CurrentConfigService.
             CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
-            ImageStdParamsTestFactory::get()->load_from_db();
+            ImageStdParamsTestFactory::get()->loadFromDb();
         }
 
         #[Override]

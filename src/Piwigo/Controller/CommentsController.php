@@ -625,7 +625,7 @@ final class CommentsController implements ControllerInterface
             }
         }
 
-        $derivative_params = $this->eventDispatcher->dispatchChange(new GetCommentsDerivativeParams($this->imageStdParams->get_by_type(ImageStdParams::THUMB)))->params;
+        $derivative_params = $this->eventDispatcher->dispatchChange(new GetCommentsDerivativeParams($this->imageStdParams->getByType(ImageStdParams::THUMB)))->params;
 
         $template->assignContext(new CommentsPageContext(
             fAction: $this->urlService->getRootUrl() . 'comments.php',

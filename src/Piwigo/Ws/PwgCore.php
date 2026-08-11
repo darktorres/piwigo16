@@ -123,9 +123,9 @@ final class PwgCore
     public function getMissingDerivatives(array $params, PwgServer &$service): PwgError|array
     {
         if ($params['types'] === []) {
-            $types = array_keys($this->imageStdParams->get_defined_type_map());
+            $types = array_keys($this->imageStdParams->getDefinedTypeMap());
         } else {
-            $types = array_intersect(array_keys($this->imageStdParams->get_defined_type_map()), $params['types']);
+            $types = array_intersect(array_keys($this->imageStdParams->getDefinedTypeMap()), $params['types']);
             if (count($types) === 0) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid types');
             }
@@ -165,17 +165,17 @@ final class PwgCore
             foreach ($rows as $image_row) {
                 $start_id = $image_row->id;
                 $src_image = new SrcImage($image_row->toArray());
-                if ($src_image->is_mimetype()) {
+                if ($src_image->isMimetype()) {
                     continue;
                 }
 
                 foreach ($types as $type) {
                     $derivative = new DerivativeImage($type, $src_image, $this->currentConfig);
-                    if ($type !== $derivative->get_type()) {
+                    if ($type !== $derivative->getType()) {
                         continue;
                     }
-                    if (@filemtime($derivative->get_path()) === false) {
-                        $urls[] = $derivative->get_url() . $uid;
+                    if (@filemtime($derivative->getPath()) === false) {
+                        $urls[] = $derivative->getUrl() . $uid;
                     }
                 }
 
@@ -300,7 +300,7 @@ final class PwgCore
         $path_msizes = $root . $data_location . 'i';
         $msizes = FilesystemHelper::getCacheSizeDerivatives($path_msizes);
 
-        $infos['msizes'] = array_fill_keys(array_keys($this->imageStdParams->get_defined_type_map()), 0);
+        $infos['msizes'] = array_fill_keys(array_keys($this->imageStdParams->getDefinedTypeMap()), 0);
         $infos['msizes']['custom'] = 0;
         $all = 0;
 
@@ -493,7 +493,7 @@ final class PwgCore
         // Piwigo Remote Sync does not support receiving the available sizes
         $piwigo_remote_sync_agent = 'Apache-HttpClient/';
         if (! is_string($http_user_agent) or ! str_starts_with($http_user_agent, $piwigo_remote_sync_agent)) {
-            $res['available_sizes'] = array_keys($this->imageStdParams->get_defined_type_map());
+            $res['available_sizes'] = array_keys($this->imageStdParams->getDefinedTypeMap());
         }
 
         if ($this->accessControl->isAdmin()) {
@@ -1273,7 +1273,7 @@ final class PwgCore
                 $image_id = $line_image_id;
 
                 $image_string =
-                '<span><img src="' . @DerivativeImage::url($this->imageStdParams->get_by_type(ImageStdParams::SQUARE), $element)
+                '<span><img src="' . @DerivativeImage::url($this->imageStdParams->getByType(ImageStdParams::SQUARE), $element)
                 . '" alt="' . $image_title . '" title="' . $image_title . '">';
             }
 

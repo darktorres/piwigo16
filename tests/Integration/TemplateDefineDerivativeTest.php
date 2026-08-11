@@ -20,7 +20,7 @@ use Piwigo\Tests\Support\TemplateTestFactory;
 /**
  * Piwigo\Template\Template::func_define_derivative() -- the single
  * largest red-line cluster in this class (roughly a third of its own
- * total gap). Genuinely needs a real DB: ImageStdParams::get_custom()'s
+ * total gap). Genuinely needs a real DB: ImageStdParams::getCustom()'s
  * own first-use-in-24h path calls ConfigService::confUpdateParam()
  * (confirmed live -- every custom w/h/crop combination this test uses is
  * new, so save() always fires), unlike every other Template instance
@@ -49,7 +49,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
-        ImageStdParamsTestFactory::get()->load_from_db();
+        ImageStdParamsTestFactory::get()->loadFromDb();
         CurrentUserTestFactory::get()->attachGlobals();
 
         $this->template = TemplateTestFactory::build();

@@ -63,8 +63,8 @@ final class ImageGd implements ImageInterface
         // GD's native imagecreatetruecolor()/imagecopymerge() require int
         // arguments (unlike Imagick/ext_imagick, which tolerate float pixel
         // coordinates) — real callers do pass floats here (e.g. i.php's
-        // $crop_rect->width()/->l are int|float, since ImageRect::crop_h()/
-        // crop_v() accumulate floor()'s float return type), which threw a
+        // $crop_rect->width()/->l are int|float, since ImageRect::cropH()/
+        // cropV() accumulate floor()'s float return type), which threw a
         // TypeError under this backend before this cast was added (verified
         // directly: imagecreatetruecolor(900.0, ...) throws "must be of type
         // int, float given" under strict_types).

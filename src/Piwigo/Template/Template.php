@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Exception;
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
@@ -36,11 +37,13 @@ use Piwigo\Core\TemplatePageContext;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
+use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\Request\TemplateExtentsRequest;
 use Smarty\Debug;
 use Smarty\Smarty;
@@ -118,6 +121,20 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @var array<int, string[]> - Runtime buttons on index page
      */
     public array $index_buttons = [];
+
+    /**
+     * Plain-array mirror of the directory chain `setTemplateDir()` also
+     * hands to `$this->smarty->addTemplateDir()` -- Smarty's own chain
+     * isn't reachable from the Latte dispatch path added for P31, so this
+     * class tracks it itself instead of delegating entirely to Smarty for
+     * directory resolution, same shape as `resolveLatteTemplatePath()`
+     * uses it.
+     *
+     * @var list<string>
+     */
+    private array $templateDirs = [];
+
+    private ?LatteEngine $latteEngineInstance = null;
 
     public function __construct(
         private readonly CurrentConfig $currentConfig,
@@ -444,6 +461,76 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
+     * Lazily constructed, memoized per `Template` instance -- mirrors
+     * `imageStdParams()`/`currentTemplate()` above: nothing forces this
+     * cost (a real cache-dir mkdir, a `PiwigoExtension` construction)
+     * except a `.latte` file actually being parsed.
+     */
+    private function latteEngine(): LatteEngine
+    {
+        if ($this->latteEngineInstance instanceof LatteEngine) {
+            return $this->latteEngineInstance;
+        }
+
+        $cacheDir = LatteEngine::defaultCacheDir($this->paths->root, $this->currentConfig->dataLocation);
+        FilesystemHelper::mkgetdir($cacheDir, $this->currentConfig);
+        if ($this->currentConfig->templateForceCompile) {
+            $this->clearLatteCacheDir($cacheDir);
+        }
+
+        $extension = new PiwigoExtension($this, $this->lang, $this->accessLevelChecker, $this->sessionService, self::urlService());
+        $this->latteEngineInstance = new LatteEngine($cacheDir, $this->currentConfig->templateCompileCheck, $extension);
+
+        return $this->latteEngineInstance;
+    }
+
+    /**
+     * Latte's compiled-cache files are flat (one PHP file per compiled
+     * template, named by hash, no nested subdirectories) -- unlike
+     * Smarty's own compile dir, a plain top-level unlink pass is enough.
+     */
+    private function clearLatteCacheDir(string $cacheDir): void
+    {
+        $entries = glob($cacheDir . '/*');
+        if ($entries === false) {
+            return;
+        }
+        foreach ($entries as $entry) {
+            if (is_file($entry)) {
+                unlink($entry);
+            }
+        }
+    }
+
+    /**
+     * Resolves a bare `.latte` filename to a real, absolute filesystem
+     * path: an extents-override match (re-keyed by base filename, unlike
+     * `$this->extents`'s handle-keyed entries used by the Smarty-era
+     * `setFilenames()`/`getExtent()` path) wins if present, otherwise the
+     * first hit walking `$this->templateDirs` in order. No custom
+     * `Latte\Loader` -- this resolves to a real path before Latte's own
+     * default `FileLoader` ever sees it, same shape as the reference's
+     * `resolveLatteTemplatePath()`.
+     */
+    private function resolveLatteTemplatePath(string $file): string
+    {
+        $baseName = basename($file);
+        if (isset($this->extents[$baseName])) {
+            return $this->extents[$baseName];
+        }
+
+        foreach ($this->templateDirs as $dir) {
+            $candidate = rtrim($dir, '/') . '/' . $file;
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        $this->htmlRenderer()
+            ->fatalError("Template->parse(): Couldn't load Latte template file: {$file}");
+    }
+
+    /**
      * Loads theme's parameters.
      */
     public function setTheme(string $root, ThemeId $theme, string $path, bool $load_css = true, bool $load_local_head = true, string $colorscheme = 'dark'): void
@@ -502,6 +589,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function setTemplateDir(string $dir): void
     {
         $this->smarty->addTemplateDir($dir);
+        $this->templateDirs[] = $dir;
 
         if (! isset($this->smarty->compile_id)) {
             $compile_id = '1';
@@ -520,7 +608,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Deletes all compiled templates.
+     * Deletes all compiled templates -- both engines' caches during the
+     * P31 transition, since a site admin clicking "clear template cache"
+     * reasonably expects both cleared together, not just whichever engine
+     * happens to render the majority of templates right now. `Piwigo\
+     * Command\CacheClearCommand` (the CLI `cache:clear`) is a *different*
+     * mechanism with a deliberately narrower, Latte-only scope -- see that
+     * class's own docblock.
      */
     public function deleteCompiledTemplates(): void
     {
@@ -529,6 +623,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->clearCompiledTemplate();
         $this->smarty->compile_id = $save_compile_id;
         file_put_contents($this->smarty->getCompileDir() . '/index.htm', 'Not allowed!');
+
+        $this->clearLatteCacheDir(LatteEngine::defaultCacheDir($this->paths->root, $this->currentConfig->dataLocation));
     }
 
     /**
@@ -674,6 +770,52 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
+     * Renders `$file` (a real filename, e.g. `'popuphelp.latte'` --
+     * resolved the same way `parse()` resolves one) and assigns the result
+     * to `$varname`, wrapped in `Latte\Runtime\Html` so it propagates
+     * through Latte's auto-escape unmolested at every `{$var}` print site
+     * downstream -- the direct-filename sibling of `assignVarFromHandle()`
+     * above, added for already-converted callers. Both coexist until every
+     * caller has migrated (docs/PLAN.md's P31 section) and
+     * `assignVarFromHandle()` is removed. Concrete-class-only for now, not
+     * declared on `TemplateInterface` -- no L2a/L2b caller reaches it
+     * through that interface yet; added there only once a real one does
+     * (whichever P31.2+ sub-item converts that class's own template),
+     * matching this codebase's standing bias against adding interface
+     * surface ahead of a real caller.
+     */
+    public function assignVarFromTemplate(string $varname, string $file): void
+    {
+        $rendered = $this->parse($file, true);
+        $this->smarty->assign($varname, new Html($rendered));
+    }
+
+    /**
+     * Whether `$file` resolves against the Latte template-directory chain.
+     * Direct replacement for the legacy `$tpl->smarty->templateExists()`
+     * check used by mail rendering (`MailService`'s 3 direct call sites).
+     */
+    public function templateExists(string $file): bool
+    {
+        if (file_exists($file)) {
+            return true;
+        }
+
+        $baseName = basename($file);
+        if (isset($this->extents[$baseName]) && file_exists($this->extents[$baseName])) {
+            return true;
+        }
+
+        foreach ($this->templateDirs as $dir) {
+            if (file_exists(rtrim($dir, '/') . '/' . $file)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Performs a string concatenation.
      */
     public function concat(string $tpl_var, string $value): void
@@ -705,18 +847,35 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Loads the template file of the handle, compiles it and appends the result to the output
-     * (or returns it if _$return_ is true).
+     * Renders `$handle` and appends the result to the output (or returns it
+     * if `$return` is true).
+     *
+     * Dispatches per-argument: if `$handle` is a key in `$this->files` --
+     * i.e. it was registered via `setFilename()`/`setFilenames()` -- it
+     * resolves and renders exactly as before, through Smarty. Otherwise
+     * `$handle` is treated as a real filename (the direct-filename calling
+     * convention added for P31 -- see docs/PLAN.md's P31 section,
+     * "Transition strategy") and resolved/rendered through Latte. Both
+     * calling conventions coexist until every caller has migrated;
+     * `setFilename()`/`setFilenames()` and this handle-lookup branch are
+     * removed together once they are (P31.7).
      *
      * @phpstan-return ($return is true ? string : null)
      */
     public function parse(string $handle, bool $return = false): ?string
     {
-        if (! isset($this->files[$handle])) {
-            $this->htmlRenderer()
-                ->fatalError("Template->parse(): Couldn't load template file for handle {$handle}");
+        if (isset($this->files[$handle])) {
+            return $this->parseSmarty($handle, $return);
         }
 
+        return $this->parseLatte($handle, $return);
+    }
+
+    /**
+     * @phpstan-return ($return is true ? string : null)
+     */
+    private function parseSmarty(string $handle, bool $return): ?string
+    {
         $this->smarty->assign('ROOT_URL', self::urlService()->getRootUrl());
         // ROOT_PATH is the .tpl-side equivalent of PHPWG_ROOT_PATH for
         // the handful of templates that need a real filesystem existence
@@ -737,6 +896,54 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $this->smarty->compile_id = $save_compile_id;
         $this->unloadExternalFilters($handle);
+
+        if ($return) {
+            return $v;
+        }
+        $this->output .= $v;
+
+        return null;
+    }
+
+    /**
+     * @phpstan-return ($return is true ? string : null)
+     */
+    private function parseLatte(string $file, bool $return): ?string
+    {
+        // Resolve first, exactly like parseSmarty()'s own "does this exist
+        // at all" check runs before any other work -- a genuinely
+        // unresolvable $file (neither a registered Smarty handle nor a
+        // real Latte file) must fail here, before touching urlService()/
+        // Lang/etc. below. Confirmed live: reordering this after the
+        // ROOT_URL assign changed which exception a broken-container edge
+        // case surfaces (TemplateTest.php's own "htmlRenderer resolver
+        // throws" case) -- resolving first keeps that failure path
+        // identical to parseSmarty()'s.
+        $path = $this->resolveLatteTemplatePath($file);
+
+        // Same ROOT_URL/ROOT_PATH assigns as parseSmarty() above, into the
+        // same shared var storage -- so both engines see them, and any
+        // later template rendered in this same request (Smarty or Latte)
+        // still finds them already assigned.
+        $this->smarty->assign('ROOT_URL', self::urlService()->getRootUrl());
+        $this->smarty->assign('ROOT_PATH', $this->paths->root);
+        // Smarty::getTemplateVars(null) always returns the full assigned-var
+        // array, string-keyed by template variable name (vendor/smarty/
+        // smarty/src/Data.php's own array_merge(...)-based implementation)
+        // -- the vendor stub just doesn't declare that precisely, hence the
+        // real (not cast-based) narrowing below.
+        $rawParams = $this->smarty->getTemplateVars();
+        $params = [];
+        if (is_array($rawParams)) {
+            foreach ($rawParams as $key => $value) {
+                if (is_string($key)) {
+                    $params[$key] = $value;
+                }
+            }
+        }
+
+        $v = $this->latteEngine()
+            ->render($path, $params);
 
         if ($return) {
             return $v;
@@ -1314,6 +1521,231 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function funcGetCombinedCss(array $params): string
     {
         return self::COMBINED_CSS_TAG;
+    }
+
+    /**
+     * Latte-facing sibling of `funcCombineScript()` above -- same
+     * `ScriptLoader::add()` call, real typed named parameters instead of a
+     * loose Smarty tag-attribute array. `$id` has no default, so a `.latte`
+     * template omitting it gets a real PHP `ArgumentCountError` at the call
+     * site rather than `funcCombineScript()`'s own soft
+     * `$errorCollector->recordFatal()` -- a deliberate strengthening
+     * (real, required arguments now backed by PHP's own type system), not
+     * a behavior gap: no real converted template omits it.
+     */
+    public function combineScript(string $id, ?string $load = null, ?string $require = null, ?string $path = null, string|false $version = '0', bool $template = false): void
+    {
+        $loadMode = 0;
+        if ($load !== null) {
+            switch ($load) {
+                case 'header':
+                    break;
+                case 'footer':
+                    $loadMode = 1;
+                    break;
+                case 'async':
+                    $loadMode = 2;
+                    break;
+                default:
+                    $this->errorCollector->recordFatal("combineScript: invalid 'load' parameter");
+            }
+        }
+
+        $requireList = $require !== null && $require !== '' ? explode(',', $require) : [];
+
+        $this->scriptLoader->add($id, $loadMode, $requireList, $path, $version, $template);
+    }
+
+    /**
+     * Latte-facing sibling of `funcGetCombinedScripts()` above -- same
+     * body, wrapped in `Latte\Runtime\Html` since this one (unlike
+     * `combineScript()`) prints real markup at its own call site and would
+     * otherwise be HTML-escaped by Latte's auto-escaping (see
+     * docs/PLAN.md's P31 section, "Auto-escaping").
+     */
+    public function getCombinedScripts(string $load): Html
+    {
+        if ($load === 'header') {
+            return new Html(self::COMBINED_SCRIPTS_TAG);
+        }
+
+        $content = [];
+        $scripts = $this->scriptLoader->getFooterScripts($this->accessLevelChecker);
+        foreach ($scripts->sync as $script) {
+            $content[] =
+              '<script type="text/javascript" src="'
+              . $this->makeScriptSrc($script)
+              . '"></script>';
+        }
+        if ($this->scriptLoader->inline_scripts !== []) {
+            $content[] = '<script type="text/javascript">//<![CDATA[
+';
+            $content = array_merge($content, $this->scriptLoader->inline_scripts);
+            $content[] = '//]]></script>';
+        }
+
+        if ($scripts->async !== []) {
+            $content[] = '<script type="text/javascript">';
+            $content[] = <<<'JS'
+            (function() {
+            var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
+            JS;
+            foreach ($scripts->async as $script) {
+                $content[] = <<<JS
+                s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='{$this->makeScriptSrc($script)}';
+                JS;
+                $content[] = 'after = after.parentNode.insertBefore(s, after);';
+            }
+            $content[] = '})();';
+            $content[] = '</script>';
+        }
+
+        return new Html(implode("\n", $content));
+    }
+
+    /**
+     * Latte-facing sibling of `funcCombineCss()` above -- same
+     * `CssLoader::add()` call, real typed named parameters. `$path` has no
+     * default, same reasoning as `combineScript()`'s `$id` above.
+     */
+    public function combineCss(string $path, ?string $id = null, string|false $version = '0', int $order = 0, bool $template = false): void
+    {
+        $this->cssLoader->add($id ?? md5($path), $path, $version, $order, $template);
+    }
+
+    /**
+     * Latte-facing sibling of `funcGetCombinedCss()` above -- prints the
+     * placeholder literal, so it needs the same `Html` wrap as
+     * `getCombinedScripts()` above.
+     */
+    public function getCombinedCss(): Html
+    {
+        return new Html(self::COMBINED_CSS_TAG);
+    }
+
+    /**
+     * Latte-facing sibling of `funcDefineDerivative()` above. Smarty's
+     * version assigned a `DerivativeParams` into the compiling template's
+     * own scope via a `name` parameter; Latte has no equivalent scope-
+     * mutation hook, so this returns the value instead, bound at the call
+     * site via `{var $x = defineDerivative(...)}` -- confirmed real usage
+     * in `piwigo16-rewrite/tools/smarty-to-latte/Converter.php:602-632`.
+     * `$crop` folds Smarty's own dual bool/numeric-percentage handling
+     * into one parameter (bool: whole 0/1 crop ratio; float|int: a percent,
+     * matching `funcDefineDerivative()`'s own `$crop_val / 100.0` math).
+     */
+    public function defineDerivative(?string $type = null, ?int $width = null, ?int $height = null, bool|float|int $crop = 0, ?int $minWidth = null, ?int $minHeight = null): DerivativeParams
+    {
+        if ($type !== null) {
+            return $this->imageStdParams()
+                ->getByType($type);
+        }
+
+        if ($width === null || $height === null) {
+            $this->htmlRenderer()
+                ->fatalError('defineDerivative missing width or height');
+        }
+
+        $cropRatio = is_bool($crop) ? ($crop ? 1 : 0) : round(((float) $crop) / 100.0, 2);
+        $minw = null;
+        $minh = null;
+
+        if ($cropRatio !== 0 && $cropRatio !== 0.0) {
+            $minw = $minWidth ?? $width;
+            if ($minw > $width) {
+                $this->htmlRenderer()
+                    ->fatalError('defineDerivative invalid min_width');
+            }
+            $minh = $minHeight ?? $height;
+            if ($minh > $height) {
+                $this->htmlRenderer()
+                    ->fatalError('defineDerivative invalid min_height');
+            }
+        }
+
+        return $this->imageStdParams()
+            ->getCustom($width, $height, $cropRatio, $minw, $minh);
+    }
+
+    /**
+     * Latte-facing sibling of `blockHtmlHead()` above -- called via
+     * `{capture $v}...{/capture}{do htmlHead($v)}` (Latte's own native
+     * tags compose the same open/close content-capture Smarty's block
+     * plugin API gave `blockHtmlHead()`, so no custom Latte tag is needed;
+     * see docs/PLAN.md's P31 section, "Blocks/functions"). Takes the
+     * content directly rather than being called twice with `null` then the
+     * real body -- `{capture}` only ever hands back the final string once.
+     */
+    public function htmlHead(string|Html $content): void
+    {
+        $trimmed = trim((string) $content);
+        if ($trimmed !== '') {
+            $this->html_head_elements[] = $trimmed;
+        }
+    }
+
+    /**
+     * Latte-facing sibling of `blockHtmlStyle()` above -- same
+     * `{capture}`+`{do}` composition as `htmlHead()`.
+     */
+    public function htmlStyle(string|Html $content): void
+    {
+        $trimmed = trim((string) $content);
+        if ($trimmed !== '') {
+            $this->html_style .= "\n" . $trimmed;
+        }
+    }
+
+    /**
+     * Latte-facing sibling of `blockFooterScript()` above -- same
+     * `{capture}`+`{do}` composition, same `ScriptLoader::addInline()`
+     * call.
+     */
+    public function footerScript(string|Html $content, ?string $require = null): void
+    {
+        $trimmed = trim((string) $content);
+        if ($trimmed !== '') {
+            $requireList = $require !== null && $require !== '' ? explode(',', $require) : [];
+            $this->scriptLoader->addInline($trimmed, $requireList);
+        }
+    }
+
+    /**
+     * Latte-facing port of `prefilterLocalCss()`'s real logic -- NOT the
+     * same thing as `$theme.local_head` (that's already an ordinary
+     * `{include}` on both engines, no special mechanism at all; see
+     * docs/PLAN.md's P31 section, "Prefilters"). `prefilterLocalCss()`
+     * injects `{combine_css}` calls for admin-configurable override files
+     * at *compile time*; since `combine_css` is now a plain function
+     * rather than a Smarty tag, this moves the same `file_exists()`-gated
+     * walk to an explicit call from the converted `header.latte` instead
+     * of a source-text injection. Only ever needed on the front-end
+     * `'header'` handle today (`prefilterLocalCss()`'s own registration is
+     * gated on `! $adminContext->isActive()`), but this method itself
+     * doesn't need that guard -- it's simply never called from an admin
+     * template.
+     *
+     * @param array<int, array<string, mixed>> $themes
+     */
+    public function localCssRules(array $themes): void
+    {
+        $siteLocalDir = substr($this->paths->siteLocal, strlen($this->paths->root));
+
+        foreach ($themes as $theme) {
+            $id = $theme['id'] ?? null;
+            if (! is_string($id)) {
+                continue;
+            }
+            $f = $siteLocalDir . 'css/' . $id . '-rules.css';
+            if (file_exists($this->paths->root . $f)) {
+                $this->combineCss($f, order: 10);
+            }
+        }
+
+        $f = $siteLocalDir . 'css/rules.css';
+        if (file_exists($this->paths->root . $f)) {
+            $this->combineCss($f, order: 10);
+        }
     }
 
     /**

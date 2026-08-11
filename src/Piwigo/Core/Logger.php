@@ -101,14 +101,16 @@ final class Logger
     /**
      * File handle for this instance's log file.
      * @var resource|null null until open() successfully opens the file
-     *   (never assigned falsy on failure — that path throws instead)
+     *   (never assigned falsy on failure — that path throws instead).
+     *   PHP has no native `resource` type declaration, so this stays
+     *   `mixed` natively -- the docblock still does the real narrowing.
      */
-    private $fileHandle;
+    private mixed $fileHandle = null;
 
     /**
      * @param array{directory?: string|null, filename?: string|null, globPattern?: string, severity?: int|string, dateFormat?: string, archiveDays?: int} $options
      */
-    public function __construct($options)
+    public function __construct(array $options)
     {
         $this->options = array_merge($this->options, $options);
 
@@ -199,14 +201,13 @@ final class Logger
     /**
      * Writes a $line to the log with a severity level of DEBUG.
      *
-     * @param string $line
      * @param array<int|string, mixed>|string|null $cat some call sites (e.g.
      *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
      *   pass an array here as a 2-arg debug(message, data) convenience —
      *   log() detects this and treats it as $args instead
      * @param array<int|string, mixed> $args
      */
-    public function debug($line, $cat = null, $args = []): void
+    public function debug(string $line, array|string|null $cat = null, array $args = []): void
     {
         $this->log(self::DEBUG, $line, $cat, $args);
     }
@@ -214,14 +215,13 @@ final class Logger
     /**
      * Writes a $line to the log with a severity level of INFO.
      *
-     * @param string $line
      * @param array<int|string, mixed>|string|null $cat some call sites (e.g.
      *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
      *   pass an array here as a 2-arg debug(message, data) convenience —
      *   log() detects this and treats it as $args instead
      * @param array<int|string, mixed> $args
      */
-    public function info($line, $cat = null, $args = []): void
+    public function info(string $line, array|string|null $cat = null, array $args = []): void
     {
         $this->log(self::INFO, $line, $cat, $args);
     }
@@ -229,14 +229,13 @@ final class Logger
     /**
      * Writes a $line to the log with a severity level of NOTICE.
      *
-     * @param string $line
      * @param array<int|string, mixed>|string|null $cat some call sites (e.g.
      *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
      *   pass an array here as a 2-arg debug(message, data) convenience —
      *   log() detects this and treats it as $args instead
      * @param array<int|string, mixed> $args
      */
-    public function notice($line, $cat = null, $args = []): void
+    public function notice(string $line, array|string|null $cat = null, array $args = []): void
     {
         $this->log(self::NOTICE, $line, $cat, $args);
     }
@@ -244,14 +243,13 @@ final class Logger
     /**
      * Writes a $line to the log with a severity level of WARNING.
      *
-     * @param string $line
      * @param array<int|string, mixed>|string|null $cat some call sites (e.g.
      *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
      *   pass an array here as a 2-arg debug(message, data) convenience —
      *   log() detects this and treats it as $args instead
      * @param array<int|string, mixed> $args
      */
-    public function warn($line, $cat = null, $args = []): void
+    public function warn(string $line, array|string|null $cat = null, array $args = []): void
     {
         $this->log(self::WARNING, $line, $cat, $args);
     }
@@ -259,14 +257,13 @@ final class Logger
     /**
      * Writes a $line to the log with a severity level of ERROR.
      *
-     * @param string $line
      * @param array<int|string, mixed>|string|null $cat some call sites (e.g.
      *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
      *   pass an array here as a 2-arg debug(message, data) convenience —
      *   log() detects this and treats it as $args instead
      * @param array<int|string, mixed> $args
      */
-    public function error($line, $cat = null, $args = []): void
+    public function error(string $line, array|string|null $cat = null, array $args = []): void
     {
         $this->log(self::ERROR, $line, $cat, $args);
     }
@@ -274,14 +271,13 @@ final class Logger
     /**
      * Writes a $line to the log with a severity level of ALERT.
      *
-     * @param string $line
      * @param array<int|string, mixed>|string|null $cat some call sites (e.g.
      *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
      *   pass an array here as a 2-arg debug(message, data) convenience —
      *   log() detects this and treats it as $args instead
      * @param array<int|string, mixed> $args
      */
-    public function alert($line, $cat = null, $args = []): void
+    public function alert(string $line, array|string|null $cat = null, array $args = []): void
     {
         $this->log(self::ALERT, $line, $cat, $args);
     }
@@ -289,14 +285,13 @@ final class Logger
     /**
      * Writes a $line to the log with a severity level of CRITICAL.
      *
-     * @param string $line
      * @param array<int|string, mixed>|string|null $cat some call sites (e.g.
      *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
      *   pass an array here as a 2-arg debug(message, data) convenience —
      *   log() detects this and treats it as $args instead
      * @param array<int|string, mixed> $args
      */
-    public function critical($line, $cat = null, $args = []): void
+    public function critical(string $line, array|string|null $cat = null, array $args = []): void
     {
         $this->log(self::CRITICAL, $line, $cat, $args);
     }
@@ -304,14 +299,13 @@ final class Logger
     /**
      * Writes a $line to the log with a severity level of EMERGENCY.
      *
-     * @param string $line
      * @param array<int|string, mixed>|string|null $cat some call sites (e.g.
      *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
      *   pass an array here as a 2-arg debug(message, data) convenience —
      *   log() detects this and treats it as $args instead
      * @param array<int|string, mixed> $args
      */
-    public function emergency($line, $cat = null, $args = []): void
+    public function emergency(string $line, array|string|null $cat = null, array $args = []): void
     {
         $this->log(self::EMERGENCY, $line, $cat, $args);
     }
@@ -319,15 +313,13 @@ final class Logger
     /**
      * Writes a $line to the log with the given severity.
      *
-     * @param int $severity
-     * @param string $message
      * @param array<int|string, mixed>|string|null $cat some call sites (e.g.
      *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
      *   pass an array here as a 2-arg debug(message, data) convenience —
      *   log() detects this and treats it as $args instead
      * @param array<int|string, mixed> $args
      */
-    public function log($severity, $message, $cat = null, $args = []): void
+    public function log(int $severity, string $message, array|string|null $cat = null, array $args = []): void
     {
         if ($this->severity() >= $severity) {
             if (is_array($cat)) {
@@ -341,10 +333,8 @@ final class Logger
 
     /**
      * Directly writes a line to the log without adding level and time.
-     *
-     * @param string $line
      */
-    public function write($line): void
+    public function write(string $line): void
     {
         $this->open();
         if ($this->status() === self::STATUS_LOG_OPEN) {
@@ -434,12 +424,11 @@ final class Logger
      *
      * @param  int $level severity level constant (self::EMERGENCY etc.) —
      *   log()'s only caller always passes its own int $severity here
-     * @param  string $message
      * @param  ?string $cat log()'s only caller has already resolved an
      *   array $cat into $args and reset $cat to null before this call
      * @param  array<int|string, mixed>  $context
      */
-    private function formatMessage($level, $message, $cat, $context): string
+    private function formatMessage(int $level, string $message, ?string $cat, array $context): string
     {
         if ($context !== []) {
             $message .= "\n" . $this->indent($this->contextToString($context));
@@ -477,7 +466,7 @@ final class Logger
      *
      * @param  array<int|string, mixed> $context
      */
-    private function contextToString($context): string
+    private function contextToString(array $context): string
     {
         $export = '';
         foreach ($context as $key => $value) {
@@ -505,19 +494,16 @@ final class Logger
      *
      * @param  string $string The string to indent
      * @param  string $indent What to use as the indent.
-     * @return string
      */
-    private function indent(string $string, $indent = '  ')
+    private function indent(string $string, string $indent = '  '): string
     {
         return $indent . str_replace("\n", "\n" . $indent, $string);
     }
 
     /**
      * Converts level constants to string name.
-     *
-     * @param int $level
      */
-    public static function levelToCode($level): string
+    public static function levelToCode(int $level): string
     {
         return match ($level) {
             self::EMERGENCY => 'EMERGENCY',
@@ -534,10 +520,8 @@ final class Logger
 
     /**
      * Converts level names to constant.
-     *
-     * @param string $code
      */
-    public static function codeToLevel($code): int
+    public static function codeToLevel(string $code): int
     {
         return match (strtoupper($code)) {
             'EMERGENCY' => self::EMERGENCY,

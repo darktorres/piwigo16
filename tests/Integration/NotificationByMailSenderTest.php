@@ -613,7 +613,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // nbm_complementary_mail_content so the per-user
         // customize-content branch (never empty here, no plugin handler
         // registered) fires too.
-        $this->conn->executeStatement('UPDATE users' . " SET mail_address = 'temp4@example.test' WHERE id = 4");
+        $this->conn->executeStatement("UPDATE users SET mail_address = 'temp4@example.test' WHERE id = 4");
         // check_key is varchar(16) -- must stay within that limit.
         $checkKey = 'user4-tmp-key';
         // enabled is a genuine boolean column -- a bare `1` literal in the
@@ -623,7 +623,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // confirmed live).
         $enabledLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
         $this->conn->executeStatement(
-            'INSERT INTO user_mail_notification' . " (user_id, check_key, enabled, last_send) VALUES (?, ?, {$enabledLiteral}, NULL)",
+            "INSERT INTO user_mail_notification (user_id, check_key, enabled, last_send) VALUES (?, ?, {$enabledLiteral}, NULL)",
             [4, $checkKey]
         );
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';

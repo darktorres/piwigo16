@@ -67,7 +67,7 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE users SET mail_address = NULL WHERE id IN (3, 4)');
-        $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'normal', language = 'en_UK' WHERE user_id IN (3, 4)");
+        $this->conn->executeStatement("UPDATE user_infos SET status = 'normal', language = 'en_UK' WHERE user_id IN (3, 4)");
         parent::tearDown();
     }
 
@@ -84,8 +84,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function testFindAdminsAndWebmastersIncludesARealAdminStatusUserWithARealEmail(): void
     {
-        $this->conn->executeStatement('UPDATE users' . " SET mail_address = 'power.user@example.test' WHERE id = 4");
-        $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'admin' WHERE user_id = 4");
+        $this->conn->executeStatement("UPDATE users SET mail_address = 'power.user@example.test' WHERE id = 4");
+        $this->conn->executeStatement("UPDATE user_infos SET status = 'admin' WHERE user_id = 4");
 
         $recipients = $this->repo->findAdminsAndWebmasters(['webmaster', 'admin'], null, null);
 
@@ -120,8 +120,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function testFindDistinctLanguagesInGroupReturnsOnlyEligibleMembersLanguages(): void
     {
-        $this->conn->executeStatement('UPDATE users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-        $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
+        $this->conn->executeStatement("UPDATE users SET mail_address = 'regular.user@example.test' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE user_infos SET language = 'fr_FR' WHERE user_id = 3");
 
         // group 1 has users 1 (en_UK, real email) and 3 (fr_FR, now a real email).
         $languages = $this->repo->findDistinctLanguagesInGroup(1, null);
@@ -132,8 +132,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function testFindDistinctLanguagesInGroupHonorsTheLanguageFilter(): void
     {
-        $this->conn->executeStatement('UPDATE users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-        $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
+        $this->conn->executeStatement("UPDATE users SET mail_address = 'regular.user@example.test' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE user_infos SET language = 'fr_FR' WHERE user_id = 3");
 
         $languages = $this->repo->findDistinctLanguagesInGroup(1, 'fr_FR');
 
@@ -164,8 +164,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function testFindByGroupAndLanguageScopesCorrectlyAcrossTwoLanguagesInTheSameGroup(): void
     {
-        $this->conn->executeStatement('UPDATE users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-        $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
+        $this->conn->executeStatement("UPDATE users SET mail_address = 'regular.user@example.test' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE user_infos SET language = 'fr_FR' WHERE user_id = 3");
 
         $frenchRecipients = $this->repo->findByGroupAndLanguage(1, 'fr_FR');
         $englishRecipients = $this->repo->findByGroupAndLanguage(1, 'en_UK');

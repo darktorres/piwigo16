@@ -232,7 +232,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE categories' . " SET status = 'public'");
+        $this->conn->executeStatement("UPDATE categories SET status = 'public'");
         CachePools::categoryTree()->clear();
         parent::tearDown();
     }
@@ -308,7 +308,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $newId = (int) $newIdRaw;
 
         $this->conn->executeStatement(
-            'INSERT INTO images' . " (file, path, date_available) VALUES ('toctou-probe.jpg', 'upload/toctou-probe.jpg', '2026-08-01 00:00:00')"
+            "INSERT INTO images (file, path, date_available) VALUES ('toctou-probe.jpg', 'upload/toctou-probe.jpg', '2026-08-01 00:00:00')"
         );
         $newImageId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
@@ -431,7 +431,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // Only image 1's date_creation is set -- the other 2 direct images
         // of category 1 stay NULL, so MIN/MAX both resolve to this single
         // real value rather than just echoing back a NULL.
-        $this->conn->executeStatement('UPDATE images' . " SET date_creation = '2021-03-10 08:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE images SET date_creation = '2021-03-10 08:00:00' WHERE id = 1");
 
         try {
             $this->renderer->render(Section::Categories, null, 0);

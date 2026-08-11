@@ -107,7 +107,7 @@ final class WsImagesSetRankTest extends ContractTestCase
         $rankIdentifier = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
         $this->conn->executeStatement(
-            'INSERT INTO image_category' . " (image_id, category_id, {$rankIdentifier}) VALUES (?, ?, ?)",
+            "INSERT INTO image_category (image_id, category_id, {$rankIdentifier}) VALUES (?, ?, ?)",
             [$id, $categoryId, $rank]
         );
 

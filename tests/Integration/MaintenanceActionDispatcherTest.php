@@ -413,10 +413,10 @@ namespace Piwigo\Tests\Integration {
                 // docblock.
             }
 
-            $raw = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'gallery_locked'");
+            $raw = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'gallery_locked'");
             self::assertTrue(json_decode(is_scalar($raw) ? (string) $raw : ''));
 
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'gallery_locked'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'gallery_locked'");
         }
 
         public function testUnlockGalleryPersistsGalleryUnlockedAndRedirects(): void
@@ -427,14 +427,14 @@ namespace Piwigo\Tests\Integration {
             } catch (ResponseReadyException) {
             }
 
-            $raw = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'gallery_locked'");
+            $raw = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'gallery_locked'");
             self::assertFalse(json_decode(is_scalar($raw) ? (string) $raw : ''));
             // $_SESSION['page_infos'] here has no reader anywhere in src/Piwigo
             // (confirmed via full-repo grep) -- exercised for coverage credit
             // without asserting on a visible effect that doesn't exist.
             self::assertSame(['Gallery unlocked'], $_SESSION['page_infos'] ?? null);
 
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'gallery_locked'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'gallery_locked'");
             unset($_SESSION['page_infos']);
         }
 

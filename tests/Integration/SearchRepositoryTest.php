@@ -231,8 +231,8 @@ final class SearchRepositoryTest extends IntegrationTestCase
      */
     public function testCountImagesGroupedByReturnsCountsOrderedDesc(): void
     {
-        $this->conn->executeStatement('UPDATE images' . " SET author = 'Ansel Adams' WHERE id IN (1, 2)");
-        $this->conn->executeStatement('UPDATE images' . " SET author = 'Dorothea Lange' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE images SET author = 'Ansel Adams' WHERE id IN (1, 2)");
+        $this->conn->executeStatement("UPDATE images SET author = 'Dorothea Lange' WHERE id = 3");
 
         try {
             $rows = $this->repo->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL'), true);

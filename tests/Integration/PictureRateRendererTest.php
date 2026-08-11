@@ -121,7 +121,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
     public function testRenderComputesTheRateSummaryAndTheCurrentClassicUsersOwnRate(): void
     {
         // 3 real votes (5, 3, 4) on image 1 -- count=3, average=4.0.
-        $this->conn->executeStatement('INSERT INTO rate' . " (user_id, element_id, anonymous_id, rate) VALUES (1, 1, '', 5), (3, 1, '', 3), (4, 1, '', 4)");
+        $this->conn->executeStatement("INSERT INTO rate (user_id, element_id, anonymous_id, rate) VALUES (1, 1, '', 5), (3, 1, '', 3), (4, 1, '', 4)");
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(3),
@@ -162,7 +162,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         // guestId (2) voted 5, keyed by the trimmed (3-octet) IP prefix --
         // the exact anonymous_id shape render() itself computes.
-        $this->conn->executeStatement('INSERT INTO rate' . " (user_id, element_id, anonymous_id, rate) VALUES (2, 1, '203.0.113', 5)");
+        $this->conn->executeStatement("INSERT INTO rate (user_id, element_id, anonymous_id, rate) VALUES (2, 1, '203.0.113', 5)");
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(2),

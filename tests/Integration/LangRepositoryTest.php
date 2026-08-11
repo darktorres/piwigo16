@@ -51,7 +51,7 @@ final class LangRepositoryTest extends IntegrationTestCase
     public function testFindAllRowsExcludesARowWithANullName(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO languages' . " (id, version, name) VALUES ('zz_NM', '1.0.0', NULL)"
+            "INSERT INTO languages (id, version, name) VALUES ('zz_NM', '1.0.0', NULL)"
         );
 
         try {
@@ -59,14 +59,14 @@ final class LangRepositoryTest extends IntegrationTestCase
 
             self::assertEquals([new LanguageListing('en_UK', 'English (Great Britain)')], $rows);
         } finally {
-            $this->conn->executeStatement('DELETE FROM languages' . " WHERE id = 'zz_NM'");
+            $this->conn->executeStatement("DELETE FROM languages WHERE id = 'zz_NM'");
         }
     }
 
     public function testFindAllRowsOrdersByName(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO languages' . " (id, version, name) VALUES ('zz_AA', '1.0.0', 'AAA First')"
+            "INSERT INTO languages (id, version, name) VALUES ('zz_AA', '1.0.0', 'AAA First')"
         );
 
         try {
@@ -77,7 +77,7 @@ final class LangRepositoryTest extends IntegrationTestCase
                 $rows
             );
         } finally {
-            $this->conn->executeStatement('DELETE FROM languages' . " WHERE id = 'zz_AA'");
+            $this->conn->executeStatement("DELETE FROM languages WHERE id = 'zz_AA'");
         }
     }
 }

@@ -77,12 +77,12 @@ namespace Piwigo\Tests\Integration {
         #[Override]
         protected function tearDown(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'public'");
-            $this->conn->executeStatement('UPDATE old_permalinks' . " SET hit = 42, last_hit = '2026-07-07 05:02:38'");
+            $this->conn->executeStatement("UPDATE categories SET status = 'public'");
+            $this->conn->executeStatement("UPDATE old_permalinks SET hit = 42, last_hit = '2026-07-07 05:02:38'");
             $rank = $this->conn->getDatabasePlatform()
                 ->quoteSingleIdentifier('rank');
             $this->conn->executeStatement(
-                'UPDATE image_category' . " SET {$rank} = CASE image_id WHEN 1 THEN 1 WHEN 2 THEN 2 WHEN 3 THEN 3 END WHERE category_id = 1"
+                "UPDATE image_category SET {$rank} = CASE image_id WHEN 1 THEN 1 WHEN 2 THEN 2 WHEN 3 THEN 3 END WHERE category_id = 1"
             );
             parent::tearDown();
         }
@@ -260,7 +260,7 @@ namespace Piwigo\Tests\Integration {
             $rank = $this->conn->getDatabasePlatform()
                 ->quoteSingleIdentifier('rank');
             $this->conn->executeStatement(
-                'UPDATE image_category' . " SET {$rank} = CASE image_id WHEN 1 THEN 3 WHEN 2 THEN 2 WHEN 3 THEN 1 END WHERE category_id = 1"
+                "UPDATE image_category SET {$rank} = CASE image_id WHEN 1 THEN 3 WHEN 2 THEN 2 WHEN 3 THEN 1 END WHERE category_id = 1"
             );
             // No quoting needed here -- PhotoSortField::parseOrderByFragment()'s
             // own regex already treats a surrounding backtick as optional, and
@@ -407,7 +407,7 @@ namespace Piwigo\Tests\Integration {
             } finally {
                 $realHash = $this->dbDriver === 'pgsql' ? '2e7e2ce3' : '2e7e6c90';
                 $this->conn->executeStatement(
-                    'UPDATE images' . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-{$realHash}.jpg' WHERE id = 1"
+                    "UPDATE images SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-{$realHash}.jpg' WHERE id = 1"
                 );
             }
         }
@@ -627,7 +627,7 @@ namespace Piwigo\Tests\Integration {
             // of category 1 stay NULL) -- MIN/MAX both resolve to that single
             // real value, proving the aggregate reads real data rather than
             // just echoing back a NULL.
-            $this->conn->executeStatement('UPDATE images' . " SET date_creation = '2019-06-15 10:00:00' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE images SET date_creation = '2019-06-15 10:00:00' WHERE id = 2");
 
             try {
                 $range = $this->repo->findDateRangeByCategory([1], self::noPermissionRestriction());
@@ -771,7 +771,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindByStatusFiltersOnTheStatusColumn(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 2");
 
             $publicRows = $this->repo->findByStatus('public');
             $privateRows = $this->repo->findByStatus('private');
@@ -819,7 +819,7 @@ namespace Piwigo\Tests\Integration {
                     'INSERT INTO user_access (user_id, cat_id) VALUES (?, ?)',
                     [3, 1]
                 );
-                $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+                $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
                 $rows = $this->repo->findPrivateCategoriesGrantedToUser(3);
                 self::assertSame([1], array_column($rows, 'id'));
@@ -836,7 +836,7 @@ namespace Piwigo\Tests\Integration {
         {
             // Fixture group_access: (group_id=1, cat_id=1), (group_id=2, cat_id=1),
             // (group_id=3, cat_id=1), (group_id=1, cat_id=2).
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private'");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private'");
 
             self::assertSame([1, 2], array_column($this->repo->findPrivateCategoriesGrantedToGroup(1), 'id'));
             self::assertSame([1], array_column($this->repo->findPrivateCategoriesGrantedToGroup(2), 'id'));
@@ -851,7 +851,7 @@ namespace Piwigo\Tests\Integration {
             // resolves correctly against a real DB (DQL JOIN...WITH conditions
             // compile to a plain SQL column comparison regardless of PHP-side
             // Type differences).
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private'");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private'");
 
             self::assertSame([1, 2], $this->repo->findPrivateCategoryIdsGrantedToGroup(1));
             self::assertSame([1], $this->repo->findPrivateCategoryIdsGrantedToGroup(2));
@@ -877,7 +877,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindPrivateCategoriesExcludingFiltersOutTheGivenIds(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private'");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private'");
 
             self::assertSame([1, 2], array_column($this->repo->findPrivateCategoriesExcluding([]), 'id'));
             self::assertSame([2], array_column($this->repo->findPrivateCategoriesExcluding(['1']), 'id'));
@@ -911,7 +911,7 @@ namespace Piwigo\Tests\Integration {
         public function testFindAllForPermalinksDisplayAppendsACheckmarkWhenPermalinkIsSet(): void
         {
             try {
-                $this->conn->executeStatement('UPDATE categories' . " SET permalink = 'sample-album' WHERE id = 1");
+                $this->conn->executeStatement("UPDATE categories SET permalink = 'sample-album' WHERE id = 1");
 
                 $rows = $this->repo->findAllForPermalinksDisplay();
 
@@ -986,7 +986,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindListForWsPublicOnlyExcludesNonPublicCategories(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 2");
 
             $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [], publicOnly: true);
 

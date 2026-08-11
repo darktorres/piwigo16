@@ -62,7 +62,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'enable_formats'");
+        $this->conn->executeStatement("DELETE FROM config WHERE param = 'enable_formats'");
         CachePools::config()->clear();
         parent::tearDown();
     }

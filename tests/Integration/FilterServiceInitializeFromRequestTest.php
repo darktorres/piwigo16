@@ -182,7 +182,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         // proves the 2nd call read the session's own serialized snapshot
         // instead of re-querying the DB.
         $this->conn->executeStatement(
-            'INSERT INTO images' . " (file, path, date_available) VALUES ('cache-probe.jpg', 'upload/cache-probe.jpg', '2026-08-01 00:00:00')"
+            "INSERT INTO images (file, path, date_available) VALUES ('cache-probe.jpg', 'upload/cache-probe.jpg', '2026-08-01 00:00:00')"
         );
         $newImageId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(

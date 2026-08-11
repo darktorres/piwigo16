@@ -338,7 +338,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
         $this->imageStdParams->set_and_save_disabled([]);
 
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT enabled FROM derivative_size' . " WHERE name = '3xlarge'"
+            "SELECT enabled FROM derivative_size WHERE name = '3xlarge'"
         );
         self::assertCount(1, $rows, '3xlarge must have exactly one row after moving from disabled to enabled, not two.');
         self::assertSame(1, $rows[0]['enabled']);

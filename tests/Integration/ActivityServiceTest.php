@@ -65,7 +65,7 @@ namespace Piwigo\Tests\Integration {
         #[Override]
         protected function tearDown(): void
         {
-            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object LIKE 'test-%'");
+            $this->conn->executeStatement("DELETE FROM activity WHERE object LIKE 'test-%'");
             parent::tearDown();
         }
 
@@ -107,7 +107,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 self::assertSame(1, $this->countRows('system', 2, 'restore'));
             } finally {
-                $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'system' AND action = 'restore'");
+                $this->conn->executeStatement("DELETE FROM activity WHERE object = 'system' AND action = 'restore'");
             }
         }
 
@@ -336,7 +336,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame('merge', $details['action']);
                 self::assertSame('5', $details['destination_tag']);
             } finally {
-                $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'tag' AND action = 'delete'");
+                $this->conn->executeStatement("DELETE FROM activity WHERE object = 'tag' AND action = 'delete'");
             }
         }
 
@@ -632,7 +632,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame($expectedDetails, $actualDetails);
             } finally {
                 $this->conn->executeStatement(
-                    'DELETE FROM activity' . " WHERE object = 'system' AND action = 'update' AND object_id = " . ActivitySystem::Core
+                    "DELETE FROM activity WHERE object = 'system' AND action = 'update' AND object_id = " . ActivitySystem::Core
                 );
             }
         }

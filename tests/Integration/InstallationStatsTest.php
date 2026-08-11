@@ -121,7 +121,7 @@ test('getInstallationDate returns user 2\'s own registration_date when it is a r
         ->not->toBeFalse();
 
     try {
-        $conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2020-05-15 10:00:00' WHERE user_id = 2");
+        $conn->executeStatement("UPDATE user_infos SET registration_date = '2020-05-15 10:00:00' WHERE user_id = 2");
 
         expect(installation_stats_test_make()->getInstallationDate())
             ->toBe('2020-05-15 10:00:00');
@@ -142,7 +142,7 @@ test('getInstallationDate falls back to the MIN registration_date across all use
         // Push every real user's registration_date before piwigo's own
         // 2001-09-01 origin, then insert one fresh, valid user whose
         // registration_date should become the real MIN() fallback.
-        $conn->executeStatement('UPDATE user_infos' . " SET registration_date = '1999-01-01 00:00:00'");
+        $conn->executeStatement("UPDATE user_infos SET registration_date = '1999-01-01 00:00:00'");
         $conn->executeStatement(sprintf("INSERT INTO users (username, password, mail_address) VALUES ('installation-stats-fallback-user', NULL, NULL)"));
         $newUserId = (int) $conn->lastInsertId();
         $conn->executeStatement(sprintf(
@@ -173,7 +173,7 @@ test('getInstallationDate falls back to the earliest image\'s date_available whe
     $originalRows = $conn->fetchAllAssociative('SELECT user_id, registration_date FROM user_infos');
 
     try {
-        $conn->executeStatement('UPDATE user_infos' . " SET registration_date = '1999-01-01 00:00:00'");
+        $conn->executeStatement("UPDATE user_infos SET registration_date = '1999-01-01 00:00:00'");
 
         $earliestDateAvailable = $conn->fetchOne('SELECT date_available FROM images ORDER BY id ASC LIMIT 1');
 

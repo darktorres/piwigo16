@@ -73,7 +73,7 @@ final class MaintenancePurgeFailedLoginsCommandTest extends IntegrationTestCase
             self::assertSame(1, $remainingRecent);
         } finally {
             $conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
-            $conn->executeStatement('DELETE FROM integrity_ignored_anomalies' . " WHERE anomaly_id IN ('old-anomaly', 'recent-anomaly')");
+            $conn->executeStatement("DELETE FROM integrity_ignored_anomalies WHERE anomaly_id IN ('old-anomaly', 'recent-anomaly')");
         }
     }
 }

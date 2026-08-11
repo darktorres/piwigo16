@@ -135,8 +135,8 @@ namespace Piwigo\Tests\Integration {
         {
             $this->conn->executeStatement('DELETE FROM plugins');
             $this->conn->executeStatement('DELETE FROM themes');
-            $this->conn->executeStatement('DELETE FROM languages' . " WHERE id != 'en_UK'");
-            $this->conn->executeStatement('UPDATE user_infos' . " SET theme = 'default' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement("DELETE FROM languages WHERE id != 'en_UK'");
+            $this->conn->executeStatement("UPDATE user_infos SET theme = 'default' WHERE user_id IN (1, 2)");
             $this->conn->executeStatement('DELETE FROM activity');
             $this->conn->executeStatement('DELETE FROM plugin_migrations');
             Kernel::reset();
@@ -1108,11 +1108,11 @@ PHP);
             ]);
 
             self::assertSame([], $errors);
-            $raw = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'mobile_theme'");
+            $raw = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'mobile_theme'");
             self::assertIsString($raw);
             self::assertSame('', json_decode($raw));
 
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'mobile_theme'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'mobile_theme'");
         }
 
         public function testThemeDeactivateOfTheRealDefaultThemeReassignsAReplacementDefault(): void
@@ -1281,7 +1281,7 @@ PHP);
             self::assertIsArray($row);
             self::assertSame('xx_ZZ', $row['language']);
 
-            $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'en_UK' WHERE user_id = 2");
+            $this->conn->executeStatement("UPDATE user_infos SET language = 'en_UK' WHERE user_id = 2");
         }
     }
 }

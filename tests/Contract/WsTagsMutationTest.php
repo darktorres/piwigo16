@@ -512,7 +512,7 @@ final class WsTagsMutationTest extends ContractTestCase
             PHP);
 
         $this->conn->executeStatement(
-            'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', '1.0.0')",
+            "INSERT INTO plugins (id, state, version) VALUES (?, 'active', '1.0.0')",
             [$pluginId]
         );
 
@@ -585,7 +585,7 @@ final class WsTagsMutationTest extends ContractTestCase
             PHP);
 
         $this->conn->executeStatement(
-            'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', '1.0.0')",
+            "INSERT INTO plugins (id, state, version) VALUES (?, 'active', '1.0.0')",
             [$pluginId]
         );
 

@@ -1431,7 +1431,7 @@ test('associateImagesToCategories() initializes a brand new category\'s starting
     // categoryService()->updateCategory() resolves -- proving line 445
     // genuinely ran.
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('mutation-sweep-fresh-category')");
+    $conn->executeStatement("INSERT INTO categories (name) VALUES ('mutation-sweep-fresh-category')");
     $categoryId = (int) $conn->lastInsertId();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/freshcategoryrank.jpg');
 
@@ -1775,7 +1775,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // Both params, not just 'empty_lounge_running' -- the raw INSERT
         // below needs 'count_orphans' gone too, or a leftover row from a
         // previous run throws a unique-key violation here.
-        $conn->executeStatement('DELETE FROM config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+        $conn->executeStatement("DELETE FROM config WHERE param IN ('empty_lounge_running', 'count_orphans')");
         // Single hyphen, matching the real "$execId-$startTime" shape
         // tryAcquireLoungeLock() itself always constructs (SessionService::
         // generateKey()'s base64 alphabet, minus '+'/'/', never contains a
@@ -1793,7 +1793,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // findRawValue() (below) only ever returns string|false, matching
         // insertIgnoreRawValue()'s own string-only contract.
         $conn->executeStatement(
-            'INSERT INTO config' . " (param, value) VALUES ('count_orphans', ?)",
+            "INSERT INTO config (param, value) VALUES ('count_orphans', ?)",
             [json_encode('3')]
         );
 
@@ -1909,7 +1909,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             $conn->executeStatement('DELETE FROM image_category WHERE image_id IN (?, ?)', [$imageA, $imageB]);
             $conn->executeStatement('DELETE FROM lounge WHERE image_id IN (?, ?)', [$imageA, $imageB]);
             $conn->executeStatement('DELETE FROM images WHERE id IN (?, ?)', [$imageA, $imageB]);
-            $conn->executeStatement('DELETE FROM config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+            $conn->executeStatement("DELETE FROM config WHERE param IN ('empty_lounge_running', 'count_orphans')");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -1937,11 +1937,11 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
         imageServiceTestSeedCurrentLogger(new Logger([
             'severity' => Logger::OFF,
         ]));
-        $conn->executeStatement('DELETE FROM config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+        $conn->executeStatement("DELETE FROM config WHERE param IN ('empty_lounge_running', 'count_orphans')");
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
         $conn->executeStatement(
-            'INSERT INTO config' . " (param, value) VALUES ('count_orphans', ?)",
+            "INSERT INTO config (param, value) VALUES ('count_orphans', ?)",
             [json_encode(3)]
         );
 
@@ -1952,7 +1952,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
 
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('count_orphans'))->toBeFalse();
         } finally {
-            $conn->executeStatement('DELETE FROM config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+            $conn->executeStatement("DELETE FROM config WHERE param IN ('empty_lounge_running', 'count_orphans')");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -1981,10 +1981,10 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
         imageServiceTestSeedCurrentLogger(new Logger([
             'severity' => Logger::OFF,
         ]));
-        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
         $staleValue = 'reallystale-' . (time() - 100);
         $conn->executeStatement(
-            'INSERT INTO config' . " (param, value) VALUES ('empty_lounge_running', ?)",
+            "INSERT INTO config (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $staleValue;
@@ -1999,7 +1999,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
             expect($result)
                 ->toBeArray();
         } finally {
-            $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -2036,13 +2036,13 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             'directory' => $logDir,
             'filename' => 'emptylounge2.log',
         ]));
-        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
         $freshLockValue = 'freshexecid-' . (time() - 30);
         // A real row, not just CurrentConfig's static cache below -- this is
         // what tryAcquireLoungeLock()'s own real INSERT IGNORE actually
         // contends against.
         $conn->executeStatement(
-            'INSERT INTO config' . " (param, value) VALUES ('empty_lounge_running', ?)",
+            "INSERT INTO config (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($freshLockValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $freshLockValue;
@@ -2079,7 +2079,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('empty_lounge_running'))->toBe($freshLockValue);
         } finally {
             $_REQUEST = $originalRequest;
-            $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -2153,11 +2153,11 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
             'directory' => $logDir,
             'filename' => 'emptylounge3.log',
         ]));
-        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
         $t0 = time();
         $lockValue = 'boundaryexecid-' . ($t0 - 60);
         $conn->executeStatement(
-            'INSERT INTO config' . " (param, value) VALUES ('empty_lounge_running', ?)",
+            "INSERT INTO config (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($lockValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $lockValue;
@@ -2186,7 +2186,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
             // encoded (see ConfigRepository::findRawValue()'s own docblock).
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('empty_lounge_running'))->toBe($lockValue);
         } finally {
-            $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -2215,10 +2215,10 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
         imageServiceTestSeedCurrentLogger(new Logger([
             'severity' => Logger::OFF,
         ]));
-        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
         $staleValue = 'boundary61execid-' . (time() - 61);
         $conn->executeStatement(
-            'INSERT INTO config' . " (param, value) VALUES ('empty_lounge_running', ?)",
+            "INSERT INTO config (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $staleValue;
@@ -2233,7 +2233,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
             expect($result)
                 ->toBeArray();
         } finally {
-            $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -2251,9 +2251,9 @@ test('emptyLounge() returns null when a different, still-fresh execution already
         imageServiceTestSeedCurrentLogger(new Logger([
             'severity' => Logger::OFF,
         ]));
-        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
         $conn->executeStatement(
-            'INSERT INTO config' . " (param, value) VALUES ('empty_lounge_running', ?)",
+            "INSERT INTO config (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode('foreignexec-' . time())]
         );
         // Not stale (CurrentConfig::emptyLoungeRunning() defaults to null),
@@ -2267,7 +2267,7 @@ test('emptyLounge() returns null when a different, still-fresh execution already
             expect($service->emptyLounge())
                 ->toBeNull();
         } finally {
-            $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
             CurrentConfigTestFactory::get()->reset();
             Kernel::reset();
         }

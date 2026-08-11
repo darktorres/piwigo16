@@ -320,7 +320,7 @@ namespace Piwigo\Tests\Integration {
             // duration of this test so this exact `if` has a genuinely
             // different, valid language to accept.
             $this->conn->executeStatement(
-                'INSERT INTO languages' . " (id, version, name) VALUES ('fr_FR', '16.3.0', 'Francais')"
+                "INSERT INTO languages (id, version, name) VALUES ('fr_FR', '16.3.0', 'Francais')"
             );
 
             CurrentUserTestFactory::get()->set(new User(
@@ -367,8 +367,8 @@ namespace Piwigo\Tests\Integration {
                 // this exact branch (including the setcookie() call) ran.
             } finally {
                 unset($_COOKIE['lang']);
-                $this->conn->executeStatement('DELETE FROM languages' . " WHERE id = 'fr_FR'");
-                $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'en_UK' WHERE user_id = 1");
+                $this->conn->executeStatement("DELETE FROM languages WHERE id = 'fr_FR'");
+                $this->conn->executeStatement("UPDATE user_infos SET language = 'en_UK' WHERE user_id = 1");
                 unset($_SESSION['pwg_uid']);
             }
         }
@@ -648,7 +648,7 @@ namespace Piwigo\Tests\Integration {
                 } else {
                     $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
                 }
-                $this->conn->executeStatement('DELETE FROM user_failed_logins' . " WHERE ip = '203.0.113.55'");
+                $this->conn->executeStatement("DELETE FROM user_failed_logins WHERE ip = '203.0.113.55'");
             }
         }
 
@@ -670,7 +670,7 @@ namespace Piwigo\Tests\Integration {
             self::assertIsArray($created);
 
             $this->conn->executeStatement(
-                'UPDATE user_auth_keys' . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
+                "UPDATE user_auth_keys SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
                 [$created['auth_key']]
             );
 
@@ -691,12 +691,12 @@ namespace Piwigo\Tests\Integration {
             $created = $this->service->createUserAuthKey(4, 'normal');
             self::assertIsArray($created);
 
-            $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'admin' WHERE user_id = 4");
+            $this->conn->executeStatement("UPDATE user_infos SET status = 'admin' WHERE user_id = 4");
 
             try {
                 self::assertFalse($this->service->authKeyLogin($created['auth_key']));
             } finally {
-                $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'normal' WHERE user_id = 4");
+                $this->conn->executeStatement("UPDATE user_infos SET status = 'normal' WHERE user_id = 4");
                 $this->conn->executeStatement('DELETE FROM user_auth_keys WHERE auth_key = ?', [$created['auth_key']]);
             }
         }

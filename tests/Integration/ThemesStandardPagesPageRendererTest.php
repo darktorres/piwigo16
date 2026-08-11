@@ -474,7 +474,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     private function rawConfigValue(string $param): ?string
     {
         $value = DbConnection::build()->fetchOne(
-            'SELECT value FROM config' . " WHERE param = '{$param}'"
+            "SELECT value FROM config WHERE param = '{$param}'"
         );
         if ($value === false) {
             return null;

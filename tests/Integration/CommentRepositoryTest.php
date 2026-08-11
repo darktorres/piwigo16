@@ -193,7 +193,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // into the past here, scoped to this test only, so only the fresh
         // insert below counts as "recent".
         $this->conn->executeStatement(
-            'UPDATE comments' . " SET date = '2026-01-01 00:00:00' WHERE author_id = 4"
+            "UPDATE comments SET date = '2026-01-01 00:00:00' WHERE author_id = 4"
         );
 
         $this->repo->insert([

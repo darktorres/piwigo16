@@ -89,7 +89,7 @@ function permalinkRepoTestSlug(string $prefix = 'p17-unit-test-'): string
 
 afterEach(function (): void {
     DbConnection::build()->executeStatement(
-        'UPDATE old_permalinks' . " SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'"
+        "UPDATE old_permalinks SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'"
     );
 });
 
@@ -215,7 +215,7 @@ test('markOldPermalinkDeleted() clears the identity map, so a later find() sees 
         // write the exact same frozen value), so this backdates the row
         // directly instead of relying on wall-clock drift.
         DbConnection::build()->executeStatement(
-            'UPDATE old_permalinks' . " SET date_deleted = '2020-01-01 00:00:00' WHERE permalink = ?",
+            "UPDATE old_permalinks SET date_deleted = '2020-01-01 00:00:00' WHERE permalink = ?",
             [$slug]
         );
         $em->clear();

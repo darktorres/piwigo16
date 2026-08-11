@@ -30,7 +30,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'allow_html_descriptions'");
+        $this->conn->executeStatement("DELETE FROM config WHERE param = 'allow_html_descriptions'");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -112,7 +112,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
         $original = $this->conn->fetchOne('SELECT author FROM images WHERE id = 1');
 
         try {
-            $this->conn->executeStatement('UPDATE images' . " SET author = '' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE images SET author = '' WHERE id = 1");
 
             $response = $this->callWs('pwg.images.setInfo', [
                 'image_id' => 1,
@@ -140,7 +140,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
 
         try {
             $this->conn->executeStatement(
-                'UPDATE images' . " SET author = 'Pre-Existing Author' WHERE id = 1"
+                "UPDATE images SET author = 'Pre-Existing Author' WHERE id = 1"
             );
 
             $response = $this->callWs('pwg.images.setInfo', [
@@ -168,7 +168,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
 
         try {
             $this->conn->executeStatement(
-                'UPDATE images' . " SET author = 'Old Author' WHERE id = 1"
+                "UPDATE images SET author = 'Old Author' WHERE id = 1"
             );
 
             $newValue = 'Replaced Author ' . uniqid();

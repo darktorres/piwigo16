@@ -497,15 +497,15 @@ final class UserRepositoryTest extends IntegrationTestCase
         // back deduplicated and chronologically ordered regardless of the
         // rows' own id order.
         try {
-            $this->conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2024-01-15 10:00:00' WHERE user_id = 1");
-            $this->conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2027-03-20 10:00:00' WHERE user_id = 2");
+            $this->conn->executeStatement("UPDATE user_infos SET registration_date = '2024-01-15 10:00:00' WHERE user_id = 1");
+            $this->conn->executeStatement("UPDATE user_infos SET registration_date = '2027-03-20 10:00:00' WHERE user_id = 2");
 
             self::assertSame(
                 ['2024-01', '2026-08', '2027-03'],
                 $this->repo->findDistinctRegistrationYearMonths()
             );
         } finally {
-            $this->conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2026-08-01 00:00:00' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement("UPDATE user_infos SET registration_date = '2026-08-01 00:00:00' WHERE user_id IN (1, 2)");
         }
     }
 
@@ -821,7 +821,7 @@ final class UserRepositoryTest extends IntegrationTestCase
     public function testDeleteUserRemovesEveryRowAcrossEveryRelatedTable(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO users' . " (username, password, mail_address) VALUES ('delete_user_test', NULL, NULL)"
+            "INSERT INTO users (username, password, mail_address) VALUES ('delete_user_test', NULL, NULL)"
         );
         $newUserId = (int) $this->conn->lastInsertId();
         $userId = UserId::from($newUserId);
@@ -847,7 +847,7 @@ final class UserRepositoryTest extends IntegrationTestCase
             [$newUserId, 'delusrtestkey01', 0]
         );
         $this->conn->executeStatement(
-            'INSERT INTO user_feed' . " (id, user_id) VALUES ('delusrtestfeed01', ?)",
+            "INSERT INTO user_feed (id, user_id) VALUES ('delusrtestfeed01', ?)",
             [$newUserId]
         );
         $this->conn->executeStatement(

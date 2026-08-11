@@ -604,7 +604,7 @@ namespace Piwigo\Tests\Integration {
             // getPwgThemes()'s own checkThemeInstalled() call requires a
             // real themes/<id> directory on disk, not just a DB row --
             // 'default' is the one real theme directory this repo ships.
-            $this->conn->executeStatement('INSERT INTO themes' . " (id, version, name) VALUES ('default', '1.0', 'Default')");
+            $this->conn->executeStatement("INSERT INTO themes (id, version, name) VALUES ('default', '1.0', 'Default')");
 
             try {
                 $result = $this->service->checkAndSaveUserInfos([
@@ -655,7 +655,7 @@ namespace Piwigo\Tests\Integration {
                 }
                 self::assertSame($expectedInfos, $after);
             } finally {
-                $this->conn->executeStatement('DELETE FROM themes' . " WHERE id = 'default'");
+                $this->conn->executeStatement("DELETE FROM themes WHERE id = 'default'");
                 $boolLiterals = $this->dbDriver === 'pgsql'
                     ? [
                         'expand' => 'false',
@@ -670,7 +670,7 @@ namespace Piwigo\Tests\Integration {
                         'enabled_high' => '1',
                     ];
                 $this->conn->executeStatement(
-                    'UPDATE user_infos' . " SET level = 0, language = 'en_UK', theme = 'default',"
+                    "UPDATE user_infos SET level = 0, language = 'en_UK', theme = 'default',"
                     . " nb_image_page = 15, recent_period = 7, expand = {$boolLiterals['expand']},"
                     . " show_nb_comments = {$boolLiterals['show_nb_comments']}, show_nb_hits = {$boolLiterals['show_nb_hits']},"
                     . " enabled_high = {$boolLiterals['enabled_high']}"
@@ -727,7 +727,7 @@ namespace Piwigo\Tests\Integration {
                 $status = $this->conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 4');
                 self::assertSame('guest', $status);
             } finally {
-                $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'normal' WHERE user_id = 4");
+                $this->conn->executeStatement("UPDATE user_infos SET status = 'normal' WHERE user_id = 4");
             }
         }
 
@@ -864,7 +864,7 @@ namespace Piwigo\Tests\Integration {
         public function testSyncUsersCreatesMissingUserInfosForABaseUser(): void
         {
             $this->conn->executeStatement(
-                'INSERT INTO users' . " (username, password, mail_address) VALUES ('sync-orphan-user', NULL, NULL)"
+                "INSERT INTO users (username, password, mail_address) VALUES ('sync-orphan-user', NULL, NULL)"
             );
             $newUserId = (int) $this->conn->lastInsertId();
 
@@ -1070,7 +1070,7 @@ namespace Piwigo\Tests\Integration {
         public function testCreateUserInfosAssignsWebmasterStatusAndTheMaxPermissionLevel(): void
         {
             $this->conn->executeStatement(
-                'INSERT INTO users' . " (username, password, mail_address) VALUES ('temp-webmaster-target', NULL, NULL)"
+                "INSERT INTO users (username, password, mail_address) VALUES ('temp-webmaster-target', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
             CurrentConfigTestFactory::get()->webmasterId = $tempId;
@@ -1094,7 +1094,7 @@ namespace Piwigo\Tests\Integration {
         public function testCreateUserInfosAssignsWebmasterStatusAndLevelZeroWhenNoPermissionLevelsAreConfigured(): void
         {
             $this->conn->executeStatement(
-                'INSERT INTO users' . " (username, password, mail_address) VALUES ('temp-webmaster-target-2', NULL, NULL)"
+                "INSERT INTO users (username, password, mail_address) VALUES ('temp-webmaster-target-2', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
             $currentConfig = CurrentConfigTestFactory::get();
@@ -1128,7 +1128,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testBuildUserForcesGuestStatusForTheConfiguredGuestId(): void
         {
-            $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'normal' WHERE user_id = 2");
+            $this->conn->executeStatement("UPDATE user_infos SET status = 'normal' WHERE user_id = 2");
 
             try {
                 $user = $this->service->buildUser(UserId::from(2));
@@ -1138,7 +1138,7 @@ namespace Piwigo\Tests\Integration {
                     'guest_must_be_guest' => true,
                 ], $user['internal_status']);
             } finally {
-                $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'guest' WHERE user_id = 2");
+                $this->conn->executeStatement("UPDATE user_infos SET status = 'guest' WHERE user_id = 2");
             }
         }
 
@@ -1209,7 +1209,7 @@ namespace Piwigo\Tests\Integration {
         public function testGetUserDataCreatesMissingUserInfosWhenExternalAuthentificationIsActive(): void
         {
             $this->conn->executeStatement(
-                'INSERT INTO users' . " (username, password, mail_address) VALUES ('sync-target-getdata', NULL, NULL)"
+                "INSERT INTO users (username, password, mail_address) VALUES ('sync-target-getdata', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
             // A one-off instance with a non-default DeploymentPolicy --
@@ -1259,7 +1259,7 @@ namespace Piwigo\Tests\Integration {
         public function testGetUserDataThrowsWhenTheUserInfosRowIsMissing(): void
         {
             $this->conn->executeStatement(
-                'INSERT INTO users' . " (username, password, mail_address) VALUES ('no-user-infos-target', NULL, NULL)"
+                "INSERT INTO users (username, password, mail_address) VALUES ('no-user-infos-target', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
 
@@ -1280,11 +1280,11 @@ namespace Piwigo\Tests\Integration {
             // has no reserved-word restriction at this layer, so a literal
             // 'true'/'false' username is a real, if odd, way to reach it.
             $this->conn->executeStatement(
-                'INSERT INTO users' . " (username, password, mail_address) VALUES ('true', NULL, NULL)"
+                "INSERT INTO users (username, password, mail_address) VALUES ('true', NULL, NULL)"
             );
             $trueId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
-                'INSERT INTO users' . " (username, password, mail_address) VALUES ('false', NULL, NULL)"
+                "INSERT INTO users (username, password, mail_address) VALUES ('false', NULL, NULL)"
             );
             $falseId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement('INSERT INTO user_infos (user_id) VALUES (?), (?)', [$trueId, $falseId]);
@@ -1308,11 +1308,11 @@ namespace Piwigo\Tests\Integration {
             // string -- getUserData()'s own is_string() gate must not
             // discard a genuinely non-empty value arriving in that shape.
             $this->conn->executeStatement(
-                'INSERT INTO users' . " (username, password, mail_address) VALUES ('prefs-user', NULL, NULL)"
+                "INSERT INTO users (username, password, mail_address) VALUES ('prefs-user', NULL, NULL)"
             );
             $userId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
-                'INSERT INTO user_infos' . " (user_id, preferences) VALUES (?, '{\"show_whats_new_16\": false, \"admin_theme\": \"clear\"}')",
+                "INSERT INTO user_infos (user_id, preferences) VALUES (?, '{\"show_whats_new_16\": false, \"admin_theme\": \"clear\"}')",
                 [$userId]
             );
 
@@ -1378,12 +1378,12 @@ namespace Piwigo\Tests\Integration {
             // default user's own theme also fails checkThemeInstalled(),
             // there's no installed theme left to fall back to at all --
             // the method's own final, hardcoded 'default' literal.
-            $this->conn->executeStatement('UPDATE user_infos' . " SET theme = 'nonexistent-theme-xyz' WHERE user_id = 2");
+            $this->conn->executeStatement("UPDATE user_infos SET theme = 'nonexistent-theme-xyz' WHERE user_id = 2");
 
             try {
                 self::assertSame('default', $this->service->getDefaultTheme());
             } finally {
-                $this->conn->executeStatement('UPDATE user_infos' . " SET theme = 'default' WHERE user_id = 2");
+                $this->conn->executeStatement("UPDATE user_infos SET theme = 'default' WHERE user_id = 2");
             }
         }
 

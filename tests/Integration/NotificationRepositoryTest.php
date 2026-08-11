@@ -71,12 +71,12 @@ final class NotificationRepositoryTest extends IntegrationTestCase
             // in the SQL text (unlike a bound parameter, which the driver
             // coerces implicitly) is rejected outright by Postgres.
             $validatedLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-            $this->conn->executeStatement('UPDATE comments' . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
-            $this->conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
-            $this->conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
+            $this->conn->executeStatement("UPDATE comments SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
+            $this->conn->executeStatement("UPDATE user_infos SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement("UPDATE user_infos SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
         }
     }
 
@@ -116,7 +116,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
         self::assertSame(2, $count);
 
-        $this->conn->executeStatement('DELETE FROM comments' . " WHERE author = 'test author'");
+        $this->conn->executeStatement("DELETE FROM comments WHERE author = 'test author'");
     }
 
     public function testCountByTypeCountsNewElementsInRange(): void

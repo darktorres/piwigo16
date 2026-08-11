@@ -119,7 +119,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             ->quoteSingleIdentifier('rank');
         foreach ($orderedIds as $index => $categoryId) {
             $this->conn->executeStatement(
-                'UPDATE categories' . " SET {$rank} = ? WHERE id = ?",
+                "UPDATE categories SET {$rank} = ? WHERE id = ?",
                 [$index + 1, $categoryId]
             );
         }
@@ -133,7 +133,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $rankIdentifier = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
         $ids = $this->conn->fetchFirstColumn(
-            'SELECT id FROM categories' . " WHERE id_uppercat = ? ORDER BY {$rankIdentifier} ASC",
+            "SELECT id FROM categories WHERE id_uppercat = ? ORDER BY {$rankIdentifier} ASC",
             [$parentId]
         );
 
@@ -955,7 +955,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             // and accepts the bare parameter unchanged.
             $textCast = $this->dbDriver === 'pgsql' ? '::text' : '';
             $this->conn->executeStatement(
-                'INSERT INTO images' . " (file, path, md5sum, date_available)
+                "INSERT INTO images (file, path, md5sum, date_available)
                  SELECT CONCAT(?{$textCast}, n), CONCAT(?{$textCast}, n), MD5(CONCAT(?{$textCast}, n)), ?
                  FROM (
                      WITH RECURSIVE seq AS (
@@ -975,7 +975,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             self::assertCount(1000, $imageIds, 'bulk insert must have produced exactly 1000 real image rows');
 
             $this->conn->executeStatement(
-                'INSERT INTO image_category' . ' (image_id, category_id)
+                'INSERT INTO image_category (image_id, category_id)
                  SELECT id, ? FROM images WHERE file LIKE ?',
                 [$categoryId, $prefix . '%']
             );

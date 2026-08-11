@@ -190,7 +190,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         // literals in the SQL text (unlike a bound parameter, which the
         // driver coerces implicitly) are rejected outright by Postgres.
         $boolLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement('UPDATE categories' . " SET commentable = {$boolLiteral}, visible = {$boolLiteral}, status = 'public', representative_picture_id = NULL, image_order = NULL");
+        $this->conn->executeStatement("UPDATE categories SET commentable = {$boolLiteral}, visible = {$boolLiteral}, status = 'public', representative_picture_id = NULL, image_order = NULL");
         $this->conn->executeStatement('DELETE FROM user_access');
         $this->conn->executeStatement('DELETE FROM group_access');
         $this->conn->executeStatement('INSERT INTO group_access (group_id, cat_id) VALUES (1, 1), (1, 2), (2, 1), (3, 1)');
@@ -497,7 +497,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function testSetCategoryPermissionsSwitchesStatusWithoutTouchingPermissionTablesWhenNewStatusIsNotPrivate(): void
     {
-        $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 2");
         $groupsBefore = $this->groupAccessFor(2);
         self::assertNotSame([], $groupsBefore, 'fixture precondition: cat 2 must already have a real group grant');
 

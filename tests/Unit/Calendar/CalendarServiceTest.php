@@ -123,7 +123,7 @@ test('buildInnerSql builds a WHERE id IN clause for a non-category section', fun
     assert($scope !== null);
 
     expect($scope->rawSqlFromWhere->sql)
-        ->toBe(' FROM images' . "\nWHERE id IN (:innerItems)")
+        ->toBe(" FROM images\nWHERE id IN (:innerItems)")
         ->and($scope->rawSqlFromWhere->parameters)
         ->toBe([
             'innerItems' => ['1', '2', '3'],
@@ -196,8 +196,7 @@ test('buildInnerSql browses everything visible when there is no category context
 
     expect($scope->rawSqlFromWhere->sql)
         ->toBe(
-            ' FROM images'
-                . "\nINNER JOIN " . 'image_category ON id = image_id'
+            " FROM images\nINNER JOIN " . 'image_category ON id = image_id'
                 . "\n    WHERE level <= :{$key}"
         )->and($scope->rawSqlFromWhere->parameters)
         ->toBe([
@@ -250,8 +249,7 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
 
     expect($scope->rawSqlFromWhere->sql)
         ->toBe(
-            ' FROM images'
-                . "\nINNER JOIN " . 'image_category ON id = image_id'
+            " FROM images\nINNER JOIN " . 'image_category ON id = image_id'
                 . "\n    WHERE 1 = 1"
         )->and($scope->rawSqlFromWhere->parameters)
         ->toBe([]);
@@ -287,8 +285,7 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
 
     expect($scope->rawSqlFromWhere->sql)
         ->toBe(
-            ' FROM images'
-                . "\nINNER JOIN " . 'image_category ON id = image_id'
+            " FROM images\nINNER JOIN " . 'image_category ON id = image_id'
                 . "\n    WHERE category_id NOT IN (:{$forbidKey}) AND category_id IN (:{$visCatKey}) AND id IN (:{$visImgKey}) AND level <= :{$levelKey}"
         )->and($scope->rawSqlFromWhere->parameters)
         ->toBe([

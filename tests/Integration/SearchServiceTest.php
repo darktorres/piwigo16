@@ -827,7 +827,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertTrue($results['search_details']['has_filters_filled']);
             } finally {
                 $this->conn->executeStatement(
-                    'UPDATE images' . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1,2,3,4,5)"
+                    "UPDATE images SET date_available = '2026-08-01 00:00:00' WHERE id IN (1,2,3,4,5)"
                 );
             }
         }
@@ -861,8 +861,8 @@ namespace Piwigo\Tests\Integration {
 
         public function testGetRegularSearchResultsDateCreatedCustomRange(): void
         {
-            $this->conn->executeStatement('UPDATE images' . " SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
-            $this->conn->executeStatement('UPDATE images' . " SET date_creation = '2025-01-01 00:00:00' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE images SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE images SET date_creation = '2025-01-01 00:00:00' WHERE id = 2");
 
             try {
                 // Mixes a 'y'/'m'/'d'-prefixed string entry of each shape plus a
@@ -1443,7 +1443,7 @@ namespace Piwigo\Tests\Integration {
             // temporary one so 2 adjacent short terms genuinely share a match,
             // exercising qsearchGetTags()'s own short-token intersection.
             $this->conn->executeStatement(
-                'INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
+                "INSERT INTO tags (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
             );
             $tagId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
@@ -1503,7 +1503,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfigTestFactory::get()->quickSearchIncludeSubAlbums = true;
             $originalUppercats = $this->conn->fetchOne('SELECT uppercats FROM categories WHERE id = 2');
             self::assertIsString($originalUppercats);
-            $this->conn->executeStatement('UPDATE categories' . " SET uppercats = '999' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE categories SET uppercats = '999' WHERE id = 2");
 
             try {
                 // "Nested" matches category 2 ("Nested Sub Album") by name only.
@@ -1722,7 +1722,7 @@ namespace Piwigo\Tests\Integration {
             // user_id=2 is CurrentConfig::defaultUserId()'s own default (the
             // guest account) -- getDefaultLanguage() reads *this* row, entirely
             // independent of CurrentUser (id=1 in this file's own setUp()).
-            $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'zz_ZZ' WHERE user_id = 2");
+            $this->conn->executeStatement("UPDATE user_infos SET language = 'zz_ZZ' WHERE user_id = 2");
             $this->processCache()
                 ->forget('default_user');
 

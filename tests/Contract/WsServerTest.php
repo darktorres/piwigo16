@@ -316,7 +316,7 @@ final class WsServerTest extends ContractTestCase
             $status = $this->ws('pwg.session.getStatus');
             self::assertSame('ok', $status['stat']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'guest_access'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'guest_access'");
             CachePools::config()->clear();
         }
     }
@@ -362,7 +362,7 @@ final class WsServerTest extends ContractTestCase
             // it would not produce the usual stat/err/message shape.
             self::assertNull(json_decode($body, true));
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'allow_web_services'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'allow_web_services'");
             CachePools::config()->clear();
         }
     }

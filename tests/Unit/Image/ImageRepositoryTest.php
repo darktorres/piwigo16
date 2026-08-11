@@ -402,7 +402,7 @@ test('findRepresentedCategoryIds returns real ints for every category whose repr
     $repo = imageRepositoryTestRepo();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/represents-test.jpg');
     $conn = DbConnection::build();
-    $conn->executeStatement('INSERT INTO categories' . " (name, representative_picture_id) VALUES ('mutation-sweep-repr-category', {$imageId})");
+    $conn->executeStatement("INSERT INTO categories (name, representative_picture_id) VALUES ('mutation-sweep-repr-category', {$imageId})");
     $categoryId = (int) $conn->lastInsertId();
 
     try {
@@ -411,7 +411,7 @@ test('findRepresentedCategoryIds returns real ints for every category whose repr
         expect($result)
             ->toBe([$categoryId]);
     } finally {
-        $conn->executeStatement('DELETE FROM categories' . " WHERE id = {$categoryId}");
+        $conn->executeStatement("DELETE FROM categories WHERE id = {$categoryId}");
         imageRepositoryTestDeleteImage($imageId);
     }
 });
@@ -471,7 +471,7 @@ test('findMaxRanksByCategory returns the real int max rank for a category with r
     // itself inserted).
     $repo = imageRepositoryTestRepo();
     $conn = DbConnection::build();
-    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('mutation-sweep-max-rank-category')");
+    $conn->executeStatement("INSERT INTO categories (name) VALUES ('mutation-sweep-max-rank-category')");
     $categoryId = (int) $conn->lastInsertId();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/max-rank-test.jpg');
     $rankColumn = $conn->getDatabasePlatform()
@@ -502,7 +502,7 @@ test('findMaxRanksByCategory returns the real int max rank for a category with r
             ->setParameter('i', $imageId)
             ->executeStatement();
         imageRepositoryTestDeleteImage($imageId);
-        $conn->executeStatement('DELETE FROM categories' . " WHERE id = {$categoryId}");
+        $conn->executeStatement("DELETE FROM categories WHERE id = {$categoryId}");
     }
 });
 
@@ -529,7 +529,7 @@ test('massInsertImageCategory persists every real row it is given', function ():
         $conn = DbConnection::build();
         $rankColumn = $conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
-        $rank = $conn->fetchOne('SELECT ' . $rankColumn . ' FROM image_category' . " WHERE image_id = {$imageId} AND category_id = 1");
+        $rank = $conn->fetchOne('SELECT ' . $rankColumn . " FROM image_category WHERE image_id = {$imageId} AND category_id = 1");
         expect($rank)
             ->toBe(3);
         $refetched = $repo->find(ImageId::from(1));
@@ -838,7 +838,7 @@ test('deleteNonStorageCategoryLinks clears the identity map after a raw write ou
         if ($exists === 0) {
             $rankColumn = $conn->getDatabasePlatform()
                 ->quoteSingleIdentifier('rank');
-            $conn->executeStatement('INSERT INTO image_category' . " (image_id, category_id, {$rankColumn}) VALUES (1, 1, 1)");
+            $conn->executeStatement("INSERT INTO image_category (image_id, category_id, {$rankColumn}) VALUES (1, 1, 1)");
         }
     }
 });

@@ -70,7 +70,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    DbConnection::build()->executeStatement('DELETE FROM sites' . " WHERE galleries_url LIKE 'p17-unit-test-%'");
+    DbConnection::build()->executeStatement("DELETE FROM sites WHERE galleries_url LIKE 'p17-unit-test-%'");
     Kernel::reset();
 });
 
@@ -190,17 +190,17 @@ test('findCategoryAndImageCountsBySite() groups by site and ignores categories w
     $siteId = is_numeric($siteId) ? $siteId : 0;
 
     $conn->executeStatement(
-        'INSERT INTO categories' . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-with-image', ?, '999901')",
+        "INSERT INTO categories (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-with-image', ?, '999901')",
         [$siteId]
     );
     $catWithImageId = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO categories' . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-without-image', ?, '999902')",
+        "INSERT INTO categories (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-without-image', ?, '999902')",
         [$siteId]
     );
     $catWithoutImageId = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO images' . " (file, path, storage_category_id) VALUES ('p17-unit-test-site.jpg', 'p17-unit-test-site.jpg', ?)",
+        "INSERT INTO images (file, path, storage_category_id) VALUES ('p17-unit-test-site.jpg', 'p17-unit-test-site.jpg', ?)",
         [$catWithImageId]
     );
     $imageId = (int) $conn->lastInsertId();

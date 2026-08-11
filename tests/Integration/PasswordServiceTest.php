@@ -146,7 +146,7 @@ final class PasswordServiceTest extends IntegrationTestCase
 
         // Restore the fixture row for later tests in this run.
         $this->conn->executeStatement(
-            'UPDATE users' . " SET password = '\$2y\$04\$xGZfKCZNROjaLMYm0nOuKugaMf/IEPCzJsuk9lpjDwZrK.RZLusGy' WHERE id = 3"
+            "UPDATE users SET password = '\$2y\$04\$xGZfKCZNROjaLMYm0nOuKugaMf/IEPCzJsuk9lpjDwZrK.RZLusGy' WHERE id = 3"
         );
     }
 

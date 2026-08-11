@@ -270,7 +270,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
 
     public function testParseSectionUrlResolvesACategoryByItsPermalink(): void
     {
-        $this->conn->executeStatement('UPDATE categories' . " SET permalink = 'sub-album' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE categories SET permalink = 'sub-album' WHERE id = 2");
 
         $i = 0;
         $page = $this->service()
@@ -293,7 +293,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         // progressive-join accumulation (`$maybe_permalinks[] =
         // $maybe_permalinks[count-1] . '/' . $tokens[$current_token]`)
         // that a 2nd token needs.
-        $this->conn->executeStatement('UPDATE categories' . " SET permalink = 'parent-word/child-word' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE categories SET permalink = 'parent-word/child-word' WHERE id = 2");
 
         $i = 0;
         $page = $this->service()
@@ -311,7 +311,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
 
     public function testParseSectionUrlResolvesASecondCombinedCategoryViaPermalink(): void
     {
-        $this->conn->executeStatement('UPDATE categories' . " SET permalink = 'sub-album' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE categories SET permalink = 'sub-album' WHERE id = 2");
 
         $i = 0;
         // Primary category resolved by plain numeric id (category 1); the

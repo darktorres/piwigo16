@@ -392,7 +392,7 @@ final class MailServiceTest extends IntegrationTestCase
         // real-email member, giving a single deterministic recipient that
         // exercises the authkey!==false LINK-building branch.
         $this->conn->executeStatement(
-            'UPDATE users' . " SET mail_address = 'temp3@example.test' WHERE id = 3"
+            "UPDATE users SET mail_address = 'temp3@example.test' WHERE id = 3"
         );
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
@@ -712,7 +712,7 @@ final class MailServiceTest extends IntegrationTestCase
         // above, this time also supplying an IMG assign slot with its own
         // 'link' key to exercise that separate auth-key-appending branch.
         $this->conn->executeStatement(
-            'UPDATE users' . " SET mail_address = 'temp3@example.test' WHERE id = 3"
+            "UPDATE users SET mail_address = 'temp3@example.test' WHERE id = 3"
         );
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 

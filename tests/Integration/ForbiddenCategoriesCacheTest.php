@@ -81,13 +81,13 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement('UPDATE categories' . " SET status = 'public', visible = {$visibleLiteral}");
+        $this->conn->executeStatement("UPDATE categories SET status = 'public', visible = {$visibleLiteral}");
         parent::tearDown();
     }
 
     public function testGetForUserReturnsTheUnderlyingForbiddenCategories(): void
     {
-        $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
         self::assertSame('1', $this->cache->getForUser(2, 'normal'));
     }
@@ -96,14 +96,14 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
     {
         self::assertSame('0', $this->cache->getForUser(2, 'normal'));
 
-        $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
         self::assertSame('0', $this->cache->getForUser(2, 'normal'), 'a cache hit must not re-query the DB');
     }
 
     public function testGetForUserUsesASeparateCacheEntryPerUser(): void
     {
-        $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
         self::assertSame('1', $this->cache->getForUser(2, 'normal'));
         // Fixture: user 1 is a member of group 1 ("Editors"), which has

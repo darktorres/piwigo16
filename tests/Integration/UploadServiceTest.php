@@ -331,7 +331,7 @@ final class UploadServiceTest extends IntegrationTestCase
             // ON DELETE CASCADE on both image_category.image_id and
             // lounge.image_id (see the schema) takes care of any
             // association rows a test created for these ids too.
-            $this->conn->executeStatement('DELETE FROM images' . " WHERE id IN ({$ids})");
+            $this->conn->executeStatement("DELETE FROM images WHERE id IN ({$ids})");
         }
         // Cleans up the one fixture-image association a test adds (image 1
         // -> category 2, not present in the stock fixture) without
@@ -343,7 +343,7 @@ final class UploadServiceTest extends IntegrationTestCase
         // rows against the shared fixture image 1, not a throwaway id this
         // class deletes wholesale.
         $this->conn->executeStatement('DELETE FROM image_format WHERE image_id = 1');
-        $this->conn->executeStatement('DELETE FROM config' . " WHERE param IN ('lounge_active', 'count_orphans')");
+        $this->conn->executeStatement("DELETE FROM config WHERE param IN ('lounge_active', 'count_orphans')");
 
         self::rrmdir($this->marker);
 
@@ -838,7 +838,7 @@ final class UploadServiceTest extends IntegrationTestCase
         // 'true' (see this class's own docblock) -- force it to 'false' here
         // so the assertion below actually proves confUpdateParam() wrote a
         // real change, not just a coincidental match with pre-existing data.
-        $this->conn->executeStatement('UPDATE config' . " SET value = 'false' WHERE param = 'lounge_active'");
+        $this->conn->executeStatement("UPDATE config SET value = 'false' WHERE param = 'lounge_active'");
 
         $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
         CurrentConfigTestFactory::get()->loungeActivateThreshold = $countBefore + 1;
@@ -855,7 +855,7 @@ final class UploadServiceTest extends IntegrationTestCase
         // meets the threshold set above.
         self::assertTrue(CurrentConfigTestFactory::get()->loungeActive);
 
-        $dbValue = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'lounge_active'");
+        $dbValue = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'lounge_active'");
         self::assertSame('true', $dbValue);
     }
 
@@ -1133,10 +1133,10 @@ final class UploadServiceTest extends IntegrationTestCase
             self::assertTrue($result);
             self::assertSame([], $errors);
 
-            $stored = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'original_resize_maxheight'");
+            $stored = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'original_resize_maxheight'");
             self::assertSame('1500', $stored, 'the field after the skipped non-scalar one must still be processed and persisted, not abandoned by a wrongly-broken loop');
         } finally {
-            $this->conn->executeStatement('UPDATE config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $this->conn->executeStatement("UPDATE config SET value = '2016' WHERE param = 'original_resize_maxheight'");
             $this->entityManager->clear();
         }
     }
@@ -1152,7 +1152,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function testSaveUploadFormConfigClearsTheInjectedEntityManagersIdentityMapAfterASuccessfulWrite(): void
     {
-        $this->conn->executeStatement('UPDATE config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+        $this->conn->executeStatement("UPDATE config SET value = '2016' WHERE param = 'original_resize_maxheight'");
         $this->entityManager->clear();
 
         // Populates $this->entityManager's own identity map with the
@@ -1179,7 +1179,7 @@ final class UploadServiceTest extends IntegrationTestCase
             self::assertInstanceOf(ConfigEntry::class, $after);
             self::assertSame('1500', $after->value, 'entityManager->clear() must genuinely evict the stale cached entity so this find() re-queries instead of returning the pre-write identity-map copy');
         } finally {
-            $this->conn->executeStatement('UPDATE config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $this->conn->executeStatement("UPDATE config SET value = '2016' WHERE param = 'original_resize_maxheight'");
             $this->entityManager->clear();
         }
     }

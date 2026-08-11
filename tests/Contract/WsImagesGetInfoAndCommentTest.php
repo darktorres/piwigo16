@@ -61,7 +61,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
                 'pwg_token' => $token,
             ]);
         }
-        $this->conn->executeStatement('UPDATE config' . " SET value = 'true' WHERE param = 'activate_comments'");
+        $this->conn->executeStatement("UPDATE config SET value = 'true' WHERE param = 'activate_comments'");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -181,7 +181,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
 
     public function testAddCommentWhenCommentsAreDisabledReturnsError(): void
     {
-        $this->conn->executeStatement('UPDATE config' . " SET value = 'false' WHERE param = 'activate_comments'");
+        $this->conn->executeStatement("UPDATE config SET value = 'false' WHERE param = 'activate_comments'");
         CachePools::config()->clear();
 
         $response = $this->ws('pwg.images.addComment', [

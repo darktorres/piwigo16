@@ -269,11 +269,11 @@ namespace Piwigo\Tests\Integration {
         #[Override]
         protected function tearDown(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'public'");
+            $this->conn->executeStatement("UPDATE categories SET status = 'public'");
             // Safety-net restore for tests that touch old_permalinks' hit
             // counter (findCategoryIdFromPermalinks()'s is_old branch) --
             // matches CategoryRepositoryTest's own tearDown restore value.
-            $this->conn->executeStatement('UPDATE old_permalinks' . " SET hit = 42, last_hit = '2026-07-07 05:02:38'");
+            $this->conn->executeStatement("UPDATE old_permalinks SET hit = 42, last_hit = '2026-07-07 05:02:38'");
             parent::tearDown();
         }
 
@@ -384,7 +384,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindCategoryIdFromPermalinksMatchesTheLastPermalinkFirst(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET permalink = 'sample-album' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET permalink = 'sample-album' WHERE id = 1");
 
             $idx = null;
             $catId = $this->service->findCategoryIdFromPermalinks(['no-match', 'sample-album'], $idx, new PermalinkRepository(EntityManagerFactory::build($this->conn)));
@@ -688,15 +688,15 @@ namespace Piwigo\Tests\Integration {
                 ->quoteSingleIdentifier('rank');
             $trueLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
             $this->conn->executeStatement(
-                'INSERT INTO categories' . " (name, id_uppercat, {$rank}, status, visible, uppercats, commentable, global_rank) VALUES ('Grandchild Album', 2, 1, 'public', {$trueLiteral}, '1,2,0', {$trueLiteral}, '1.1.1')"
+                "INSERT INTO categories (name, id_uppercat, {$rank}, status, visible, uppercats, commentable, global_rank) VALUES ('Grandchild Album', 2, 1, 'public', {$trueLiteral}, '1,2,0', {$trueLiteral}, '1.1.1')"
             );
             $grandchildId = (int) $this->conn->lastInsertId();
-            $this->conn->executeStatement('UPDATE categories' . " SET uppercats = '1,2,{$grandchildId}' WHERE id = {$grandchildId}");
+            $this->conn->executeStatement("UPDATE categories SET uppercats = '1,2,{$grandchildId}' WHERE id = {$grandchildId}");
             // Reuse image 1 (already directly in category 1) as a second,
             // additional link into the new grandchild -- proves the walk
             // propagates a real image count up two ancestor levels, not just
             // one.
-            $this->conn->executeStatement('INSERT INTO image_category' . " (image_id, category_id) VALUES (1, {$grandchildId})");
+            $this->conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$grandchildId})");
 
             try {
                 $userdata = [
@@ -713,7 +713,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame(6, $cats[1]['count_images']); // own 3 + cat2's 2 + grandchild's 1
                 self::assertSame(2, $cats[1]['count_categories']); // cat2 + grandchild
             } finally {
-                $this->conn->executeStatement('DELETE FROM categories' . " WHERE id = {$grandchildId}");
+                $this->conn->executeStatement("DELETE FROM categories WHERE id = {$grandchildId}");
             }
         }
 
@@ -723,7 +723,7 @@ namespace Piwigo\Tests\Integration {
             // (999) that findCategoriesByIds() can't resolve (no such
             // category) -- the real ancestor (1) must still get its
             // count_categories incremented despite the phantom one.
-            $this->conn->executeStatement('UPDATE categories' . " SET uppercats = '1,999,2' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE categories SET uppercats = '1,999,2' WHERE id = 2");
 
             try {
                 $cats = $this->service->getRelatedCategoriesMenu([4], []);
@@ -738,7 +738,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertSame(1, $byId['1']['count_categories']);
             } finally {
-                $this->conn->executeStatement('UPDATE categories' . " SET uppercats = '1,2' WHERE id = 2");
+                $this->conn->executeStatement("UPDATE categories SET uppercats = '1,2' WHERE id = 2");
             }
         }
 
@@ -857,7 +857,7 @@ namespace Piwigo\Tests\Integration {
             // temp category too makes it a real "non-orphan": deleting the
             // temp category must NOT delete it, unlike a genuinely orphaned
             // image.
-            $this->conn->executeStatement('INSERT INTO image_category' . " (image_id, category_id) VALUES (1, {$tempId})");
+            $this->conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$tempId})");
 
             $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($this->conn)), 'delete_orphans');
 
@@ -983,7 +983,7 @@ namespace Piwigo\Tests\Integration {
             // elsewhere in this file only as a query parameter, never a raw
             // INSERT value) would overflow it here.
             $this->conn->executeStatement(
-                'INSERT INTO old_permalinks' . " (cat_id, permalink, hit) VALUES (60000, 'orphaned-permalink-test', 0)"
+                "INSERT INTO old_permalinks (cat_id, permalink, hit) VALUES (60000, 'orphaned-permalink-test', 0)"
             );
 
             $this->service->checkCategoriesIntegrity();
@@ -1011,7 +1011,7 @@ namespace Piwigo\Tests\Integration {
             // ancestor id that no longer exists (deleted without a full
             // uppercats resync) -- catMapCallback()'s own defensive ''
             // fallback for an unmatched captured id.
-            $this->conn->executeStatement('UPDATE categories' . " SET uppercats = '1,999,2' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE categories SET uppercats = '1,999,2' WHERE id = 2");
 
             try {
                 $this->service->updateGlobalRank();
@@ -1029,7 +1029,7 @@ namespace Piwigo\Tests\Integration {
                 // than a crash.
                 self::assertSame('1..1', $globalRank);
             } finally {
-                $this->conn->executeStatement('UPDATE categories' . " SET uppercats = '1,2', global_rank = '1.1' WHERE id = 2");
+                $this->conn->executeStatement("UPDATE categories SET uppercats = '1,2', global_rank = '1.1' WHERE id = 2");
             }
         }
 
@@ -1069,7 +1069,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testSetCatStatusPublicMakesParentCategoriesPublicToo(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private'");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private'");
 
             $this->service->setCatStatus([2], 'public');
 
@@ -1079,7 +1079,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testSetCatStatusPrivateUsesThePrivateParentAsThePermissionReference(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
             $this->conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (3, 2)');
 
             try {
@@ -1119,7 +1119,7 @@ namespace Piwigo\Tests\Integration {
                 ->quoteSingleIdentifier('groups');
             $this->conn->executeStatement("INSERT INTO {$groupsTable} (name) VALUES ('zzz-16i-probe-group')");
             $groupId = (int) $this->conn->lastInsertId();
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
             $this->conn->executeStatement('INSERT INTO group_access (group_id, cat_id) VALUES (?, 2)', [$groupId]);
 
             try {
@@ -1158,7 +1158,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testUpdatePathRewritesImagePathsForStorageLinkedCategories(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET dir = 'sample-album', site_id = 1 WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET dir = 'sample-album', site_id = 1 WHERE id = 1");
             $this->conn->executeStatement('UPDATE images SET storage_category_id = 1 WHERE id = 1');
 
             try {
@@ -1181,7 +1181,7 @@ namespace Piwigo\Tests\Integration {
                 $this->conn->executeStatement('UPDATE categories SET dir = NULL, site_id = NULL WHERE id = 1');
                 $realHash = $this->dbDriver === 'pgsql' ? '2e7e2ce3' : '2e7e6c90';
                 $this->conn->executeStatement(
-                    'UPDATE images' . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-{$realHash}.jpg' WHERE id = 1"
+                    "UPDATE images SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-{$realHash}.jpg' WHERE id = 1"
                 );
             }
         }
@@ -1218,7 +1218,7 @@ namespace Piwigo\Tests\Integration {
             // coerces implicitly) are rejected outright by Postgres.
             $falseLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
             $trueLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-            $this->conn->executeStatement('UPDATE categories' . " SET visible = {$falseLiteral} WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET visible = {$falseLiteral} WHERE id = 1");
 
             try {
                 $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 1);
@@ -1237,13 +1237,13 @@ namespace Piwigo\Tests\Integration {
 
                 $this->conn->executeStatement('DELETE FROM categories WHERE id = ' . $newId);
             } finally {
-                $this->conn->executeStatement('UPDATE categories' . " SET visible = {$trueLiteral} WHERE id = 1");
+                $this->conn->executeStatement("UPDATE categories SET visible = {$trueLiteral} WHERE id = 1");
             }
         }
 
         public function testCreateVirtualCategoryWithInheritPropagatesTheParentsGroupsAndUsers(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
             $this->conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (3, 1)');
 
             try {
@@ -1397,7 +1397,7 @@ namespace Piwigo\Tests\Integration {
             // coerces implicitly) are rejected outright by Postgres.
             $falseLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
             $trueLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-            $this->conn->executeStatement('UPDATE categories' . " SET visible = {$falseLiteral} WHERE id = 2");
+            $this->conn->executeStatement("UPDATE categories SET visible = {$falseLiteral} WHERE id = 2");
 
             try {
                 // unlockChild=true merges getSubcatIds([1]) (== [1, 2]) into
@@ -1415,7 +1415,7 @@ namespace Piwigo\Tests\Integration {
                 // A native PHP bool on Postgres, numeric 1/0 on MySQL.
                 self::assertSame(1, (int) (bool) $visible);
             } finally {
-                $this->conn->executeStatement('UPDATE categories' . " SET visible = {$trueLiteral} WHERE id = 2");
+                $this->conn->executeStatement("UPDATE categories SET visible = {$trueLiteral} WHERE id = 2");
             }
         }
 
@@ -1457,7 +1457,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame('public', $this->repo->findCategoryStatus(2));
             } finally {
                 $this->conn->executeStatement(
-                    'UPDATE categories' . " SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1' WHERE id = 2"
+                    "UPDATE categories SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1' WHERE id = 2"
                 );
             }
         }
@@ -1490,7 +1490,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame('private', $this->repo->findCategoryStatus(2));
             } finally {
                 $this->conn->executeStatement(
-                    'UPDATE categories' . " SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1', status = 'public' WHERE id = 2"
+                    "UPDATE categories SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1', status = 'public' WHERE id = 2"
                 );
                 $this->conn->executeStatement('DELETE FROM categories WHERE id = ' . $privateParentId);
             }

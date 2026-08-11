@@ -56,7 +56,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $userId = $this->conn->fetchOne('SELECT id FROM users' . " WHERE username = 'fixture_admin'");
+        $userId = $this->conn->fetchOne("SELECT id FROM users WHERE username = 'fixture_admin'");
         self::assertIsNumeric($userId);
         $this->userId = $userId;
 
@@ -73,13 +73,13 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
         );
 
-        $this->conn->executeStatement('DELETE FROM user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
+        $this->conn->executeStatement("DELETE FROM user_auth_keys WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
+        $this->conn->executeStatement("DELETE FROM user_auth_keys WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
         parent::tearDown();
     }
 
@@ -118,7 +118,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         // API).
         $created = $this->service->create($this->userId, 30, 'Expired Key');
         $this->conn->executeStatement(
-            'UPDATE user_auth_keys' . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
+            "UPDATE user_auth_keys SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
             [$created->authKey]
         );
         // insert() persisted+flushed this row through the ORM, so the raw
@@ -135,7 +135,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         $available = $this->service->create($this->userId, 30, 'Mixed Available Key');
         $expired = $this->service->create($this->userId, 30, 'Mixed Expired Key');
         $this->conn->executeStatement(
-            'UPDATE user_auth_keys' . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
+            "UPDATE user_auth_keys SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
             [$expired->authKey]
         );
         $this->em->clear();

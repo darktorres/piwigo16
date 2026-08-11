@@ -604,9 +604,9 @@ test('search() filters by image type, against the full real $types vocabulary', 
     // no image_type at all, via the 'none' member) survive.
     $conn = DbConnection::build();
     $pictureId = historyTestInsertLine(1, '2026-07-12', '03:00:00');
-    $conn->executeStatement('UPDATE history' . " SET image_type = 'picture' WHERE id = ?", [$pictureId]);
+    $conn->executeStatement("UPDATE history SET image_type = 'picture' WHERE id = ?", [$pictureId]);
     $highId = historyTestInsertLine(1, '2026-07-12', '03:00:01');
-    $conn->executeStatement('UPDATE history' . " SET image_type = 'high' WHERE id = ?", [$highId]);
+    $conn->executeStatement("UPDATE history SET image_type = 'high' WHERE id = ?", [$highId]);
     $noneId = historyTestInsertLine(1, '2026-07-12', '03:00:02');
 
     try {
@@ -631,9 +631,9 @@ test('search() binds a distinct query parameter per non-none image type, not a s
     // need 2 distinct bound values at once to prove the suffix matters.
     $conn = DbConnection::build();
     $pictureId = historyTestInsertLine(1, '2026-07-12', '03:00:00');
-    $conn->executeStatement('UPDATE history' . " SET image_type = 'picture' WHERE id = ?", [$pictureId]);
+    $conn->executeStatement("UPDATE history SET image_type = 'picture' WHERE id = ?", [$pictureId]);
     $highId = historyTestInsertLine(1, '2026-07-12', '03:00:01');
-    $conn->executeStatement('UPDATE history' . " SET image_type = 'high' WHERE id = ?", [$highId]);
+    $conn->executeStatement("UPDATE history SET image_type = 'high' WHERE id = ?", [$highId]);
     historyTestInsertLine(1, '2026-07-12', '03:00:02'); // no image_type -- excluded, 'none' isn't in $imageTypes here
 
     try {
@@ -672,7 +672,7 @@ test('search() maps every optional column when a row actually has them populated
     try {
         $id = historyTestInsertLine(1, '2026-07-12', '03:00:00');
         $conn->executeStatement(
-            'UPDATE history' . " SET section = 'categories', category_id = 1, search_id = ?, tag_ids = '1,2,3', image_id = 1, image_type = 'picture' WHERE id = ?",
+            "UPDATE history SET section = 'categories', category_id = 1, search_id = ?, tag_ids = '1,2,3', image_id = 1, image_type = 'picture' WHERE id = ?",
             [$searchId, $id]
         );
 

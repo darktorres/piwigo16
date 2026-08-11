@@ -146,7 +146,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         $this->deletedActivityRows = $rows;
         self::assertNotSame([], $rows, 'Fixture is expected to seed real non-system activity rows to delete/restore.');
 
-        $this->conn->executeStatement('DELETE FROM activity' . " WHERE object != 'system'");
+        $this->conn->executeStatement("DELETE FROM activity WHERE object != 'system'");
 
         $activityService = Kernel::container()->get(ActivityService::class);
         if (! $activityService instanceof ActivityService) {

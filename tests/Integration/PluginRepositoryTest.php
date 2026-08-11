@@ -59,7 +59,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         // test_get_db_plugins_filters_by_a_malformed_id_finds_nothing()
         // below instead.
         $this->conn->executeStatement(
-            'INSERT INTO plugins' . " (id, state, version) VALUES
+            "INSERT INTO plugins (id, state, version) VALUES
              ('c13y', 'active', '2.1'),
              ('nut2', 'inactive', '1.0'),
              ('o-brien', 'active', '3.0')"

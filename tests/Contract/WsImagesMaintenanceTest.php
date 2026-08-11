@@ -374,7 +374,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
     public function testFormatsSearchImageFindsAMatchingPhotoWithoutExistingFormat(): void
     {
         $formatExtensions = $this->conn->fetchOne(
-            'SELECT value FROM config' . " WHERE param = 'format_ext'"
+            "SELECT value FROM config WHERE param = 'format_ext'"
         );
         // format_ext isn't seeded by the fixture -- CurrentConfig's own
         // non-null static default (includes 'tif') is what's actually in

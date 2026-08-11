@@ -251,7 +251,7 @@ final class WsCommentsTest extends ContractTestCase
     public function testUserCommentsGetListReturnsErrorWhenCommentsAreDisabled(): void
     {
         $this->conn->executeStatement(
-            'UPDATE config' . " SET value = 'false' WHERE param = 'activate_comments'"
+            "UPDATE config SET value = 'false' WHERE param = 'activate_comments'"
         );
         CachePools::config()->clear();
 
@@ -267,7 +267,7 @@ final class WsCommentsTest extends ContractTestCase
             self::assertSame('Comments are disabled', $response['message']);
         } finally {
             $this->conn->executeStatement(
-                'UPDATE config' . " SET value = 'true' WHERE param = 'activate_comments'"
+                "UPDATE config SET value = 'true' WHERE param = 'activate_comments'"
             );
             CachePools::config()->clear();
         }
@@ -433,7 +433,7 @@ final class WsCommentsTest extends ContractTestCase
     public function testUserCommentsGetListShowsTheRawAuthorNameForAnAnonymousComment(): void
     {
         $this->conn->executeStatement(
-            'UPDATE config' . " SET value = 'true' WHERE param = 'comments_forall'"
+            "UPDATE config SET value = 'true' WHERE param = 'comments_forall'"
         );
         CachePools::config()->clear();
 
@@ -490,7 +490,7 @@ final class WsCommentsTest extends ContractTestCase
             }
         } finally {
             $this->conn->executeStatement(
-                'UPDATE config' . " SET value = 'false' WHERE param = 'comments_forall'"
+                "UPDATE config SET value = 'false' WHERE param = 'comments_forall'"
             );
             CachePools::config()->clear();
         }

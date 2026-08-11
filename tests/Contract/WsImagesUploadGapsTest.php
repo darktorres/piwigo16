@@ -75,7 +75,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
                 'pwg_token' => $token,
             ]);
         }
-        $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'uniqueness_mode'");
+        $this->conn->executeStatement("DELETE FROM config WHERE param = 'uniqueness_mode'");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -641,7 +641,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         $sum = md5($bytes);
 
         $adminUserId = $this->conn->fetchOne(
-            'SELECT id FROM users' . " WHERE username = 'fixture_admin'"
+            "SELECT id FROM users WHERE username = 'fixture_admin'"
         );
         self::assertIsNumeric($adminUserId);
 

@@ -75,7 +75,7 @@ namespace Piwigo\Tests\Integration {
             // the SQL text (unlike a bound parameter, which the driver
             // coerces implicitly) is rejected outright by Postgres.
             $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'public', visible = {$visibleLiteral}");
+            $this->conn->executeStatement("UPDATE categories SET status = 'public', visible = {$visibleLiteral}");
             $this->conn->executeStatement('DELETE FROM user_access');
             parent::tearDown();
         }
@@ -87,7 +87,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testAPrivateCategoryIsForbiddenToAUserWithNoAccess(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
             // User 2 (guest, fixture) has no user_access row and isn't in
             // any group with group_access to cat 1.
@@ -96,7 +96,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testAPrivateCategoryIsNotForbiddenWithDirectUserAccess(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
             $this->conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (2, 1)');
 
             self::assertSame('0', $this->service->getForbiddenCategories(2, 'normal'));
@@ -104,7 +104,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testAPrivateCategoryIsNotForbiddenViaGroupAccess(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
             // Fixture: user 1 is a member of group 1 ("Editors"), which has
             // group_access to cat 1 -- this is exactly the group-based JOIN
@@ -128,7 +128,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testPrivateAndLockedCategoriesCombine(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
             $this->conn->executeStatement('UPDATE categories SET visible = ' . ($this->dbDriver === 'pgsql' ? 'false' : '0') . ' WHERE id = 2');
 
             $forbidden = explode(',', $this->service->getForbiddenCategories(2, 'normal'));
@@ -169,7 +169,7 @@ namespace Piwigo\Tests\Integration {
             // own `$userIds = [$userIds];` scalar-to-array normalization
             // (the sibling normalization for $categoryIds is already
             // covered by other callers that pass a bare int there).
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
             $this->service->grantUserAccess(4, [1]);
 
@@ -178,7 +178,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testAddPermissionOnCategoryWithNoCategoriesIsANoop(): void
         {
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
             $this->service->addPermissionOnCategory([], [2]);
 
@@ -192,7 +192,7 @@ namespace Piwigo\Tests\Integration {
             // eligible for an explicit user_access row -- proving
             // applyOnSub's own findSubcategoryIds() merge actually widens
             // the grant beyond category 1 alone.
-            $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id IN (1, 2)");
+            $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id IN (1, 2)");
 
             $this->service->addPermissionOnCategory([1], [3], applyOnSub: true);
 

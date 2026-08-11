@@ -411,7 +411,7 @@ final class GroupServiceTest extends IntegrationTestCase
     {
         $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
         $this->conn->executeStatement(
-            'DELETE FROM activity' . " WHERE object = 'user' AND action = 'edit' AND {$detailsColumn} LIKE :assoc",
+            "DELETE FROM activity WHERE object = 'user' AND action = 'edit' AND {$detailsColumn} LIKE :assoc",
             [
                 'assoc' => '%"associated": ' . $associatedGroupId . '%',
             ]

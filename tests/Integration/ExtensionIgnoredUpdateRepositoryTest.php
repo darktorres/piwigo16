@@ -76,8 +76,7 @@ final class ExtensionIgnoredUpdateRepositoryTest extends IntegrationTestCase
             self::assertSame(['test-plugin-a', 'test-plugin-b'], $ids, 'the Theme row must not leak into the Plugin result');
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM extension_ignored_updates'
-                . " WHERE extension_id IN ('test-plugin-a', 'test-plugin-b', 'test-theme-a')"
+                "DELETE FROM extension_ignored_updates WHERE extension_id IN ('test-plugin-a', 'test-plugin-b', 'test-theme-a')"
             );
         }
     }

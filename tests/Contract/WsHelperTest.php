@@ -252,7 +252,7 @@ final class WsHelperTest extends ContractTestCase
         // Every fixture image starts with date_creation=NULL -- `date_creation
         // >= '...'` is always false (NULL) against it, so a real value is
         // seeded first, same rationale as the f_min_hit test above.
-        $this->conn->executeStatement('UPDATE images' . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE images SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
 
         try {
             $included = $this->searchIds('Photo 1', [
@@ -271,7 +271,7 @@ final class WsHelperTest extends ContractTestCase
 
     public function testStdImageSqlFilterCriteriaFMaxDateCreatedKeepsOnlyImagesStrictlyBefore(): void
     {
-        $this->conn->executeStatement('UPDATE images' . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE images SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
 
         try {
             $included = $this->searchIds('Photo 1', [

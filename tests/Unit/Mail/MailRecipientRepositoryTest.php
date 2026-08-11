@@ -32,7 +32,7 @@ function mailRecipientTestRepo(): MailRecipientRepository
 afterEach(function (): void {
     $conn = DbConnection::build();
     $conn->executeStatement('UPDATE users SET mail_address = NULL WHERE id IN (3, 4)');
-    $conn->executeStatement('UPDATE user_infos' . " SET status = 'normal', language = 'en_UK' WHERE user_id IN (3, 4)");
+    $conn->executeStatement("UPDATE user_infos SET status = 'normal', language = 'en_UK' WHERE user_id IN (3, 4)");
 });
 
 test('findAdminsAndWebmasters() returns only the real webmaster when no admin status exists', function (): void {
@@ -47,8 +47,8 @@ test('findAdminsAndWebmasters() returns only the real webmaster when no admin st
 
 test('findAdminsAndWebmasters() includes a real admin-status user with a real email', function (): void {
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE users' . " SET mail_address = 'power.user@example.test' WHERE id = 4");
-    $conn->executeStatement('UPDATE user_infos' . " SET status = 'admin' WHERE user_id = 4");
+    $conn->executeStatement("UPDATE users SET mail_address = 'power.user@example.test' WHERE id = 4");
+    $conn->executeStatement("UPDATE user_infos SET status = 'admin' WHERE user_id = 4");
 
     $recipients = mailRecipientTestRepo()
         ->findAdminsAndWebmasters(['webmaster', 'admin'], null, null);
@@ -86,8 +86,8 @@ test('findAdminsAndWebmasters() returns empty for a status nobody has', function
 
 test('findDistinctLanguagesInGroup() returns only eligible members\' languages', function (): void {
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-    $conn->executeStatement('UPDATE user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
+    $conn->executeStatement("UPDATE users SET mail_address = 'regular.user@example.test' WHERE id = 3");
+    $conn->executeStatement("UPDATE user_infos SET language = 'fr_FR' WHERE user_id = 3");
 
     // group 1 has users 1 (en_UK, real email) and 3 (fr_FR, now a real email).
     $languages = mailRecipientTestRepo()
@@ -100,8 +100,8 @@ test('findDistinctLanguagesInGroup() returns only eligible members\' languages',
 
 test('findDistinctLanguagesInGroup() honors the language filter', function (): void {
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-    $conn->executeStatement('UPDATE user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
+    $conn->executeStatement("UPDATE users SET mail_address = 'regular.user@example.test' WHERE id = 3");
+    $conn->executeStatement("UPDATE user_infos SET language = 'fr_FR' WHERE user_id = 3");
 
     expect(mailRecipientTestRepo()->findDistinctLanguagesInGroup(1, 'fr_FR'))
         ->toBe(['fr_FR']);
@@ -130,8 +130,8 @@ test('findByGroupAndLanguage() returns empty for a language nobody in the group 
 
 test('findByGroupAndLanguage() scopes correctly across two languages in the same group', function (): void {
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-    $conn->executeStatement('UPDATE user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
+    $conn->executeStatement("UPDATE users SET mail_address = 'regular.user@example.test' WHERE id = 3");
+    $conn->executeStatement("UPDATE user_infos SET language = 'fr_FR' WHERE user_id = 3");
 
     $repo = mailRecipientTestRepo();
     $frenchRecipients = $repo->findByGroupAndLanguage(1, 'fr_FR');

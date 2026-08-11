@@ -181,7 +181,7 @@ test('findImageIds() applies the date_where continuation', function (): void {
     // *continuation* fragment ("AND (...)"), which must land right
     // after $fromWhereSql's own WHERE and before GROUP BY.
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE images' . " SET date_available = '2026-08-02 00:00:00' WHERE id = 3");
+    $conn->executeStatement("UPDATE images SET date_available = '2026-08-02 00:00:00' WHERE id = 3");
 
     try {
         $ids = calendarTestRepo()
@@ -194,7 +194,7 @@ test('findImageIds() applies the date_where continuation', function (): void {
         expect($ids)
             ->toBe([1, 2]);
     } finally {
-        $conn->executeStatement('UPDATE images' . " SET date_available = '2026-08-01 00:00:00' WHERE id = 3");
+        $conn->executeStatement("UPDATE images SET date_available = '2026-08-01 00:00:00' WHERE id = 3");
     }
 });
 
@@ -276,7 +276,7 @@ test('findImageIds() DQL path only joins image_category when the scope asks for 
     // result, proving the join really is conditional on the scope's own
     // flag, not always-on or always-off.
     $conn = DbConnection::build();
-    $conn->executeStatement('INSERT INTO images' . " (file, path) VALUES ('p17-unit-test-calendar-orphan.jpg', 'p17-unit-test-calendar-orphan.jpg')");
+    $conn->executeStatement("INSERT INTO images (file, path) VALUES ('p17-unit-test-calendar-orphan.jpg', 'p17-unit-test-calendar-orphan.jpg')");
     $orphanId = (int) $conn->lastInsertId();
 
     try {

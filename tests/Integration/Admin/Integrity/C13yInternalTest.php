@@ -174,7 +174,7 @@ test('c13y_user flags a real user whose status does not match the expected one, 
         ->not->toBeFalse();
 
     try {
-        $conn->executeStatement('UPDATE user_infos' . " SET status = 'normal' WHERE user_id = 1");
+        $conn->executeStatement("UPDATE user_infos SET status = 'normal' WHERE user_id = 1");
 
         $c13y = c13yInternalTestCheckIntegrity();
         new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_user(new ListCheckIntegrity($c13y));

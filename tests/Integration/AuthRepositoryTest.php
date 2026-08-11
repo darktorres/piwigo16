@@ -79,7 +79,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
         self::assertSame('fr_FR', $value);
 
         $this->conn->executeStatement(
-            'UPDATE user_infos' . " SET language = 'en_UK' WHERE user_id = 1"
+            "UPDATE user_infos SET language = 'en_UK' WHERE user_id = 1"
         );
     }
 
@@ -200,7 +200,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
         } finally {
             $lastVisitLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
             $this->conn->executeStatement(
-                'UPDATE user_infos' . " SET last_visit = NULL, last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
+                "UPDATE user_infos SET last_visit = NULL, last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
             );
         }
     }
@@ -227,7 +227,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
         $lastVisitLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
         $this->conn->executeStatement(
-            'UPDATE user_infos' . " SET last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
+            "UPDATE user_infos SET last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
         );
     }
 }

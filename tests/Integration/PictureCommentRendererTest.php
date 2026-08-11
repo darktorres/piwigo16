@@ -255,7 +255,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             );
         } finally {
             unset($_POST['content'], $_POST['key']);
-            $this->conn->executeStatement('DELETE FROM comments' . " WHERE content = 'A moderated comment.'");
+            $this->conn->executeStatement("DELETE FROM comments WHERE content = 'A moderated comment.'");
         }
     }
 
@@ -277,7 +277,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
         } finally {
             unset($_POST['content'], $_POST['key']);
-            $this->conn->executeStatement('DELETE FROM comments' . " WHERE content = 'A validated comment.'");
+            $this->conn->executeStatement("DELETE FROM comments WHERE content = 'A validated comment.'");
         }
     }
 
@@ -442,7 +442,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame(2, $adminCount);
             self::assertSame(1, $normalCount);
         } finally {
-            $this->conn->executeStatement('DELETE FROM comments' . " WHERE content IN ('Validated onlyValidated check.', 'Unvalidated onlyValidated check.')");
+            $this->conn->executeStatement("DELETE FROM comments WHERE content IN ('Validated onlyValidated check.', 'Unvalidated onlyValidated check.')");
         }
     }
 
@@ -716,7 +716,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('Notify plugins comment.', $captured['content']);
         } finally {
             unset($_POST['content'], $_POST['key']);
-            $this->conn->executeStatement('DELETE FROM comments' . " WHERE content = 'Notify plugins comment.'");
+            $this->conn->executeStatement("DELETE FROM comments WHERE content = 'Notify plugins comment.'");
         }
     }
 
@@ -740,7 +740,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('MutationTestAuthor', $row['author']);
         } finally {
             unset($_POST['author'], $_POST['content'], $_POST['key']);
-            $this->conn->executeStatement('DELETE FROM comments' . " WHERE content = 'Trimmed mutation content check.'");
+            $this->conn->executeStatement("DELETE FROM comments WHERE content = 'Trimmed mutation content check.'");
         }
     }
 
@@ -764,7 +764,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('guest', $row['author']);
         } finally {
             unset($_POST['author'], $_POST['content'], $_POST['key']);
-            $this->conn->executeStatement('DELETE FROM comments' . " WHERE content = 'Zero author fallback check.'");
+            $this->conn->executeStatement("DELETE FROM comments WHERE content = 'Zero author fallback check.'");
         }
     }
 
@@ -813,7 +813,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('http://mutation-check.example.test', $row['website_url']);
         } finally {
             unset($_POST['content'], $_POST['website_url'], $_POST['key']);
-            $this->conn->executeStatement('DELETE FROM comments' . " WHERE content = 'Website url trim check.'");
+            $this->conn->executeStatement("DELETE FROM comments WHERE content = 'Website url trim check.'");
         }
     }
 
@@ -840,7 +840,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
         } finally {
             unset($_POST['content'], $_POST['website_url'], $_POST['key']);
-            $this->conn->executeStatement('DELETE FROM comments' . " WHERE content = 'Zero website url no reject check.'");
+            $this->conn->executeStatement("DELETE FROM comments WHERE content = 'Zero website url no reject check.'");
         }
     }
 
@@ -864,7 +864,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('mutation-check@example.test', $row['email']);
         } finally {
             unset($_POST['content'], $_POST['email'], $_POST['key']);
-            $this->conn->executeStatement('DELETE FROM comments' . " WHERE content = 'Email trim check.'");
+            $this->conn->executeStatement("DELETE FROM comments WHERE content = 'Email trim check.'");
         }
     }
 
@@ -887,7 +887,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
         } finally {
             unset($_POST['content'], $_POST['email'], $_POST['key']);
-            $this->conn->executeStatement('DELETE FROM comments' . " WHERE content = 'Zero email no reject check.'");
+            $this->conn->executeStatement("DELETE FROM comments WHERE content = 'Zero email no reject check.'");
         }
     }
 

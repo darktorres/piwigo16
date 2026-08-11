@@ -25,7 +25,7 @@ final class WsHistoryTest extends ContractTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement('DELETE FROM history');
-        $this->conn->executeStatement('DELETE FROM config' . " WHERE param IN ('history_admin', 'history_guest')");
+        $this->conn->executeStatement("DELETE FROM config WHERE param IN ('history_admin', 'history_guest')");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -190,7 +190,7 @@ final class WsHistoryTest extends ContractTestCase
      */
     public function testActivityGetListFiltersByPerformerUid(): void
     {
-        $adminId = $this->conn->fetchOne('SELECT id FROM users' . " WHERE username = 'fixture_admin'");
+        $adminId = $this->conn->fetchOne("SELECT id FROM users WHERE username = 'fixture_admin'");
         self::assertIsNumeric($adminId);
 
         // Generates a real, fresh 'photo'/'edit' row performed by
@@ -242,7 +242,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertIsArray($result);
             self::assertSame([], $result['result_lines']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'activity_display_connections'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'activity_display_connections'");
             CachePools::config()->clear();
         }
     }
@@ -260,9 +260,9 @@ final class WsHistoryTest extends ContractTestCase
         CachePools::config()->clear();
 
         try {
-            $adminId = $this->conn->fetchOne('SELECT id FROM users' . " WHERE username = 'fixture_admin'");
+            $adminId = $this->conn->fetchOne("SELECT id FROM users WHERE username = 'fixture_admin'");
             self::assertIsNumeric($adminId);
-            $regularUserId = $this->conn->fetchOne('SELECT id FROM users' . " WHERE username = 'regular_user'");
+            $regularUserId = $this->conn->fetchOne("SELECT id FROM users WHERE username = 'regular_user'");
             self::assertIsNumeric($regularUserId);
 
             // fixture_admin (webmaster status) logs in first -- its own
@@ -305,7 +305,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertContains((string) $adminId, $objectIds, 'admins_only must keep an admin login');
             self::assertNotContains((string) $regularUserId, $objectIds, 'admins_only must exclude a non-admin login');
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'activity_display_connections'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'activity_display_connections'");
             CachePools::config()->clear();
         }
     }
@@ -319,7 +319,7 @@ final class WsHistoryTest extends ContractTestCase
      */
     public function testActivityGetListLoginEventEnrichesUsernameAndDetailsUsers(): void
     {
-        $adminId = $this->conn->fetchOne('SELECT id FROM users' . " WHERE username = 'fixture_admin'");
+        $adminId = $this->conn->fetchOne("SELECT id FROM users WHERE username = 'fixture_admin'");
         $adminIdString = (string) $adminId;
 
         // wsAdmin() performs a real pwg.session.login, which AuthService::
@@ -420,7 +420,7 @@ final class WsHistoryTest extends ContractTestCase
      */
     public function testActivityGetListResetsANonArrayUsersDetailBeforeAppending(): void
     {
-        $adminId = $this->conn->fetchOne('SELECT id FROM users' . " WHERE username = 'fixture_admin'");
+        $adminId = $this->conn->fetchOne("SELECT id FROM users WHERE username = 'fixture_admin'");
         $adminIdInt = $adminId;
 
         // A real 'user' activity row whose `details` JSON already has a
@@ -434,7 +434,7 @@ final class WsHistoryTest extends ContractTestCase
         // only real way this state could exist" rationale as
         // WsHistoryTest's own dangling-image-id/dangling-user-id tests.
         $this->conn->executeStatement(
-            'INSERT INTO activity' . " (object, object_id, action, session_idx, occured_on, details) VALUES ('user', ?, 'edit', ?, NOW(), ?)",
+            "INSERT INTO activity (object, object_id, action, session_idx, occured_on, details) VALUES ('user', ?, 'edit', ?, NOW(), ?)",
             [
                 $adminIdInt, 'pwgcore-malformed-users-' . uniqid(), json_encode([
                     'users' => 'not-an-array',
@@ -797,7 +797,7 @@ final class WsHistoryTest extends ContractTestCase
             'image_id' => 1,
         ]);
 
-        $adminId = $this->conn->fetchOne('SELECT id FROM users' . " WHERE username = 'fixture_admin'");
+        $adminId = $this->conn->fetchOne("SELECT id FROM users WHERE username = 'fixture_admin'");
 
         $response = $this->wsAdmin('pwg.history.search', [
             'user_id' => $adminId,
@@ -1206,7 +1206,7 @@ final class WsHistoryTest extends ContractTestCase
                 PHP);
 
             $this->conn->executeStatement(
-                'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', '1.0.0')",
+                "INSERT INTO plugins (id, state, version) VALUES (?, 'active', '1.0.0')",
                 [$pluginId]
             );
 
@@ -1370,7 +1370,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertIsArray($line);
             self::assertContains($line['IMAGEID'], ['1', '2']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'nb_logs_page'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'nb_logs_page'");
             CachePools::config()->clear();
         }
     }
@@ -1471,7 +1471,7 @@ final class WsHistoryTest extends ContractTestCase
         self::assertSame(200, $status);
 
         $row = $this->conn->fetchAssociative(
-            'SELECT id FROM history' . " WHERE image_id IS NULL AND section = 'categories' ORDER BY id DESC LIMIT 1"
+            "SELECT id FROM history WHERE image_id IS NULL AND section = 'categories' ORDER BY id DESC LIMIT 1"
         );
         self::assertIsArray($row, 'expected the /index.php visit above to log a real image_id-less history row');
 

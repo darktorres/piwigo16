@@ -68,7 +68,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
         // SQL text (unlike a bound parameter, which the driver coerces
         // implicitly) is rejected outright by Postgres.
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement('UPDATE categories' . " SET status = 'public', visible = {$visibleLiteral}");
+        $this->conn->executeStatement("UPDATE categories SET status = 'public', visible = {$visibleLiteral}");
         $this->conn->executeStatement('DELETE FROM user_access');
         $this->conn->executeStatement('DELETE FROM group_access');
         parent::tearDown();
@@ -81,7 +81,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
 
     public function testFindPrivateCategoryIdsReflectsAPrivateCategory(): void
     {
-        $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
         self::assertSame([1], $this->repo->findPrivateCategoryIds());
     }
@@ -94,7 +94,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
     public function testFindLockedCategoryIdsReflectsAnInvisibleCategory(): void
     {
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
-        $this->conn->executeStatement('UPDATE categories' . " SET visible = {$visibleLiteral} WHERE id = 2");
+        $this->conn->executeStatement("UPDATE categories SET visible = {$visibleLiteral} WHERE id = 2");
 
         self::assertSame([2], $this->repo->findLockedCategoryIds());
     }

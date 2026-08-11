@@ -346,17 +346,17 @@ final class FilterResolverTest extends IntegrationTestCase
         // becomes the new max, one sits exactly on the inclusive lower
         // boundary (max minus 1 day), and one sits 1 second outside it.
         $this->conn->executeStatement(
-            'INSERT INTO images' . " (file, path, date_available) VALUES ('last-import-max.jpg', 'upload/last-import-max.jpg', '2026-08-10 12:00:00')"
+            "INSERT INTO images (file, path, date_available) VALUES ('last-import-max.jpg', 'upload/last-import-max.jpg', '2026-08-10 12:00:00')"
         );
         $maxId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            'INSERT INTO images' . " (file, path, date_available) VALUES ('last-import-boundary.jpg', 'upload/last-import-boundary.jpg', '2026-08-09 12:00:00')"
+            "INSERT INTO images (file, path, date_available) VALUES ('last-import-boundary.jpg', 'upload/last-import-boundary.jpg', '2026-08-09 12:00:00')"
         );
         $boundaryId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            'INSERT INTO images' . " (file, path, date_available) VALUES ('last-import-excluded.jpg', 'upload/last-import-excluded.jpg', '2026-08-09 11:59:59')"
+            "INSERT INTO images (file, path, date_available) VALUES ('last-import-excluded.jpg', 'upload/last-import-excluded.jpg', '2026-08-09 11:59:59')"
         );
         $excludedId = (int) $this->conn->lastInsertId();
 
@@ -385,12 +385,12 @@ final class FilterResolverTest extends IntegrationTestCase
     public function testResolvePrefilterNoVirtualAlbumExcludesImagesLinkedOnlyToAVirtualCategory(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO categories' . " (name, dir) VALUES ('Real Album', 'real_album')"
+            "INSERT INTO categories (name, dir) VALUES ('Real Album', 'real_album')"
         );
         $realCategoryId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            'INSERT INTO images' . " (file, path) VALUES ('no-virtual-real.jpg', 'upload/no-virtual-real.jpg')"
+            "INSERT INTO images (file, path) VALUES ('no-virtual-real.jpg', 'upload/no-virtual-real.jpg')"
         );
         $realImageId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
@@ -399,7 +399,7 @@ final class FilterResolverTest extends IntegrationTestCase
         );
 
         $this->conn->executeStatement(
-            'INSERT INTO images' . " (file, path) VALUES ('no-virtual-virtual-only.jpg', 'upload/no-virtual-virtual-only.jpg')"
+            "INSERT INTO images (file, path) VALUES ('no-virtual-virtual-only.jpg', 'upload/no-virtual-virtual-only.jpg')"
         );
         $virtualOnlyImageId = (int) $this->conn->lastInsertId();
         // Category 1 is one of the fixture's own virtual categories (dir IS
@@ -446,7 +446,7 @@ final class FilterResolverTest extends IntegrationTestCase
         );
 
         $this->conn->executeStatement(
-            'UPDATE categories' . " SET dir = 'temp-real-dir' WHERE dir IS NULL"
+            "UPDATE categories SET dir = 'temp-real-dir' WHERE dir IS NULL"
         );
 
         try {

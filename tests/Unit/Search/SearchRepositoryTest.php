@@ -326,8 +326,8 @@ test('countImagesGroupedBy() returns counts ordered desc', function (): void {
     // tell a real ORDER BY counter DESC apart from GROUP BY's own
     // incidental (frequently alphabetical) scan order.
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE images' . " SET author = 'Zzz Author' WHERE id IN (1, 2)");
-    $conn->executeStatement('UPDATE images' . " SET author = 'Aaa Author' WHERE id = 3");
+    $conn->executeStatement("UPDATE images SET author = 'Zzz Author' WHERE id IN (1, 2)");
+    $conn->executeStatement("UPDATE images SET author = 'Aaa Author' WHERE id = 3");
 
     try {
         $rows = searchTestRepo()

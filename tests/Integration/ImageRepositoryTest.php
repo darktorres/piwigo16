@@ -286,7 +286,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             self::assertSame('exec123-1700000000', $this->repo->findLoungeLockValue());
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
         }
     }
 
@@ -298,7 +298,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             self::assertSame('exec123-1700000000', $this->repo->findLoungeLockValue());
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
         }
     }
 
@@ -355,7 +355,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             $rank = $this->conn->getDatabasePlatform()
                 ->quoteSingleIdentifier('rank');
             $this->conn->executeStatement(
-                'INSERT INTO image_category' . " (image_id, category_id, {$rank}) VALUES (3, 1, 3)"
+                "INSERT INTO image_category (image_id, category_id, {$rank}) VALUES (3, 1, 3)"
             );
         }
     }
@@ -655,7 +655,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // this single row is guaranteed to be the "oldest" (ORDER BY
         // image_id ASC LIMIT 1) one found.
         $this->conn->executeStatement(
-            'INSERT INTO images' . " (file, path, date_available) VALUES ('lounge-null-date.jpg', 'upload/lounge-null-date.jpg', NULL)"
+            "INSERT INTO images (file, path, date_available) VALUES ('lounge-null-date.jpg', 'upload/lounge-null-date.jpg', NULL)"
         );
         $imageId = (int) $this->conn->lastInsertId();
 
@@ -711,7 +711,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         try {
             $this->conn->executeStatement(
-                'INSERT INTO images' . " (file, path, date_available) VALUES ('older-photo.jpg', 'upload/older-photo.jpg', '2020-01-01 00:00:00')"
+                "INSERT INTO images (file, path, date_available) VALUES ('older-photo.jpg', 'upload/older-photo.jpg', '2020-01-01 00:00:00')"
             );
             $olderId = (int) $this->conn->lastInsertId();
 
@@ -855,13 +855,13 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         try {
             $this->conn->executeStatement(
-                'INSERT INTO images' . " (file, date_available) VALUES ('p18-earliest.jpg', '2010-01-01 00:00:00')"
+                "INSERT INTO images (file, date_available) VALUES ('p18-earliest.jpg', '2010-01-01 00:00:00')"
             );
             $this->conn->executeStatement(
-                'INSERT INTO images' . " (file, date_available) VALUES ('p18-max.jpg', '2030-01-01 00:00:00')"
+                "INSERT INTO images (file, date_available) VALUES ('p18-max.jpg', '2030-01-01 00:00:00')"
             );
             $this->conn->executeStatement(
-                'INSERT INTO images' . " (file, date_available) VALUES ('p18-middle.jpg', '2020-01-01 00:00:00')"
+                "INSERT INTO images (file, date_available) VALUES ('p18-middle.jpg', '2020-01-01 00:00:00')"
             );
 
             $breakdown = $this->repo->findAddMethodBreakdown();
@@ -1067,7 +1067,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function testHasAccessibleImageWithAuthorIsTrueOnceOneImageHasAnAuthor(): void
     {
-        $this->conn->executeStatement('UPDATE images' . " SET author = 'fixture-author' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE images SET author = 'fixture-author' WHERE id = 1");
 
         try {
             self::assertTrue($this->repo->hasAccessibleImageWithAuthor(self::noPermissionRestriction()));
@@ -1224,7 +1224,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             // and rank are numerically identical by construction (1/1,
             // 2/2, 3/3) -- restoring rank = image_id is exact, not an
             // approximation.
-            $this->conn->executeStatement('UPDATE image_category' . " SET {$rankIdentifier} = image_id WHERE category_id = 1");
+            $this->conn->executeStatement("UPDATE image_category SET {$rankIdentifier} = image_id WHERE category_id = 1");
         }
     }
 
@@ -1244,7 +1244,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
                 ->fetchOne();
             self::assertSame(99, $rank);
         } finally {
-            $this->conn->executeStatement('UPDATE image_category' . " SET {$rankIdentifier} = 1 WHERE image_id = 1 AND category_id = 1");
+            $this->conn->executeStatement("UPDATE image_category SET {$rankIdentifier} = 1 WHERE image_id = 1 AND category_id = 1");
         }
     }
 

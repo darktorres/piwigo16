@@ -130,7 +130,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
             self::assertIsArray($byName['level']);
             self::assertSame(8, $byName['level']['maxValue']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'available_permission_levels'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'available_permission_levels'");
             CachePools::config()->clear();
         }
     }

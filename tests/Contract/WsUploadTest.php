@@ -633,8 +633,8 @@ final class WsUploadTest extends ContractTestCase
         // undoing the override above. Pinning the threshold absurdly high
         // for the test's duration keeps that legitimate feature from firing
         // without disabling or working around it.
-        $originalLoungeActive = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'lounge_active'");
-        $originalLoungeThreshold = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'lounge_activate_threshold'");
+        $originalLoungeActive = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'lounge_active'");
+        $originalLoungeThreshold = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'lounge_activate_threshold'");
         $this->upsertConfig('lounge_active', 'false');
         $this->upsertConfig('lounge_activate_threshold', '999999999');
         CachePools::config()->clear();
@@ -670,19 +670,19 @@ final class WsUploadTest extends ContractTestCase
         } finally {
             if (is_string($originalLoungeActive)) {
                 $this->conn->executeStatement(
-                    'UPDATE config' . " SET value = ? WHERE param = 'lounge_active'",
+                    "UPDATE config SET value = ? WHERE param = 'lounge_active'",
                     [$originalLoungeActive]
                 );
             } else {
-                $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'lounge_active'");
+                $this->conn->executeStatement("DELETE FROM config WHERE param = 'lounge_active'");
             }
             if (is_string($originalLoungeThreshold)) {
                 $this->conn->executeStatement(
-                    'UPDATE config' . " SET value = ? WHERE param = 'lounge_activate_threshold'",
+                    "UPDATE config SET value = ? WHERE param = 'lounge_activate_threshold'",
                     [$originalLoungeThreshold]
                 );
             } else {
-                $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'lounge_activate_threshold'");
+                $this->conn->executeStatement("DELETE FROM config WHERE param = 'lounge_activate_threshold'");
             }
             CachePools::config()->clear();
         }
@@ -728,7 +728,7 @@ final class WsUploadTest extends ContractTestCase
             self::assertSame('fail', $response['stat']);
             self::assertSame(401, $response['err']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'enable_formats'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'enable_formats'");
             CachePools::config()->clear();
         }
     }
@@ -768,7 +768,7 @@ final class WsUploadTest extends ContractTestCase
                     'pwg_token' => $this->getPwgToken(),
                 ]);
             }
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'enable_formats'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'enable_formats'");
             CachePools::config()->clear();
         }
     }

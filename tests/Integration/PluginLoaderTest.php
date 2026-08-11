@@ -184,7 +184,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            'INSERT INTO plugins' . " (id, state, version) VALUES ('ghost-plugin', 'active', '1.0')"
+            "INSERT INTO plugins (id, state, version) VALUES ('ghost-plugin', 'active', '1.0')"
         );
 
         KernelContainerOverride::with([
@@ -210,7 +210,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            'INSERT INTO plugins' . " (id, state, version) VALUES ('loadable-plugin', 'active', '1.0')"
+            "INSERT INTO plugins (id, state, version) VALUES ('loadable-plugin', 'active', '1.0')"
         );
 
         KernelContainerOverride::with([
@@ -235,7 +235,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            'INSERT INTO plugins' . " (id, state, version) VALUES ('inactive-plugin', 'inactive', '1.0')"
+            "INSERT INTO plugins (id, state, version) VALUES ('inactive-plugin', 'inactive', '1.0')"
         );
 
         KernelContainerOverride::with([
@@ -268,7 +268,7 @@ PHP);
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', '1.0')",
+            "INSERT INTO plugins (id, state, version) VALUES (?, 'active', '1.0')",
             [$id]
         );
 
@@ -329,7 +329,7 @@ PHP);
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', '1.0')",
+            "INSERT INTO plugins (id, state, version) VALUES (?, 'active', '1.0')",
             [$id]
         );
 
@@ -359,7 +359,7 @@ PHP);
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', 'auto')",
+            "INSERT INTO plugins (id, state, version) VALUES (?, 'active', 'auto')",
             [$id]
         );
 

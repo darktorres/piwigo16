@@ -92,7 +92,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // previous test method's write is the only source of a stale row,
         // and confUpdateParam()'s own cache-clearing doesn't help a test
         // that reads it back with raw SQL.
-        $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'fs_quick_check_last_check'");
+        $this->conn->executeStatement("DELETE FROM config WHERE param = 'fs_quick_check_last_check'");
 
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
     }
@@ -100,7 +100,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'fs_quick_check_last_check'");
+        $this->conn->executeStatement("DELETE FROM config WHERE param = 'fs_quick_check_last_check'");
         CurrentTemplate::current()->reset();
         Kernel::reset();
         parent::tearDown();
@@ -127,7 +127,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
      */
     private function fsQuickCheckLastCheckRaw(): ?string
     {
-        $raw = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'fs_quick_check_last_check'");
+        $raw = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'fs_quick_check_last_check'");
         if ($raw === false) {
             return null;
         }
@@ -180,7 +180,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // block the next call, fsQuickCheck() would overwrite this
         // sentinel with a fresh date('c') value.
         $this->conn->executeStatement(
-            'UPDATE config' . " SET value = '\"sentinel-unchanged\"' WHERE param = 'fs_quick_check_last_check'"
+            "UPDATE config SET value = '\"sentinel-unchanged\"' WHERE param = 'fs_quick_check_last_check'"
         );
 
         $this->checker->fsQuickCheck();
@@ -192,7 +192,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
     {
         $this->checker->fsQuickCheck();
         $this->conn->executeStatement(
-            'UPDATE config' . " SET value = '\"sentinel-before-reset\"' WHERE param = 'fs_quick_check_last_check'"
+            "UPDATE config SET value = '\"sentinel-before-reset\"' WHERE param = 'fs_quick_check_last_check'"
         );
         // The raw UPDATE above bypasses ConfigRepository's own
         // EntityManager (the private, standalone one buildConfigRepository()
@@ -262,7 +262,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
             ['fsic-dup-a.jpg', $path1, 'fsic-dup-b.jpg', $path2]
         );
         $newIds = $this->conn->fetchFirstColumn(
-            'SELECT id FROM images' . " WHERE file IN ('fsic-dup-a.jpg', 'fsic-dup-b.jpg')"
+            "SELECT id FROM images WHERE file IN ('fsic-dup-a.jpg', 'fsic-dup-b.jpg')"
         );
         self::assertCount(2, $newIds);
 

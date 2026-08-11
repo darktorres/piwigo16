@@ -145,7 +145,7 @@ namespace Piwigo\Tests\Integration {
             // same as this class's own tests) -- delete rather than reset to
             // a value, restoring the true baseline.
             $this->conn->executeStatement(
-                'DELETE FROM config' . " WHERE param = 'no_photo_yet'"
+                "DELETE FROM config WHERE param = 'no_photo_yet'"
             );
             parent::tearDown();
         }
@@ -176,7 +176,7 @@ namespace Piwigo\Tests\Integration {
                 ? 'ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value'
                 : 'ON DUPLICATE KEY UPDATE value = VALUES(value)';
             $this->conn->executeStatement(
-                'INSERT INTO config' . " (param, value) VALUES ('no_photo_yet', ?) {$onConflict}",
+                "INSERT INTO config (param, value) VALUES ('no_photo_yet', ?) {$onConflict}",
                 [$value]
             );
         }
@@ -285,7 +285,7 @@ namespace Piwigo\Tests\Integration {
             // under a consistent snapshot that predates it, confirmed live --
             // a read through the same still-open transaction cannot see it.
             self::assertSame('"false"', $this->readFlag());
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'no_photo_yet'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'no_photo_yet'");
         }
     }
 }

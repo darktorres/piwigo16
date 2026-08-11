@@ -115,7 +115,7 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // pushed a day later here, scoped to this test only, so images 1
         // and 2 are the only ones matching the filter below.
         $this->conn->executeStatement(
-            'UPDATE images' . " SET date_available = '2026-08-02 00:00:00' WHERE id = 3"
+            "UPDATE images SET date_available = '2026-08-02 00:00:00' WHERE id = 3"
         );
 
         $ids = $this->repo->findImageIds(

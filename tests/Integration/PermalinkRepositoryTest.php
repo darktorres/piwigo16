@@ -53,7 +53,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
         // Resets the fixture's own seeded baseline (piwigo-17.0.sql:
         // hit=42, last_hit='2026-08-01 00:00:00') after any test that
         // mutates it.
-        $this->conn->executeStatement('UPDATE old_permalinks' . " SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'");
+        $this->conn->executeStatement("UPDATE old_permalinks SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'");
         parent::tearDown();
     }
 
@@ -188,7 +188,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
 
     public function testFindPermalinkMatchesFindsOldAndCurrentPermalinks(): void
     {
-        $this->conn->executeStatement('UPDATE categories' . " SET permalink = 'sample-album' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE categories SET permalink = 'sample-album' WHERE id = 1");
 
         $matches = $this->repo->findPermalinkMatches(['old-sample-album', 'sample-album']);
 

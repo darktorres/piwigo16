@@ -97,7 +97,7 @@ final class WsUsersMutationTest extends ContractTestCase
      */
     private function guestId(): int
     {
-        $raw = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'guest_id'");
+        $raw = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'guest_id'");
         if (! is_string($raw)) {
             return 2;
         }
@@ -300,7 +300,7 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame(1003, $response['err']);
             self::assertSame('The passwords do not match', $response['message']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'double_password_type_in_admin'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'double_password_type_in_admin'");
             CachePools::config()->clear();
         }
     }
@@ -637,7 +637,7 @@ final class WsUsersMutationTest extends ContractTestCase
             $after = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = 1');
             self::assertSame($before, $after);
         } finally {
-            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'allow_user_customization'");
+            $this->conn->executeStatement("DELETE FROM config WHERE param = 'allow_user_customization'");
             CachePools::config()->clear();
         }
     }
@@ -653,7 +653,7 @@ final class WsUsersMutationTest extends ContractTestCase
     public function testSetMyInfoIgnoresShowNbCommentsWhenCommentsAreDisabled(): void
     {
         $this->conn->executeStatement(
-            'UPDATE config' . " SET value = 'false' WHERE param = 'activate_comments'"
+            "UPDATE config SET value = 'false' WHERE param = 'activate_comments'"
         );
         CachePools::config()->clear();
 
@@ -670,7 +670,7 @@ final class WsUsersMutationTest extends ContractTestCase
             $after = $this->conn->fetchOne('SELECT show_nb_comments FROM user_infos WHERE user_id = 1');
             self::assertSame($before, $after, 'show_nb_comments must be silently dropped, not applied, while comments are disabled gallery-wide');
         } finally {
-            $this->conn->executeStatement('UPDATE config' . " SET value = 'true' WHERE param = 'activate_comments'");
+            $this->conn->executeStatement("UPDATE config SET value = 'true' WHERE param = 'activate_comments'");
             CachePools::config()->clear();
         }
     }
@@ -690,7 +690,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $password = 'Test1234!';
         $userId = $this->createUser($username, $password);
 
-        $originalDefaultUserId = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'default_user_id'");
+        $originalDefaultUserId = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'default_user_id'");
 
         $this->upsertConfig('default_user_id', (string) $userId);
         CachePools::config()->clear();
@@ -736,10 +736,10 @@ final class WsUsersMutationTest extends ContractTestCase
         } finally {
             $this->loginAsAdmin();
             if ($originalDefaultUserId === false) {
-                $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'default_user_id'");
+                $this->conn->executeStatement("DELETE FROM config WHERE param = 'default_user_id'");
             } else {
                 $this->conn->executeStatement(
-                    'UPDATE config' . " SET value = ? WHERE param = 'default_user_id'",
+                    "UPDATE config SET value = ? WHERE param = 'default_user_id'",
                     [$originalDefaultUserId]
                 );
             }
@@ -1017,7 +1017,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $email = $username . '@example.test';
         $userId = $this->createUser($username, $password, $email);
 
-        $originalSmtpHost = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'smtp_host'");
+        $originalSmtpHost = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'smtp_host'");
         $this->upsertConfig('smtp_host', '"127.0.0.1:1"');
         CachePools::config()->clear();
 
@@ -1054,10 +1054,10 @@ final class WsUsersMutationTest extends ContractTestCase
         } finally {
             $this->loginAsAdmin();
             if ($originalSmtpHost === false) {
-                $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'smtp_host'");
+                $this->conn->executeStatement("DELETE FROM config WHERE param = 'smtp_host'");
             } else {
                 $this->conn->executeStatement(
-                    'UPDATE config' . " SET value = ? WHERE param = 'smtp_host'",
+                    "UPDATE config SET value = ? WHERE param = 'smtp_host'",
                     [$originalSmtpHost]
                 );
             }
@@ -1148,7 +1148,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
     public function testSetMainUserPromotesAWebmaster(): void
     {
-        $originalWebmasterId = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'webmaster_id'");
+        $originalWebmasterId = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'webmaster_id'");
         self::assertIsString($originalWebmasterId);
 
         $token = $this->getPwgToken();
@@ -1169,11 +1169,11 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame('ok', $response['stat']);
             self::assertSame('The main user has been changed.', $response['result']);
 
-            $stored = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'webmaster_id'");
+            $stored = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'webmaster_id'");
             self::assertSame((string) $userId, $stored);
         } finally {
             $this->conn->executeStatement(
-                'UPDATE config' . " SET value = ? WHERE param = 'webmaster_id'",
+                "UPDATE config SET value = ? WHERE param = 'webmaster_id'",
                 [$originalWebmasterId]
             );
             CachePools::config()->clear();

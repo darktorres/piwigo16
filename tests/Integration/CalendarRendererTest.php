@@ -88,11 +88,11 @@ namespace Piwigo\Tests\Integration {
 
             $this->conn = DbConnection::build();
 
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
 
             $this->urlService = new CalendarRendererTestFakeUrlService();
             $this->htmlService = HtmlServiceTestFactory::build();

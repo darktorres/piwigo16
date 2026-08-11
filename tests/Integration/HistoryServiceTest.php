@@ -416,7 +416,7 @@ final class HistoryServiceTest extends IntegrationTestCase
             // into the new, narrower enum definition. Delete that row
             // first.
             $this->conn->executeStatement(
-                'DELETE FROM history' . " WHERE section = 'my_custom_section'"
+                "DELETE FROM history WHERE section = 'my_custom_section'"
             );
             $repo->alterSectionEnum($originalOptions);
             $currentConfig = CurrentConfigTestFactory::get();

@@ -411,7 +411,7 @@ test('getSearchArray() returns false, not true, for a real row whose rules colum
     // is what this test targets, not just "is rules present".
     searchServiceTestConn()
         ->executeStatement(
-            'INSERT INTO search' . " (search_uuid, created_on, created_by, rules) VALUES ('psk-20260712-nullrulz1', '2026-07-12 00:00:00', 1, NULL)"
+            "INSERT INTO search (search_uuid, created_on, created_by, rules) VALUES ('psk-20260712-nullrulz1', '2026-07-12 00:00:00', 1, NULL)"
         );
 
     expect(searchServiceTestService()->getSearchArray('psk-20260712-nullrulz1'))
@@ -981,7 +981,7 @@ test('getRegularSearchResults() filters by date_posted preset', function (): voi
             ->and($results['search_details']['has_filters_filled'])->toBeTrue();
     } finally {
         $conn->executeStatement(
-            'UPDATE images' . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1,2,3,4,5)"
+            "UPDATE images SET date_available = '2026-08-01 00:00:00' WHERE id IN (1,2,3,4,5)"
         );
     }
 });
@@ -1039,9 +1039,9 @@ test('getRegularSearchResults() date_created custom range', function (): void {
     // populate the UN-prefixed key instead, so only a real, correct
     // prefix concat avoids colliding with them.
     $conn = searchServiceTestConn();
-    $conn->executeStatement('UPDATE images' . " SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
-    $conn->executeStatement('UPDATE images' . " SET date_creation = '2023-06-10 00:00:00' WHERE id = 2");
-    $conn->executeStatement('UPDATE images' . " SET date_creation = '2022-05-15 12:00:00' WHERE id = 3");
+    $conn->executeStatement("UPDATE images SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
+    $conn->executeStatement("UPDATE images SET date_creation = '2023-06-10 00:00:00' WHERE id = 2");
+    $conn->executeStatement("UPDATE images SET date_creation = '2022-05-15 12:00:00' WHERE id = 3");
 
     try {
         // Mixes a 'y'/'m'/'d'-prefixed string entry of each shape plus a
@@ -1226,7 +1226,7 @@ test('getQuickSearchResultsNoCache() widens a match via the default-language Inf
     // variants)` step actually widens the match, not just that the
     // Inflector class loads without throwing.
     $conn = searchServiceTestConn();
-    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('natures', 'natures', NOW())");
+    $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('natures', 'natures', NOW())");
     $tagId = (int) $conn->lastInsertId();
     $conn->executeStatement('INSERT INTO image_tag (image_id, tag_id) VALUES (4, ?)', [$tagId]);
 
@@ -1260,7 +1260,7 @@ test('getQuickSearchResultsNoCache() a term matching a real tag with zero curren
     // The sibling test above (a genuinely unrecognized word) can never
     // observe this, since it never populates tag_ids either.
     $conn = searchServiceTestConn();
-    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('zqualifiesonly', 'zqualifiesonly', NOW())");
+    $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('zqualifiesonly', 'zqualifiesonly', NOW())");
     $tagId = (int) $conn->lastInsertId();
 
     try {
@@ -1825,11 +1825,11 @@ test('qsearchGetTags() narrows 2 adjacent short, non-wildcarded, non-quoted term
     // just the shared 'zna znb' tag. 'zna'/'znb' alone are each tagged
     // to image 5 (noise); 'zna znb' alone is tagged to image 4.
     $conn = searchServiceTestConn();
-    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('zna', 'zna', NOW())");
+    $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('zna', 'zna', NOW())");
     $tagA = (int) $conn->lastInsertId();
-    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('znb', 'znb', NOW())");
+    $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('znb', 'znb', NOW())");
     $tagB = (int) $conn->lastInsertId();
-    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('zna znb', 'zna-znb', NOW())");
+    $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('zna znb', 'zna-znb', NOW())");
     $tagAB = (int) $conn->lastInsertId();
     $conn->executeStatement(
         'INSERT INTO image_tag (image_id, tag_id) VALUES (5, ?), (5, ?), (4, ?)',
@@ -1863,7 +1863,7 @@ test('getQuickSearchResultsNoCache() excludes a matched tag from the display lis
     // be found (a real, valid tag match) yet excluded from the display
     // list -- unlike 'family', long enough to qualify on its own.
     $conn = searchServiceTestConn();
-    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('ab', 'ab', NOW())");
+    $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('ab', 'ab', NOW())");
     $tagId = (int) $conn->lastInsertId();
     $conn->executeStatement('INSERT INTO image_tag (image_id, tag_id) VALUES (4, ?)', [$tagId]);
 
@@ -1890,7 +1890,7 @@ test('getQuickSearchResultsNoCache() narrows two adjacent short terms to a share
     // exercising qsearchGetTags()'s own short-token intersection.
     $conn = searchServiceTestConn();
     $conn->executeStatement(
-        'INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
+        "INSERT INTO tags (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
     );
     $tagId = (int) $conn->lastInsertId();
     $conn->executeStatement(
@@ -1918,11 +1918,11 @@ test('qsearchGetCategories() narrows 2 adjacent short, non-wildcarded, non-quote
     // would otherwise coincidentally reach the same final image set
     // regardless of whether this sub-intersection ran.
     $conn = searchServiceTestConn();
-    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('zca')");
+    $conn->executeStatement("INSERT INTO categories (name) VALUES ('zca')");
     $catA = (int) $conn->lastInsertId();
-    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('zcb')");
+    $conn->executeStatement("INSERT INTO categories (name) VALUES ('zcb')");
     $catB = (int) $conn->lastInsertId();
-    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('zca zcb')");
+    $conn->executeStatement("INSERT INTO categories (name) VALUES ('zca zcb')");
     $catAB = (int) $conn->lastInsertId();
     $conn->executeStatement(
         'INSERT INTO image_category (image_id, category_id) VALUES (5, ?), (5, ?), (4, ?)',
@@ -1951,7 +1951,7 @@ test('getQuickSearchResultsNoCache() excludes a matched category from the displa
     // the identical 4-term OR gate. A 2-char exact category name ('ab')
     // in a 2-token search satisfies none of the 4 conditions.
     $conn = searchServiceTestConn();
-    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('ab')");
+    $conn->executeStatement("INSERT INTO categories (name) VALUES ('ab')");
     $catId = (int) $conn->lastInsertId();
 
     try {
@@ -2015,7 +2015,7 @@ test('getQuickSearchResultsNoCache() finds no subalbums for a leaf category matc
     $originalUppercats = $conn->fetchOne('SELECT uppercats FROM categories WHERE id = 2');
     expect($originalUppercats)
         ->toBeString();
-    $conn->executeStatement('UPDATE categories' . " SET uppercats = '999' WHERE id = 2");
+    $conn->executeStatement("UPDATE categories SET uppercats = '999' WHERE id = 2");
 
     try {
         // "Nested" matches category 2 ("Nested Sub Album") by name only.
@@ -2283,7 +2283,7 @@ test('getQuickSearchResultsNoCache() throws when the default user language resol
     // user_id=2 is CurrentConfig::defaultUserId()'s own default (the
     // guest account) -- getDefaultLanguage() reads *this* row, entirely
     // independent of CurrentUser (id=1 in this file's own beforeEach()).
-    $conn->executeStatement('UPDATE user_infos' . " SET language = 'zz_ZZ' WHERE user_id = 2");
+    $conn->executeStatement("UPDATE user_infos SET language = 'zz_ZZ' WHERE user_id = 2");
     searchServiceTestProcessCache()
         ->forget('default_user');
 

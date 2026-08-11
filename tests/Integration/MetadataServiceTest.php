@@ -1079,14 +1079,14 @@ namespace Piwigo\Tests\Integration {
             } finally {
                 $this->conn->executeStatement('DELETE FROM image_tag WHERE image_id = ?', [$imageId]);
                 $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
-                $this->conn->executeStatement('DELETE FROM tags' . " WHERE name IN ('sync-nature', 'sync-travel')");
+                $this->conn->executeStatement("DELETE FROM tags WHERE name IN ('sync-nature', 'sync-travel')");
             }
         }
 
         public function testSyncMetadataSkipsARowWhoseFileIsUnreadable(): void
         {
             $this->conn->executeStatement(
-                'INSERT INTO images' . " (path) VALUES ('no/such/file-for-sync.jpg')"
+                "INSERT INTO images (path) VALUES ('no/such/file-for-sync.jpg')"
             );
             $imageId = (int) $this->conn->lastInsertId();
 

@@ -57,7 +57,7 @@ final class MetadataRepositoryTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE categories SET site_id = NULL, dir = NULL');
-        $this->conn->executeStatement('UPDATE images' . " SET storage_category_id = NULL, date_metadata_update = '2026-07-07'");
+        $this->conn->executeStatement("UPDATE images SET storage_category_id = NULL, date_metadata_update = '2026-07-07'");
         parent::tearDown();
     }
 
@@ -87,8 +87,8 @@ final class MetadataRepositoryTest extends IntegrationTestCase
 
     public function testFindCategoryIdsMatchesASpecificCategory(): void
     {
-        $this->conn->executeStatement('UPDATE categories' . " SET site_id = 1, dir = 'sample_album' WHERE id = 1");
-        $this->conn->executeStatement('UPDATE categories' . " SET site_id = 1, dir = 'nested' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE categories SET site_id = 1, dir = 'sample_album' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE categories SET site_id = 1, dir = 'nested' WHERE id = 2");
 
         $ids = $this->repo->findCategoryIds(1, 1, false);
 
@@ -97,8 +97,8 @@ final class MetadataRepositoryTest extends IntegrationTestCase
 
     public function testFindCategoryIdsRecursiveIncludesSubcategories(): void
     {
-        $this->conn->executeStatement('UPDATE categories' . " SET site_id = 1, dir = 'sample_album', uppercats = '1' WHERE id = 1");
-        $this->conn->executeStatement('UPDATE categories' . " SET site_id = 1, dir = 'nested', uppercats = '1,2' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE categories SET site_id = 1, dir = 'sample_album', uppercats = '1' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE categories SET site_id = 1, dir = 'nested', uppercats = '1,2' WHERE id = 2");
 
         $ids = $this->repo->findCategoryIds(1, 1, true);
         sort($ids);

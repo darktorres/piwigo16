@@ -424,7 +424,7 @@ final class WsExtensionsTest extends ContractTestCase
         // not the plural wire-format 'plugins' the WS param itself uses --
         // see ExtensionIgnoredUpdateEntity's own docblock.
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM extension_ignored_updates' . " WHERE extension_type = 'plugin'"
+            "SELECT extension_id FROM extension_ignored_updates WHERE extension_type = 'plugin'"
         );
         self::assertCount(1, $rows);
         self::assertSame($pluginId, $rows[0]['extension_id']);
@@ -453,7 +453,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('ok', $second['stat']);
 
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM extension_ignored_updates' . " WHERE extension_type = 'plugin' AND extension_id = ?",
+            "SELECT extension_id FROM extension_ignored_updates WHERE extension_type = 'plugin' AND extension_id = ?",
             [$pluginId]
         );
         self::assertCount(1, $rows, 'ignoring the same extension twice must not create a duplicate row');
@@ -484,12 +484,12 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
 
         $pluginRows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM extension_ignored_updates' . " WHERE extension_type = 'plugin'"
+            "SELECT extension_id FROM extension_ignored_updates WHERE extension_type = 'plugin'"
         );
         self::assertSame([], $pluginRows);
 
         $themeRows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM extension_ignored_updates' . " WHERE extension_type = 'theme'"
+            "SELECT extension_id FROM extension_ignored_updates WHERE extension_type = 'theme'"
         );
         self::assertSame(['some_theme'], array_column($themeRows, 'extension_id'), 'reset with a specific type must not touch other types');
     }

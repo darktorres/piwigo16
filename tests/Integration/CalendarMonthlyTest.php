@@ -100,11 +100,11 @@ namespace Piwigo\Tests\Integration {
             // Idempotent: safe to re-run before every test method even though
             // the DB itself is only reset/reloaded once per class (see
             // $fixtureReady above).
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
 
             $this->urlService = new CalendarMonthlyTestFakeUrlService();
 
@@ -830,7 +830,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function testBuildMonthCalendarShiftsASundayFirstDayToTheLastColumn(): void
         {
-            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2024-09-15 00:00:00' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE images SET date_available = '2024-09-15 00:00:00' WHERE id = 1");
 
             try {
                 $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
@@ -847,7 +847,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertArrayNotHasKey('DAY', $this->digArray($firstWeek, [0]));
                 self::assertSame(1, $this->dig($firstWeek, [6, 'DAY']));
             } finally {
-                $this->conn->executeStatement('UPDATE images' . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
+                $this->conn->executeStatement("UPDATE images SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
             }
         }
 

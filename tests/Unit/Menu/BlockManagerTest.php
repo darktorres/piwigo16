@@ -234,7 +234,7 @@ test('prepareDisplay treats a resolved position of exactly 1 as visible', functi
         ->toBe(1);
 });
 
-test('prepareDisplay sorts display blocks before firing blockmanager_prepareDisplay, so handlers observe already-sorted order', function (): void {
+test('prepareDisplay sorts display blocks before firing blockmanager_prepare_display, so handlers observe already-sorted order', function (): void {
     $currentConfig = CurrentConfigTestFactory::get();
     $currentConfig->blkMenubar = [
         'second' => 10,
@@ -249,7 +249,7 @@ test('prepareDisplay sorts display blocks before firing blockmanager_prepareDisp
     $handler = function (BlockManagerPrepareDisplay $event) use (&$observedIds): void {
         $target = $event->value;
         if (! $target instanceof BlockManager) {
-            throw new RuntimeException('blockmanager_prepareDisplay: expected a BlockManager instance');
+            throw new RuntimeException('blockmanager_prepare_display: expected a BlockManager instance');
         }
 
         $reflection = new ReflectionProperty(BlockManager::class, 'display_blocks');
@@ -279,7 +279,7 @@ test('prepareDisplay sorts display blocks before firing blockmanager_prepareDisp
         ->toBe(['second', 'first']);
 });
 
-test('prepareDisplay re-sorts after blockmanager_prepareDisplay handlers change block positions', function (): void {
+test('prepareDisplay re-sorts after blockmanager_prepare_display handlers change block positions', function (): void {
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
     $manager->registerBlock(new RegisteredBlock('first', 'First', 'core'));
     $manager->registerBlock(new RegisteredBlock('second', 'Second', 'core'));
@@ -292,7 +292,7 @@ test('prepareDisplay re-sorts after blockmanager_prepareDisplay handlers change 
     $handler = function (BlockManagerPrepareDisplay $event): void {
         $target = $event->value;
         if (! $target instanceof BlockManager) {
-            throw new RuntimeException('blockmanager_prepareDisplay: expected a BlockManager instance');
+            throw new RuntimeException('blockmanager_prepare_display: expected a BlockManager instance');
         }
 
         $target->setBlockPosition('first', 999);

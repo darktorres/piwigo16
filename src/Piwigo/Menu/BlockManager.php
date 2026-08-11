@@ -84,7 +84,7 @@ final class BlockManager
 
     /**
      * Performs one time preparation of registered blocks for display.
-     * Triggers 'blockmanager_prepareDisplay' event where plugins can
+     * Triggers 'blockmanager_prepare_display' event where plugins can
      * reposition or hide blocks
      */
     public function prepareDisplay(): void

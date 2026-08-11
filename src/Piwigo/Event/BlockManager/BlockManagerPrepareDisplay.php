@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Event\BlockManager;
 
 /**
- * Typed event for the legacy `blockmanager_prepareDisplay` filter
+ * Typed event for the legacy `blockmanager_prepare_display` filter
  * (notify). No handler is registered for it anywhere today. Typed
  * `object`, not `Piwigo\Menu\BlockManager`, even though its one real
  * dispatch site (`BlockManager::prepareDisplay()`) always passes `$this`

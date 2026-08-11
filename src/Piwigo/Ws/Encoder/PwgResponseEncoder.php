@@ -64,9 +64,9 @@ abstract class PwgResponseEncoder
     private static function flatten(mixed &$value): void
     {
         if ($value instanceof PwgNamedArray) {
-            $value = $value->_content;
+            $value = $value->content;
         } elseif ($value instanceof PwgNamedStruct) {
-            $value = $value->_content;
+            $value = $value->content;
         }
 
         if (! is_array($value)) {

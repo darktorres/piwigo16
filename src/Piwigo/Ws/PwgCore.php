@@ -347,7 +347,7 @@ final class PwgCore
 
         $infos['last_date_calc'] = date('Y-m-d H:i:s');
 
-        // $output matches PwgNamedArray::$_content's own by-design generic
+        // $output matches PwgNamedArray::$content's own by-design generic
         // array<int, mixed> contract (a name/value pair list encoded
         // generically for XML/REST) -- $infos itself is genuinely
         // heterogeneous (int/array/string/null per key).

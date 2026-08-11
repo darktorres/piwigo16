@@ -90,13 +90,10 @@ final class PwgRestEncoder extends PwgResponseEncoder
      * @param array<int|string, mixed> $data
      * @param array<array-key, int> $xml_attributes
      */
-    public function encodeStruct(array $data, bool $skip_underscore, array $xml_attributes = []): void
+    public function encodeStruct(array $data, array $xml_attributes = []): void
     {
         foreach ($data as $name => $value) {
             if (is_numeric($name)) {
-                continue;
-            }
-            if ($skip_underscore and $name[0] === '_') {
                 continue;
             }
             if ($value === null) {
@@ -119,9 +116,6 @@ final class PwgRestEncoder extends PwgResponseEncoder
 
         foreach ($data as $name => $value) {
             if (is_numeric($name)) {
-                continue;
-            }
-            if ($skip_underscore and $name[0] === '_') {
                 continue;
             }
             if ($value === null) {
@@ -162,16 +156,16 @@ final class PwgRestEncoder extends PwgResponseEncoder
                 if (array_is_list($data)) {
                     $this->encodeArray($data, 'item');
                 } else {
-                    $this->encodeStruct($data, false, $xml_attributes);
+                    $this->encodeStruct($data, $xml_attributes);
                 }
                 break;
             case 'object':
                 if ($data instanceof PwgNamedArray) {
-                    $this->encodeArray($data->_content, $data->_itemName, $data->_xmlAttributes);
+                    $this->encodeArray($data->content, $data->itemName, $data->xmlAttributes);
                 } elseif ($data instanceof PwgNamedStruct) {
-                    $this->encodeStruct($data->_content, false, $data->_xmlAttributes);
+                    $this->encodeStruct($data->content, $data->xmlAttributes);
                 } else {
-                    $this->encodeStruct(get_object_vars($data), true);
+                    $this->encodeStruct(get_object_vars($data));
                 }
                 break;
             default:

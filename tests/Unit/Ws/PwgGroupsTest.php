@@ -126,7 +126,7 @@ test('getList returns an empty groups list for a group_id with no real matches',
     expect($result)
         ->toBeArray();
     if (is_array($result)) {
-        expect($result['groups']->_content)->toBe([]);
+        expect($result['groups']->content)->toBe([]);
     }
 });
 

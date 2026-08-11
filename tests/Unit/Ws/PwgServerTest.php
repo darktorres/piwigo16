@@ -520,7 +520,7 @@ test('wsGetMethodList lists only non-hidden methods', function (): void {
 
     $result = PwgServer::wsGetMethodList([], $server);
 
-    expect($result['methods']->_content)->toBe(['test.visible']);
+    expect($result['methods']->content)->toBe(['test.visible']);
 });
 
 test('wsGetMethodDetails returns INVALID_PARAM for a non-existent method name', function (): void {

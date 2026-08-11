@@ -21,20 +21,26 @@ use Piwigo\Ws\PwgNamedStruct;
  * there because no real WS response exercises them: encode()'s 'NULL'
  * gettype() case, the generic get_object_vars() object fallback, and the
  * `default` resource/unknown-type trigger_error() branch. This file closes
- * exactly those three, plus encodeStruct()'s numeric-key skip and its
- * skip_underscore behaviour (only reachable via that same generic object
- * fallback), which had no coverage anywhere.
+ * exactly those three, plus encodeStruct()'s numeric-key skip, which had
+ * no coverage anywhere.
  *
- * encodeStruct() runs the *same* is_numeric()/skip_underscore/null checks
- * in two separate foreach loops over the same $data (the first loop only
- * peels off xml_attributes/ATTRIBUTES_KEY entries via unset(); every other
- * key -- including ones the checks below skip -- stays in $data for the
- * second, element-writing loop). So a key matching one of those three skip
- * conditions hits the *same* check in both loops, never reaching either
- * loop's write path. Asserting on the final rendered XML (the only way to
- * observe encodeStruct()'s effect from the public API) is sufficient proof
- * both loops' checks fired: if either loop's check hadn't skipped it, the
- * key would show up as a written element.
+ * encodeStruct() no longer takes a skip_underscore flag -- real PHP
+ * visibility (get_object_vars() called from outside a class already
+ * excludes private/protected properties natively) governs what the
+ * generic object fallback exposes, not a leading-underscore naming
+ * convention. See 'encode() no longer hides leading-underscore keys...'
+ * below for the test documenting that contract directly.
+ *
+ * encodeStruct() runs the *same* is_numeric()/null checks in two separate
+ * foreach loops over the same $data (the first loop only peels off
+ * xml_attributes/ATTRIBUTES_KEY entries via unset(); every other key --
+ * including ones the checks below skip -- stays in $data for the second,
+ * element-writing loop). So a key matching one of those skip conditions
+ * hits the *same* check in both loops, never reaching either loop's write
+ * path. Asserting on the final rendered XML (the only way to observe
+ * encodeStruct()'s effect from the public API) is sufficient proof both
+ * loops' checks fired: if either loop's check hadn't skipped it, the key
+ * would show up as a written element.
  */
 test('encode_struct skips an integer array key in both scan loops, writing no element for it', function (): void {
     // [3 => ..., 'label' => ...] is not array_is_list() (key 3 isn't the
@@ -79,34 +85,6 @@ test('encode_struct skips a null-valued key in both scan loops, omitting the ele
         ->toBe($expected)
         ->and($result)
         ->not->toContain('<subtitle');
-});
-
-test('encode_struct with skip_underscore=true skips a leading-underscore key, in both scan loops', function (): void {
-    // skip_underscore is only ever true via encode()'s generic
-    // get_object_vars() object fallback -- the PwgNamedStruct/PwgNamedArray
-    // branches both pass false. A plain object that is neither of those
-    // wrapper types is exactly what reaches that fallback, so this fixture
-    // also proves encode()'s own `else { encodeStruct(get_object_vars($data), true); }`
-    // line and the `break` right after it.
-    $encoder = new PwgRestEncoder();
-    $response = new stdClass();
-    $response->_secret = 'TopSecret';
-    $response->label = 'Public';
-
-    $result = $encoder->encodeResponse($response);
-
-    $expected = <<<EOD
-    <?xml version="1.0" encoding="utf-8" ?>
-    <rsp stat="ok">
-    <label>Public</label>
-    </rsp>
-    EOD;
-    expect($result)
-        ->toBe($expected)
-        ->and($result)
-        ->not->toContain('TopSecret')
-        ->and($result)
-        ->not->toContain('_secret');
 });
 
 test('encode() writes empty content for a NULL list element, reached only via encodeArray(), never encodeStruct()', function (): void {
@@ -211,7 +189,7 @@ test('encode_struct pulls a later xml_attributes-designated key out even after a
     // Exercises encodeStruct()'s FIRST scan loop (attribute-extraction),
     // not just the second (element-writing) loop the numeric-key test
     // near the top of this file already covers: $xml_attributes is only
-    // ever non-empty via a PwgNamedStruct's own _xmlAttributes, so 'id'
+    // ever non-empty via a PwgNamedStruct's own xmlAttributes, so 'id'
     // must be pulled out here as a real XML attribute on <group>, never
     // as a child element -- and placing a numeric key *before* it proves
     // the loop keeps going past that entry instead of stopping on it.
@@ -271,25 +249,14 @@ test('encode_struct casts an integer attribute key to string before writing it',
         ->toContain('<label>Public</label>');
 });
 
-test('encode_struct (skip_underscore path) still special-cases a non-underscore ATTRIBUTES_KEY property as an xml attribute source', function (): void {
-    // skip_underscore=true is only ever reached via encode()'s generic
-    // get_object_vars() object fallback, which never threads a non-empty
-    // $xml_attributes through -- so the *only* way to observe this first
-    // loop's `$skip_underscore and $name[0] === '_'` condition actually
-    // pulling something out of $data (rather than merely not-writing it,
-    // already covered by the skip_underscore test near the top of this
-    // file) is via the ATTRIBUTES_KEY special case, whose name
-    // ('attributes_xml_') does NOT start with an underscore but DOES end
-    // with one.
-    //
-    // Kills line 92 IfNegated and IdenticalToNotIdentical (both invert
-    // the condition, so the true skip_underscore=true + non-underscore-
-    // first-char combination wrongly skips this entry instead of
-    // processing it), LogicalAndToLogicalOr (`or` makes the whole
-    // condition unconditionally true whenever skip_underscore is true,
-    // regardless of $name), and DecrementInteger (`$name[-1]` is the
-    // *last* character of 'attributes_xml_', which -- unlike the first --
-    // genuinely is '_', so checking it wrongly skips this entry too).
+test('encode() extracts an ATTRIBUTES_KEY property as an xml attribute source through the generic object fallback', function (): void {
+    // The generic get_object_vars() object fallback (an arbitrary object
+    // that is neither PwgNamedArray nor PwgNamedStruct) still runs
+    // encodeStruct()'s full first scan loop, including the
+    // ATTRIBUTES_KEY special case -- this proves that dispatch path
+    // extracts real xml attributes from an arbitrary object's own
+    // ATTRIBUTES_KEY property, same as the plain-array/PwgNamedStruct
+    // paths this file's other ATTRIBUTES_KEY tests already cover.
     $encoder = new PwgRestEncoder();
     $response = new stdClass();
     $response->{PwgResponseEncoder::ATTRIBUTES_KEY} = [
@@ -308,75 +275,6 @@ test('encode_struct (skip_underscore path) still special-cases a non-underscore 
         ->toContain('<label>Public</label>')
         ->and($result)
         ->not->toContain('attributes_xml_');
-});
-
-test('encode_struct (skip_underscore path) checks the key\'s first character, not a shifted index', function (): void {
-    // Kills line 92 IncrementInteger (`$name[0]` -> `$name[1]`). A
-    // single-character property name only has a valid string offset at
-    // 0 -- indexing 1 is out of range, and PHP raises a genuine
-    // "Uninitialized string offset" E_WARNING for it (confirmed live via
-    // `php -r '$n="_"; $n[1];'` under a matching error handler) that the
-    // real, unmutated `$name[0]` never triggers for any key.
-    //
-    // This mutant happens to be output-invisible here (the second scan
-    // loop still filters the entry out correctly either way, since only
-    // this first-loop line is mutated), so the captured-warnings
-    // assertion is the only signal that can kill it -- same
-    // capture-and-assert technique this file's own resource/E_USER_WARNING
-    // test above already uses.
-    $encoder = new PwgRestEncoder();
-    $response = new stdClass();
-    $response->{'_'} = 'should-be-skipped-silently';
-    $response->label = 'Public';
-
-    /** @var array<int, array{0: int, 1: string}> $captured */
-    $captured = [];
-    set_error_handler(static function (int $errno, string $errstr) use (&$captured): bool {
-        $captured[] = [$errno, $errstr];
-
-        return true;
-    });
-    try {
-        $result = $encoder->encodeResponse($response);
-    } finally {
-        restore_error_handler();
-    }
-
-    expect($captured)
-        ->toBe([])
-        ->and($result)
-        ->toContain('<label>Public</label>')
-        ->and($result)
-        ->not->toContain('should-be-skipped-silently');
-});
-
-test('encode_struct (skip_underscore path, first scan loop) only skips the underscore-prefixed entry itself, not every entry after it', function (): void {
-    // Kills line 93 ContinueToBreak: the underscore-prefixed '_secret'
-    // entry is deliberately placed *before* the ATTRIBUTES_KEY entry, so
-    // a `break` instead of `continue` aborts the whole loop on '_secret'
-    // and 'id' never gets pulled out as an attribute, ending up as a
-    // plain child element instead.
-    $encoder = new PwgRestEncoder();
-    $response = new stdClass();
-    $response->_secret = 'hide-me';
-    $response->{PwgResponseEncoder::ATTRIBUTES_KEY} = [
-        'id' => 9,
-    ];
-    $response->label = 'Public';
-    $wrapper = [
-        'group' => $response,
-    ];
-
-    $result = $encoder->encodeResponse($wrapper);
-
-    expect($result)
-        ->toContain('<group id="9">')
-        ->and($result)
-        ->toContain('<label>Public</label>')
-        ->and($result)
-        ->not->toContain('hide-me')
-        ->and($result)
-        ->not->toContain('_secret');
 });
 
 test('encode_struct omits a null-valued xml_attributes-designated key entirely, never as an empty attribute (first scan loop)', function (): void {
@@ -450,51 +348,41 @@ test('encode_struct (second, element-writing scan loop) only skips a null-valued
         ->not->toContain('<middle');
 });
 
-test('encode() routes a plain PHP array through encodeStruct() with skip_underscore=false, unlike the generic object fallback', function (): void {
-    // Kills line 158 FalseToTrue: encode()'s bare 'array' case is the
-    // only encodeStruct() call site that hardcodes `false` for
-    // skip_underscore. Forcing it `true` would make a plain associative
-    // array behave like the get_object_vars() object fallback and
-    // silently drop any underscore-prefixed key -- which a plain PHP
-    // array response must NOT do.
-    $encoder = new PwgRestEncoder();
-    $response = [
-        '_hidden' => 'should-appear',
-        'visible' => 'yes',
-    ];
-
-    $result = $encoder->encodeResponse($response);
-
-    expect($result)
-        ->toContain('<_hidden>should-appear</_hidden>')
-        ->and($result)
-        ->toContain('<visible>yes</visible>');
-});
-
-test('encode() routes a PwgNamedArray through encodeArray()/its own _content, not the generic object fallback', function (): void {
+test('encode() routes a PwgNamedArray through encodeArray()/its own content, not the generic object fallback', function (): void {
     // Kills line 162 InstanceOfToFalse: a false-forced check sends a
     // PwgNamedArray to the final generic-object `else` branch instead --
     // get_object_vars() on it (from outside the class) sees its public
-    // _content/_itemName/_xmlAttributes properties, but skip_underscore=true
-    // then drops all three (every one starts with an underscore),
-    // producing no output at all instead of the two <item> elements.
+    // content/itemName/xmlAttributes properties, and -- now that
+    // skip_underscore no longer exists to hide them -- would encode them
+    // as a wrapping <content>/<itemName>/<xmlAttributes> struct instead
+    // of the flat two <item> elements. An exact toBe() match is required
+    // here, not toContain(): under the mutant, the wrong output
+    // (`<content><item>a</item><item>b</item></content><itemName>item</itemName>...`)
+    // still contains the literal substrings '<item>a</item>'/'<item>b</item>',
+    // so a toContain() assertion would silently stop catching this mutant.
     $encoder = new PwgRestEncoder();
     $response = new PwgNamedArray(['a', 'b'], 'item');
 
     $result = $encoder->encodeResponse($response);
 
+    $expected = <<<EOD
+    <?xml version="1.0" encoding="utf-8" ?>
+    <rsp stat="ok">
+    <item>a</item><item>b</item>
+    </rsp>
+    EOD;
     expect($result)
-        ->toContain('<item>a</item>')
-        ->and($result)
-        ->toContain('<item>b</item>');
+        ->toBe($expected);
 });
 
-test('encode() routes a PwgNamedStruct through encodeStruct()/its own _content, not the generic object fallback', function (): void {
+test('encode() routes a PwgNamedStruct through encodeStruct()/its own content, not the generic object fallback', function (): void {
     // Kills line 164 InstanceOfToFalse, the PwgNamedStruct counterpart to
     // the PwgNamedArray test above: get_object_vars() would see only
-    // _content/_xmlAttributes (both underscore-prefixed, both public),
-    // and skip_underscore=true in the generic fallback would drop both,
-    // producing no output at all instead of the <title> element.
+    // content/xmlAttributes (both public), and -- with skip_underscore
+    // gone -- the mutant would wrap the output in a <content> element
+    // instead of writing <title>Hello</title> directly. Same toBe()
+    // reasoning as the PwgNamedArray test above: toContain() would not
+    // distinguish the two.
     //
     // Explicit `[]` for $xmlAttributes (rather than the default null)
     // turns off PwgNamedStruct's own auto-attribute-detection, so 'title'
@@ -508,30 +396,52 @@ test('encode() routes a PwgNamedStruct through encodeStruct()/its own _content, 
 
     $result = $encoder->encodeResponse($response);
 
+    $expected = <<<EOD
+    <?xml version="1.0" encoding="utf-8" ?>
+    <rsp stat="ok">
+    <title>Hello</title>
+    </rsp>
+    EOD;
     expect($result)
-        ->toContain('<title>Hello</title>');
+        ->toBe($expected);
 });
 
-test('encode() encodes a PwgNamedStruct without skipping its own underscore-prefixed keys', function (): void {
-    // Kills line 167 FalseToTrue: the PwgNamedStruct branch's own
-    // encodeStruct() call hardcodes skip_underscore=false (only the
-    // generic get_object_vars() object fallback a few lines below passes
-    // true) -- a leading-underscore _content key must still be written as
-    // a normal element for a PwgNamedStruct, unlike the object-fallback
-    // path this file's own 'skips a leading-underscore key' test near the
-    // top covers. The sibling 'routes a PwgNamedStruct...' test right
-    // above has no underscore-prefixed _content key, so it can't
-    // distinguish this mutant on its own.
+test('encode() no longer hides leading-underscore keys anywhere -- plain array, PwgNamedStruct, or the generic object fallback', function (): void {
+    // Confirms the new, correct contract now that skip_underscore is
+    // gone: real PHP visibility (not a leading-underscore naming
+    // convention) governs what's exposed. Covers all three routes
+    // encode()/encodeStruct() can reach a leading-underscore key
+    // through -- a plain associative array, a PwgNamedStruct's own
+    // content, and an arbitrary object via get_object_vars() -- since
+    // all three now behave identically (no more special-casing).
     $encoder = new PwgRestEncoder();
-    $response = new PwgNamedStruct([
+
+    $arrayResult = $encoder->encodeResponse([
+        '_hidden' => 'should-appear',
+        'visible' => 'yes',
+    ]);
+    expect($arrayResult)
+        ->toContain('<_hidden>should-appear</_hidden>')
+        ->and($arrayResult)
+        ->toContain('<visible>yes</visible>');
+
+    $structEncoder = new PwgRestEncoder();
+    $structResult = $structEncoder->encodeResponse(new PwgNamedStruct([
         '_hidden' => 'should-appear',
         'label' => 'Public',
-    ], []);
-
-    $result = $encoder->encodeResponse($response);
-
-    expect($result)
+    ], []));
+    expect($structResult)
         ->toContain('<_hidden>should-appear</_hidden>')
-        ->and($result)
+        ->and($structResult)
+        ->toContain('<label>Public</label>');
+
+    $objectEncoder = new PwgRestEncoder();
+    $response = new stdClass();
+    $response->_formerlyHidden = 'now-visible';
+    $response->label = 'Public';
+    $objectResult = $objectEncoder->encodeResponse($response);
+    expect($objectResult)
+        ->toContain('<_formerlyHidden>now-visible</_formerlyHidden>')
+        ->and($objectResult)
         ->toContain('<label>Public</label>');
 });

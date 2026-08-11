@@ -273,7 +273,7 @@ final class WsHelper
 
                 $sub_categories = $categories[$uppercat_key]['sub_categories'];
                 if ($sub_categories instanceof PwgNamedArray) {
-                    $sub_categories->_content[] = &$node;
+                    $sub_categories->content[] = &$node;
                 }
             }
         }

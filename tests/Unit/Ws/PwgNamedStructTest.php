@@ -9,7 +9,7 @@ use Piwigo\Ws\PwgNamedStruct;
  * when the caller supplies an explicit list, it is flipped into a
  * name => position map (same shape as PwgNamedArray's own flip); when
  * omitted (null), the constructor instead auto-detects xml-attribute
- * candidates by walking $_content itself (scalar/null values, keys not
+ * candidates by walking $content itself (scalar/null values, keys not
  * in ['', 0, '0']), writing $key => 1 for each. Only the
  * PwgSerialPhpEncoderTest.php fixture exercised this class before, and
  * only via the explicit (empty-array) branch -- the null/auto-detect
@@ -21,11 +21,11 @@ test('explicit xmlAttributes flips the given list into a name => position map', 
         'name' => 'Alps',
     ], ['id']);
 
-    expect($struct->_xmlAttributes)
+    expect($struct->xmlAttributes)
         ->toBe([
             'id' => 0,
         ])
-        ->and($struct->_content)
+        ->and($struct->content)
         ->toBe([
             'id' => 7,
             'name' => 'Alps',
@@ -33,17 +33,17 @@ test('explicit xmlAttributes flips the given list into a name => position map', 
 });
 
 test('null xmlAttributes auto-detects scalar content keys instead of flipping a list', function (): void {
-    // Same $_content as the explicit-array test above, but with
+    // Same $content as the explicit-array test above, but with
     // xmlAttributes omitted -- proves the two branches produce
-    // meaningfully different $_xmlAttributes for identical input,
-    // and that the auto-detect branch really does walk $_content
+    // meaningfully different $xmlAttributes for identical input,
+    // and that the auto-detect branch really does walk $content
     // (not simply an empty/flipped-nothing result).
     $struct = new PwgNamedStruct([
         'id' => 7,
         'name' => 'Alps',
     ]);
 
-    expect($struct->_xmlAttributes)
+    expect($struct->xmlAttributes)
         ->toBe([
             'id' => 1,
             'name' => 1,
@@ -63,8 +63,8 @@ test('null xmlAttributes auto-detect skips non-scalar values and keys forced int
 
     // 'comments' is an array (not scalar/null) so it's never a candidate;
     // 'name' is scalar but explicitly forced to stay an xml element via
-    // $xmlElements, so only 'id' ends up in _xmlAttributes.
-    expect($struct->_xmlAttributes)
+    // $xmlElements, so only 'id' ends up in xmlAttributes.
+    expect($struct->xmlAttributes)
         ->toBe([
             'id' => 1,
         ]);
@@ -80,7 +80,7 @@ test('null xmlAttributes auto-detect excludes the "" and 0 keys even when scalar
         0 => 'zero',
     ]);
 
-    expect($struct->_xmlAttributes)
+    expect($struct->xmlAttributes)
         ->toBe([
             'id' => 1,
         ]);

@@ -206,7 +206,7 @@ test('encodeResponse actually flattens a PwgNamedArray wrapper before encoding',
     // would still be a PwgNamedArray *object* by the time it reaches
     // xmlrpcEncode(). That method has no special case for PwgNamedArray --
     // it would fall into the generic 'object' branch and get_object_vars()
-    // would leak _content/_itemName/_xmlAttributes as struct members
+    // would leak content/itemName/xmlAttributes as struct members
     // instead of encoding the wrapped list directly. Calling flatten
     // first unwraps $response to plain [1, 2, 3] before xmlrpcEncode()
     // ever sees it, so the list branch runs and none of those wrapper

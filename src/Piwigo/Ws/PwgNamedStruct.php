@@ -16,22 +16,21 @@ namespace Piwigo\Ws;
  * integers starting at 0). Provides naming clues for xml output (what is xml
  * attributes and what is element)
  *
- * $_content is genuinely arbitrary by design -- this wraps any WS method's
+ * $content is genuinely arbitrary by design -- this wraps any WS method's
  * own response content generically for encoding, same rationale as
  * PwgNamedArray/Encoder\PwgResponseEncoder.
  */
 final class PwgNamedStruct
 {
-    /* private */
     /**
      * @var array<array-key, int>
      */
-    public $_xmlAttributes;
+    public $xmlAttributes;
 
     /**
      * Constructs a named struct (usually returned by web service function
      * implementation)
-     * @param array<array-key, mixed> $_content the actual content (php array) --
+     * @param array<array-key, mixed> $content the actual content (php array) --
      *    a "struct" is defined by non-consecutive keys, which includes
      *    genuine int keys (e.g. a numeric key mixed with string keys, or a
      *    non-zero-starting int-keyed array), not just string keys
@@ -41,18 +40,18 @@ final class PwgNamedStruct
      * @param string[]|null $xmlElements keys in $content to always treat as xml elements
      */
     public function __construct(
-        public array $_content,
+        public array $content,
         ?array $xmlAttributes = null,
         ?array $xmlElements = null
     ) {
         if (isset($xmlAttributes)) {
-            $this->_xmlAttributes = array_flip($xmlAttributes);
+            $this->xmlAttributes = array_flip($xmlAttributes);
         } else {
-            $this->_xmlAttributes = [];
-            foreach ($this->_content as $key => $value) {
+            $this->xmlAttributes = [];
+            foreach ($this->content as $key => $value) {
                 if (! in_array($key, ['', 0, '0'], true) and (is_scalar($value) or $value === null)) {
                     if ($xmlElements === null || $xmlElements === [] or ! in_array($key, $xmlElements, true)) {
-                        $this->_xmlAttributes[$key] = 1;
+                        $this->xmlAttributes[$key] = 1;
                     }
                 }
             }

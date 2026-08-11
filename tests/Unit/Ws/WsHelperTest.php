@@ -293,8 +293,8 @@ test('categoriesFlatlistToTree attaches a child under its real parent, root-leve
         ->and($tree[0]['sub_categories'])->toBeInstanceOf(PwgNamedArray::class);
     $subCategories = $tree[0]['sub_categories'];
     if ($subCategories instanceof PwgNamedArray) {
-        expect($subCategories->_content)->toHaveCount(1);
-        $child = $subCategories->_content[0];
+        expect($subCategories->content)->toHaveCount(1);
+        $child = $subCategories->content[0];
         if (is_array($child)) {
             expect($child['name'])->toBe('Child');
         }

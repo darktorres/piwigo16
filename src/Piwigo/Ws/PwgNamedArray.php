@@ -16,30 +16,29 @@ namespace Piwigo\Ws;
  * Provides naming clues for xml output (xml attributes vs. xml child elements?)
  * Usually returned by web service function implementation.
  *
- * $_content is genuinely arbitrary by design -- this wraps any WS method's
+ * $content is genuinely arbitrary by design -- this wraps any WS method's
  * own response content generically for encoding, same rationale as
  * PwgNamedStruct/Encoder\PwgResponseEncoder.
  */
 final class PwgNamedArray
 {
-    /* private */
     /**
      * @var array<string, int>
      */
-    public $_xmlAttributes;
+    public $xmlAttributes;
 
     /**
      * Constructs a named array
-     * @param array<int, mixed> $_content (keys must be consecutive integers starting at 0)
-     * @param string $_itemName xml element name for values of arr (e.g. image)
+     * @param array<int, mixed> $content (keys must be consecutive integers starting at 0)
+     * @param string $itemName xml element name for values of arr (e.g. image)
      * @param string[] $xmlAttributes of sub-item attributes that will be encoded as
      *      xml attributes instead of xml child elements
      */
     public function __construct(
-        public array $_content,
-        public string $_itemName,
+        public array $content,
+        public string $itemName,
         array $xmlAttributes = []
     ) {
-        $this->_xmlAttributes = array_flip($xmlAttributes);
+        $this->xmlAttributes = array_flip($xmlAttributes);
     }
 }

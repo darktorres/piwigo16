@@ -162,7 +162,7 @@ test('getList returns an empty categories list for a cat_id with no real access 
     expect($result)
         ->toBeArray();
     if (is_array($result)) {
-        expect($result['categories']->_content)->toBe([]);
+        expect($result['categories']->content)->toBe([]);
     }
 });
 

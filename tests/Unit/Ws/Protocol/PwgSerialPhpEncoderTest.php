@@ -66,7 +66,7 @@ test('encodeResponse serializes a plain array response as stat=ok/result', funct
 
 test('encodeResponse flattens a PwgNamedStruct, merging its attributes_xml_ marker key into the result', function (): void {
     // flattenResponse() (inherited from PwgResponseEncoder) unwraps the
-    // PwgNamedStruct to its raw ->_content, then -- because isStruct()
+    // PwgNamedStruct to its raw ->content, then -- because isStruct()
     // is true for it -- merges the 'attributes_xml_' sub-array into the
     // parent and removes the marker key entirely.
     $encoder = new PwgSerialPhpEncoder();
@@ -97,7 +97,7 @@ test('encodeResponse flattens a PwgNamedStruct, merging its attributes_xml_ mark
 });
 
 test('encodeResponse flattens a PwgNamedArray to its plain list content, with no attributes merge', function (): void {
-    // flatten()'s other branch: PwgNamedArray unwraps to ->_content same
+    // flatten()'s other branch: PwgNamedArray unwraps to ->content same
     // as PwgNamedStruct does, but a sequential-int-keyed list is NOT a
     // "struct" per isStruct(), so the attributes_xml_ merge block is
     // skipped entirely -- a genuinely different code path from the

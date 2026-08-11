@@ -37,7 +37,7 @@ final class RatingPageRenderer
         $ratingRequest = RatingRequest::fromGlobals($inputValidator);
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('rating');
+        $tabsheet->setId('rating');
         $tabsheet->select('rating', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 

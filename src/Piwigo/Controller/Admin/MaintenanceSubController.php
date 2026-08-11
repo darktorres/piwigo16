@@ -157,7 +157,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         $tab = $maintenanceDispatch->tab;
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('maintenance');
+        $tabsheet->setId('maintenance');
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

@@ -518,7 +518,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // relative paths.
         $this->coreTabs->setContext(new CoreTabsContext(confLink: $this->urlService->getRootUrl() . 'admin.php?page=configuration&amp;section='));
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('configuration');
+        $tabsheet->setId('configuration');
         $tabsheet->select($page_section, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

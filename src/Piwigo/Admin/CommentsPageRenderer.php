@@ -36,7 +36,7 @@ final class CommentsPageRenderer
         // of broken relative ones.
         $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('comments');
+        $tabsheet->setId('comments');
         $tabsheet->select('', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 

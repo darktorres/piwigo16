@@ -109,7 +109,7 @@ final class CatListPageRenderer
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('albums');
+        $tabsheet->setId('albums');
         $tabsheet->select('list', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

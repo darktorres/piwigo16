@@ -224,7 +224,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('site_update');
+        $tabsheet->setId('site_update');
         $tabsheet->select('synchronization', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

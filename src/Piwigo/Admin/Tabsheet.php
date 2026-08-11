@@ -25,7 +25,7 @@ final class Tabsheet
     public $sheets;
 
     /**
-     * Only ever assigned null (constructor) or a real string (set_id()) --
+     * Only ever assigned null (constructor) or a real string (setId()) --
      * confirmed via every real read/write site in this class.
      *
      * @var ?string
@@ -50,7 +50,7 @@ final class Tabsheet
         $this->selected = '';
     }
 
-    public function set_id(string $id): void
+    public function setId(string $id): void
     {
         $this->uniqid = $id;
     }
@@ -124,7 +124,7 @@ final class Tabsheet
     /*
       set $titlename value
     */
-    public function set_titlename(string $titlename): string
+    public function setTitlename(string $titlename): string
     {
         $this->titlename = $titlename;
         return $this->titlename;
@@ -133,7 +133,7 @@ final class Tabsheet
     /*
       returns $titlename value
     */
-    public function get_titlename(): string
+    public function getTitlename(): string
     {
         return $this->titlename;
     }
@@ -141,7 +141,7 @@ final class Tabsheet
     /**
      * returns properties of selected tab
      */
-    public function get_selected(): ?TabSheetEntry
+    public function getSelected(): ?TabSheetEntry
     {
         if ($this->selected !== '') {
             return $this->sheets[$this->selected];
@@ -162,7 +162,7 @@ final class Tabsheet
 
         $template->set_filename('tabsheet', 'tabsheet.tpl');
 
-        $selected_tab = $this->get_selected();
+        $selected_tab = $this->getSelected();
 
         $template->assignContext(new TabsheetPageContext(
             sheets: array_map(static fn (TabSheetEntry $entry): array => $entry->toArray(), $this->sheets),

@@ -84,7 +84,7 @@ final class CatOptionsPageRenderer
         // broken relative hrefs.
         $this->coreTabs->setContext(new CoreTabsContext(linkStart: $this->urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('cat_options');
+        $tabsheet->setId('cat_options');
         $tabsheet->select($section, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

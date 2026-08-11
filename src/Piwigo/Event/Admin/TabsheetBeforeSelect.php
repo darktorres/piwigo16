@@ -10,7 +10,7 @@ namespace Piwigo\Event\Admin;
  * `$sheets`. `$tabsheetId` is nullable -- diverges from the reference's
  * non-nullable `string` -- since its one real dispatch site
  * (`Tabsheet::select()`) passes `$this->uniqid`, only ever set via
- * `set_id()`, `null` until then.
+ * `setId()`, `null` until then.
  *
  * `$sheets` matches the reference's own loose `array<mixed>`, not
  * `Tabsheet::$sheets`'s real precise shape

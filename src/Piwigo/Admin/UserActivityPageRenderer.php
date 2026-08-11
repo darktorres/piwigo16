@@ -45,7 +45,7 @@ final class UserActivityPageRenderer
         $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('users');
+        $tabsheet->setId('users');
         $tabsheet->select('user_activity', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 

@@ -94,7 +94,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('site_update');
+        $tabsheet->setId('site_update');
         // Matches CoreTabs::addCoreTabs()'s own 'site_maager' key -- see
         // this class's own docblock.
         $tabsheet->select('site_maager', $this->eventDispatcher);

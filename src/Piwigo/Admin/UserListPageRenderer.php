@@ -42,7 +42,7 @@ final class UserListPageRenderer
         $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('users');
+        $tabsheet->setId('users');
         $tabsheet->select('user_list', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 

@@ -76,7 +76,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
         $tab = ExtensionTabRequest::fromGlobals('/^(installed|update|new)$/', $this->inputValidator)->tab;
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('languages');
+        $tabsheet->setId('languages');
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

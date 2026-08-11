@@ -63,7 +63,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * `$my_base_url` is not needed here: CoreTabs::addCoreTabs()'s own
  * `case 'admin_home':` branch (the only case this page's
- * `$tabsheet->set_id('admin_home'); $tabsheet->select('');` can ever
+ * `$tabsheet->setId('admin_home'); $tabsheet->select('');` can ever
  * reach) hardcodes `'url' => 'admin.php'` and never reads
  * `global $my_base_url;` at all.
  *
@@ -130,7 +130,7 @@ final class IntroSubController implements AdminSubControllerInterface
         }
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('admin_home');
+        $tabsheet->setId('admin_home');
         $tabsheet->select('', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

@@ -11,7 +11,7 @@ use Piwigo\Core\TemplatePageContext;
  * The 'tabsheet'/'tabsheet_selected' template variables assigned by
  * {@see \Piwigo\Admin\Tabsheet::assign()}. `$titlenameKey` is a real,
  * per-instance mutable property (`Tabsheet::$titlename`, changeable via
- * `set_titlename()`) -- no real caller anywhere in the codebase ever
+ * `setTitlename()`) -- no real caller anywhere in the codebase ever
  * constructs a `Tabsheet` with a non-default titlename (confirmed via a
  * full-repo grep of every `new Tabsheet(...)` site), but this class's own
  * Unit tests exercise the general per-instance case directly, so the

@@ -81,7 +81,7 @@ final class ThemesSubController implements AdminSubControllerInterface
         $tab = ExtensionTabRequest::fromGlobals('/^(installed|update|new|standard_pages)$/', $this->inputValidator)->tab;
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('themes');
+        $tabsheet->setId('themes');
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

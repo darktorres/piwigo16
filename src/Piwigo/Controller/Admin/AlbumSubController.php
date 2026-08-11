@@ -88,7 +88,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         $tab = is_string($tab_param) && in_array($tab_param, self::KNOWN_TABS, true) ? $tab_param : 'properties';
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('album');
+        $tabsheet->setId('album');
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

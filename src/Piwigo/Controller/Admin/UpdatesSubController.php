@@ -84,7 +84,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
         $tab = UpdatesTabRequest::fromGlobals($this->inputValidator)->tab;
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('updates');
+        $tabsheet->setId('updates');
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

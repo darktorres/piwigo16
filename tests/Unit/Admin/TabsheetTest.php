@@ -80,7 +80,7 @@ test('the constructor defaults name/titlename and starts with no tabs and nothin
         ->toBeNull();
     expect($tabsheet->selected)
         ->toBe('');
-    expect($tabsheet->get_selected())
+    expect($tabsheet->getSelected())
         ->toBeNull();
 });
 
@@ -93,9 +93,9 @@ test('the constructor accepts custom name/titlename', function (): void {
         ->toBe('CUSTOM_TITLE');
 });
 
-test('set_id stores the given id', function (): void {
+test('setId stores the given id', function (): void {
     $tabsheet = new Tabsheet();
-    $tabsheet->set_id('my-tabsheet');
+    $tabsheet->setId('my-tabsheet');
 
     expect($tabsheet->uniqid)
         ->toBe('my-tabsheet');
@@ -172,7 +172,7 @@ test('select picks the requested tab when it exists', function (): void {
 
     expect($tabsheet->selected)
         ->toBe('advanced');
-    expect($tabsheet->get_selected())
+    expect($tabsheet->getSelected())
         ->toEqual(new TabSheetEntry('Advanced', '/advanced'));
 });
 
@@ -322,14 +322,14 @@ test('assign clears the temporary tabsheet template var after compiling it', fun
         ->toBeNull();
 });
 
-test('set_titlename overwrites titlename and returns the new value', function (): void {
+test('setTitlename overwrites titlename and returns the new value', function (): void {
     $tabsheet = new Tabsheet();
 
-    expect($tabsheet->set_titlename('NEW_TITLE'))
+    expect($tabsheet->setTitlename('NEW_TITLE'))
         ->toBe('NEW_TITLE');
     expect($tabsheet->titlename)
         ->toBe('NEW_TITLE');
-    expect($tabsheet->get_titlename())
+    expect($tabsheet->getTitlename())
         ->toBe('NEW_TITLE');
 });
 

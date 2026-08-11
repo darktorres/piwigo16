@@ -220,7 +220,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         if ($this->accessControl->isAuthorizeStatus(AccessLevel::Webmaster)) {
             // TabSheet
             $tabsheet = new Tabsheet();
-            $tabsheet->set_id('nbm');
+            $tabsheet->setId('nbm');
             $tabsheet->select($page_mode, $this->eventDispatcher);
             $tabsheet->assign($this->currentTemplate);
         }

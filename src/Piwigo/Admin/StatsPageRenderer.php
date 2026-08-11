@@ -71,7 +71,7 @@ final class StatsPageRenderer
         // of broken relative ones.
         $coreTabs->setContext(new CoreTabsContext(linkStart: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('history');
+        $tabsheet->setId('history');
         $tabsheet->select($pageSlug, $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 

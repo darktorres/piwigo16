@@ -33,7 +33,7 @@ final class HelpPageRenderer
         // page's tab strip renders broken relative hrefs.
         $coreTabs->setContext(new CoreTabsContext(helpLink: $urlService->getRootUrl() . 'admin.php?page=help&amp;section='));
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('help');
+        $tabsheet->setId('help');
         $tabsheet->select($selected, $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 

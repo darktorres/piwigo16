@@ -41,7 +41,7 @@ final class MenubarPageRenderer
         // page's tab strip renders a broken relative href.
         $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('menus');
+        $tabsheet->setId('menus');
         $tabsheet->select('', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 

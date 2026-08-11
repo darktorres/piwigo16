@@ -31,7 +31,7 @@ final class RatingUserPageRenderer
         $template = $currentTemplate->get();
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('rating');
+        $tabsheet->setId('rating');
         $tabsheet->select('rating_user', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 

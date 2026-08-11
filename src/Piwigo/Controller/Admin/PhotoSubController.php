@@ -79,7 +79,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         $tab = $photoDispatch->tab;
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('photo');
+        $tabsheet->setId('photo');
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 

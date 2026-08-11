@@ -59,7 +59,7 @@ final class AlbumsPageRenderer
         $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('albums');
+        $tabsheet->setId('albums');
         $tabsheet->select('list', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 

@@ -51,8 +51,7 @@ final readonly class UpdatesPwgRequest
             // error (e.g. hitting the backtrack limit) -- unreachable for
             // this trivial single-trailing-letter pattern against a
             // validate()-bounded version string, so the `?? ''` fallback
-            // here can't be exercised. Confirmed while investigating a
-            // mutation-testing gap.
+            // here can't be exercised.
             $upgradeTo = is_string($get_to) ? (preg_replace('/[a-z]$/', '', $get_to) ?? '') : '';
         } else {
             $inputValidator

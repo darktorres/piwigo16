@@ -94,7 +94,7 @@ final readonly class CatOptionsRequest
         // fallback value below is that same literal 'status', so whether
         // an explicit 'status' input matches via in_array() or falls
         // through to the ternary's else branch, the result is identical
-        // either way. Confirmed while investigating a mutation-testing gap.
+        // either way.
         $section = (is_string($section) and in_array($section, ['comments', 'visible', 'status', 'representative'], true))
             ? $section
             : 'status';

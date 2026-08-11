@@ -61,7 +61,6 @@ final readonly class PhotosAddDirectRequest
         // The (bool) cast is redundant: `&&` itself always produces a
         // genuine bool result regardless of its right operand's type, so
         // removing the cast can't change $formats_truthy's value or type.
-        // Confirmed while investigating a mutation-testing gap.
         $formats_truthy = $display_formats && (bool) $get['formats'];
         $formats_id = '';
         if ($formats_truthy) {

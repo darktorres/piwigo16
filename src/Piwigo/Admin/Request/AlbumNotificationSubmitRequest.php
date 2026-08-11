@@ -54,8 +54,7 @@ final readonly class AlbumNotificationSubmitRequest
         // is one of its cases) -- calling validate() on an empty
         // $post_users array is already a silent no-op (mandatory defaults
         // to false), so `> 0` vs `>= 0`/`> -1` produce identical final
-        // $users output. Confirmed while investigating a mutation-testing
-        // gap, same redundancy as the `group` sentinel array below.
+        // $users output. Same redundancy as the `group` sentinel array below.
         if ($who === 'users' and is_array($post_users) and count($post_users) > 0) {
             $inputValidator
                 ->validate('users', $post, true, ValidationPattern::ID);
@@ -74,10 +73,9 @@ final readonly class AlbumNotificationSubmitRequest
         // these 6 literals is *also* independently caught by validate()
         // itself, which silently no-ops on an "empty" $paramValue rather
         // than validating it. That makes this array's exact contents
-        // unobservable: manually verified (temporarily emptying the array
-        // entirely) that all 6 sentinels -- and 0.0, the one this array
-        // doesn't list -- still produce identical (non-throwing) behavior
-        // either way. `who === 'group'` is the only real gate here.
+        // unobservable: all 6 sentinels -- and 0.0, the one this array
+        // doesn't list -- produce identical (non-throwing) behavior either
+        // way. `who === 'group'` is the only real gate here.
         if ($who === 'group' and ! in_array($group, [null, false, 0, '0', '', []], true)) {
             $inputValidator
                 ->validate('group', $post, false, ValidationPattern::ID);

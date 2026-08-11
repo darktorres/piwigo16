@@ -73,7 +73,7 @@ final readonly class ElementSetRanksRequest
         // value below is that same literal 'default', so whether an
         // explicit 'default' input matches via in_array() or falls through
         // to the ternary's else branch, the result is identical either
-        // way. Confirmed while investigating a mutation-testing gap.
+        // way.
         $image_order_choice = in_array($image_order_choice_raw, ['default', 'rank', 'user_define'], true)
             ? $image_order_choice_raw
             : 'default';

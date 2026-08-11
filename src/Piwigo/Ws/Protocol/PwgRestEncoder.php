@@ -41,10 +41,14 @@ final class PwgRestEncoder extends PwgResponseEncoder
     public function encodeResponse($response): string
     {
         if ($response instanceof PwgError) {
-            $ret = '<?xml version="1.0"?>
-<rsp stat="fail">
-	<err code="' . $response->code() . '" msg="' . htmlspecialchars($response->message()) . '" />
-</rsp>';
+            $code = $response->code();
+            $msg = htmlspecialchars($response->message());
+            $ret = <<<XML
+            <?xml version="1.0"?>
+            <rsp stat="fail">
+            \t<err code="{$code}" msg="{$msg}" />
+            </rsp>
+            XML;
             return $ret;
         }
 
@@ -52,10 +56,13 @@ final class PwgRestEncoder extends PwgResponseEncoder
         $this->encode($response);
         $ret = $this->writer()
             ->getOutput();
-        $ret = '<?xml version="1.0" encoding="' . CharsetHelper::getPwgCharset() . '" ?>
-<rsp stat="ok">
-' . $ret . '
-</rsp>';
+        $charset = CharsetHelper::getPwgCharset();
+        $ret = <<<XML
+        <?xml version="1.0" encoding="{$charset}" ?>
+        <rsp stat="ok">
+        {$ret}
+        </rsp>
+        XML;
 
         return $ret;
     }

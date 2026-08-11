@@ -224,7 +224,7 @@ final class RequestBootstrap
      * Kernel::boot($paths) runs as the very first statement, ahead of
      * everything else in this method -- see this class's own docblock for
      * why. The container-building call it makes internally only registers
-     * lazy PHP-DI factory closures, confirmed zero eager side effects, so
+     * lazy PHP-DI factory closures with zero eager side effects, so
      * booting this early changes nothing observable until something
      * actually resolves a service.
      */
@@ -278,8 +278,8 @@ final class RequestBootstrap
         // bootstrap's own body (not just by code that runs after full
         // boot) read Config's static state -- these two
         // calls must seed it before any of that later code runs. Both are
-        // idempotent (verified: re-running never overwrites an already-set
-        // key), so bootConfigOnly()'s own copy of these same two calls
+        // idempotent (re-running never overwrites an already-set key), so
+        // bootConfigOnly()'s own copy of these same two calls
         // (its standalone-callable path, not chained after this one on any
         // real request) is a harmless no-op if it ever runs in the same
         // process.
@@ -694,8 +694,8 @@ final class RequestBootstrap
         // crack in the trigger_change() chain.
         //
         // 'pwg_image_resize' doesn't exist as a function anywhere in this
-        // codebase and neither event is ever triggered -- a confirmed
-        // dead-but-harmless registration, already documented in
+        // codebase and neither event is ever triggered -- a dead-but-harmless
+        // registration, already documented in
         // Piwigo\PluginConfig\EventDispatcher's own class docblock.
         // Preserved unchanged rather than "fixed", per that same
         // documented decision. addEventHandler(), not addTypedHandler():

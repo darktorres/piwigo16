@@ -10,8 +10,8 @@ use function Sentry\init;
  * Initializes the Sentry PHP SDK. Explicit early-return no-op when no DSN
  * is configured -- defense in depth on top of the SDK's own internal guard
  * (Transport\HttpTransport::send() checks getDsn() === null before any
- * network I/O; verified directly in the installed vendor/sentry/sentry
- * source, not assumed). Reads env vars via plain getenv() --
+ * network I/O, per the installed vendor/sentry/sentry source). Reads env
+ * vars via plain getenv() --
  * pwg_load_env_file() (include/env.inc.php, called from common.inc.php)
  * already populates them via symfony/dotenv's usePutenv() before this
  * class's own init() runs (as RequestBootstrap::bootEntryPoint()'s first
@@ -37,10 +37,10 @@ final class SentryBootstrap
      * and calling it more than once per test (even with a real
      * restore_error_handler()/restore_exception_handler() after each)
      * leaves the SDK's own internal handler-chain state imbalanced in a
-     * way PHPUnit's risky-test detector correctly notices -- confirmed
-     * live: a single real init()+restore is never flagged, a second one
-     * in the same test always is, regardless of how many env-var/option
-     * combinations are exercised. Only the "valid, real DSN" scenario
+     * way PHPUnit's risky-test detector correctly notices. A single real
+     * init()+restore is never flagged; a second one in the same test
+     * always is, regardless of how many env-var/option combinations are
+     * exercised. Only the "valid, real DSN" scenario
      * needs the real SDK call to prove the wiring actually binds a
      * client; the others are exercised through this method directly.
      *

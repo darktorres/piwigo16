@@ -113,7 +113,7 @@ final class RouteDefinitions
         // is off) without rewriting REQUEST_URI to include "index.php" --
         // Router::pathInfo() strips the SCRIPT_NAME-derived mount-point prefix
         // from that bare request and is left with "/", which needs its own route
-        // (found live: a real post-login redirect 404'd here, caught by the
+        // (without it, a real post-login redirect 404's here, caught by the
         // Browser test suite's login helper).
         $routes->add('index_directory_root', new Route('/', [
             '_controller' => GalleryController::class,

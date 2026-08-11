@@ -247,7 +247,6 @@ final class PageTail
 
     private static function checkForUpdates(): void
     {
-        // ----------------------------------------------- update notification
         $update_notify_check_period = RequestBootstrap::currentConfig()->updateNotifyCheckPeriod;
         if ($update_notify_check_period > 0) {
             $check_for_updates = false;

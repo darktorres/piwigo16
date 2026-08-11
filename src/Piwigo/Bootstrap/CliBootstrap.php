@@ -91,7 +91,6 @@ final class CliBootstrap
         // docblocks on each) -- kept as real, callable steps in the
         // standard boot sequence for when either gains a real body, but
         // there is nothing for a test to observe either removed today.
-        // Confirmed while investigating a mutation-testing gap.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot($paths);

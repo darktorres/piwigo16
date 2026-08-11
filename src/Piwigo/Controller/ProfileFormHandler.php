@@ -69,7 +69,6 @@ final readonly class ProfileFormHandler
         private Paths $paths,
     ) {}
 
-    // ------------------------------------------------------ update & customization
     /**
      * @param array<string, mixed> $userdata
      * @param array<int, string> $errors

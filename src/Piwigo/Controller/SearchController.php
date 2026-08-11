@@ -63,10 +63,6 @@ final readonly class SearchController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginSearch());
 
-        // +---------------------------------------------------------------+
-        // | Create a default search                                      |
-        // +---------------------------------------------------------------+
-
         $search = [
             'mode' => 'AND',
             'fields' => [],

@@ -106,7 +106,7 @@ final readonly class ProfileController implements ControllerInterface
         }
 
         // Load language if cookie is set from login/register/password pages.
-        // Real bug, found while adding coverage for this branch: this block
+        // This block
         // used to run much later in this method, *after*
         // assignVarFromHandle('PROFILE_CONTENT', 'profile_content')
         // below -- Smarty's assignVarFromHandle() renders the referenced

@@ -47,27 +47,24 @@ abstract class PersistentCache
 
     /**
      * Searches for a key in the persistent cache and fills corresponding value.
-     * @param string $key
      * @param-out mixed $value
      * @return bool false if the $key is not found in cache ($value is not modified in this case)
      */
     // Only purge() has a real caller today; get()/set() are still the real cache contract.
     // @phpstan-ignore shipmonk.deadMethod
-    abstract public function get($key, mixed &$value);
+    abstract public function get(string $key, mixed &$value): bool;
 
     /**
      * Sets a key/value pair in the persistent cache.
      * @param string $key - it should be the return value of makeKey function
-     * @param mixed $value
-     * @param int $lifetime
      * @return bool false on error
      */
     // @phpstan-ignore shipmonk.deadMethod
-    abstract public function set($key, $value, $lifetime = null);
+    abstract public function set(string $key, mixed $value, ?int $lifetime = null): bool;
 
     /**
      * Purge the persistent cache.
      * @param bool $all - if false only expired items will be purged
      */
-    abstract public function purge($all): void;
+    abstract public function purge(bool $all): void;
 }

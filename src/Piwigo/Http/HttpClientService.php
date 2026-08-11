@@ -145,11 +145,13 @@ final readonly class HttpClientService implements ClientInterface
      * fetchRemote()'s other real usage shape (downloading an extension
      * archive straight to disk).
      *
-     * @param resource $fileHandle
+     * @param resource $fileHandle PHP has no native `resource` type
+     *   declaration, so this stays `mixed` natively -- the docblock still
+     *   does the real narrowing (same shape as Core\Logger::$fileHandle).
      * @param array<string, mixed> $getData data added to the request URL
      * @param array<string, mixed> $postData data transmitted with POST
      */
-    public static function fetchToFile($fileHandle, string $url, CurrentConfig $currentConfig, array $getData = [], array $postData = [], string $userAgent = 'Piwigo'): bool
+    public static function fetchToFile(mixed $fileHandle, string $url, CurrentConfig $currentConfig, array $getData = [], array $postData = [], string $userAgent = 'Piwigo'): bool
     {
         $response = self::guardedFetch($url, $currentConfig, $getData, $postData, $userAgent);
         if (! $response instanceof \Symfony\Contracts\HttpClient\ResponseInterface) {

@@ -16,17 +16,17 @@ final class QExpression extends QMultiToken
     /**
      * @var array<string, QSearchScope>
      */
-    public $scopes = [];
+    public array $scopes = [];
 
     /**
      * @var array<int, QSingleToken>
      */
-    public $stokens = [];
+    public array $stokens = [];
 
     /**
      * @var array<int, int>
      */
-    public $stoken_modifiers = [];
+    public array $stoken_modifiers = [];
 
     /**
      * @param QSearchScope[] $scopes

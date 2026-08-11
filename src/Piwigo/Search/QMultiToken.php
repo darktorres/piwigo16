@@ -26,7 +26,7 @@ class QMultiToken implements Stringable
     /**
      * @var array<int, QSingleToken|QMultiToken>
      */
-    public $tokens = []; // the actual array of QSingleToken or QMultiToken
+    public array $tokens = []; // the actual array of QSingleToken or QMultiToken
 
     #[Override]
     public function __toString(): string

@@ -76,7 +76,7 @@ interface UrlServiceInterface
      * @param int $nextToken the index in the array of url tokens; in/out
      * @return array<string, mixed>
      */
-    public function parseSectionUrl(array $tokens, &$nextToken, RedirectServiceInterface $redirectService): array;
+    public function parseSectionUrl(array $tokens, int &$nextToken, RedirectServiceInterface $redirectService): array;
 
     /**
      * @param string[] $tokens
@@ -88,7 +88,7 @@ interface UrlServiceInterface
      * @param int|string $id image id
      * @param string $whatPart one of 'e' (element), 'r' (representative)
      */
-    public function getActionUrl($id, $whatPart, bool $download): string;
+    public function getActionUrl(int|string $id, string $whatPart, bool $download): string;
 
     /**
      * @param array<string, mixed> $elementInfo containing element information

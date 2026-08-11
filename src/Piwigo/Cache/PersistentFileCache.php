@@ -32,7 +32,7 @@ final class PersistentFileCache extends PersistentCache
     }
 
     #[Override]
-    public function get($key, mixed &$value): bool
+    public function get(string $key, mixed &$value): bool
     {
         $file = $this->dir . $key . '.cache';
         if (! is_readable($file)) {
@@ -63,7 +63,7 @@ final class PersistentFileCache extends PersistentCache
     }
 
     #[Override]
-    public function set($key, $value, $lifetime = null): bool
+    public function set(string $key, mixed $value, ?int $lifetime = null): bool
     {
         if ($lifetime === null) {
             $lifetime = $this->default_lifetime;
@@ -91,7 +91,7 @@ final class PersistentFileCache extends PersistentCache
     }
 
     #[Override]
-    public function purge($all): void
+    public function purge(bool $all): void
     {
         $files = glob($this->dir . '*.cache');
         if ($files === false || $files === []) {

@@ -317,11 +317,9 @@ final readonly class ProfileFormHandler
      * Assign template variables, from arguments
      * Used to build profile edition pages
      *
-     * @param string $url_action
-     * @param string $url_redirect
      * @param array<string, mixed> $userdata
      */
-    public function loadIntoTemplate($url_action, $url_redirect, array $userdata, ?string $template_prefixe = null): void
+    public function loadIntoTemplate(string $url_action, string $url_redirect, array $userdata, ?string $template_prefixe = null): void
     {
         $template = $this->currentTemplate->get();
 

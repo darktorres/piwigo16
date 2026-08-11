@@ -44,7 +44,7 @@ final class Totp
      * @param int $length Length in bytes (default: 20)
      * @return string Base32-encoded secret
      */
-    public static function generateSecret($length = 20): string
+    public static function generateSecret(int $length = 20): string
     {
         if ($length < 1) {
             throw new InvalidArgumentException('generateSecret(): $length must be at least 1');
@@ -57,7 +57,7 @@ final class Totp
      * @param string $secret Encoded base32 secret
      * @return string otpauth://totp/ url
      */
-    public static function getOtpAuthUrl($secret, UrlServiceInterface $urlService, CurrentUser $currentUser): string
+    public static function getOtpAuthUrl(string $secret, UrlServiceInterface $urlService, CurrentUser $currentUser): string
     {
         $username = $currentUser->get()
             ->username;
@@ -69,7 +69,7 @@ final class Totp
      * @param string $secret Encoded base32 secret
      * @return string data:image/png;base64..
      */
-    public static function getQrCode($secret, UrlServiceInterface $urlService, CurrentUser $currentUser): string
+    public static function getQrCode(string $secret, UrlServiceInterface $urlService, CurrentUser $currentUser): string
     {
         $otp_url = self::getOtpAuthUrl($secret, $urlService, $currentUser);
 
@@ -85,7 +85,7 @@ final class Totp
      * @param int $timestamp timestamp used in second (default: 30)
      * @return string 6 digits TOTP code
      */
-    public static function generateCode(string $secret, $timestamp = 30): string
+    public static function generateCode(string $secret, int $timestamp = 30): string
     {
         $timestamp = floor(time() / $timestamp); // e.g 58338889 > 30-second intervals since 1970 at the moment T
         return self::generateCodeFromTimestamp($secret, $timestamp);
@@ -99,7 +99,7 @@ final class Totp
      * @param int $timestamp timestamp used in second (default: 30)
      * @param int $check_interval Number of 30s steps to check before/after current (default: 1)
      */
-    public static function verifyCode($code, string $secret, $timestamp = 30, $check_interval = 1): bool
+    public static function verifyCode(string $code, string $secret, int $timestamp = 30, int $check_interval = 1): bool
     {
         $timestamp = floor(time() / $timestamp);
 

@@ -44,7 +44,7 @@ final class QSingleToken implements Stringable
     /**
      * @var string[]
      */
-    public $variants = [];
+    public array $variants = [];
 
     /**
      * Set by QSearchScope::parse() (or a subclass override) -- exactly one
@@ -56,7 +56,7 @@ final class QSingleToken implements Stringable
      *
      * @var array{range: array{0: int|float|string, 1: int|float|string}, strict: array{0: int, 1: int}}|array{0: string, 1: string}|null
      */
-    public $scope_data;
+    public ?array $scope_data = null;
 
     public ?int $idx = null;
 

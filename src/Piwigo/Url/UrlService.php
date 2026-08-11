@@ -673,7 +673,7 @@ final class UrlService implements UrlServiceInterface
      * @return array<string, mixed>
      */
     #[Override]
-    public function parseSectionUrl(array $tokens, &$nextToken, RedirectServiceInterface $redirectService): array
+    public function parseSectionUrl(array $tokens, int &$nextToken, RedirectServiceInterface $redirectService): array
     {
         $page = [];
         if (isset($tokens[$nextToken]) and str_starts_with($tokens[$nextToken], 'categor')) {
@@ -943,7 +943,7 @@ final class UrlService implements UrlServiceInterface
      * @param string $whatPart one of 'e' (element), 'r' (representative)
      */
     #[Override]
-    public function getActionUrl($id, $whatPart, bool $download): string
+    public function getActionUrl(int|string $id, string $whatPart, bool $download): string
     {
         $params = [
             'id' => $id,

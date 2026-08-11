@@ -163,7 +163,7 @@ final class LocalSiteReader
      * @param string $path recurse in this directory
      * @return array<string, array{representative_ext: ?string, formats?: array<string, float>}> like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
-    public function getElements($path): array
+    public function getElements(string $path): array
     {
         $flip_file_ext = $this->flip_file_ext;
         $flip_picture_ext = $this->flip_picture_ext;

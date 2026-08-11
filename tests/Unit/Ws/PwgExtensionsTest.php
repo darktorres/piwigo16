@@ -15,7 +15,7 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgExtensions;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 
 /**
  * Piwigo\Ws\PwgExtensions -- the `pwg.plugins.*`/`pwg.themes.performAction`/
@@ -97,9 +97,9 @@ test('pluginsPerformAction returns a 403 PwgError when the submitted pwg_token d
         CurrentTemplate::current()->set($template);
 
         $ws = pwgExtensionsTestSubject();
-        $server = Kernel::container()->get(PwgServer::class);
-        if (! $server instanceof PwgServer) {
-            throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
+        $server = Kernel::container()->get(Server::class);
+        if (! $server instanceof Server) {
+            throw new LogicException('Container returned an unexpected type for ' . Server::class);
         }
 
         $result = $ws->pluginsPerformAction([
@@ -130,9 +130,9 @@ test('themesPerformAction returns a 403 PwgError when the submitted pwg_token do
         CurrentTemplate::current()->set($template);
 
         $ws = pwgExtensionsTestSubject();
-        $server = Kernel::container()->get(PwgServer::class);
-        if (! $server instanceof PwgServer) {
-            throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
+        $server = Kernel::container()->get(Server::class);
+        if (! $server instanceof Server) {
+            throw new LogicException('Container returned an unexpected type for ' . Server::class);
         }
 
         $result = $ws->themesPerformAction([
@@ -162,9 +162,9 @@ test('update returns a 401 PwgError when extensions install is disabled', functi
         CurrentConfigTestFactory::get()->enableExtensionsInstall = false;
 
         $ws = pwgExtensionsTestSubject();
-        $server = Kernel::container()->get(PwgServer::class);
-        if (! $server instanceof PwgServer) {
-            throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
+        $server = Kernel::container()->get(Server::class);
+        if (! $server instanceof Server) {
+            throw new LogicException('Container returned an unexpected type for ' . Server::class);
         }
 
         $result = $ws->update([
@@ -196,9 +196,9 @@ test('ignoreUpdate returns a 401 PwgError when the user is not a webmaster', fun
         pwgExtensionsTestSetUser(isWebmaster: false);
 
         $ws = pwgExtensionsTestSubject();
-        $server = Kernel::container()->get(PwgServer::class);
-        if (! $server instanceof PwgServer) {
-            throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
+        $server = Kernel::container()->get(Server::class);
+        if (! $server instanceof Server) {
+            throw new LogicException('Container returned an unexpected type for ' . Server::class);
         }
 
         $result = $ws->ignoreUpdate([
@@ -229,9 +229,9 @@ test('ignoreUpdate returns a 403 PwgError when the submitted pwg_token does not 
         pwgExtensionsTestSetUser(isWebmaster: true);
 
         $ws = pwgExtensionsTestSubject();
-        $server = Kernel::container()->get(PwgServer::class);
-        if (! $server instanceof PwgServer) {
-            throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
+        $server = Kernel::container()->get(Server::class);
+        if (! $server instanceof Server) {
+            throw new LogicException('Container returned an unexpected type for ' . Server::class);
         }
 
         $result = $ws->ignoreUpdate([

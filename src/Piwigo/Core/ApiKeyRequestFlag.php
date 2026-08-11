@@ -14,10 +14,10 @@ namespace Piwigo\Core;
  * same FrankenPHP worker process. This class exists for that reason.
  * UserBootstrap::initialize() calls activate() once per request when a WS
  * api_key authenticates; SessionService (session persistence gate) and
- * PwgServer (api_key-forbidden WS methods) read isActive().
+ * Server (api_key-forbidden WS methods) read isActive().
  *
  * `UserBootstrap` (the only writer) constructor-injects this directly, as do
- * `Piwigo\Ws\PwgCore`/`Piwigo\Ws\PwgServer`. `Piwigo\Session\
+ * `Piwigo\Ws\Core`/`Piwigo\Ws\Server`. `Piwigo\Session\
  * SessionService::sessionWrite()` reads this via its own private lazy
  * apiKeyRequestFlag() helper instead: ~27 real construction sites make a
  * required constructor param too high a blast radius for this one internal

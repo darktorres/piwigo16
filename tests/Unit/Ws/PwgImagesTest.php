@@ -12,7 +12,7 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgImages;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 
 /**
  * Piwigo\Ws\PwgImages -- the `pwg.images.*` WS methods (26 public
@@ -52,18 +52,18 @@ function pwgImagesTestSubject(): PwgImages
 
 /**
  * None of the branches under test here ever reach `$service->invoke()`
- * -- a bare, unregistered PwgServer only needs to satisfy the method's
+ * -- a bare, unregistered Server only needs to satisfy the method's
  * own type, same rationale as `PwgPermissionsTest.php`'s own
  * pwgPermissionsTestServer() helper. Unlike most other Ws\Pwg* classes
- * in this campaign, PwgImages' methods take `PwgServer $service` by
+ * in this campaign, PwgImages' methods take `Server $service` by
  * value (not by reference), so the container-resolved instance can be
  * passed directly.
  */
-function pwgImagesTestServer(): PwgServer
+function pwgImagesTestServer(): Server
 {
-    $server = Kernel::container()->get(PwgServer::class);
-    if (! $server instanceof PwgServer) {
-        throw new LogicException('Container returned an unexpected type for ' . PwgServer::class);
+    $server = Kernel::container()->get(Server::class);
+    if (! $server instanceof Server) {
+        throw new LogicException('Container returned an unexpected type for ' . Server::class);
     }
 
     return $server;

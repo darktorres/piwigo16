@@ -6,7 +6,7 @@ namespace Piwigo\Image\Projection;
 
 /**
  * {@see \Piwigo\Image\ImageRepository::findNextIdAndCount()}'s own row
- * shape -- `Ws\PwgCore::getMissingDerivatives()`'s own pagination-cursor
+ * shape -- `Ws\Core::getMissingDerivatives()`'s own pagination-cursor
  * bootstrap.
  */
 final readonly class NextIdCount

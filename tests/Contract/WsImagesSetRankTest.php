@@ -17,7 +17,7 @@ use Piwigo\Db\DbConnection;
  *
  * setRank()'s own "image_id is missing" guard (image_id === null after
  * array_shift()) is NOT chased here: image_id is registered with
- * WsParamFlag::FORCE_ARRAY and no 'default', so PwgServer::addMethod()
+ * WsParamFlag::FORCE_ARRAY and no 'default', so Server::addMethod()
  * never ORs in WsParamFlag::OPTIONAL for it (that only happens when a
  * 'default' key is present) -- a caller can never get past the WS layer's
  * own "Missing parameters: image_id" without image_id already being a

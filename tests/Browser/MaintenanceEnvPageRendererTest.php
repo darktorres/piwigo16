@@ -28,7 +28,7 @@ it('renders the env tab with real server/DB info when the gallery is unlocked', 
 it('shows the time-since-last-calculation when a real cache_sizes config value is present', function (): void {
     $snapshot = H::snapshotConfig(['cache_sizes']);
     // cache_sizes is a `[{name, value}, ...]` list persisted by
-    // Ws\PwgCore's cache-size calculation (confirmed via direct read) --
+    // Ws\Core's cache-size calculation (confirmed via direct read) --
     // index 3's own 'value' (a date string) is what MaintenanceEnvPageRenderer
     // reads for its "time since last calculation" display. Hand-crafted
     // here rather than triggering a real calculation, since only that one

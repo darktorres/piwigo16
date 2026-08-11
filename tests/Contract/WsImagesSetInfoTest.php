@@ -52,7 +52,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
     public function testSetInfoInvalidTokenReturnsError(): void
     {
         // admin_only is checked before the pwg_token comparison
-        // (PwgServer::invoke()'s own gate order) -- a guest caller never
+        // (Server::invoke()'s own gate order) -- a guest caller never
         // reaches the token check at all, so this must already be logged
         // in as admin for the 403 (not a 401 "not authenticated") to fire.
         $this->loginAsAdmin();

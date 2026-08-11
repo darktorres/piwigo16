@@ -21,10 +21,10 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 
 /**
- * Piwigo\Ws\PwgServer -- the WS framework's own generic method registry/
+ * Piwigo\Ws\Server -- the WS framework's own generic method registry/
  * dispatcher. No dedicated Integration/Browser spec of its own, though
  * WsDefaultMethods.php registers every real WS method through
  * `addMethod()` and every Contract test exercises `invoke()`
@@ -34,7 +34,7 @@ use Piwigo\Ws\PwgServer;
  * branch ends in a real `die(0)` (see the plan's own B4 audit -- one of
  * only 2 confirmed exit()/die() branches in the whole legacy WS API
  * bucket), and its happy path just wires reflection methods + delegates
- * to a real `PwgRequestHandler::handleRequest()`, itself a thin wrapper
+ * to a real `RequestHandler::handleRequest()`, itself a thin wrapper
  * around `invoke()`/`sendResponse()`, both covered directly below.
  * `sendResponse()` also isn't covered here -- it's a 3-line `header()`/
  * `print_r()`/event-dispatch wrapper around `ResponseEncoder::
@@ -76,9 +76,9 @@ function pwgServerTestAccessControl(bool $isAdmin): AccessControl
     );
 }
 
-function pwgServerTestServer(bool $isAdmin = true, ?CurrentConfig $currentConfig = null): PwgServer
+function pwgServerTestServer(bool $isAdmin = true, ?CurrentConfig $currentConfig = null): Server
 {
-    return new PwgServer(
+    return new Server(
         new EventDispatcher(),
         pwgServerTestAccessControl($isAdmin),
         new ApiKeyRequestFlag(),
@@ -91,7 +91,7 @@ function pwgServerTestServer(bool $isAdmin = true, ?CurrentConfig $currentConfig
 test('addMethod with a plain param-name list registers a shorthand signature with default flags/type', function (): void {
     $server = pwgServerTestServer();
 
-    $server->addMethod('test.method', fn (array $params, PwgServer &$service): array => [], ['foo', 'bar'], 'A test method');
+    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], ['foo', 'bar'], 'A test method');
 
     expect($server->hasMethod('test.method'))
         ->toBeTrue()
@@ -113,7 +113,7 @@ test('addMethod with a plain param-name list registers a shorthand signature wit
 test('addMethod with a detailed param options map preserves flags/type and sets OPTIONAL when a default is present', function (): void {
     $server = pwgServerTestServer();
 
-    $server->addMethod('test.method', fn (array $params, PwgServer &$service): array => [], [
+    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], [
         'id' => [
             'type' => WsParamType::ID,
         ],
@@ -135,7 +135,7 @@ test('addMethod with a detailed param options map preserves flags/type and sets 
 test('addMethod treats a null description as an empty string and null params as no params', function (): void {
     $server = pwgServerTestServer();
 
-    $server->addMethod('test.method', fn (array $params, PwgServer &$service): array => [], null, null, [
+    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], null, null, [
         'admin_only' => true,
     ]);
 
@@ -167,61 +167,61 @@ test('hasMethod/getMethodDescription/getMethodSignature/getMethodOptions fall ba
 test('isPost reflects whether $_POST is non-empty', function (): void {
     $original = $_POST;
     $_POST = [];
-    expect(PwgServer::isPost())->toBeFalse();
+    expect(Server::isPost())->toBeFalse();
 
     $_POST = [
         'a' => '1',
     ];
-    expect(PwgServer::isPost())->toBeTrue();
+    expect(Server::isPost())->toBeTrue();
 
     $_POST = $original;
 });
 
 test('makeArrayParam converts null to an empty array and wraps a scalar, leaving a real array untouched', function (): void {
     $null = null;
-    PwgServer::makeArrayParam($null);
+    Server::makeArrayParam($null);
     expect($null)
         ->toBe([]);
 
     $scalar = 'x';
-    PwgServer::makeArrayParam($scalar);
+    Server::makeArrayParam($scalar);
     expect($scalar)
         ->toBe(['x']);
 
     $array = ['a', 'b'];
-    PwgServer::makeArrayParam($array);
+    Server::makeArrayParam($array);
     expect($array)
         ->toBe(['a', 'b']);
 });
 
 test('hasFlag is a plain bitwise AND-equality check', function (): void {
-    expect(PwgServer::hasFlag(WsParamFlag::FORCE_ARRAY, WsParamFlag::ACCEPT_ARRAY))->toBeTrue()
-        ->and(PwgServer::hasFlag(WsParamFlag::OPTIONAL, WsParamFlag::ACCEPT_ARRAY))->toBeFalse()
-        ->and(PwgServer::hasFlag(0, WsParamFlag::OPTIONAL))->toBeFalse();
+    expect(Server::hasFlag(WsParamFlag::FORCE_ARRAY, WsParamFlag::ACCEPT_ARRAY))->toBeTrue()
+        ->and(Server::hasFlag(WsParamFlag::OPTIONAL, WsParamFlag::ACCEPT_ARRAY))->toBeFalse()
+        ->and(Server::hasFlag(0, WsParamFlag::OPTIONAL))->toBeFalse();
 });
 
 // --------------------------------------------------------------- checkType
 
 test('checkType accepts a valid scalar of each type and coerces it', function (): void {
     $bool = '1';
-    expect(PwgServer::checkType($bool, WsParamType::BOOL, 'flag'))->toBeNull();
+    expect(Server::checkType($bool, WsParamType::BOOL, 'flag'))->toBeNull();
     expect($bool)
         ->toBeTrue();
 
     $int = '42';
-    expect(PwgServer::checkType($int, WsParamType::INT, 'count'))->toBeNull();
+    expect(Server::checkType($int, WsParamType::INT, 'count'))->toBeNull();
     expect($int)
         ->toBe(42);
 
     $float = '4.5';
-    expect(PwgServer::checkType($float, WsParamType::FLOAT, 'ratio'))->toBeNull();
+    expect(Server::checkType($float, WsParamType::FLOAT, 'ratio'))->toBeNull();
     expect($float)
         ->toBe(4.5);
 });
 
 test('checkType rejects an invalid scalar of each type with a descriptive PwgError', function (): void {
     $bool = 'not-a-bool';
-    $error = PwgServer::checkType($bool, WsParamType::BOOL, 'flag');
+    $error = Server::checkType($bool, WsParamType::BOOL, 'flag');
     expect($error)
         ->toBeInstanceOf(PwgError::class);
     if ($error instanceof PwgError) {
@@ -232,7 +232,7 @@ test('checkType rejects an invalid scalar of each type with a descriptive PwgErr
     }
 
     $int = 'not-an-int';
-    $error = PwgServer::checkType($int, WsParamType::INT, 'count');
+    $error = Server::checkType($int, WsParamType::INT, 'count');
     expect($error)
         ->toBeInstanceOf(PwgError::class);
     if ($error instanceof PwgError) {
@@ -241,7 +241,7 @@ test('checkType rejects an invalid scalar of each type with a descriptive PwgErr
     }
 
     $float = 'not-a-float';
-    $error = PwgServer::checkType($float, WsParamType::FLOAT, 'ratio');
+    $error = Server::checkType($float, WsParamType::FLOAT, 'ratio');
     expect($error)
         ->toBeInstanceOf(PwgError::class);
     if ($error instanceof PwgError) {
@@ -252,7 +252,7 @@ test('checkType rejects an invalid scalar of each type with a descriptive PwgErr
 
 test('checkType enforces POSITIVE/NOTNULL as a minimum range of 1, appending the right message suffix', function (): void {
     $zero = '0';
-    $error = PwgServer::checkType($zero, WsParamType::ID, 'category_id');
+    $error = Server::checkType($zero, WsParamType::ID, 'category_id');
     expect($error)
         ->toBeInstanceOf(PwgError::class);
     if ($error instanceof PwgError) {
@@ -261,14 +261,14 @@ test('checkType enforces POSITIVE/NOTNULL as a minimum range of 1, appending the
     }
 
     $one = '1';
-    expect(PwgServer::checkType($one, WsParamType::ID, 'category_id'))->toBeNull();
+    expect(Server::checkType($one, WsParamType::ID, 'category_id'))->toBeNull();
     expect($one)
         ->toBe(1);
 });
 
 test('checkType validates every element when the param is an array', function (): void {
     $ints = ['1', '2', 'not-an-int'];
-    $error = PwgServer::checkType($ints, WsParamType::INT, 'ids');
+    $error = Server::checkType($ints, WsParamType::INT, 'ids');
     expect($error)
         ->toBeInstanceOf(PwgError::class);
     if ($error instanceof PwgError) {
@@ -277,14 +277,14 @@ test('checkType validates every element when the param is an array', function ()
     }
 
     $valid = ['1', '2', '3'];
-    expect(PwgServer::checkType($valid, WsParamType::INT, 'ids'))->toBeNull();
+    expect(Server::checkType($valid, WsParamType::INT, 'ids'))->toBeNull();
     expect($valid)
         ->toBe([1, 2, 3]);
 });
 
 test('checkType leaves an empty-string scalar param untouched (no type coercion attempted)', function (): void {
     $empty = '';
-    expect(PwgServer::checkType($empty, WsParamType::INT, 'count'))->toBeNull();
+    expect(Server::checkType($empty, WsParamType::INT, 'count'))->toBeNull();
     expect($empty)
         ->toBe('');
 });
@@ -308,7 +308,7 @@ test('invoke returns a 405 for a post_only method called without POST data', fun
     $original = $_POST;
     $_POST = [];
     $server = pwgServerTestServer();
-    $server->addMethod('test.postOnly', fn (array $params, PwgServer &$service): array => [], null, null, [
+    $server->addMethod('test.postOnly', fn (array $params, Server &$service): array => [], null, null, [
         'post_only' => true,
     ]);
 
@@ -325,7 +325,7 @@ test('invoke returns a 405 for a post_only method called without POST data', fun
 
 test('invoke returns a 401 for an admin_only method called by a non-admin', function (): void {
     $server = pwgServerTestServer(isAdmin: false);
-    $server->addMethod('test.adminOnly', fn (array $params, PwgServer &$service): array => [], null, null, [
+    $server->addMethod('test.adminOnly', fn (array $params, Server &$service): array => [], null, null, [
         'admin_only' => true,
     ]);
 
@@ -344,8 +344,8 @@ test('invoke returns a 401 when an active API key request targets a config-forbi
     $currentConfig->apiKeyForbiddenMethods = ['test.forbidden'];
     $apiKeyFlag = new ApiKeyRequestFlag();
     $apiKeyFlag->activate();
-    $server = new PwgServer(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig);
-    $server->addMethod('test.forbidden', fn (array $params, PwgServer &$service): array => [
+    $server = new Server(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig);
+    $server->addMethod('test.forbidden', fn (array $params, Server &$service): array => [
         'ok' => true,
     ]);
 
@@ -361,7 +361,7 @@ test('invoke returns a 401 when an active API key request targets a config-forbi
 
 test('invoke returns MISSING_PARAM when a required param is absent, and again when it is present but empty', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.method', fn (array $params, PwgServer &$service): array => [], ['name']);
+    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], ['name']);
 
     $absent = $server->invoke('test.method', []);
     expect($absent)
@@ -387,7 +387,7 @@ test('invoke returns MISSING_PARAM when a required param is absent, and again wh
 test('invoke applies a registered default value for a missing optional param', function (): void {
     $server = pwgServerTestServer();
     $received = null;
-    $server->addMethod('test.method', function (array $params, PwgServer &$service) use (&$received): array {
+    $server->addMethod('test.method', function (array $params, Server &$service) use (&$received): array {
         $received = $params;
         return [];
     }, [
@@ -406,7 +406,7 @@ test('invoke applies a registered default value for a missing optional param', f
 
 test('invoke rejects an array value for a param that does not accept arrays', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.method', fn (array $params, PwgServer &$service): array => [], ['name']);
+    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], ['name']);
 
     $result = $server->invoke('test.method', [
         'name' => ['a', 'b'],
@@ -425,7 +425,7 @@ test('invoke rejects an array value for a param that does not accept arrays', fu
 test('invoke force-wraps a scalar into an array when FORCE_ARRAY is set', function (): void {
     $server = pwgServerTestServer();
     $received = null;
-    $server->addMethod('test.method', function (array $params, PwgServer &$service) use (&$received): array {
+    $server->addMethod('test.method', function (array $params, Server &$service) use (&$received): array {
         $received = $params;
         return [];
     }, [
@@ -446,7 +446,7 @@ test('invoke force-wraps a scalar into an array when FORCE_ARRAY is set', functi
 
 test('invoke rejects a param that fails its declared type check', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.method', fn (array $params, PwgServer &$service): array => [], [
+    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], [
         'category_id' => [
             'type' => WsParamType::ID,
         ],
@@ -467,7 +467,7 @@ test('invoke rejects a param that fails its declared type check', function (): v
 test('invoke clamps a param above maxValue down to maxValue', function (): void {
     $server = pwgServerTestServer();
     $received = null;
-    $server->addMethod('test.method', function (array $params, PwgServer &$service) use (&$received): array {
+    $server->addMethod('test.method', function (array $params, Server &$service) use (&$received): array {
         $received = $params;
         return [];
     }, [
@@ -489,7 +489,7 @@ test('invoke clamps a param above maxValue down to maxValue', function (): void 
 
 test('invoke calls the real registered callback with the checked params and a reference to the service itself', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.method', function (array $params, PwgServer &$service): array {
+    $server->addMethod('test.method', function (array $params, Server &$service): array {
         return [
             'echo' => $params,
             'sameService' => $service->hasMethod('test.method'),
@@ -513,12 +513,12 @@ test('invoke calls the real registered callback with the checked params and a re
 
 test('wsGetMethodList lists only non-hidden methods', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.visible', fn (array $params, PwgServer &$service): array => []);
-    $server->addMethod('test.hidden', fn (array $params, PwgServer &$service): array => [], null, null, [
+    $server->addMethod('test.visible', fn (array $params, Server &$service): array => []);
+    $server->addMethod('test.hidden', fn (array $params, Server &$service): array => [], null, null, [
         'hidden' => true,
     ]);
 
-    $result = PwgServer::wsGetMethodList([], $server);
+    $result = Server::wsGetMethodList([], $server);
 
     expect($result['methods']->content)->toBe(['test.visible']);
 });
@@ -526,7 +526,7 @@ test('wsGetMethodList lists only non-hidden methods', function (): void {
 test('wsGetMethodDetails returns INVALID_PARAM for a non-existent method name', function (): void {
     $server = pwgServerTestServer();
 
-    $result = PwgServer::wsGetMethodDetails([
+    $result = Server::wsGetMethodDetails([
         'methodName' => 'does.not.exist',
     ], $server);
 
@@ -540,7 +540,7 @@ test('wsGetMethodDetails returns INVALID_PARAM for a non-existent method name', 
 
 test('wsGetMethodDetails describes a real method\'s full param signature', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.method', fn (array $params, PwgServer &$service): array => [], [
+    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], [
         'category_id' => [
             'type' => WsParamType::ID,
         ],
@@ -552,7 +552,7 @@ test('wsGetMethodDetails describes a real method\'s full param signature', funct
         'admin_only' => true,
     ]);
 
-    $result = PwgServer::wsGetMethodDetails([
+    $result = Server::wsGetMethodDetails([
         'methodName' => 'test.method',
     ], $server);
 
@@ -596,7 +596,7 @@ test('isAuthorizedMethodForAPIKEY blocks a config-forbidden method once the API 
     $currentConfig->apiKeyForbiddenMethods = ['pwg.users.setInfo'];
     $apiKeyFlag = new ApiKeyRequestFlag();
     $apiKeyFlag->activate();
-    $server = new PwgServer(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig);
+    $server = new Server(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig);
 
     expect($server->isAuthorizedMethodForAPIKEY('pwg.users.setInfo'))
         ->toBeFalse()
@@ -609,7 +609,7 @@ test('isAuthorizedMethodForAPIKEY also blocks via a ws_session_login_api_key ses
     $_SESSION['connected_with'] = 'ws_session_login_api_key';
     $currentConfig = new CurrentConfig();
     $currentConfig->apiKeyForbiddenMethods = ['pwg.users.setInfo'];
-    $server = new PwgServer(new EventDispatcher(), pwgServerTestAccessControl(true), new ApiKeyRequestFlag(), $currentConfig);
+    $server = new Server(new EventDispatcher(), pwgServerTestAccessControl(true), new ApiKeyRequestFlag(), $currentConfig);
 
     try {
         expect($server->isAuthorizedMethodForAPIKEY('pwg.users.setInfo'))

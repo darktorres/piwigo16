@@ -47,10 +47,10 @@ use Piwigo\Users\UserInfoEntity;
  * (implemented by this class) rather than touching these tables directly,
  * since `Auth` is `L2aCoreDomain`, which cannot depend on `History`'s own
  * `L2bExtendedDomain` layer.
- * Admin\InstallationStats/Admin\StatsPageRenderer/Ws\PwgCore read
+ * Admin\InstallationStats/Admin\StatsPageRenderer/Ws\Core read
  * `history_summary` via this repository's own findLastByType()/
  * findMonthlyRows()/findDailyRowsForMonths()/
- * findAverageDailyPageViewsSince()/sumPageViews(); Ws\PwgCore's own
+ * findAverageDailyPageViewsSince()/sumPageViews(); Ws\Core's own
  * activity-table listing goes to
  * {@see \Piwigo\Activity\ActivityRepository::findPaginated()} instead, a
  * different table this class doesn't own.

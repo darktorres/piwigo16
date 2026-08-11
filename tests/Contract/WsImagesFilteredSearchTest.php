@@ -20,7 +20,7 @@ use Piwigo\Db\DbConnection;
  * digit checks are NOT chased here (`tags`, `categories`, `added_by`, each
  * "Invalid parameter <name>"): all three are registered in
  * WsDefaultMethods.php with WsParamFlag::FORCE_ARRAY|WsParamType::ID, and
- * PwgServer::checkType() already rejects any non-positive-integer array
+ * Server::checkType() already rejects any non-positive-integer array
  * element at the WS layer itself -- with a *different* message ("<name>
  * must only contain positive and not null integers") -- before
  * filteredSearchCreate() ever runs. Confirmed live: a non-numeric tags[]

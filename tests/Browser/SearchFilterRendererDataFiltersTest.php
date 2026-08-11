@@ -207,7 +207,7 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         ]);
 
         // Every one of these WS params is WsParamFlag::FORCE_ARRAY-declared
-        // (PwgServer::makeArrayParam() coerces a bare scalar into a
+        // (Server::makeArrayParam() coerces a bare scalar into a
         // 1-element array server-side) -- a single value per field is
         // enough to make `isset($searchFields[x])` true; the sidebar's own
         // bucket/row computations below read from the *underlying photo

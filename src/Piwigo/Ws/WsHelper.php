@@ -64,7 +64,7 @@ final class WsHelper
      * pwg.getMissingDerivatives, pwg.tags.getImages) -- all 11 f_* keys are
      * always present, per that shared registration block.
      *
-     * $params's own float|null/int|null typing (PwgServer's own
+     * $params's own float|null/int|null typing (Server's own
      * WsParamType::FLOAT/WsParamType::INT coercion, per this method's own
      * $params shape below) already guarantees each f_* value's real type --
      * the 4 date fields are validated below via
@@ -74,7 +74,7 @@ final class WsHelper
      *
      * @param array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
      */
-    public function stdImageSqlFilterCriteria(array $params, PwgServer $service): ImageFilterCriteria
+    public function stdImageSqlFilterCriteria(array $params, Server $service): ImageFilterCriteria
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
             if (isset($params[$datefield]) and ! DateHelper::isValidMysqlDatetime($params[$datefield])) {
@@ -106,7 +106,7 @@ final class WsHelper
      * docblock for why this is scoped to just this one method.
      *
      * @param array{order: string|null, ...} $params order has no WS_TYPE flag
-     *   and a null default, but PwgServer::invoke() still guarantees a plain
+     *   and a null default, but Server::invoke() still guarantees a plain
      *   scalar (rejects arrays for any registered param lacking
      *   WsParamFlag::ACCEPT_ARRAY)
      */

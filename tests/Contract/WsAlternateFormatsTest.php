@@ -17,7 +17,7 @@ use Piwigo\Db\DbConnection;
  *  - Ws\Protocol\SerialPhpEncoder (format=php) and
  *    Ws\Protocol\XmlRpcEncoder (format=xmlrpc, both success and
  *    PwgError/fault branches).
- *  - Ws\Protocol\PwgRestRequestHandler's own "missing method name" guard
+ *  - Ws\Protocol\RestRequestHandler's own "missing method name" guard
  *    (a request with no `method` POST field at all).
  *  - Ws\WsDefaultMethods::register()'s available_permission_levels
  *    empty-config fallback (`[0, 1, 2, 4, 8]`), which exists specifically
@@ -93,8 +93,8 @@ final class WsAlternateFormatsTest extends ContractTestCase
     public function testMissingMethodNameReturnsInvalidMethodError(): void
     {
         // No `method=` field at all -- WsRawRequest::fromGlobals()->method
-        // stays null, hitting PwgRestRequestHandler::handleRequest()'s own
-        // dedicated guard rather than PwgServer::invoke()'s
+        // stays null, hitting RestRequestHandler::handleRequest()'s own
+        // dedicated guard rather than Server::invoke()'s
         // "not isset($this->methods[...])" check (which needs a non-null,
         // just-unrecognized method name).
         $body = $this->rawCall('json', 'not_method=irrelevant');

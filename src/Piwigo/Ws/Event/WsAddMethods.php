@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Event;
 
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 
 /**
  * Typed event for the legacy `ws_add_methods` notification. Registered by
@@ -15,12 +15,12 @@ use Piwigo\Ws\PwgServer;
  * Piwigo\Admin\Integrity\Event\ListCheckIntegrity.
  *
  * Namespace override (Piwigo\Ws\Event\, not the default Piwigo\Event\Ws\):
- * $server carries a real Piwigo\Ws\PwgServer instance, a first-party
+ * $server carries a real Piwigo\Ws\Server instance, a first-party
  * domain type deptrac's L0Data layer (Piwigo\Event\*) may not depend on.
  */
 final readonly class WsAddMethods
 {
     public function __construct(
-        public PwgServer $server,
+        public Server $server,
     ) {}
 }

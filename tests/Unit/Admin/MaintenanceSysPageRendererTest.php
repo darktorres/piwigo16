@@ -30,7 +30,7 @@ use Piwigo\Users\UserStatus;
  *
  * The webmaster + `?method=pwg.activity_sys.getList` branch ends in a
  * real `exit` -- an HTTP-only branch by this whole campaign's own
- * documented convention (same class as Ws\WsHelper/Ws\PwgServer's
+ * documented convention (same class as Ws\WsHelper/Ws\Server's
  * documented exit()/die() branches), never exercised in-process here.
  * Both branches actually covered (non-webmaster; webmaster without the
  * ajax method) fall through to the same template-assignment tail without

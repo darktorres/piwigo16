@@ -50,7 +50,7 @@ use Piwigo\Ws\WsHelper;
  * with a genuinely malformed row instead -- a real call to the real
  * instance method under test, not a mock, same "unreachable through any
  * real WS request" precedent as WsServerTest's own
- * test_checkType_accepts_an_array_of_booleans() for PwgServer::checkType().
+ * test_checkType_accepts_an_array_of_booleans() for Server::checkType().
  */
 final class WsHelperTest extends ContractTestCase
 {

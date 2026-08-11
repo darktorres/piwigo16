@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Request;
 
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 
 /**
- * Validated request shape for `PwgRestRequestHandler::handleRequest()`.
+ * Validated request shape for `RestRequestHandler::handleRequest()`.
  * This is the sole real site where the REST WS
  * transport converts raw `$_POST`/`$_GET` into the `method` name +
  * `$params` bag every `Ws\*` method receives -- analogous to
  * `Piwigo\Http\RequestFactory::fromGlobals()`'s own sole legitimate
  * superglobal read for PSR-7 construction. Downstream `$params` values
- * are still coerced per-parameter by `PwgServer::invoke()`'s own
- * parameter-checking loop (which calls `PwgServer::checkType()`) against
+ * are still coerced per-parameter by `Server::invoke()`'s own
+ * parameter-checking loop (which calls `Server::checkType()`) against
  * each method's own `WsParamType`/`WsParamFlag` signature (a real,
  * already-existing validation layer, just not `InputValidator`-based) --
  * this DTO only extracts the raw method name + parameter bag, faithfully
@@ -34,7 +34,7 @@ final readonly class WsRawRequest
 
     public static function fromGlobals(): self
     {
-        return self::fromArrays($_POST, $_GET, PwgServer::isPost());
+        return self::fromArrays($_POST, $_GET, Server::isPost());
     }
 
     /**

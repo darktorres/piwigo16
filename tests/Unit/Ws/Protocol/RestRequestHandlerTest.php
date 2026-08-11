@@ -18,12 +18,12 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Protocol\JsonEncoder;
-use Piwigo\Ws\Protocol\PwgRestRequestHandler;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Protocol\RestRequestHandler;
+use Piwigo\Ws\Server;
 
 /**
- * Piwigo\Ws\Protocol\PwgRestRequestHandler -- the sole real
- * `PwgRequestHandler` implementation wired by `WsInitializer::init()`.
+ * Piwigo\Ws\Protocol\RestRequestHandler -- the sole real
+ * `RequestHandler` implementation wired by `WsInitializer::init()`.
  * No dedicated Integration/Browser spec of its own -- every real WS
  * HTTP request reaches it transitively through `WsController`.
  *
@@ -32,11 +32,11 @@ use Piwigo\Ws\PwgServer;
  * `WsRawRequestTest.php` for the raw method-name/param-bag extraction
  * logic -- this file only covers the 2 real branches specific to
  * `handleRequest()` itself: no method name resolved at all, and a real
- * method dispatched through to `PwgServer::sendResponse()`.
+ * method dispatched through to `Server::sendResponse()`.
  *
  * `sendResponse()` writes its encoded body via `print_r()` -- captured
  * here with `ob_start()`/`ob_get_clean()` rather than asserting on
- * `PwgServer::invoke()`'s return value directly, since `handleRequest()`
+ * `Server::invoke()`'s return value directly, since `handleRequest()`
  * itself never exposes that return value to a caller.
  */
 function pwgRestRequestHandlerTestAccessControl(): AccessControl
@@ -60,9 +60,9 @@ function pwgRestRequestHandlerTestAccessControl(): AccessControl
     );
 }
 
-function pwgRestRequestHandlerTestServer(): PwgServer
+function pwgRestRequestHandlerTestServer(): Server
 {
-    $server = new PwgServer(
+    $server = new Server(
         new EventDispatcher(),
         pwgRestRequestHandlerTestAccessControl(),
         new ApiKeyRequestFlag(),
@@ -88,7 +88,7 @@ test('handleRequest sends an INVALID_METHOD error when no method name is present
     $_GET = [];
     $_POST = [];
     $server = pwgRestRequestHandlerTestServer();
-    $handler = new PwgRestRequestHandler();
+    $handler = new RestRequestHandler();
 
     ob_start();
     $handler->handleRequest($server);
@@ -105,10 +105,10 @@ test('handleRequest invokes the requested GET method with its params and sends t
     ];
     $_POST = [];
     $server = pwgRestRequestHandlerTestServer();
-    $server->addMethod('test.echo', fn (array $params, PwgServer &$service): array => [
+    $server->addMethod('test.echo', fn (array $params, Server &$service): array => [
         'name' => $params['name'],
     ], ['name']);
-    $handler = new PwgRestRequestHandler();
+    $handler = new RestRequestHandler();
 
     ob_start();
     $handler->handleRequest($server);
@@ -125,10 +125,10 @@ test('handleRequest reads params from $_POST instead of $_GET when the request i
         'name' => 'Pyrenees',
     ];
     $server = pwgRestRequestHandlerTestServer();
-    $server->addMethod('test.echo', fn (array $params, PwgServer &$service): array => [
+    $server->addMethod('test.echo', fn (array $params, Server &$service): array => [
         'name' => $params['name'],
     ], ['name']);
-    $handler = new PwgRestRequestHandler();
+    $handler = new RestRequestHandler();
 
     ob_start();
     $handler->handleRequest($server);

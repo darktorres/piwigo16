@@ -28,7 +28,7 @@ final class WsDefaultMethods
     // ClassName::method() calls.
     public function __construct(
         private readonly PwgCategories $pwgCategories,
-        private readonly PwgCore $pwgCore,
+        private readonly Core $pwgCore,
         private readonly PwgPermissions $pwgPermissions,
         private readonly PwgComments $pwgComments,
         private readonly PwgExtensions $pwgExtensions,

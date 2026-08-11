@@ -76,7 +76,7 @@ use Piwigo\Ws\Request\HistorySearchPageRequest;
  * mixed>`-typed WS method parameter) is raw, unvalidated WS-protocol
  * request data; every real read narrows defensively at its own use site.
  */
-final class PwgCore
+final class Core
 {
     public function __construct(
         private readonly AuthService $authService,
@@ -120,7 +120,7 @@ final class PwgCore
      *    via ws.php's $f_params.
      * @return PwgError|array{next_page?: int|string, urls?: string[]}
      */
-    public function getMissingDerivatives(array $params, PwgServer &$service): PwgError|array
+    public function getMissingDerivatives(array $params, Server &$service): PwgError|array
     {
         if ($params['types'] === []) {
             $types = array_keys($this->imageStdParams->getDefinedTypeMap());
@@ -201,7 +201,7 @@ final class PwgCore
      * Returns Piwigo version
      * @param mixed[] $params
      */
-    public function getVersion(array $params, PwgServer &$service): string
+    public function getVersion(array $params, Server &$service): string
     {
         return AppInfo::VERSION;
     }
@@ -212,7 +212,7 @@ final class PwgCore
      * @param mixed[] $params
      * @return array{infos: NamedArray}
      */
-    public function getInfos(array $params, PwgServer &$service): array
+    public function getInfos(array $params, Server &$service): array
     {
         $infos = [];
         $infos['version'] = AppInfo::VERSION;
@@ -267,7 +267,7 @@ final class PwgCore
      * @param mixed[] $params
      * @return array{infos: NamedArray}
      */
-    public function getCacheSize(array $params, PwgServer &$service): array
+    public function getCacheSize(array $params, Server &$service): array
     {
         $data_location = $this->currentConfig->dataLocation;
         // $data_location ('_data/') is a path relative to the install root,
@@ -374,7 +374,7 @@ final class PwgCore
      *    WsParamFlag::FORCE_ARRAY|WsParamType::ID, mandatory (no 'default') -- always
      *    a list of positive ints.
      */
-    public function caddieAdd(array $params, PwgServer &$service): int
+    public function caddieAdd(array $params, Server &$service): int
     {
         $user_id = $this->currentUser->get()
             ->id->value;
@@ -391,7 +391,7 @@ final class PwgCore
      *    WS_TYPE flag, null default -- string|null. image_id:
      *    WsParamFlag::OPTIONAL with no 'default' -- may be entirely absent.
      */
-    public function ratesDelete(array $params, PwgServer &$service): int
+    public function ratesDelete(array $params, Server &$service): int
     {
         $anonymous_id = (! in_array($params['anonymous_id'], [null, ''], true)) ? $params['anonymous_id'] : null;
         $image_id = (isset($params['image_id']) and $params['image_id'] !== 0) ? $params['image_id'] : null;
@@ -418,7 +418,7 @@ final class PwgCore
      *    username: no WS_TYPE flag, mandatory -- always a plain string.
      *    password: no WS_TYPE flag, null default -- string|null.
      */
-    public function sessionLogin(array $params, PwgServer &$service): PwgError|true
+    public function sessionLogin(array $params, Server &$service): PwgError|true
     {
         if ($this->apiKeyRequestFlag->isActive()) {
             return new PwgError(401, 'Cannot use this method with an api key');
@@ -445,7 +445,7 @@ final class PwgCore
      * Performs a logout
      * @param mixed[] $params
      */
-    public function sessionLogout(array $params, PwgServer &$service): PwgError|true
+    public function sessionLogout(array $params, Server &$service): PwgError|true
     {
         if ($this->apiKeyRequestFlag->isActive()) {
             return new PwgError(401, 'Cannot use this method with an api key');
@@ -463,7 +463,7 @@ final class PwgCore
      * @param mixed[] $params
      * @return array<string, mixed>
      */
-    public function sessionGetStatus(array $params, PwgServer &$service): array
+    public function sessionGetStatus(array $params, Server &$service): array
     {
 
         $currentUser = $this->currentUser->get();
@@ -531,7 +531,7 @@ final class PwgCore
      * echoes $param back for the WS client, same by-design shape.
      * @return PwgError|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}
      */
-    public function getActivityList(array $param, PwgServer &$service): PwgError|array
+    public function getActivityList(array $param, Server &$service): PwgError|array
     {
         foreach (['date_min', 'date_max'] as $datefield) {
             $datefield_value = $param[$datefield];
@@ -755,7 +755,7 @@ final class PwgCore
      *    null default -- string|null. is_download: WsParamType::BOOL, default
      *    false (non-null) -- always bool.
      */
-    public function historyLog(array $params, PwgServer &$service): void
+    public function historyLog(array $params, Server &$service): void
     {
         $section = null;
         if (! in_array($params['section'], [null, ''], true)) {
@@ -826,7 +826,7 @@ final class PwgCore
      *    WS_TYPE flag, non-null int default (-1) -- int if the default is
      *    used, otherwise the raw uncoerced request string. image_id:
      *    WsParamType::ID, null default -- int|null in principle, but
-     *    PwgServer::checkType()'s own int/positive coercion deliberately
+     *    Server::checkType()'s own int/positive coercion deliberately
      *    skips an empty-string param (`elseif ($param !== '')`), so the
      *    real, uncoerced string '' also reaches here whenever a caller
      *    sends the key with no value (a real browser client, unlike a WS
@@ -836,7 +836,7 @@ final class PwgCore
      *    default -- int|null.
      * @return array<string, mixed>
      */
-    public function historySearch(array $param, PwgServer &$service): array
+    public function historySearch(array $param, Server &$service): array
     {
         $conn = $this->connection;
 
@@ -889,7 +889,7 @@ final class PwgCore
         // user
         $search['fields']['user'] = intval($param['user_id']);
 
-        // image -- PwgServer::checkType() deliberately skips its own
+        // image -- Server::checkType() deliberately skips its own
         // int/positive coercion for an empty-string param (its own
         // `elseif ($param !== '')` guard), so a real browser client that
         // always sends every key (history.tpl's own `image_id: {if

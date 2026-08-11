@@ -20,12 +20,12 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Event\WsAddMethods;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 use Piwigo\Ws\WsDefaultMethods;
 
 /**
  * Piwigo\Ws\WsDefaultMethods -- registers every standard WS method
- * (`pwg.*`) against a real `PwgServer`. `register()` is almost entirely
+ * (`pwg.*`) against a real `Server`. `register()` is almost entirely
  * declarative `$service->addMethod(...)` calls (confirmed by reading
  * the whole 2300+-line file) -- so this isn't branch-coverage in the
  * usual sense, it's a real regression guard on the single place every
@@ -50,7 +50,7 @@ use Piwigo\Ws\WsDefaultMethods;
  * handler classes plus 4 shared collaborators), none of which matter
  * for what's asserted here.
  */
-function wsDefaultMethodsTestServer(): PwgServer
+function wsDefaultMethodsTestServer(): Server
 {
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
@@ -69,7 +69,7 @@ function wsDefaultMethodsTestServer(): PwgServer
         new AccessLevelChecker($currentUser, $currentConfig),
     );
 
-    return new PwgServer(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
+    return new Server(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
 }
 
 beforeEach(function (): void {

@@ -10,7 +10,7 @@ namespace Piwigo\Ws\Request;
  * format (this app only ever registers a REST request handler). No
  * pattern validation needed: `WsInitializer::init()`'s own switch
  * already leaves the encoder null for any unrecognized format before
- * passing it to `PwgServer::setEncoder()`.
+ * passing it to `Server::setEncoder()`.
  */
 final readonly class WsFormatRequest
 {
@@ -34,7 +34,7 @@ final readonly class WsFormatRequest
         }
 
         // $_GET['format'] could be an array for a malformed ?format[]=x
-        // request -- PwgServer::setEncoder() requires a string.
+        // request -- Server::setEncoder() requires a string.
         return new self(is_string($format) ? $format : '');
     }
 }

@@ -35,7 +35,7 @@ use ReflectionProperty;
  *
  * `checkStatus(AccessLevel::Free)` (the lowest access tier) never denies
  * any real user, and the real happy path always ends in a literal
- * `exit()` after `PwgServer::run()` (see the class's own docblock) --
+ * `exit()` after `Server::run()` (see the class's own docblock) --
  * genuinely un-testable normally. But `allowWebServices = false` reaches
  * `HtmlService::pageForbidden()` BEFORE either of those, which throws via
  * `RedirectService::redirectHtml()` -- the SAME expensive-looking

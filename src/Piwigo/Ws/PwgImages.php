@@ -324,13 +324,13 @@ final class PwgImages
      * Adds a comment to an image
      * @param array{image_id: int, author: string, content: string, key: string, ...} $params
      *    image_id: WsParamType::ID, mandatory -- always a plain int. author/content/
-     *    key have no WS_TYPE flag, but PwgServer::invoke() rejects an array
+     *    key have no WS_TYPE flag, but Server::invoke() rejects an array
      *    value for any registered param without WsParamFlag::ACCEPT_ARRAY, so
      *    they're always plain strings too (author has a string default,
      *    content/key are mandatory)
      * @return PwgError|array{comment: NamedStruct}
      */
-    public function addComment(array $params, PwgServer $service): PwgError|array
+    public function addComment(array $params, Server $service): PwgError|array
     {
 
         if (! $this->currentConfig->activateComments) {
@@ -382,7 +382,7 @@ final class PwgImages
      *    comments_per_page have defaults, so always present too)
      * @return PwgError|array<string, mixed>
      */
-    public function getInfo(array $params, PwgServer $service): PwgError|array
+    public function getInfo(array $params, Server $service): PwgError|array
     {
 
         $image_row = $this->imageService->getRowWithCondition(
@@ -590,7 +590,7 @@ final class PwgImages
      * @return PwgError|array<string, mixed> matches
      *   Rate\RateService::rate()'s own already-reviewed by-design shape
      */
-    public function rate(array $params, PwgServer $service): PwgError|array
+    public function rate(array $params, Server $service): PwgError|array
     {
         $accessible = $this->imageService->isImageAccessibleWithCondition(
             ImageId::from($params['image_id']),
@@ -619,7 +619,7 @@ final class PwgImages
      *    merged in via ws.php's $f_params)
      * @return array{paging: NamedStruct, images: NamedArray}
      */
-    public function search(array $params, PwgServer $service): array
+    public function search(array $params, Server $service): array
     {
         $images = [];
         $filterCondition = $this->wsHelper->stdImageSqlFilterCriteria($params, $service)
@@ -737,7 +737,7 @@ final class PwgImages
      * Registers a new search
      *
      * Every param here is WsParamFlag::OPTIONAL with no 'default' key, so
-     * PwgServer::invoke() leaves any not provided by the caller entirely
+     * Server::invoke() leaves any not provided by the caller entirely
      * absent from $params (not filled with null) -- hence the optional (?:)
      * shape keys throughout. FORCE_ARRAY params, when present, are always
      * arrays (never a bare scalar).
@@ -745,7 +745,7 @@ final class PwgImages
      * @param array{search_id?: string, allwords?: string, allwords_mode?: string, allwords_fields?: array<int, string>, tags?: array<int, int>, tags_mode?: string, categories?: array<int, int>, categories_withsubs?: bool, authors?: array<int, string>, added_by?: array<int, int>, filetypes?: array<int, string>, date_posted_preset?: string, date_posted_custom?: array<int, string>, date_created_preset?: string, date_created_custom?: array<int, string>, ratios?: array<int, string>, ratings?: array<int, string>, filesize_min?: int, filesize_max?: int, height_min?: int, height_max?: int, width_min?: int, width_max?: int, ...} $params
      * @return PwgError|array{search_id: string, search_url: string}
      */
-    public function filteredSearchCreate(array $params, PwgServer $service): PwgError|array
+    public function filteredSearchCreate(array $params, Server $service): PwgError|array
     {
 
         $searchService = $this->searchService;
@@ -1023,11 +1023,11 @@ final class PwgImages
      * Sets the level of an image
      * @param array{image_id: array<int, int>, level: int, ...} $params
      *    image_id: WsParamFlag::FORCE_ARRAY|WsParamType::ID -- always coerced to a list
-     *      of positive ints by PwgServer::invoke() before this runs
+     *      of positive ints by Server::invoke() before this runs
      *    level: WsParamType::INT|WsParamType::POSITIVE, mandatory (no 'default') -- always
      *      a plain int by the time this runs
      */
-    public function setPrivacyLevel(array $params, PwgServer $service): PwgError|int
+    public function setPrivacyLevel(array $params, Server $service): PwgError|int
     {
 
         $available_permission_levels = $this->currentConfig->availablePermissionLevels;
@@ -1061,7 +1061,7 @@ final class PwgImages
      *   the single-image branch below returns the one image_id plus its
      *   new rank
      */
-    public function setRank(array $params, PwgServer $service): array|PwgError
+    public function setRank(array $params, Server $service): array|PwgError
     {
         if (count($params['image_id']) > 1) {
             $this->imageService
@@ -1134,9 +1134,9 @@ final class PwgImages
      * @param array{data: string, original_sum: string, type: string, position: string, ...} $params
      *    none of these have a WS_TYPE flag; data/original_sum/position are
      *    mandatory (no 'default'), type defaults to 'file' -- all always plain
-     *    strings (see PwgServer::invoke()'s array-rejection check)
+     *    strings (see Server::invoke()'s array-rejection check)
      */
-    public function addChunk(array $params, PwgServer $service): ?PwgError
+    public function addChunk(array $params, Server $service): ?PwgError
     {
         $logger = $this->currentLogger->get();
 
@@ -1191,7 +1191,7 @@ final class PwgImages
      *    image_id: WsParamType::ID, mandatory. type: no WS_TYPE flag, defaults to
      *    'file'. sum: no WS_TYPE flag, mandatory -- both always plain strings
      */
-    public function addFile(array $params, PwgServer $service): PwgError|bool|null
+    public function addFile(array $params, Server $service): PwgError|bool|null
     {
         $logger = $this->currentLogger->get();
 
@@ -1270,13 +1270,13 @@ final class PwgImages
      * @param array{thumbnail_sum: string|null, high_sum: string|null, original_sum: string, original_filename: string|null, name: string|null, author: string|null, date_creation: string|null, comment: string|null, categories: string|null, tag_ids: string|null, level: int, check_uniqueness: bool, image_id: int|null, ...} $params
      *    All except level/check_uniqueness/image_id have no WS_TYPE flag and a
      *    null default (or none, for the mandatory original_sum) -- always
-     *    plain strings when present (see PwgServer::invoke()'s array-rejection
+     *    plain strings when present (see Server::invoke()'s array-rejection
      *    check). level: WsParamType::INT|POSITIVE, default 0 (non-null) -- always
      *    int. check_uniqueness: WsParamType::BOOL, default true -- always bool.
      *    image_id: WsParamType::ID, null default -- int|null.
      * @return PwgError|array{image_id: int|string, url: string}
      */
-    public function add(array $params, PwgServer $service): PwgError|array
+    public function add(array $params, Server $service): PwgError|array
     {
         $logger = $this->currentLogger->get();
 
@@ -1458,7 +1458,7 @@ final class PwgImages
      *    default -- int|null.
      * @return PwgError|array{image_id: int|string, url: string}
      */
-    public function addSimple(array $params, PwgServer $service): PwgError|array
+    public function addSimple(array $params, Server $service): PwgError|array
     {
         $logger = $this->currentLogger->get();
 
@@ -1584,7 +1584,7 @@ final class PwgImages
      * array<string, mixed> rather than an unverified 2-branch union.
      * @return PwgError|array<string, mixed>|null
      */
-    public function upload(array $params, PwgServer $service): PwgError|array|null
+    public function upload(array $params, Server $service): PwgError|array|null
     {
         $format_ext = null;
 
@@ -1649,7 +1649,7 @@ final class PwgImages
         // already commits to the "move an uploaded file" path below,
         // rather than silently falling through to the php://input branch
         // -- a minimal, single-fact existence check, same shape as
-        // Ws\PwgServer::isPost()'s own raw $_POST read.
+        // Ws\Server::isPost()'s own raw $_POST read.
         if ($_FILES !== []) {
             if (! $uploaded_file->present) {
                 return new PwgError(103, 'Failed to move uploaded file.');
@@ -1774,7 +1774,7 @@ final class PwgImages
      *   result of the pwg.images.getInfo invocation once the upload is
      *   complete
      */
-    public function uploadAsync(array $params, PwgServer &$service): PwgError|array
+    public function uploadAsync(array $params, Server &$service): PwgError|array
     {
         $logger = $this->currentLogger->get();
 
@@ -2018,7 +2018,7 @@ final class PwgImages
             'image_id' => $image_id,
         ]);
         // $service->invoke() is a genuine string-keyed dynamic dispatcher
-        // (see PwgServer's own class docblock) -- its declared return type
+        // (see Server's own class docblock) -- its declared return type
         // is `mixed` by design. This narrows it to the real shape this
         // specific sub-invocation (always 'pwg.images.getInfo', which
         // itself really does return PwgError|array<string, mixed>) is
@@ -2042,7 +2042,7 @@ final class PwgImages
      *   id is 'images''s NOT NULL primary key (int|string per
      *   driver), or null when no matching photo was found
      */
-    public function exist(array $params, PwgServer $service): array
+    public function exist(array $params, Server $service): array
     {
         $logger = $this->currentLogger->get();
 
@@ -2106,7 +2106,7 @@ final class PwgImages
      * $candidates below is arbitrary client-supplied JSON.
      * @return array<int|string, array<string, mixed>>
      */
-    public function formatsSearchImage(array $params, PwgServer $service): array
+    public function formatsSearchImage(array $params, Server $service): array
     {
         $logger = $this->currentLogger->get();
 
@@ -2201,7 +2201,7 @@ final class PwgImages
      *    plain int, a list of ints, or null. pwg_token: no WS_TYPE flag,
      *    mandatory -- always a plain string.
      */
-    public function formatsDelete(array $params, PwgServer $service): PwgError|bool
+    public function formatsDelete(array $params, Server $service): PwgError|bool
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -2287,7 +2287,7 @@ final class PwgImages
      *    thumbnail_sum/high_sum: no WS_TYPE flag, null default -- string|null.
      * @return PwgError|array<string, string>
      */
-    public function checkFiles(array $params, PwgServer $service): PwgError|array
+    public function checkFiles(array $params, Server $service): PwgError|array
     {
         $logger = $this->currentLogger->get();
 
@@ -2354,7 +2354,7 @@ final class PwgImages
      *    non-null string defaults -- always string. pwg_token:
      *    WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
      */
-    public function setInfo(array $params, PwgServer $service): ?PwgError
+    public function setInfo(array $params, Server $service): ?PwgError
     {
 
         if (isset($params['pwg_token']) and new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
@@ -2508,7 +2508,7 @@ final class PwgImages
      *    mandatory -- a plain string or an array, never null. pwg_token: no
      *    WS_TYPE flag, mandatory -- always a plain string.
      */
-    public function delete(array $params, PwgServer $service): PwgError|int
+    public function delete(array $params, Server $service): PwgError|int
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -2548,7 +2548,7 @@ final class PwgImages
      * @param mixed[] $params
      * @return array{message: ?string, ready_for_upload: bool}
      */
-    public function checkUpload(array $params, PwgServer $service): array
+    public function checkUpload(array $params, Server $service): array
     {
         $ret = [];
         $ret['message'] = $this->uploadService->readyForUploadMessage();
@@ -2568,7 +2568,7 @@ final class PwgImages
      * @return array{rows: list<array{image_id: int, category_id: int}>|null} matches
      *   ImageService::emptyLounge()'s own already-precise return type
      */
-    public function emptyLounge(array $params, PwgServer $service): array
+    public function emptyLounge(array $params, Server $service): array
     {
         $ret = [
             'rows' => $this->imageService
@@ -2589,7 +2589,7 @@ final class PwgImages
      *    always int.
      * @return PwgError|array{moved_from_lounge: list<array{image_id: int, category_id: int}>|null, category: array{id: int, nb_photos: int, label: string}}
      */
-    public function uploadCompleted(array $params, PwgServer $service): PwgError|array
+    public function uploadCompleted(array $params, Server $service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -2654,7 +2654,7 @@ final class PwgImages
      *    -- always int. pwg_token: no WS_TYPE flag, mandatory -- always string.
      * @return PwgError|array{nb_added: int, nb_no_md5sum: int}
      */
-    public function setMd5sum(array $params, PwgServer $service): PwgError|array
+    public function setMd5sum(array $params, Server $service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -2684,7 +2684,7 @@ final class PwgImages
      *    plain string or an array, never null. pwg_token: mandatory string.
      * @return PwgError|array{nb_synchronized: int}
      */
-    public function syncMetadata(array $params, PwgServer $service): PwgError|array
+    public function syncMetadata(array $params, Server $service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -2740,7 +2740,7 @@ final class PwgImages
      *    int. pwg_token: no WS_TYPE flag, mandatory -- always string.
      * @return PwgError|array{nb_deleted: int, nb_orphans: int}
      */
-    public function deleteOrphans(array $params, PwgServer $service): PwgError|array
+    public function deleteOrphans(array $params, Server $service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -2769,7 +2769,7 @@ final class PwgImages
      *    WS_TYPE flag, but always plain strings (action has a string default,
      *    pwg_token is mandatory)
      */
-    public function setCategory(array $params, PwgServer $service): ?PwgError
+    public function setCategory(array $params, Server $service): ?PwgError
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');

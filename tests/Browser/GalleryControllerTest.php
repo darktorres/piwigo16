@@ -41,7 +41,7 @@ function galSetNbImagePage(int $userId, int $value): void
  * ...}` object, the shape SearchService::getSearchResults() checks
  * `isset($search['q'])` against to route into getQuickSearchResults()
  * instead of getRegularSearchResults()) -- `search_uuid` is left NULL
- * (an old-style numeric-only id, same as Ws\PwgCore::historySearch()'s
+ * (an old-style numeric-only id, same as Ws\Core::historySearch()'s
  * own ephemeral inserts) so it's reachable via `/index.php?/search/<id>`
  * without tripping SearchService::getValidatedSearchInfo()'s
  * search_uuid-required guard. Returns the new row's id.

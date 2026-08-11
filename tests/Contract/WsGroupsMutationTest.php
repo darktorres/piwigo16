@@ -12,11 +12,11 @@ use Override;
  * chased here: GroupService::delete() only returns `false` when
  * `count($groupIds) === 0`, but `group_id` is registered with
  * WsParamFlag::FORCE_ARRAY and no WsParamFlag::OPTIONAL/'default' key
- * (mandatory) -- PwgServer::invoke() itself rejects any request that
+ * (mandatory) -- Server::invoke() itself rejects any request that
  * doesn't supply at least one real element before this method's own body
  * ever runs (confirmed live: a bare `group_id=` -- or the key omitted
  * entirely -- fails at the WS layer with "Missing parameters: group_id"
- * first, and PwgServer::checkType() rejects any non-positive-integer
+ * first, and Server::checkType() rejects any non-positive-integer
  * element with its own error too). Genuinely unreachable through the real
  * WS route, not a gap in test coverage.
  */

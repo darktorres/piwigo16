@@ -51,7 +51,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 
 /**
  * [SEC-21] The SVG upload branch validates that the sniffed MIME type
@@ -265,15 +265,15 @@ final class UploadService
      * 3) register in database
      *
      * @param int[]|null $categories
-     * @param PwgServer|null $service Not a required parameter: the one
+     * @param Server|null $service Not a required parameter: the one
      *   non-WS real caller, Job\Handler\BatchUploadHandler::
      *   __invoke(BatchUploadJob $job), is a genuine queued-job handler
-     *   with no PwgServer in scope at all. PwgImages.php's 5 real WS
+     *   with no Server in scope at all. PwgImages.php's 5 real WS
      *   callers (addFile()/add()/addSimple()/upload()/uploadAsync(), each
-     *   already carrying its own PwgServer $service param) pass it
+     *   already carrying its own Server $service param) pass it
      *   through; BatchUploadHandler passes nothing.
      */
-    public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null, ?PwgServer $service = null): int
+    public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null, ?Server $service = null): int
     {
         $logger = $this->currentLogger->get();
 

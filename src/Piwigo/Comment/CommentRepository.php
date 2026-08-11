@@ -954,7 +954,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Total row count of `comments` -- Ws\PwgCore::getInfos()'s own
+     * Total row count of `comments` -- Ws\Core::getInfos()'s own
      * "nb_comments" summary figure. Single-table, no WHERE or join here
      * that DQL can't express.
      */
@@ -971,7 +971,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Total count of unvalidated (pending) comments -- Ws\PwgCore::
+     * Total count of unvalidated (pending) comments -- Ws\Core::
      * getInfos()'s own "nb_unvalidated_comments" summary figure.
      * Single-table, static WHERE -- no join here that DQL can't express.
      */

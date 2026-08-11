@@ -567,7 +567,7 @@ final class WsHistoryTest extends ContractTestCase
         // historyLog()'s own body has an `if ($params['image_id'] !== 0)`
         // branch (skip the hit-counter increment for a non-photo visit),
         // but the WS registration types image_id as WsParamType::ID
-        // (INT|POSITIVE|NOTNULL, min_range 1) -- PwgServer::invoke()'s own
+        // (INT|POSITIVE|NOTNULL, min_range 1) -- Server::invoke()'s own
         // parameter check rejects 0 before the method body ever runs, so
         // that branch is dead code via this real WS route.
         $response = $this->wsAdmin('pwg.history.log', [
@@ -639,7 +639,7 @@ final class WsHistoryTest extends ContractTestCase
      * isset($IMAGE_ID)}"{$IMAGE_ID}"{else}""{/if}`) -- unlike this test
      * suite's own wsAdmin() helper, which (like the other tests in this
      * file) simply omits the key entirely when unused, so this exact
-     * client shape was never covered before. PwgServer::checkType()
+     * client shape was never covered before. Server::checkType()
      * deliberately skips its own int/positive coercion for an
      * empty-string param, so '' reached historySearch()'s old `!== 0`
      * guard unconverted, got persisted as image_id: 0 via intval(''),
@@ -974,7 +974,7 @@ final class WsHistoryTest extends ContractTestCase
      * tags/cat/added_by reconstruction filters each id list through
      * `array_filter($words, is_string(...))` -- but
      * filteredSearchCreate() registers 'tags'/'categories'/'added_by' with
-     * 'type' => WsParamType::ID, so PwgServer::checkType() coerces every
+     * 'type' => WsParamType::ID, so Server::checkType() coerces every
      * element to a real PHP int (filter_var(..., FILTER_VALIDATE_INT)), and
      * json round-tripping through search.rules preserves that int
      * type. is_string() on an int is always false, so the filter empties
@@ -1593,10 +1593,10 @@ final class WsHistoryTest extends ContractTestCase
      * in this codebase, confirmed there via a full-repo grep before the
      * legacy include/ws_functions/pwg.php file was even deleted. Calling
      * this method (admin_only, so an authenticated call is required to
-     * even reach the broken callback -- PwgServer::invoke()'s own
+     * even reach the broken callback -- Server::invoke()'s own
      * admin_only gate runs before parameter checks or the call itself)
      * therefore always throws a real, uncaught `Call to undefined
-     * function` Error -- PwgServer::invoke() has no try/catch around its
+     * function` Error -- Server::invoke() has no try/catch around its
      * own call_user_func_array(), so this reaches PHP as an unhandled
      * fatal. Raw curl (not wsAdmin()/callWs(), which assert HTTP status
      * < 500) -- same shape as assertHistorySearchIsAHackingAttempt()

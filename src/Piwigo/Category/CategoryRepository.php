@@ -2590,7 +2590,7 @@ final class CategoryRepository
 
     /**
      * Count of categories with no physical directory (virtual) or with
-     * one (physical) -- Ws\PwgCore::getInfos()'s own "nb_virtual"/
+     * one (physical) -- Ws\Core::getInfos()'s own "nb_virtual"/
      * "nb_physical" summary figures.
      *
      * Same reasoning as {@see findIdsByDirNull()} above.

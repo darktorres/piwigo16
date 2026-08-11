@@ -20,7 +20,7 @@ use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 use Piwigo\Ws\WsHelper;
 
 /**
@@ -324,10 +324,10 @@ test('categoriesFlatlistToTree skips a row with a non-scalar id', function (): v
 /**
  * None of the branches under test in this file's stdImageSqlFilterCriteria()
  * tests ever reach sendResponse()/exit() -- a bare, unregistered
- * PwgServer only needs to satisfy the method's own type, same rationale
+ * Server only needs to satisfy the method's own type, same rationale
  * as PwgPermissionsTest.php's own pwgPermissionsTestServer() helper.
  */
-function wsHelperTestServer(): PwgServer
+function wsHelperTestServer(): Server
 {
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
@@ -346,5 +346,5 @@ function wsHelperTestServer(): PwgServer
         new AccessLevelChecker($currentUser, $currentConfig),
     );
 
-    return new PwgServer(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
+    return new Server(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
 }

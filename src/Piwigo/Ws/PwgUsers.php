@@ -102,7 +102,7 @@ final class PwgUsers
      * field list), not a single fixed row shape.
      * @return PwgError|array<int|string, mixed>
      */
-    public function getList(array $params, PwgServer &$service): PwgError|array
+    public function getList(array $params, Server &$service): PwgError|array
     {
         $available_permission_levels = $this->currentConfig->availablePermissionLevels;
 
@@ -423,7 +423,7 @@ final class PwgUsers
      * @return PwgError|array<int|string, mixed> PwgError, or the result of
      *   the pwg.users.getList invocation
      */
-    public function add(array $params, PwgServer &$service): PwgError|array
+    public function add(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -493,7 +493,7 @@ final class PwgUsers
      *
      * @return PwgError|array{auth_key: string, user_id: int, created_on: string, duration: int, expired_on: string, key_type: string, auth_key_id: string}
      */
-    public function getAuthKey(array $params, PwgServer &$service): PwgError|array
+    public function getAuthKey(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -516,7 +516,7 @@ final class PwgUsers
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces user_id to a list of positive ints.
      */
-    public function delete(array $params, PwgServer &$service): PwgError|string
+    public function delete(array $params, Server &$service): PwgError|string
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -573,7 +573,7 @@ final class PwgUsers
      * @return PwgError|array<int|string, mixed> PwgError, or the result of
      *   the pwg.users.getList invocation
      */
-    public function setInfo(array $params, PwgServer &$service): PwgError|array
+    public function setInfo(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -603,7 +603,7 @@ final class PwgUsers
 
     /**
      * $service->invoke() is a genuine string-keyed dynamic dispatcher (see
-     * PwgServer's own class docblock) -- its declared return type is
+     * Server's own class docblock) -- its declared return type is
      * `mixed` by design. This narrows it to the real shape this specific
      * sub-invocation (always 'pwg.users.getList', which itself really
      * does return PwgError|array<int|string, mixed>) is known to return,
@@ -634,7 +634,7 @@ final class PwgUsers
      *   ws.php registration at all -- harmless no-ops, not part of the real
      *   shape.)
      */
-    public function setMyInfo(array $params, PwgServer &$service): PwgError|string
+    public function setMyInfo(array $params, Server &$service): PwgError|string
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -737,7 +737,7 @@ final class PwgUsers
      *   Users\User::$preferences' own by-design arbitrary per-user
      *   key-value shape (User.php's own $preferences docblock)
      */
-    public function preferencesSet(array $params, PwgServer &$service): PwgError|array
+    public function preferencesSet(array $params, Server &$service): PwgError|array
     {
         if (! (bool) preg_match('/^[a-zA-Z0-9_-]+$/', $params['param'])) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
@@ -761,7 +761,7 @@ final class PwgUsers
      * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
      */
-    public function favoritesAdd(array $params, PwgServer &$service): PwgError|true
+    public function favoritesAdd(array $params, Server &$service): PwgError|true
     {
         if ($this->accessControl->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
@@ -784,7 +784,7 @@ final class PwgUsers
      * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
      */
-    public function favoritesRemove(array $params, PwgServer &$service): PwgError|true
+    public function favoritesRemove(array $params, Server &$service): PwgError|true
     {
         if ($this->accessControl->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
@@ -810,7 +810,7 @@ final class PwgUsers
      *   present, string|null.
      * @return false|array{paging: NamedStruct, images: NamedArray}
      */
-    public function favoritesGetList(array $params, PwgServer &$service): false|array
+    public function favoritesGetList(array $params, Server &$service): false|array
     {
 
         if ($this->accessControl->isAGuest()) {
@@ -870,7 +870,7 @@ final class PwgUsers
      *   bool default, WsParamType::BOOL -- always present.
      * @return PwgError|array{generated_link: string, send_by_mail: string|false|null, time_validation: string}
      */
-    public function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
+    public function generatePasswordLink(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -950,7 +950,7 @@ final class PwgUsers
      *   'default' key -- both mandatory, always present, WsParamType::ID guarantees
      *   a plain int for user_id.
      */
-    public function setMainUser(array $params, PwgServer &$service): PwgError|string
+    public function setMainUser(array $params, Server &$service): PwgError|string
     {
         // check if not webmaster
         if (! $this->accessControl->isWebmaster()) {
@@ -989,7 +989,7 @@ final class PwgUsers
      *   WsParamType::INT|WsParamType::POSITIVE guarantees a plain int.
      * @return PwgError|array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}
      */
-    public function createApiKey(array $params, PwgServer &$service): PwgError|array
+    public function createApiKey(array $params, Server &$service): PwgError|array
     {
         $logger = $this->currentLogger->get();
 
@@ -1034,7 +1034,7 @@ final class PwgUsers
      * @param array{pkid: string, pwg_token: string, ...} $params neither has a
      *   'default' key -- both mandatory, always present, no 'type' flag.
      */
-    public function revokeApiKey(array $params, PwgServer &$service): PwgError|string
+    public function revokeApiKey(array $params, Server &$service): PwgError|string
     {
         $logger = $this->currentLogger->get();
 
@@ -1072,7 +1072,7 @@ final class PwgUsers
      *   none has a 'default' key -- all mandatory, always present, no 'type'
      *   flag.
      */
-    public function editApiKey(array $params, PwgServer &$service): PwgError|string
+    public function editApiKey(array $params, Server &$service): PwgError|string
     {
         $logger = $this->currentLogger->get();
 
@@ -1117,7 +1117,7 @@ final class PwgUsers
      *   mandatory, always present, no 'type' flag.
      * @return PwgError|string|list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>
      */
-    public function getApiKey(array $params, PwgServer &$service): PwgError|array|string
+    public function getApiKey(array $params, Server &$service): PwgError|array|string
     {
         if ($this->accessControl->isAGuest()) {
             return new PwgError(401, 'Acces Denied');

@@ -92,7 +92,7 @@ final class WsImagesMutationTest extends ContractTestCase
         // 'level' is only registered with WsParamType::INT|POSITIVE plus a
         // 'maxValue' (the highest of CurrentConfig::availablePermissionLevels(),
         // 8 by default) at the WS layer -- a too-high value is silently
-        // *clamped* there (PwgServer::invoke()'s own maxValue handling), not
+        // *clamped* there (Server::invoke()'s own maxValue handling), not
         // rejected, so this needs a value that's positive, <= 8, and simply
         // not one of the actual available levels ([0, 1, 2, 4, 8] by
         // default) to reach setPrivacyLevel()'s own in_array() guard.

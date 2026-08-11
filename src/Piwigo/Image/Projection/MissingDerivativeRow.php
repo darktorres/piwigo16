@@ -6,7 +6,7 @@ namespace Piwigo\Image\Projection;
 
 /**
  * {@see \Piwigo\Image\ImageRepository::findForMissingDerivatives()}'s own
- * row shape -- `Ws\PwgCore::getMissingDerivatives()`'s own cursor-paginated
+ * row shape -- `Ws\Core::getMissingDerivatives()`'s own cursor-paginated
  * scan, one real caller.
  *
  * `toArray()` preserves the exact original snake_case shape:

@@ -19,12 +19,12 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgCore;
+use Piwigo\Ws\Core;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 
 /**
- * Piwigo\Ws\PwgCore -- the `pwg.getVersion`/`pwg.getInfos`/
+ * Piwigo\Ws\Core -- the `pwg.getVersion`/`pwg.getInfos`/
  * `pwg.getMissingDerivatives`/`pwg.session.*`/`pwg.getActivityList`/
  * `pwg.history.*`/etc WS methods. Resolved via `Kernel::container()->get()`
  * (same rationale as `UpdatesSubControllerTest.php`) -- 27 constructor
@@ -43,11 +43,11 @@ use Piwigo\Ws\PwgServer;
  * CSRF/pure guard of its own reachable this cheaply -- confirmed by
  * reading each -- and is not attempted here.
  */
-function pwgCoreTestSubject(): PwgCore
+function pwgCoreTestSubject(): Core
 {
-    $ws = Kernel::container()->get(PwgCore::class);
-    if (! $ws instanceof PwgCore) {
-        throw new LogicException('Container returned an unexpected type for ' . PwgCore::class);
+    $ws = Kernel::container()->get(Core::class);
+    if (! $ws instanceof Core) {
+        throw new LogicException('Container returned an unexpected type for ' . Core::class);
     }
 
     return $ws;
@@ -55,11 +55,11 @@ function pwgCoreTestSubject(): PwgCore
 
 /**
  * None of the branches under test here ever reach `$service->invoke()`
- * -- a bare, unregistered PwgServer only needs to satisfy the by-ref
+ * -- a bare, unregistered Server only needs to satisfy the by-ref
  * type, same rationale as `PwgPermissionsTest.php`'s own
  * pwgPermissionsTestServer() helper.
  */
-function pwgCoreTestServer(): PwgServer
+function pwgCoreTestServer(): Server
 {
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
@@ -78,7 +78,7 @@ function pwgCoreTestServer(): PwgServer
         new AccessLevelChecker($currentUser, $currentConfig),
     );
 
-    return new PwgServer(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
+    return new Server(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
 }
 
 beforeEach(function (): void {

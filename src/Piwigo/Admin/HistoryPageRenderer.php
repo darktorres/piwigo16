@@ -26,7 +26,7 @@ use Piwigo\Validation\InputValidator;
  * Ported from admin/history.php (page slug "history") -- displays the
  * filtered history lines panel. The actual line listing is fetched
  * client-side via an async ws.php?method=pwg.history.search call
- * (Ws\PwgCore::historySearch()); this page only renders the filter form.
+ * (Ws\Core::historySearch()); this page only renders the filter form.
  */
 final class HistoryPageRenderer
 {

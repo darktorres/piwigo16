@@ -676,7 +676,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
     //     Request DTO in the app could read either array -- the same
     //     "earliest possible bootstrap stage" category as
     //     RequestFactory::fromGlobals() itself.
-    //   - Ws/PwgServer.php: isPost()'s own `$_POST !== []` -- a minimal
+    //   - Ws/Server.php: isPost()'s own `$_POST !== []` -- a minimal
     //     single-fact reader (matches this same file's own docblock),
     //     not a bag of request data a DTO wrapper would help.
     //   - Ws/PwgImages.php: upload()'s own `$_FILES !== []` top-level
@@ -700,7 +700,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
         'Admin/AdminShell.php',
         'Bootstrap/UserBootstrap.php',
         'Bootstrap/RequestBootstrap.php',
-        'Ws/PwgServer.php',
+        'Ws/Server.php',
         'Ws/PwgImages.php',
         'Admin/BatchManagerGlobalPageRenderer.php',
     ];
@@ -1102,7 +1102,7 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // Ws/* raw-response mechanism: the whole Ws/ module sends its own
         // JSON-RPC/XML/PHP-serialized response and exits, by design --
         // bypasses the PSR-7 middleware pipeline entirely (WsController's
-        // own docblock: "PwgServer::run() always ends the response itself
+        // own docblock: "Server::run() always ends the response itself
         // ... there is no real PSR-7 Response to construct"). Same
         // mechanism reached from Bootstrap/UserBootstrap.php's api_key
         // gate and Admin/Upload/UploadService.php's IN_WS branch.
@@ -1111,7 +1111,7 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // error-response mechanism this file already uses everywhere
         // else, so upload errors honor the request's real format=/
         // protocol instead of hardcoding raw JSON regardless.
-        'Ws/PwgServer.php' => 1,
+        'Ws/Server.php' => 1,
         'Ws/WsHelper.php' => 1,
         'Controller/WsController.php' => 1,
         'Bootstrap/UserBootstrap.php' => 2,

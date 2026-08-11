@@ -1269,7 +1269,7 @@ final class ImageRepository extends EntityRepository
     /**
      * Total row count of `image_category` (every link, not distinct
      * images -- a different figure from {@see countImagesInCategories()}
-     * above) -- Ws\PwgCore::getInfos()'s own "nb_image_category" summary
+     * above) -- Ws\Core::getInfos()'s own "nb_image_category" summary
      * figure.
      */
     public function countImageCategoryLinks(): int
@@ -1285,7 +1285,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Earliest `date_available` across every image -- Ws\PwgCore::
+     * Earliest `date_available` across every image -- Ws\Core::
      * getInfos()'s own "first_date" summary figure, a different query
      * from {@see findEarliestDateAvailable()} above (that one is the
      * first-inserted image's own date, by id; this one is the minimum
@@ -1303,7 +1303,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Next free id and total row count, in one round trip --
-     * Ws\PwgCore::getMissingDerivatives()'s own pagination-cursor
+     * Ws\Core::getMissingDerivatives()'s own pagination-cursor
      * bootstrap (same MAX(id)+1 shape as {@see findNextId()} above, plus
      * COUNT(*) for the "nothing to do" early exit).
      */
@@ -1326,7 +1326,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * One page of images with id below $startId, matching $criteria --
-     * Ws\PwgCore::getMissingDerivatives()'s own cursor-paginated scan, one
+     * Ws\Core::getMissingDerivatives()'s own cursor-paginated scan, one
      * real caller. $criteria->filterCriteria is a typed
      * {@see \Piwigo\Image\ImageFilterCriteria}, applied here via
      * {@see applyImageFilterCriteria()} against this method's own `i`
@@ -1444,7 +1444,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * id/label(computed)/filesize/file/path/representative_ext for
-     * $imageIds -- Ws\PwgCore::historySearch()'s own thumbnail/label
+     * $imageIds -- Ws\Core::historySearch()'s own thumbnail/label
      * enrichment step, keyed by id.
      *
      * @param  list<int|string>  $imageIds

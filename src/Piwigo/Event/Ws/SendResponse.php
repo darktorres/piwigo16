@@ -7,7 +7,7 @@ namespace Piwigo\Event\Ws;
 /**
  * Typed event for the legacy `sendResponse` notification. No handler is
  * registered for it anywhere today. $encodedResponse is `string|false`,
- * not the reference's plain `string` -- PwgServer::sendResponse()'s real
+ * not the reference's plain `string` -- Server::sendResponse()'s real
  * dispatch site goes through the abstract
  * ResponseEncoder::encodeResponse(): string|false interface (only
  * JsonEncoder's json_encode() call can genuinely produce false; the

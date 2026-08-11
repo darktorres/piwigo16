@@ -17,7 +17,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces ws.php -- the web-service dispatcher entry point. Wraps the
- * existing PwgServer registration/dispatch/response-formatting mechanism
+ * existing Server registration/dispatch/response-formatting mechanism
  * as-is. The ~100 web-service methods are real Piwigo\Ws\* class methods,
  * autoloaded like every other class; their addMethod() registration
  * catalog is Piwigo\Ws\WsDefaultMethods::register().
@@ -32,7 +32,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * define() calls anywhere under src/Piwigo/.
  *
  * $service->run() calls header()/echo directly and does not return a
- * PSR-7 Response -- the PwgServer protocol (REST/XML-RPC/JSON/PHP
+ * PSR-7 Response -- the Server protocol (REST/XML-RPC/JSON/PHP
  * encoders) writes its own response. This controller's return type is
  * satisfied the same way check_status()'s `never` exit paths are:
  * $service->run() is the last statement, and PHP's own request lifecycle
@@ -59,14 +59,14 @@ final class WsController implements ControllerInterface
                 ->pageForbidden($this->redirectService, 'Web services are disabled');
         }
 
-        // WsInitializer::init() guarantees at most one PwgServer/default-event
+        // WsInitializer::init() guarantees at most one Server/default-event
         // registration per process, returning the same shared instance even
         // when UserBootstrap's api_key/uploadAsync branches already
         // initialized it earlier in this request.
         $service = $this->wsInitializer->init();
         $service->run();
 
-        // Unreachable: PwgServer::run() always ends the response itself
+        // Unreachable: Server::run() always ends the response itself
         // (header()+echo, one of the 4 protocol encoders) and this
         // process-lifetime script exits right after -- there is no real
         // PSR-7 Response to construct. Kept only so this method's return

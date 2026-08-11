@@ -443,7 +443,7 @@ final class RateRepository extends EntityRepository
 
     /**
      * Deletes rates matching $userId, and optionally further narrowed to
-     * $anonymousId and/or $elementId -- Ws\PwgCore::ratesDelete()'s own
+     * $anonymousId and/or $elementId -- Ws\Core::ratesDelete()'s own
      * "delete this user's rates, optionally scoped" WS method, a
      * different contract from {@see deleteByUserAnonymousAndElements()}
      * above (that one requires both a non-null anonymousId and a

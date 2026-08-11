@@ -124,7 +124,7 @@ final class SearchRepository
     }
 
     /**
-     * $createdOn/$searchUuid default to null for Ws\PwgCore::historySearch()'s
+     * $createdOn/$searchUuid default to null for Ws\Core::historySearch()'s
      * ephemeral, metadata-less inserts (no user-facing permalink, never
      * forked) -- SearchService::saveSearch() always passes real values for
      * both.
@@ -152,7 +152,7 @@ final class SearchRepository
 
     /**
      * Batch lookup of decoded `rules` for a list of search ids, used by
-     * Ws\PwgCore::historySearch()'s history-listing enrichment (one query
+     * Ws\Core::historySearch()'s history-listing enrichment (one query
      * for every `search_id` referenced across a page of history rows,
      * instead of unserialize()-ing a raw per-row string itself).
      *

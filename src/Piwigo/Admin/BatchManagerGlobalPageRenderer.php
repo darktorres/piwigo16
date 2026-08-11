@@ -106,7 +106,7 @@ final class BatchManagerGlobalPageRenderer
         // (matching the original's own ordering exactly, CSRF check before
         // any field validation), so it can't read the DTO's own post bag
         // yet -- a minimal, single-fact existence check, same shape as
-        // Ws\PwgServer::isPost()'s own already-reviewed raw $_POST read.
+        // Ws\Server::isPost()'s own already-reviewed raw $_POST read.
         if (count($_POST) > 0) {
             new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);

@@ -20,7 +20,7 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgGroups;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 
 /**
  * Piwigo\Ws\PwgGroups -- the `pwg.groups.*` WS methods (8 registrations).
@@ -58,11 +58,11 @@ function pwgGroupsTestSubject(): PwgGroups
 
 /**
  * None of the branches under test here ever reach `$service->invoke()`
- * -- a bare, unregistered PwgServer only needs to satisfy the by-ref
+ * -- a bare, unregistered Server only needs to satisfy the by-ref
  * type, same rationale as `PwgPermissionsTest.php`'s own
  * pwgPermissionsTestServer() helper.
  */
-function pwgGroupsTestServer(): PwgServer
+function pwgGroupsTestServer(): Server
 {
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
@@ -81,7 +81,7 @@ function pwgGroupsTestServer(): PwgServer
         new AccessLevelChecker($currentUser, $currentConfig),
     );
 
-    return new PwgServer(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
+    return new Server(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
 }
 
 beforeEach(function (): void {

@@ -40,7 +40,7 @@ final class PwgPermissions
      *   ints when present.
      * @return PwgError|array{categories: NamedArray}
      */
-    public function getList(array $params, PwgServer &$service): PwgError|array
+    public function getList(array $params, Server &$service): PwgError|array
     {
         $my_params = array_filter(
             ['cat_id', 'group_id', 'user_id'],
@@ -135,7 +135,7 @@ final class PwgPermissions
      * PermissionService::addPermissionOnCategory() -- this WS method has no
      * `$_POST` state of its own.
      */
-    public function add(array $params, PwgServer &$service): PwgError|array
+    public function add(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -187,7 +187,7 @@ final class PwgPermissions
      *   can't prove the sealed shape from a re-narrowed value, only that
      *   it's a real array)
      */
-    public function remove(array $params, PwgServer &$service): PwgError|array
+    public function remove(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -210,7 +210,7 @@ final class PwgPermissions
 
     /**
      * $service->invoke() is a genuine string-keyed dynamic dispatcher (see
-     * PwgServer's own class docblock) -- its declared return type is
+     * Server's own class docblock) -- its declared return type is
      * `mixed` by design. This narrows it to the real shape this specific
      * sub-invocation (always 'pwg.permissions.getList', which itself
      * really does return PwgError|array{categories: NamedArray}) is

@@ -13,7 +13,7 @@ use RuntimeException;
  * Ws\PwgTags::delete()'s own `else { return ['id' => []]; }` branch (when
  * $tag_ids is empty) is NOT chased here: `tag_id` is registered with
  * WsParamFlag::FORCE_ARRAY and no WsParamFlag::OPTIONAL/'default' key
- * (mandatory), so PwgServer::invoke() itself rejects any request that
+ * (mandatory), so Server::invoke() itself rejects any request that
  * doesn't supply at least one real element -- a bare `tag_id=` (or the
  * key omitted entirely) never reaches this method's own body at all
  * (confirmed live: it fails at the WS layer with "Missing parameters:

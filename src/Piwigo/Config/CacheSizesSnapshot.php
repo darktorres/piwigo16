@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 /**
- * A decoded pwg.getCacheSize snapshot (see Ws\PwgCore::getCacheSize()) --
+ * A decoded pwg.getCacheSize snapshot (see Ws\Core::getCacheSize()) --
  * persisted as a {name, value} pair list (NamedArray's own wire
  * shape), looked up here by name rather than position. The real
  * producer also emits `msizes`/`tsizes` rows, but no consumer in this

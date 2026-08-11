@@ -5,17 +5,17 @@ declare(strict_types=1);
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Ws\Protocol\JsonEncoder;
-use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\Protocol\RestEncoder;
+use Piwigo\Ws\Protocol\RestRequestHandler;
 use Piwigo\Ws\Protocol\SerialPhpEncoder;
 use Piwigo\Ws\Protocol\XmlRpcEncoder;
 use Piwigo\Ws\WsInitializer;
 
 /**
- * Piwigo\Ws\WsInitializer -- builds the per-request PwgServer and
+ * Piwigo\Ws\WsInitializer -- builds the per-request Server and
  * registers the WS default event handlers. Resolved via
  * `Kernel::container()->get()`: its own 8 constructor deps include
- * `WsDefaultMethods`/`PwgCore` (each themselves wrapping ~10-25 further
+ * `WsDefaultMethods`/`Core` (each themselves wrapping ~10-25 further
  * domain Services), so hand-constructing that whole graph would be
  * strictly worse than trusting the real, already-tested container
  * wiring -- same rationale as `UpdatesSubControllerTest.php`'s own
@@ -27,7 +27,7 @@ use Piwigo\Ws\WsInitializer;
  * `init()`'s own event-handler registrations (`WsAddMethods`/
  * `WsInvokeAllowed`/`GetHistory`) are not asserted on directly here --
  * they wire `WsDefaultMethods::register()`/`WsHelper::isInvokeAllowed()`/
- * `PwgCore::historyGet()`, each already deferred/covered on their own
+ * `Core::historyGet()`, each already deferred/covered on their own
  * terms elsewhere in the B4 bucket.
  */
 function wsInitializerTestGet(): WsInitializer
@@ -58,14 +58,14 @@ test('init defaults to a REST request handler and REST response encoder when no 
     expect($server->requestFormat)
         ->toBe('rest')
         ->and($server->requestHandler)
-        ->toBeInstanceOf(PwgRestRequestHandler::class)
+        ->toBeInstanceOf(RestRequestHandler::class)
         ->and($server->responseFormat)
         ->toBe('rest')
         ->and($server->responseEncoder)
         ->toBeInstanceOf(RestEncoder::class);
 });
 
-test('init memoizes the built PwgServer across repeated calls on the same instance', function (): void {
+test('init memoizes the built Server across repeated calls on the same instance', function (): void {
     $wsInitializer = wsInitializerTestGet();
 
     $first = $wsInitializer->init();

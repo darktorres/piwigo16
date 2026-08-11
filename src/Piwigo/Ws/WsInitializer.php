@@ -13,35 +13,35 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Event\WsAddMethods;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 use Piwigo\Ws\Protocol\JsonEncoder;
-use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\Protocol\RestEncoder;
+use Piwigo\Ws\Protocol\RestRequestHandler;
 use Piwigo\Ws\Protocol\SerialPhpEncoder;
 use Piwigo\Ws\Protocol\XmlRpcEncoder;
 use Piwigo\Ws\Request\WsFormatRequest;
 
 /**
- * Builds the per-request PwgServer and registers the WS default event
+ * Builds the per-request Server and registers the WS default event
  * handlers.
  *
- * `$server` memoizes the built PwgServer on this instance; PHP-DI shares
+ * `$server` memoizes the built Server on this instance; PHP-DI shares
  * this WsInitializer instance across every resolving caller (WsController
  * on every WS request; UserBootstrap's api_key-failure and
- * pwg.images.uploadAsync branches), so PwgServer construction and the
+ * pwg.images.uploadAsync branches), so Server construction and the
  * default-event registrations run at most once per process and every
- * caller receives the same PwgServer instance from init()'s return value.
+ * caller receives the same Server instance from init()'s return value.
  *
- * PwgServer is passed as a real parameter to
+ * Server is passed as a real parameter to
  * WsHelper::stdImageSqlFilterCriteria()/UploadService::addUploadedFile()
  * rather than read from a global.
  */
 final class WsInitializer
 {
-    private ?PwgServer $server = null;
+    private ?Server $server = null;
 
     public function __construct(
         private readonly EventDispatcher $eventDispatcher,
         private readonly WsDefaultMethods $wsDefaultMethods,
-        private readonly PwgCore $pwgCore,
+        private readonly Core $pwgCore,
         private readonly UrlServiceInterface $urlService,
         private readonly WsHelper $wsHelper,
         private readonly AccessControl $accessControl,
@@ -49,23 +49,23 @@ final class WsInitializer
         private readonly CurrentConfig $currentConfig,
     ) {}
 
-    public function init(): PwgServer
+    public function init(): Server
     {
-        if ($this->server instanceof PwgServer) {
+        if ($this->server instanceof Server) {
             return $this->server;
         }
 
         $this->eventDispatcher->addTypedHandler(WsAddMethods::class, $this->wsDefaultMethods->register(...));
         $this->eventDispatcher->addTypedHandler(WsInvokeAllowed::class, $this->wsHelper->isInvokeAllowed(...));
         // Registers unconditionally, once per WS request -- must run before
-        // PwgCore::historySearch() dispatches its GetHistory event, since
+        // Core::historySearch() dispatches its GetHistory event, since
         // historyGet() needs to already be listening.
         $this->eventDispatcher->addTypedHandler(GetHistory::class, $this->pwgCore->historyGet(...));
 
         $requestFormat = 'rest';
         $responseFormat = WsFormatRequest::fromGlobals()->responseFormat;
 
-        $service = new PwgServer($this->eventDispatcher, $this->accessControl, $this->apiKeyRequestFlag, $this->currentConfig);
+        $service = new Server($this->eventDispatcher, $this->accessControl, $this->apiKeyRequestFlag, $this->currentConfig);
 
         // $requestFormat is hardcoded to 'rest' above; the format-selection
         // switch stays for parity with $responseFormat's structure and in case
@@ -73,7 +73,7 @@ final class WsInitializer
         $handler = null;
         switch ($requestFormat) {
             case 'rest':
-                $handler = new PwgRestRequestHandler();
+                $handler = new RestRequestHandler();
                 break;
         }
         $service->setHandler($requestFormat, $handler);

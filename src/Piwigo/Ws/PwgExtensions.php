@@ -77,7 +77,7 @@ final class PwgExtensions
      *   entirely unvalidated request array, but the body doesn't read it.
      * @return list<array{id: string, name: string, version: string, state: string, description: string}>
      */
-    public function pluginsGetList(array $params, PwgServer &$service): array
+    public function pluginsGetList(array $params, Server &$service): array
     {
         $urlService = $this->urlService;
         // ExtensionScanner::scan()'s own declared return type is a generic
@@ -121,7 +121,7 @@ final class PwgExtensions
      *   none has a 'default' key -- all mandatory, always present, no 'type'
      *   flag.
      */
-    public function pluginsPerformAction(array $params, PwgServer &$service): PwgError|true
+    public function pluginsPerformAction(array $params, Server &$service): PwgError|true
     {
         $template = $this->currentTemplate->get();
 
@@ -187,7 +187,7 @@ final class PwgExtensions
      *   none has a 'default' key -- all mandatory, always present, no 'type'
      *   flag.
      */
-    public function themesPerformAction(array $params, PwgServer &$service): PwgError|true
+    public function themesPerformAction(array $params, Server &$service): PwgError|true
     {
         $template = $this->currentTemplate->get();
 
@@ -247,7 +247,7 @@ final class PwgExtensions
      *   self-redirect a few lines below that appends it as a raw extra query
      *   param) -- covered by the shape's open tail, never explicitly typed.
      */
-    public function update(array $params, PwgServer &$service): PwgError|string
+    public function update(array $params, Server &$service): PwgError|string
     {
         if (! $this->currentConfig->enableExtensionsInstall) {
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
@@ -372,7 +372,7 @@ final class PwgExtensions
      *   reset: non-null bool default, WsParamType::BOOL -- always present.
      *   pwg_token: no 'default' key -- mandatory, always present.
      */
-    public function ignoreUpdate(array $params, PwgServer &$service): PwgError|true
+    public function ignoreUpdate(array $params, Server &$service): PwgError|true
     {
         // No define('IN_ADMIN', true) or include_once
         // admin/include/functions.php here: IN_ADMIN has no reader left in
@@ -425,7 +425,7 @@ final class PwgExtensions
      *   entirely unvalidated request array, but the body doesn't read it.
      * @return array{piwigo_need_update: bool|null, ext_need_update: bool|null}
      */
-    public function checkUpdates(array $params, PwgServer &$service): array
+    public function checkUpdates(array $params, Server &$service): array
     {
         $urlService = $this->urlService;
         $coreUpdateService = $this->coreUpdateService;

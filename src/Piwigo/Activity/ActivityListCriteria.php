@@ -9,7 +9,7 @@ use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Replaces the ad hoc `list<SqlCondition>` that
- * `Ws\PwgCore::getActivityList()` used to build and combine itself
+ * `Ws\Core::getActivityList()` used to build and combine itself
  * before handing the finished raw fragment to
  * {@see ActivityRepository::findPaginated()}. One immutable object built
  * once by the caller from its own already-validated `$param`, passed

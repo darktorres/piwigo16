@@ -14,10 +14,10 @@ use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 
 /**
- * Ws\PwgServer -- the generic WS dispatcher itself (invoke()'s own gates,
+ * Ws\Server -- the generic WS dispatcher itself (invoke()'s own gates,
  * checkType()'s scalar bool/float branches, the reflection.* methods,
  * isAuthorizedMethodForAPIKEY()), reached through ws.php rather than any
  * one pwg.* domain method's own test file.
@@ -33,12 +33,12 @@ use Piwigo\Ws\PwgServer;
  * without pretending a fake WS method registration exists.
  *
  * run()'s own "no request handler" branch (`! $this->requestHandler
- * instanceof PwgRequestHandler`) is similarly unreachable in practice
+ * instanceof RequestHandler`) is similarly unreachable in practice
  * through ws.php: WsInitializer::init() hardcodes $requestFormat = 'rest'
- * and always constructs a PwgRestRequestHandler for it, so
+ * and always constructs a RestRequestHandler for it, so
  * requestHandler is never null by the time run() checks it through the
  * real ws.php entry point. test_run_without_a_request_handler_returns_unknown_request_format()
- * below reaches it by constructing a real PwgServer directly and calling
+ * below reaches it by constructing a real Server directly and calling
  * setEncoder() without ever calling setHandler() -- a real object in a
  * state WsInitializer itself never produces, not a mock of the class
  * under test.
@@ -55,7 +55,7 @@ use Piwigo\Ws\PwgServer;
  * WsCommentsTest's own class docblock for the full writeup.
  *
  * Ws\WsInitializer::init()'s own memoization early-return (`if (self::$server
- * instanceof PwgServer) { return self::$server; }`) needs init() to run
+ * instanceof Server) { return self::$server; }`) needs init() to run
  * twice inside one real request -- see test_init_reuses_the_memoized_server_below.
  */
 final class WsServerTest extends ContractTestCase
@@ -73,7 +73,7 @@ final class WsServerTest extends ContractTestCase
      * Reached through the real ws.php entry point: WsFormatRequest::
      * fromArray() leaves the encoder null for any `?format=` value
      * WsInitializer::init()'s own switch doesn't recognize
-     * (rest/php/json/xmlrpc), so PwgServer::setEncoder() genuinely
+     * (rest/php/json/xmlrpc), so Server::setEncoder() genuinely
      * receives a null encoder for a malformed real request -- not a
      * synthetic construction. run() calls die(0) in this branch, so this
      * uses a raw curl call against the live server rather than an
@@ -98,10 +98,10 @@ final class WsServerTest extends ContractTestCase
         self::assertSame(400, $status);
         self::assertStringContainsString('Cannot process your request. Unknown response format.', $body);
         self::assertStringContainsString('Request format: rest Response format: not-a-real-format', $body);
-        // var_export()'s own output of PwgServer's own shallow request/
+        // var_export()'s own output of Server's own shallow request/
         // response debug state -- confirms the die(0) branch really ran to
         // completion rather than stopping earlier. Not a full
-        // var_export($this): PwgServer's own DI-injected collaborators
+        // var_export($this): Server's own DI-injected collaborators
         // (accessControl's own chain reaches HtmlService/MailService/
         // UrlService and every one of their own collaborators) would make
         // a full var_export($this) exhaust the request's memory limit.
@@ -113,7 +113,7 @@ final class WsServerTest extends ContractTestCase
     /**
      * See this file's own class docblock: unreachable through the real
      * ws.php entry point (WsInitializer::init() always calls setHandler()
-     * before setEncoder()), so this resolves a real PwgServer from the
+     * before setEncoder()), so this resolves a real Server from the
      * container directly and calls setEncoder() without ever calling
      * setHandler() -- genuinely exercises run()'s own guard with a real
      * request-handler-less object, not a mock of the class under test. No
@@ -128,7 +128,7 @@ final class WsServerTest extends ContractTestCase
      * one calls run() directly in the PHPUnit CLI process, so it
      * boots/resets the Kernel locally, matching
      * Integration\ContainerSmokeTest's own boot()-then-reset() pattern. A
-     * real Paths is required, not a bare boot: PwgServer constructor-
+     * real Paths is required, not a bare boot: Server constructor-
      * injects AccessControl, whose own chain
      * (-> RedirectService -> Lang) resolves Paths, whose value the
      * container can't guess without one -- same rationale as
@@ -140,8 +140,8 @@ final class WsServerTest extends ContractTestCase
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         $body = false;
         try {
-            $server = Kernel::container()->get(PwgServer::class);
-            self::assertInstanceOf(PwgServer::class, $server);
+            $server = Kernel::container()->get(Server::class);
+            self::assertInstanceOf(Server::class, $server);
             $encoder = new JsonEncoder();
             $server->setEncoder('json', $encoder);
 
@@ -167,8 +167,8 @@ final class WsServerTest extends ContractTestCase
      * WsInitializer::init()'s own memoization branch. Bootstrap\
      * UserBootstrap's own `pwg.images.uploadAsync` username/password
      * credential branch (confirmed live via reading its source) calls
-     * WsInitializer::init() once to build a PwgServer for
-     * PwgCore::sessionLogin() -- ahead of the normal WsController::
+     * WsInitializer::init() once to build a Server for
+     * Core::sessionLogin() -- ahead of the normal WsController::
      * __invoke()'s own init() call for the real method dispatch, in the
      * *same* request -- the only real route where init() runs twice per
      * process. A fresh, never-logged-in cookie jar (this test's own,
@@ -178,9 +178,9 @@ final class WsServerTest extends ContractTestCase
      *
      * uploadAsync's own registered params (chunk/chunk_sum/chunks/
      * original_sum/filename) are deliberately not sent -- the credential
-     * branch runs during bootstrap, entirely before PwgServer::invoke()'s
+     * branch runs during bootstrap, entirely before Server::invoke()'s
      * own per-method param validation, so a "Missing parameters: ..."
-     * fail response from the *second* init()'d PwgServer is a perfectly
+     * fail response from the *second* init()'d Server is a perfectly
      * fine, non-500 outcome; only the credential login itself needs to
      * succeed for real.
      */
@@ -323,10 +323,10 @@ final class WsServerTest extends ContractTestCase
 
     /**
      * WsController::__invoke()'s own gate, reached before WsInitializer::
-     * init()/PwgServer::run() ever construct a request handler -- this is
+     * init()/Server::run() ever construct a request handler -- this is
      * genuinely different from the guest_access-disabled case above (that
      * one is a normal WS JSON 'fail'/401 envelope produced from inside
-     * PwgServer::invoke()). Here, HtmlService::pageForbidden() throws
+     * Server::invoke()). Here, HtmlService::pageForbidden() throws
      * ResponseReadyException with a real HTML 403 body before any WS
      * dispatch happens at all, so a plain callWs()/ws() JSON-decode
      * wouldn't apply -- this uses a raw curl call and inspects the HTTP
@@ -405,7 +405,7 @@ final class WsServerTest extends ContractTestCase
     public function testCheckTypeAcceptsAnArrayOfBooleans(): void
     {
         $param = ['1', 'false', 'yes'];
-        $result = PwgServer::checkType($param, WsParamType::BOOL, 'flags');
+        $result = Server::checkType($param, WsParamType::BOOL, 'flags');
 
         self::assertNull($result);
         self::assertSame([true, false, true], $param);
@@ -414,7 +414,7 @@ final class WsServerTest extends ContractTestCase
     public function testCheckTypeRejectsAnArrayContainingANonBoolean(): void
     {
         $param = ['1', 'not-a-boolean'];
-        $result = PwgServer::checkType($param, WsParamType::BOOL, 'flags');
+        $result = Server::checkType($param, WsParamType::BOOL, 'flags');
 
         self::assertInstanceOf(PwgError::class, $result);
         self::assertSame(WsError::INVALID_PARAM, $result->code());
@@ -436,7 +436,7 @@ final class WsServerTest extends ContractTestCase
     public function testCheckTypeAcceptsAnArrayOfPositiveFloats(): void
     {
         $param = ['1.5', '0'];
-        $result = PwgServer::checkType($param, WsParamType::FLOAT | WsParamType::POSITIVE, 'ratios');
+        $result = Server::checkType($param, WsParamType::FLOAT | WsParamType::POSITIVE, 'ratios');
 
         self::assertNull($result);
         self::assertSame([1.5, 0.0], $param);
@@ -451,7 +451,7 @@ final class WsServerTest extends ContractTestCase
     public function testCheckTypeRejectsAnArrayContainingAFloatBelowMinRange(): void
     {
         $param = ['1.5', '-3.5'];
-        $result = PwgServer::checkType($param, WsParamType::FLOAT | WsParamType::POSITIVE, 'ratios');
+        $result = Server::checkType($param, WsParamType::FLOAT | WsParamType::POSITIVE, 'ratios');
 
         self::assertInstanceOf(PwgError::class, $result);
         self::assertSame(WsError::INVALID_PARAM, $result->code());
@@ -681,7 +681,7 @@ final class WsServerTest extends ContractTestCase
      * ever reached, even though the outward 401/"Access denied" response
      * looks identical. Logging in through pwg.session.login with the same
      * api_key's "pkid-..." public part / secret as username/password
-     * instead (PwgCore::sessionLogin() -> authKeyLogin() with its
+     * instead (Core::sessionLogin() -> authKeyLogin() with its
      * $connectionByHeader default of false) performs a real logUser() as
      * the key's owner (fixture_admin, a genuine admin) and sets
      * $_SESSION['connected_with'] = 'ws_session_login_api_key' -- the

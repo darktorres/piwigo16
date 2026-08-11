@@ -303,7 +303,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     }
 
     /**
-     * Paginated activity rows matching $criteria -- Ws\PwgCore::getActivityList()'s
+     * Paginated activity rows matching $criteria -- Ws\Core::getActivityList()'s
      * own WS listing, one real caller.
      *
      * $criteria (an immutable {@see ActivityListCriteria} value object) is

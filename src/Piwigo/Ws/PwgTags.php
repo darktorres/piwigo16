@@ -57,7 +57,7 @@ final class PwgTags
      *   WsParamType::BOOL -- always present.
      * @return array{tags: NamedArray}
      */
-    public function getList(array $params, PwgServer &$service): array
+    public function getList(array $params, Server &$service): array
     {
         $tags = $this->tagService->getAvailableTags();
         if ($params['sort_by_counter']) {
@@ -97,7 +97,7 @@ final class PwgTags
      *   entirely unvalidated request array, but the body doesn't read it.
      * @return array{tags: NamedArray}
      */
-    public function getAdminList(array $params, PwgServer &$service): array
+    public function getAdminList(array $params, Server &$service): array
     {
         return [
             'tags' => new NamedArray(
@@ -123,7 +123,7 @@ final class PwgTags
      *   WsHelper::stdImageSqlFilterCriteria()/WsHelper::stdImageSqlOrder().
      * @return array{paging: NamedStruct, images: NamedArray}
      */
-    public function getImages(array $params, PwgServer &$service): array
+    public function getImages(array $params, Server &$service): array
     {
         $tagService = $this->tagService;
 
@@ -258,7 +258,7 @@ final class PwgTags
      *   always present.
      * @return PwgError|array{info: string, id: int|string, name: string, url_name: string}
      */
-    public function add(array $params, PwgServer &$service): PwgError|array
+    public function add(array $params, Server &$service): PwgError|array
     {
         $creation_output = $this->tagService->createTag($params['name']);
 
@@ -292,7 +292,7 @@ final class PwgTags
      *   FORCE_ARRAY always coerces tag_id to a list of positive ints.
      * @return PwgError|array{id: array<int, int>}
      */
-    public function delete(array $params, PwgServer &$service): PwgError|array
+    public function delete(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -325,7 +325,7 @@ final class PwgTags
      *   guarantees a plain int for tag_id.
      * @return PwgError|array<string, mixed>
      */
-    public function rename(array $params, PwgServer &$service): PwgError|array
+    public function rename(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -381,7 +381,7 @@ final class PwgTags
      * count is count($inserts)).
      * @return PwgError|array{id: int, name: string, url_name: string, count: int}
      */
-    public function duplicate(array $params, PwgServer &$service): PwgError|array
+    public function duplicate(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -446,7 +446,7 @@ final class PwgTags
      *   FORCE_ARRAY always coerces to a list of positive ints.
      * @return PwgError|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: list<int>}
      */
-    public function merge(array $params, PwgServer &$service): PwgError|array
+    public function merge(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');

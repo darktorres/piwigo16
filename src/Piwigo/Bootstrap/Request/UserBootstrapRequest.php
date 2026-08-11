@@ -10,7 +10,7 @@ namespace Piwigo\Bootstrap\Request;
  *
  * This runs at the very top of the request lifecycle (before any
  * controller/WS-method dispatch), but unlike `Http\RequestFactory::
- * fromGlobals()` or `Ws\PwgServer::invoke()`'s own dispatch, nothing else
+ * fromGlobals()` or `Ws\Server::invoke()`'s own dispatch, nothing else
  * in the framework already wraps these specific fields, so they're
  * genuine raw reads worth their own DTO -- constructed as the first
  * statement of `initialize()`, same as every other Request DTO this

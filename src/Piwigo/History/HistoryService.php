@@ -65,7 +65,7 @@ final readonly class HistoryService
      * caller. All 4 params are threaded explicitly because this method
      * has 3 mutually-exclusive real callers -- GalleryController/
      * PictureController (a real SectionContext always exists, pass
-     * SectionContextRegistry::current()'s values), PwgCore::historyLog()
+     * SectionContextRegistry::current()'s values), Core::historyLog()
      * (a WS method that never runs SectionPopulator, passes its own
      * WS-param-derived values), and ActionController (no section context
      * available at all, passes nothing) -- so these can't be read

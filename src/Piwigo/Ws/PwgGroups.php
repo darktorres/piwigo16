@@ -53,7 +53,7 @@ final class PwgGroups
      *   flag -- always present, always string.
      * @return PwgError|array{paging: NamedStruct, groups: NamedArray}
      */
-    public function getList(array $params, PwgServer &$service): PwgError|array
+    public function getList(array $params, Server &$service): PwgError|array
     {
         if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
@@ -91,7 +91,7 @@ final class PwgGroups
      * @return PwgError|array<array-key, mixed> PwgError, or the result of
      *   the pwg.groups.getList invocation
      */
-    public function add(array $params, PwgServer &$service): PwgError|array
+    public function add(array $params, Server &$service): PwgError|array
     {
         $name = strip_tags(stripslashes($params['name']));
 
@@ -122,7 +122,7 @@ final class PwgGroups
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces group_id to a list of positive ints.
      */
-    public function delete(array $params, PwgServer &$service): PwgError|NamedArray
+    public function delete(array $params, Server &$service): PwgError|NamedArray
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -150,7 +150,7 @@ final class PwgGroups
      * @return PwgError|array<array-key, mixed> PwgError, or the result of
      *   the pwg.groups.getList invocation
      */
-    public function setInfo(array $params, PwgServer &$service): PwgError|array
+    public function setInfo(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -187,7 +187,7 @@ final class PwgGroups
      * @return PwgError|array<array-key, mixed> PwgError, or the result of
      *   the pwg.groups.getList invocation
      */
-    public function addUser(array $params, PwgServer &$service): PwgError|array
+    public function addUser(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -216,7 +216,7 @@ final class PwgGroups
      * result -- same by-name-dispatcher rationale as add()/setInfo() above.
      * @return PwgError|array{destination_group: mixed, deleted_group: mixed}
      */
-    public function merge(array $params, PwgServer &$service): PwgError|array
+    public function merge(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -249,7 +249,7 @@ final class PwgGroups
      * @return PwgError|array<array-key, mixed> PwgError, or the result of
      *   the pwg.groups.getList invocation
      */
-    public function duplicate(array $params, PwgServer &$service): PwgError|array
+    public function duplicate(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -277,7 +277,7 @@ final class PwgGroups
      * @return PwgError|array<array-key, mixed> PwgError, or the result of
      *   the pwg.groups.getList invocation
      */
-    public function deleteUser(array $params, PwgServer &$service): PwgError|array
+    public function deleteUser(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -295,7 +295,7 @@ final class PwgGroups
 
     /**
      * $service->invoke() is a genuine string-keyed dynamic dispatcher (see
-     * PwgServer's own class docblock) -- its declared return type is
+     * Server's own class docblock) -- its declared return type is
      * `mixed` by design. This narrows it to the real shape this specific
      * sub-invocation (always 'pwg.groups.getList', which itself really
      * does return PwgError|array{paging: NamedStruct, groups: NamedArray})

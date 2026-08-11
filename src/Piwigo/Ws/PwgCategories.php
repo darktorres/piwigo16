@@ -148,7 +148,7 @@ final class PwgCategories
      *   registration, see WsHelper::stdImageSqlFilterCriteria()/WsHelper::stdImageSqlOrder().
      * @return PwgError|array{paging: NamedStruct, images: NamedArray}
      */
-    public function getImages(array $params, PwgServer &$service): PwgError|array
+    public function getImages(array $params, Server &$service): PwgError|array
     {
         $urlService = $this->urlService;
 
@@ -362,7 +362,7 @@ final class PwgCategories
      * Ws\PwgUsers::getList()'s own client-controlled response shape.
      * @return PwgError|array<int|string, mixed>
      */
-    public function getList(array $params, PwgServer &$service): PwgError|array
+    public function getList(array $params, Server &$service): PwgError|array
     {
         $currentUser = $this->currentUser->get();
 
@@ -725,7 +725,7 @@ final class PwgCategories
      *   always present.
      * @return array<string, mixed>
      */
-    public function getAdminList(array $params, PwgServer &$service): array
+    public function getAdminList(array $params, Server &$service): array
     {
         if (! isset($params['additional_output'])) {
             $params['additional_output'] = '';
@@ -832,7 +832,7 @@ final class PwgCategories
      *   entirely absent.
      * @return PwgError|array{info: string, id: int|string}
      */
-    public function add(array $params, PwgServer &$service): PwgError|array
+    public function add(array $params, Server &$service): PwgError|array
     {
         if (isset($params['pwg_token']) and new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -894,7 +894,7 @@ final class PwgCategories
      *   always coerces to a list of positive ints. rank: WsParamFlag::OPTIONAL
      *   (explicit flag) with no 'default' key -- may be entirely absent.
      */
-    public function setRank(array $params, PwgServer &$service): ?PwgError
+    public function setRank(array $params, Server &$service): ?PwgError
     {
         // does the category really exist?
         $categories = $this->categoryService->getRankInfoByIds(array_values($params['category_id']));
@@ -956,7 +956,7 @@ final class PwgCategories
      *   always present. pwg_token: WsParamFlag::OPTIONAL with no 'default' key --
      *   may be entirely absent.
      */
-    public function setInfo(array $params, PwgServer &$service): ?PwgError
+    public function setInfo(array $params, Server &$service): ?PwgError
     {
 
         if (isset($params['pwg_token']) and new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
@@ -1040,7 +1040,7 @@ final class PwgCategories
      *   'default' key -- both mandatory, always present, WsParamType::ID guarantees
      *   plain ints.
      */
-    public function setRepresentative(array $params, PwgServer &$service): ?PwgError
+    public function setRepresentative(array $params, Server &$service): ?PwgError
     {
         // does the category really exist?
         if (! $this->categoryService->existsById($params['category_id'])) {
@@ -1081,7 +1081,7 @@ final class PwgCategories
      * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
      */
-    public function deleteRepresentative(array $params, PwgServer &$service): ?PwgError
+    public function deleteRepresentative(array $params, Server &$service): ?PwgError
     {
         // does the category really exist?
         if (! $this->categoryService->existsById($params['category_id'])) {
@@ -1113,7 +1113,7 @@ final class PwgCategories
      *   CategoryService::getCategoryRepresentantProperties()'s own
      *   already-precise return type (this method's only real array return)
      */
-    public function refreshRepresentative(array $params, PwgServer &$service): PwgError|array
+    public function refreshRepresentative(array $params, Server &$service): PwgError|array
     {
         $categoryService = $this->categoryService;
 
@@ -1158,7 +1158,7 @@ final class PwgCategories
      *   'type' flag, non-null default -- always a plain string. pwg_token: no
      *   'default' key, no flags -- mandatory, always present, plain string.
      */
-    public function delete(array $params, PwgServer &$service): ?PwgError
+    public function delete(array $params, Server &$service): ?PwgError
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -1232,7 +1232,7 @@ final class PwgCategories
      *   mandatory, always present, plain string.
      * @return PwgError|array{new_ariane_string: string, updated_cats: array<int, array{cat_id: string, nb_sub_photos: int}>}
      */
-    public function move(array $params, PwgServer &$service): PwgError|array
+    public function move(array $params, Server &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -1375,7 +1375,7 @@ final class PwgCategories
      *   positive ints.
      * @return array<int, array{nb_images_associated_outside: int, nb_images_becoming_orphan: int, nb_images_recursive: int}>
      */
-    public function calculateOrphans(array $param, PwgServer &$service): array
+    public function calculateOrphans(array $param, Server &$service): array
     {
         $category_id = $param['category_id'][0];
 

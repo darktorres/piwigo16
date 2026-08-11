@@ -14,14 +14,14 @@ namespace Piwigo\Ws\Protocol;
 use Override;
 use Piwigo\Core\WsError;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgRequestHandler;
-use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\Request\WsRawRequest;
+use Piwigo\Ws\RequestHandler;
+use Piwigo\Ws\Server;
 
-final class PwgRestRequestHandler extends PwgRequestHandler
+final class RestRequestHandler extends RequestHandler
 {
     #[Override]
-    public function handleRequest(PwgServer &$service): void
+    public function handleRequest(Server &$service): void
     {
         $wsRequest = WsRawRequest::fromGlobals();
 

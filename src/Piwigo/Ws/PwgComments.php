@@ -64,7 +64,7 @@ final class PwgComments
      * unverified; left as array<string, mixed>.
      * @return PwgError|array<string, mixed>
      */
-    public function getList(array $params, PwgServer &$service): PwgError|array
+    public function getList(array $params, Server &$service): PwgError|array
     {
         if (! $this->currentConfig->activateComments) {
             return new PwgError(403, 'Comments are disabled');
@@ -241,7 +241,7 @@ final class PwgComments
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
      */
-    public function delete(array $params, PwgServer &$service): PwgError|string
+    public function delete(array $params, Server &$service): PwgError|string
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, $this->lang->t('Invalid security token'));
@@ -261,7 +261,7 @@ final class PwgComments
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
      */
-    public function validate(array $params, PwgServer &$service): PwgError|string
+    public function validate(array $params, Server &$service): PwgError|string
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, $this->lang->t('Invalid security token'));

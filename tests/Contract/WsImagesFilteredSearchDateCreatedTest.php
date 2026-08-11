@@ -15,7 +15,7 @@ namespace Piwigo\Tests\Contract;
  * The 'tags'/'categories'/'added_by' "must only contain digits"
  * PwgError(INVALID_PARAM, 'Invalid parameter X') branches are NOT chased
  * here: all three are registered with 'type' => WsParamType::ID (see
- * WsDefaultMethods), so PwgServer::invoke() itself already rejects any
+ * WsDefaultMethods), so Server::invoke() itself already rejects any
  * non-positive-integer element with its own "X must only contain positive
  * and not null integers" error *before* filteredSearchCreate() ever runs --
  * confirmed live via direct WS calls. filteredSearchCreate()'s own

@@ -19,7 +19,7 @@ use Piwigo\Ws\NamedStruct;
  * genuinely by-design: this walks/encodes an arbitrary WS method's
  * arbitrary, arbitrarily-nested response value (NamedArray/
  * NamedStruct themselves wrap arbitrary content) -- same rationale as
- * PwgServer's own generic method dispatcher.
+ * Server's own generic method dispatcher.
  */
 abstract class ResponseEncoder
 {

@@ -30,7 +30,7 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgPermissions;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Server;
 
 /**
  * Piwigo\Ws\PwgPermissions -- the `pwg.permissions.*` WS methods (3
@@ -106,11 +106,11 @@ function pwgPermissionsTestSubject(): PwgPermissions
  * None of the branches under test here ever reach `$service->invoke()`
  * (getList()'s guard fires first; add()/remove()'s CSRF check fires
  * before their own real `$service->invoke('pwg.permissions.getList',
- * ...)` call) -- a bare, unregistered PwgServer only needs to satisfy
+ * ...)` call) -- a bare, unregistered Server only needs to satisfy
  * the by-ref type, same rationale as PwgServerTest.php's own
  * pwgServerTestServer() helper.
  */
-function pwgPermissionsTestServer(): PwgServer
+function pwgPermissionsTestServer(): Server
 {
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
@@ -129,7 +129,7 @@ function pwgPermissionsTestServer(): PwgServer
         new AccessLevelChecker($currentUser, $currentConfig),
     );
 
-    return new PwgServer(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
+    return new Server(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
 }
 
 test('getList rejects more than one of cat_id/group_id/user_id at once', function (): void {

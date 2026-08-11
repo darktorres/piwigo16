@@ -36,9 +36,9 @@ use Piwigo\Ws\Event\WsInvokeAllowed;
  * method's own registration, same rationale as PluginConfig\EventDispatcher's
  * own pub-sub methods).
  */
-final class PwgServer
+final class Server
 {
-    public ?PwgRequestHandler $requestHandler = null;
+    public ?RequestHandler $requestHandler = null;
 
     public ?string $requestFormat = null;
 
@@ -63,9 +63,9 @@ final class PwgServer
      * intervening method calls (addMethod(), trigger_notify()) mean
      * PHPStan can't carry that narrowing to handleRequest()'s call site.
      */
-    private function requestHandler(): PwgRequestHandler
+    private function requestHandler(): RequestHandler
     {
-        assert($this->requestHandler instanceof PwgRequestHandler);
+        assert($this->requestHandler instanceof RequestHandler);
         return $this->requestHandler;
     }
 
@@ -82,7 +82,7 @@ final class PwgServer
     /**
      *  Initializes the request handler.
      */
-    public function setHandler(string $requestFormat, ?PwgRequestHandler &$requestHandler): void
+    public function setHandler(string $requestFormat, ?RequestHandler &$requestHandler): void
     {
         $this->requestHandler = &$requestHandler;
         $this->requestFormat = $requestFormat;
@@ -127,7 +127,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
             die(0);
         }
 
-        if (! $this->requestHandler instanceof PwgRequestHandler) {
+        if (! $this->requestHandler instanceof RequestHandler) {
             $this->sendResponse(new PwgError(400, 'Unknown request format'));
             return;
         }
@@ -276,7 +276,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
      * request's HTTP method), same shape as
      * Piwigo\Http\RequestFactory::fromGlobals()'s own sole legitimate
      * superglobal read -- reused by 2 real call sites
-     * (PwgRestRequestHandler::handleRequest()'s param-source choice,
+     * (RestRequestHandler::handleRequest()'s param-source choice,
      * invoke()'s own post_only method gate), not a bag of request data
      * that would benefit from a {Module}/Request/{Name} DTO wrapper.
      */

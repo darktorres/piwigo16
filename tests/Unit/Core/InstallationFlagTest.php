@@ -7,12 +7,7 @@ use Piwigo\Core\InstallationFlag;
 /**
  * Piwigo\Core\InstallationFlag -- had no dedicated coverage of its own
  * (only exercised indirectly via LangTest.php's mark()/reset() calls
- * around the InstallationFlag-active default-language path). The
- * PHPWG_INSTALLED-constant branch of isActive() is deliberately not
- * exercised here for the same reason FilterState/PageState-style
- * "constant can't be undefined once set" tests avoid it elsewhere in
- * this suite: defining it would permanently leak into every later test
- * sharing this same process.
+ * around the InstallationFlag-active default-language path).
  */
 test('isActive is false before mark() has ever been called', function (): void {
     expect(new InstallationFlag()->isActive())

@@ -6,27 +6,19 @@ namespace Piwigo\Core;
 
 /**
  * "This request is past the install-check gate" marker -- typed
- * replacement for the raw PHPWG_INSTALLED constant everywhere OUTSIDE
- * the install flow itself.
+ * replacement for the raw PHPWG_INSTALLED constant, fully retiring it the
+ * same way Piwigo\Core\AdminContext/WsContext fully retire IN_ADMIN/IN_WS:
+ * no raw-constant fallback, `mark()` is the only way `isActive()` ever
+ * becomes true.
  *
- * Unlike Piwigo\Core\AdminContext/WsContext, this does NOT fully retire
- * the raw define(): install.php's own performInstall() step still does
- * `define('PHPWG_INSTALLED', true)` immediately before running the
- * install, right next to its own `PWG_CHARSET`/`DB_CHARSET`/`DB_COLLATE`
- * `defined(...) or define(...)` guards in the same block ("shell-defined
- * constants still win when present"). Verified via a real repo-wide scan:
- * nothing under
- * src/Piwigo/Admin/Install/ itself reads PHPWG_INSTALLED (only
- * Core\Lang/Users\UserService/Bootstrap\SessionBootstrap do, all outside
- * the install flow), so isActive() checking defined() first is a safety
- * net for that one remaining shell define(), not a live dependency this
- * class's own callers need to worry about.
- *
- * A container-shared instance. `RequestBootstrap` (the only writer)
- * constructor-resolves it from the container, as do `Piwigo\Core\Lang`
- * and `Piwigo\Users\UserService`. `Piwigo\Bootstrap\SessionBootstrap`, a
- * genuinely static-only class, resolves it via a private
- * container-resolving `installationFlag()` helper instead.
+ * A container-shared instance. `RequestBootstrap` (the normal request
+ * path's writer) and `public/install.php` (the install path's writer, via
+ * `RequestBootstrap::installationFlag()`) both call `mark()` through this
+ * same accessor. `Piwigo\Core\Lang` and `Piwigo\Users\UserService`
+ * constructor-resolve it from the container to read `isActive()`.
+ * `Piwigo\Bootstrap\SessionBootstrap`, a genuinely static-only class,
+ * resolves it via a private container-resolving `installationFlag()`
+ * helper instead.
  */
 final class InstallationFlag
 {
@@ -36,7 +28,9 @@ final class InstallationFlag
      * Called once from RequestBootstrap::bootEntryPoint(), between
      * configure() and connect() -- the same point the former
      * `defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);`
-     * guard sat in the now-deleted include/common.inc.php seam file.
+     * guard sat in the now-deleted include/common.inc.php seam file. Also
+     * called from public/install.php, right before performInstall(), the
+     * same point that file's own former raw define() sat.
      */
     public function mark(): void
     {
@@ -45,7 +39,7 @@ final class InstallationFlag
 
     public function isActive(): bool
     {
-        return $this->marked || defined('PHPWG_INSTALLED');
+        return $this->marked;
     }
 
     /**

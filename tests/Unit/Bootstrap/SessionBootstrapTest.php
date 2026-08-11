@@ -18,9 +18,8 @@ use Piwigo\Core\Paths;
  * other test in the same process once made, not something a Unit test
  * should ever trigger for real. `InstallationFlag::isActive()` starts
  * `false` on a freshly booted container (its own `$marked` property
- * defaults `false`, and nothing in this Unit-suite process run defines
- * the legacy `PHPWG_INSTALLED` constant `isActive()` also checks) --
- * `register()`'s own `and`-guard short-circuits on that alone,
+ * defaults `false`) -- `register()`'s own `and`-guard short-circuits on
+ * that alone,
  * regardless of `sessionSaveHandler()` (whose own default is actually
  * `'db'`, the value that would otherwise satisfy the other half).
  */

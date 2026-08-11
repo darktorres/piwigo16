@@ -256,7 +256,7 @@ final class PhotosAddDirectPageRenderer
         $max_upload_resolution_ctx = null;
 
         // what is the maximum number of pixels permitted by the memory_limit?
-        if (PwgImage::get_library() === 'gd') {
+        if (PwgImage::getLibrary() === 'gd') {
             $fudge_factor = 1.7;
             $memory_limit = $uploadService->getIniSize('memory_limit');
             // memory_limit is a core php.ini directive, always present

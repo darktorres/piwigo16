@@ -13,11 +13,11 @@ namespace Piwigo\Admin\Image;
 
 interface ImageInterface
 {
-    public function get_width(): int|float;
+    public function getWidth(): int|float;
 
-    public function get_height(): int|float;
+    public function getHeight(): int|float;
 
-    public function set_compression_quality(int $quality): bool;
+    public function setCompressionQuality(int $quality): bool;
 
     public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool;
 

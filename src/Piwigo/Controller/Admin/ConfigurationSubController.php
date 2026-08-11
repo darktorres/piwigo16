@@ -643,7 +643,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // we only load the derivatives if it was not already loaded: it occurs
                 // when submitting the form and an error remains
                 if (! $this->sizesLoadedInTpl) {
-                    $is_gd = (PwgImage::get_library() === 'gd') ? true : false;
+                    $is_gd = (PwgImage::getLibrary() === 'gd') ? true : false;
 
                     $sizes = [
                         'original_resize_maxwidth' => $this->currentConfig->originalResizeMaxwidth,

@@ -8,8 +8,8 @@ use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\PwgImage;
 
 /**
- * Records every call pwg_resize() makes on the underlying ImageInterface,
- * in order -- several pwg_resize() mutations (skipping strip()/crop()/
+ * Records every call pwgResize() makes on the underlying ImageInterface,
+ * in order -- several pwgResize() mutations (skipping strip()/crop()/
  * rotate(), or calling rotate() when the resolved rotation is exactly 0)
  * produce a destination file with the exact same final dimensions as the
  * unmutated code, so asserting on width/height/file-existence alone can't
@@ -27,19 +27,19 @@ final class PwgImageSpyImage implements ImageInterface
         private readonly int|float $height,
     ) {}
 
-    public function get_width(): int|float
+    public function getWidth(): int|float
     {
         return $this->width;
     }
 
-    public function get_height(): int|float
+    public function getHeight(): int|float
     {
         return $this->height;
     }
 
-    public function set_compression_quality(int $quality): bool
+    public function setCompressionQuality(int $quality): bool
     {
-        $this->calls[] = "set_compression_quality({$quality})";
+        $this->calls[] = "setCompressionQuality({$quality})";
         return true;
     }
 

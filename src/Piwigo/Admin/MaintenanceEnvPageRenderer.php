@@ -125,7 +125,7 @@ final class MaintenanceEnvPageRenderer
             : null;
 
         // graphics library
-        $graphics_library = PwgImage::get_graphics_library_label();
+        $graphics_library = PwgImage::getGraphicsLibraryLabel();
         $graphics_library_value = $graphics_library !== '' ? $graphics_library : null;
 
         $maint_unlock_gallery = null;

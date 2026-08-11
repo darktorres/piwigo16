@@ -73,7 +73,7 @@ afterEach(function (): void {
 // itself couldn't be running at all if PHP_VERSION/the real MySQL version
 // didn't already satisfy AppInfo::REQUIRED_PHP_VERSION/SqlDialect::
 // REQUIRED_MYSQL_VERSION, and exif_read_data() is confirmed available here
-// (see PwgImage's own get_rotation_angle() tests) -- so both real checks
+// (see PwgImage's own getRotationAngle() tests) -- so both real checks
 // below are provably "zero anomalies" in this suite's own environment,
 // not just today's incidental happy path.
 

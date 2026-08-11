@@ -97,7 +97,7 @@ final class UploadServiceTestThemeConfProvider implements ThemeConfProviderInter
  * CurrentPathsTestFactory::get()->root, and addFormat()'s own identical "images.path
  * ... is relative, not yet an absolute path" handling elsewhere in this
  * same class) -- every downstream use of $file_path in this method
- * (StorageRegistry::stripRoot(), chmod(), get_rotation_angle()/
+ * (StorageRegistry::stripRoot(), chmod(), getRotationAngle()/
  * pwgImageInfos()'s own getimagesize()/filesize() calls) requires an
  * absolute path, exactly like the "new photo" branch's $file_path always
  * is.
@@ -452,8 +452,8 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertSame(48, $this->rowInt($row['height']));
         self::assertSame($expectedMd5, $row['md5sum']);
         // A plain GD-generated PNG carries no EXIF orientation (and isn't
-        // even a JPEG) -- PwgImage::get_rotation_angle() returns null for
-        // any non-JPEG source, which get_rotation_code_from_angle() maps to
+        // even a JPEG) -- PwgImage::getRotationAngle() returns null for
+        // any non-JPEG source, which getRotationCodeFromAngle() maps to
         // rotation code 0.
         self::assertSame(0, $this->rowInt($row['rotation']));
         self::assertIsString($row['path']);
@@ -664,8 +664,8 @@ final class UploadServiceTest extends IntegrationTestCase
     }
 
     /**
-     * addUploadedFile()'s own `if (PwgImage::get_library() !== 'gd')`
-     * guard around originalResize()/needResize()/pwg_resize() -- this
+     * addUploadedFile()'s own `if (PwgImage::getLibrary() !== 'gd')`
+     * guard around originalResize()/needResize()/pwgResize() -- this
      * environment's real ImageMagick CLI makes CurrentConfig::
      * graphicsLibrary()'s own 'auto' default resolve to 'ext_imagick'
      * before ever considering 'gd' (see tests/Unit/Admin/Upload/
@@ -676,8 +676,8 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function testAddUploadedFileResizesTheOriginalWhenItExceedsTheConfiguredMaxDimensions(): void
     {
-        if (PwgImage::get_library() === 'gd') {
-            self::markTestSkipped('No non-GD image library (ext_imagick/imagick) available in this environment -- addUploadedFile() never reaches its own originalResize()/needResize()/pwg_resize() block when PwgImage::get_library() is gd.');
+        if (PwgImage::getLibrary() === 'gd') {
+            self::markTestSkipped('No non-GD image library (ext_imagick/imagick) available in this environment -- addUploadedFile() never reaches its own originalResize()/needResize()/pwgResize() block when PwgImage::getLibrary() is gd.');
         }
 
         CurrentConfigTestFactory::get()->originalResize = true;
@@ -1545,7 +1545,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     /**
      * Real gap: `escapeshellarg($ext_imagick_dir) . PwgImage::
-     * get_ext_imagick_command()` -- a bogus configured dir must genuinely
+     * getExtImagickCommand()` -- a bogus configured dir must genuinely
      * be prepended into the exec() command (making the whole invocation
      * fail, since a slash-containing command name bypasses PATH lookup
      * entirely), not silently dropped in favor of a bare, PATH-resolved

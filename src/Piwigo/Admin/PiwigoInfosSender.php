@@ -136,7 +136,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
                 'db_version' => $dbInfo->version(),
                 'php_datetime' => date('Y-m-d H:i:s'),
                 'db_datetime' => $dbCurrentDate,
-                'graphics_library' => PwgImage::get_graphics_library(),
+                'graphics_library' => PwgImage::getGraphicsLibrary(),
             ],
             'general_stats' => $this->installationStats->getGeneralStatistics()
                 ->toArray(),

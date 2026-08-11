@@ -689,7 +689,7 @@ function upload_service_make_jpeg_with_orientation(int $orientation, int $width,
 
 test('needResize swaps width/height for a rotated EXIF orientation before comparing against the max bounds', function (): void {
     // Raw pixel dims are portrait (50x200); EXIF orientation 6 makes
-    // PwgImage::get_rotation_angle() report a 270-degree rotation (see
+    // PwgImage::getRotationAngle() report a 270-degree rotation (see
     // PwgImageTest's own comment for the same orientation value), meaning a
     // real viewer displays this landscape at 200x50 -- without the
     // width/height swap this method's own docblock explains, a
@@ -719,7 +719,7 @@ test('needResize fully swaps both width AND height, not just one of them, for a 
 
 test('needResize also swaps width/height for a 90-degree rotation (EXIF orientation 7/8)', function (): void {
     // Orientation 6 above maps to a 270-degree rotation; 8 is the other
-    // real-world case (get_rotation_angle()'s own orientation 7/8 => 90
+    // real-world case (getRotationAngle()'s own orientation 7/8 => 90
     // mapping) -- a boundary distinct from 270, so this can't be satisfied
     // by only recognizing 270 as "needs a swap".
     $path = upload_service_test_marker() . '/rotated-90.jpg';
@@ -1366,7 +1366,7 @@ test('uploadFileVideo logs the exact file_path/representative_ext it was called 
 });
 
 test('the 5 ext_imagick-only handlers return the incoming representative_ext unmodified when the graphics library is not ext_imagick', function (): void {
-    // Forces PwgImage::get_library() to resolve to 'gd' instead of this
+    // Forces PwgImage::getLibrary() to resolve to 'gd' instead of this
     // environment's real default 'ext_imagick' (see this file's own
     // "converts a real ... via the ext_imagick CLI" tests further down) --
     // each of these 5 handlers checks the library BEFORE its own extension
@@ -1489,9 +1489,9 @@ test('getOptimalDimensionsForRepresentative returns a positive width/height pair
 });
 
 /**
- * uploadFileTiff/Pdf/Psd/Eps() all guard on `PwgImage::get_library() !==
+ * uploadFileTiff/Pdf/Psd/Eps() all guard on `PwgImage::getLibrary() !==
  * 'ext_imagick'` -- this environment's real ImageMagick CLI (`magick`,
- * confirmed on PATH) makes PwgImage::is_ext_imagick() true and
+ * confirmed on PATH) makes PwgImage::isExtImagick() true and
  * CurrentConfig::graphicsLibrary()'s own 'auto' default resolves to
  * 'ext_imagick' first, so these 4 handlers' real conversion branches (not
  * just their early-return guards, already covered above) are genuinely

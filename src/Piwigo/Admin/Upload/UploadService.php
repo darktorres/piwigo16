@@ -65,7 +65,7 @@ use Piwigo\Ws\PwgServer;
  * [SEC-16] Every exec() call in this file (PDF/HEIC/TIFF/video/PSD/EPS
  * representative generation) builds its command string with
  * escapeshellarg() on every path/dir component, using the same
- * `escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command()`
+ * `escapeshellarg($ext_imagick_dir) . PwgImage::getExtImagickCommand()`
  * dir-prefix pattern as PwgImage.php/ImageExtImagick.php.
  *
  * The 6 upload_file_* representative-generation handlers are `public
@@ -368,7 +368,7 @@ final class UploadService
                 // ... is relative, not yet an absolute path" handling just
                 // below in this same class) -- but every downstream use of
                 // $file_path past this point (StorageRegistry::stripRoot(),
-                // chmod(), get_rotation_angle()/pwgImageInfos()'s own
+                // chmod(), getRotationAngle()/pwgImageInfos()'s own
                 // getimagesize()/filesize() calls) requires an absolute
                 // filesystem path, exactly like the "new photo" branch's own
                 // $file_path already is. Prefixing here, once, right after the
@@ -515,7 +515,7 @@ final class UploadService
 
             $logger->info(__METHOD__ . ' : force cache generation, representative_ext = ' . ($representative_ext ?? ''));
 
-            if (PwgImage::get_library() !== 'gd') {
+            if (PwgImage::getLibrary() !== 'gd') {
                 if ($this->currentConfig->originalResize) {
                     $original_resize_maxwidth = $this->currentConfig->originalResizeMaxwidth;
 
@@ -528,7 +528,7 @@ final class UploadService
 
                         $original_resize_quality = $this->currentConfig->originalResizeQuality;
 
-                        $img->pwg_resize(
+                        $img->pwgResize(
                             $file_path,
                             $original_resize_maxwidth,
                             $original_resize_maxheight,
@@ -544,8 +544,8 @@ final class UploadService
 
             // we need to save the rotation angle in the database to compute
             // width/height of "multisizes"
-            $rotation_angle = PwgImage::get_rotation_angle($file_path);
-            $rotation = PwgImage::get_rotation_code_from_angle($rotation_angle);
+            $rotation_angle = PwgImage::getRotationAngle($file_path);
+            $rotation = PwgImage::getRotationCodeFromAngle($rotation_angle);
 
             $file_infos = $this->pwgImageInfos($file_path);
 
@@ -873,7 +873,7 @@ final class UploadService
             return $event;
         }
 
-        if (PwgImage::get_library() !== 'ext_imagick') {
+        if (PwgImage::getLibrary() !== 'ext_imagick') {
             $event->representativeExt = $representative_ext;
 
             return $event;
@@ -897,7 +897,7 @@ final class UploadService
         // below -- same pattern established in PwgImage.php/
         // ImageExtImagick.php; the original never escaped an embedded
         // '"' or shell metacharacter in either path.
-        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
+        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::getExtImagickCommand();
         // Both (string) casts below are redundant under `.` concatenation
         // (which stringifies int|false identically to an explicit cast) --
         // confirmed while investigating a mutation-testing gap, same
@@ -939,7 +939,7 @@ final class UploadService
             return $event;
         }
 
-        if (PwgImage::get_library() !== 'ext_imagick') {
+        if (PwgImage::getLibrary() !== 'ext_imagick') {
             $event->representativeExt = $representative_ext;
 
             return $event;
@@ -961,7 +961,7 @@ final class UploadService
 
         $ext_imagick_dir = self::currentConfig()->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
-        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
+        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::getExtImagickCommand();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
         $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . $w . 'x' . $h . '>"';
         $exec .= ' ' . escapeshellarg($representative_file_path);
@@ -999,7 +999,7 @@ final class UploadService
             return $event;
         }
 
-        if (PwgImage::get_library() !== 'ext_imagick') {
+        if (PwgImage::getLibrary() !== 'ext_imagick') {
             $event->representativeExt = $representative_ext;
 
             return $event;
@@ -1023,7 +1023,7 @@ final class UploadService
 
         $ext_imagick_dir = self::currentConfig()->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
-        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
+        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::getExtImagickCommand();
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
         // own identical note above.
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
@@ -1177,7 +1177,7 @@ final class UploadService
             return $event;
         }
 
-        if (PwgImage::get_library() !== 'ext_imagick') {
+        if (PwgImage::getLibrary() !== 'ext_imagick') {
             $event->representativeExt = $representative_ext;
 
             return $event;
@@ -1200,7 +1200,7 @@ final class UploadService
 
         $ext_imagick_dir = self::currentConfig()->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
-        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
+        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::getExtImagickCommand();
 
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
         // own identical note above.
@@ -1260,7 +1260,7 @@ final class UploadService
             return $event;
         }
 
-        if (PwgImage::get_library() !== 'ext_imagick') {
+        if (PwgImage::getLibrary() !== 'ext_imagick') {
             $event->representativeExt = $representative_ext;
 
             return $event;
@@ -1283,7 +1283,7 @@ final class UploadService
 
         $ext_imagick_dir = self::currentConfig()->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
-        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
+        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::getExtImagickCommand();
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
         // own identical note above.
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
@@ -1465,7 +1465,7 @@ final class UploadService
         // pixels plus a 90/270 EXIF rotation flag needs width/height
         // swapped before comparing against the max thresholds, or the
         // check (and the resize it gates) runs against the wrong axis.
-        $rotation_angle = PwgImage::get_rotation_angle($image_filepath);
+        $rotation_angle = PwgImage::getRotationAngle($image_filepath);
         if (in_array($rotation_angle, [90, 270], true)) {
             [$width, $height] = [$height, $width];
         }

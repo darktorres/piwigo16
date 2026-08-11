@@ -11,7 +11,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * Only runs the real ext-imagick extension when it's genuinely available in
- * this environment (same PwgImage::is_imagick() check
+ * this environment (same PwgImage::isImagick() check
  * tests/Unit/Admin/Image/ImageExtImagickTest.php uses for its own external
  * `identify` binary) -- no fake/mocked Imagick, this exercises the real
  * extension. Real JPEG fixture images are generated on the fly via GD
@@ -61,7 +61,7 @@ function imageImagickTestMakeJpeg(string $path, int $width, int $height, int $r,
 
 function imageImagickTestSkipIfUnavailable(): void
 {
-    if (! PwgImage::is_imagick()) {
+    if (! PwgImage::isImagick()) {
         Assert::markTestSkipped('ext-imagick is not available in this environment.');
     }
 }
@@ -110,7 +110,7 @@ function imageImagickTestMakeStripes(string $path, int $width, int $height): voi
     // fixture varied color along X only (pure vertical stripes, constant
     // down each column) -- every row was then identical to every other
     // row, so any mutation affecting ONLY the pre-halving pass's height
-    // argument (scaleImage()'s intdiv($this->get_height(), 2) divisor)
+    // argument (scaleImage()'s intdiv($this->getHeight(), 2) divisor)
     // was structurally invisible no matter what final assertion a caller
     // made, confirmed empirically (hand-mutated 2->1 and 2->3, reran the
     // real byte-for-byte comparison in imageImagickTestAssertPrehalving(),
@@ -216,7 +216,7 @@ test('construct throws for content that is not a real image', function (): void 
         ->toThrow(ImagickException::class);
 });
 
-test('get_width and get_height report the real source dimensions', function (): void {
+test('getWidth and getHeight report the real source dimensions', function (): void {
     imageImagickTestSkipIfUnavailable();
 
     $path = imageImagickTestMarker() . '/photo.jpg';
@@ -224,9 +224,9 @@ test('get_width and get_height report the real source dimensions', function (): 
 
     $image = new ImageImagick($path);
 
-    expect($image->get_width())
+    expect($image->getWidth())
         ->toBe(200)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(120);
 });
 
@@ -241,9 +241,9 @@ test('crop reduces the reported dimensions to the cropped region', function (): 
 
     expect($result)
         ->toBeTrue()
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(80)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(60);
 });
 
@@ -260,9 +260,9 @@ test('resize takes the direct path for a source not more than 3x the target widt
 
     expect($result)
         ->toBeTrue()
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(90)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(54);
 });
 
@@ -280,9 +280,9 @@ test('resize takes the pre-halving path for an even source more than 3x the targ
 
     expect($result)
         ->toBeTrue()
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(40)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(24);
 });
 
@@ -297,20 +297,20 @@ test('rotate by 90 degrees swaps the reported width and height', function (): vo
 
     expect($result)
         ->toBeTrue()
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(120)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(200);
 });
 
-test('set_compression_quality and strip both report success', function (): void {
+test('setCompressionQuality and strip both report success', function (): void {
     imageImagickTestSkipIfUnavailable();
 
     $path = imageImagickTestMarker() . '/photo.jpg';
     imageImagickTestMakeJpeg($path, 100, 80, 5, 5, 5);
     $image = new ImageImagick($path);
 
-    expect($image->set_compression_quality(60))
+    expect($image->setCompressionQuality(60))
         ->toBeTrue()
         ->and($image->strip())
         ->toBeTrue();
@@ -370,9 +370,9 @@ test('write persists the image to the destination path with the current dimensio
         ->toBeGreaterThan(0);
 
     $reloaded = new ImageImagick($destPath);
-    expect($reloaded->get_width())
+    expect($reloaded->getWidth())
         ->toBe(50)
-        ->and($reloaded->get_height())
+        ->and($reloaded->getHeight())
         ->toBe(30);
 });
 
@@ -390,9 +390,9 @@ test('compose composites a same-backend overlay and preserves the base dimension
 
     expect($result)
         ->toBeTrue()
-        ->and($base->get_width())
+        ->and($base->getWidth())
         ->toBe(200)
-        ->and($base->get_height())
+        ->and($base->getHeight())
         ->toBe(120);
 
     // Dimensions alone don't prove compositing actually happened -- write
@@ -479,9 +479,9 @@ test('crop accepts real float width/height/x/y without a TypeError', function ()
 
     expect($result)
         ->toBeTrue()
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(60)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(40);
 });
 
@@ -532,9 +532,9 @@ test('resize accepts real float width/height without a TypeError', function (): 
 
     expect($result)
         ->toBeTrue()
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(60)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(40);
 });
 

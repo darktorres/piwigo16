@@ -10,7 +10,7 @@ use Piwigo\Admin\Image\PwgImage;
 /**
  * Same call-recording contract as PwgImageSpyImage, but write() controls
  * the destination file directly -- $writeBytes=null never creates it at
- * all (get_resize_result()'s own filesize() call observes a genuinely
+ * all (getResizeResult()'s own filesize() call observes a genuinely
  * missing file), otherwise it writes exactly that many bytes (exact
  * control over the "X KB" computation).
  */
@@ -27,19 +27,19 @@ final class PwgImageSpyImageFileControl implements ImageInterface
         private readonly ?int $writeBytes,
     ) {}
 
-    public function get_width(): int|float
+    public function getWidth(): int|float
     {
         return $this->width;
     }
 
-    public function get_height(): int|float
+    public function getHeight(): int|float
     {
         return $this->height;
     }
 
-    public function set_compression_quality(int $quality): bool
+    public function setCompressionQuality(int $quality): bool
     {
-        $this->calls[] = 'set_compression_quality';
+        $this->calls[] = 'setCompressionQuality';
         return true;
     }
 

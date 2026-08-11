@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Image\Projection;
 
 /**
- * {@see \Piwigo\Admin\Image\PwgImage::get_resize_dimensions()}'s own
+ * {@see \Piwigo\Admin\Image\PwgImage::getResizeDimensions()}'s own
  * optional crop-rectangle sub-shape.
  */
 final readonly class ResizeCrop

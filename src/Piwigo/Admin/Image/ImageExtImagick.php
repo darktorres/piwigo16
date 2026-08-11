@@ -51,7 +51,7 @@ final class ImageExtImagick implements ImageInterface
         $this->imagickdir = $imagick_dir;
 
         if (strtolower(StringHelper::getExtension($this->source_filepath)) === 'webp') {
-            $webp_info = PwgImage::webp_info($this->source_filepath);
+            $webp_info = PwgImage::webpInfo($this->source_filepath);
 
             if ($webp_info->hasAnimation) {
                 $this->is_animated_webp = true;
@@ -93,19 +93,19 @@ final class ImageExtImagick implements ImageInterface
         $this->height = (int) $match[2];
     }
 
-    public function add_command(string $command, int|float|string|null $params = null): void
+    public function addCommand(string $command, int|float|string|null $params = null): void
     {
         $this->commands[$command] = $params;
     }
 
     #[Override]
-    public function get_width(): int|float
+    public function getWidth(): int|float
     {
         return $this->width;
     }
 
     #[Override]
-    public function get_height(): int|float
+    public function getHeight(): int|float
     {
         return $this->height;
     }
@@ -117,14 +117,14 @@ final class ImageExtImagick implements ImageInterface
         $this->height = $height;
 
         // the final "!" is added to crop the canva too, for animated picture (with WebP in mind)
-        $this->add_command('crop', (string) $width . 'x' . (string) $height . '+' . (string) $x . '+' . (string) $y . '!');
+        $this->addCommand('crop', (string) $width . 'x' . (string) $height . '+' . (string) $x . '+' . (string) $y . '!');
         return true;
     }
 
     #[Override]
     public function strip(): bool
     {
-        $this->add_command('strip');
+        $this->addCommand('strip');
         return true;
     }
 
@@ -140,13 +140,13 @@ final class ImageExtImagick implements ImageInterface
             $this->width = $this->height;
             $this->height = $tmp;
         }
-        $this->add_command('rotate', -$rotation);
-        $this->add_command('orient', 'top-left');
+        $this->addCommand('rotate', -$rotation);
+        $this->addCommand('orient', 'top-left');
         return true;
     }
 
     #[Override]
-    public function set_compression_quality(int $quality): bool
+    public function setCompressionQuality(int $quality): bool
     {
 
         if ($this->is_animated_webp) {
@@ -157,7 +157,7 @@ final class ImageExtImagick implements ImageInterface
             $quality = min($quality, $max_quality);
         }
 
-        $this->add_command('quality', $quality);
+        $this->addCommand('quality', $quality);
         return true;
     }
 
@@ -167,15 +167,15 @@ final class ImageExtImagick implements ImageInterface
         $this->width = $width;
         $this->height = $height;
 
-        $this->add_command('filter', 'Lanczos');
-        $this->add_command('resize', (string) $width . 'x' . (string) $height . '!');
+        $this->addCommand('filter', 'Lanczos');
+        $this->addCommand('resize', (string) $width . 'x' . (string) $height . '!');
         return true;
     }
 
     #[Override]
     public function sharpen(int|float $amount): bool
     {
-        $m = PwgImage::get_sharpen_matrix($amount);
+        $m = PwgImage::getSharpenMatrix($amount);
 
         $param = 'convolve "' . count($m) . ':';
         foreach ($m as $line) {
@@ -183,7 +183,7 @@ final class ImageExtImagick implements ImageInterface
             $param .= implode(',', $line);
         }
         $param .= '"';
-        $this->add_command('morphology', $param);
+        $this->addCommand('morphology', $param);
         return true;
     }
 
@@ -205,7 +205,7 @@ final class ImageExtImagick implements ImageInterface
         $param .= ' ' . escapeshellarg($overlay_realpath);
         $param .= ' -gravity NorthWest -geometry +' . (string) $x . '+' . (string) $y;
         $param .= ' -composite';
-        $this->add_command($param);
+        $this->addCommand($param);
         return true;
     }
 
@@ -217,7 +217,7 @@ final class ImageExtImagick implements ImageInterface
         // bootstrap) — not a lazy-init global.
         $logger = $this->currentLogger->get();
 
-        $this->add_command('interlace', 'line'); // progressive rendering
+        $this->addCommand('interlace', 'line'); // progressive rendering
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)
         //
         // option deactivated for Piwigo 2.4.1, it doesn't work fo old versions
@@ -226,12 +226,12 @@ final class ImageExtImagick implements ImageInterface
         // option
         //
         if (version_compare(PwgImage::$ext_imagick_version, '6.6') > 0) {
-            $this->add_command('sampling-factor', '4:2:2');
+            $this->addCommand('sampling-factor', '4:2:2');
         }
 
         // [SEC-16] escapeshellarg() on the dir prefix and both real paths
         // below -- see the constructor's own note above.
-        $exec = escapeshellarg($this->imagickdir) . PwgImage::get_ext_imagick_command();
+        $exec = escapeshellarg($this->imagickdir) . PwgImage::getExtImagickCommand();
         $exec .= ' ' . escapeshellarg((string) realpath($this->source_filepath));
 
         // If the image is animated webp add a filter to avoid breaking the animation

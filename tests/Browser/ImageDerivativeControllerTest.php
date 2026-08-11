@@ -130,7 +130,7 @@ function idcUploadSizedPhoto(object $test, string $albumName, int $width, int $h
  * Writes images.rotation directly -- ImageDerivativeController's
  * __invoke() reads this column (via ImageRepository::findByPath()) to set
  * $this->rotationAngle *without* any live EXIF re-read whenever it's
- * already non-null (PwgImage::get_rotation_angle_from_code(): 0=0deg,
+ * already non-null (PwgImage::getRotationAngleFromCode(): 0=0deg,
  * 1=90deg, 2=180deg, 3=270deg) -- writing it directly, before the first
  * derivative request for the photo, exercises that "already resolved"
  * branch deterministically, without depending on a GD-generated JPEG
@@ -640,8 +640,8 @@ it('composites an opaque watermark onto a freshly-generated derivative', functio
 it('applies the stored rotation angle before crop/scale, swapping width/height for a 90-degree rotation', function (): void {
     // A landscape (100x50) source with a horizontal color split (red top
     // half, blue bottom half). ImageDerivativeController's own "// rotate"
-    // block (get_rotation_angle_from_code(1) => 90 degrees) runs *before*
-    // $o_size/$d_size are read from $image->get_width()/get_height(), so
+    // block (getRotationAngleFromCode(1) => 90 degrees) runs *before*
+    // $o_size/$d_size are read from $image->getWidth()/getHeight(), so
     // a real 90-degree rotation both swaps the derivative's own output
     // dimensions and rotates which axis the color split runs along -- a
     // direction-agnostic way to prove real rotation happened (GD's
@@ -680,9 +680,9 @@ it('applies the stored rotation angle before crop/scale, swapping width/height f
     // Set *before* the first derivative request for this photo: a fresh
     // upload's own images.rotation starts NULL, in which case __invoke()
     // would compute rotationAngle from a live EXIF re-read instead
-    // (PwgImage::get_rotation_angle()) -- writing the code directly
+    // (PwgImage::getRotationAngle()) -- writing the code directly
     // exercises the "already resolved" branch
-    // (get_rotation_angle_from_code($row->rotation)) deterministically.
+    // (getRotationAngleFromCode($row->rotation)) deterministically.
     idcSetImageRotationCode($imageId, 1);
 
     $imagePath = H::imagePath($imageId);
@@ -1113,7 +1113,7 @@ it('resolves the rotation angle live from EXIF when the DB rotation column is st
     // A fresh upload's own images.rotation is never actually left NULL by
     // UploadService::addUploadedFile() (it always writes a real code, 0
     // included, from a live EXIF read at upload time -- see
-    // PwgImage::get_rotation_code_from_angle()'s own null=>0 case) -- the
+    // PwgImage::getRotationCodeFromAngle()'s own null=>0 case) -- the
     // NULL branch this test targets only exists for a row that reached the
     // DB some other way (e.g. a legacy row a schema migration never
     // populated the newer column for). Writing NULL directly reproduces

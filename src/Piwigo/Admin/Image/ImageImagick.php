@@ -47,19 +47,19 @@ final class ImageImagick implements ImageInterface
     }
 
     #[Override]
-    public function get_width(): int
+    public function getWidth(): int
     {
         return $this->image->getImageWidth();
     }
 
     #[Override]
-    public function get_height(): int
+    public function getHeight(): int
     {
         return $this->image->getImageHeight();
     }
 
     #[Override]
-    public function set_compression_quality(int $quality): bool
+    public function setCompressionQuality(int $quality): bool
     {
         return $this->image->setImageCompressionQuality($quality);
     }
@@ -98,10 +98,10 @@ final class ImageImagick implements ImageInterface
         // image, is faster than running Lanczos over the full original
         // resolution directly. ImageGd's resize() has no equivalent step
         // -- GD's imagecopyresampled() doesn't need it.
-        if ($this->get_width() % 2 === 0
-            && $this->get_height() % 2 === 0
-            && $this->get_width() > 3.0 * (float) $width) {
-            $this->image->scaleImage(intdiv($this->get_width(), 2), intdiv($this->get_height(), 2));
+        if ($this->getWidth() % 2 === 0
+            && $this->getHeight() % 2 === 0
+            && $this->getWidth() > 3.0 * (float) $width) {
+            $this->image->scaleImage(intdiv($this->getWidth(), 2), intdiv($this->getHeight(), 2));
         }
 
         // Imagick::resizeImage() requires int columns/rows — see
@@ -120,7 +120,7 @@ final class ImageImagick implements ImageInterface
         // (the only one) doesn't catch it, so any real request for a
         // derivative with a configured sharpen level fatally errored
         // instead of degrading -- confirmed uncaught up the stack.
-        $m = PwgImage::get_sharpen_matrix($amount);
+        $m = PwgImage::getSharpenMatrix($amount);
         return $this->image->convolveImage(ImagickKernel::fromMatrix($m));
     }
 

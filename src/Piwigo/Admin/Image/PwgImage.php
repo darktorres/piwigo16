@@ -38,7 +38,7 @@ final class PwgImage implements ImageInterface
     public ?ImageInterface $image = null;
 
     /**
-     * @var string|false false is only ever transient: get_library() can
+     * @var string|false false is only ever transient: getLibrary() can
      *   return false, but __construct() throws ImageProcessingException
      *   immediately when that happens, so a successfully constructed
      *   instance always holds a non-empty string here
@@ -68,7 +68,7 @@ final class PwgImage implements ImageInterface
             throw new ImageProcessingException('[Image] unsupported file extension');
         }
 
-        if (! (bool) ($this->library = self::get_library($library, $extension))) {
+        if (! (bool) ($this->library = self::getLibrary($library, $extension))) {
             throw new ImageProcessingException('No image library available on your server.');
         }
 
@@ -85,26 +85,26 @@ final class PwgImage implements ImageInterface
     // arbitrary $method string against an arbitrary backend). Explicit
     // one-liners here give real signature checking for the exact same
     // public surface real callers already use (e.g. tests/Unit/Admin/
-    // Image/PwgImageTest.php's `$img->get_width()`).
+    // Image/PwgImageTest.php's `$img->getWidth()`).
     #[Override]
-    public function get_width(): int|float
+    public function getWidth(): int|float
     {
         return $this->getImage()
-            ->get_width();
+            ->getWidth();
     }
 
     #[Override]
-    public function get_height(): int|float
+    public function getHeight(): int|float
     {
         return $this->getImage()
-            ->get_height();
+            ->getHeight();
     }
 
     #[Override]
-    public function set_compression_quality(int $quality): bool
+    public function setCompressionQuality(int $quality): bool
     {
         return $this->getImage()
-            ->set_compression_quality($quality);
+            ->setCompressionQuality($quality);
     }
 
     #[Override]
@@ -172,30 +172,30 @@ final class PwgImage implements ImageInterface
     }
 
     // Piwigo resize function
-    public function pwg_resize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): ResizeResult
+    public function pwgResize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): ResizeResult
     {
         $starttime = TimingHelper::getMoment();
         $image = $this->getImage();
 
         // width/height
-        $source_width = $image->get_width();
-        $source_height = $image->get_height();
+        $source_width = $image->getWidth();
+        $source_height = $image->getHeight();
 
         $rotation = null;
         if ($automatic_rotation) {
-            $rotation = self::get_rotation_angle($this->source_filepath);
+            $rotation = self::getRotationAngle($this->source_filepath);
         }
-        $resize_dimensions = self::get_resize_dimensions($source_width, $source_height, $max_width, $max_height, $rotation, $crop, $follow_orientation);
+        $resize_dimensions = self::getResizeDimensions($source_width, $source_height, $max_width, $max_height, $rotation, $crop, $follow_orientation);
 
         // testing on height is useless in theory: if width is unchanged, there
         // should be no resize, because width/height ratio is not modified.
         if ((float) $resize_dimensions->width === (float) $source_width and (float) $resize_dimensions->height === (float) $source_height) {
             // the image doesn't need any resize! We just copy it to the destination
             copy($this->source_filepath, $destination_filepath);
-            return $this->get_resize_result($destination_filepath, $resize_dimensions->width, $resize_dimensions->height, $starttime);
+            return $this->getResizeResult($destination_filepath, $resize_dimensions->width, $resize_dimensions->height, $starttime);
         }
 
-        $image->set_compression_quality($quality);
+        $image->setCompressionQuality($quality);
 
         if ($strip_metadata) {
             // we save a few kilobytes. For example a thumbnail with metadata weights 25KB, without metadata 7KB.
@@ -215,10 +215,10 @@ final class PwgImage implements ImageInterface
         $image->write($destination_filepath);
 
         // everything should be OK if we are here!
-        return $this->get_resize_result($destination_filepath, $resize_dimensions->width, $resize_dimensions->height, $starttime);
+        return $this->getResizeResult($destination_filepath, $resize_dimensions->width, $resize_dimensions->height, $starttime);
     }
 
-    public static function get_resize_dimensions(int|float $width, int|float $height, int $max_width, int $max_height, ?int $rotation = null, bool $crop = false, bool $follow_orientation = true): ResizeDimensions
+    public static function getResizeDimensions(int|float $width, int|float $height, int $max_width, int $max_height, ?int $rotation = null, bool $crop = false, bool $follow_orientation = true): ResizeDimensions
     {
         $rotate_for_dimensions = false;
         if (isset($rotation) and in_array(abs($rotation), [90, 270], true)) {
@@ -282,7 +282,7 @@ final class PwgImage implements ImageInterface
         return new ResizeDimensions($destination_width, $destination_height, $cropResult);
     }
 
-    public static function webp_info(string $source_filepath): WebpInfo
+    public static function webpInfo(string $source_filepath): WebpInfo
     {
         // function based on https://stackoverflow.com/questions/61221874/detect-if-a-webp-image-is-transparent-in-php
         //
@@ -293,13 +293,13 @@ final class PwgImage implements ImageInterface
 
         $fp = fopen($source_filepath, 'rb');
         if (! (bool) $fp) {
-            throw new Exception("webp_info(): fopen({$source_filepath}): Failed");
+            throw new Exception("webpInfo(): fopen({$source_filepath}): Failed");
         }
         $buf = fread($fp, 25);
         fclose($fp);
 
         if ($buf === false) {
-            throw new Exception("webp_info(): fread({$source_filepath}): Failed");
+            throw new Exception("webpInfo(): fread({$source_filepath}): Failed");
         }
 
         switch (true) {
@@ -307,7 +307,7 @@ final class PwgImage implements ImageInterface
             case ! str_starts_with($buf, 'RIFF'):
             case substr($buf, 8, 4) !== 'WEBP':
             case substr($buf, 12, 3) !== 'VP8':
-                throw new Exception('webp_info(): not a valid webp image');
+                throw new Exception('webpInfo(): not a valid webp image');
             case $buf[15] === ' ':
                 // Simple File Format (Lossy)
                 return new WebpInfo('VP8', false, false);
@@ -321,11 +321,11 @@ final class PwgImage implements ImageInterface
                 return new WebpInfo('VP8X', (bool) (ord($buf[20]) & 0x00000002), (bool) (ord($buf[20]) & 0x00000010));
 
             default:
-                throw new Exception('webp_info(): could not detect webp type');
+                throw new Exception('webpInfo(): could not detect webp type');
         }
     }
 
-    public static function get_rotation_angle(string $source_filepath): ?int
+    public static function getRotationAngle(string $source_filepath): ?int
     {
         $size = getimagesize($source_filepath);
         if ($size === false) {
@@ -369,16 +369,16 @@ final class PwgImage implements ImageInterface
         return $rotation;
     }
 
-    public static function get_rotation_code_from_angle(?int $rotation_angle): int
+    public static function getRotationCodeFromAngle(?int $rotation_angle): int
     {
         return match ($rotation_angle) {
             // null (no EXIF orientation / non-JPEG source, per
-            // get_rotation_angle()) means "no rotation", same as 0.
+            // getRotationAngle()) means "no rotation", same as 0.
             null, 0 => 0,
             90 => 1,
             180 => 2,
             270 => 3,
-            default => throw new Exception("get_rotation_code_from_angle(): unexpected rotation angle {$rotation_angle}"),
+            default => throw new Exception("getRotationCodeFromAngle(): unexpected rotation angle {$rotation_angle}"),
         };
     }
 
@@ -388,14 +388,14 @@ final class PwgImage implements ImageInterface
      *   Doctrine ORM from ImageEntity's smallint `rotation` column --
      *   not a mysqli-fetched numeric string
      */
-    public static function get_rotation_angle_from_code(int|string $rotation_code): int
+    public static function getRotationAngleFromCode(int|string $rotation_code): int
     {
         return match ((int) $rotation_code % 4) {
             0 => 0,
             1 => 90,
             2 => 180,
             3 => 270,
-            default => throw new Exception("get_rotation_angle_from_code(): unexpected rotation code {$rotation_code}"),
+            default => throw new Exception("getRotationAngleFromCode(): unexpected rotation code {$rotation_code}"),
         };
     }
 
@@ -404,7 +404,7 @@ final class PwgImage implements ImageInterface
      *
      * @return array<int, array<int, int|float>>
      */
-    public static function get_sharpen_matrix(int|float $amount): array
+    public static function getSharpenMatrix(int|float $amount): array
     {
         // Amount should be in the range of 48-10
         $amount = round(abs(-48.0 + ((float) $amount * 0.38)), 2);
@@ -426,7 +426,7 @@ final class PwgImage implements ImageInterface
         return $matrix;
     }
 
-    private function get_resize_result(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): ResizeResult
+    private function getResizeResult(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): ResizeResult
     {
         // this is purely diagnostic/log output -- fall back to 0 KB rather
         // than throwing if the destination somehow isn't readable.
@@ -443,14 +443,14 @@ final class PwgImage implements ImageInterface
         );
     }
 
-    public static function is_imagick(): bool
+    public static function isImagick(): bool
     {
         return extension_loaded('imagick') and class_exists('Imagick');
     }
 
     /**
-     * get_ext_imagick_command()/is_ext_imagick()/get_library()/
-     * get_graphics_library() below are all `public static`, with no
+     * getExtImagickCommand()/isExtImagick()/getLibrary()/
+     * getGraphicsLibrary() below are all `public static`, with no
      * instance available for real constructor injection -- resolves the
      * container-shared instance directly instead, same "container
      * resolve, not a constructor property" shape as
@@ -471,7 +471,7 @@ final class PwgImage implements ImageInterface
         return new CurrentConfig();
     }
 
-    public static function get_ext_imagick_command(): string
+    public static function getExtImagickCommand(): string
     {
         // Per-process memoization of an exec() probe -- a static local
         // rather than a class property since this static method has no
@@ -493,7 +493,7 @@ final class PwgImage implements ImageInterface
         return $command;
     }
 
-    public static function is_ext_imagick(): bool
+    public static function isExtImagick(): bool
     {
 
         if (! function_exists('exec')) {
@@ -505,7 +505,7 @@ final class PwgImage implements ImageInterface
         // same stdin-hang guard as ImageExtImagick's own identify/convert
         // calls.
         $returnarray = [];
-        @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version < /dev/null', $returnarray);
+        @exec(escapeshellarg($imagick_dir) . self::getExtImagickCommand() . ' -version < /dev/null', $returnarray);
         if (isset($returnarray[0]) && $returnarray[0] !== '' && $returnarray[0] !== '0' and (bool) preg_match('/ImageMagick/i', $returnarray[0])) {
             if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
@@ -515,12 +515,12 @@ final class PwgImage implements ImageInterface
         return false;
     }
 
-    public static function is_gd(): bool
+    public static function isGd(): bool
     {
         return function_exists('gd_info');
     }
 
-    public static function get_library(?string $library = null, ?string $extension = null): string|false
+    public static function getLibrary(?string $library = null, ?string $extension = null): string|false
     {
 
         if ($library === null) {
@@ -532,24 +532,24 @@ final class PwgImage implements ImageInterface
         switch (strtolower($library)) {
             case 'auto':
             case 'ext_imagick':
-                if ($extension !== 'gif' and self::is_ext_imagick()) {
+                if ($extension !== 'gif' and self::isExtImagick()) {
                     return 'ext_imagick';
                 }
                 // no break
             case 'imagick':
-                if ($extension !== 'gif' and self::is_imagick()) {
+                if ($extension !== 'gif' and self::isImagick()) {
                     return 'imagick';
                 }
                 // no break
             case 'gd':
-                if (self::is_gd()) {
+                if (self::isGd()) {
                     return 'gd';
                 }
                 // no break
             default:
                 if ($library !== 'auto') {
                     // Requested library not available. Try another library
-                    return self::get_library('auto', $extension);
+                    return self::getLibrary('auto', $extension);
                 }
         }
         return false;
@@ -557,20 +557,20 @@ final class PwgImage implements ImageInterface
 
     /**
      * Extends this class's own library-detection concern
-     * (is_imagick()/is_ext_imagick()/is_gd()/get_library() above),
-     * appending a version-string suffix on top of get_library()'s bare
+     * (isImagick()/isExtImagick()/isGd()/getLibrary() above),
+     * appending a version-string suffix on top of getLibrary()'s bare
      * identifier.
      */
-    public static function get_graphics_library(): string|false
+    public static function getGraphicsLibrary(): string|false
     {
 
-        $library = self::get_library();
+        $library = self::getLibrary();
 
         switch ($library) {
             case 'ext_imagick':
                 $ext_imagick_dir = self::currentConfig()->extImagickDir;
                 $returnarray = [];
-                exec($ext_imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
+                exec($ext_imagick_dir . self::getExtImagickCommand() . ' -version', $returnarray);
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0] ?? '', $match)) {
                     $library .= '/' . $match[1];
                 }
@@ -594,9 +594,9 @@ final class PwgImage implements ImageInterface
         return $library;
     }
 
-    public static function get_graphics_library_label(): string
+    public static function getGraphicsLibraryLabel(): string
     {
-        [$library_code, $library_version] = explode('/', (string) self::get_graphics_library());
+        [$library_code, $library_version] = explode('/', (string) self::getGraphicsLibrary());
 
         $label_for_lib = [
             'imagick' => 'ImageMagick',

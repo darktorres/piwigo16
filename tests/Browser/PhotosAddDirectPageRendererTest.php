@@ -275,7 +275,7 @@ it('warns when upload_form_chunk_size is configured larger than PHP\'s real uplo
 //   this environment's real Apache memory_limit (128M, /etc/php/8.5/
 //   apache2/php.ini), max_upload_resolution comes out >= 25 -- the
 //   fudge_factor=1.7 line just above (218) DOES already run every time
-//   (unconditionally, whenever the outer `get_library() === 'gd'` block is
+//   (unconditionally, whenever the outer `getLibrary() === 'gd'` block is
 //   entered -- see that test), it's specifically the resolution<25 body
 //   that stays unreached. memory_limit is PHP_INI_ALL (ini_set()-able in
 //   principle), but only from *inside* the same request that's executing
@@ -291,7 +291,7 @@ it('warns when upload_form_chunk_size is configured larger than PHP\'s real uplo
 //   with a literal string argument always resolves the real global
 //   built-in -- it can't be namespaced away, and this environment always
 //   has it loaded (confirmed live: `php -m` lists gd for both the apache2
-//   and cli SAPIs). Same underlying check as PwgImage::is_gd() (also just
+//   and cli SAPIs). Same underlying check as PwgImage::isGd() (also just
 //   `function_exists('gd_info')`), which the "computes the GD..." test
 //   above only ever observes returning true.
 //

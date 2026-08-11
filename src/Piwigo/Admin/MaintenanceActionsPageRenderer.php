@@ -132,12 +132,12 @@ final class MaintenanceActionsPageRenderer
 
         // graphics library
         $graphics_library = null;
-        switch (PwgImage::get_library()) {
+        switch (PwgImage::getLibrary()) {
             case 'ext_imagick':
                 $library = 'External ImageMagick';
                 $ext_imagick_dir = $this->currentConfig->extImagickDir;
                 $returnarray = [];
-                exec($ext_imagick_dir . PwgImage::get_ext_imagick_command() . ' -version', $returnarray);
+                exec($ext_imagick_dir . PwgImage::getExtImagickCommand() . ' -version', $returnarray);
                 $returnarray_line0 = $returnarray[0] ?? '';
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray_line0, $match)) {
                     $library .= ' ' . $match[1];

@@ -167,15 +167,15 @@ final class ImageDerivativeController implements ControllerInterface
                 $this->coi = $row->coi;
 
                 if ($row->rotation === null) {
-                    // get_rotation_angle() returns null for "no EXIF
+                    // getRotationAngle() returns null for "no EXIF
                     // orientation / non-JPEG source" -- get_rotation_code_
                     // from_angle()'s own docblock confirms that means the
                     // same thing as an explicit 0 (no rotation).
-                    $this->rotationAngle = PwgImage::get_rotation_angle($this->srcPath) ?? 0;
+                    $this->rotationAngle = PwgImage::getRotationAngle($this->srcPath) ?? 0;
 
-                    $imageRepo->updateRotation($image_id, PwgImage::get_rotation_code_from_angle($this->rotationAngle));
+                    $imageRepo->updateRotation($image_id, PwgImage::getRotationCodeFromAngle($this->rotationAngle));
                 } else {
-                    $this->rotationAngle = PwgImage::get_rotation_angle_from_code($row->rotation);
+                    $this->rotationAngle = PwgImage::getRotationAngleFromCode($row->rotation);
                 }
             } catch (ResponseReadyException $e) {
                 // Part III: a real, security-critical regression this catch
@@ -270,7 +270,7 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         // Crop & scale
-        $o_size = $d_size = [(int) $image->get_width(), (int) $image->get_height()];
+        $o_size = $d_size = [(int) $image->getWidth(), (int) $image->getHeight()];
         // $crop_rect/$scaled_size are by-ref out-params; pre-declare as null so the
         // call site's argument type matches SizingParams::compute()'s ?ImageRect/
         // ?array parameter types (an undefined variable is otherwise seen as mixed).
@@ -300,7 +300,7 @@ final class ImageDerivativeController implements ControllerInterface
         if ($params->willWatermark($d_size, $this->imageStdParams)) {
             $wm = $this->imageStdParams->getWatermark();
             $wm_image = new PwgImage($this->paths->root . $wm->file, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
-            $wm_size = [(int) $wm_image->get_width(), (int) $wm_image->get_height()];
+            $wm_size = [(int) $wm_image->getWidth(), (int) $wm_image->getHeight()];
             if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
                 $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
                 // $tmp/$wm_scaled_size are by-ref out-params; pre-declare as null

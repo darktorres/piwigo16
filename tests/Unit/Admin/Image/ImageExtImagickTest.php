@@ -18,9 +18,9 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  * __construct()'s "identify couldn't determine dimensions" guard throws
  * ImageProcessingException. Tests here only run the real external
  * `identify` binary when it's genuinely available in this environment
- * (same check PwgImage::is_ext_imagick() itself uses) -- no fake/mocked
+ * (same check PwgImage::isExtImagick() itself uses) -- no fake/mocked
  * binary, this exercises the real shell-exec path. This file also drives
- * rotate()/sharpen()/set_compression_quality()/compose()/write() through
+ * rotate()/sharpen()/setCompressionQuality()/compose()/write() through
  * the same real CLI, plus __construct()'s animated-WebP branch, matching
  * UploadServiceTest's uploadFileTiff/Pdf/Psd/Eps "ext_imagick CLI" tests
  * -- real `magick`/`convert`/`identify` binaries, no mocking.
@@ -35,7 +35,7 @@ function imageExtImagickTestMarker(): string
 
 function imageExtImagickTestSkipIfUnavailable(): void
 {
-    if (! PwgImage::is_ext_imagick()) {
+    if (! PwgImage::isExtImagick()) {
         Assert::markTestSkipped('No external ImageMagick (magick/convert) binary available in this environment.');
     }
 }
@@ -68,7 +68,7 @@ function imageExtImagickTestMakeJpeg(string $path, int $width, int $height, int 
 
 /**
  * Builds a real, tiny 2-frame animated WebP via the external ImageMagick
- * CLI. __construct()'s animated-WebP branch reads PwgImage::webp_info()'s
+ * CLI. __construct()'s animated-WebP branch reads PwgImage::webpInfo()'s
  * real VP8X extended-header animation bit, so a genuine multi-frame WebP
  * container is required here -- no lighter-weight way to set that bit
  * without one.
@@ -98,9 +98,9 @@ function imageExtImagickTestFrameCount(string $path): int
 
 /**
  * Builds a hand-crafted, deliberately truncated WebP: a real RIFF/WEBP/VP8X
- * header (25 bytes, the minimum PwgImage::webp_info() itself reads) with
+ * header (25 bytes, the minimum PwgImage::webpInfo() itself reads) with
  * the animation flag bit set, but cut off before the width/height fields
- * that follow it in a real VP8X chunk. webp_info() only inspects byte 15
+ * that follow it in a real VP8X chunk. webpInfo() only inspects byte 15
  * ('X') and byte 20 (the flags byte) -- both present here -- so it reports
  * has-animation=true, but getimagesize() genuinely can't extract real
  * dimensions from a file this short and returns false (confirmed live).
@@ -113,7 +113,7 @@ function imageExtImagickTestMakeTruncatedAnimatedWebp(string $path): void
     $riffPayload = 'WEBP' . $vp8xChunk;
     $riff = 'RIFF' . pack('V', strlen($riffPayload)) . $riffPayload;
 
-    // Pad up to exactly the 25 bytes webp_info() reads (fread() would
+    // Pad up to exactly the 25 bytes webpInfo() reads (fread() would
     // otherwise return fewer, tripping its own "not a valid webp image"
     // guard instead of the branch this fixture targets).
     if (strlen($riff) < 25) {
@@ -162,7 +162,7 @@ function imageExtImagickTestMake(string $path): ImageExtImagick
 
 /**
  * Resolves the real, absolute path of a binary via the same `command -v`
- * idiom PwgImage::get_ext_imagick_command() itself uses internally --
+ * idiom PwgImage::getExtImagickCommand() itself uses internally --
  * used to build a private, non-PATH symlink to the real magick/convert
  * binary (see the write() imagickdir-prefix test below).
  */
@@ -235,7 +235,7 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
     // write()'s own [SEC-16] comment -- so this genuinely points exec() at
     // a nonexistent path regardless of which real binary this environment
     // already resolves 'identify' to via PATH. Same convention as
-    // PwgImageTest's own is_ext_imagick() "nonexistent dir" tests.
+    // PwgImageTest's own isExtImagick() "nonexistent dir" tests.
     imageExtImagickTestCurrentConfig()
         ->extImagickDir = '/totally/nonexistent/dir/';
 
@@ -286,9 +286,9 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
 
     $image = imageExtImagickTestMake($path);
 
-    expect($image->get_width())
+    expect($image->getWidth())
         ->toBe(12)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(9);
 });
 
@@ -369,9 +369,9 @@ test('construct detects an animated WebP and reads dimensions via getimagesize i
 
     expect($image->is_animated_webp)
         ->toBeTrue()
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(20)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(14);
 });
 
@@ -391,9 +391,9 @@ test('construct treats an uppercase .WEBP extension as webp case-insensitively',
 
     expect($image->is_animated_webp)
         ->toBeTrue()
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(20)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(14);
 });
 
@@ -402,7 +402,7 @@ test('construct throws when an animated webp is too short for getimagesize to re
 
     $path = imageExtImagickTestMarker() . '/truncated-animated.webp';
     imageExtImagickTestMakeTruncatedAnimatedWebp($path);
-    expect(PwgImage::webp_info($path)->hasAnimation)->toBeTrue();
+    expect(PwgImage::webpInfo($path)->hasAnimation)->toBeTrue();
     expect(getimagesize($path))
         ->toBeFalse();
 
@@ -423,9 +423,9 @@ test('rotate by 0 degrees is a no-op that adds no command', function (): void {
         ->toBeTrue()
         ->and($image->commands)
         ->toBe([])
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(40)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(20);
 });
 
@@ -447,9 +447,9 @@ test('rotate by a literal float 0.0 is also a no-op that adds no command', funct
         ->toBeTrue()
         ->and($image->commands)
         ->toBe([])
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(40)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(20);
 });
 
@@ -464,9 +464,9 @@ test('rotate by 90 degrees swaps width/height and queues rotate+orient commands'
 
     expect($result)
         ->toBeTrue()
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(20)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(40)
         ->and($image->commands)
         ->toBe([
@@ -492,9 +492,9 @@ test('rotate by 270 degrees swaps width/height and queues rotate+orient commands
 
     expect($result)
         ->toBeTrue()
-        ->and($image->get_width())
+        ->and($image->getWidth())
         ->toBe(20)
-        ->and($image->get_height())
+        ->and($image->getHeight())
         ->toBe(40)
         ->and($image->commands)
         ->toBe([
@@ -503,7 +503,7 @@ test('rotate by 270 degrees swaps width/height and queues rotate+orient commands
         ]);
 });
 
-test('set_compression_quality caps the requested quality via animatedWebpCompressionQuality for an animated webp source', function (): void {
+test('setCompressionQuality caps the requested quality via animatedWebpCompressionQuality for an animated webp source', function (): void {
     imageExtImagickTestSkipIfUnavailable();
     imageExtImagickTestCurrentConfig()
         ->animatedWebpCompressionQuality = 40;
@@ -512,7 +512,7 @@ test('set_compression_quality caps the requested quality via animatedWebpCompres
     imageExtImagickTestMakeAnimatedWebp($path, 16, 10);
     $image = imageExtImagickTestMake($path);
 
-    $result = $image->set_compression_quality(90);
+    $result = $image->setCompressionQuality(90);
 
     expect($result)
         ->toBeTrue()
@@ -538,19 +538,19 @@ test('write adds the sampling-factor command only when ext_imagick_version compa
     $path = imageExtImagickTestMarker() . '/sampling-src.jpg';
     imageExtImagickTestMakeJpeg($path, 8, 8, 1, 1, 1);
     // imageExtImagickTestSkipIfUnavailable() itself already refreshed this
-    // to the real, live detected version via is_ext_imagick() -- captured
+    // to the real, live detected version via isExtImagick() -- captured
     // here so it can be restored, not assumed to start at ''.
     $originalVersion = PwgImage::$ext_imagick_version;
 
     try {
-        // Strictly greater than '6.6' -- the add_command() call must fire.
+        // Strictly greater than '6.6' -- the addCommand() call must fire.
         PwgImage::$ext_imagick_version = '7.0';
         $imageGreater = imageExtImagickTestMake($path);
         $imageGreater->write(imageExtImagickTestMarker() . '/sampling-greater-out.jpg');
         expect($imageGreater->commands['sampling-factor'] ?? null)->toBe('4:2:2');
 
         // Exactly '6.6' (version_compare() returns 0) -- *not* greater, so
-        // the add_command() call must *not* fire. This exact-equality case
+        // the addCommand() call must *not* fire. This exact-equality case
         // is what actually discriminates >, >=, and <= from each other.
         PwgImage::$ext_imagick_version = '6.6';
         $imageEqual = imageExtImagickTestMake($path);
@@ -571,10 +571,10 @@ test('sharpen builds the morphology convolve command and produces a valid deriva
     $image = imageExtImagickTestMake($path);
 
     // Independently rebuild the expected command string from the same
-    // shared matrix PwgImage::get_sharpen_matrix() produces -- this locks
+    // shared matrix PwgImage::getSharpenMatrix() produces -- this locks
     // down ImageExtImagick::sharpen()'s own string-builder logic
     // (untested until now), not the matrix math itself.
-    $m = PwgImage::get_sharpen_matrix(50);
+    $m = PwgImage::getSharpenMatrix(50);
     $expectedParam = 'convolve "' . count($m) . ':';
     foreach ($m as $line) {
         $expectedParam .= ' ';
@@ -618,17 +618,17 @@ test('compose throws a LogicException when the overlay uses a different image ba
     // same idea as ImageGdTest's own compose()-mismatch test, this class's
     // guard only cares that it's genuinely not `self` (ImageExtImagick).
     $overlay->image = new class() implements ImageInterface {
-        public function get_width(): int
+        public function getWidth(): int
         {
             return 1;
         }
 
-        public function get_height(): int
+        public function getHeight(): int
         {
             return 1;
         }
 
-        public function set_compression_quality(int $quality): bool
+        public function setCompressionQuality(int $quality): bool
         {
             return true;
         }
@@ -865,7 +865,7 @@ test('write concatenates the imagickdir prefix directly onto the convert/magick 
     // correct and the reordered command end up trying (and failing) to
     // execute a nonexistent path, so this needs a real, working target to
     // tell them apart.
-    $commandName = PwgImage::get_ext_imagick_command();
+    $commandName = PwgImage::getExtImagickCommand();
     $realBinaryPath = imageExtImagickTestRealBinaryPath($commandName);
     $privateBinPath = imageExtImagickTestMarker() . '/' . $commandName;
     symlink($realBinaryPath, $privateBinPath);
@@ -994,12 +994,12 @@ test('write omits the parameter value for every "no value" sentinel (null/0/0.0/
         imageExtImagickTestMakeJpeg($path, 10, 10, 1, 1, 1);
         $image = imageExtImagickTestMake($path);
 
-        $image->add_command('optnull', null);
-        $image->add_command('optzeroint', 0);
-        $image->add_command('optzerofloat', 0.0);
-        $image->add_command('optzerostr', '0');
-        $image->add_command('optemptystr', '');
-        $image->add_command('optreal', 5);
+        $image->addCommand('optnull', null);
+        $image->addCommand('optzeroint', 0);
+        $image->addCommand('optzerofloat', 0.0);
+        $image->addCommand('optzerostr', '0');
+        $image->addCommand('optemptystr', '');
+        $image->addCommand('optreal', 5);
 
         // Fake, non-real ImageMagick flag names -- write()'s own exec()
         // call is expected to genuinely fail against these (real CLI

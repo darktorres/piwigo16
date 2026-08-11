@@ -97,9 +97,9 @@ test('construct decodes a real PNG', function (): void {
 
     $img = new ImageGd($path);
 
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(33);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(21);
 });
 
@@ -117,9 +117,9 @@ test('construct decodes a real .jpeg (not just .jpg) extension', function (): vo
 
     $img = new ImageGd($path);
 
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(19);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(11);
 });
 
@@ -133,9 +133,9 @@ test('construct decodes a real GIF', function (): void {
 
     $img = new ImageGd($path);
 
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(17);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(9);
 });
 
@@ -154,13 +154,13 @@ test('construct lowercases the file extension before matching it', function (): 
 
     $img = new ImageGd($path);
 
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(15);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(8);
 });
 
-test('get_width and get_height report the real decoded dimensions, not transposed', function (): void {
+test('getWidth and getHeight report the real decoded dimensions, not transposed', function (): void {
     $path = imageGdTestMarker() . '/dims.jpg';
     $gdImg = imagecreatetruecolor(64, 12);
     if ($gdImg === false) {
@@ -170,9 +170,9 @@ test('get_width and get_height report the real decoded dimensions, not transpose
 
     $img = new ImageGd($path);
 
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(64);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(12);
 });
 
@@ -189,9 +189,9 @@ test('strip is a true no-op', function (): void {
         ->toBeTrue();
     // A genuine no-op: dimensions (the only cheaply-observable state)
     // stay exactly what they were before the call.
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(5);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(5);
 });
 
@@ -275,9 +275,9 @@ test('crop produces a real image of exactly the requested size, taken from the c
 
     expect($result)
         ->toBeTrue();
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(10);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(20);
     $color = imagecolorat($img->image, 0, 0);
     if ($color === false) {
@@ -308,9 +308,9 @@ test('crop accepts real float width/height/x/y without a TypeError', function ()
 
     expect($result)
         ->toBeTrue();
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(10);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(20);
 });
 
@@ -361,9 +361,9 @@ test('resize produces a real image scaled to exactly the requested dimensions', 
 
     expect($result)
         ->toBeTrue();
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(40);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(20);
 });
 
@@ -380,9 +380,9 @@ test('resize accepts real float width/height without a TypeError', function (): 
 
     expect($result)
         ->toBeTrue();
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(40);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(20);
 });
 
@@ -532,9 +532,9 @@ test('rotate produces a real image with width/height swapped for a 90-degree tur
 
     expect($result)
         ->toBeTrue();
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(10);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(30);
 });
 
@@ -575,7 +575,7 @@ test('rotate fills newly exposed corners with the documented background color', 
     expect($rgb['blue'])->toBe(0);
 });
 
-test('set_compression_quality stores the requested quality and reports success', function (): void {
+test('setCompressionQuality stores the requested quality and reports success', function (): void {
     $path = imageGdTestMarker() . '/quality.jpg';
     $gdImg = imagecreatetruecolor(5, 5);
     if ($gdImg === false) {
@@ -584,7 +584,7 @@ test('set_compression_quality stores the requested quality and reports success',
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
 
-    $result = $img->set_compression_quality(42);
+    $result = $img->setCompressionQuality(42);
 
     expect($result)
         ->toBeTrue();
@@ -613,7 +613,7 @@ test('sharpen applies a real convolution and reports success', function (): void
 test('sharpen leaves a uniform region at exactly its original value', function (): void {
     // Real gap, found via mutation testing: the existing sharpen test
     // only checks the boolean return value, never any actual pixel data.
-    // PwgImage::get_sharpen_matrix() always normalizes its kernel to sum
+    // PwgImage::getSharpenMatrix() always normalizes its kernel to sum
     // to exactly 1 (every cell divided by the matrix's own total), so for
     // any uniform (flat-color) region, imageconvolution()'s div=1/offset=0
     // literals must leave every channel completely unchanged -- any
@@ -691,7 +691,7 @@ test('write falls back to JPEG for any other destination extension', function ()
     }
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
-    $img->set_compression_quality(77);
+    $img->setCompressionQuality(77);
 
     expect($img->write($dest))
         ->toBeTrue();
@@ -741,17 +741,17 @@ test('compose throws when the overlay uses a different image backend', function 
     // setup this suite doesn't otherwise depend on, and this class's own
     // guard only cares that it's genuinely not `self` (ImageGd).
     $overlay->image = new class() implements ImageInterface {
-        public function get_width(): int
+        public function getWidth(): int
         {
             return 1;
         }
 
-        public function get_height(): int
+        public function getHeight(): int
         {
             return 1;
         }
 
-        public function set_compression_quality(int $quality): bool
+        public function setCompressionQuality(int $quality): bool
         {
             return true;
         }
@@ -889,9 +889,9 @@ test('compose merges a same-backend overlay onto the base image', function (): v
     expect($img->compose($overlay, 2, 2, 100))
         ->toBeTrue();
     // Base image dimensions are untouched by composing a smaller overlay.
-    expect($img->get_width())
+    expect($img->getWidth())
         ->toBe(20);
-    expect($img->get_height())
+    expect($img->getHeight())
         ->toBe(20);
     $color = imagecolorat($img->image, 2, 2);
     if ($color === false) {

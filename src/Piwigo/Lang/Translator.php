@@ -108,17 +108,17 @@ final class Translator
      * load_language()'s $lang_info population, e.g. X-Piwigo-Parent/
      * X-Piwigo-Zero-Plural -- don't have to parse the same file twice.
      *
-     * Cached via CachePools::translations() (confirmed via a real Xdebug
-     * profile: raw PO parsing plus two full passes over every translation
-     * entry -- toDictionaryEntry() and mirror() -- cost ~18-19% of a
-     * bootstrap request's server-side time with no caching at all). Cache
+     * Cached via CachePools::translations() -- raw PO parsing plus two full
+     * passes over every translation entry (toDictionaryEntry() and
+     * mirror()) cost ~18-19% of a bootstrap request's server-side time with
+     * no caching at all, per a real Xdebug profile. Cache
      * key folds in $poFile's own mtime, so an edited PO file busts its own
      * entry on the very next load() -- no manual clear, no staleness risk.
      * A cache hit skips PoLoader::loadFile() and both entry-iteration
      * passes entirely; the returned Translations is reconstructed with only
      * the cached headers (the sole thing any real caller reads off it --
-     * confirmed via Piwigo\Core\Lang's own load_language(), which only ever
-     * calls ->getHeaders() on this return value), not the full entry list.
+     * Piwigo\Core\Lang's own load_language() only ever calls ->getHeaders()
+     * on this return value), not the full entry list.
      */
     public function load(string $locale, string $poFile): ?Translations
     {
@@ -174,7 +174,7 @@ final class Translator
 
     /**
      * Rebuilds a Translations object carrying only cached headers, for a
-     * load() cache hit -- confirmed the only thing any real caller reads
+     * load() cache hit -- the only thing any real caller reads
      * off load()'s return value (see load()'s own docblock), so there is no
      * need to reconstruct the full parsed entry list.
      *
@@ -253,14 +253,14 @@ final class Translator
      * Builds the array shape gettext/translator's Translator::
      * addTranslations() expects: `['domain' => string, 'plural-forms' =>
      * 'nplurals=N; plural=EXPR;', 'messages' => [context => [original =>
-     * list<string>]]]`. Mirrors what the removed ArrayGenerator produced
-     * (verified against gettext/translator's own dictionary reader,
-     * `Translator::getTranslation()`/`getPluralIndex()`): msgstr[0]
+     * list<string>]]]`. Mirrors what the removed ArrayGenerator produced,
+     * per gettext/translator's own dictionary reader,
+     * `Translator::getTranslation()`/`getPluralIndex()`: msgstr[0]
      * (`getTranslation()`) is a slot of its own, NOT included in
-     * `getPluralTranslations()` -- confirmed empirically (a 3-plural-form
-     * PO file's `getPluralTranslations()` returned only `[msgstr1,
-     * msgstr2]`, msgstr0 came from `getTranslation()`), contradicting an
-     * assumption the reference's own equivalent code made.
+     * `getPluralTranslations()` (a 3-plural-form PO file's
+     * `getPluralTranslations()` returns only `[msgstr1, msgstr2]`, msgstr0
+     * comes from `getTranslation()`), contradicting an assumption the
+     * reference's own equivalent code made.
      *
      * @return array{domain: string, plural-forms: string, messages: array<string, array<string, list<string>>>}
      */
@@ -348,7 +348,7 @@ final class Translator
             // getPluralTranslations()[0] is msgstr[1] -- the translation
             // matching the plural English key -- NOT msgstr[0] (that's
             // getTranslation(), handled above). See toDictionaryEntry()'s
-            // docblock for how this was confirmed. gettext/gettext's own
+            // docblock for the full reasoning. gettext/gettext's own
             // Translation::$pluralTranslations has no property/return type
             // (bare `array`), so $pluralForms[0] is genuinely unverified
             // mixed to PHPStan -- a real gap $mirror's own typed property

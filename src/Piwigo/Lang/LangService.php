@@ -20,8 +20,7 @@ use Piwigo\Db\EntityManagerFactory;
  * explicit parameter rather than resolved internally from
  * `Piwigo\Users\CurrentUser` -- `Piwigo\Lang\` is L1Infrastructure, and
  * deptrac's ruleset only lets L1Infrastructure depend on L0Data, not
- * upward on `Users`' L2aCoreDomain (confirmed via a real `deptrac analyse`
- * violation caught while wiring this in, same layer shape as `Kernel`'s
+ * upward on `Users`' L2aCoreDomain (same layer shape as `Kernel`'s
  * own `CurrentUser::attachGlobals()` exclusion). Callers resolve the
  * active locale themselves (typically `CurrentUser::get()->language`) and
  * pass it in.
@@ -32,8 +31,8 @@ use Piwigo\Db\EntityManagerFactory;
  * directories under the core `language/` tree before it's composed into
  * any path, blocking path traversal (`../../etc/passwd`) or reads of
  * arbitrary files outside a plugin's language directory. There is no
- * `CurrentConfig::availableLanguages()` accessor to validate against (checked:
- * not in the 277-key SCHEMA) -- the filesystem check is both simpler and
+ * `CurrentConfig::availableLanguages()` accessor to validate against
+ * (not in the 277-key SCHEMA) -- the filesystem check is both simpler and
  * authoritative (a "locale" with no matching core directory isn't a real,
  * loadable locale regardless of what a DB row claims).
  */

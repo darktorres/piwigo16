@@ -29,9 +29,9 @@ use Piwigo\Users\UserStatus;
 // indirectly by the Browser suite, not re-tested here. What's under test
 // at this level: combine()'s behavior for 0-1 non-template items and
 // remote items, which never touch the filesystem (confirmed by reading
-// flush_pending()/process_combinable()'s own branches).
+// flushPending()/processCombinable()'s own branches).
 //
-// process_combinable()'s own is_template branch (cache-hit short-circuit,
+// processCombinable()'s own is_template branch (cache-hit short-circuit,
 // cache-miss build+write, the real-path-not-found guard, and CSS/JS
 // dispatch) is invoked directly via reflection further down, bypassing
 // combine()'s legacy-bootstrap-coupled entry points -- it only needs a
@@ -62,7 +62,7 @@ afterEach(function (): void {
 // test elsewhere in this file (beforeEach seeds a guest), so the
 // admin-only branch's own inner boolean logic needs a real admin
 // CurrentUser to ever execute at all -- invoked via reflection since
-// computeForce() is private, same convention as process_combinable().
+// computeForce() is private, same convention as processCombinable().
 
 function invokeComputeForce(FileCombiner $combiner): bool
 {
@@ -187,7 +187,7 @@ test('computeForce is false for an admin JS combine with no cache-busting header
  * coercion of each operand (0 is falsy) regardless of an explicit cast
  * on any individual operand, same as this codebase's other
  * already-documented redundant-cast-in-boolean-context instances (see
- * clear_combined_files()'s own equivalence write-up further down this
+ * clearCombinedFiles()'s own equivalence write-up further down this
  * file, and FilesystemHelperTest.php's mkgetdir() cluster). A position-0
  * 'no-cache' match at the very start of HTTP_PRAGMA returns false either
  * way -- confirmed identical with and without the cast.
@@ -260,7 +260,7 @@ test('combine passes remote combinables through without combining them', functio
 test('combine flushes pending items before appending a remote combinable, preserving declaration order', function (): void {
     // template_combine_files=true so the first item accumulates in
     // $pending instead of flushing itself immediately -- if the
-    // is_remote branch's own flush_pending() call were skipped, $first
+    // is_remote branch's own flushPending() call were skipped, $first
     // would only ever get flushed by combine()'s trailing call, landing
     // it AFTER $remote instead of before.
     CurrentConfigTestFactory::get()->templateCombineFiles = true;
@@ -276,8 +276,8 @@ test('combine flushes pending items before appending a remote combinable, preser
         ->and($result[1])->toBe($remote);
 });
 
-// --- flush_pending()'s multi-item merge path (real files, no Template
-// dependency needed -- process_combinable()'s $return_content=true branch
+// --- flushPending()'s multi-item merge path (real files, no Template
+// dependency needed -- processCombinable()'s $return_content=true branch
 // for a non-template combinable reads the file directly via
 // file_get_contents()) ---
 
@@ -289,7 +289,7 @@ test('combine flushes pending items before appending a remote combinable, preser
  * documented default '0'): combine()'s own RemoveStringCast on
  * `$key[] = (string) $combinable->version;` and
  * `$key[] = (string) filemtime(...);`. $key's only consumer, in
- * flush_pending()'s count>1 branch, is `join('>', $key)` -- and PHP's
+ * flushPending()'s count>1 branch, is `join('>', $key)` -- and PHP's
  * own array-to-string coercion inside join()/implode() applies the
  * *exact same* to-string conversion rules to a non-string array element
  * (bool/int/float/null, even a warned-about array) as an explicit
@@ -298,7 +298,7 @@ test('combine flushes pending items before appending a remote combinable, preser
  * $combinable->version is reachable at runtime since Combinable's own
  * $version property carries no PHP type declaration, only a
  * `string|false` docblock). For a single-item combinable this line's
- * mutation is doubly moot: flush_pending()'s count===1 branch discards
+ * mutation is doubly moot: flushPending()'s count===1 branch discards
  * $key entirely without ever joining it.
  */
 test('combine merges 2+ non-template files into a single combined output on disk, respecting declaration order', function (): void {
@@ -318,7 +318,7 @@ test('combine merges 2+ non-template files into a single combined output on disk
         expect($result)
             ->toHaveCount(1);
         $combinedPath = $result[0]->path;
-        // Exact hash-derived filename, replicating flush_pending()'s own
+        // Exact hash-derived filename, replicating flushPending()'s own
         // join('>', $key) + crc32b + base_convert(..., 16, 36) formula --
         // pins the *1 and *36 base-conversion arguments precisely, not
         // just "a filename got produced".
@@ -495,12 +495,12 @@ test('add merges an array of combinables', function (): void {
  * refcounted resource GC closes the handle once $dir goes out of scope
  * at function return regardless of the explicit call, confirmed live
  * via a real /proc/self/fd descriptor-count check across 10 repeated
- * clear_combined_files() calls with the closedir() call removed: the
+ * clearCombinedFiles() calls with the closedir() call removed: the
  * count never grows past its first-call baseline. Same convention as
  * FilesystemHelperTest.php's/DerivativeCacheServiceTest.php's own
  * closedir()/clearstatcache() equivalence write-ups.
  */
-test('clear_combined_files deletes only .js and .css files from the combined dir', function (): void {
+test('clearCombinedFiles deletes only .js and .css files from the combined dir', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-clear-' . bin2hex(random_bytes(8));
     mkdir($root . '/_data/combined', 0o777, true);
     file_put_contents($root . '/_data/combined/a.js', 'x');
@@ -511,7 +511,7 @@ test('clear_combined_files deletes only .js and .css files from the combined dir
     CurrentConfigTestFactory::get()->dataLocation = '_data/';
 
     try {
-        FileCombiner::clear_combined_files(CurrentConfigTestFactory::get(), Paths::fromRoot($root));
+        FileCombiner::clearCombinedFiles(CurrentConfigTestFactory::get(), Paths::fromRoot($root));
 
         expect(file_exists($root . '/_data/combined/a.js'))->toBeFalse();
         expect(file_exists($root . '/_data/combined/b.css'))->toBeFalse();
@@ -525,7 +525,7 @@ test('clear_combined_files deletes only .js and .css files from the combined dir
     }
 });
 
-test('clear_combined_files returns without error when the combined dir does not exist', function (): void {
+test('clearCombinedFiles returns without error when the combined dir does not exist', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-noclear-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
@@ -533,18 +533,18 @@ test('clear_combined_files returns without error when the combined dir does not 
 
     set_error_handler(static fn (): bool => true);
     try {
-        expect(static fn () => FileCombiner::clear_combined_files(CurrentConfigTestFactory::get(), Paths::fromRoot($root)))->not->toThrow(Throwable::class);
+        expect(static fn () => FileCombiner::clearCombinedFiles(CurrentConfigTestFactory::get(), Paths::fromRoot($root)))->not->toThrow(Throwable::class);
     } finally {
         restore_error_handler();
         Kernel::reset();
     }
 });
 
-// --- process_combinable()'s is_template branch (cache-hit/cache-miss,
-// real-path-not-found, CSS/JS dispatch) + process_css()/process_css_rec() ---
+// --- processCombinable()'s is_template branch (cache-hit/cache-miss,
+// real-path-not-found, CSS/JS dispatch) + processCss()/processCssRec() ---
 //
 // Real filesystem, real (but minimally themed) Template, invoked via
-// reflection since process_combinable() is private -- same "bypass the
+// reflection since processCombinable() is private -- same "bypass the
 // legacy-bootstrap-coupled public entry point to reach the private logic
 // directly" convention as ScriptLoaderTest.php's own
 // compute_script_topological_order() helper.
@@ -567,7 +567,7 @@ function file_combiner_test_rrmdir(string $dir): void
 
 function invokeProcessCombinable(FileCombiner $combiner, Combinable $combinable, bool $returnContent, bool $force, string &$header): ?string
 {
-    $method = new ReflectionMethod($combiner, 'process_combinable');
+    $method = new ReflectionMethod($combiner, 'processCombinable');
     /** @var string|null */
     return $method->invokeArgs($combiner, [$combinable, $returnContent, $force, &$header]);
 }
@@ -578,18 +578,18 @@ function invokeProcessCombinable(FileCombiner $combiner, Combinable $combinable,
  * exercises the exact scenario, run against both the mutated and
  * original source to confirm byte-identical output):
  *
- * - flush_pending()'s own EmptyStringToNotEmpty on `$header = '';`
- *   (its count===1 branch, right before calling process_combinable()
+ * - flushPending()'s own EmptyStringToNotEmpty on `$header = '';`
+ *   (its count===1 branch, right before calling processCombinable()
  *   with $return_content=false): $header there is a fresh local
  *   variable passed only into *that one* by-ref call and never read
- *   again afterward in flush_pending() itself -- confirmed with a CSS
- *   template combinable carrying a suspicious @import (so process_css()
+ *   again afterward in flushPending() itself -- confirmed with a CSS
+ *   template combinable carrying a suspicious @import (so processCss()
  *   really does append into $header via this exact call path), whose
  *   written single-item cache file's content is identical regardless of
  *   $header's starting value, since that file is built from $content
- *   alone (see process_combinable()'s own `file_put_contents(...,
+ *   alone (see processCombinable()'s own `file_put_contents(...,
  *   $content)`, never $header).
- * - process_combinable()'s own RemoveEarlyReturn on the is_template
+ * - processCombinable()'s own RemoveEarlyReturn on the is_template
  *   branch's trailing `return null;`: by the time this line is reached,
  *   the earlier `if ($return_content) { return $content; }` a few lines
  *   above has already NOT triggered, which only happens when
@@ -601,7 +601,7 @@ function invokeProcessCombinable(FileCombiner $combiner, Combinable $combinable,
  *   this method's own final `return null;` -- same return value, same
  *   side effects (the cache write already happened above), every time.
  */
-test('combine reaches process_combinable for a single template combinable via flush_pending\'s own count===1 branch, updating its path to the cached file', function (): void {
+test('combine reaches processCombinable for a single template combinable via flushPending\'s own count===1 branch, updating its path to the cached file', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-single-template-flush-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
@@ -620,7 +620,7 @@ test('combine reaches process_combinable for a single template combinable via fl
 
         $result = $combiner->combine();
 
-        // If flush_pending()'s own process_combinable() call for the
+        // If flushPending()'s own processCombinable() call for the
         // count===1 branch were skipped, $combinable would still point at
         // its original source path instead of the built cache file.
         expect($result)
@@ -636,7 +636,7 @@ test('combine reaches process_combinable for a single template combinable via fl
     }
 });
 
-test('process_combinable\'s single-file cache key is sensitive to the combinable\'s own path, not just its id', function (): void {
+test('processCombinable\'s single-file cache key is sensitive to the combinable\'s own path, not just its id', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-key-path-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
@@ -669,7 +669,7 @@ test('process_combinable\'s single-file cache key is sensitive to the combinable
     }
 });
 
-test('process_combinable\'s single-file cache key is sensitive to the combinable\'s own version', function (): void {
+test('processCombinable\'s single-file cache key is sensitive to the combinable\'s own version', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-key-version-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
@@ -701,7 +701,7 @@ test('process_combinable\'s single-file cache key is sensitive to the combinable
     }
 });
 
-test('process_combinable\'s single-file cache filename exactly matches the crc32b+base36 hash of path,version,mtime', function (): void {
+test('processCombinable\'s single-file cache filename exactly matches the crc32b+base36 hash of path,version,mtime', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-key-exact-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
@@ -736,7 +736,7 @@ test('process_combinable\'s single-file cache filename exactly matches the crc32
     }
 });
 
-test('process_combinable reuses an already-combined template file (matching a filemtime-inclusive cache key) without ever touching CurrentTemplate', function (): void {
+test('processCombinable reuses an already-combined template file (matching a filemtime-inclusive cache key) without ever touching CurrentTemplate', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-hit-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
@@ -790,7 +790,7 @@ test('process_combinable reuses an already-combined template file (matching a fi
     }
 });
 
-test('process_combinable builds and writes a new combined JS file on a cache miss, dispatching to process_js', function (): void {
+test('processCombinable builds and writes a new combined JS file on a cache miss, dispatching to processJs', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-miss-js-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
@@ -821,9 +821,9 @@ test('process_combinable builds and writes a new combined JS file on a cache mis
             ->and($combinable->version)
             ->toBe($originalVersion)
             ->and(file_exists($root . '/' . $combinable->path))->toBeTrue()
-            // process_js() trims trailing whitespace/semicolons and
+            // processJs() trims trailing whitespace/semicolons and
             // re-appends ";\n" -- confirms dispatch went through
-            // process_js(), not process_css().
+            // processJs(), not processCss().
             ->and(file_get_contents($root . '/' . $combinable->path))->toBe("var a = 1;\n");
     } finally {
         CurrentTemplate::current()->reset();
@@ -832,7 +832,7 @@ test('process_combinable builds and writes a new combined JS file on a cache mis
     }
 });
 
-test('process_combinable builds and writes a new combined CSS file on a cache miss, dispatching to process_css', function (): void {
+test('processCombinable builds and writes a new combined CSS file on a cache miss, dispatching to processCss', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-miss-css-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
     // Smarty's default delimiters are the same braces CSS rule blocks use
@@ -862,7 +862,7 @@ test('process_combinable builds and writes a new combined CSS file on a cache mi
             ->toEndWith('.css')
             ->and(file_exists($root . '/' . $combinable->path))->toBeTrue()
             // The {literal} markers are gone and no minification/trimming
-            // happened -- process_css() (not process_js()) ran.
+            // happened -- processCss() (not processJs()) ran.
             ->and(file_get_contents($root . '/' . $combinable->path))->toBe("body{color:red;}\n");
     } finally {
         CurrentTemplate::current()->reset();
@@ -871,9 +871,9 @@ test('process_combinable builds and writes a new combined CSS file on a cache mi
     }
 });
 
-test('process_combinable returns rendered content directly for a template combinable when return_content is true, instead of writing a single-item cache file', function (): void {
+test('processCombinable returns rendered content directly for a template combinable when return_content is true, instead of writing a single-item cache file', function (): void {
     // Every other is_template test in this file calls with
-    // $returnContent=false (flush_pending()'s count===1 branch) -- this is
+    // $returnContent=false (flushPending()'s count===1 branch) -- this is
     // the OTHER real caller, its count>1 multi-item merge branch, which
     // always passes $return_content=true so each item's own rendered
     // content gets concatenated straight into the combined output instead
@@ -913,7 +913,7 @@ test('process_combinable returns rendered content directly for a template combin
     }
 });
 
-test('process_combinable throws when a template combinable points at a file that does not exist', function (): void {
+test('processCombinable throws when a template combinable points at a file that does not exist', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-missing-real-path-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
@@ -935,9 +935,9 @@ test('process_combinable throws when a template combinable points at a file that
         file_combiner_test_rrmdir($root);
         Kernel::reset();
     }
-})->throws(Exception::class, 'process_combinable(): file not found for themes/default/js/does-not-exist.js');
+})->throws(Exception::class, 'processCombinable(): file not found for themes/default/js/does-not-exist.js');
 
-test('process_css throws when a combined_css_postfilter listener returns something other than a CombinedCssPostfilter instance', function (): void {
+test('processCss throws when a combined_css_postfilter listener returns something other than a CombinedCssPostfilter instance', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-postfilter-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
     file_put_contents($root . '/themes/default/css/foo.css', "body{color:red;}\n");
@@ -977,15 +977,15 @@ test('process_css throws when a combined_css_postfilter listener returns somethi
  * line 285's DecrementInteger on `$match[1][0]` (url() rewriting's
  * first-character check) and line 302's DecrementInteger on `$match[1]`
  * inside `is_readable($paths->root . $dir . '/' . $match[1])` are BOTH
- * already killed by this file's own pre-existing tests -- "process_css_rec
+ * already killed by this file's own pre-existing tests -- "processCssRec
  * only rewrites url() references starting with '/'..." below, and
- * "process_css_rec resolves a doubly-nested @import..." further down,
+ * "processCssRec resolves a doubly-nested @import..." further down,
  * respectively (confirmed live: each fails under its own sed-applied
  * mutation). pest --mutate's own report listed them as UNTESTED anyway;
  * same class of tool limitation as this project's other documented
  * pest-plugin-mutate blind spots.
  */
-test('process_css_rec resolves a nested @import file recursively into the combined output', function (): void {
+test('processCssRec resolves a nested @import file recursively into the combined output', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-import-ok-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
     file_put_contents($root . '/themes/default/css/sub.css', "p { color: blue; }\n");
@@ -1007,7 +1007,7 @@ test('process_css_rec resolves a nested @import file recursively into the combin
     }
 });
 
-test('process_css_rec strips path-traversal, remote, and unreadable @import directives into the header instead of inlining them', function (): void {
+test('processCssRec strips path-traversal, remote, and unreadable @import directives into the header instead of inlining them', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-import-suspicious-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
     file_put_contents(
@@ -1026,7 +1026,7 @@ test('process_css_rec strips path-traversal, remote, and unreadable @import dire
         // traversal, remote '://' URL) hits the same guard and is removed
         // from the output, with its raw @import directive preserved in
         // $header instead (@import must stay first in the final combined
-        // file -- see FileCombiner::process_css_rec()'s own docblock).
+        // file -- see FileCombiner::processCssRec()'s own docblock).
         expect($result)
             ->toBe("\n\n\nbody{color:red;}\n")
             ->and($header)
@@ -1036,7 +1036,7 @@ test('process_css_rec strips path-traversal, remote, and unreadable @import dire
     }
 });
 
-test('process_css_rec still strips a "\.\." @import even when the path it traverses to is itself a real, readable file', function (): void {
+test('processCssRec still strips a "\.\." @import even when the path it traverses to is itself a real, readable file', function (): void {
     // The suspicious-path guard is 3 conditions OR'd together (traversal,
     // remote, unreadable) -- each must independently be able to trigger
     // the guard on its own. This is the ONLY way to isolate the '..'
@@ -1069,7 +1069,7 @@ test('process_css_rec still strips a "\.\." @import even when the path it traver
     }
 });
 
-test('process_css_rec throws when an @import target passes the is_readable() check but file_get_contents() still fails to read it', function (): void {
+test('processCssRec throws when an @import target passes the is_readable() check but file_get_contents() still fails to read it', function (): void {
     // A Unix domain socket at the target path is the one realistic,
     // deterministic way to reach this: is_readable() is true for it (usual
     // permission bits), but file_get_contents() still fails to open it as
@@ -1103,10 +1103,10 @@ test('process_css_rec throws when an @import target passes the is_readable() che
         socket_close($socket);
         file_combiner_test_rrmdir($root);
     }
-})->throws(Exception::class, 'process_css_rec(): unable to read themes/default/css/blocked.css')
+})->throws(Exception::class, 'processCssRec(): unable to read themes/default/css/blocked.css')
     ->skip(! extension_loaded('sockets'), 'requires ext-sockets to create a Unix domain socket file');
 
-test('process_css_rec rewrites a relative url() reference into an embellished absolute URL', function (): void {
+test('processCssRec rewrites a relative url() reference into an embellished absolute URL', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-url-rewrite-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
     file_put_contents(
@@ -1144,7 +1144,7 @@ test('process_css_rec rewrites a relative url() reference into an embellished ab
     }
 });
 
-test('process_css_rec only rewrites url() references starting with "/" when checking the FIRST character of the path, not the last or second', function (): void {
+test('processCssRec only rewrites url() references starting with "/" when checking the FIRST character of the path, not the last or second', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-url-slash-edge-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
     file_put_contents(
@@ -1177,7 +1177,7 @@ test('process_css_rec only rewrites url() references starting with "/" when chec
     }
 });
 
-test('process_css_rec resolves a relative url() reference against the CSS file\'s own subdirectory, not the combined root', function (): void {
+test('processCssRec resolves a relative url() reference against the CSS file\'s own subdirectory, not the combined root', function (): void {
     // main.css lives in a subdirectory -- $relative must be dir+match,
     // not just one side or the other, or a swapped concatenation.
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-url-subdir-' . bin2hex(random_bytes(8));
@@ -1201,7 +1201,7 @@ test('process_css_rec resolves a relative url() reference against the CSS file\'
     }
 });
 
-test('process_css_rec leaves a remote or data-URI url() reference untouched', function (): void {
+test('processCssRec leaves a remote or data-URI url() reference untouched', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-url-skip-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
     file_put_contents(
@@ -1225,7 +1225,7 @@ test('process_css_rec leaves a remote or data-URI url() reference untouched', fu
     }
 });
 
-test('process_css_rec resolves a doubly-nested @import against the correct subdirectory at each level', function (): void {
+test('processCssRec resolves a doubly-nested @import against the correct subdirectory at each level', function (): void {
     // Distinguishes the recursive call's own $dir argument from a
     // corrupted computation -- a wrong dir here would make the deepest
     // import's is_readable() check miss, stripping it into $header
@@ -1256,7 +1256,7 @@ test('process_css_rec resolves a doubly-nested @import against the correct subdi
     }
 });
 
-test('process_combinable throws for a non-template combinable whose file cannot be read', function (): void {
+test('processCombinable throws for a non-template combinable whose file cannot be read', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-nontemplate-missing-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
 
@@ -1273,7 +1273,7 @@ test('process_combinable throws for a non-template combinable whose file cannot 
     }
 })->throws(Exception::class, 'do_combine(): unable to read themes/default/js/does-not-exist.js');
 
-test('process_combinable dispatches a non-template combinable to process_js when read successfully', function (): void {
+test('processCombinable dispatches a non-template combinable to processJs when read successfully', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-nontemplate-js-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "  var a = 1;  ;;\n");
@@ -1292,7 +1292,7 @@ test('process_combinable dispatches a non-template combinable to process_js when
     }
 });
 
-test('process_combinable registers the template file under a handle combining the loader type and combinable id', function (): void {
+test('processCombinable registers the template file under a handle combining the loader type and combinable id', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-handle-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
@@ -1321,7 +1321,7 @@ test('process_combinable registers the template file under a handle combining th
     }
 });
 
-test('process_combinable notifies combinable_preparse listeners before parsing a template combinable', function (): void {
+test('processCombinable notifies combinable_preparse listeners before parsing a template combinable', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-preparse-notify-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
@@ -1362,8 +1362,8 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
     }
 });
 
-test('process_js trims whitespace/semicolons even from a null content argument', function (): void {
-    $method = new ReflectionMethod(FileCombiner::class, 'process_js');
+test('processJs trims whitespace/semicolons even from a null content argument', function (): void {
+    $method = new ReflectionMethod(FileCombiner::class, 'processJs');
 
     expect($method->invoke(null, null))
         ->toBe(";\n")

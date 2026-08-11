@@ -34,24 +34,24 @@ class Combinable
         $path,
         public $version = '0'
     ) {
-        $this->set_path($path);
+        $this->setPath($path);
         $this->is_template = false;
     }
 
     /**
      * @param string|null $path a null/empty path is a deliberate no-op
      */
-    public function set_path($path): void
+    public function setPath($path): void
     {
         if (! in_array($path, [null, ''], true)) {
             $this->path = $path;
         }
     }
 
-    public function is_remote(UrlServiceInterface $urlService): bool
+    public function isRemote(UrlServiceInterface $urlService): bool
     {
-        // A combinable with no path yet (set_path()'s own null/empty no-op,
-        // not yet filled in by ScriptLoader::fill_well_known()) has nothing
+        // A combinable with no path yet (setPath()'s own null/empty no-op,
+        // not yet filled in by ScriptLoader::fillWellKnown()) has nothing
         // to be remote about.
         if ($this->path === null) {
             return false;

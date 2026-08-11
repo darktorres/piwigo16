@@ -28,47 +28,47 @@ test('constructor defaults version to 0 and is_template to false', function (): 
 test('a null path leaves path unset (well-known path filled in later)', function (): void {
     $combinable = new Combinable('jquery.ui.widget', null);
 
-    // set_path(null)'s own documented no-op leaves $path at its real
+    // setPath(null)'s own documented no-op leaves $path at its real
     // ?string $path = null default -- isset() on a null property value is
     // false regardless, which is exactly what this test verifies (a
-    // well-known path gets filled in later by ScriptLoader::fill_well_known()).
+    // well-known path gets filled in later by ScriptLoader::fillWellKnown()).
     expect(isset($combinable->path))
         ->toBeFalse();
 });
 
-test('set_path is a no-op for an empty path', function (): void {
+test('setPath is a no-op for an empty path', function (): void {
     $combinable = new Combinable('my-id', 'themes/default/js/foo.js');
 
-    $combinable->set_path('');
-    $combinable->set_path(null);
+    $combinable->setPath('');
+    $combinable->setPath(null);
 
     expect($combinable->path)
         ->toBe('themes/default/js/foo.js');
 });
 
-test('set_path overwrites a non-empty path', function (): void {
+test('setPath overwrites a non-empty path', function (): void {
     $combinable = new Combinable('my-id', 'themes/default/js/foo.js');
 
-    $combinable->set_path('themes/default/js/bar.js');
+    $combinable->setPath('themes/default/js/bar.js');
 
     expect($combinable->path)
         ->toBe('themes/default/js/bar.js');
 });
 
-test('is_remote is true for an absolute URL', function (): void {
+test('isRemote is true for an absolute URL', function (): void {
     $combinable = new Combinable('my-id', 'https://cdn.example.com/foo.js');
 
-    expect($combinable->is_remote(UrlServiceTestFactory::build()))->toBeTrue();
+    expect($combinable->isRemote(UrlServiceTestFactory::build()))->toBeTrue();
 });
 
-test('is_remote is true for a protocol-relative URL', function (): void {
+test('isRemote is true for a protocol-relative URL', function (): void {
     $combinable = new Combinable('my-id', '//cdn.example.com/foo.js');
 
-    expect($combinable->is_remote(UrlServiceTestFactory::build()))->toBeTrue();
+    expect($combinable->isRemote(UrlServiceTestFactory::build()))->toBeTrue();
 });
 
-test('is_remote is false for a local path', function (): void {
+test('isRemote is false for a local path', function (): void {
     $combinable = new Combinable('my-id', 'themes/default/js/foo.js');
 
-    expect($combinable->is_remote(UrlServiceTestFactory::build()))->toBeFalse();
+    expect($combinable->isRemote(UrlServiceTestFactory::build()))->toBeFalse();
 });

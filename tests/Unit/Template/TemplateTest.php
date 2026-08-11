@@ -455,7 +455,7 @@ test('currentTemplate resolver throws when the container returns an unexpected t
     $t = TemplateTestFactory::build();
 
     // currentTemplate()'s own docblock: its only real caller is
-    // finalizeOutput()'s cssLoader->get_css() call, whose own first
+    // finalizeOutput()'s cssLoader->getCss() call, whose own first
     // argument (self::urlService(), evaluated before currentTemplate())
     // transitively resolves HtmlService -- which independently needs
     // CurrentTemplate as a natively-typed constructor param -- so going

@@ -20,7 +20,7 @@ use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 
 /**
  * Piwigo\Template\PwgTemplateAdapter -- the Smarty-registered object behind
- * `derivative`/`derivative_url` template calls; had zero dedicated coverage.
+ * `derivative`/`derivativeUrl` template calls; had zero dedicated coverage.
  * Both need the same real DB-backed ImageStdParams/DerivativeImage::
  * setUrlService() wiring (see
  * NotificationByMailSenderTest/MailServiceTest's own docblocks) -- placed in
@@ -91,7 +91,7 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
 
     public function testDerivativeUrlReturnsARealUrlString(): void
     {
-        $url = $this->adapter->derivative_url('thumb', $this->fakeImageInfos());
+        $url = $this->adapter->derivativeUrl('thumb', $this->fakeImageInfos());
 
         self::assertStringContainsString('x-th.jpg', $url);
     }

@@ -6,7 +6,7 @@ use Piwigo\Template\Css;
 use Piwigo\Template\CssLoader;
 
 // Inspects CssLoader's private $registered_css via reflection rather than
-// going through get_css() -> FileCombiner::combine(), which cascades
+// going through getCss() -> FileCombiner::combine(), which cascades
 // through several legacy free functions with top-level side effects
 // (is_admin() -> ... -> functions_user.inc.php's own top-level
 // add_event_handler() call). CssLoader::add()'s dedup/ordering logic --
@@ -133,7 +133,7 @@ test('add computes order as order*1000 plus the declaration counter', function (
         ->and($registered['b']->order)->toBe(2001);
 });
 
-test('get_css sorts registered CSS by order before combining', function (): void {
+test('getCss sorts registered CSS by order before combining', function (): void {
     $loader = new CssLoader();
     $loader->add('high-priority', 'high.css', order: 5);
     $loader->add('low-priority', 'low.css', order: 0);
@@ -161,11 +161,11 @@ test('shouldReplace requires the existing order to be strictly less than order*1
         ->toBeTrue();
 });
 
-test('cmp_by_order subtracts orders, not adds them', function (): void {
+test('cmpByOrder subtracts orders, not adds them', function (): void {
     // Both orders non-zero and positive so addition and subtraction
     // produce genuinely opposite-signed results (either operand being 0
     // would leave the sign unchanged either way).
-    $method = new ReflectionMethod(CssLoader::class, 'cmp_by_order');
+    $method = new ReflectionMethod(CssLoader::class, 'cmpByOrder');
 
     expect($method->invoke(null, new Css('a', 'a.css', '0', 3), new Css('b', 'b.css', '0', 5)))
         ->toBeLessThan(0);

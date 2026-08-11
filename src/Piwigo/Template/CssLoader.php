@@ -43,7 +43,7 @@ final class CssLoader
     /**
      * @return Combinable[] array of combined CSS.
      */
-    public function get_css(UrlServiceInterface $urlService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, Paths $paths, AccessLevelChecker $accessLevelChecker): array
+    public function getCss(UrlServiceInterface $urlService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, Paths $paths, AccessLevelChecker $accessLevelChecker): array
     {
         $combiner = new FileCombiner($accessLevelChecker, 'css', $urlService, $paths, $eventDispatcher, $currentTemplate, $currentConfig, $this->sortedRegisteredCss());
         return $combiner->combine();
@@ -54,7 +54,7 @@ final class CssLoader
      */
     private function sortedRegisteredCss(): array
     {
-        uasort($this->registered_css, self::cmp_by_order(...));
+        uasort($this->registered_css, self::cmpByOrder(...));
 
         return $this->registered_css;
     }
@@ -62,7 +62,7 @@ final class CssLoader
     /**
      * Callback for CSS files sorting.
      */
-    private static function cmp_by_order(Css $a, Css $b): int
+    private static function cmpByOrder(Css $a, Css $b): int
     {
         return $a->order - $b->order;
     }

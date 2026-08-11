@@ -27,7 +27,7 @@ final class PwgTemplateAdapter
      */
     public function derivative($type, $img): DerivativeImage
     {
-        // Mirrors derivative_url()/DerivativeImage::url()'s own
+        // Mirrors derivativeUrl()/DerivativeImage::url()'s own
         // is_object($infos) ? $infos : new SrcImage($infos) handling — the
         // constructor itself only accepts a real SrcImage.
         return new DerivativeImage($type, is_object($img) ? $img : new SrcImage($img), $this->currentConfig);
@@ -37,7 +37,7 @@ final class PwgTemplateAdapter
      * @param string $type
      * @param array<string, mixed> $img
      */
-    public function derivative_url($type, $img): string
+    public function derivativeUrl($type, $img): string
     {
         return DerivativeImage::url($type, $img);
     }

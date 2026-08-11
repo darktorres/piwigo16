@@ -7,7 +7,7 @@ namespace Piwigo\Template\Projection;
 use Piwigo\Template\Combinable;
 
 /**
- * {@see \Piwigo\Template\ScriptLoader::get_footer_scripts()}'s own fixed
+ * {@see \Piwigo\Template\ScriptLoader::getFooterScripts()}'s own fixed
  * 2-list result (footer-sync scripts, footer-async scripts).
  */
 final readonly class FooterScripts

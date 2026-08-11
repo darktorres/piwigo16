@@ -438,7 +438,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     /**
      * Container resolve, not a constructor property -- the only real use
-     * in this class is CssLoader::get_css()'s one call site below. A
+     * in this class is CssLoader::getCss()'s one call site below. A
      * required constructor param here would ripple to every real
      * `new Template(...)` construction site across the app for a single
      * caller, the same low-blast-radius reasoning as htmlRenderer()/
@@ -816,10 +816,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     private function finalizeOutput(): string
     {
-        if (! $this->scriptLoader->did_head()) {
+        if (! $this->scriptLoader->didHead()) {
             $pos = strpos($this->output, self::COMBINED_SCRIPTS_TAG);
             if ($pos !== false) {
-                $scripts = $this->scriptLoader->get_head_scripts($this->accessLevelChecker);
+                $scripts = $this->scriptLoader->getHeadScripts($this->accessLevelChecker);
                 $content = [];
                 foreach ($scripts as $script) {
                     $content[] =
@@ -832,7 +832,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             } // else maybe error or warning ?
         }
 
-        $css = $this->cssLoader->get_css(self::urlService(), $this->eventDispatcher, $this->currentTemplate(), $this->currentConfig, $this->paths, $this->accessLevelChecker);
+        $css = $this->cssLoader->getCss(self::urlService(), $this->eventDispatcher, $this->currentTemplate(), $this->currentConfig, $this->paths, $this->accessLevelChecker);
 
         $content = [];
         foreach ($css as $combi) {
@@ -1246,7 +1246,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if ($load === 0) {
             return self::COMBINED_SCRIPTS_TAG;
         } else {
-            $scripts = $this->scriptLoader->get_footer_scripts($this->accessLevelChecker);
+            $scripts = $this->scriptLoader->getFooterScripts($this->accessLevelChecker);
             foreach ($scripts->sync as $script) {
                 $content[] =
                   '<script type="text/javascript" src="'
@@ -1287,8 +1287,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     private function make_script_src($script): string
     {
         $ret = '';
-        if ($script->is_remote(self::urlService())) {
-            // is_remote() can only return true via a real urlIsRemote($this
+        if ($script->isRemote(self::urlService())) {
+            // isRemote() can only return true via a real urlIsRemote($this
             // ->path) call, which it early-returns false before reaching
             // whenever $this->path is null -- so path is provably non-null
             // here.
@@ -1323,7 +1323,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $require = $params['require'] ?? null;
             $require_list = (! in_array($require, [null, false, 0, '0', '', []], true) && is_scalar($require)) ? explode(',', (string) $require) : [];
 
-            $this->scriptLoader->add_inline(
+            $this->scriptLoader->addInline(
                 $content,
                 $require_list
             );

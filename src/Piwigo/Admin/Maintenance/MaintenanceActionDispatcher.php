@@ -199,7 +199,7 @@ final class MaintenanceActionDispatcher
 
                 $this->currentTemplate->get()
                     ->delete_compiled_templates();
-                FileCombiner::clear_combined_files($this->currentConfig, $this->paths);
+                FileCombiner::clearCombinedFiles($this->currentConfig, $this->paths);
                 if (! $this->persistentCache instanceof PersistentCache) {
                     $this->htmlRenderer
                         ->fatalError('persistent cache not initialized');

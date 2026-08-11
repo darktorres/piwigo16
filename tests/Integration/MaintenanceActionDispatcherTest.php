@@ -694,7 +694,7 @@ namespace Piwigo\Tests\Integration {
                 new PersistentFileCache(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()),
             );
 
-            // FileCombiner::clear_combined_files()'s own opendir() (the real
+            // FileCombiner::clearCombinedFiles()'s own opendir() (the real
             // combined-CSS/JS cache dir, _data/combined/, may not exist yet in
             // this shared process -- another test may have just deleted it) is
             // unsuppressed but already handled gracefully in production

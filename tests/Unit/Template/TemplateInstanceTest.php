@@ -1611,7 +1611,7 @@ test('func_combine_script maps load="footer" to load_mode 1', function (): void 
         'load' => 'footer',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->load_mode)->toBe(1);
+    expect($t->scriptLoader->getAll()['x']->load_mode)->toBe(1);
 });
 
 test('func_combine_script maps load="async" to load_mode 2', function (): void {
@@ -1623,7 +1623,7 @@ test('func_combine_script maps load="async" to load_mode 2', function (): void {
         'load' => 'async',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->load_mode)->toBe(2);
+    expect($t->scriptLoader->getAll()['x']->load_mode)->toBe(2);
 });
 
 test('func_combine_script defaults load_mode to 0 when no load param is given', function (): void {
@@ -1634,7 +1634,7 @@ test('func_combine_script defaults load_mode to 0 when no load param is given', 
         'path' => 'x.js',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->load_mode)->toBe(0);
+    expect($t->scriptLoader->getAll()['x']->load_mode)->toBe(0);
 });
 
 test('func_combine_script explodes a real comma-separated require string', function (): void {
@@ -1646,7 +1646,7 @@ test('func_combine_script explodes a real comma-separated require string', funct
         'require' => 'a,b',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->precedents)->toBe(['a', 'b']);
+    expect($t->scriptLoader->getAll()['x']->precedents)->toBe(['a', 'b']);
 });
 
 test('func_combine_script casts a non-string scalar require to a string before exploding', function (): void {
@@ -1658,7 +1658,7 @@ test('func_combine_script casts a non-string scalar require to a string before e
         'require' => 5,
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->precedents)->toBe(['5']);
+    expect($t->scriptLoader->getAll()['x']->precedents)->toBe(['5']);
 });
 
 test('func_combine_script treats a missing require key as no requirements', function (): void {
@@ -1669,7 +1669,7 @@ test('func_combine_script treats a missing require key as no requirements', func
         'path' => 'x.js',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->precedents)->toBe([]);
+    expect($t->scriptLoader->getAll()['x']->precedents)->toBe([]);
 });
 
 test('func_combine_script treats require=0 (int) as no requirements', function (): void {
@@ -1681,7 +1681,7 @@ test('func_combine_script treats require=0 (int) as no requirements', function (
         'require' => 0,
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->precedents)->toBe([]);
+    expect($t->scriptLoader->getAll()['x']->precedents)->toBe([]);
 });
 
 test('func_combine_script treats require="0" (string) as no requirements', function (): void {
@@ -1693,7 +1693,7 @@ test('func_combine_script treats require="0" (string) as no requirements', funct
         'require' => '0',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->precedents)->toBe([]);
+    expect($t->scriptLoader->getAll()['x']->precedents)->toBe([]);
 });
 
 test('func_combine_script treats require="" (empty string) as no requirements', function (): void {
@@ -1705,7 +1705,7 @@ test('func_combine_script treats require="" (empty string) as no requirements', 
         'require' => '',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->precedents)->toBe([]);
+    expect($t->scriptLoader->getAll()['x']->precedents)->toBe([]);
 });
 
 test('func_combine_script treats require=false as no requirements', function (): void {
@@ -1717,7 +1717,7 @@ test('func_combine_script treats require=false as no requirements', function ():
         'require' => false,
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->precedents)->toBe([]);
+    expect($t->scriptLoader->getAll()['x']->precedents)->toBe([]);
 });
 
 test('func_combine_script treats a non-scalar require array as no requirements', function (): void {
@@ -1729,7 +1729,7 @@ test('func_combine_script treats a non-scalar require array as no requirements',
         'require' => [1, 2, 3],
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->precedents)->toBe([]);
+    expect($t->scriptLoader->getAll()['x']->precedents)->toBe([]);
 });
 
 test('func_combine_script discards a non-string path', function (): void {
@@ -1740,7 +1740,7 @@ test('func_combine_script discards a non-string path', function (): void {
         'path' => 42,
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->path)->toBeNull();
+    expect($t->scriptLoader->getAll()['x']->path)->toBeNull();
 });
 
 test('func_combine_script keeps a real string path', function (): void {
@@ -1751,7 +1751,7 @@ test('func_combine_script keeps a real string path', function (): void {
         'path' => 'x.js',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->path)->toBe('x.js');
+    expect($t->scriptLoader->getAll()['x']->path)->toBe('x.js');
 });
 
 test('func_combine_script defaults version to "0" when missing', function (): void {
@@ -1762,7 +1762,7 @@ test('func_combine_script defaults version to "0" when missing', function (): vo
         'path' => 'x.js',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->version)->toBe('0');
+    expect($t->scriptLoader->getAll()['x']->version)->toBe('0');
 });
 
 test('func_combine_script falls back to version "0" for a non-string version', function (): void {
@@ -1774,7 +1774,7 @@ test('func_combine_script falls back to version "0" for a non-string version', f
         'version' => 7,
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->version)->toBe('0');
+    expect($t->scriptLoader->getAll()['x']->version)->toBe('0');
 });
 
 test('func_combine_script keeps a real string version', function (): void {
@@ -1786,7 +1786,7 @@ test('func_combine_script keeps a real string version', function (): void {
         'version' => '3.2',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->version)->toBe('3.2');
+    expect($t->scriptLoader->getAll()['x']->version)->toBe('3.2');
 });
 
 test('func_combine_script defaults is_template to false when the template param is missing', function (): void {
@@ -1797,7 +1797,7 @@ test('func_combine_script defaults is_template to false when the template param 
         'path' => 'x.js',
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->is_template)->toBeFalse();
+    expect($t->scriptLoader->getAll()['x']->is_template)->toBeFalse();
 });
 
 test('func_combine_script sets is_template to true when the template param is truthy', function (): void {
@@ -1809,7 +1809,7 @@ test('func_combine_script sets is_template to true when the template param is tr
         'template' => true,
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->is_template)->toBeTrue();
+    expect($t->scriptLoader->getAll()['x']->is_template)->toBeTrue();
 });
 
 test('func_combine_script casts a non-bool truthy template value to a real bool before storing', function (): void {
@@ -1826,7 +1826,7 @@ test('func_combine_script casts a non-bool truthy template value to a real bool 
         'template' => 1,
     ]);
 
-    expect($t->scriptLoader->get_all()['x']->is_template)->toBeTrue();
+    expect($t->scriptLoader->getAll()['x']->is_template)->toBeTrue();
 });
 
 test('func_get_combined_scripts trigger_errors when load is missing', function (): void {
@@ -2396,7 +2396,7 @@ test('finalizeOutput clears the CSS loader so a second call does not re-emit alr
 
 test('finalizeOutput does not reprocess the combined-scripts tag once did_head is already true', function (): void {
     $t = TemplateTestFactory::build();
-    $t->scriptLoader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
+    $t->scriptLoader->getHeadScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
     $t->output = Template::COMBINED_SCRIPTS_TAG;
 
     $result = $t->fetchOutput();

@@ -46,7 +46,7 @@ final class FileCombiner
     /**
      * Deletes all combined files from cache directory.
      */
-    public static function clear_combined_files(CurrentConfig $currentConfig, Paths $paths): void
+    public static function clearCombinedFiles(CurrentConfig $currentConfig, Paths $paths): void
     {
         $root = $paths->root;
         $dir = opendir($root . $currentConfig->combinedDir);
@@ -88,20 +88,20 @@ final class FileCombiner
         foreach ($this->combinables as $combinable) {
             if ($combinable->path === null) {
                 // Same defensive "warn and omit" contract
-                // ScriptLoader::get_head_scripts() already applies to a
+                // ScriptLoader::getHeadScripts() already applies to a
                 // never-resolved path -- there's nothing to combine or
                 // pass through for an entry with no file at all.
                 trigger_error("Combinable {$combinable->id} has an undefined path", E_USER_WARNING);
                 continue;
             }
-            if ($combinable->is_remote($this->urlService)) {
-                $this->flush_pending($result, $pending, $key, $force);
+            if ($combinable->isRemote($this->urlService)) {
+                $this->flushPending($result, $pending, $key, $force);
                 $key = $ini_key;
                 $result[] = $combinable;
                 continue;
             }
             if (! $this->currentConfig->templateCombineFiles) {
-                $this->flush_pending($result, $pending, $key, $force);
+                $this->flushPending($result, $pending, $key, $force);
                 $key = $ini_key;
             }
 
@@ -112,7 +112,7 @@ final class FileCombiner
             }
             $pending[] = $combinable;
         }
-        $this->flush_pending($result, $pending, $key, $force);
+        $this->flushPending($result, $pending, $key, $force);
         return $result;
     }
 
@@ -142,7 +142,7 @@ final class FileCombiner
      * @param Combinable[] $pending
      * @param string[] $key
      */
-    private function flush_pending(array &$result, array &$pending, array $key, bool $force): void
+    private function flushPending(array &$result, array &$pending, array $key, bool $force): void
     {
         if (count($pending) > 1) {
             $key = join('>', $key);
@@ -152,7 +152,7 @@ final class FileCombiner
                 $header = '';
                 foreach ($pending as $combinable) {
                     $output .= "/*BEGIN {$combinable->path} */\n";
-                    $output .= $this->process_combinable($combinable, true, $force, $header);
+                    $output .= $this->processCombinable($combinable, true, $force, $header);
                     $output .= "\n";
                 }
                 $output = "/*BEGIN header */\n" . $header . "\n" . $output;
@@ -163,7 +163,7 @@ final class FileCombiner
             $result[] = new Combinable('combi', $file, false);
         } elseif (count($pending) === 1) {
             $header = '';
-            $this->process_combinable($pending[0], false, $force, $header);
+            $this->processCombinable($pending[0], false, $force, $header);
             $result[] = $pending[0];
         }
         $key = [];
@@ -178,7 +178,7 @@ final class FileCombiner
      *                       the minified file (only used when
      *                       $return_content===true)
      */
-    private function process_combinable($combinable, bool $return_content, bool $force, string &$header): ?string
+    private function processCombinable($combinable, bool $return_content, bool $force, string &$header): ?string
     {
         // Both real call sites only ever pass an item already drawn from
         // $pending, which combine()'s own loop above never adds a
@@ -210,7 +210,7 @@ final class FileCombiner
             $handle = $this->type . '.' . $combinable->id;
             $real_path = realpath($this->paths->root . $combinable->path);
             if ($real_path === false) {
-                throw new Exception("process_combinable(): file not found for {$combinable->path}");
+                throw new Exception("processCombinable(): file not found for {$combinable->path}");
             }
             $template->set_filename($handle, $real_path);
             $this->eventDispatcher->dispatchNotify(new CombinablePreparse($template, $combinable, $this)); // allow themes and plugins to set their own vars to template ...
@@ -220,18 +220,18 @@ final class FileCombiner
             $content = $template->parse($handle, true);
 
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header, $this->urlService, $this->paths, $this->eventDispatcher);
+                $content = self::processCss($content, $combinable->path, $header, $this->urlService, $this->paths, $this->eventDispatcher);
             } else {
-                $content = self::process_js($content);
+                $content = self::processJs($content);
             }
 
             if ($return_content) {
                 return $content;
             }
-            // Unlike flush_pending()'s multi-item ('combi') branch, this
+            // Unlike flushPending()'s multi-item ('combi') branch, this
             // single-item ('t'-prefixed) cache file has no other call site
             // that ever creates CurrentConfig::combinedDir() -- on a fresh
-            // install (or right after clear_combined_files(), which only
+            // install (or right after clearCombinedFiles(), which only
             // unlinks *.js/*.css and never rmdir()s the directory itself,
             // so this is only reachable pre-first-write) the very first
             // single-combinable template request would silently fail to
@@ -251,9 +251,9 @@ final class FileCombiner
                 throw new Exception('do_combine(): unable to read ' . $combinable->path);
             }
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header, $this->urlService, $this->paths, $this->eventDispatcher);
+                $content = self::processCss($content, $combinable->path, $header, $this->urlService, $this->paths, $this->eventDispatcher);
             } else {
-                $content = self::process_js($content);
+                $content = self::processJs($content);
             }
             return $content;
         }
@@ -266,7 +266,7 @@ final class FileCombiner
      *
      * @param string|null $js file content
      */
-    private static function process_js(?string $js): string
+    private static function processJs(?string $js): string
     {
         return trim((string) $js, " \t\r\n;") . ";\n";
     }
@@ -278,9 +278,9 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css(string $css, $file, string &$header, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher): string
+    private static function processCss(string $css, $file, string &$header, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher): string
     {
-        $css = self::process_css_rec($css, dirname($file), $header, $urlService, $paths);
+        $css = self::processCssRec($css, dirname($file), $header, $urlService, $paths);
         $postfilterEvent = $eventDispatcher->dispatchChange(new CombinedCssPostfilter($css));
 
         return $postfilterEvent->css;
@@ -292,7 +292,7 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css_rec(string $css, string $dir, &$header, UrlServiceInterface $urlService, Paths $paths): string
+    private static function processCssRec(string $css, string $dir, &$header, UrlServiceInterface $urlService, Paths $paths): string
     {
         /** @var non-empty-string */
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
@@ -331,9 +331,9 @@ final class FileCombiner
                 } else {
                     $sub_css = file_get_contents($paths->root . $dir . "/{$match[1]}");
                     if ($sub_css === false) {
-                        throw new Exception('process_css_rec(): unable to read ' . $dir . "/{$match[1]}");
+                        throw new Exception('processCssRec(): unable to read ' . $dir . "/{$match[1]}");
                     }
-                    $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header, $urlService, $paths);
+                    $replace[] = self::processCssRec($sub_css, dirname($dir . "/{$match[1]}"), $header, $urlService, $paths);
                 }
             }
             $css = str_replace($search, $replace, $css);

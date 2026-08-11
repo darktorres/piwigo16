@@ -13,11 +13,10 @@ use Override;
  *
  * Matches every subdirectory under `language/` — two or three lowercase
  * letters (ISO 639-1 for almost every shipped pack, except `kok_IN`
- * (Konkani), which has no 639-1 code and ships under its 639-2/3 code —
- * confirmed by listing every real directory under `language/`), an
- * underscore, and two uppercase ISO 3166-1 letters. Used as a filesystem
- * path component for `language/<code>/*.po`, so the shape constraint
- * doubles as a directory-traversal guard.
+ * (Konkani), which has no 639-1 code and ships under its 639-2/3 code),
+ * an underscore, and two uppercase ISO 3166-1 letters. Used as a
+ * filesystem path component for `language/<code>/*.po`, so the shape
+ * constraint doubles as a directory-traversal guard.
  */
 final readonly class LangCode implements StringVo
 {

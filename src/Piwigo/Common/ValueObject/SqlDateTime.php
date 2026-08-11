@@ -17,7 +17,7 @@ use Override;
  * treat the underlying string as well-formed. `Y-m-d H:i:s` is the shared
  * canonical string form both MySQL's DATETIME and PostgreSQL's TIMESTAMP
  * (without time zone) columns round-trip through this project's DBAL
- * driver setup (confirmed live against both), so this VO isn't
+ * driver setup, so this VO isn't
  * engine-specific despite the shape originating from MySQL's own output
  * convention.
  *

@@ -16,9 +16,9 @@ use Override;
  * rejected) so downstream SQL composition, comparisons, and formatting
  * can treat the underlying string as well-formed. `Y-m-d` is the shared
  * canonical string form both MySQL's DATE and PostgreSQL's DATE columns
- * round-trip through this project's DBAL driver setup (confirmed live
- * against both), so this VO isn't engine-specific despite the shape
- * originating from MySQL's own output convention.
+ * round-trip through this project's DBAL driver setup, so this VO isn't
+ * engine-specific despite the shape originating from MySQL's own output
+ * convention.
  *
  * Pairs with `SqlDateTime` for columns typed `DATE` rather than
  * `DATETIME`/`TIMESTAMP` (e.g. `images.date_metadata_update`).

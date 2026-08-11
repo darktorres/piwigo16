@@ -346,7 +346,7 @@ abstract class IntegrationTestCase extends TestCase
         // session left active by an earlier test's real login flow (this
         // class's own tearDown() only closes it *after* the test method
         // returns -- too late once a later test's resetDatabase() has
-        // already force-killed the connection PwgSession/SessionService
+        // already force-killed the connection SessionHandler/SessionService
         // was going to write through). Closing it here first flushes that
         // write against the connection while it's still alive, instead of
         // deferring to a tearDown() that will find it already severed
@@ -356,14 +356,14 @@ abstract class IntegrationTestCase extends TestCase
         // This early close can still lose the race: a *different*,
         // interleaving test's own `WITH (FORCE)` drop can have already
         // severed the connection behind *this* stale session's
-        // PwgSession/EntityManager before this method ever runs (confirmed
+        // SessionHandler/EntityManager before this method ever runs (confirmed
         // live via a real full-suite reproduction, traced down to a
         // Doctrine\DBAL\Exception\ConnectionLost -- "terminating
         // connection due to administrator command" -- thrown from
         // UnitOfWork::commit()'s own beginTransaction() call). This
         // write's own success or failure is moot either way: the very
         // next statement drops (and recreates) the whole database,
-        // discarding whatever row it would have touched. PwgSession::
+        // discarding whatever row it would have touched. SessionHandler::
         // write() already catches that exception and correctly returns
         // false per SessionHandlerInterface's contract, but PHP's own
         // session module then raises a native E_WARNING for the

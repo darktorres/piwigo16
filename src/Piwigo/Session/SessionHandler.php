@@ -10,7 +10,7 @@ use SessionHandlerInterface;
 use Throwable;
 
 // see https://php.watch/versions/8.4/session_set_save_handler-alt-signature-deprecated
-final class PwgSession implements SessionHandlerInterface
+final class SessionHandler implements SessionHandlerInterface
 {
     public function __construct(
         private readonly SessionService $service,
@@ -74,7 +74,7 @@ final class PwgSession implements SessionHandlerInterface
             // best-effort log write is strictly better than that.
             if ($this->currentLogger->isInitialized()) {
                 $this->currentLogger->get()
-                    ->warn('PwgSession::write() failed: ' . $e->getMessage());
+                    ->warn('SessionHandler::write() failed: ' . $e->getMessage());
             }
 
             return false;

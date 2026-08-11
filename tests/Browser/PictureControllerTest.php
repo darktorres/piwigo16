@@ -958,7 +958,7 @@ function pictureCookieJarSessionId(string $cookieJar): string
 
 /**
  * Reads the real `pwg_picture_deriv` session var straight out of the
- * DB-backed `sessions` table (Piwigo\Session\PwgSession's own save
+ * DB-backed `sessions` table (Piwigo\Session\SessionHandler's own save
  * handler), keyed the same way that handler stores it:
  * SessionService::remoteAddrHash() . $pwgIdCookieValue. The hash prefix
  * is IP-derived (the first 2 octets of an IPv4 REMOTE_ADDR, hex-encoded

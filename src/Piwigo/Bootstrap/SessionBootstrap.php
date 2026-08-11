@@ -9,13 +9,13 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
-use Piwigo\Session\PwgSession;
+use Piwigo\Session\SessionHandler;
 use Piwigo\Session\SessionService;
 
 /**
  * Installs Piwigo's DB-backed session save handler before session_start().
  * SessionMiddleware's docblock documents this as the thing that registers
- * PwgSession as the save handler on every real request for the legacy
+ * SessionHandler as the save handler on every real request for the legacy
  * bootstrap path.
  *
  * Lives in Bootstrap (L4), not Piwigo\Session (L1): the body constructs
@@ -43,7 +43,7 @@ final class SessionBootstrap
             if (! $currentLogger instanceof CurrentLogger) {
                 throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
             }
-            session_set_save_handler(new PwgSession($sessionService, $currentLogger));
+            session_set_save_handler(new SessionHandler($sessionService, $currentLogger));
 
             if (function_exists('ini_set')) {
                 $session_use_cookies = RequestBootstrap::currentConfig()->sessionUseCookies;

@@ -640,7 +640,7 @@ it('shows the newsletter subscription promo panel for an account old enough with
 // uncovered.
 
 it('skips malformed cached activity-week/day entries from a stale-but-still-"fresh" session without a fatal or warning', function (): void {
-    // $_SESSION['cache_activity_last_weeks'] is DB-backed (PwgSession /
+    // $_SESSION['cache_activity_last_weeks'] is DB-backed (SessionHandler /
     // SessionService -- see Piwigo\Session\SessionRepository), keyed by the
     // exact same value PHP's own session cookie carries, so a real
     // malformed cache entry is reachable by writing directly into that row

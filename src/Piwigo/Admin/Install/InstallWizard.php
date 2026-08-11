@@ -63,8 +63,8 @@ use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\HttpClientService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\PwgSession;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionHandler;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
@@ -671,7 +671,7 @@ final class InstallWizard
             // marked active and this block ran unconditionally in the
             // original, without SessionBootstrap::register()'s
             // session_save_handler === 'db' guard)
-            session_set_save_handler(new PwgSession(new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), InstallBootstrap::currentLogger()));
+            session_set_save_handler(new SessionHandler(new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), InstallBootstrap::currentLogger()));
             if (function_exists('ini_set')) {
                 ini_set('session.use_cookies', $this->currentConfig->sessionUseCookies);
                 ini_set('session.use_only_cookies', $this->currentConfig->sessionUseOnlyCookies);

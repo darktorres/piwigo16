@@ -6,12 +6,12 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Session\PwgSession;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionHandler;
 use Piwigo\Session\SessionService;
 
 /**
- * Piwigo\Session\PwgSession -- a thin SessionHandlerInterface delegate
+ * Piwigo\Session\SessionHandler -- a thin SessionHandlerInterface delegate
  * to SessionService, real PHP session-module entry points. No dedicated
  * Integration/Browser spec of its own.
  *
@@ -25,7 +25,7 @@ use Piwigo\Session\SessionService;
 test('open/write/read/close/destroy/gc all delegate to a real SessionService round trip', function (): void {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class);
     $service = new SessionService($repo, new CurrentConfig());
-    $pwgSession = new PwgSession($service, new CurrentLogger());
+    $pwgSession = new SessionHandler($service, new CurrentLogger());
     $sessionId = str_replace('.', '-', uniqid('pwg-session-test-', true));
 
     expect($pwgSession->open('', ''))

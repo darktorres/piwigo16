@@ -963,7 +963,7 @@ function bmCookieJarSessionId(string $cookieJar): string
 
 /**
  * Reads the real session `data` blob straight out of the DB-backed
- * `sessions` table (Piwigo\Session\PwgSession's own save handler) for the
+ * `sessions` table (Piwigo\Session\SessionHandler's own save handler) for the
  * given `pwg_id` cookie value -- a `LIKE '%<id>'` suffix match sidesteps
  * SessionService::getRemoteAddrSessionHash()'s own IP-derived prefix
  * entirely (same rationale as PasswordControllerTest.php's own

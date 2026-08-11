@@ -11,12 +11,12 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Session\PwgSession;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionHandler;
 use Piwigo\Session\SessionService;
 
 /**
- * Piwigo\Session\PwgSession -- the SessionHandlerInterface adapter
+ * Piwigo\Session\SessionHandler -- the SessionHandlerInterface adapter
  * registered via session_set_save_handler(), had zero dedicated coverage.
  * SessionServiceTest (Unit suite) deliberately only covers the
  * DB-independent methods (an unreachable db_host, by design); the real
@@ -35,11 +35,11 @@ use Piwigo\Session\SessionService;
  * CLI/test process with no request context, which is exactly this test
  * process without the explicit REMOTE_ADDR set below.
  */
-final class PwgSessionTest extends IntegrationTestCase
+final class SessionHandlerTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
-    private PwgSession $pwgSession;
+    private SessionHandler $pwgSession;
 
     private ?string $originalRemoteAddr = null;
 
@@ -72,7 +72,7 @@ final class PwgSessionTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
 
-        $this->pwgSession = new PwgSession($service, $currentLogger);
+        $this->pwgSession = new SessionHandler($service, $currentLogger);
     }
 
     #[Override]

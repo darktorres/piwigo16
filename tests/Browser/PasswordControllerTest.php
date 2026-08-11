@@ -304,10 +304,10 @@ function passwordCookieJarSessionId(string $cookieJar): string
 
 /**
  * Reads the real session `data` blob straight out of the DB-backed
- * `sessions` table (Piwigo\Session\PwgSession's own save handler) for the
+ * `sessions` table (Piwigo\Session\SessionHandler's own save handler) for the
  * given `pwg_id` cookie value -- same suffix-match rationale as
  * PictureControllerTest.php's own pictureSessionDerivType() (the
- * IP-derived hash PwgSession prepends to the raw id isn't safe to
+ * IP-derived hash SessionHandler prepends to the raw id isn't safe to
  * hardcode).
  */
 function passwordSessionData(string $pwgIdCookieValue): string

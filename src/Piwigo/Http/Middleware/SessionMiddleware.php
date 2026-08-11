@@ -13,7 +13,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Starts the PHP session (skipping if legacy common.inc.php already
- * started one -- it already registers PwgSession as the save handler on
+ * started one -- it already registers SessionHandler as the save handler on
  * every real request via Piwigo\Bootstrap\SessionBootstrap::register()),
  * then hydrates/persists a Session VO as a request attribute.
  *

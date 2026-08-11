@@ -51,42 +51,57 @@ final class FeedHelper
     public function generateRss2Feed(array $channel, array $items): string
     {
         $channel_encoding = $channel['encoding'] ?? '';
-        $channel_title = $channel['title'] ?? '';
-        $channel_link = $channel['link'] ?? '';
+        $channel_title = htmlspecialchars($channel['title'] ?? '');
+        $channel_link = htmlspecialchars($channel['link'] ?? '');
+        $last_build_date = new DateTimeImmutable()
+            ->format(\DATE_RFC2822);
 
-        $feed = '<?xml version="1.0" encoding="' . $channel_encoding . '"?>' . "\n";
-        $feed .= "<rss version=\"2.0\">\n";
-        $feed .= "  <channel>\n";
-        $feed .= '    <title>' . htmlspecialchars($channel_title) . "</title>\n";
-        $feed .= '    <link>' . htmlspecialchars($channel_link) . "</link>\n";
-        $feed .= "    <description></description>\n";
-        $feed .= '    <lastBuildDate>' . new DateTimeImmutable()->format(\DATE_RFC2822) . "</lastBuildDate>\n";
+        $feed = <<<XML
+        <?xml version="1.0" encoding="{$channel_encoding}"?>
+        <rss version="2.0">
+          <channel>
+            <title>{$channel_title}</title>
+            <link>{$channel_link}</link>
+            <description></description>
+            <lastBuildDate>{$last_build_date}</lastBuildDate>
+        XML . "\n";
 
         foreach ($items as $item) {
-            $item_title = $item['title'] ?? '';
-            $item_link = $item['link'] ?? '';
-            $item_description = $item['description'] ?? '';
+            $item_title = htmlspecialchars(strip_tags($item['title'] ?? ''));
+            $item_link_raw = $item['link'] ?? '';
+            $item_link = htmlspecialchars($item_link_raw);
+            $item_description_raw = $item['description'] ?? '';
             $item_author = $item['author'] ?? '';
             $item_date = $item['date'] ?? '';
-            $item_guid = $item['guid'] ?? '';
+            $item_guid_raw = $item['guid'] ?? '';
             $item_html = $item['html'] ?? false;
+            $item_description = $item_html
+                ? '<![CDATA[' . $item_description_raw . ']]>'
+                : htmlspecialchars($item_description_raw);
+            $item_guid = htmlspecialchars($item_guid_raw !== '' ? $item_guid_raw : $item_link_raw);
 
-            $feed .= "    <item>\n";
-            $feed .= '      <title>' . htmlspecialchars(strip_tags($item_title)) . "</title>\n";
-            $feed .= '      <link>' . htmlspecialchars($item_link) . "</link>\n";
-            $feed .= '      <description>' . ($item_html ? '<![CDATA[' . $item_description . ']]>' : htmlspecialchars($item_description)) . "</description>\n";
+            $feed .= <<<XML
+                <item>
+                  <title>{$item_title}</title>
+                  <link>{$item_link}</link>
+                  <description>{$item_description}</description>
+            XML . "\n";
             if ($item_author !== '') {
                 $feed .= '      <author>' . htmlspecialchars($item_author) . "</author>\n";
             }
             if ($item_date !== '') {
                 $feed .= '      <pubDate>' . new DateTimeImmutable($item_date)->format(\DATE_RFC2822) . "</pubDate>\n";
             }
-            $feed .= '      <guid isPermaLink="false">' . htmlspecialchars($item_guid !== '' ? $item_guid : $item_link) . "</guid>\n";
-            $feed .= "    </item>\n";
+            $feed .= <<<XML
+                  <guid isPermaLink="false">{$item_guid}</guid>
+                </item>
+            XML . "\n";
         }
 
-        $feed .= "  </channel>\n";
-        $feed .= "</rss>\n";
+        $feed .= <<<'XML'
+          </channel>
+        </rss>
+        XML . "\n";
 
         return $feed;
     }

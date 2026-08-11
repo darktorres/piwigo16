@@ -27,40 +27,40 @@ final class PwgXmlRpcEncoder extends PwgResponseEncoder
         if ($response instanceof PwgError) {
             $code = $response->code();
             $msg = htmlspecialchars($response->message());
-            $ret = <<<EOD
-<methodResponse>
-  <fault>
-    <value>
-      <struct>
-        <member>
-          <name>faultCode</name>
-          <value><int>{$code}</int></value>
-        </member>
-        <member>
-          <name>faultString</name>
-          <value><string>{$msg}</string></value>
-        </member>
-      </struct>
-    </value>
-  </fault>
-</methodResponse>
-EOD;
+            $ret = <<<XML
+            <methodResponse>
+              <fault>
+                <value>
+                  <struct>
+                    <member>
+                      <name>faultCode</name>
+                      <value><int>{$code}</int></value>
+                    </member>
+                    <member>
+                      <name>faultString</name>
+                      <value><string>{$msg}</string></value>
+                    </member>
+                  </struct>
+                </value>
+              </fault>
+            </methodResponse>
+            XML;
             return $ret;
         }
 
         parent::flattenResponse($response);
         $ret = self::xmlrpcEncode($response);
-        $ret = <<<EOD
-<methodResponse>
-  <params>
-    <param>
-      <value>
-        {$ret}
-      </value>
-    </param>
-  </params>
-</methodResponse>
-EOD;
+        $ret = <<<XML
+        <methodResponse>
+          <params>
+            <param>
+              <value>
+                {$ret}
+              </value>
+            </param>
+          </params>
+        </methodResponse>
+        XML;
         return $ret;
     }
 

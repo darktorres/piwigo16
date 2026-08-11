@@ -110,12 +110,11 @@ final readonly class CalendarRepository
             }
         }
 
-        // Real bug found live -- $orderBySql traces
-        // back to CurrentConfig::orderBy(), admin-settable raw SQL text
-        // that can legitimately be `ORDER BY RAND()`. Same real gap
-        // already fixed for CategoryRepository's own raw-DBAL fallback
-        // ("function rand() does not exist" against a real Postgres
-        // server otherwise).
+        // $orderBySql traces back to CurrentConfig::orderBy(), admin-settable
+        // raw SQL text that can legitimately be `ORDER BY RAND()`. Same real
+        // gap already fixed for CategoryRepository's own raw-DBAL fallback
+        // ("function rand() does not exist" against a real Postgres server
+        // otherwise).
         $orderBySql = str_ireplace('RAND()', SqlDialect::randomFunction() . '()', $orderBySql);
 
         $ids = $this->em->getConnection()
@@ -182,7 +181,7 @@ final readonly class CalendarRepository
      *
      * DQL's own `GroupByItem` grammar only accepts a path expression or a
      * `ResultVariable` (a SELECT-list alias), never an arbitrary function
-     * call -- confirmed against `vendor/doctrine/orm`'s own
+     * call, per `vendor/doctrine/orm`'s own
      * `Parser::GroupByItem()` -- so `GROUP BY period` (the alias) is both
      * the only legal DQL shape and, per `SqlWalker::walkResultVariable()`,
      * compiles to the exact same `GROUP BY period` SQL text the original
@@ -197,10 +196,10 @@ final readonly class CalendarRepository
      */
     public function countGroupedByLevel(string $levelDql, CalendarQueryScope $scope, SqlCondition $dateWhere): array
     {
-        // Real bug found live -- no ORDER BY, so row
-        // order was never guaranteed; MySQL and PostgreSQL disagreed on
-        // it (nav bar items appearing out of chronological order).
-        // $levelDql is always one of YEAR()/WEEK()/WEEKDAY()'s own
+        // Without an explicit ORDER BY, row order was never guaranteed;
+        // MySQL and PostgreSQL disagreed on it (nav bar items appearing out
+        // of chronological order). $levelDql is always one of YEAR()/WEEK()/
+        // WEEKDAY()'s own
         // numeric DQL functions, so a plain numeric ASC sort is always
         // correct here, matching countByMonthDay()/countByDayOfMonth()'s
         // own established "period alone is group+sort key" precedent.
@@ -241,10 +240,10 @@ final readonly class CalendarRepository
      * be pre-joined by the caller into one `CONCAT(...)` DQL expression
      * string, but DQL's `CONCAT()` grammar only accepts `StringPrimary`
      * arguments -- a bare function call or literal, never a trailing
-     * arithmetic suffix like `WEEK(...)+1` (confirmed empirically: the
-     * DQL parser rejects it, `StringPrimary()`'s own grammar has no
-     * arithmetic-expression branch, unlike a plain `SelectExpression`
-     * context which does). Solved by selecting each level expression as
+     * arithmetic suffix like `WEEK(...)+1` (the DQL parser rejects it --
+     * `StringPrimary()`'s own grammar has no arithmetic-expression branch,
+     * unlike a plain `SelectExpression` context which does). Solved by
+     * selecting each level expression as
      * its own aliased column (`part0`, `part1`, ...) instead -- a bare
      * `SelectExpression` position, which does allow `FUNC(...)+1` (per
      * `Parser::SelectExpression()`'s own `isMathOperator()` lookahead
@@ -302,8 +301,8 @@ final readonly class CalendarRepository
      * functionally dependent on the DATE_FORMAT()-derived `period` alias)
      * has no direct DQL translation -- DQL's `GroupByItem` grammar
      * rejects an arbitrary function-call expression outright, only a
-     * path expression or a `ResultVariable` (SELECT-list alias) is legal
-     * (confirmed against `vendor/doctrine/orm`'s own grammar). Solved by
+     * path expression or a `ResultVariable` (SELECT-list alias) is legal,
+     * per `vendor/doctrine/orm`'s own grammar. Solved by
      * giving `YEAR(...)`/`MONTH(...)` their own SELECT-list aliases
      * (`yr`/`mo`) so `GROUP BY period, yr, mo` and `ORDER BY yr DESC, mo
      * ASC` are both legal alias references -- the 2 extra columns this
@@ -420,8 +419,8 @@ final readonly class CalendarRepository
      *
      * The final by-id row is fetched via explicit `AS` aliases matching
      * `SrcImage`'s own raw snake_case constructor
-     * contract exactly (`representative_ext`, confirmed by reading it) --
-     * a mapping shim at this call site, not a `SrcImage` redesign. All 7
+     * contract exactly (`representative_ext`) -- a mapping shim at this
+     * call site, not a `SrcImage` redesign. All 7
      * selected columns (id/file/representative_ext/path/width/height/
      * rotation) are plain scalar-typed on `ImageEntity`, no custom
      * Doctrine Type to unwrap.

@@ -88,7 +88,6 @@ final readonly class CalendarRenderer
     ): CalendarRenderResult {
         $template = $this->template;
 
-        // ------------------ initialize the condition on items to take into account ---
         $conn = DbConnection::build();
         $accessLevelChecker = new AccessLevelChecker($this->currentUser, $this->currentConfig);
         $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState, $accessLevelChecker);
@@ -120,7 +119,6 @@ final readonly class CalendarRenderer
             }
         }
 
-        // -------------------------------------- initialize the calendar parameters ---
         TimingHelper::debug('start initialize_calendar', $this->pageState);
 
         $fields = [

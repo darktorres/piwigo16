@@ -630,12 +630,23 @@ test('findAverageRatePerElement() matches the fixture', function (): void {
 });
 
 test('findTopRatedImageIds() orders by rating_score desc', function (): void {
-    // rating_score: 3=5.00, 1=4.50, 2=3.00, 4=2.00, 5=NULL (sorts last)
+    // rating_score: 3=5.00, 1=4.50, 2=3.00, 4=2.00, 5=NULL (sorts last).
+    // findTopRatedImageIds() itself has no WHERE clause (it ranks every
+    // real row in the table), so filtered down to the fixture's own 5
+    // ids before comparing, not a bare positional match -- several OTHER
+    // Unit-suite files insert a disposable image (a real, higher
+    // auto-increment id, unrated so it would sort last but still inside
+    // a limit(10) window) for the span of their own test, which an
+    // unfiltered comparison here could catch mid-test under --parallel.
     $repo = rateTestRepo();
+    $fixtureIds = [1, 2, 3, 4, 5];
 
-    expect($repo->findTopRatedImageIds(3))
-        ->toBe([3, 1, 2])
-        ->and($repo->findTopRatedImageIds(10))
+    $top3 = array_values(array_intersect($repo->findTopRatedImageIds(3), $fixtureIds));
+    expect($top3)
+        ->toBe([3, 1, 2]);
+
+    $top10 = array_values(array_intersect($repo->findTopRatedImageIds(10), $fixtureIds));
+    expect($top10)
         ->toBe([3, 1, 2, 4, 5]);
 });
 

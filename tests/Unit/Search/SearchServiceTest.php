@@ -1703,6 +1703,13 @@ test('qsearchGetTags() direct call with a nullable wildcarded tag scope matches 
     // QMultiToken::push() through the normal getQuickSearchResultsNoCache()
     // path -- calling qsearchGetTags() directly with a hand-built
     // nullable 'tag' scope is the only way to reach this branch.
+    //
+    // Filtered down to the fixture's own 5 ids before comparing, not a
+    // bare match -- these 4 sibling tests query "every tagged/untagged/
+    // categorized/uncategorized image" with no id bound at all, so a
+    // disposable image another Unit-suite file inserts (tagged or not,
+    // categorized or not) for the span of its own test could land in
+    // any one of them under --parallel.
     $scopes = [new QSearchScope('tag', [], true)];
     $expr = new QExpression('tag:*', $scopes);
     $qsr = new QResults();
@@ -1710,7 +1717,7 @@ test('qsearchGetTags() direct call with a nullable wildcarded tag scope matches 
     searchServiceTestService()
         ->qsearchGetTags($expr, $qsr);
 
-    $imageIds = $qsr->tag_iids[0];
+    $imageIds = array_values(array_intersect($qsr->tag_iids[0], [1, 2, 3, 4, 5]));
     sort($imageIds);
     expect($imageIds)
         ->toBe([1, 2, 3]);
@@ -1724,7 +1731,7 @@ test('qsearchGetTags() direct call with a nullable empty tag scope matches untag
     searchServiceTestService()
         ->qsearchGetTags($expr, $qsr);
 
-    $imageIds = $qsr->tag_iids[0];
+    $imageIds = array_values(array_intersect($qsr->tag_iids[0], [1, 2, 3, 4, 5]));
     sort($imageIds);
     expect($imageIds)
         ->toBe([4, 5]);
@@ -1741,7 +1748,7 @@ test('qsearchGetCategories() direct call with a nullable wildcarded category sco
     searchServiceTestService()
         ->qsearchGetCategories($expr, $qsr);
 
-    $imageIds = $qsr->cat_iids[0];
+    $imageIds = array_values(array_intersect($qsr->cat_iids[0], [1, 2, 3, 4, 5]));
     sort($imageIds);
     expect($imageIds)
         ->toBe([1, 2, 3, 4, 5]);
@@ -1755,7 +1762,7 @@ test('qsearchGetCategories() direct call with a nullable empty category scope ma
     searchServiceTestService()
         ->qsearchGetCategories($expr, $qsr);
 
-    expect($qsr->cat_iids[0])->toBe([]);
+    expect(array_intersect($qsr->cat_iids[0], [1, 2, 3, 4, 5]))->toBe([]);
 });
 
 test('qsearchGetImages() dispatches the hook for an unrecognized scope and applies the returned clause', function (): void {

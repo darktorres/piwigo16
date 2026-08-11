@@ -814,32 +814,44 @@ test('findAddMethodBreakdown reports real string/int columns for at least one re
 
 test('deleteNonStorageCategoryLinks clears the identity map after a raw write outside the ORM', function (): void {
     // Kills line 919's RemoveMethodCall ($em->clear()).
-    $repo = imageRepositoryTestRepo();
-    $cached = $repo->find(ImageId::from(1));
-    expect($cached)
-        ->not->toBeNull();
+    //
+    // A fresh, disposable image/image_category pair, not fixture image
+    // 1 -- a prior version of this test deleted image 1's own real
+    // image_category row for the span of the test (storage_category_id
+    // NULL and no $categories keep-list skips both of the method's own
+    // exclusion guards, so it really did delete it, restored in
+    // finally). Confirmed live: this raced under --parallel against
+    // OTHER Unit-suite files reading image 1's real category membership
+    // (CalendarRepositoryTest.php's own findImageIds() tests, beyond the
+    // findTopRatedImageIds()/SectionRepositoryTest.php risk this test
+    // already anticipated) -- deleteNonStorageCategoryLinks() itself is
+    // generic over any image id, so a disposable one with the same
+    // "NULL storage_category_id, one category link" shape exercises the
+    // identical code path without touching shared fixture data at all.
+    $conn = DbConnection::build();
+    $conn->insert('images', [
+        'file' => 'p17-unit-test-identity-map.jpg',
+        'path' => 'upload/p17-unit-test-identity-map.jpg',
+    ]);
+    $imageId = (int) $conn->lastInsertId();
+    $rankColumn = $conn->getDatabasePlatform()
+        ->quoteSingleIdentifier('rank');
+    $conn->executeStatement("INSERT INTO image_category (image_id, category_id, {$rankColumn}) VALUES (?, 1, 1)", [$imageId]);
 
-    // Fixture image 1's own storage_category_id is NULL and no
-    // $categories keep-list is passed here, so both of the method's own
-    // exclusion guards are skipped -- this really does delete image 1's
-    // real fixture image_category row (id=1, category_id=1, rank=1), not
-    // just a throwaway one. Restore it, or every other Unit test that
-    // reads image 1's real category membership (findTopRatedImageIds()
-    // and friends in SectionRepositoryTest.php) breaks.
     try {
-        $repo->deleteNonStorageCategoryLinks([1], []);
+        $repo = imageRepositoryTestRepo();
+        $cached = $repo->find(ImageId::from($imageId));
+        expect($cached)
+            ->not->toBeNull();
 
-        $refetched = $repo->find(ImageId::from(1));
+        $repo->deleteNonStorageCategoryLinks([$imageId], []);
+
+        $refetched = $repo->find(ImageId::from($imageId));
         expect($refetched)
             ->not->toBe($cached);
     } finally {
-        $conn = DbConnection::build();
-        $exists = $conn->fetchOne('SELECT COUNT(*) FROM image_category WHERE image_id = 1 AND category_id = 1');
-        if ($exists === 0) {
-            $rankColumn = $conn->getDatabasePlatform()
-                ->quoteSingleIdentifier('rank');
-            $conn->executeStatement("INSERT INTO image_category (image_id, category_id, {$rankColumn}) VALUES (1, 1, 1)");
-        }
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 

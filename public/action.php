@@ -11,9 +11,8 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// P22: page logic moved to Piwigo\Controller\ActionController
-// (config/routes.php's `/action.php` route); this file is now pure
-// bootstrap + dispatch, matching every other P22 controller's root file.
+// Page logic lives in Piwigo\Controller\ActionController (config/routes.php's
+// `/action.php` route); this file is pure bootstrap + dispatch.
 // session_cache_limiter('public') stays here (not in the controller) --
 // it must run before session_start(), which RequestBootstrap::
 // bootEntryPoint() triggers directly below, well before

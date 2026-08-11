@@ -11,11 +11,10 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// P22/P23: page logic lives in Piwigo\Controller\ImageDerivativeController
-// (config/routes.php's `/i.php{tail}` route); this file is now pure
-// bootstrap + dispatch, matching every other P22 controller's root file --
-// including index.php's own RequestBootstrap::bootEntryPoint() +
-// RequestPipeline::handle() shape.
+// Page logic lives in Piwigo\Controller\ImageDerivativeController
+// (config/routes.php's `/i.php{tail}` route); this file is pure
+// bootstrap + dispatch, same RequestBootstrap::bootEntryPoint() +
+// RequestPipeline::handle() shape as index.php.
 require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\RequestPipeline;

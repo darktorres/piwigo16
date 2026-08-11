@@ -11,9 +11,8 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// P22: page logic moved to Piwigo\Controller\ProfileController
-// (config/routes.php's `/profile.php` route); this file is now pure
-// bootstrap + dispatch, matching every other P22 controller's root file.
+// Page logic lives in Piwigo\Controller\ProfileController (config/routes.php's
+// `/profile.php` route); this file is pure bootstrap + dispatch.
 require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\RequestPipeline;

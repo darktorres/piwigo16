@@ -43,7 +43,7 @@ jobs:
       - run: composer test
 
   ecs:
-    name: ECS (style, non-blocking until P5)
+    name: ECS (style, non-blocking)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -153,7 +153,7 @@ jobs:
             --ignore=GHSA-w5hq-g745-h8pq
 
   deptrac:
-    name: Deptrac (from P6)
+    name: Deptrac
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -293,7 +293,7 @@ jobs:
       - run: bun run size-limit
 
   k6-load:
-    name: k6 load (from P32)
+    name: k6 load
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: true
@@ -302,7 +302,7 @@ jobs:
       # tests/Load/*.js doesn't exist yet — non-blocking (warning) per
       # docs/PLAN.md, a no-op until it's added.
       - if: hashFiles('tests/Load/**') != ''
-        run: echo "k6 load surface not present yet (P32)"
+        run: echo "k6 load surface not present yet"
 
   commitlint:
     name: commitlint
@@ -332,7 +332,7 @@ jobs:
           fail_level: error
 
   test-file-inventory:
-    name: Test file inventory (P0 "just test" lesson)
+    name: Test file inventory
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -787,7 +787,7 @@ jobs:
           retention-days: 7
 
   restore-drill:
-    name: Restore drill (backup/restore proof, P4)
+    name: Restore drill (backup/restore proof)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     services:

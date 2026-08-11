@@ -20,10 +20,8 @@ use Symfony\Component\Console\Command\Command;
 // gain real backing services -- same discipline as config/container.php
 // and config/routes.php.
 //
-// Maintenance*Command (found missing by a 2026-07-13 audit -- P12 planned
-// all 4 maintenance:* commands but none were ever built) autowire
-// DbMaintenanceRepository (built P21, had zero real callers until now)
-// with zero new container.php entries. All 4 are now registered.
+// The 4 Maintenance*Command classes autowire DbMaintenanceRepository with
+// zero new container.php entries.
 /**
  * @return list<class-string<Command>>
  */

@@ -11,9 +11,9 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// web-vitals RUM beacon endpoint (docs/PLAN.md P1, item 11b). Bare
-// bootstrap + dispatch, matching every other root controller's own shape
-// (e.g. about.php) — .htaccess rewrites the clean /analytics/vitals URL
+// web-vitals RUM beacon endpoint. Bare bootstrap + dispatch, same shape
+// as every other root controller file (e.g. about.php) — .htaccess
+// rewrites the clean /analytics/vitals URL
 // here; config/routes.php's own route matches that clean path, not this
 // filename (Router::pathInfo() falls back to the raw REQUEST_URI once
 // SCRIPT_NAME stops being a prefix of it, same mechanism the bare "/" ->

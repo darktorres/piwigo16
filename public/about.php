@@ -11,11 +11,10 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// P22 proof-of-concept: the real PSR-15 pipeline (dormant since P9) is now
-// live traffic's actual dispatcher. Page logic itself moved to
+// The PSR-15 middleware pipeline (RequestPipeline::handle()) is live
+// traffic's actual dispatcher. Page logic lives in
 // Piwigo\Controller\AboutController (config/routes.php's `/about.php`
-// route); this file is now pure bootstrap + dispatch, matching every other
-// P22 controller's own root-file shape.
+// route); this file is pure bootstrap + dispatch.
 require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\RequestPipeline;

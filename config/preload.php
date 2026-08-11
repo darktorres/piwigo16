@@ -28,11 +28,8 @@ use Piwigo\Routing\Router;
 // php.ini here (a deployment-config step); CI runs without preload (tests
 // need fresh resolution) per the doc's own text.
 //
-// Scoped to classes that exist today. Grows automatically as later
-// phases add their own hot classes -- no phase "owns" finishing this
-// list. The doc's full target list (Config, ConfigLoader, Paths, AppInfo,
-// EntityManager, Connection) references classes that don't exist yet
-// (P13/P14/P16).
+// Scoped to classes that are actually hot on the request path today;
+// grows one entry at a time as new hot classes are identified.
 
 require __DIR__ . '/../vendor/autoload.php';
 

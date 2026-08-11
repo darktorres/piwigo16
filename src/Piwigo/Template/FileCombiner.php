@@ -32,13 +32,13 @@ final class FileCombiner
      */
     public function __construct(
         private readonly AccessLevelChecker $accessLevelChecker,
-        private $type,
+        private string $type,
         private readonly UrlServiceInterface $urlService,
         private readonly Paths $paths,
         private readonly EventDispatcher $eventDispatcher,
         private readonly CurrentTemplate $currentTemplate,
         private readonly CurrentConfig $currentConfig,
-        private $combinables = [],
+        private array $combinables = [],
     ) {
         $this->is_css = $this->type === 'css';
     }
@@ -64,7 +64,7 @@ final class FileCombiner
     /**
      * @param Combinable|Combinable[] $combinable
      */
-    public function add($combinable): void
+    public function add(Combinable|array $combinable): void
     {
         if (is_array($combinable)) {
             $this->combinables = array_merge($this->combinables, $combinable);
@@ -173,12 +173,11 @@ final class FileCombiner
     /**
      * Process one combinable file.
      *
-     * @param Combinable $combinable
      * @param string $header CSS directives that must appear first in
      *                       the minified file (only used when
      *                       $return_content===true)
      */
-    private function processCombinable($combinable, bool $return_content, bool $force, string &$header): ?string
+    private function processCombinable(Combinable $combinable, bool $return_content, bool $force, string &$header): ?string
     {
         // Both real call sites only ever pass an item already drawn from
         // $pending, which combine()'s own loop above never adds a
@@ -273,11 +272,10 @@ final class FileCombiner
     /**
      * Process a CSS file.
      *
-     * @param string $file
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function processCss(string $css, $file, string &$header, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher): string
+    private static function processCss(string $css, string $file, string &$header, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher): string
     {
         $css = self::processCssRec($css, dirname($file), $header, $urlService, $paths);
         $postfilterEvent = $eventDispatcher->dispatchChange(new CombinedCssPostfilter($css));
@@ -291,7 +289,7 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function processCssRec(string $css, string $dir, &$header, UrlServiceInterface $urlService, Paths $paths): string
+    private static function processCssRec(string $css, string $dir, string &$header, UrlServiceInterface $urlService, Paths $paths): string
     {
         /** @var non-empty-string */
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";

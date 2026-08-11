@@ -1676,7 +1676,11 @@ test('loadExternalFilters derives the callback_key from an [object, method] arra
     // object element (not a string) exercises array_map()'s
     // get_debug_type() fallback; the 'getExtent' element exercises its
     // is_string() branch -- both sides of the same ternary in one call.
-    $t->setPrefilter('tail', $t->getExtent(...));
+    // (Deliberately the array form, not `$t->getExtent(...)` -- that
+    // first-class-callable syntax produces a Closure instead, which
+    // would take the get_debug_type()-only fallback branch below it and
+    // never exercise the array_map() path at all.)
+    $t->setPrefilter('tail', [$t, 'getExtent']);
     $before = $t->smarty->compile_id;
 
     $t->loadExternalFilters('tail');

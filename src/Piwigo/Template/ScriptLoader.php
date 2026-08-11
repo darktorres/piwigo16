@@ -197,10 +197,9 @@ final class ScriptLoader
     }
 
     /**
-     * @param string $code
      * @param string[] $require
      */
-    public function addInline($code, $require): void
+    public function addInline(string $code, array $require): void
     {
         ! (bool) $this->did_footer || trigger_error('Attempt to add inline script but the footer has been written', E_USER_WARNING);
         if ($require !== []) {
@@ -219,8 +218,6 @@ final class ScriptLoader
     }
 
     /**
-     * @param string $id
-     * @param int $load_mode
      * @param string[] $require
      * @param string|null $path null defers to fillWellKnown()'s
      *   self::$known_paths lookup by $id — this method's own UI-core-dependency
@@ -229,7 +226,7 @@ final class ScriptLoader
      *   busting, mirroring Script::__construct()'s own contract (this
      *   method just forwards $version straight into `new Script(...)`)
      */
-    public function add($id, $load_mode, $require, $path, $version = '0', bool $is_template = false): void
+    public function add(string $id, int $load_mode, array $require, ?string $path, string|false $version = '0', bool $is_template = false): void
     {
         if ($this->did_head && $load_mode === 0) {
             trigger_error("Attempt to add script {$id} but the head has been written", E_USER_WARNING);
@@ -375,7 +372,7 @@ final class ScriptLoader
      *
      * @param string $id in self::$known_paths
      */
-    private static function fillWellKnown($id, Script $script): void
+    private static function fillWellKnown(string $id, Script $script): void
     {
         if (in_array($script->path, [null, ''], true) && isset(self::$known_paths[$id])) {
             $script->path = self::$known_paths[$id];
@@ -411,9 +408,8 @@ final class ScriptLoader
      * Add a known jQuery UI script to loaded scripts.
      *
      * @param string $id in self::$known_paths
-     * @param int $load_mode
      */
-    private function loadKnownRequiredScript($id, $load_mode): bool
+    private function loadKnownRequiredScript(string $id, int $load_mode): bool
     {
         if (isset(self::$known_paths[$id]) or str_starts_with($id, 'jquery.ui.')) {
             $this->add($id, $load_mode, [], null);
@@ -425,10 +421,8 @@ final class ScriptLoader
     /**
      * Compute script order depending on dependencies.
      * Assigned to $script->extra['order'].
-     *
-     * @param string $script_id
      */
-    private function computeScriptTopologicalOrder($script_id, int $recursion_limiter = 0): int
+    private function computeScriptTopologicalOrder(string $script_id, int $recursion_limiter = 0): int
     {
         if (! isset($this->registered_scripts[$script_id])) {
             trigger_error("Undefined script {$script_id} is required by someone", E_USER_WARNING);

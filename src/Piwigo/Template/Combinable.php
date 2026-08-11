@@ -27,7 +27,7 @@ class Combinable
      */
     public function __construct(
         public string $id,
-        $path,
+        ?string $path,
         public string|false $version = '0'
     ) {
         $this->setPath($path);
@@ -37,7 +37,7 @@ class Combinable
     /**
      * @param string|null $path a null/empty path is a deliberate no-op
      */
-    public function setPath($path): void
+    public function setPath(?string $path): void
     {
         if (! in_array($path, [null, ''], true)) {
             $this->path = $path;

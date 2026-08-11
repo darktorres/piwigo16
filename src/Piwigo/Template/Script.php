@@ -28,7 +28,7 @@ final class Script extends Combinable
     public function __construct(
         public int $load_mode,
         string $id,
-        $path,
+        ?string $path,
         string|false $version = '0',
         public array $precedents = []
     ) {

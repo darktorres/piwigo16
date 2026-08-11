@@ -71,15 +71,11 @@ final class CssLoader
      * Adds a new file, if a file with the same $id already exsists, the one with
      * the higher $order or higher $version is kept.
      *
-     * @param string $id
-     * @param string $path
      * @param string|false $version false disables version-based cache
      *   busting, mirroring Combinable::$version's own contract; no current
      *   .tpl passes version=, but funcCombineCss() forwards it verbatim
-     * @param int $order
-     * @param bool $is_template
      */
-    public function add($id, $path, $version = '0', $order = 0, $is_template = false): void
+    public function add(string $id, string $path, string|false $version = '0', int $order = 0, bool $is_template = false): void
     {
         if (! isset($this->registered_css[$id])) {
             // costum order as an higher impact than declaration order
@@ -96,11 +92,7 @@ final class CssLoader
         }
     }
 
-    /**
-     * @param int $order
-     * @param string|false $version
-     */
-    private static function shouldReplace(Css $existing, $order, $version): bool
+    private static function shouldReplace(Css $existing, int $order, string|false $version): bool
     {
         return $existing->order < $order * 1000
             || $existing->version === false

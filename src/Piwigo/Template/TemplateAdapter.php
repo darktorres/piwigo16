@@ -13,6 +13,7 @@ namespace Piwigo\Template;
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SrcImage;
 
 final readonly class TemplateAdapter
@@ -22,10 +23,9 @@ final readonly class TemplateAdapter
     ) {}
 
     /**
-     * @param string $type
      * @param array<string, mixed>|SrcImage $img
      */
-    public function derivative($type, $img): DerivativeImage
+    public function derivative(string|DerivativeParams $type, array|SrcImage $img): DerivativeImage
     {
         // Mirrors derivativeUrl()/DerivativeImage::url()'s own
         // is_object($infos) ? $infos : new SrcImage($infos) handling — the
@@ -34,10 +34,9 @@ final readonly class TemplateAdapter
     }
 
     /**
-     * @param string $type
      * @param array<string, mixed> $img
      */
-    public function derivativeUrl($type, $img): string
+    public function derivativeUrl(string|DerivativeParams $type, array $img): string
     {
         return DerivativeImage::url($type, $img);
     }

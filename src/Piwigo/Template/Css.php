@@ -14,13 +14,12 @@ namespace Piwigo\Template;
 final class Css extends Combinable
 {
     /**
-     * @param string $path
      * @param string|false $version false disables version-based cache
      *   busting, mirroring Combinable::$version's own contract
      */
     public function __construct(
         string $id,
-        $path,
+        string $path,
         string|false $version = '0',
         public int $order = 0
     ) {

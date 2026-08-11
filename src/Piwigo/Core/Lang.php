@@ -632,8 +632,6 @@ final class Lang
         return $result;
     }
 
-    // ---- Test helpers ----------------------------------------------------
-
     /**
      * Also seeds Translator's own mirror (t()'s fallback path for keys
      * with no gettext entry) -- matches this method's own pre-"nothing is

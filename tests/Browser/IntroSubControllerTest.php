@@ -383,10 +383,19 @@ it('adds the cached filesystem cache size onto the storage chart when configured
 
     try {
         H::setConfigValue('add_cache_to_storage_chart', 'true');
-        H::setConfigValue('cache_sizes', H::jsonEncode([[
-            'value' => 204800,
-            'time' => time(),
-        ]]));
+        // CacheSizesSnapshot::fromArray() expects the real pwg.getCacheSize
+        // {name, value} pair-list wire shape (see Ws\Core::getCacheSize()),
+        // not a flat {value, time} object.
+        H::setConfigValue('cache_sizes', H::jsonEncode([
+            [
+                'name' => 'cache_size',
+                'value' => 204800,
+            ],
+            [
+                'name' => 'last_date_calc',
+                'value' => date('Y-m-d H:i:s'),
+            ],
+        ]));
 
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php');

@@ -783,7 +783,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 $template->assignContext(new ConfigurationSearchTabPageContext(
                     search: [
-                        'filters_views' => $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews,
+                        'filters_views' => array_map(
+                            static fn (FilterViewDefinition $d): array => $d->toArray(),
+                            $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews,
+                        ),
                         'last_filters_conf' => $this->currentConfig->filtersViews->lastFiltersConf ?? false,
                         'filters_names' => $filters_names_checkboxes,
                     ],

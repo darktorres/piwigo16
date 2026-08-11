@@ -123,10 +123,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         $logger = $this->currentLogger->get();
         $template = $this->currentTemplate->get();
 
-        // +-----------------------------------------------------------------------+
-        // | Check Access and exit when user status is not ok                      |
-        // +-----------------------------------------------------------------------+
-
         if (! $this->currentConfig->enableSynchronization) {
             $this->htmlRenderer
                 ->fatalError('synchronization is disabled');
@@ -213,10 +209,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         // method.
         $footer_elements = null;
 
-        // +-----------------------------------------------------------------------+
-        // | tabs                                                                  |
-        // +-----------------------------------------------------------------------+
-
         // Consumed by CoreTabs::addCoreTabs()'s own 'site_update' case,
         // triggered synchronously inside Tabsheet::select() below -- must
         // be set before that call, not dead code (see this class's own
@@ -227,10 +219,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         $tabsheet->setId('site_update');
         $tabsheet->select('synchronization', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
-
-        // +-----------------------------------------------------------------------+
-        // | Quick sync                                                            |
-        // +-----------------------------------------------------------------------+
 
         // $post is a local working copy of the submitted form data. The
         // quick_sync shortcut below sets 8 keys directly on this array to
@@ -269,9 +257,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             }
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                      directories / categories                         |
-        // +-----------------------------------------------------------------------+
         if (isset($post['submit'])
             and ($post['sync'] === 'dirs' or $post['sync'] === 'files')
             and ! $general_failure) {
@@ -534,9 +519,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
               . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
               . ' -->'];
         }
-        // +-----------------------------------------------------------------------+
-        // |                           files / elements                            |
-        // +-----------------------------------------------------------------------+
         if (isset($post['submit']) and $post['sync'] === 'files'
               and ! $general_failure) {
             $start_files = TimingHelper::getMoment();
@@ -767,9 +749,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
               . ' -->';
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                          synchronize files                            |
-        // +-----------------------------------------------------------------------+
         if (isset($post['submit'])
             and ($post['sync'] === 'dirs' or $post['sync'] === 'files')
             and ! $general_failure) {
@@ -840,9 +819,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             }// end if sync files
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                          synchronize files                            |
-        // +-----------------------------------------------------------------------+
         if (isset($post['submit'])
             and ($post['sync'] === 'dirs' or $post['sync'] === 'files')) {
             $template->assignContext(new SiteUpdateSyncResultPageContext(
@@ -855,9 +831,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             ));
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                          synchronize metadata                         |
-        // +-----------------------------------------------------------------------+
         if (isset($post['submit']) and isset($post['sync_meta'])
                  and ! $general_failure) {
             // sync only never synchronized files ?
@@ -958,9 +931,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             ));
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                        template initialization                        |
-        // +-----------------------------------------------------------------------+
         $template->setFilenames([
             'update' => 'site_update.tpl',
         ]);
@@ -986,9 +956,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             footerElements: $footer_elements,
         ));
 
-        // +-----------------------------------------------------------------------+
-        // |                        introduction : choices                         |
-        // +-----------------------------------------------------------------------+
         if (isset($post['submit'])) {
             $privacy_level_selected = 0;
             if (isset($post['privacy_level']) and is_numeric($post['privacy_level'])) {
@@ -1081,9 +1048,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             syncInfos: $sync_infos,
         ));
 
-        // +-----------------------------------------------------------------------+
-        // |                          sending html code                            |
-        // +-----------------------------------------------------------------------+
         $template->assignVarFromHandle('ADMIN_CONTENT', 'update');
     }
 }

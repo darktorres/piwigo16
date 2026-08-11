@@ -100,9 +100,6 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
         $tabsheet->select('site_maager', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
-        // +-----------------------------------------------------------------------+
-        // |                        new site creation form                         |
-        // +-----------------------------------------------------------------------+
         if ($siteManagerRequest->newSiteGalleriesUrl !== null) {
             $galleries_url_input = $siteManagerRequest->newSiteGalleriesUrl;
             $is_remote = $this->urlService->urlIsRemote($galleries_url_input);
@@ -144,9 +141,6 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             }
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                            actions on site                            |
-        // +-----------------------------------------------------------------------+
         if ($siteManagerRequest->action !== null and $siteManagerRequest->siteId !== null) {
             $site_id = $siteManagerRequest->siteId;
             $galleries_url = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)

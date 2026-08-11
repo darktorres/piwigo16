@@ -263,7 +263,6 @@ final class LocalSiteReader
             ->getSyncMetadata($infos);
     }
 
-    // -------------------------------------------------- private functions --------
     public function getRepresentativeExt(string $path, string $filename_wo_ext): ?string
     {
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';

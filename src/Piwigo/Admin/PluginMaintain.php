@@ -19,36 +19,31 @@ use Piwigo\Core\WsContext;
  */
 class PluginMaintain
 {
-    /**
-     * @param string $plugin_id
-     */
     public function __construct(
         // protected so real third-party plugin subclasses can read it.
         // @phpstan-ignore shipmonk.deadProperty.neverRead
-        protected $plugin_id,
+        protected string $plugin_id,
         private readonly WsContext $wsContext,
         private readonly AccessControl $accessControl,
     ) {}
 
     /**
-     * @param string $plugin_version
      * @param array<int, string> $errors - used to return error messages
      * @return mixed - kept docblock-only here (not native) since a native
      *   return type on this base class would break any real third-party plugin
      *   maintain.class.php subclass whose own override declares no return type
      *   at all (verified empirically: PHP fatals on such a mismatch)
      */
-    public function install($plugin_version, &$errors = [])
+    public function install(string $plugin_version, array &$errors = [])
     {
         return null;
     }
 
     /**
-     * @param string $plugin_version
      * @param array<int, string> $errors - used to return error messages
      * @return mixed - see install()'s @return docblock
      */
-    public function activate($plugin_version, &$errors = [])
+    public function activate(string $plugin_version, array &$errors = [])
     {
         return null;
     }
@@ -70,15 +65,13 @@ class PluginMaintain
     }
 
     /**
-     * @param string $old_version
-     * @param string $new_version
      * @param array<int, string> $errors - used to return error messages
      * written as the phpstan-only variant of the return tag below because
      * ECS's phpdoc_no_empty_return fixer strips the generic form of that
      * tag, which would leave this method's return type undeclared again
      * @phpstan-return void
      */
-    public function update($old_version, $new_version, &$errors = []) {}
+    public function update(string $old_version, string $new_version, array &$errors = []) {}
 
     /**
      * @removed 2.7

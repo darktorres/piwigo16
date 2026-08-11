@@ -35,7 +35,7 @@ final class CheckIntegrity
      *
      * @var list<string>
      */
-    public $ignore_list;
+    public array $ignore_list;
 
     /**
      * Every element is built exclusively by addAnomaly() below, or
@@ -53,12 +53,12 @@ final class CheckIntegrity
      *   ignored?: bool,
      * }>
      */
-    public $retrieve_list;
+    public array $retrieve_list;
 
     /**
      * @var list<string> addAnomaly()-generated md5 ids
      */
-    public $build_ignore_list;
+    public array $build_ignore_list;
 
     /**
      * @param IntegrityIgnoredAnomalyRepository $repo persists per-(anomaly,

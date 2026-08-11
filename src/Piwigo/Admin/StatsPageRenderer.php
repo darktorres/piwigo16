@@ -165,7 +165,7 @@ final class StatsPageRenderer
      * @param int|self::ALL_YEARS $last
      * @return float[]|int[]
      */
-    private static function getMonthOfLastYears(HistoryService $historyService, $last = self::ALL_YEARS): array
+    private static function getMonthOfLastYears(HistoryService $historyService, int|string $last = self::ALL_YEARS): array
     {
         if ($last !== self::ALL_YEARS) {
             $date = new DateTime();

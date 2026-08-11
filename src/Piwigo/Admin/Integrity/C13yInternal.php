@@ -193,10 +193,9 @@ final readonly class C13yInternal
      * Do correction user
      *
      * @param int $id user_id
-     * @param string $action
      * @return bool true if ok else false
      */
-    public function c13yCorrectionUser($id, $action)
+    public function c13yCorrectionUser(int $id, string $action): bool
     {
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).

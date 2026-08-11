@@ -22,20 +22,15 @@ final class Tabsheet
     /**
      * @var array<string, TabSheetEntry>
      */
-    public $sheets;
+    public array $sheets;
 
     /**
      * Only ever assigned null (constructor) or a real string (setId()) --
      * confirmed via every real read/write site in this class.
-     *
-     * @var ?string
      */
-    public $uniqid;
+    public ?string $uniqid;
 
-    /**
-     * @var string
-     */
-    public $selected;
+    public string $selected;
 
     /*
       $name is the tabsheet's name inside the template .tpl file

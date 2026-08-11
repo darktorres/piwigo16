@@ -66,10 +66,8 @@ abstract class CalendarBase
      * db column on which this calendar works -- raw SQL column name, used
      * only by {@see CalendarRepository::findImageIds()}'s own raw-DBAL
      * path (see its own docblock for why it alone stays off DQL).
-     *
-     * @var string
      */
-    public $date_field;
+    public string $date_field;
 
     /**
      * DQL property-path equivalent of $date_field (e.g. `i.dateAvailable`)
@@ -91,15 +89,13 @@ abstract class CalendarBase
      *
      * @var array<int, array{sql: string, dql: string, labels: array<int|string, string>|null}>
      */
-    public $calendar_levels;
+    public array $calendar_levels;
 
     /**
      * chronology field ('posted' or 'created'); set by CalendarRenderer
      * before initialize() is called.
-     *
-     * @var string
      */
-    public $chronology_field = '';
+    public string $chronology_field = '';
 
     /**
      * mutable chronology-date state, narrowed in place by
@@ -108,15 +104,13 @@ abstract class CalendarBase
      *
      * @var array<int, int|string>
      */
-    public $chronology_date = [];
+    public array $chronology_date = [];
 
     /**
      * chronology view (CAL_VIEW_LIST or CAL_VIEW_CALENDAR); set by
      * CalendarRenderer before generateCategoryContent() is called.
-     *
-     * @var string
      */
-    public $chronology_view = '';
+    public string $chronology_view = '';
 
     /**
      * `month_calendar.tpl`'s own `chronology_navigation_bars` data,
@@ -161,7 +155,7 @@ abstract class CalendarBase
     // Called via CalendarRenderer.php's CalendarBase-typed $calendar --
     // polymorphic dispatch the tool doesn't trace back to this declaration.
     // @phpstan-ignore shipmonk.deadMethod
-    abstract public function generateCategoryContent(TemplateInterface $template);
+    abstract public function generateCategoryContent(TemplateInterface $template): bool;
 
     /**
      * Returns a sql WHERE subquery for the date field.
@@ -172,7 +166,7 @@ abstract class CalendarBase
      *   {@see CalendarRenderer::render()}'s own findImageIds() feed passes true, since every
      *   other CalendarRepository method is real DQL (see CalendarRepository's own docblock).
      */
-    abstract public function getDateWhere($max_levels = 3, bool $forDql = false): SqlCondition;
+    abstract public function getDateWhere(int $max_levels = 3, bool $forDql = false): SqlCondition;
 
     /**
      * Initialize the calendar.
@@ -191,10 +185,8 @@ abstract class CalendarBase
 
     /**
      * Returns the calendar title (with HTML).
-     *
-     * @return string
      */
-    public function getDisplayName()
+    public function getDisplayName(): string
     {
         $res = '';
 
@@ -231,10 +223,8 @@ abstract class CalendarBase
 
     /**
      * Returns a display name for a date component optionally using labels.
-     *
-     * @return string
      */
-    protected function getDateComponentLabel(int $level, string $date_component)
+    protected function getDateComponentLabel(int $level, string $date_component): string
     {
         $label = $date_component;
         if (isset($this->calendar_levels[$level]['labels'][$date_component])) {
@@ -247,11 +237,8 @@ abstract class CalendarBase
 
     /**
      * Gets a nice display name for a date to be shown in previous/next links
-     *
-     * @param string $date
-     * @return string
      */
-    protected function getDateNiceName($date)
+    protected function getDateNiceName(string $date): string
     {
         $date_components = explode('-', $date);
         $res = '';
@@ -280,10 +267,10 @@ abstract class CalendarBase
     protected function getNavBarFromItems(
         array $date_components,
         array $items,
-        $show_any,
-        $show_empty = false,
-        $labels = null
-    ) {
+        bool $show_any,
+        bool $show_empty = false,
+        ?array $labels = null
+    ): array {
         $nav_bar_datas = [];
 
         if ($this->currentConfig->calendarShowEmpty and $show_empty and $labels !== null and $labels !== []) {
@@ -349,7 +336,7 @@ abstract class CalendarBase
      *   display value -- CalendarMonthly's own day-number labels are ints,
      *   not strings.
      */
-    protected function buildNavBar($level, ?array $labels): void
+    protected function buildNavBar(int $level, ?array $labels): void
     {
         $levelDql = $this->calendar_levels[$level]['dql'];
         $scope = $this->scope;

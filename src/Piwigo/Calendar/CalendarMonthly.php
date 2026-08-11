@@ -125,7 +125,7 @@ final class CalendarMonthly extends CalendarBase
      * @param int $max_levels (e.g. 2=only year and month)
      */
     #[Override]
-    public function getDateWhere($max_levels = 3, bool $forDql = false): SqlCondition
+    public function getDateWhere(int $max_levels = 3, bool $forDql = false): SqlCondition
     {
         $dateField = $forDql ? $this->date_field_dql : $this->date_field;
         $levelKey = $forDql ? 'dql' : 'sql';
@@ -204,7 +204,7 @@ final class CalendarMonthly extends CalendarBase
      *   a numeric string parsed from the URL (or the literal 'any')
      * @param int|string $month same: $page['chronology_date'][self::CMONTH]
      */
-    protected function getAllDaysInMonth($year, $month): int
+    protected function getAllDaysInMonth(int|string $year, int|string $month): int
     {
         $md = [
             1 => 31,

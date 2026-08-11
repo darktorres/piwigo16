@@ -98,7 +98,7 @@ final class CalendarWeekly extends CalendarBase
      * @param int $max_levels (e.g. 2=only year and month)
      */
     #[Override]
-    public function getDateWhere($max_levels = 3, bool $forDql = false): SqlCondition
+    public function getDateWhere(int $max_levels = 3, bool $forDql = false): SqlCondition
     {
         $dateField = $forDql ? $this->date_field_dql : $this->date_field;
         $levelKey = $forDql ? 'dql' : 'sql';

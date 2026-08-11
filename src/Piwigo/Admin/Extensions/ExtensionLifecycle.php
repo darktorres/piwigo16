@@ -29,9 +29,8 @@ use Piwigo\Users\UserService;
 /**
  * Install/activate/deactivate/uninstall/delete state machine, replacing
  * plugins.class.php/themes.class.php/languages.class.php's perform_action()
- * methods. These are genuinely NOT interchangeable behind one shape:
- * confirmed via direct read (and cross-checked against
- * install/piwigo_structure-mysql.sql) that:
+ * methods. These are genuinely NOT interchangeable behind one shape
+ * (cross-checked against install/piwigo_structure-mysql.sql):
  *
  * - Plugins alone have a persisted `state` enum('inactive','active') column
  *   -- a plugin row's mere existence means "installed" (active or not).

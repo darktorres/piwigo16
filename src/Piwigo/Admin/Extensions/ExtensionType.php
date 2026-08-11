@@ -84,19 +84,17 @@ enum ExtensionType: string
         return match ($this) {
             self::Plugin => 'main.inc.php',
             self::Theme => 'themeconf.inc.php',
-            // Real, verified bug found via live admin-page verification, not
-            // assumed: languages.class.php (and its own extract_language_files())
+            // languages.class.php (and its own extract_language_files())
             // both still check for 'common.lang.php', but this rewrite's
             // language/ tree already migrated every locale to gettext .po
-            // files (confirmed: zero common.lang.php files exist anywhere
-            // under language/, every locale has a common.po instead, with
+            // files -- zero common.lang.php files exist anywhere under
+            // language/, every locale has a common.po instead, with
             // "Source: common.lang.php" left in its header comment as the
-            // conversion's own paper trail) -- the legacy marker check has
+            // conversion's own paper trail. The legacy marker check has
             // been silently matching nothing since that migration, which is
             // why languages_installed.php/languages_new.php render an empty
             // list against a live fixture -- languages.class.php itself is
-            // untouched (a pre-existing bug, not otherwise exercised
-            // end-to-end until now).
+            // untouched (a pre-existing bug).
             self::Language => 'common.po',
         };
     }

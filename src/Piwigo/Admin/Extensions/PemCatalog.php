@@ -21,9 +21,9 @@ use Piwigo\Users\CurrentUser;
  * plugins/themes/languages god-classes' get_versions_to_check()/
  * get_server_plugins()/get_server_themes()/get_server_languages()/
  * get_incompatible_plugins()/extension_*_compare() methods, which were
- * ~95% identical across the 3 legacy classes (confirmed by direct read --
- * only the PEM category conf key and a couple of URL-path nouns differ,
- * all of which ExtensionType now exposes).
+ * ~95% identical across the 3 legacy classes -- only the PEM category
+ * conf key and a couple of URL-path nouns differ, all of which
+ * ExtensionType now exposes.
  *
  * Archive download + extraction (extract_plugin_files()/extract_theme_files()/
  * extract_language_files() in the legacy classes) lives here too, since
@@ -413,7 +413,7 @@ final readonly class PemCatalog
     /**
      * plugins.class.php::get_merged_extensions()'s own concept (distinct
      * from, and unrelated to, updates.class.php::get_merged_extensions() --
-     * confirmed by direct read, the two only share a name): reads a local
+     * the two only share a name): reads a local
      * "extension id: description" list of extensions merged into Piwigo
      * core, only ever used by the plugins listing page to flag installed
      * plugins that are now redundant. themes.class.php/languages.class.php

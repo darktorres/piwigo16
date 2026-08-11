@@ -106,17 +106,17 @@ final readonly class ImageFilterCriteria
             $clauses[] = $tblPrefix . 'date_creation < :imgFilterMaxDateCreated';
             $parameters['imgFilterMaxDateCreated'] = $this->maxDateCreated;
         }
-        // Real bug found live -- width/height are
+        // width/height are
         // plain integer columns, and while MySQL's `/` operator always
         // computes in decimal context, PostgreSQL's `/` on two integer
-        // operands truncates to an integer (same real bug already fixed
+        // operands truncates to an integer (same bug already fixed
         // in SearchService's/FilterResolver's/ImageRepository's own
         // ratio filters). `width*1.0` forces decimal-context arithmetic
         // on both platforms without needing a CAST. NULLIF(height, 0)
         // additionally guards a genuinely zero height (a real, if
         // degenerate, row) -- MySQL's `/` silently returns NULL for a
         // zero divisor, but Postgres raises a real "division by zero"
-        // error instead, confirmed live via SearchService's own identical
+        // error instead, same as SearchService's own identical
         // ratio-bucket clause.
         if ($this->minRatio !== null) {
             $clauses[] = $tblPrefix . 'width*1.0/NULLIF(' . $tblPrefix . 'height, 0) >= :imgFilterMinRatio';

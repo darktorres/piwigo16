@@ -43,7 +43,7 @@ function c13yInternalTestUserService(): UserService
     return $userService;
 }
 
-// c13y_correction_user() reaches CoreDomainAccessor::userService(), which
+// c13yCorrectionUser() reaches CoreDomainAccessor::userService(), which
 // needs the DI container -- unlike every other function-style Integration
 // test file in this suite, this is the first one in file-discovery order
 // that actually touches it, so it can't rely on some earlier class-based
@@ -66,10 +66,10 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-// c13y_user()/c13y_correction_user() depend on the exact configured guest_id/
+// c13yUser()/c13yCorrectionUser() depend on the exact configured guest_id/
 // default_user_id/webmaster_id lining up against real fixture rows in a way
 // that's fragile to hardcode an exact anomaly count for -- deferred.
-// c13y_version()/c13y_exif() are deterministic in THIS environment: the app
+// c13yVersion()/c13yExif() are deterministic in THIS environment: the app
 // itself couldn't be running at all if PHP_VERSION/the real MySQL version
 // didn't already satisfy AppInfo::REQUIRED_PHP_VERSION/SqlDialect::
 // REQUIRED_MYSQL_VERSION, and exif_read_data() is confirmed available here
@@ -77,27 +77,27 @@ afterEach(function (): void {
 // below are provably "zero anomalies" in this suite's own environment,
 // not just today's incidental happy path.
 
-test('c13y_version adds no anomaly when the running PHP/MySQL already satisfy the app\'s own minimum versions', function (): void {
+test('c13yVersion adds no anomaly when the running PHP/MySQL already satisfy the app\'s own minimum versions', function (): void {
     $c13y = c13yInternalTestCheckIntegrity();
 
-    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_version(new ListCheckIntegrity($c13y));
+    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yVersion(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)
         ->toBe([]);
 });
 
-test('c13y_exif adds no anomaly when exif_read_data() is available', function (): void {
+test('c13yExif adds no anomaly when exif_read_data() is available', function (): void {
     expect(function_exists('exif_read_data'))
         ->toBeTrue();
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_exif(new ListCheckIntegrity($c13y));
+    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yExif(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)
         ->toBe([]);
 });
 
-// c13y_version()'s and c13y_exif()'s own add_anomaly()-calling branches
+// c13yVersion()'s and c13yExif()'s own addAnomaly()-calling branches
 // (the "PHP/MySQL version too low" and "exif extension missing" true
 // paths) are not exercised anywhere in this file, and can't genuinely be:
 // version_compare() only takes the anomaly path if the running PHP
@@ -108,7 +108,7 @@ test('c13y_exif adds no anomaly when exif_read_data() is available', function ()
 // (not a bug, so out of scope here). SqlDialect::
 // REQUIRED_MYSQL_VERSION ('8.4.10') is equally unreachable here: this
 // environment's real MySQL server is pinned to that exact floor, so it
-// can never report a version below it. c13y_exif()'s branch is the exact same
+// can never report a version below it. c13yExif()'s branch is the exact same
 // "verified untestable without breaking a real runtime guarantee" shape
 // tests/Integration/MetadataServiceTest.php already documents for its own
 // exif_read_data() guard: function_exists() can't be forced to lie about
@@ -121,7 +121,7 @@ afterEach(function (): void {
     CurrentConfigTestFactory::get()->webmasterId = 1;
 });
 
-test('c13y_user flags a configured webmaster_id that has no matching user row, and c13y_correction_user creates it', function (): void {
+test('c13yUser flags a configured webmaster_id that has no matching user row, and c13yCorrectionUser creates it', function (): void {
     // guest_id/default_user_id stay at their real fixture defaults (a real
     // 'guest' user genuinely exists at id 2), so only the webmaster_id slot
     // is deliberately pointed at a nonexistent id -- isolates the
@@ -131,7 +131,7 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
     CurrentConfigTestFactory::get()->webmasterId = 999999;
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_user(new ListCheckIntegrity($c13y));
+    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yUser(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)
         ->toHaveCount(1);
@@ -174,7 +174,7 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
     }
 });
 
-test('c13y_user flags a real user whose status does not match the expected one, and c13y_correction_user fixes it', function (): void {
+test('c13yUser flags a real user whose status does not match the expected one, and c13yCorrectionUser fixes it', function (): void {
     CurrentConfigTestFactory::get()->guestId = 2;
     CurrentConfigTestFactory::get()->defaultUserId = 2;
     CurrentConfigTestFactory::get()->webmasterId = 1;
@@ -188,7 +188,7 @@ test('c13y_user flags a real user whose status does not match the expected one, 
         $conn->executeStatement("UPDATE user_infos SET status = 'normal' WHERE user_id = 1");
 
         $c13y = c13yInternalTestCheckIntegrity();
-        new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_user(new ListCheckIntegrity($c13y));
+        new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yUser(new ListCheckIntegrity($c13y));
 
         $webmasterAnomaly = null;
         foreach ($c13y->retrieve_list as $anomaly) {
@@ -197,7 +197,7 @@ test('c13y_user flags a real user whose status does not match the expected one, 
             }
         }
         if ($webmasterAnomaly === null) {
-            throw new RuntimeException('Expected c13y_user() to flag the webmaster user\'s mismatched status');
+            throw new RuntimeException('Expected c13yUser() to flag the webmaster user\'s mismatched status');
         }
         expect($webmasterAnomaly['correction_fct_args'])->toBe([
             'id' => 1,
@@ -228,19 +228,19 @@ test('c13y_user flags a real user whose status does not match the expected one, 
     }
 });
 
-test('c13y_correction_user does nothing for id 0', function (): void {
-    expect(new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(0, 'creation'))->toBeFalse();
+test('c13yCorrectionUser does nothing for id 0', function (): void {
+    expect(new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yCorrectionUser(0, 'creation'))->toBeFalse();
 });
 
-test('c13y_correction_user does nothing for an unrecognized action', function (): void {
-    expect(new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(1, 'not-a-real-action'))->toBeFalse();
+test('c13yCorrectionUser does nothing for an unrecognized action', function (): void {
+    expect(new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yCorrectionUser(1, 'not-a-real-action'))->toBeFalse();
 });
 
-test('c13y_user flags a configured default_user_id distinct from guest_id that has no matching user row', function (): void {
-    // Every other c13y_user() test in this file keeps guest_id and
+test('c13yUser flags a configured default_user_id distinct from guest_id that has no matching user row', function (): void {
+    // Every other c13yUser() test in this file keeps guest_id and
     // default_user_id equal (both the real fixture "guest" id, 2), so
-    // c13y_user()'s own `if ($guest_id !== $default_user_id)` guard around
-    // building the default_user_id slot of $c13y_users never actually ran.
+    // c13yUser()'s own `if ($guest_id !== $default_user_id)` guard around
+    // building the default_user_id slot of $c13yUsers never actually ran.
     // This is the one test that diverges them, isolating that branch the
     // same way the existing webmaster test isolates its own slot.
     CurrentConfigTestFactory::get()->guestId = 2;
@@ -248,7 +248,7 @@ test('c13y_user flags a configured default_user_id distinct from guest_id that h
     CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_user(new ListCheckIntegrity($c13y));
+    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yUser(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)
         ->toHaveCount(1);
@@ -261,7 +261,7 @@ test('c13y_user flags a configured default_user_id distinct from guest_id that h
     ]);
 });
 
-test('c13y_correction_user creates the guest_id slot for a "creation" action, renaming around the real "guest" username collision', function (): void {
+test('c13yCorrectionUser creates the guest_id slot for a "creation" action, renaming around the real "guest" username collision', function (): void {
     // guest_id itself is pointed at a synthetic, not-yet-existing id so the
     // insert has nowhere to collide on the primary key, but the candidate
     // *username* ("guest") is real (fixture id 2 is genuinely named
@@ -275,7 +275,7 @@ test('c13y_correction_user creates the guest_id slot for a "creation" action, re
 
     $conn = DbConnection::build();
     try {
-        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(999997, 'creation');
+        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yCorrectionUser(999997, 'creation');
         expect($result)
             ->toBeTrue();
 
@@ -292,14 +292,14 @@ test('c13y_correction_user creates the guest_id slot for a "creation" action, re
     }
 });
 
-test('c13y_correction_user creates the default_user_id slot for a "creation" action', function (): void {
+test('c13yCorrectionUser creates the default_user_id slot for a "creation" action', function (): void {
     CurrentConfigTestFactory::get()->guestId = 2;
     CurrentConfigTestFactory::get()->defaultUserId = 999996;
     CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $conn = DbConnection::build();
     try {
-        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(999996, 'creation');
+        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yCorrectionUser(999996, 'creation');
         expect($result)
             ->toBeTrue();
 
@@ -313,7 +313,7 @@ test('c13y_correction_user creates the default_user_id slot for a "creation" act
     }
 });
 
-test('c13y_correction_user sets a real user\'s status to "guest" when its id matches the configured guest_id', function (): void {
+test('c13yCorrectionUser sets a real user\'s status to "guest" when its id matches the configured guest_id', function (): void {
     // Reuses a real, unrelated fixture row (id 3, "regular_user") purely as
     // the stand-in guest_id slot to drive the `$id === $guest_id` branch of
     // the 'status' action -- the same "hijack CurrentConfig, act on a real
@@ -328,7 +328,7 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
         ->not->toBeFalse();
 
     try {
-        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(3, 'status');
+        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yCorrectionUser(3, 'status');
         expect($result)
             ->toBeTrue();
 
@@ -344,7 +344,7 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
     }
 });
 
-test('c13y_correction_user sets a real user\'s status to "guest" when its id matches the configured default_user_id', function (): void {
+test('c13yCorrectionUser sets a real user\'s status to "guest" when its id matches the configured default_user_id', function (): void {
     CurrentConfigTestFactory::get()->guestId = 2;
     CurrentConfigTestFactory::get()->defaultUserId = 4;
     CurrentConfigTestFactory::get()->webmasterId = 1;
@@ -355,7 +355,7 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
         ->not->toBeFalse();
 
     try {
-        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(4, 'status');
+        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13yCorrectionUser(4, 'status');
         expect($result)
             ->toBeTrue();
 

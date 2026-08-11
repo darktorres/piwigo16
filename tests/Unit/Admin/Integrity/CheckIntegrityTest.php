@@ -13,14 +13,14 @@ use Piwigo\Core\Paths;
  * anomalies). Resolved via `Kernel::container()->get()` (same
  * rationale as `UpdatesSubControllerTest.php`).
  *
- * `add_anomaly()` is pure logic given a fresh instance (`ignore_list`
+ * `addAnomaly()` is pure logic given a fresh instance (`ignore_list`
  * is a public, directly-settable property) -- covered for its "new
  * anomaly" and "already-ignored anomaly" branches, plus `is_callable`
  * reflecting a real callable vs a non-existent one.
- * `get_htlm_links_more_info()` needs only a real `Lang::t()` call and
+ * `getHtlmLinksMoreInfo()` needs only a real `Lang::t()` call and
  * `AdminUiHelper::pwgUrl()` (a pure constant map), no DB access.
  *
- * `check()`/`update_conf()`/`maintenance()` all reach
+ * `check()`/`updateConf()`/`maintenance()` all reach
  * `IntegrityIgnoredAnomalyRepository::syncForVersion()`, which
  * unconditionally REPLACES the real ignored-anomalies row set for the
  * current `AppInfo::VERSION` -- calling any of them here risks wiping
@@ -46,10 +46,10 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-test('add_anomaly records a new anomaly with a stable md5 id and reflects a real callable correction_fct', function (): void {
+test('addAnomaly records a new anomaly with a stable md5 id and reflects a real callable correction_fct', function (): void {
     $checkIntegrity = checkIntegrityTestSubject();
 
-    $checkIntegrity->add_anomaly('Something is wrong', 'strtoupper', [
+    $checkIntegrity->addAnomaly('Something is wrong', 'strtoupper', [
         'arg' => 'x',
     ], 'Fix it');
 
@@ -68,20 +68,20 @@ test('add_anomaly records a new anomaly with a stable md5 id and reflects a real
         ]) . 'Fix it'));
 });
 
-test('add_anomaly marks is_callable false for a non-existent correction function', function (): void {
+test('addAnomaly marks is_callable false for a non-existent correction function', function (): void {
     $checkIntegrity = checkIntegrityTestSubject();
 
-    $checkIntegrity->add_anomaly('Something is wrong', 'not_a_real_function_xyz');
+    $checkIntegrity->addAnomaly('Something is wrong', 'not_a_real_function_xyz');
 
     expect($checkIntegrity->retrieve_list[0]['is_callable'])->toBeFalse();
 });
 
-test('add_anomaly diverts an already-ignored anomaly id into build_ignore_list instead of retrieve_list', function (): void {
+test('addAnomaly diverts an already-ignored anomaly id into build_ignore_list instead of retrieve_list', function (): void {
     $checkIntegrity = checkIntegrityTestSubject();
     $alreadyIgnoredId = md5('Already known' . serialize(null) . '');
     $checkIntegrity->ignore_list = [$alreadyIgnoredId];
 
-    $checkIntegrity->add_anomaly('Already known');
+    $checkIntegrity->addAnomaly('Already known');
 
     expect($checkIntegrity->retrieve_list)
         ->toBe([])
@@ -89,10 +89,10 @@ test('add_anomaly diverts an already-ignored anomaly id into build_ignore_list i
         ->toBe([$alreadyIgnoredId]);
 });
 
-test('get_htlm_links_more_info returns real forum/wiki links composed via AdminUiHelper::pwgUrl', function (): void {
+test('getHtlmLinksMoreInfo returns real forum/wiki links composed via AdminUiHelper::pwgUrl', function (): void {
     $checkIntegrity = checkIntegrityTestSubject();
 
-    $result = $checkIntegrity->get_htlm_links_more_info();
+    $result = $checkIntegrity->getHtlmLinksMoreInfo();
 
     expect($result)
         ->toContain('href="' . AppInfo::URL . '/forum"')

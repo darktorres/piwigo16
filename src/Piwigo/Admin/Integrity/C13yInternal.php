@@ -46,15 +46,15 @@ final class C13yInternal
      */
     public function registerHandlers(): void
     {
-        $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13y_version(...));
-        $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13y_exif(...));
-        $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13y_user(...));
+        $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13yVersion(...));
+        $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13yExif(...));
+        $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13yUser(...));
     }
 
     /**
      * Check version
      */
-    public function c13y_version(ListCheckIntegrity $event): void
+    public function c13yVersion(ListCheckIntegrity $event): void
     {
         $c13y = $event->value;
 
@@ -94,13 +94,13 @@ final class C13yInternal
 
         foreach ($check_list as $elem) {
             if (version_compare($elem['compare'] ?? $elem['current'], $elem['required'], '<')) {
-                $c13y->add_anomaly(
+                $c13y->addAnomaly(
                     sprintf($this->lang->t('The version of %s [%s] installed is not compatible with the version required [%s]'), $elem['type'], $elem['current'], $elem['required']),
                     null,
                     null,
                     $this->lang->t('You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all')
           . '<br>' .
-          $c13y->get_htlm_links_more_info()
+          $c13y->getHtlmLinksMoreInfo()
                 );
             }
         }
@@ -109,7 +109,7 @@ final class C13yInternal
     /**
      * Check exif
      */
-    public function c13y_exif(ListCheckIntegrity $event): void
+    public function c13yExif(ListCheckIntegrity $event): void
     {
         $c13y = $event->value;
         $checks = [
@@ -118,13 +118,13 @@ final class C13yInternal
         ];
         foreach ($checks as $value => $enabled) {
             if ($enabled and (! function_exists('exif_read_data'))) {
-                $c13y->add_anomaly(
+                $c13y->addAnomaly(
                     sprintf($this->lang->t('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
                     null,
                     null,
                     sprintf($this->lang->t('%s must be to set to false in your local/config/config.inc.php file'), '$conf[\'' . $value . '\']')
           . '<br>' .
-          $c13y->get_htlm_links_more_info()
+          $c13y->getHtlmLinksMoreInfo()
                 );
             }
         }
@@ -133,7 +133,7 @@ final class C13yInternal
     /**
      * Check user
      */
-    public function c13y_user(ListCheckIntegrity $event): void
+    public function c13yUser(ListCheckIntegrity $event): void
     {
         $c13y = $event->value;
 
@@ -169,18 +169,18 @@ final class C13yInternal
 
         foreach ($c13y_users as $id => $data) {
             if (! array_key_exists($id, $status)) {
-                $c13y->add_anomaly(
+                $c13y->addAnomaly(
                     $this->lang->t($data['l10n_non_existent']),
-                    $this->c13y_correction_user(...),
+                    $this->c13yCorrectionUser(...),
                     [
                         'id' => $id,
                         'action' => 'creation',
                     ]
                 );
             } elseif (($data['status'] ?? null) !== null and ($status[$id] ?? '') !== $data['status']) {
-                $c13y->add_anomaly(
+                $c13y->addAnomaly(
                     $this->lang->t($data['l10n_bad_status']),
-                    $this->c13y_correction_user(...),
+                    $this->c13yCorrectionUser(...),
                     [
                         'id' => $id,
                         'action' => 'status',
@@ -197,7 +197,7 @@ final class C13yInternal
      * @param string $action
      * @return bool true if ok else false
      */
-    public function c13y_correction_user($id, $action)
+    public function c13yCorrectionUser($id, $action)
     {
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).

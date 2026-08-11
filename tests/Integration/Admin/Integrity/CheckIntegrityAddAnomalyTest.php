@@ -18,7 +18,7 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 
-// add_anomaly()/get_htlm_links_more_info() are CheckIntegrity's own pure
+// addAnomaly()/getHtlmLinksMoreInfo() are CheckIntegrity's own pure
 // data-structure logic -- no event/template dependency at all -- but
 // CheckIntegrity's constructor takes a real IntegrityIgnoredAnomalyRepository
 // dependency, so constructing one at all needs a real EntityManager/DB
@@ -40,10 +40,10 @@ function checkIntegrityAddAnomalyNew(): CheckIntegrity
     return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplate::current());
 }
 
-test('add_anomaly records a new anomaly with is_callable computed from a real function name', function (): void {
+test('addAnomaly records a new anomaly with is_callable computed from a real function name', function (): void {
     $c13y = checkIntegrityAddAnomalyNew();
 
-    $c13y->add_anomaly('Something is wrong', 'strlen', [
+    $c13y->addAnomaly('Something is wrong', 'strlen', [
         'arg' => 'x',
     ], 'fix it');
 
@@ -62,18 +62,18 @@ test('add_anomaly records a new anomaly with is_callable computed from a real fu
     ]) . 'fix it'));
 });
 
-test('add_anomaly marks is_callable false for a non-existent function name', function (): void {
+test('addAnomaly marks is_callable false for a non-existent function name', function (): void {
     $c13y = checkIntegrityAddAnomalyNew();
 
-    $c13y->add_anomaly('Bad correction fn', 'this_function_does_not_exist_anywhere');
+    $c13y->addAnomaly('Bad correction fn', 'this_function_does_not_exist_anywhere');
 
     expect($c13y->retrieve_list[0]['is_callable'])->toBeFalse();
 });
 
-test('add_anomaly with no correction function is never callable and carries a null correction_fct', function (): void {
+test('addAnomaly with no correction function is never callable and carries a null correction_fct', function (): void {
     $c13y = checkIntegrityAddAnomalyNew();
 
-    $c13y->add_anomaly('Plain anomaly, no fix available');
+    $c13y->addAnomaly('Plain anomaly, no fix available');
 
     $entry = $c13y->retrieve_list[0];
     expect($entry['correction_fct'])->toBeNull();
@@ -81,12 +81,12 @@ test('add_anomaly with no correction function is never callable and carries a nu
     expect($entry['is_callable'])->toBeFalse();
 });
 
-test('add_anomaly routes an already-ignored id into build_ignore_list instead of retrieve_list', function (): void {
+test('addAnomaly routes an already-ignored id into build_ignore_list instead of retrieve_list', function (): void {
     $c13y = checkIntegrityAddAnomalyNew();
     $anomalyId = md5('Ignored anomaly' . serialize(null) . '');
     $c13y->ignore_list = [$anomalyId];
 
-    $c13y->add_anomaly('Ignored anomaly');
+    $c13y->addAnomaly('Ignored anomaly');
 
     expect($c13y->retrieve_list)
         ->toBe([]);
@@ -94,13 +94,13 @@ test('add_anomaly routes an already-ignored id into build_ignore_list instead of
         ->toBe([$anomalyId]);
 });
 
-test('add_anomaly generates distinct ids for anomalies that differ only by correction_fct_args', function (): void {
+test('addAnomaly generates distinct ids for anomalies that differ only by correction_fct_args', function (): void {
     $c13y = checkIntegrityAddAnomalyNew();
 
-    $c13y->add_anomaly('Same message', 'strlen', [
+    $c13y->addAnomaly('Same message', 'strlen', [
         'a' => 1,
     ]);
-    $c13y->add_anomaly('Same message', 'strlen', [
+    $c13y->addAnomaly('Same message', 'strlen', [
         'a' => 2,
     ]);
 
@@ -109,14 +109,14 @@ test('add_anomaly generates distinct ids for anomalies that differ only by corre
     expect($c13y->retrieve_list[0]['id'])->not->toBe($c13y->retrieve_list[1]['id']);
 });
 
-// get_htlm_links_more_info() is this class's other genuinely pure method --
+// getHtlmLinksMoreInfo() is this class's other genuinely pure method --
 // AdminUiHelper::pwgUrl() is a fixed, DB/config-free constant map, and
 // Lang::t()/Translator self-initialize without any Lang::load() call
 // (untranslated gettext falls back to the literal English string).
-test('get_htlm_links_more_info formats a forum + wiki link pair from the fixed pwg URL map', function (): void {
+test('getHtlmLinksMoreInfo formats a forum + wiki link pair from the fixed pwg URL map', function (): void {
     $c13y = checkIntegrityAddAnomalyNew();
 
-    $result = $c13y->get_htlm_links_more_info();
+    $result = $c13y->getHtlmLinksMoreInfo();
 
     expect($result)
         ->toBe(sprintf(

@@ -34,10 +34,10 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * Integration suite (tests/Integration/Admin/Integrity/
  * CheckIntegrityAddAnomalyTest.php, relocated from tests/Unit/ once
  * CheckIntegrity's constructor started needing a real
- * IntegrityIgnoredAnomalyRepository) already covers add_anomaly()/
- * get_htlm_links_more_info() directly (pure logic, no event/template
+ * IntegrityIgnoredAnomalyRepository) already covers addAnomaly()/
+ * getHtlmLinksMoreInfo() directly (pure logic, no event/template
  * dependency of their own); check()/display() genuinely need a real
- * IntegrityIgnoredAnomalyRepository (update_conf()'s own persistence) and
+ * IntegrityIgnoredAnomalyRepository (updateConf()'s own persistence) and
  * a real rendered check_integrity.tpl (themes/admin/default/template/), so
  * this suite boots Kernel + a real admin Template directly, the same
  * shape as PictureCommentRendererTest's own gallery-theme Template
@@ -65,7 +65,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         $c13y = $event->value;
         foreach (self::$queuedAnomalies as $a) {
-            $c13y->add_anomaly($a['anomaly'], $a['correction_fct'], $a['correction_fct_args'], $a['correction_msg']);
+            $c13y->addAnomaly($a['anomaly'], $a['correction_fct'], $a['correction_fct_args'], $a['correction_msg']);
         }
     }
 
@@ -294,7 +294,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
     public function testMaintenanceDelegatesToUpdateConfAndClearsTheIgnoreList(): void
     {
         // A row for a *different* version than AppInfo::VERSION -- must
-        // survive maintenance()/update_conf() untouched, since
+        // survive maintenance()/updateConf() untouched, since
         // syncForVersion() is scoped to the current version only (proves
         // the version-scoping design, not just that clearing works).
         $this->buildIntegrityRepo()

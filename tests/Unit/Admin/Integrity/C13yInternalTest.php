@@ -24,7 +24,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  * what a real healthy production install also reports. Forcing an
  * actual anomaly would mean faking `function_exists()`/downgrading the
  * real DB version/corrupting real user rows, none of which this class's
- * own thin-checker role justifies. `c13y_correction_user()` performs
+ * own thin-checker role justifies. `c13yCorrectionUser()` performs
  * real user-table writes and is not attempted either.
  */
 function c13yInternalTestSubject(): C13yInternal
@@ -75,33 +75,33 @@ test('registerHandlers wires all 3 checkers onto the container-shared EventDispa
         ->toBe([]);
 });
 
-test('c13y_version adds no anomaly against this environment\'s real, above-minimum PHP and DB versions', function (): void {
+test('c13yVersion adds no anomaly against this environment\'s real, above-minimum PHP and DB versions', function (): void {
     $checkIntegrity = c13yInternalTestCheckIntegrity();
 
     c13yInternalTestSubject()
-        ->c13y_version(new ListCheckIntegrity($checkIntegrity));
+        ->c13yVersion(new ListCheckIntegrity($checkIntegrity));
 
     expect($checkIntegrity->retrieve_list)
         ->toBe([]);
 });
 
-test('c13y_exif adds no anomaly since this environment\'s real exif_read_data function exists', function (): void {
+test('c13yExif adds no anomaly since this environment\'s real exif_read_data function exists', function (): void {
     CurrentConfigTestFactory::get()->showExif = true;
     CurrentConfigTestFactory::get()->useExif = true;
     $checkIntegrity = c13yInternalTestCheckIntegrity();
 
     c13yInternalTestSubject()
-        ->c13y_exif(new ListCheckIntegrity($checkIntegrity));
+        ->c13yExif(new ListCheckIntegrity($checkIntegrity));
 
     expect($checkIntegrity->retrieve_list)
         ->toBe([]);
 });
 
-test('c13y_user adds no anomaly for the real, correctly-provisioned guest/default/webmaster user rows', function (): void {
+test('c13yUser adds no anomaly for the real, correctly-provisioned guest/default/webmaster user rows', function (): void {
     $checkIntegrity = c13yInternalTestCheckIntegrity();
 
     c13yInternalTestSubject()
-        ->c13y_user(new ListCheckIntegrity($checkIntegrity));
+        ->c13yUser(new ListCheckIntegrity($checkIntegrity));
 
     expect($checkIntegrity->retrieve_list)
         ->toBe([]);

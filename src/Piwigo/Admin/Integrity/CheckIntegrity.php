@@ -31,16 +31,16 @@ final class CheckIntegrity
     /**
      * Now backed by a real typed column (see $repo) -- no more risk of an
      * unknown/corrupted blob shape, always a real list<string> of
-     * add_anomaly()-generated md5 ids for the current AppInfo::VERSION.
+     * addAnomaly()-generated md5 ids for the current AppInfo::VERSION.
      *
      * @var list<string>
      */
     public $ignore_list;
 
     /**
-     * Every element is built exclusively by add_anomaly() below, or
+     * Every element is built exclusively by addAnomaly() below, or
      * dynamically extended with 'corrected'/'ignored' by check(). See
-     * add_anomaly()'s own docblock for the precise element shape.
+     * addAnomaly()'s own docblock for the precise element shape.
      *
      * @var list<array{
      *   id: string,
@@ -56,7 +56,7 @@ final class CheckIntegrity
     public $retrieve_list;
 
     /**
-     * @var list<string> add_anomaly()-generated md5 ids
+     * @var list<string> addAnomaly()-generated md5 ids
      */
     public $build_ignore_list;
 
@@ -167,7 +167,7 @@ final class CheckIntegrity
         }
 
         // Both sides are already real list<string> (repo-loaded/
-        // add_anomaly()-built respectively) -- no more untyped-blob
+        // addAnomaly()-built respectively) -- no more untyped-blob
         // filtering needed before diffing them. Parenthesized explicitly:
         // `$x = a or b;` would assign only `a` (`=` binds tighter than
         // `or`), silently discarding the `b` side -- a real, easy-to-miss
@@ -178,7 +178,7 @@ final class CheckIntegrity
         );
 
         if ($ignore_list_changed) {
-            $this->update_conf($this->build_ignore_list);
+            $this->updateConf($this->build_ignore_list);
         }
     }
 
@@ -186,7 +186,7 @@ final class CheckIntegrity
      * Dispatched as its own method (rather than inline in check()) so
      * PHPStan sees a call on $this and re-widens $retrieve_list /
      * $build_ignore_list afterwards -- it can't otherwise tell that a
-     * registered handler may call $event->value->add_anomaly() back into
+     * registered handler may call $event->value->addAnomaly() back into
      * this same instance through the dispatched event.
      */
     private function dispatchListCheckIntegrity(): void
@@ -237,7 +237,7 @@ final class CheckIntegrity
                             if ((bool) $c13y['corrected']) {
                                 $c13y_display['show_correction_success_fct'] = true;
                             } else {
-                                $c13y_display['correction_error_fct'] = $this->get_htlm_links_more_info();
+                                $c13y_display['correction_error_fct'] = $this->getHtlmLinksMoreInfo();
                             }
                         } elseif ($c13y['is_callable']) {
                             $c13y_display['show_correction_fct'] = true;
@@ -298,7 +298,7 @@ final class CheckIntegrity
      *
      * @param ?array<string, mixed> $correction_fct_args
      */
-    public function add_anomaly(string $anomaly, string|Closure|null $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
+    public function addAnomaly(string $anomaly, string|Closure|null $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
     {
         $correctionFctLabel = match (true) {
             $correction_fct === null => null,
@@ -325,12 +325,12 @@ final class CheckIntegrity
     /**
      * Update table config
      *
-     * @param list<string> $conf_ignore_list add_anomaly()-generated md5 ids
+     * @param list<string> $conf_ignore_list addAnomaly()-generated md5 ids
      */
     /**
      * @param list<string> $conf_ignore_list
      */
-    public function update_conf(array $conf_ignore_list = []): void
+    public function updateConf(array $conf_ignore_list = []): void
     {
         $this->repo->syncForVersion(
             AppInfo::VERSION,
@@ -344,7 +344,7 @@ final class CheckIntegrity
      */
     public function maintenance(): void
     {
-        $this->update_conf();
+        $this->updateConf();
     }
 
     /**
@@ -352,7 +352,7 @@ final class CheckIntegrity
      *
      * @return string links
      */
-    public function get_htlm_links_more_info(): string
+    public function getHtlmLinksMoreInfo(): string
     {
         $pwg_links = AdminUiHelper::pwgUrl();
         $link_fmt = <<<'HTML'

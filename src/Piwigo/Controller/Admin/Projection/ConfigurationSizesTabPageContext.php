@@ -14,9 +14,8 @@ use Piwigo\Core\TemplatePageContext;
  * ConfigurationSizesPageContext}, which is `processSizes()`'s own POST
  * handler context. Constructed via 2 separate calls at that case's own
  * 2 real positions: `$isGd`/`$sizes` immediately (`$sizes`'s own
- * checkbox values, formerly a separate `Template::append($tpl_var, ...,
- * merge: true)` loop, are merged into the plain PHP `$sizes` array
- * before this first construction instead), then
+ * checkbox values are merged into the plain PHP `$sizes` array before
+ * this first construction), then
  * `$derivatives`/`$resizeQuality`/`$customDerivatives` in a second call
  * once those are computed -- the two calls' own `toArray()` keys never
  * overlap, so the second one's `assignContext()` never wipes the

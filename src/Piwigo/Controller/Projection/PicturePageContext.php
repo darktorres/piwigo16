@@ -31,10 +31,9 @@ use Piwigo\Core\TemplatePageContext;
  * sibling `PDF_VIEWER_FILESIZE_THRESHOLD` key moved to {@see
  * PictureContentPageContext}, the template variable set actually live
  * when `picture_content.tpl` (its one real consumer) parses. `$relatedTags`/
- * `$relatedCategories` were formerly `Template::append()`-built lists --
- * `null` when the original loop never ran at all (matching its own
- * `isset($related_tags)`/`isset($related_categories)` template guards),
- * a real, non-empty list otherwise.
+ * `$relatedCategories` are `null` when the original loop never ran at all
+ * (matching its own `isset($related_tags)`/`isset($related_categories)`
+ * template guards), a real, non-empty list otherwise.
  */
 final readonly class PicturePageContext implements TemplatePageContext
 {

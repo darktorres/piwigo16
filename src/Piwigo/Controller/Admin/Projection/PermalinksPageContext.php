@@ -12,7 +12,7 @@ use Piwigo\Core\TemplatePageContext;
  * The template variable set assigned by
  * {@see \Piwigo\Controller\Admin\PermalinksSubController::handle()}.
  * `$categoriesOptions` is {@see \Piwigo\Category\CategoryService}'s own
- * formerly-directly-assigned `categories`/`categories_selected` pair.
+ * `categories`/`categories_selected` pair.
  */
 final readonly class PermalinksPageContext implements TemplatePageContext
 {

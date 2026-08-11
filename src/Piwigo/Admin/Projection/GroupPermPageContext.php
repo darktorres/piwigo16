@@ -12,7 +12,7 @@ use Piwigo\Core\TemplatePageContext;
  * The template variable set assigned by
  * {@see \Piwigo\Admin\GroupPermPageRenderer::render()}.
  * `$categoryOptionTrue`/`$categoryOptionFalse` are
- * {@see \Piwigo\Category\CategoryService}'s own formerly-directly-assigned
+ * {@see \Piwigo\Category\CategoryService}'s own
  * `category_option_true`/`category_option_false` (+ `_selected`) pairs.
  */
 final readonly class GroupPermPageContext implements TemplatePageContext

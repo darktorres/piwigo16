@@ -12,7 +12,7 @@ use Piwigo\Core\TemplatePageContext;
  * The template variable assigned by
  * {@see \Piwigo\Controller\Admin\SiteUpdateSubController::handle()}'s own
  * "introduction : choices" block. `$categoryOptions` is
- * {@see \Piwigo\Category\CategoryService}'s own formerly-directly-assigned
+ * {@see \Piwigo\Category\CategoryService}'s own
  * `category_options`/`category_options_selected` pair -- top-level keys,
  * not nested under `introduction` like the rest of this context.
  */

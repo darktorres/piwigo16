@@ -17,7 +17,7 @@ use Piwigo\Core\TemplatePageContext;
  * null value) to match that exact original behavior --
  * `user_perm.tpl` reads it via `{if isset($categories_because_of_groups)}`.
  * `$categoryOptionTrue`/`$categoryOptionFalse` are
- * {@see \Piwigo\Category\CategoryService}'s own formerly-directly-assigned
+ * {@see \Piwigo\Category\CategoryService}'s own
  * `category_option_true`/`category_option_false` (+ `_selected`) pairs.
  */
 final readonly class UserPermPageContext implements TemplatePageContext

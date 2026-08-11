@@ -14,7 +14,7 @@ use Piwigo\Image\DerivativeParams;
  * {@see \Piwigo\Controller\CommentsController::__invoke()}. `$comments`
  * is always included (even empty) since `comment_list.tpl`'s own
  * `{foreach from=$comments}` has no guard around it. `$categoriesOptions`
- * is {@see \Piwigo\Category\CategoryService}'s own formerly-directly-assigned
+ * is {@see \Piwigo\Category\CategoryService}'s own
  * `categories`/`categories_selected` pair.
  */
 final readonly class CommentsPageContext implements TemplatePageContext

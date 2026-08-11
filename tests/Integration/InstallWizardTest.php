@@ -648,6 +648,62 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertFileExists($this->paths->siteLocal . Env::testModeInstalledStamp());
     }
 
+    /**
+     * Regression test for a real bug found live: MigrateCommand::run() is
+     * called directly (not through a full Symfony Application, see
+     * performInstall()'s own comment on that block), so it does NOT
+     * guarantee catching every failure into a plain exit code the way a
+     * real CLI invocation would. A driver-level exception (confirmed live:
+     * mysqli's own exception-throwing mode surfacing a genuine "table
+     * already exists" collision, reproduced here by pre-creating one of
+     * the baseline migration's own tables) escaped it uncaught, and since
+     * public/install.php's own top-level catch only handles
+     * ResponseReadyException, that reached a real browser as an uncaught
+     * fatal error -- a blank page, not the installer's own error UI.
+     */
+    public function testPerformInstallRecordsAnErrorAndDoesNotProceedWhenTheSchemaMigrationFails(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+
+        // Pre-create one of the tables the baseline migration itself
+        // creates, so the real MigrateCommand run below collides on it
+        // exactly the way a genuinely-already-installed database does.
+        if ($this->dbDriver === 'pgsql') {
+            $conn = $this->newPgsqlConnection($freshDb);
+            pg_query($conn, 'CREATE TABLE caddie (id INT)');
+            pg_close($conn);
+        } else {
+            $db = $this->newMysqli($freshDb);
+            $db->query('CREATE TABLE caddie (id INT)');
+            $db->close();
+        }
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+            'admin_name' => 'p17migratefail',
+            'admin_pass1' => 'Migrate-Fail-Secret-1!',
+            'admin_pass2' => 'Migrate-Fail-Secret-1!',
+            'admin_mail' => 'migratefail@example.test',
+            'install' => '1',
+        ]);
+        $wizard->analyzeForm();
+        self::assertFalse($wizard->hasErrors(), 'unexpected validation/connection errors: ' . $this->reflectErrorsJoined($wizard));
+
+        $wizard->performInstall();
+
+        self::assertTrue($wizard->hasErrors());
+        self::assertStringContainsString('Schema migration failed', $this->reflectErrorsJoined($wizard));
+        // Reset to step 1 (not left at step 2 -- see performInstall()'s own
+        // comment) so a caller's later render() shows the initial form with
+        // this error, not a false "installation succeeded" page.
+        self::assertSame(1, $this->reflectPrivate($wizard, 'step'));
+    }
+
     public function testPerformInstallRecordsAnErrorWhenTheEnvFileCannotBeWritten(): void
     {
         $this->bootInstallBootstrap();

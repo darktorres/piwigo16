@@ -11,7 +11,7 @@ use Piwigo\Ws\PwgNamedArray;
  * (boolean/integer/double/string/array-or-object), and for arrays
  * decides "list" vs "struct" via the same
  * `range(0, count($data)-1) === array_keys($data)` idiom the parent
- * class's own is_struct() uses. Every expected XML fragment below was
+ * class's own isStruct() uses. Every expected XML fragment below was
  * built by tracing that switch by hand, piece by piece, then
  * cross-checked for the PHP-builtin pieces only (htmlspecialchars(),
  * (string) float casting) via standalone `php -r` calls -- never by
@@ -107,7 +107,7 @@ test('encodeResponse renders a struct response mixing every scalar type plus a n
 test('encodeResponse renders an empty array response as an empty struct, not an empty list', function (): void {
     // range(0, count([])-1) is range(0,-1) = [0,-1], which never equals
     // array_keys([]) = [] -- so an empty array takes the *struct*
-    // branch (matching the parent class's own is_struct() having the
+    // branch (matching the parent class's own isStruct() having the
     // same quirk), producing "<struct>\n</struct>" with no members.
     $encoder = new PwgXmlRpcEncoder();
 

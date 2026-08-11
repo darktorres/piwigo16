@@ -7,7 +7,7 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 
 /**
- * PwgResponseEncoder is abstract, but is_struct() and flattenResponse()
+ * PwgResponseEncoder is abstract, but isStruct() and flattenResponse()
  * are both real `public static` methods callable without subclassing --
  * this file drives them directly, same convention as the sibling
  * PwgRestEncoderTest/PwgSerialPhpEncoderTest files in ../Protocol/ but
@@ -18,12 +18,12 @@ use Piwigo\Ws\PwgNamedStruct;
  * flatten()'s PwgNamedArray/PwgNamedStruct unwrap and the ATTRIBUTES_KEY
  * merge indirectly (through PwgSerialPhpEncoder::encodeResponse()), but
  * that file's own docblock explicitly declines to chase the
- * is_array($value) re-assertion guard right below the is_struct() call
+ * is_array($value) re-assertion guard right below the isStruct() call
  * (lines 74-84), and neither that file nor PwgRestEncoderTest exercises
- * is_struct()'s own boundary conditions or a *nested* recursive flatten()
+ * isStruct()'s own boundary conditions or a *nested* recursive flatten()
  * call directly. This file closes those gaps.
  */
-test('is_struct returns false for a real sequential array with values that differ from their own index', function (): void {
+test('isStruct returns false for a real sequential array with values that differ from their own index', function (): void {
     // Values are deliberately NOT equal to their own index (10 !== 0, 20 !==
     // 1, 30 !== 2): if `array_keys($data)` on line 50 were ever unwrapped to
     // just `$data` (dropping the array_keys() call), the comparison would
@@ -38,37 +38,37 @@ test('is_struct returns false for a real sequential array with values that diffe
     // flips the result to true.
     $data = [10, 20, 30];
 
-    expect(PwgResponseEncoder::is_struct($data))->toBeFalse();
+    expect(PwgResponseEncoder::isStruct($data))->toBeFalse();
 });
 
-test('is_struct returns true for an associative array with string keys', function (): void {
+test('isStruct returns true for an associative array with string keys', function (): void {
     $data = [
         'id' => 7,
         'name' => 'Alps',
     ];
 
-    expect(PwgResponseEncoder::is_struct($data))->toBeTrue();
+    expect(PwgResponseEncoder::isStruct($data))->toBeTrue();
 });
 
-test('is_struct returns true for integer keys that do not start at zero', function (): void {
+test('isStruct returns true for integer keys that do not start at zero', function (): void {
     $data = [
         1 => 'a',
         2 => 'b',
     ];
 
-    expect(PwgResponseEncoder::is_struct($data))->toBeTrue();
+    expect(PwgResponseEncoder::isStruct($data))->toBeTrue();
 });
 
-test('is_struct returns true for integer keys with a gap', function (): void {
+test('isStruct returns true for integer keys with a gap', function (): void {
     $data = [
         0 => 'a',
         2 => 'b',
     ];
 
-    expect(PwgResponseEncoder::is_struct($data))->toBeTrue();
+    expect(PwgResponseEncoder::isStruct($data))->toBeTrue();
 });
 
-test('is_struct returns true for an empty array, because PHP range(0, -1) is not empty', function (): void {
+test('isStruct returns true for an empty array, because PHP range(0, -1) is not empty', function (): void {
     // A naive reading of `range(0, count($data) - 1) !== array_keys($data)`
     // suggests an empty array should be "not a struct" (both sides empty).
     // That is NOT what PHP actually does: when start > end, range() counts
@@ -76,27 +76,27 @@ test('is_struct returns true for an empty array, because PHP range(0, -1) is not
     // array -- range(0, -1) is the 2-element [0, -1], not [].
     //   php -r 'var_dump(range(0, -1));'   // [0, -1], NOT []
     // So for $data = [], count($data) - 1 is -1, range(0, -1) = [0, -1],
-    // array_keys([]) = [], and [0, -1] !== [] is true: is_struct([])
+    // array_keys([]) = [], and [0, -1] !== [] is true: isStruct([])
     // returns true. This is a genuine surprising corner of the production
     // code (see the "productionBugFound" note in this task's report), but
-    // it is provably inert in this codebase: is_struct() has exactly one
+    // it is provably inert in this codebase: isStruct() has exactly one
     // caller (flatten(), below), and flatten() only ever *acts* on
     // $is_struct via the ATTRIBUTES_KEY isset() check, which is always
     // false for an empty array regardless of $is_struct's value. This test
     // pins the real, current return value either way.
     $data = [];
 
-    expect(PwgResponseEncoder::is_struct($data))->toBeTrue();
+    expect(PwgResponseEncoder::isStruct($data))->toBeTrue();
 });
 
-test('is_struct returns false for non-array scalar values', function (): void {
+test('isStruct returns false for non-array scalar values', function (): void {
     $int = 42;
     $string = 'hello';
     $null = null;
 
-    expect(PwgResponseEncoder::is_struct($int))->toBeFalse()
-        ->and(PwgResponseEncoder::is_struct($string))->toBeFalse()
-        ->and(PwgResponseEncoder::is_struct($null))->toBeFalse();
+    expect(PwgResponseEncoder::isStruct($int))->toBeFalse()
+        ->and(PwgResponseEncoder::isStruct($string))->toBeFalse()
+        ->and(PwgResponseEncoder::isStruct($null))->toBeFalse();
 });
 
 test('flattenResponse leaves a non-array, non-wrapper scalar value completely unchanged', function (): void {
@@ -107,9 +107,9 @@ test('flattenResponse leaves a non-array, non-wrapper scalar value completely un
     // A RemoveEarlyReturn mutation on that line is a genuine EQUIVALENT
     // MUTANT, confirmed live (sed the `return;` out of the if-block, rerun
     // this whole file, restore): the identical guard a few lines below
-    // (`$is_struct = self::is_struct($value); if (! is_array($value)) {
+    // (`$is_struct = self::isStruct($value); if (! is_array($value)) {
     // return; }`, line 82) always catches the exact same non-array $value
-    // right after, because is_struct() only *reads* its by-ref $data
+    // right after, because isStruct() only *reads* its by-ref $data
     // parameter (`if (is_array($data)) {...} return false;` -- no
     // assignment anywhere in its body) -- it never converts $value into an
     // array or vice versa. So removing the line-75 return cannot be
@@ -190,7 +190,7 @@ test('flattenResponse recursively flattens a nested PwgNamedStruct inside a plai
 test('flattenResponse recursively flattens a nested PwgNamedArray inside a plain list', function (): void {
     // Same recursive-foreach proof as above, but for a *list*-shaped outer
     // array (sequential int keys) containing a nested PwgNamedArray, so the
-    // outer is_struct() takes the `false` branch (skips the ATTRIBUTES_KEY
+    // outer isStruct() takes the `false` branch (skips the ATTRIBUTES_KEY
     // merge block entirely) while the foreach at lines 93-95 still has to
     // run and recurse into the single element to unwrap it.
     $value = [

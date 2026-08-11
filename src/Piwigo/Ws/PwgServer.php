@@ -135,11 +135,11 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         // add reflection methods
         $this->addMethod(
             'reflection.getMethodList',
-            self::ws_getMethodList(...)
+            self::wsGetMethodList(...)
         );
         $this->addMethod(
             'reflection.getMethodDetails',
-            self::ws_getMethodDetails(...),
+            self::wsGetMethodDetails(...),
             ['methodName']
         );
 
@@ -480,7 +480,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
      * @param array<string, mixed> $params
      * @return array{methods: PwgNamedArray}
      */
-    public static function ws_getMethodList(array $params, self &$service): array
+    public static function wsGetMethodList(array $params, self &$service): array
     {
         $methods = array_filter(
             $service->methods,
@@ -497,7 +497,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
      * @param array<string, mixed> $params
      * @return PwgError|array<string, mixed>
      */
-    public static function ws_getMethodDetails(array $params, self &$service): PwgError|array
+    public static function wsGetMethodDetails(array $params, self &$service): PwgError|array
     {
         $methodName = $params['methodName'];
 

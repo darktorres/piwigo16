@@ -21,25 +21,25 @@ use Piwigo\Ws\PwgNamedStruct;
  * there because no real WS response exercises them: encode()'s 'NULL'
  * gettype() case, the generic get_object_vars() object fallback, and the
  * `default` resource/unknown-type trigger_error() branch. This file closes
- * exactly those three, plus encode_struct()'s numeric-key skip and its
+ * exactly those three, plus encodeStruct()'s numeric-key skip and its
  * skip_underscore behaviour (only reachable via that same generic object
  * fallback), which had no coverage anywhere.
  *
- * encode_struct() runs the *same* is_numeric()/skip_underscore/null checks
+ * encodeStruct() runs the *same* is_numeric()/skip_underscore/null checks
  * in two separate foreach loops over the same $data (the first loop only
  * peels off xml_attributes/ATTRIBUTES_KEY entries via unset(); every other
  * key -- including ones the checks below skip -- stays in $data for the
  * second, element-writing loop). So a key matching one of those three skip
  * conditions hits the *same* check in both loops, never reaching either
  * loop's write path. Asserting on the final rendered XML (the only way to
- * observe encode_struct()'s effect from the public API) is sufficient proof
+ * observe encodeStruct()'s effect from the public API) is sufficient proof
  * both loops' checks fired: if either loop's check hadn't skipped it, the
  * key would show up as a written element.
  */
 test('encode_struct skips an integer array key in both scan loops, writing no element for it', function (): void {
     // [3 => ..., 'label' => ...] is not array_is_list() (key 3 isn't the
     // list's expected leading 0), so encode()'s bare 'array' case routes
-    // this through encode_struct(), not encode_array().
+    // this through encodeStruct(), not encodeArray().
     $encoder = new PwgRestEncoder();
     $response = [
         3 => 'numeric-key-value',
@@ -86,7 +86,7 @@ test('encode_struct with skip_underscore=true skips a leading-underscore key, in
     // get_object_vars() object fallback -- the PwgNamedStruct/PwgNamedArray
     // branches both pass false. A plain object that is neither of those
     // wrapper types is exactly what reaches that fallback, so this fixture
-    // also proves encode()'s own `else { encode_struct(get_object_vars($data), true); }`
+    // also proves encode()'s own `else { encodeStruct(get_object_vars($data), true); }`
     // line and the `break` right after it.
     $encoder = new PwgRestEncoder();
     $response = new stdClass();
@@ -109,11 +109,11 @@ test('encode_struct with skip_underscore=true skips a leading-underscore key, in
         ->not->toContain('_secret');
 });
 
-test('encode() writes empty content for a NULL list element, reached only via encode_array(), never encode_struct()', function (): void {
-    // A null *struct* value never reaches encode() at all -- encode_struct()
+test('encode() writes empty content for a NULL list element, reached only via encodeArray(), never encodeStruct()', function (): void {
+    // A null *struct* value never reaches encode() at all -- encodeStruct()
     // skips it before ever recursing (proven by the test above). The 'NULL'
     // gettype() case is only reachable for an element of a real *list*, via
-    // encode_array()'s unconditional `$this->encode($item, $xml_attributes)`
+    // encodeArray()'s unconditional `$this->encode($item, $xml_attributes)`
     // call, which has no null check of its own.
     $encoder = new PwgRestEncoder();
     $response = [null, 'x'];
@@ -175,7 +175,7 @@ test('encode() trigger_error()s an E_USER_WARNING for a resource value and write
 
 /**
  * Mutation-sweep closure notes (encodeResponse()'s PwgError branch,
- * encode_struct()'s twin scan loops, and encode()'s array/object
+ * encodeStruct()'s twin scan loops, and encode()'s array/object
  * dispatch). Each test below is built to fail under one specific
  * mutant, traced by hand against the source before being written --
  * see each test's own comment for which mutant(s) it targets and why.
@@ -208,7 +208,7 @@ test('encodeResponse renders a PwgError as a stat="fail" response, never routing
 });
 
 test('encode_struct pulls a later xml_attributes-designated key out even after an earlier numeric key in the same struct (first scan loop)', function (): void {
-    // Exercises encode_struct()'s FIRST scan loop (attribute-extraction),
+    // Exercises encodeStruct()'s FIRST scan loop (attribute-extraction),
     // not just the second (element-writing) loop the numeric-key test
     // near the top of this file already covers: $xml_attributes is only
     // ever non-empty via a PwgNamedStruct's own _xmlAttributes, so 'id'
@@ -244,7 +244,7 @@ test('encode_struct pulls a later xml_attributes-designated key out even after a
 });
 
 test('encode_struct casts an integer attribute key to string before writing it', function (): void {
-    // Kills line 104 RemoveStringCast: write_attribute()'s own $name
+    // Kills line 104 RemoveStringCast: writeAttribute()'s own $name
     // parameter is declared `string $name`, and this file's own
     // strict_types=1 means passing a genuine int array key without the
     // (string) cast throws a real TypeError rather than PHP silently
@@ -384,7 +384,7 @@ test('encode_struct omits a null-valued xml_attributes-designated key entirely, 
     // `$value === null`, so the first loop stops `continue`-ing on the
     // null 'id' entry -- which the *original* code never lets reach the
     // isset($xml_attributes[...]) check at all -- and instead falls
-    // through to write_attribute('id', null), rendering a real but empty
+    // through to writeAttribute('id', null), rendering a real but empty
     // `id=""` attribute instead of omitting 'id' altogether).
     $encoder = new PwgRestEncoder();
     $response = [
@@ -450,9 +450,9 @@ test('encode_struct (second, element-writing scan loop) only skips a null-valued
         ->not->toContain('<middle');
 });
 
-test('encode() routes a plain PHP array through encode_struct() with skip_underscore=false, unlike the generic object fallback', function (): void {
+test('encode() routes a plain PHP array through encodeStruct() with skip_underscore=false, unlike the generic object fallback', function (): void {
     // Kills line 158 FalseToTrue: encode()'s bare 'array' case is the
-    // only encode_struct() call site that hardcodes `false` for
+    // only encodeStruct() call site that hardcodes `false` for
     // skip_underscore. Forcing it `true` would make a plain associative
     // array behave like the get_object_vars() object fallback and
     // silently drop any underscore-prefixed key -- which a plain PHP
@@ -471,7 +471,7 @@ test('encode() routes a plain PHP array through encode_struct() with skip_unders
         ->toContain('<visible>yes</visible>');
 });
 
-test('encode() routes a PwgNamedArray through encode_array()/its own _content, not the generic object fallback', function (): void {
+test('encode() routes a PwgNamedArray through encodeArray()/its own _content, not the generic object fallback', function (): void {
     // Kills line 162 InstanceOfToFalse: a false-forced check sends a
     // PwgNamedArray to the final generic-object `else` branch instead --
     // get_object_vars() on it (from outside the class) sees its public
@@ -489,7 +489,7 @@ test('encode() routes a PwgNamedArray through encode_array()/its own _content, n
         ->toContain('<item>b</item>');
 });
 
-test('encode() routes a PwgNamedStruct through encode_struct()/its own _content, not the generic object fallback', function (): void {
+test('encode() routes a PwgNamedStruct through encodeStruct()/its own _content, not the generic object fallback', function (): void {
     // Kills line 164 InstanceOfToFalse, the PwgNamedStruct counterpart to
     // the PwgNamedArray test above: get_object_vars() would see only
     // _content/_xmlAttributes (both underscore-prefixed, both public),
@@ -514,7 +514,7 @@ test('encode() routes a PwgNamedStruct through encode_struct()/its own _content,
 
 test('encode() encodes a PwgNamedStruct without skipping its own underscore-prefixed keys', function (): void {
     // Kills line 167 FalseToTrue: the PwgNamedStruct branch's own
-    // encode_struct() call hardcodes skip_underscore=false (only the
+    // encodeStruct() call hardcodes skip_underscore=false (only the
     // generic get_object_vars() object fallback a few lines below passes
     // true) -- a leading-underscore _content key must still be written as
     // a normal element for a PwgNamedStruct, unlike the object-fallback

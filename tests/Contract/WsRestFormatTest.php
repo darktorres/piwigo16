@@ -8,18 +8,18 @@ namespace Piwigo\Tests\Contract;
  * Ws\Protocol\PwgRestEncoder -- reached via ws.php?format=rest instead of
  * the suite's usual format=json (see WsInitializer's format switch).
  * WsImagesGetInfoAndCommentTest's own rest-format test already exercises
- * encodeResponse()'s success path plus encode_struct()/encode_array() via
+ * encodeResponse()'s success path plus encodeStruct()/encodeArray() via
  * PwgNamedStruct/PwgNamedArray (derivatives/categories/tags/rates); this
  * file covers what that one doesn't: encode()'s 'boolean' gettype() case,
- * a null struct value being skipped (encode_struct()'s two null-skip
+ * a null struct value being skipped (encodeStruct()'s two null-skip
  * checks), and a plain (non-PwgNamedArray/PwgNamedStruct) associative PHP
- * array hitting encode()'s bare 'array' => encode_struct() branch (as
- * opposed to the object-based encode_array()/encode_struct() calls the
+ * array hitting encode()'s bare 'array' => encodeStruct() branch (as
+ * opposed to the object-based encodeArray()/encodeStruct() calls the
  * PwgNamedArray/PwgNamedStruct branches already prove).
  *
  * Not chased here (no real WS response exercises these): encode()'s
  * 'NULL' gettype() case (only reachable for an element of a real list --
- * a PHP null skips straight past every real encode_struct() call before
+ * a PHP null skips straight past every real encodeStruct() call before
  * ever reaching encode() itself), the generic get_object_vars() object
  * fallback (every real response object is a PwgNamedArray/PwgNamedStruct/
  * PwgError), and the `default` resource/unknown-type trigger_error()
@@ -58,7 +58,7 @@ final class WsRestFormatTest extends ContractTestCase
         $body = $this->restBody('pwg.images.checkUpload');
 
         self::assertStringContainsString('<ready_for_upload>1</ready_for_upload>', $body);
-        // message is null -- encode_struct()'s own null-value skip means
+        // message is null -- encodeStruct()'s own null-value skip means
         // the element never appears at all, not an empty one.
         self::assertStringNotContainsString('<message>', $body);
     }
@@ -73,7 +73,7 @@ final class WsRestFormatTest extends ContractTestCase
         // relies on) -- msizes' *value* is what's a genuinely plain PHP
         // array<string, int> (not a PwgNamedArray/PwgNamedStruct):
         // array_is_list() is false (string keys), so encode()'s bare
-        // 'array' case routes it through encode_struct(), rendering each
+        // 'array' case routes it through encodeStruct(), rendering each
         // key as its own XML element directly inside <value> (confirmed
         // live -- there is no literal <msizes> tag anywhere in the body).
         self::assertMatchesRegularExpression('/<name>msizes<\/name>\s*<value>.*<square>\d+<\/square>.*<\/value>/s', $body);

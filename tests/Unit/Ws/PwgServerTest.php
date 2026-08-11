@@ -509,24 +509,24 @@ test('invoke calls the real registered callback with the checked params and a re
         ]);
 });
 
-// --------------------------------------------------------------- ws_getMethodList / ws_getMethodDetails
+// --------------------------------------------------------------- wsGetMethodList / wsGetMethodDetails
 
-test('ws_getMethodList lists only non-hidden methods', function (): void {
+test('wsGetMethodList lists only non-hidden methods', function (): void {
     $server = pwgServerTestServer();
     $server->addMethod('test.visible', fn (array $params, PwgServer &$service): array => []);
     $server->addMethod('test.hidden', fn (array $params, PwgServer &$service): array => [], null, null, [
         'hidden' => true,
     ]);
 
-    $result = PwgServer::ws_getMethodList([], $server);
+    $result = PwgServer::wsGetMethodList([], $server);
 
     expect($result['methods']->_content)->toBe(['test.visible']);
 });
 
-test('ws_getMethodDetails returns INVALID_PARAM for a non-existent method name', function (): void {
+test('wsGetMethodDetails returns INVALID_PARAM for a non-existent method name', function (): void {
     $server = pwgServerTestServer();
 
-    $result = PwgServer::ws_getMethodDetails([
+    $result = PwgServer::wsGetMethodDetails([
         'methodName' => 'does.not.exist',
     ], $server);
 
@@ -538,7 +538,7 @@ test('ws_getMethodDetails returns INVALID_PARAM for a non-existent method name',
     }
 });
 
-test('ws_getMethodDetails describes a real method\'s full param signature', function (): void {
+test('wsGetMethodDetails describes a real method\'s full param signature', function (): void {
     $server = pwgServerTestServer();
     $server->addMethod('test.method', fn (array $params, PwgServer &$service): array => [], [
         'category_id' => [
@@ -552,7 +552,7 @@ test('ws_getMethodDetails describes a real method\'s full param signature', func
         'admin_only' => true,
     ]);
 
-    $result = PwgServer::ws_getMethodDetails([
+    $result = PwgServer::wsGetMethodDetails([
         'methodName' => 'test.method',
     ], $server);
 

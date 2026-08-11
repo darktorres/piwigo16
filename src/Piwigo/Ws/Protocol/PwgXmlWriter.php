@@ -59,11 +59,11 @@ final class PwgXmlWriter
         return $this->encodedXml;
     }
 
-    public function start_element(string $name): void
+    public function startElement(string $name): void
     {
-        $this->end_prev(false);
+        $this->endPrev(false);
         if ($this->elementStack !== []) {
-            $this->eol_indent();
+            $this->eolIndent();
         }
         $this->indentLevel++;
         $this->indent();
@@ -76,28 +76,28 @@ final class PwgXmlWriter
         $this->elementStack[] = $name;
     }
 
-    public function end_element(string $x): void
+    public function endElement(string $x): void
     {
-        $close_tag = $this->end_prev(true);
+        $close_tag = $this->endPrev(true);
         $name = array_pop($this->elementStack);
         if ($close_tag) {
             $this->indentLevel--;
             $this->indent();
-            //      $this->eol_indent();
+            //      $this->eolIndent();
             $this->output('</' . $name . '>');
         }
     }
 
-    public function write_content(mixed $value): void
+    public function writeContent(mixed $value): void
     {
-        $this->end_prev(false);
+        $this->endPrev(false);
         $value = is_scalar($value) ? (string) $value : '';
         $this->output(htmlspecialchars($value));
     }
 
-    public function write_cdata(mixed $value): void
+    public function writeCdata(mixed $value): void
     {
-        $this->end_prev(false);
+        $this->endPrev(false);
         $value = is_scalar($value) ? (string) $value : '';
         $this->output(
             '<![CDATA['
@@ -106,24 +106,24 @@ final class PwgXmlWriter
         );
     }
 
-    public function write_attribute(string $name, mixed $value): void
+    public function writeAttribute(string $name, mixed $value): void
     {
-        $this->output(' ' . $name . '="' . $this->encode_attribute($value) . '"');
+        $this->output(' ' . $name . '="' . $this->encodeAttribute($value) . '"');
     }
 
-    public function encode_attribute(mixed $value): string
+    public function encodeAttribute(mixed $value): string
     {
         return htmlspecialchars(is_scalar($value) ? (string) $value : '');
     }
 
-    private function end_prev(bool $done): bool
+    private function endPrev(bool $done): bool
     {
         $ret = true;
         if ($this->lastTagOpen) {
             if ($done) {
                 $this->indentLevel--;
                 $this->output(' />');
-                // $this->eol_indent();
+                // $this->eolIndent();
                 $ret = false;
             } else {
                 $this->output('>');
@@ -133,7 +133,7 @@ final class PwgXmlWriter
         return $ret;
     }
 
-    private function eol_indent(): void
+    private function eolIndent(): void
     {
         $this->output("\n");
     }

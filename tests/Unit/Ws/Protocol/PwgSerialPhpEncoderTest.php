@@ -22,12 +22,12 @@ use Piwigo\Ws\PwgNamedStruct;
  * doesn't set up.
  *
  * Ws\Encoder\PwgResponseEncoder::flatten()'s own re-assertion guard (`$is_struct
- * = self::is_struct($value); if (! is_array($value)) { return; }`,
+ * = self::isStruct($value); if (! is_array($value)) { return; }`,
  * directly below the earlier `if (! is_array($value)) { return; }`) is not
- * chased here or anywhere else: it exists purely because is_struct()
+ * chased here or anywhere else: it exists purely because isStruct()
  * takes `$data` by reference with a `mixed` type, so PHPStan discards the
  * is_array() narrowing above across the call (see the source's own
- * docblock) -- but is_struct()'s real body never actually writes to
+ * docblock) -- but isStruct()'s real body never actually writes to
  * `$data` at all (confirmed by reading its full source: a plain read-only
  * `is_array($data)`/`array_keys($data)` check, `return`s the whole way
  * through). $value is therefore always still the same real array
@@ -66,7 +66,7 @@ test('encodeResponse serializes a plain array response as stat=ok/result', funct
 
 test('encodeResponse flattens a PwgNamedStruct, merging its attributes_xml_ marker key into the result', function (): void {
     // flattenResponse() (inherited from PwgResponseEncoder) unwraps the
-    // PwgNamedStruct to its raw ->_content, then -- because is_struct()
+    // PwgNamedStruct to its raw ->_content, then -- because isStruct()
     // is true for it -- merges the 'attributes_xml_' sub-array into the
     // parent and removes the marker key entirely.
     $encoder = new PwgSerialPhpEncoder();
@@ -99,7 +99,7 @@ test('encodeResponse flattens a PwgNamedStruct, merging its attributes_xml_ mark
 test('encodeResponse flattens a PwgNamedArray to its plain list content, with no attributes merge', function (): void {
     // flatten()'s other branch: PwgNamedArray unwraps to ->_content same
     // as PwgNamedStruct does, but a sequential-int-keyed list is NOT a
-    // "struct" per is_struct(), so the attributes_xml_ merge block is
+    // "struct" per isStruct(), so the attributes_xml_ merge block is
     // skipped entirely -- a genuinely different code path from the
     // PwgNamedStruct case above.
     $encoder = new PwgSerialPhpEncoder();

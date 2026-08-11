@@ -56,6 +56,13 @@ final class RequestBootstrapConfigureTest extends IntegrationTestCase
 
     public function test_configure_redirect_response_has_a_302_status_and_installphp_location(): void
     {
+        // parent::setUp()'s own conditional default boot (real repo root)
+        // would otherwise collide with this test's own configure() call
+        // below (a *different* root) -- Kernel::boot() throws on a root
+        // mismatch rather than silently keeping the stale binding (see its
+        // own docblock), so reset back to a genuinely unbooted baseline
+        // first.
+        Kernel::reset();
         $tempRoot = sys_get_temp_dir() . '/piwigo-configure-test-' . bin2hex(random_bytes(6));
         mkdir($tempRoot . '/local', 0777, true);
 

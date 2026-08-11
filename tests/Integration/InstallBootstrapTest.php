@@ -122,7 +122,23 @@ final class InstallBootstrapTest extends IntegrationTestCase
         restore_error_handler();
     }
 
-    public function test_boot_is_idempotent_and_keeps_the_first_paths_on_a_second_call(): void
+    public function test_boot_is_idempotent_when_recalled_with_the_same_paths_root_by_value(): void
+    {
+        $first = Paths::fromRoot($this->tempRoot);
+        $second = Paths::fromRoot($this->tempRoot);
+
+        InstallBootstrap::boot($first);
+        InstallBootstrap::boot($second);
+
+        self::assertTrue(Kernel::isBooted());
+
+        // No local/config/config.php -> default policy -> boot() really did
+        // call ErrorCollector::install() as a side effect of the 1st call;
+        // undo it so it can't intercept errors raised by any later test.
+        restore_error_handler();
+    }
+
+    public function test_boot_throws_instead_of_silently_keeping_a_stale_paths_binding_when_recalled_with_a_different_root(): void
     {
         $first = Paths::fromRoot($this->tempRoot);
         $secondRoot = sys_get_temp_dir() . '/piwigo-installbootstrap-2nd-' . bin2hex(random_bytes(6)) . '/';
@@ -130,16 +146,25 @@ final class InstallBootstrapTest extends IntegrationTestCase
         $second = Paths::fromRoot($secondRoot);
 
         InstallBootstrap::boot($first);
-        InstallBootstrap::boot($second);
 
-        // Kernel::boot()'s own `self::$booted` guard makes the 2nd call a
-        // no-op -- CurrentPaths must still reflect the *first* Paths, not
-        // silently swap to the second.
+        try {
+            InstallBootstrap::boot($second);
+            self::fail('Expected InstallBootstrap::boot() to throw on a mismatched Paths root.');
+        } catch (LogicException $logicException) {
+            self::assertSame(
+                'Kernel already booted with a different Paths root (' . $this->tempRoot
+                    . ') -- reset the Kernel (call reset() first) to rebind it (e.g. between tests).',
+                $logicException->getMessage()
+            );
+        }
+
+        // The failed 2nd call never reached Kernel::boot()'s own state
+        // mutation -- CurrentPaths must still reflect the *first* Paths.
         self::assertSame($first, CurrentPathsTestFactory::get());
 
         // The 1st boot() (no local/config/config.php -> default policy)
-        // really did call ErrorCollector::install(); the 2nd was a no-op
-        // (Kernel::$booted guard). Undo the one real registration.
+        // really did call ErrorCollector::install(); undo it so it can't
+        // intercept errors raised by any later test.
         restore_error_handler();
         $this->removeDirectory($secondRoot);
     }

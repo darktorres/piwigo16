@@ -266,25 +266,30 @@ namespace Piwigo\Tests\Integration {
             $login = 'p18-regression-' . bin2hex(random_bytes(4));
             $result = $this->service->registerUser($login, 'password123', null, UrlServiceTestFactory::build());
 
-            self::assertNotNull($result->userId);
-            $userId = $result->userId;
+            try {
+                self::assertNotNull($result->userId);
+                $userId = $result->userId;
 
-            $members = $groupRepo->findMemberUserIds($defaultGroupId);
-            self::assertSame([$userId], array_map(static fn (UserId $id): int => $id->value, $members));
+                $members = $groupRepo->findMemberUserIds($defaultGroupId);
+                self::assertSame([$userId], array_map(static fn (UserId $id): int => $id->value, $members));
 
-            // The bug wrote (group_id, user_id) = ($userId, $defaultGroupId)
-            // into user_group -- swapped columns, not just a missing row.
-            // Confirm no such row exists.
-            $swappedRowCount = $this->conn->createQueryBuilder()
-                ->select('COUNT(*)')
-                ->from('user_group')
-                ->where('group_id = :userId')
-                ->setParameter('userId', $userId)
-                ->executeQuery()
-                ->fetchOne();
-            self::assertSame(0, is_numeric($swappedRowCount) ? (int) $swappedRowCount : -1);
-
-            $groupRepo->delete([$defaultGroupId]);
+                // The bug wrote (group_id, user_id) = ($userId, $defaultGroupId)
+                // into user_group -- swapped columns, not just a missing row.
+                // Confirm no such row exists.
+                $swappedRowCount = $this->conn->createQueryBuilder()
+                    ->select('COUNT(*)')
+                    ->from('user_group')
+                    ->where('group_id = :userId')
+                    ->setParameter('userId', $userId)
+                    ->executeQuery()
+                    ->fetchOne();
+                self::assertSame(0, is_numeric($swappedRowCount) ? (int) $swappedRowCount : -1);
+            } finally {
+                if ($result->userId !== null) {
+                    $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$result->userId]);
+                }
+                $groupRepo->delete([$defaultGroupId]);
+            }
         }
 
         /**

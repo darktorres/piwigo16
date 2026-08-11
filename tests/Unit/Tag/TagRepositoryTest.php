@@ -161,6 +161,39 @@ function tagTestName(): string
     return 'p17-unit-test-' . bin2hex(random_bytes(4));
 }
 
+/**
+ * A fresh, disposable tag pre-linked to image 1 -- mimics the fixture's
+ * own tag 3 ("family", also linked to image 1) shape for tests that need
+ * an existing image1<->tag link to add/remove other images' links
+ * against, without touching the real, shared fixture tag. A prior
+ * version of several tests below used the real tag 3 directly for this;
+ * confirmed live that composer test's own parallel runner intermittently
+ * raced SearchServiceTest.php's own "'family' search matches only image
+ * 1" assertions against these tests' own temporary (image 4/5, tag 3)
+ * links -- the same class of cross-file collision already found and
+ * fixed for PermalinkServiceTest.php/PermalinkRepositoryTest.php's
+ * shared category id. Caller must remove both the returned tag and its
+ * image1 link via tagTestRemoveFixtureLikeTag() in its own finally block.
+ */
+function tagTestFixtureLikeTagId(): TagId
+{
+    $repo = tagTestRepo();
+    $tagId = $repo->insert(tagTestName(), tagTestName());
+    DbConnection::build()->insert('image_tag', [
+        'image_id' => 1,
+        'tag_id' => $tagId->value,
+    ]);
+
+    return $tagId;
+}
+
+function tagTestRemoveFixtureLikeTag(TagId $tagId): void
+{
+    DbConnection::build()->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
+    tagTestRepo()
+        ->deleteByIds([$tagId]);
+}
+
 function tagTestNoPermissionRestriction(): PermissionCriteria
 {
     return new PermissionCriteria(null, null, null, null, null, null);
@@ -313,31 +346,27 @@ test('deleteImageTagByTagIds() is a no-op for no ids', function (): void {
     // made a concurrent 'family' search return image 4 as a spurious
     // extra match).
     $repo = tagTestRepo();
-    $tagId = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
+    $tagId = tagTestFixtureLikeTagId();
     $conn->insert('image_tag', [
         'image_id' => 4,
-        'tag_id' => $tagId->value,
-    ]);
-    $conn->insert('image_tag', [
-        'image_id' => 5,
         'tag_id' => $tagId->value,
     ]);
 
     try {
         $repo->deleteImageTagByTagIds([]);
 
-        // both links survive this no-op call. findImageIdsForTagIds()
+        // Both links (the pre-existing image1 one and the image4 one
+        // just added) survive this no-op call. findImageIdsForTagIds()
         // carries no ORDER BY (order is not part of its contract -- both
         // real callers in TagService just treat the result as a set), so
         // sort before comparing, same idiom as the sibling test above.
         $imageIds = $repo->findImageIdsForTagIds([$tagId]);
         sort($imageIds);
         expect($imageIds)
-            ->toBe([4, 5]);
+            ->toBe([1, 4]);
     } finally {
-        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
-        $repo->deleteByIds([$tagId]);
+        tagTestRemoveFixtureLikeTag($tagId);
     }
 });
 
@@ -345,8 +374,8 @@ test('deleteImageTagByTagIds() removes every link to that tag', function (): voi
     // Disposable tag -- see the sibling no-op test above for why a real
     // fixture tag id isn't safe to borrow here.
     $repo = tagTestRepo();
-    $tagId = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
+    $tagId = tagTestFixtureLikeTagId();
     $conn->insert('image_tag', [
         'image_id' => 4,
         'tag_id' => $tagId->value,
@@ -359,8 +388,13 @@ test('deleteImageTagByTagIds() removes every link to that tag', function (): voi
     try {
         $repo->deleteImageTagByTagIds([$tagId]);
 
+        // The pre-existing image1 link must be gone too, not just the 2
+        // disposable ones just added.
         expect($repo->findImageIdsForTagIds([$tagId]))->toBe([]);
     } finally {
+        // deleteImageTagByTagIds() above already removed every link,
+        // including the image1 one tagTestFixtureLikeTagId() itself
+        // added -- only the tag row remains to clean up.
         $repo->deleteByIds([$tagId]);
     }
 });
@@ -422,32 +456,26 @@ test('deleteImageTagByImageIds() removes every link from that image', function (
 });
 
 test('deleteImageTagByImageAndTagIds() is a no-op for empty image ids', function (): void {
-    // Disposable tag -- see deleteImageTagByTagIds()'s no-op test above
-    // for why a real fixture tag id isn't safe to borrow here.
-    $repo = tagTestRepo();
-    $tagId = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
+    $tagId = tagTestFixtureLikeTagId();
     $conn->insert('image_tag', [
         'image_id' => 4,
         'tag_id' => $tagId->value,
     ]);
 
     try {
-        $repo->deleteImageTagByImageAndTagIds([], [$tagId]);
+        tagTestRepo()->deleteImageTagByImageAndTagIds([], [$tagId]);
 
-        expect($repo->findImageIdsForTagIds([$tagId]))->toBe([4]);
+        expect(tagTestRepo()->findImageIdsForTagIds([$tagId]))->toBe([1, 4]);
     } finally {
-        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
-        $repo->deleteByIds([$tagId]);
+        tagTestRemoveFixtureLikeTag($tagId);
     }
 });
 
 test('deleteImageTagByImageAndTagIds() is a no-op for empty tag ids', function (): void {
-    // Disposable tag -- see deleteImageTagByTagIds()'s no-op test above
-    // for why a real fixture tag id isn't safe to borrow here.
     $repo = tagTestRepo();
-    $tagId = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
+    $tagId = tagTestFixtureLikeTagId();
     $conn->insert('image_tag', [
         'image_id' => 4,
         'tag_id' => $tagId->value,
@@ -456,10 +484,9 @@ test('deleteImageTagByImageAndTagIds() is a no-op for empty tag ids', function (
     try {
         $repo->deleteImageTagByImageAndTagIds([4], []);
 
-        expect($repo->findImageIdsForTagIds([$tagId]))->toBe([4]);
+        expect($repo->findImageIdsForTagIds([$tagId]))->toBe([1, 4]);
     } finally {
-        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
-        $repo->deleteByIds([$tagId]);
+        tagTestRemoveFixtureLikeTag($tagId);
     }
 });
 

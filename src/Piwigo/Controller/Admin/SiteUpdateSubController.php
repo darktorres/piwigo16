@@ -335,9 +335,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $next_id = $this->categoryService->getNextId();
 
             // retrieve sub-directories fulldirs from the site reader
-            $fs_fulldirs = $site_reader->get_full_directories($basedir);
+            $fs_fulldirs = $site_reader->getFullDirectories($basedir);
 
-            // get_full_directories doesn't include the base directory, so if it's a
+            // getFullDirectories doesn't include the base directory, so if it's a
             // category directory, we need to include it in our array
             if (isset($post['cat'])) {
                 $fs_fulldirs[] = $basedir;
@@ -542,10 +542,10 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $start_files = TimingHelper::getMoment();
             $start = $start_files;
 
-            $fs = $site_reader->get_elements($basedir);
+            $fs = $site_reader->getElements($basedir);
 
             $footer_elements ??= [];
-            $footer_elements[] = '<!-- get_elements: '
+            $footer_elements[] = '<!-- getElements: '
               . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
               . ' -->';
 
@@ -817,7 +817,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                 $datas = [];
                 foreach ($files as $id => $file) {
-                    $data = $site_reader->get_element_update_attributes($file['path'])->toArray();
+                    $data = $site_reader->getElementUpdateAttributes($file['path'])->toArray();
                     $data['id'] = $id;
                     $datas[] = $data;
                 } // end foreach file
@@ -828,7 +828,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         ->massUpdateFields(
                             [
                                 'primary' => ['id'],
-                                'update' => $site_reader->get_update_attributes(),
+                                'update' => $site_reader->getUpdateAttributes(),
                             ],
                             $datas
                         );
@@ -896,7 +896,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $tagService = $this->tagService;
 
             foreach ($files as $id => $element_infos) {
-                $data = $site_reader->get_element_metadata($element_infos);
+                $data = $site_reader->getElementMetadata($element_infos);
 
                 if (is_array($data)) {
                     $data['date_metadata_update'] = $dbnow;
@@ -931,7 +931,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                                 'update' => array_values(array_unique(
                                     array_merge(
                                         array_diff(
-                                            $site_reader->get_metadata_attributes(),
+                                            $site_reader->getMetadataAttributes(),
                                             // keywords and tags fields are managed separately
                                             ['keywords', 'tags']
                                         ),
@@ -971,7 +971,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
         // used_metadata string is displayed to inform admin which metadata will be
         // used from files for synchronization
-        $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
+        $used_metadata = implode(', ', $site_reader->getMetadataAttributes());
 
         $template->assignContext(new SiteUpdatePageContext(
             siteUrl: $site_url,

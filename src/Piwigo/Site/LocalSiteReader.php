@@ -151,7 +151,7 @@ final class LocalSiteReader
     /**
      * @return string[]
      */
-    public function get_full_directories(string $basedir): array
+    public function getFullDirectories(string $basedir): array
     {
         $fs_fulldirs = FilesystemHelper::getFsDirectories($basedir, $this->currentConfig);
         return $fs_fulldirs;
@@ -163,7 +163,7 @@ final class LocalSiteReader
      * @param string $path recurse in this directory
      * @return array<string, array{representative_ext: ?string, formats?: array<string, float>}> like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
-    public function get_elements($path): array
+    public function getElements($path): array
     {
         $flip_file_ext = $this->flip_file_ext;
         $flip_picture_ext = $this->flip_picture_ext;
@@ -183,7 +183,7 @@ final class LocalSiteReader
                     if (isset($flip_file_ext[$extension])) {
                         $representative_ext = null;
                         if (! isset($flip_picture_ext[$extension])) {
-                            $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
+                            $representative_ext = $this->getRepresentativeExt($path, $filename_wo_ext);
                         }
 
                         $fs[$path . '/' . $node] = [
@@ -191,7 +191,7 @@ final class LocalSiteReader
                         ];
 
                         if ($this->currentConfig->isFormatsEnabled) {
-                            $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
+                            $fs[$path . '/' . $node]['formats'] = $this->getFormats($path, $filename_wo_ext);
                         }
                     }
                 } elseif (is_dir($path . '/' . $node)
@@ -205,7 +205,7 @@ final class LocalSiteReader
             closedir($contents);
 
             foreach ($subdirs as $subdir) {
-                $tmp_fs = $this->get_elements($path . '/' . $subdir);
+                $tmp_fs = $this->getElements($path . '/' . $subdir);
                 $fs = array_merge($fs, $tmp_fs);
             }
             ksort($fs);
@@ -218,12 +218,12 @@ final class LocalSiteReader
     /**
      * @return string[]
      */
-    public function get_update_attributes(): array
+    public function getUpdateAttributes(): array
     {
         return ['representative_ext'];
     }
 
-    public function get_element_update_attributes(string $file): ElementUpdateAttributes
+    public function getElementUpdateAttributes(string $file): ElementUpdateAttributes
     {
         $filename = basename($file);
         $extension = StringHelper::getExtension($filename);
@@ -232,7 +232,7 @@ final class LocalSiteReader
         if (! isset($this->flip_picture_ext[$extension])) {
             $dirname = dirname($file);
             $filename_wo_ext = StringHelper::getFilenameWoExtension($filename);
-            $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
+            $representative_ext = $this->getRepresentativeExt($dirname, $filename_wo_ext);
         }
 
         return new ElementUpdateAttributes($representative_ext);
@@ -243,7 +243,7 @@ final class LocalSiteReader
     /**
      * @return string[]
      */
-    public function get_metadata_attributes(): array
+    public function getMetadataAttributes(): array
     {
         return $this->metadataService()
             ->getSyncMetadataAttributes();
@@ -257,14 +257,14 @@ final class LocalSiteReader
      * @param array<string, mixed> $infos
      * @return array<string, mixed>|false
      */
-    public function get_element_metadata(array $infos): array|false
+    public function getElementMetadata(array $infos): array|false
     {
         return $this->metadataService()
             ->getSyncMetadata($infos);
     }
 
     // -------------------------------------------------- private functions --------
-    public function get_representative_ext(string $path, string $filename_wo_ext): ?string
+    public function getRepresentativeExt(string $path, string $filename_wo_ext): ?string
     {
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
         foreach ($this->currentConfig->pictureExtensions as $ext) {
@@ -279,7 +279,7 @@ final class LocalSiteReader
     /**
      * @return array<string, float> keyed by format extension
      */
-    public function get_formats(string $path, string $filename_wo_ext): array
+    public function getFormats(string $path, string $filename_wo_ext): array
     {
         $formats = [];
 

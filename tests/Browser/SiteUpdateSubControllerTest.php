@@ -1226,7 +1226,7 @@ it('assigns tags from IPTC keywords during metadata synchronization', function (
         // use_iptc_mapping is left at its own default (already includes
         // 'keywords' => '2#025'), only use_iptc itself needs enabling --
         // it defaults to false, and IPTC keywords are otherwise never
-        // read at all (LocalSiteReader::get_element_metadata() ->
+        // read at all (LocalSiteReader::getElementMetadata() ->
         // MetadataService::getSyncMetadata() only calls
         // getSyncIptcData() when it's true).
         H::setConfigValue('use_iptc', 'true');

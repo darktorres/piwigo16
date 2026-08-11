@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Site\Projection;
 
 /**
- * {@see \Piwigo\Site\LocalSiteReader::get_element_update_attributes()}'s
+ * {@see \Piwigo\Site\LocalSiteReader::getElementUpdateAttributes()}'s
  * own fixed result shape.
  */
 final readonly class ElementUpdateAttributes

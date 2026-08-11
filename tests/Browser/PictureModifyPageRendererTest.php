@@ -692,7 +692,7 @@ it('resolves storage_category_id from a filesystem-synced photo, marks it unlink
     $image = H::makeTestImage('PM Sync Photo');
     copy($image, $tempDir . '/' . $file);
     @unlink($image);
-    // Site\LocalSiteReader::get_formats() floors raw bytes to KB
+    // Site\LocalSiteReader::getFormats() floors raw bytes to KB
     // (floor($bytes / 1024)) before storing -- a real 1 MiB sibling file
     // stores a clean 1024 KB, and this renderer's own format-listing loop
     // re-divides that by 1024 to display "MB" (KB -> MB is correct here,

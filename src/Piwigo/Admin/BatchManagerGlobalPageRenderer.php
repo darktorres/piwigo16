@@ -505,7 +505,7 @@ final class BatchManagerGlobalPageRenderer
 
         // metadata
         $site_reader = new LocalSiteReader('./', $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState, $this->paths));
-        $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
+        $used_metadata = implode(', ', $site_reader->getMetadataAttributes());
 
         // derivatives
         $del_deriv_map = [];

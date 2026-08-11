@@ -12,18 +12,18 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  * tests/Browser/SiteUpdateSubControllerTest.php (a single flat directory
  * with one picture-extension element, `enable_formats` off) -- that
  * leaves the following genuinely uncovered here: the '.'/'..' skip inside
- * get_elements()'s readdir loop, the representative-extension lookup for
- * a *non*-picture file_ext element (get_representative_ext() itself,
- * found and not-found), the `enable_formats` branch (get_formats(),
+ * getElements()'s readdir loop, the representative-extension lookup for
+ * a *non*-picture file_ext element (getRepresentativeExt() itself,
+ * found and not-found), the `enable_formats` branch (getFormats(),
  * found and skipped-because-absent), and the matching branch inside
- * get_element_update_attributes(). get_metadata_attributes() and
- * get_element_metadata() (the two MetadataService-delegating methods)
+ * getElementUpdateAttributes(). getMetadataAttributes() and
+ * getElementMetadata() (the two MetadataService-delegating methods)
  * are already fully covered by that same browser flow and are not
  * exercised again here -- this file never touches the lazy-constructed
  * default MetadataService, so no DB access is needed.
  *
  * Mutation-sweep notes (pest --mutate --class='Piwigo\Site\LocalSiteReader'):
- * three mutants on get_elements() are true equivalent mutants under any
+ * three mutants on getElements() are true equivalent mutants under any
  * plain-file/plain-directory fixture and were verified as such by live
  * sed-mutate-and-rerun (apply the exact mutant, confirm this whole file
  * still passes, then restore the source) rather than by reasoning alone --
@@ -42,18 +42,18 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  *  - `is_dir($path . '/' . $node)` mutated to `is_dir($path . '/')`
  *    (dropping `$node` from the concatenation): this reduces to `is_dir
  *    ($path)`, which is already known true here -- it's checked a few
- *    lines up, at the top of get_elements(), and $path is unchanged for
+ *    lines up, at the top of getElements(), and $path is unchanged for
  *    the rest of the method. So this clause becomes a tautology. The only
  *    entries that could ever expose the drop are directory entries that
  *    are neither a regular file nor a real directory (e.g. a broken
- *    symlink or a FIFO), and even then get_elements()'s own top-of-method
+ *    symlink or a FIFO), and even then getElements()'s own top-of-method
  *    is_dir() guard makes the recursive call return [] either way, so the
  *    returned array is identical regardless. Deliberately not chased with
  *    a broken-symlink/FIFO fixture, since a FIFO with no reader/writer on
  *    the other end risks hanging the test process.
  *
  * One further mutant is a known, *not* equivalent, gap: `filesize()`'s
- * `!== false` check inside get_formats() (mutated to `!== true`, which is
+ * `!== false` check inside getFormats() (mutated to `!== true`, which is
  * always true since filesize() never returns bool(true)). Reaching the
  * difference requires filesize() to genuinely fail immediately after
  * is_file() succeeded on the very same path -- normal stat() failure
@@ -129,23 +129,23 @@ test('open returns true for an existing directory and false for a missing one', 
         ->toBeFalse();
 });
 
-test('get_elements skips the . and .. readdir entries', function (): void {
+test('getElements skips the . and .. readdir entries', function (): void {
     // An otherwise-empty directory only ever yields '.' and '..' from
     // readdir(), so a non-empty result here (rather than a fatal loop)
     // proves the skip branch ran without needing extra fixture files.
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
-    expect($reader->get_elements($this->root))
+    expect($reader->getElements($this->root))
         ->toBe([]);
 });
 
-test('get_elements looks up a representative extension for a non-picture file_ext element and finds one under pwg_representative', function (): void {
+test('getElements looks up a representative extension for a non-picture file_ext element and finds one under pwg_representative', function (): void {
     mkdir($this->root . '/pwg_representative');
     file_put_contents($this->root . '/holiday-report.pdf', 'pdf-bytes');
     file_put_contents($this->root . '/pwg_representative/holiday-report.png', 'png-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
-    $elements = $reader->get_elements($this->root);
+    $elements = $reader->getElements($this->root);
 
     expect($elements)
         ->toBe([
@@ -155,11 +155,11 @@ test('get_elements looks up a representative extension for a non-picture file_ex
         ]);
 });
 
-test('get_elements looks up a representative extension for a non-picture file_ext element and finds none', function (): void {
+test('getElements looks up a representative extension for a non-picture file_ext element and finds none', function (): void {
     file_put_contents($this->root . '/podcast-episode.mp3', 'mp3-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
-    $elements = $reader->get_elements($this->root);
+    $elements = $reader->getElements($this->root);
 
     expect($elements)
         ->toBe([
@@ -169,11 +169,11 @@ test('get_elements looks up a representative extension for a non-picture file_ex
         ]);
 });
 
-test('get_elements does not look up a representative extension for a picture-extension element', function (): void {
+test('getElements does not look up a representative extension for a picture-extension element', function (): void {
     file_put_contents($this->root . '/family-photo.jpg', 'jpg-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
-    $elements = $reader->get_elements($this->root);
+    $elements = $reader->getElements($this->root);
 
     expect($elements)
         ->toBe([
@@ -183,7 +183,7 @@ test('get_elements does not look up a representative extension for a picture-ext
         ]);
 });
 
-test('get_elements attaches per-format sizes under pwg_format when enable_formats is on', function (): void {
+test('getElements attaches per-format sizes under pwg_format when enable_formats is on', function (): void {
     requireCurrentConfig($this->currentConfig)->isFormatsEnabled = true;
 
     mkdir($this->root . '/pwg_format');
@@ -192,7 +192,7 @@ test('get_elements attaches per-format sizes under pwg_format when enable_format
     file_put_contents($this->root . '/pwg_format/scan.tif', str_repeat('y', 5120));
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
-    $elements = $reader->get_elements($this->root);
+    $elements = $reader->getElements($this->root);
 
     expect($elements)
         ->toBe([
@@ -206,12 +206,12 @@ test('get_elements attaches per-format sizes under pwg_format when enable_format
         ]);
 });
 
-test('get_elements attaches an empty formats array when enable_formats is on but no pwg_format directory exists', function (): void {
+test('getElements attaches an empty formats array when enable_formats is on but no pwg_format directory exists', function (): void {
     requireCurrentConfig($this->currentConfig)->isFormatsEnabled = true;
     file_put_contents($this->root . '/scan.jpg', 'jpg-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
-    $elements = $reader->get_elements($this->root);
+    $elements = $reader->getElements($this->root);
 
     expect($elements)
         ->toBe([
@@ -222,63 +222,63 @@ test('get_elements attaches an empty formats array when enable_formats is on but
         ]);
 });
 
-test('get_element_update_attributes finds a representative extension for a non-picture element', function (): void {
+test('getElementUpdateAttributes finds a representative extension for a non-picture element', function (): void {
     mkdir($this->root . '/pwg_representative');
     file_put_contents($this->root . '/pwg_representative/document.gif', 'gif-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
-    expect($reader->get_element_update_attributes($this->root . '/document.pdf'))->toEqual(new ElementUpdateAttributes('gif'));
+    expect($reader->getElementUpdateAttributes($this->root . '/document.pdf'))->toEqual(new ElementUpdateAttributes('gif'));
 });
 
-test('get_element_update_attributes returns a null representative extension for a picture element', function (): void {
+test('getElementUpdateAttributes returns a null representative extension for a picture element', function (): void {
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
-    expect($reader->get_element_update_attributes($this->root . '/photo.png'))->toEqual(new ElementUpdateAttributes(null));
+    expect($reader->getElementUpdateAttributes($this->root . '/photo.png'))->toEqual(new ElementUpdateAttributes(null));
 });
 
-test('get_representative_ext returns the first matching picture extension found under pwg_representative', function (): void {
+test('getRepresentativeExt returns the first matching picture extension found under pwg_representative', function (): void {
     mkdir($this->root . '/pwg_representative');
     file_put_contents($this->root . '/pwg_representative/movie.jpg', 'jpg-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
-    expect($reader->get_representative_ext($this->root, 'movie'))
+    expect($reader->getRepresentativeExt($this->root, 'movie'))
         ->toBe('jpg');
 });
 
-test('get_representative_ext returns null when no representative file exists for any picture extension', function (): void {
+test('getRepresentativeExt returns null when no representative file exists for any picture extension', function (): void {
     mkdir($this->root . '/pwg_representative');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
-    expect($reader->get_representative_ext($this->root, 'movie'))
+    expect($reader->getRepresentativeExt($this->root, 'movie'))
         ->toBeNull();
 });
 
-test('get_formats returns the on-disk size in kilobytes for each matching format extension present, in formatExtensions order', function (): void {
+test('getFormats returns the on-disk size in kilobytes for each matching format extension present, in formatExtensions order', function (): void {
     mkdir($this->root . '/pwg_format');
     file_put_contents($this->root . '/pwg_format/negative.tif', str_repeat('a', 4096));
     file_put_contents($this->root . '/pwg_format/negative.psd', str_repeat('b', 1024));
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
-    expect($reader->get_formats($this->root, 'negative'))
+    expect($reader->getFormats($this->root, 'negative'))
         ->toBe([
             'tif' => 4.0,
             'psd' => 1.0,
         ]);
 });
 
-test('get_formats returns an empty array when the pwg_format directory does not exist', function (): void {
+test('getFormats returns an empty array when the pwg_format directory does not exist', function (): void {
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
-    expect($reader->get_formats($this->root, 'negative'))
+    expect($reader->getFormats($this->root, 'negative'))
         ->toBe([]);
 });
 
-test('get_elements does not look up a representative extension for a picture-extension element even when a matching representative file exists', function (): void {
-    // flip_picture_ext is what get_elements() consults to decide whether
+test('getElements does not look up a representative extension for a picture-extension element even when a matching representative file exists', function (): void {
+    // flip_picture_ext is what getElements() consults to decide whether
     // to skip the pwg_representative lookup for a given extension. A
     // representative-extension file that genuinely matches is planted
     // here on purpose: if flip_picture_ext were ever the *unflipped*
@@ -291,7 +291,7 @@ test('get_elements does not look up a representative extension for a picture-ext
     file_put_contents($this->root . '/pwg_representative/family-photo.png', 'png-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
-    $elements = $reader->get_elements($this->root);
+    $elements = $reader->getElements($this->root);
 
     expect($elements)
         ->toBe([
@@ -301,11 +301,11 @@ test('get_elements does not look up a representative extension for a picture-ext
         ]);
 });
 
-test('get_elements lower-cases the file extension before matching it against the configured extension lists', function (): void {
+test('getElements lower-cases the file extension before matching it against the configured extension lists', function (): void {
     file_put_contents($this->root . '/vacation.JPG', 'jpg-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
-    $elements = $reader->get_elements($this->root);
+    $elements = $reader->getElements($this->root);
 
     expect($elements)
         ->toBe([
@@ -315,7 +315,7 @@ test('get_elements lower-cases the file extension before matching it against the
         ]);
 });
 
-test('get_elements recurses into ordinary subdirectories -- including names that are a substring or superstring of an excluded name -- while skipping exactly pwg_high, pwg_representative, pwg_format and thumbnail', function (): void {
+test('getElements recurses into ordinary subdirectories -- including names that are a substring or superstring of an excluded name -- while skipping exactly pwg_high, pwg_representative, pwg_format and thumbnail', function (): void {
     // 'keepme' is a plain subdirectory with no special meaning: it must
     // be recursed into. 'thumbnails' (superstring of 'thumbnail') and
     // 'humbnail' (substring of 'thumbnail') must *also* be recursed into
@@ -344,7 +344,7 @@ test('get_elements recurses into ordinary subdirectories -- including names that
     file_put_contents($this->root . '/thumbnail/hidden-4.jpg', 'h4-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
-    $elements = $reader->get_elements($this->root);
+    $elements = $reader->getElements($this->root);
 
     expect($elements)
         ->toBe([
@@ -360,7 +360,7 @@ test('get_elements recurses into ordinary subdirectories -- including names that
         ]);
 });
 
-test('get_elements returns keys in sorted order regardless of the on-disk readdir order', function (): void {
+test('getElements returns keys in sorted order regardless of the on-disk readdir order', function (): void {
     // Filenames deliberately chosen so their natural readdir() order
     // (filesystem/hash-dependent, effectively unordered for a small
     // directory on ext4) is very unlikely to already be alphabetical --
@@ -370,7 +370,7 @@ test('get_elements returns keys in sorted order regardless of the on-disk readdi
     file_put_contents($this->root . '/apple.jpg', 'a-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
-    $elements = $reader->get_elements($this->root);
+    $elements = $reader->getElements($this->root);
 
     expect(array_keys($elements))
         ->toBe([
@@ -380,7 +380,7 @@ test('get_elements returns keys in sorted order regardless of the on-disk readdi
         ]);
 });
 
-test('get_formats floors a non-multiple-of-1024 file size to kilobytes', function (): void {
+test('getFormats floors a non-multiple-of-1024 file size to kilobytes', function (): void {
     // 2047 bytes / 1024 = 1.9990234375: floor() -> 1.0, while round()
     // and ceil() both -> 2.0, and dividing by 1023 instead of 1024
     // (an off-by-one on the divisor) also -> floor(2047/1023) = 2.0.
@@ -390,7 +390,7 @@ test('get_formats floors a non-multiple-of-1024 file size to kilobytes', functio
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
-    expect($reader->get_formats($this->root, 'negative'))
+    expect($reader->getFormats($this->root, 'negative'))
         ->toBe([
             'tif' => 1.0,
         ]);

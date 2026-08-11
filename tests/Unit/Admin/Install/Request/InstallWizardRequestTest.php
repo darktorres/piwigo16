@@ -8,9 +8,7 @@ use Piwigo\Validation\InputValidator;
 test('fromArrays returns defaults for an empty GET/POST', function (): void {
     $request = InstallWizardRequest::fromArrays([], [], new InputValidator());
 
-    expect($request->dl)
-        ->toBeNull()
-        ->and($request->dbhost)
+    expect($request->dbhost)
         ->toBe('localhost')
         ->and($request->dbuser)
         ->toBe('')
@@ -40,22 +38,6 @@ test('fromArrays returns defaults for an empty GET/POST', function (): void {
         ->toBeFalse();
 });
 
-test('fromArrays parses dl as a 32-char hex string', function (): void {
-    $request = InstallWizardRequest::fromArrays([
-        'dl' => str_repeat('a', 32),
-    ], [], new InputValidator());
-
-    expect($request->dl)
-        ->toBe(str_repeat('a', 32));
-});
-
-test('fromArrays rejects a malformed dl', function (): void {
-    expect(fn (): InstallWizardRequest => InstallWizardRequest::fromArrays([
-        'dl' => 'not-hex',
-    ], [], new InputValidator()))
-        ->toThrow(RuntimeException::class);
-});
-
 test('fromArrays falls back to the localhost default when dbhost is explicitly submitted empty', function (): void {
     // Real gap, found via mutation testing: the "defaults for an empty
     // GET/POST" test above only covers a *missing* dbhost key -- an
@@ -69,15 +51,6 @@ test('fromArrays falls back to the localhost default when dbhost is explicitly s
 
     expect($request->dbhost)
         ->toBe('localhost');
-});
-
-test('fromArrays treats an explicitly empty dl the same as a missing one', function (): void {
-    $request = InstallWizardRequest::fromArrays([
-        'dl' => '',
-    ], [], new InputValidator());
-
-    expect($request->dl)
-        ->toBeNull();
 });
 
 test('fromArrays parses db credentials from POST', function (): void {

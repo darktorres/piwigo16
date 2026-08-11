@@ -101,8 +101,8 @@ abstract class IntegrationTestCase extends TestCase
         // Kernel::boot()'s own idempotency guard if this ran
         // unconditionally -- a subclass needing a genuinely different root
         // calls Kernel::reset() itself right after parent::setUp() (see
-        // InstallBootstrapTest/InstallWizardTest/LegacyFileConfTest) rather
-        // than fighting this default. dirname(__DIR__, 2) from
+        // InstallBootstrapTest/InstallWizardTest) rather than fighting
+        // this default. dirname(__DIR__, 2) from
         // tests/Integration/ is this project's own repo root, matching
         // every fixture path (e.g. MetadataServiceTest's 'path' =>
         // '_data/...') already written relative to it. This deliberately

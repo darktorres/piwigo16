@@ -25,7 +25,6 @@ use Piwigo\Validation\InputValidator;
 final readonly class InstallWizardRequest
 {
     private function __construct(
-        public ?string $dl,
         public string $dbhost,
         public string $dbuser,
         public string $dbpasswd,
@@ -53,12 +52,8 @@ final readonly class InstallWizardRequest
      */
     public static function fromArrays(array $get, array $post, InputValidator $inputValidator): self
     {
-        $inputValidator->validate('dl', $get, false, '/^[a-f0-9]{32}$/');
         $inputValidator->validate('dbdriver', $post, false, '/^(mysqli|pgsql)$/');
         $inputValidator->validate('dbport', $post, false, '/^\d{1,5}$/');
-
-        $dl_raw = $get['dl'] ?? null;
-        $dl = (is_string($dl_raw) && $dl_raw !== '') ? $dl_raw : null;
 
         $dbhost_raw = $post['dbhost'] ?? null;
         $dbhost = (is_string($dbhost_raw) && $dbhost_raw !== '') ? $dbhost_raw : 'localhost';
@@ -91,7 +86,6 @@ final readonly class InstallWizardRequest
         }
 
         return new self(
-            $dl,
             $dbhost,
             $dbuser,
             $dbpasswd,

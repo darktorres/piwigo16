@@ -219,8 +219,8 @@ final class UserListPageRenderer
     {
         // A presence check ("did the site owner override webmaster_id in
         // their OWN local/config/config.inc.php"), not a value read --
-        // deliberately does NOT start from CurrentConfig::defaultsArray() the way
-        // LegacyFileConf::read()'s value-reading callers do. webmaster_id
+        // deliberately does NOT merge in CurrentConfig::defaultsArray()
+        // first the way a value-reading caller would. webmaster_id
         // has a real SCHEMA default (1) now; merging that in first would
         // make isset($conf['webmaster_id']) true on every request even
         // when the site file never touched it, permanently (and wrongly)

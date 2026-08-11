@@ -326,7 +326,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // Kernel::boot()'s own idempotency guard makes the call below a
         // silent no-op, leaving CurrentPaths pointing at the real repo
         // instead of this test's own throwaway fixture root (same fix as
-        // InstallBootstrapTest/InstallWizardTest/LegacyFileConfTest).
+        // InstallBootstrapTest/InstallWizardTest).
         Kernel::reset();
         Kernel::boot(new Paths(
             root: $root,

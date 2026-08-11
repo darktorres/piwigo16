@@ -588,12 +588,13 @@ function findCallSitesOutsideComments(string $dir, string $needle): array
         }
 
         // Token-level scan: only real code can carry a call site. Comments,
-        // string literals (e.g. InstallWizard's generated local/config/
-        // database.inc.php template, whose define() lines execute in the
-        // legacy bootstrap outside src/), heredoc bodies, and inline HTML
-        // are blanked out (newlines preserved, so line numbers stay exact)
-        // before the text search. Strictly more precise than the previous
-        // comment-prefix line heuristic: every real call still matches.
+        // string literals (a needle like "define(" or "PHPWG_INSTALLED" can
+        // appear as plain text inside one, e.g. an error message or a
+        // generated-file template, without that being a real call/read),
+        // heredoc bodies, and inline HTML are blanked out (newlines
+        // preserved, so line numbers stay exact) before the text search.
+        // Strictly more precise than the previous comment-prefix line
+        // heuristic: every real call still matches.
         $blanked = '';
         foreach (token_get_all($source) as $token) {
             if (! is_array($token)) {
@@ -775,10 +776,10 @@ test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page
 test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarations', function (): void {
     // Table names are plain literal strings now -- no prefix, no indirection.
     // Config keys only ever set by a site's own local/config/config.inc.php
-    // (never mirrored into CurrentConfig) read through
-    // LegacyFileConf::read(). $t2 (RequestBootstrap::configure()) is an
-    // explicit parameter, not a global. Zero-tolerance, no allowlist
-    // needed.
+    // (never mirrored into CurrentConfig) are read via a direct `@include`
+    // of that file (e.g. Admin\UserListPageRenderer), not a global. $t2
+    // (RequestBootstrap::configure()) is an explicit parameter, not a
+    // global. Zero-tolerance, no allowlist needed.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [

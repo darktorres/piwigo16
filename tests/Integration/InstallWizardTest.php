@@ -31,7 +31,6 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
-use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Validation\InputValidator;
 use ReflectionProperty;
@@ -50,8 +49,8 @@ use ReflectionProperty;
  *    read-only from the real repo (InstallWizard needs the real admin
  *    theme's Smarty templates + the real install/config.sql file + the
  *    real bundled languages to behave authentically), but every WRITE
- *    path (.env(.test), local/config/database.inc.php, the install stamp,
- *    _data/, Smarty's compile dir) lands only inside this throwaway root.
+ *    path (.env(.test), the install stamp, _data/, Smarty's compile dir)
+ *    lands only inside this throwaway root.
  *    Piwigo\Db\MigrationDependencyFactory::build() deliberately resolves
  *    config/migrations.php relative to its own source file, not through
  *    Paths (see that class's own docblock), so no config/ symlink is
@@ -67,11 +66,7 @@ use ReflectionProperty;
  * Likewise, this whole test *process* runs with $_SERVER['HTTP_X_PIWIGO_ENV']
  * = 'test' set globally by tests/bootstrap.php, so Env::testModeIsActive()
  * is always true here -- performInstall()'s env file write always lands on
- * '.env.test' (never plain '.env'), and its "also write legacy
- * database.inc.php in prod mode" branch is provably unreachable in this
- * process; the dedicated prod-mode test below works around that by
- * temporarily unsetting that one $_SERVER key for the single call that
- * needs real prod-mode behavior, then restoring it immediately after.
+ * '.env.test', never plain '.env'.
  *
  * render() itself is fully exercised for step 1 (the initial form, before
  * any submission) -- real, low-risk, and it's the exact page the disabled
@@ -108,8 +103,8 @@ use ReflectionProperty;
  * span (no seam exists to isolate just the session/cookie/mail primitives
  * from the rest of the method). Every DB row and file *step 1/2's shared
  * logic doesn't touch* (webmaster/guest users, sites, config, activated
- * language, the written .env/database.inc.php/install stamp) is already
- * fully covered below via performInstall() directly.
+ * language, the written .env/install stamp) is already fully covered below
+ * via performInstall() directly.
  *
  * Three real branches are deliberately left uncovered, not silently
  * skipped -- each is a genuine behavioral guard whose own triggering
@@ -227,11 +222,13 @@ final class InstallWizardTest extends IntegrationTestCase
         symlink($repoRoot . '/plugins', $this->tempRoot . 'plugins');
         symlink($repoRoot . '/language', $this->tempRoot . 'language');
         mkdir($this->tempRoot . 'local/config', 0777, true);
-        // Present-but-empty, not absent -- see LegacyFileConfTest's own
-        // comment: a genuinely missing config.inc.php makes read()'s
-        // `@include` raise an E_WARNING that PHPUnit's failOnWarning="true"
-        // still catches despite the `@`, for every test that doesn't
-        // specifically want to exercise that missing-file branch itself.
+        // Present-but-empty, not absent -- InstallWizard's own flow no
+        // longer reads this file (nothing under src/Piwigo/Admin/Install/
+        // does), but the pre-existing local/config/ subdirectory this write
+        // creates is itself relied on below (see
+        // testPerformInstallRecordsAnErrorWhenTheEnvFileCannotBeWritten's
+        // own comment on already-existing subdirectories surviving a
+        // read-only root).
         file_put_contents($this->tempRoot . 'local/config/config.inc.php', "<?php\n// no overrides\n");
         $this->paths = Paths::fromRoot($this->tempRoot);
     }
@@ -410,42 +407,6 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertTrue(is_numeric($count));
 
         return (int) $count;
-    }
-
-    // ------------------------------------------------------------- constructor
-
-    public function testConstructorReadsTheDefaultDataLocationWhenTheLocalOverrideSetsNothing(): void
-    {
-        // Kernel is already booted (parent::setUp()'s own default real-repo
-        // root) by this point -- a bare Kernel::boot($this->paths) would
-        // silently no-op against its own idempotency guard, and the
-        // constructor's own LegacyFileConf::read() (a static utility with
-        // no Paths of its own to receive, unlike InstallWizard's own
-        // constructor-injected $this->paths) would read the wrong root via
-        // whatever Paths is still bound in the live container.
-        // KernelContainerOverride::with()
-        // rebinds Paths::class for just this test's own scope instead.
-        KernelContainerOverride::with([
-            Paths::class => $this->paths,
-        ], function (): void {
-            $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
-
-            self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
-        });
-    }
-
-    public function testConstructorThrowsWhenALocalOverrideSetsANonStringDataLocation(): void
-    {
-        file_put_contents($this->paths->local . 'config/config.inc.php', "<?php\n\$conf['data_location'] = 12345;\n");
-
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessageIsOrContains("Invalid \$conf['data_location'] configuration: expected a string.");
-
-        KernelContainerOverride::with([
-            Paths::class => $this->paths,
-        ], function (): void {
-            new InstallWizard(LangTestFactory::get(), $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
-        });
     }
 
     // --------------------------------------------------------- analyzeForm()
@@ -683,178 +644,8 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertStringContainsString('PIWIGO_DB_BASE=' . $freshDb, $envContent);
         self::assertStringContainsString('PIWIGO_BASE_URL=http://example.test', $envContent);
 
-        // ---- legacy database.inc.php is skipped while test mode is active
-        self::assertFileDoesNotExist($this->paths->siteLocal . 'config/database.inc.php');
-
         // ---- install stamp ------------------------------------------------
         self::assertFileExists($this->paths->siteLocal . Env::testModeInstalledStamp());
-    }
-
-    public function testPerformInstallWritesTheLegacyDatabaseIncPhpFileOutsideTestMode(): void
-    {
-        $this->bootInstallBootstrap();
-        $freshDb = $this->createFreshDatabase();
-
-        $wizard = $this->submit([
-            'dbhost' => $this->dbHost,
-            'dbdriver' => $this->dbDriver,
-            'dbuser' => $this->dbUser,
-            'dbpasswd' => $this->dbPass,
-            'dbname' => $freshDb,
-            'admin_name' => 'p17setup2',
-            'admin_pass1' => 'Anoth3r-Secret-77!',
-            'admin_pass2' => 'Anoth3r-Secret-77!',
-            'admin_mail' => 'webmaster2@example.test',
-            'install' => '1',
-        ]);
-        $wizard->analyzeForm();
-        self::assertFalse($wizard->hasErrors(), 'unexpected validation/connection errors: ' . $this->reflectErrorsJoined($wizard));
-
-        // Temporarily leave test mode for this one call -- performInstall()
-        // gates the legacy-config-file write on `! Env::testModeIsActive()`,
-        // which (see this class's own docblock) is otherwise always true in
-        // this CLI process.
-        $savedHeader = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
-        unset($_SERVER['HTTP_X_PIWIGO_ENV']);
-        // Regression test for a fixed bug, found via this exact test,
-        // confirmed live (not assumed): performInstall()'s own
-        // legacy-config-file branch used to call a bare `@umask(0111);`
-        // and never restore the process's original umask afterwards --
-        // since umask() is process-wide, that leaked into every later
-        // mkdir()/fopen() for the rest of this PHP process (or, in
-        // production, the rest of that worker's lifetime under FrankenPHP/
-        // PHP-FPM). Confirmed concretely: running this one test before
-        // LegacyFileConfTest in the same process made every one of that
-        // file's own `mkdir(..., 0777, true)` calls silently produce
-        // directories with mode 0666 (no execute bit) instead of 0777,
-        // which then made every `file_put_contents()` into them fail
-        // silently (no exception -- just a `false` return nobody checked),
-        // so LegacyFileConf::read()'s own `@include` had nothing to include
-        // and kept returning unmodified defaults. Fixed by saving/restoring
-        // the umask around just the config-file-write block in the source
-        // itself -- asserted directly below, not just guarded against here.
-        $originalUmask = umask();
-        try {
-            $wizard->performInstall();
-            self::assertSame(
-                $originalUmask,
-                umask(),
-                'performInstall() must restore the process umask it temporarily changes for the legacy config-file write'
-            );
-        } finally {
-            umask($originalUmask);
-            if ($savedHeader !== null) {
-                $_SERVER['HTTP_X_PIWIGO_ENV'] = $savedHeader;
-            }
-        }
-
-        $configFile = $this->paths->siteLocal . 'config/database.inc.php';
-        self::assertFileExists($configFile);
-        $content = file_get_contents($configFile);
-        self::assertIsString($content);
-        self::assertStringContainsString("\$conf['db_base'] = '" . $freshDb . "';", $content);
-        self::assertStringContainsString("\$conf['db_user'] = '" . $this->dbUser . "';", $content);
-        self::assertStringContainsString("\$conf['db_host'] = '" . $this->dbHost . "';", $content);
-        self::assertStringContainsString("\$prefixeTable = '';", $content);
-        self::assertStringContainsString("define('PHPWG_INSTALLED', true);", $content);
-
-        // Plain '.env' this time, not '.env.test' -- the same env-write
-        // block ran, but Env::testModeEnvFile() resolved differently while
-        // the header was unset.
-        self::assertFileExists($this->tempRoot . '.env');
-    }
-
-    /**
-     * performInstall()'s OWN config-write-failure fallback
-     * (FilesystemHelper::secureDirectory() + a tmp pwg_<hash> file under
-     * _data/ + the template's own 'config_creation_failed'/'config_url'/
-     * 'config_file_content' vars) -- needs the *prod-mode* legacy
-     * database.inc.php write (same header-unset trick as the sibling
-     * prod-mode test above) to ALSO fail its own
-     * fopen($this->configFile, 'w'), achieved here by making
-     * local/config/ itself genuinely unwritable (0555 -- still
-     * traversable, just no write bit) at exactly that moment, without
-     * touching any other directory performInstall() writes into (the
-     * root-level .env file, or _data/ for the fallback's own tmp file).
-     * The source's own `@fopen($this->configFile, 'w')` genuinely emits a
-     * real E_WARNING once that permission denial actually happens -- the
-     * bare `@` does NOT stop PHPUnit's ErrorHandler from still surfacing
-     * it (same constraint as this file's own renderSuppressingHeaderWarnings()
-     * elsewhere), so the call is wrapped in a real no-op handler below.
-     */
-    public function testPerformInstallFallsBackToADownloadableConfigFileWhenTheLegacyWriteTargetIsUnwritable(): void
-    {
-        $this->bootInstallBootstrap();
-        $freshDb = $this->createFreshDatabase();
-        // The fallback's own secureDirectory()/tmp-file write both target
-        // confDataLocation ('_data/') -- genuinely absent until something
-        // creates it; unlike the ?dl= download tests above, nothing
-        // earlier in this flow creates it on its own.
-        mkdir($this->tempRoot . '_data', 0777, true);
-
-        $wizard = $this->submit([
-            'dbhost' => $this->dbHost,
-            'dbdriver' => $this->dbDriver,
-            'dbuser' => $this->dbUser,
-            'dbpasswd' => $this->dbPass,
-            'dbname' => $freshDb,
-            'admin_name' => 'p17cfgfallback',
-            'admin_pass1' => 'Cfg-Fallback-Secret-1!',
-            'admin_pass2' => 'Cfg-Fallback-Secret-1!',
-            'admin_mail' => 'cfgfallback@example.test',
-            'install' => '1',
-        ]);
-        $wizard->analyzeForm();
-        self::assertFalse($wizard->hasErrors(), 'unexpected validation/connection errors: ' . $this->reflectErrorsJoined($wizard));
-
-        $savedHeader = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
-        unset($_SERVER['HTTP_X_PIWIGO_ENV']);
-        chmod($this->tempRoot . 'local/config', 0o555);
-        set_error_handler(static fn (): bool => true);
-        try {
-            $wizard->performInstall();
-        } finally {
-            restore_error_handler();
-            chmod($this->tempRoot . 'local/config', 0o777);
-            if ($savedHeader !== null) {
-                $_SERVER['HTTP_X_PIWIGO_ENV'] = $savedHeader;
-            }
-        }
-
-        self::assertFileDoesNotExist($this->paths->siteLocal . 'config/database.inc.php');
-
-        $template = $this->reflectPrivate($wizard, 'template');
-        self::assertInstanceOf(Template::class, $template);
-        self::assertTrue($template->get_template_vars('config_creation_failed'));
-
-        $configUrl = $template->get_template_vars('config_url');
-        self::assertIsString($configUrl);
-        self::assertStringStartsWith('install.php?dl=', $configUrl);
-        $tmpHash = substr($configUrl, strlen('install.php?dl='));
-        self::assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $tmpHash);
-
-        $configFileContent = $template->get_template_vars('config_file_content');
-        self::assertIsString($configFileContent);
-        self::assertStringContainsString("\$conf['db_base'] = '" . $freshDb . "';", $configFileContent);
-        self::assertStringContainsString("define('PHPWG_INSTALLED', true);", $configFileContent);
-
-        // The fallback's own tmp file -- the one a real
-        // config_url=install.php?dl=<hash> download would serve (see the
-        // ?dl= tests above) -- was genuinely written to disk, with the
-        // exact same content assigned to the template.
-        $tmpFile = $this->tempRoot . '_data/pwg_' . $tmpHash;
-        self::assertFileExists($tmpFile);
-        $tmpFileContent = file_get_contents($tmpFile);
-        self::assertSame($configFileContent, $tmpFileContent);
-
-        // This fallback doesn't push an entry to $this->errors (only the
-        // template flag) and the rest of performInstall() (schema/user/
-        // site creation) still ran to completion despite the legacy config
-        // write failing.
-        self::assertSame([], $this->reflectPrivate($wizard, 'errors'));
-        $webmaster = $this->queryOne($freshDb, 'SELECT username FROM users WHERE id = 1');
-        self::assertIsArray($webmaster);
-        self::assertSame('p17cfgfallback', $webmaster['username']);
     }
 
     public function testPerformInstallRecordsAnErrorWhenTheEnvFileCannotBeWritten(): void
@@ -926,147 +717,6 @@ final class InstallWizardTest extends IntegrationTestCase
         $wizard = $this->submit([], [], preserveAcceptLanguage: true);
 
         self::assertSame('de_DE', $this->reflectPrivate($wizard, 'language'));
-    }
-
-    // ------------------------------------------------------- boot(), ?dl= download
-
-    /**
-     * Real bug fixed alongside this test: boot()'s own ?dl= branch used to
-     * call header()/echo/unlink()/exit() directly -- exactly the pattern
-     * every sibling check in this same method (a few lines below: the
-     * mysqli-extension guard, the already-installed guard) had already
-     * moved off of, onto throw new ResponseReadyException(...), precisely
-     * because an exit()-terminated branch can't be exercised from inside
-     * this same PHP test process without killing the whole run. Converted
-     * it to the same pattern here -- public/install.php's own entry shell
-     * already wraps every boot()/analyzeForm()/performInstall()/render()
-     * call in a `catch (ResponseReadyException $e)` that emits whatever
-     * response it carries, so this needed no change on that end.
-     */
-    public function testBootServesAndDeletesTheTemporaryDatabaseConfigFileForAValidDlParam(): void
-    {
-        $this->bootInstallBootstrap();
-
-        // Mirrors the real shape performInstall()'s own config-write-
-        // failure fallback leaves behind: a temp `pwg_<hash>` file under
-        // confDataLocation, named after a 32-hex-char hash -- matches both
-        // InstallWizardRequest::fromArrays()'s own dl validation regex
-        // ('/^[a-f0-9]{32}$/') and install.tpl's own config_url template
-        // var (see performInstall()'s own 'config_url' => 'install.php?dl='
-        // . $tmp_filename assignment; an md5() digest -- the real hash
-        // that branch generates -- is exactly 32 lowercase hex chars).
-        mkdir($this->tempRoot . '_data', 0777, true);
-        $hash = md5('install-wizard-dl-test-fixture');
-        $fileContent = "<?php\n\$conf['dblayer'] = 'mysqli';\n\$conf['db_base'] = 'whatever';\n";
-        $tmpFile = $this->tempRoot . '_data/pwg_' . $hash;
-        file_put_contents($tmpFile, $fileContent);
-
-        $body = null;
-        $headers = [];
-        try {
-            $this->submit([], [
-                'dl' => $hash,
-            ]);
-            self::fail('expected boot() to throw ResponseReadyException for a valid, existing dl= download');
-        } catch (ResponseReadyException $e) {
-            $response = $e->response();
-            $body = (string) $response->getBody();
-            $headers = [
-                'Cache-Control' => $response->getHeader('Cache-Control'),
-                'Pragma' => $response->getHeader('Pragma'),
-                'Content-Disposition' => $response->getHeader('Content-Disposition'),
-                'Content-Transfer-Encoding' => $response->getHeader('Content-Transfer-Encoding'),
-                'Content-Length' => $response->getHeader('Content-Length'),
-            ];
-        }
-
-        self::assertSame($fileContent, $body);
-        self::assertSame(
-            [
-                'Cache-Control' => ['no-cache, must-revalidate'],
-                'Pragma' => ['no-cache'],
-                'Content-Disposition' => ['attachment; filename="database.inc.php"'],
-                'Content-Transfer-Encoding' => ['binary'],
-                'Content-Length' => [(string) strlen($fileContent)],
-            ],
-            $headers
-        );
-
-        // Real, load-bearing cleanup -- the original header()/echo/
-        // unlink()/exit() sequence deleted the temp file once served, and
-        // the ResponseReadyException-based replacement preserves that
-        // exactly (unlink() happens before the throw, not in some
-        // finally/emitter step this test would otherwise miss).
-        self::assertFileDoesNotExist($tmpFile);
-    }
-
-    /**
-     * Companion to the valid-dl test above: this
-     * exact branch's own `$fileContent = '';` fallback (see boot()'s own
-     * inline comment right above it) handles file_get_contents() genuinely
-     * failing on a file that DOES exist (a permissions issue, a race) --
-     * a real unreadable file (chmod 0000, not a mock) proves that fallback
-     * line actually runs and the response still gets built, with an empty
-     * body, instead of a PHP warning breaking the response.
-     */
-    public function testBootServesAnEmptyBodyWhenTheMatchedDlFileExistsButCannotBeRead(): void
-    {
-        $this->bootInstallBootstrap();
-
-        mkdir($this->tempRoot . '_data', 0777, true);
-        $hash = md5('install-wizard-dl-unreadable-fixture');
-        $tmpFile = $this->tempRoot . '_data/pwg_' . $hash;
-        file_put_contents($tmpFile, 'irrelevant, unreadable content');
-        chmod($tmpFile, 0000);
-
-        $body = null;
-        $contentLength = null;
-        // file_get_contents() genuinely emits a real E_WARNING for the
-        // unreadable file -- not a bug (the source's own
-        // `$fileContent === false` fallback is exactly what handles it),
-        // and a bare `@` does NOT stop PHPUnit's ErrorHandler from still
-        // surfacing it (see e.g. this file's own
-        // renderSuppressingHeaderWarnings() for the same constraint
-        // elsewhere in this suite), so a real no-op handler is the only
-        // reliable way to swallow it here.
-        set_error_handler(static fn (): bool => true);
-        try {
-            $this->submit([], [
-                'dl' => $hash,
-            ]);
-            self::fail('expected boot() to throw ResponseReadyException for a valid, existing dl= file');
-        } catch (ResponseReadyException $e) {
-            $response = $e->response();
-            $body = (string) $response->getBody();
-            $contentLength = $response->getHeader('Content-Length');
-        } finally {
-            restore_error_handler();
-        }
-
-        self::assertSame('', $body);
-        self::assertSame(['0'], $contentLength);
-        // Same real cleanup as the sibling valid-file test above -- unlink()
-        // only needs the containing directory's write bit, not the target
-        // file's own (now-0000) permission bits, so it still succeeds.
-        self::assertFileDoesNotExist($tmpFile);
-    }
-
-    public function testBootFallsThroughToTheNormalRequestBodyForADlParamWithNoMatchingFile(): void
-    {
-        $this->bootInstallBootstrap();
-
-        // Syntactically valid (32 lowercase hex chars, passes
-        // InstallWizardRequest's own dl validation regex) but nothing on
-        // disk matches it -- proves the branch's file_exists() half
-        // actually gates it, not just the "dl param is present" half the
-        // test above alone couldn't distinguish.
-        $hash = str_repeat('a', 32);
-
-        $wizard = $this->submit([], [
-            'dl' => $hash,
-        ]);
-
-        self::assertSame(1, $this->reflectPrivate($wizard, 'step'));
     }
 
     // --------------------------------------------------------- analyzeForm(), more

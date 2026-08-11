@@ -24,7 +24,6 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Admin\Install\Projection\InstallConfigFailurePageContext;
 use Piwigo\Admin\Install\Projection\InstallRenderPageContext;
 use Piwigo\Admin\Install\Request\InstallWizardRequest;
 use Piwigo\Auth\AccessLevelChecker;
@@ -48,7 +47,6 @@ use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
-use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
@@ -64,8 +62,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\HttpClientService;
-use Piwigo\Http\ResponseFactory;
-use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\PwgSession;
 use Piwigo\Session\SessionEntity;
@@ -84,15 +80,9 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 /**
  * install.php's orchestration. The install.php entry shell keeps only
- * bootstrap (env/config includes, the SEC-60-constrained define()s) and
- * drives this wizard: boot() -> [POST: analyzeForm(); no errors -> shell
- * define()s PHPWG_INSTALLED/PWG_CHARSET/DB_CHARSET/DB_COLLATE ->
- * performInstall()] -> render().
- *
- * The constructor reads data_location via LegacyFileConf::read() -- a
- * site owner's `local/config/config.inc.php` override is only visible
- * through the raw file, not through `CurrentConfig::`'s accessors (no
- * real `config` table exists yet at this point in the install flow).
+ * bootstrap (autoload, env/config includes) and drives this wizard:
+ * boot() -> [POST: analyzeForm(); no errors -> shell marks
+ * InstallationFlag active -> performInstall()] -> render().
  *
  * install.php calls InstallBootstrap::boot($paths) before this wizard is
  * constructed, so the DI container is available throughout. Every
@@ -103,10 +93,6 @@ use Symfony\Component\Console\Output\BufferedOutput;
  */
 final class InstallWizard
 {
-    private readonly string $confDataLocation;
-
-    private readonly string $configFile;
-
     private string $dbhost = 'localhost';
 
     private string $dbuser = '';
@@ -191,60 +177,17 @@ final class InstallWizard
         private readonly DeploymentPolicy $deploymentPolicy,
         private readonly CurrentTemplate $currentTemplate,
         private readonly CurrentUser $currentUser,
-    ) {
-        $conf_data_location = LegacyFileConf::read($this->paths)['data_location'] ?? null;
-        if (! is_string($conf_data_location)) {
-            throw new LogicException("Invalid \$conf['data_location'] configuration: expected a string.");
-        }
-        $this->confDataLocation = $conf_data_location;
-
-        $this->configFile = $this->paths->siteLocal . 'config/database.inc.php';
-    }
+    ) {}
 
     /**
      * Everything the former install.php top level did before the
-     * "form analyze" section: the ?dl= database-config download, $_POST
-     * narrowing + Config seeding, environment checks, language pick +
-     * Lang loads, and template initialization.
+     * "form analyze" section: $_POST narrowing + Config seeding,
+     * environment checks, language pick + Lang loads, and template
+     * initialization.
      */
     public function boot(): void
     {
-        // download database config file if exists
         $this->request = InstallWizardRequest::fromGlobals($this->inputValidator);
-
-        $dl_param = $this->request->dl;
-        if ($dl_param !== null && file_exists($this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param)) {
-            $filename = $this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param;
-            // Real bug, found while adding coverage for this branch: a raw
-            // header()/echo/exit() sequence can't be exercised from inside
-            // this same PHP process without exit()-ing the whole test
-            // runner -- exactly the problem this class's own sibling
-            // checks a few lines below (the mysqli-extension/already-
-            // installed guards) already solved by throwing
-            // ResponseReadyException instead of terminating directly (see
-            // that exception's own docblock: "instead of terminating the
-            // process directly via header()+echo+exit()/die()"). This
-            // branch was simply never migrated to the same pattern.
-            // install.php's own entry shell already wraps every boot()/
-            // analyzeForm()/performInstall()/render() call in a `catch
-            // (ResponseReadyException $e)` block that emits whatever
-            // response it carries, so throwing here instead of exit()ing
-            // needs no change on that end at all.
-            $fileContent = file_get_contents($filename);
-            if ($fileContent === false) {
-                $fileContent = '';
-            }
-            $response = ResponseFactory::raw($fileContent, [
-                'Cache-Control' => 'no-cache, must-revalidate',
-                'Pragma' => 'no-cache',
-                'Content-Disposition' => 'attachment; filename="database.inc.php"',
-                'Content-Transfer-Encoding' => 'binary',
-                'Content-Length' => (string) strlen($fileContent),
-            ]);
-            unlink($filename);
-
-            throw new ResponseReadyException($response);
-        }
 
         // Obtain various vars
         $this->dbhost = $this->request->dbhost;
@@ -464,12 +407,11 @@ final class InstallWizard
     }
 
     /**
-     * Former install.php step-2 block: .env / database.inc.php writing,
-     * schema + base-data creation, core theme/plugin activation, webmaster
-     * user creation and upgrade-table pre-fill. The entry shell define()s
-     * PHPWG_INSTALLED/PWG_CHARSET/DB_CHARSET/DB_COLLATE immediately before
-     * calling this (SEC-60 forbids define() in src/Piwigo), exactly where
-     * the former top-level code did.
+     * Former install.php step-2 block: .env writing, schema + base-data
+     * creation, core theme/plugin activation, webmaster user creation and
+     * upgrade-table pre-fill. The entry shell marks InstallationFlag active
+     * immediately before calling this, exactly where the former top-level
+     * code's raw `define('PHPWG_INSTALLED', true)` sat.
      */
     public function performInstall(): void
     {
@@ -518,59 +460,6 @@ final class InstallWizard
             $this->errors[] = 'Could not write ' . $env_file . ' — check filesystem permissions.';
         }
         $this->dbCredentials->reload();
-
-        // Also write legacy database.inc.php in prod mode so upgrade.php and other
-        // not-yet-migrated scripts keep working.
-        if (! Env::testModeIsActive() && count($this->errors) === 0) {
-            $file_content = '<?php
-$conf[\'dblayer\'] = \'' . $this->dblayer . '\';
-$conf[\'db_base\'] = \'' . $this->dbname . '\';
-$conf[\'db_user\'] = \'' . $this->dbuser . '\';
-$conf[\'db_password\'] = \'' . $this->dbpasswd . '\';
-$conf[\'db_host\'] = \'' . $this->dbhost . '\';
-
-$prefixeTable = \'\';
-
-define(\'PHPWG_INSTALLED\', true);
-define(\'PWG_CHARSET\', \'utf-8\');
-define(\'DB_CHARSET\', \'utf8\');
-define(\'DB_COLLATE\', \'\');
-
-?>';
-
-            // umask() returns the PREVIOUS mask, so this both saves and
-            // sets it in one call -- restored below once the config-file
-            // write is done. Never restoring it (the original bug) leaks
-            // 0111 into every later mkdir()/fopen() call for the rest of
-            // this process's lifetime; unlike fopen()-created regular
-            // files (which default to mode 0666, no execute bits for
-            // 0111 to strip), mkdir()-created directories DO carry
-            // execute bits by default, and losing them makes the
-            // directory untraversable.
-            $originalUmask = @umask(0111);
-            // writing the configuration file
-            if (! (bool) ($fp = @fopen($this->configFile, 'w'))) {
-                // make sure nobody can list files of _data directory
-                FilesystemHelper::secureDirectory($this->paths->root . $this->confDataLocation);
-
-                $tmp_filename = md5(uniqid((string) time()));
-                $fh = @fopen($this->paths->root . $this->confDataLocation . 'pwg_' . $tmp_filename, 'w');
-                if ($fh !== false) {
-                    @fputs($fh, $file_content, strlen($file_content));
-                    @fclose($fh);
-                }
-
-                $this->template->assignContext(new InstallConfigFailurePageContext(
-                    configCreationFailed: true,
-                    configUrl: 'install.php?dl=' . $tmp_filename,
-                    configFileContent: $file_content,
-                ));
-            } else {
-                @fputs($fp, $file_content, strlen($file_content));
-                @fclose($fp);
-            }
-            @umask($originalUmask);
-        }
 
         // Create install sentinel stamp file.
         if (count($this->errors) === 0) {
@@ -671,12 +560,6 @@ define(\'DB_COLLATE\', \'\');
         // fill CurrentConfig::$data from the freshly-seeded config table
         $configService->loadConfFromDb();
 
-        // PWG_CHARSET (required for building the fs_themes array in the
-        // themes class) is guaranteed defined here: the entry shell
-        // define()s it right before calling this method, so the former
-        // `if (! defined('PWG_CHARSET'))` re-guard that sat here was
-        // provably dead and was dropped in the 8f-6 port (SEC-60 forbids
-        // define() in src/Piwigo anyway).
         InstallService::activateCoreThemes($this->lang, $this->currentUser, $this->currentConfigService, $this->currentConfig, $this->paths, $this->eventDispatcher);
         InstallService::activateCorePlugins($this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
 
@@ -759,9 +642,9 @@ define(\'DB_COLLATE\', \'\');
             // was always false and the guard was dropped.
 
             // See Piwigo\Bootstrap\SessionBootstrap (kept inline here: at
-            // this point of the install PHPWG_INSTALLED was only just
-            // define()d and this block ran unconditionally in the original,
-            // without SessionBootstrap::register()'s
+            // this point of the install InstallationFlag was only just
+            // marked active and this block ran unconditionally in the
+            // original, without SessionBootstrap::register()'s
             // session_save_handler === 'db' guard)
             session_set_save_handler(new PwgSession(new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), InstallBootstrap::currentLogger()));
             if (function_exists('ini_set')) {

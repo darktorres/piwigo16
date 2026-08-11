@@ -1630,8 +1630,8 @@ it('main tab: warns about a deprecated $conf[\'order_by\'] set in a real local c
     // @include()s (the live, container-bound Paths->local .
     // 'config/config.inc.php'), not a config-table row. Confirmed via a
     // full grep of every real @include site of this exact path
-    // (Admin\UserListPageRenderer, Admin\Install\LegacyFileConf, this
-    // controller, and BackupService's own file copy) that it is NEVER read
+    // (Admin\UserListPageRenderer, this controller, and BackupService's
+    // own file copy) that it is NEVER read
     // into the live app's real runtime $conf during normal request
     // bootstrap (ConfigLoader::applyDefaults()/applyEnvOverrides() are both
     // no-ops) -- writing it here cannot affect any other concurrently-

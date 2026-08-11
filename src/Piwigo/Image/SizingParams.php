@@ -30,18 +30,15 @@ final class SizingParams
      * @param int[]|null $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height); null when $max_crop=0
      */
     public function __construct(
-        public $ideal_size,
-        public $max_crop = 0,
-        public $min_size = null
+        public array $ideal_size,
+        public float|int $max_crop = 0,
+        public ?array $min_size = null
     ) {}
 
     /**
      * Returns a simple SizingParams object.
-     *
-     * @param int $w
-     * @param int $h
      */
-    public static function classic($w, $h): self
+    public static function classic(int $w, int $h): self
     {
         return new self([$w, $h]);
     }

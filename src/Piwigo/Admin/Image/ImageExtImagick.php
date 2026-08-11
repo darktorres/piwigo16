@@ -22,25 +22,16 @@ final class ImageExtImagick implements ImageInterface
 {
     public string $imagickdir = '';
 
-    /**
-     * @var int|float
-     */
-    public $width = 0;
+    public int|float $width = 0;
 
-    /**
-     * @var int|float
-     */
-    public $height = 0;
+    public int|float $height = 0;
 
-    /**
-     * @var bool
-     */
-    public $is_animated_webp = false;
+    public bool $is_animated_webp = false;
 
     /**
      * @var array<string, int|float|string|null>
      */
-    public $commands = [];
+    public array $commands = [];
 
     public function __construct(
         public string $source_filepath,

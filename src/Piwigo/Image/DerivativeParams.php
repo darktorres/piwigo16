@@ -19,28 +19,22 @@ final class DerivativeParams
     /**
      * @var string among the ImageStdParams size-type constants
      */
-    public $type = ImageStdParams::CUSTOM;
+    public string $type = ImageStdParams::CUSTOM;
 
     /**
      * @var int used for non-custom images to regenerate the cached files
      */
-    public $last_mod_time = 0;
+    public int $last_mod_time = 0;
 
-    /**
-     * @var bool
-     */
-    public $use_watermark = false;
+    public bool $use_watermark = false;
 
     /**
      * @var float from 0=no sharpening to 1=max sharpening
      */
-    public $sharpen = 0.0;
+    public float $sharpen = 0.0;
 
-    /**
-     * @param SizingParams $sizing
-     */
     public function __construct(
-        public $sizing
+        public SizingParams $sizing
     ) {}
 
     public function __serialize(): array
@@ -72,18 +66,12 @@ final class DerivativeParams
         return $scale_size !== null ? array_map(intval(...), $scale_size) : $in_size;
     }
 
-    /**
-     * @return int
-     */
-    public function maxWidth()
+    public function maxWidth(): int
     {
         return $this->sizing->ideal_size[0];
     }
 
-    /**
-     * @return int
-     */
-    public function maxHeight()
+    public function maxHeight(): int
     {
         return $this->sizing->ideal_size[1];
     }
@@ -103,9 +91,8 @@ final class DerivativeParams
 
     /**
      * @param int[] $out_size
-     * @return bool
      */
-    public function willWatermark(array $out_size, ImageStdParams $imageStdParams)
+    public function willWatermark(array $out_size, ImageStdParams $imageStdParams): bool
     {
         if ($this->use_watermark) {
             $min_size = $imageStdParams->getWatermark()

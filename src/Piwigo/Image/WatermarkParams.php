@@ -16,38 +16,20 @@ namespace Piwigo\Image;
  */
 final class WatermarkParams
 {
-    /**
-     * @var string
-     */
-    public $file = '';
+    public string $file = '';
 
     /**
      * @var int[]
      */
-    public $min_size = [500, 500];
+    public array $min_size = [500, 500];
 
-    /**
-     * @var int
-     */
-    public $xpos = 50;
+    public int $xpos = 50;
 
-    /**
-     * @var int
-     */
-    public $ypos = 50;
+    public int $ypos = 50;
 
-    /**
-     * @var int
-     */
-    public $xrepeat = 0;
+    public int $xrepeat = 0;
 
-    /**
-     * @var int
-     */
-    public $yrepeat = 0;
+    public int $yrepeat = 0;
 
-    /**
-     * @var int
-     */
-    public $opacity = 100;
+    public int $opacity = 100;
 }

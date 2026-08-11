@@ -129,7 +129,7 @@ final class DerivativeImage
      * @param SrcImage $src_image the source image of this derivative
      */
     public function __construct(
-        $type,
+        string|DerivativeParams $type,
         public SrcImage $src_image,
         private readonly CurrentConfig $currentConfig,
     ) {
@@ -147,7 +147,7 @@ final class DerivativeImage
      *
      * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage -- see SrcImage::__construct()'s own docblock for why the array form stays generic
      */
-    public static function thumbUrl($infos): string
+    public static function thumbUrl(array|SrcImage $infos): string
     {
         return self::url(ImageStdParams::THUMB, $infos);
     }
@@ -159,7 +159,7 @@ final class DerivativeImage
      *    ImageStdParams size-type constant) or a DerivativeParams object
      * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage
      */
-    public static function url($type, $infos): string
+    public static function url(string|DerivativeParams $type, array|SrcImage $infos): string
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
         $params = is_string($type) ? self::imageStdParams()->getByType($type) : $type;
@@ -190,7 +190,7 @@ final class DerivativeImage
      * @param array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage[]
      */
-    public static function getAll($src_image): array
+    public static function getAll(array|SrcImage $src_image): array
     {
         if (! is_object($src_image)) {
             $src_image = new SrcImage($src_image);
@@ -219,7 +219,7 @@ final class DerivativeImage
      * @param array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage|null null if $type not found
      */
-    public static function getOne($type, $src_image): ?self
+    public static function getOne(string $type, array|SrcImage $src_image): ?self
     {
         if (! is_object($src_image)) {
             $src_image = new SrcImage($src_image);
@@ -245,7 +245,7 @@ final class DerivativeImage
      * @param string $rel_url by-ref out-param
      * @param bool $is_cached by-ref out-param; not bound to a real variable when omitted (uses its default)
      */
-    private static function build(SrcImage $src, CurrentConfig $currentConfig, &$params, &$rel_path, &$rel_url, &$is_cached = false): void
+    private static function build(SrcImage $src, CurrentConfig $currentConfig, ?DerivativeParams &$params, string &$rel_path, string &$rel_url, bool &$is_cached = false): void
     {
         // every real call site (the constructor, url(), and this method's
         // own recursive call below) passes a freshly-resolved, non-null
@@ -358,7 +358,7 @@ final class DerivativeImage
     /**
      * @return string one of the ImageStdParams size-type constants or 'Original'
      */
-    public function getType()
+    public function getType(): string
     {
         if (! $this->params instanceof DerivativeParams) {
             return 'Original';
@@ -418,11 +418,9 @@ final class DerivativeImage
     }
 
     /**
-     * @param int $maxw
-     * @param int $maxh
      * @return int[]|null
      */
-    public function getScaledSize($maxw, $maxh): ?array
+    public function getScaledSize(int $maxw, int $maxh): ?array
     {
         $size = $this->getSize();
         if ((bool) $size) {
@@ -443,11 +441,8 @@ final class DerivativeImage
 
     /**
      * Returns the scaled size as HTML attributes.
-     *
-     * @param int $maxw
-     * @param int $maxh
      */
-    public function getScaledSizeHtm($maxw = 9999, $maxh = 9999): string
+    public function getScaledSizeHtm(int $maxw = 9999, int $maxh = 9999): string
     {
         $size = $this->getScaledSize($maxw, $maxh);
         if ((bool) $size) {

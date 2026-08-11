@@ -137,20 +137,11 @@ final class SrcImage
 
     public const int DIM_NOT_GIVEN = 0x04;
 
-    /**
-     * @var int
-     */
-    public $id;
+    public int $id;
 
-    /**
-     * @var string
-     */
-    public $rel_path;
+    public string $rel_path;
 
-    /**
-     * @var int
-     */
-    public $rotation = 0;
+    public int $rotation = 0;
 
     /**
      * @var int[]|null

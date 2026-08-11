@@ -19,10 +19,7 @@ use Override;
 
 final class ImageImagick implements ImageInterface
 {
-    /**
-     * @var Imagick
-     */
-    public $image;
+    public Imagick $image;
 
     /**
      * compose()'s own "already dimmed this overlay once" memoization flag.

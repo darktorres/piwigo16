@@ -191,22 +191,12 @@ final class ImageStdParams
         return $this->undefined_type_map;
     }
 
-    /**
-     * @return DerivativeParams
-     */
-    public function getByType(string $type)
+    public function getByType(string $type): DerivativeParams
     {
         return $this->all_type_map[$type];
     }
 
-    /**
-     * @param int $w
-     * @param int $h
-     * @param float $crop
-     * @param ?int $minw
-     * @param ?int $minh
-     */
-    public function getCustom($w, $h, $crop = 0, $minw = null, $minh = null): DerivativeParams
+    public function getCustom(int $w, int $h, float|int $crop = 0, ?int $minw = null, ?int $minh = null): DerivativeParams
     {
         // $minw/$minh are always both null or both set together (see the
         // sole caller, Template::funcDefineDerivative()).
@@ -563,10 +553,8 @@ final class ImageStdParams
      * those ran would hit a read on null here, in the original
      * serialize()-blob code too. Lazily defaults it instead of crashing --
      * self-healing, matching the same null-tolerance save() already needs.
-     *
-     * @param DerivativeParams $params
      */
-    public function applyGlobal($params): void
+    public function applyGlobal(DerivativeParams $params): void
     {
         $this->watermark ??= new WatermarkParams();
 

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Piwigo\Tests\Unit\Page;
+
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -10,7 +12,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
-use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Page\PageTailRenderer;
@@ -37,21 +38,8 @@ use Piwigo\Users\UserStatus;
  * CurrentConfig skips the mobile-theme-toggle/debug-output branches
  * (mobilTheme()/showQueries()/showGt() all default falsy) -- the
  * cheapest real happy path, matching this campaign's established
- * scoping. TelemetrySenderInterface's own real implementation
- * (PiwigoInfosSender) needs 10 further heavy constructor deps for a
- * config-gated send() that's a no-op by default anyway -- a small,
- * dedicated fake proves send() was called without that cost.
+ * scoping.
  */
-final class PageTailTestFakeTelemetrySender implements TelemetrySenderInterface
-{
-    public bool $sendWasCalled = false;
-
-    public function send(): void
-    {
-        $this->sendWasCalled = true;
-    }
-}
-
 function pageTailTestRoot(): string
 {
     $root = sys_get_temp_dir() . '/piwigo-page-tail-test-' . bin2hex(random_bytes(8)) . '/';

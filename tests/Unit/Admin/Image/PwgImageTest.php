@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+namespace Piwigo\Tests\Unit\Admin\Image;
+
+use Exception;
+use LogicException;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\Projection\ResizeCrop;
@@ -16,7 +20,8 @@ use Piwigo\Event\Lifecycle\LoadImageLibrary;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
-use Piwigo\Tests\Unit\Admin\Image\PwgImageSpyImage;
+use ReflectionClass;
+use RuntimeException;
 
 /**
  * __construct()'s unsupported-extension guard throws
@@ -92,88 +97,6 @@ function pwgImageTestMarker(): string
 function pwgImageTestMake(string $sourceFilepath, ?string $library = null): PwgImage
 {
     return new PwgImage($sourceFilepath, new CurrentLogger(), EventDispatcherTestFactory::get(), new CurrentConfig(), $library);
-}
-
-/**
- * Same call-recording contract as PwgImageSpyImage, but write() controls
- * the destination file directly -- $writeBytes=null never creates it at
- * all (get_resize_result()'s own filesize() call observes a genuinely
- * missing file), otherwise it writes exactly that many bytes (exact
- * control over the "X KB" computation).
- */
-final class PwgImageSpyImageFileControl implements ImageInterface
-{
-    /**
-     * @var list<string>
-     */
-    public array $calls = [];
-
-    public function __construct(
-        private readonly int|float $width,
-        private readonly int|float $height,
-        private readonly ?int $writeBytes,
-    ) {}
-
-    public function get_width(): int|float
-    {
-        return $this->width;
-    }
-
-    public function get_height(): int|float
-    {
-        return $this->height;
-    }
-
-    public function set_compression_quality(int $quality): bool
-    {
-        $this->calls[] = 'set_compression_quality';
-        return true;
-    }
-
-    public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
-    {
-        $this->calls[] = 'crop';
-        return true;
-    }
-
-    public function strip(): bool
-    {
-        $this->calls[] = 'strip';
-        return true;
-    }
-
-    public function rotate(int|float $rotation): bool
-    {
-        $this->calls[] = 'rotate';
-        return true;
-    }
-
-    public function resize(int|float $width, int|float $height): bool
-    {
-        $this->calls[] = 'resize';
-        return true;
-    }
-
-    public function sharpen(int|float $amount): bool
-    {
-        $this->calls[] = 'sharpen';
-        return true;
-    }
-
-    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
-    {
-        $this->calls[] = 'compose';
-        return true;
-    }
-
-    public function write(string $destination_filepath): bool
-    {
-        $this->calls[] = 'write';
-        if ($this->writeBytes !== null) {
-            file_put_contents($destination_filepath, str_repeat('x', $this->writeBytes));
-        }
-        return true;
-    }
 }
 
 /**
@@ -1691,7 +1614,7 @@ test('get_graphics_library_label formats the gd library and version when no imag
     // subprocess test, calling get_graphics_library_label() instead to
     // prove the label array's own 'gd' entry is real, not just non-empty.
     $script = '\Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));'
-        . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->setExtImagickDir("/totally/nonexistent/dir/");'
+        . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->extImagickDir = "/totally/nonexistent/dir/";'
         . 'echo \Piwigo\Admin\Image\PwgImage::get_graphics_library_label();';
     $proc = pwgImageRunSubprocess(['-n', '-d', 'extension=gd'], $script);
 
@@ -1730,7 +1653,7 @@ test('get_ext_imagick_command/is_ext_imagick/get_graphics_library correctly loca
 
     try {
         $script = '\Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));'
-            . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->setExtImagickDir(' . var_export($dir . '/', true) . ');'
+            . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->extImagickDir = ' . var_export($dir . '/', true) . ';'
             . 'echo json_encode(['
             . '"command" => \Piwigo\Admin\Image\PwgImage::get_ext_imagick_command(),'
             . '"is_ext" => \Piwigo\Admin\Image\PwgImage::is_ext_imagick(),'

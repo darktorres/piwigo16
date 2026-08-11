@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Ws\PwgNamedStruct;
+use Piwigo\Ws\NamedStruct;
 
 /**
- * PwgNamedStruct::__construct() branches on `isset($xmlAttributes)`:
+ * NamedStruct::__construct() branches on `isset($xmlAttributes)`:
  * when the caller supplies an explicit list, it is flipped into a
- * name => position map (same shape as PwgNamedArray's own flip); when
+ * name => position map (same shape as NamedArray's own flip); when
  * omitted (null), the constructor instead auto-detects xml-attribute
  * candidates by walking $content itself (scalar/null values, keys not
  * in ['', 0, '0']), writing $key => 1 for each. Only the
@@ -16,7 +16,7 @@ use Piwigo\Ws\PwgNamedStruct;
  * branch had no coverage anywhere.
  */
 test('explicit xmlAttributes flips the given list into a name => position map', function (): void {
-    $struct = new PwgNamedStruct([
+    $struct = new NamedStruct([
         'id' => 7,
         'name' => 'Alps',
     ], ['id']);
@@ -38,7 +38,7 @@ test('null xmlAttributes auto-detects scalar content keys instead of flipping a 
     // meaningfully different $xmlAttributes for identical input,
     // and that the auto-detect branch really does walk $content
     // (not simply an empty/flipped-nothing result).
-    $struct = new PwgNamedStruct([
+    $struct = new NamedStruct([
         'id' => 7,
         'name' => 'Alps',
     ]);
@@ -51,7 +51,7 @@ test('null xmlAttributes auto-detects scalar content keys instead of flipping a 
 });
 
 test('null xmlAttributes auto-detect skips non-scalar values and keys forced into xmlElements', function (): void {
-    $struct = new PwgNamedStruct(
+    $struct = new NamedStruct(
         [
             'id' => 7,
             'name' => 'Alps',
@@ -74,7 +74,7 @@ test('null xmlAttributes auto-detect excludes the "" and 0 keys even when scalar
     // Note: a literal '0' array key is normalized to the int key 0 by PHP
     // itself before this constructor ever sees it, so only these two
     // distinct key shapes are reachable through a real foreach here.
-    $struct = new PwgNamedStruct([
+    $struct = new NamedStruct([
         'id' => 7,
         '' => 'blank',
         0 => 'zero',

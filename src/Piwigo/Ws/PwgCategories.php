@@ -146,7 +146,7 @@ final class PwgCategories
      *   -- makeArrayParam() converts the null default to [], always a list of
      *   positive ints. f_* keys: the shared $f_params block merged into this
      *   registration, see WsHelper::stdImageSqlFilterCriteria()/WsHelper::stdImageSqlOrder().
-     * @return PwgError|array{paging: PwgNamedStruct, images: PwgNamedArray}
+     * @return PwgError|array{paging: NamedStruct, images: NamedArray}
      */
     public function getImages(array $params, PwgServer &$service): PwgError|array
     {
@@ -321,7 +321,7 @@ final class PwgCategories
                         ];
                     }
 
-                    $images[$idx]['categories'] = new PwgNamedArray(
+                    $images[$idx]['categories'] = new NamedArray(
                         $image_cats,
                         'category',
                         ['id', 'url', 'page_url']
@@ -331,7 +331,7 @@ final class PwgCategories
         }
 
         return [
-            'paging' => new PwgNamedStruct(
+            'paging' => new NamedStruct(
                 [
                     'page' => $params['page'],
                     'per_page' => $params['per_page'],
@@ -339,7 +339,7 @@ final class PwgCategories
                     'total_count' => $total_images,
                 ]
             ),
-            'images' => new PwgNamedArray(
+            'images' => new NamedArray(
                 $images,
                 'image',
                 $this->wsHelper->stdGetImageXmlAttributes()
@@ -704,7 +704,7 @@ final class PwgCategories
             return $this->wsHelper->categoriesFlatlistToTree($cats);
         }
 
-        $output['categories'] = new PwgNamedArray(
+        $output['categories'] = new NamedArray(
             $cats,
             'category',
             $this->wsHelper->stdGetCategoryXmlAttributes()
@@ -812,7 +812,7 @@ final class PwgCategories
 
         usort($cats, CategoryService::compareByGlobalRank(...));
         return [
-            'categories' => new PwgNamedArray(
+            'categories' => new NamedArray(
                 $cats,
                 'category',
                 ['id', 'nb_images', 'name', 'uppercats', 'global_rank', 'status', 'test']

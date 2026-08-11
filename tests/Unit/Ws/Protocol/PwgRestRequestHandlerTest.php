@@ -17,7 +17,7 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\Protocol\PwgJsonEncoder;
+use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\PwgServer;
 
@@ -68,7 +68,7 @@ function pwgRestRequestHandlerTestServer(): PwgServer
         new ApiKeyRequestFlag(),
         new CurrentConfig(),
     );
-    $encoder = new PwgJsonEncoder();
+    $encoder = new JsonEncoder();
     $server->setEncoder('json', $encoder);
 
     return $server;

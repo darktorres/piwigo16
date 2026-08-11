@@ -171,7 +171,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
         self::assertStringContainsString('<?xml', $body);
         // JSON's top-level result is a flat object; REST wraps the very same
         // fields one level deeper under a named <image> element (the
-        // `['image' => new PwgNamedStruct($ret, ...)]` branch, format='rest'
+        // `['image' => new NamedStruct($ret, ...)]` branch, format='rest'
         // only).
         self::assertMatchesRegularExpression('/<image\s+id="1"/', $body);
         self::assertStringContainsString('file="fixture-photo-1.jpg"', $body);

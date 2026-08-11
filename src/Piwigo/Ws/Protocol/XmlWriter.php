@@ -14,10 +14,10 @@ namespace Piwigo\Ws\Protocol;
 /**
  * Low-level XML wire-format writer -- every `mixed` value/content param
  * here is genuinely by-design (an arbitrary WS response value being
- * serialized), same rationale as Encoder\PwgResponseEncoder's own
+ * serialized), same rationale as Encoder\ResponseEncoder's own
  * class-level docblock.
  */
-final class PwgXmlWriter
+final class XmlWriter
 {
     /**
      * @var string

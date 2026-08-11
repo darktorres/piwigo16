@@ -11,17 +11,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Encoder;
 
-use Piwigo\Ws\PwgNamedArray;
-use Piwigo\Ws\PwgNamedStruct;
+use Piwigo\Ws\NamedArray;
+use Piwigo\Ws\NamedStruct;
 
 /**
  * Base class for web service response encoder. Every `mixed` here is
  * genuinely by-design: this walks/encodes an arbitrary WS method's
- * arbitrary, arbitrarily-nested response value (PwgNamedArray/
- * PwgNamedStruct themselves wrap arbitrary content) -- same rationale as
+ * arbitrary, arbitrarily-nested response value (NamedArray/
+ * NamedStruct themselves wrap arbitrary content) -- same rationale as
  * PwgServer's own generic method dispatcher.
  */
-abstract class PwgResponseEncoder
+abstract class ResponseEncoder
 {
     /**
      * The array-key marker flatten() uses to distinguish XML-attribute
@@ -63,9 +63,9 @@ abstract class PwgResponseEncoder
 
     private static function flatten(mixed &$value): void
     {
-        if ($value instanceof PwgNamedArray) {
+        if ($value instanceof NamedArray) {
             $value = $value->content;
-        } elseif ($value instanceof PwgNamedStruct) {
+        } elseif ($value instanceof NamedStruct) {
             $value = $value->content;
         }
 

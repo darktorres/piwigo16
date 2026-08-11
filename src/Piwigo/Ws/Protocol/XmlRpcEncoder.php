@@ -12,14 +12,14 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Protocol;
 
 use Override;
-use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\PwgError;
 
 /**
  * mixed values/params throughout are by design -- see the parent class's
  * own docblock.
  */
-final class PwgXmlRpcEncoder extends PwgResponseEncoder
+final class XmlRpcEncoder extends ResponseEncoder
 {
     #[Override]
     public function encodeResponse($response): string

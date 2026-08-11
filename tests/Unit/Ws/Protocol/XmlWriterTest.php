@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Ws\Protocol\PwgXmlWriter;
+use Piwigo\Ws\Protocol\XmlWriter;
 
 /**
- * PwgXmlWriter is a small hand-rolled state machine (an open-tag flag +
+ * XmlWriter is a small hand-rolled state machine (an open-tag flag +
  * an element-name stack + an indent level), not a DOM/XMLWriter wrapper.
  * Every expected string below was built by tracing that state machine
  * call by call: endPrev() decides whether an element self-closes
@@ -15,7 +15,7 @@ use Piwigo\Ws\Protocol\PwgXmlWriter;
  * way back out.
  */
 test('an element with no content self-closes', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('foo');
     $writer->endElement('foo');
@@ -25,7 +25,7 @@ test('an element with no content self-closes', function (): void {
 });
 
 test('an element with text content gets an explicit closing tag', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('foo');
     $writer->writeContent('bar');
@@ -36,7 +36,7 @@ test('an element with text content gets an explicit closing tag', function (): v
 });
 
 test('a tag name starting with a digit is prefixed with an underscore', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('123');
     $writer->endElement('123');
@@ -46,7 +46,7 @@ test('a tag name starting with a digit is prefixed with an underscore', function
 });
 
 test('nested elements are indented with one tab per depth level, going in only', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('a');
     $writer->startElement('b');
@@ -61,7 +61,7 @@ test('nested elements are indented with one tab per depth level, going in only',
 });
 
 test('writeAttribute htmlspecialchars-escapes the value and stays inside the opening tag', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('img');
     $writer->writeAttribute('id', 42);
@@ -73,7 +73,7 @@ test('writeAttribute htmlspecialchars-escapes the value and stays inside the ope
 });
 
 test('writeCdata escapes an embedded ]]> terminator sequence', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('data');
     $writer->writeCdata('a]]>b');
@@ -84,7 +84,7 @@ test('writeCdata escapes an embedded ]]> terminator sequence', function (): void
 });
 
 test('writeContent coerces a non-scalar value to empty content instead of erroring', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('x');
     $writer->writeContent(['not', 'scalar']);
@@ -99,7 +99,7 @@ test('a tag name starting with any digit 0-9 is prefixed with an underscore', fu
     // ord($name[0]) actually reads: a DecrementInteger mutant on that `0`
     // literal reads $name[-1] (the *last* char, 'x') instead, which is
     // never a digit here, so the mutant would leave the name unprefixed.
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement($digit . 'x');
     $writer->endElement($digit . 'x');
@@ -111,7 +111,7 @@ test('a tag name starting with any digit 0-9 is prefixed with an underscore', fu
 test('a tag name starting with the character just below the digit range is not prefixed', function (): void {
     // '/' (ASCII 47) is one below '0' (48), so diff = -1: pins the `>= 0`
     // lower boundary of the digit check.
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('/foo');
     $writer->endElement('/foo');
@@ -123,7 +123,7 @@ test('a tag name starting with the character just below the digit range is not p
 test('a tag name starting with the character just above the digit range is not prefixed', function (): void {
     // ':' (ASCII 58) is one above '9' (57), so diff = 10: pins the
     // `<= 9` upper boundary of the digit check.
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement(':foo');
     $writer->endElement(':foo');
@@ -137,7 +137,7 @@ test('a tag name is prefixed based on its first character, not its last', functi
     // a digit but '9' (last char) is, so a DecrementInteger mutant on the
     // $name[0] array offset (reading $name[-1] instead) would prefix this
     // name where the real code does not.
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('x9');
     $writer->endElement('x9');
@@ -155,7 +155,7 @@ test('endElement still emits indent whitespace before the closing tag when the i
     // Every field here is `public` specifically so a test can drive the
     // state directly -- force the indent level one step ahead of the
     // stack to exercise that branch's call to indent() for real.
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
     $writer->elementStack = ['a', 'b', 'c'];
     $writer->indentLevel = 4;
     $writer->lastTagOpen = false;
@@ -167,7 +167,7 @@ test('endElement still emits indent whitespace before the closing tag when the i
 });
 
 test('writeContent casts a non-string scalar to a string before escaping it', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('n');
     $writer->writeContent(42);
@@ -178,7 +178,7 @@ test('writeContent casts a non-string scalar to a string before escaping it', fu
 });
 
 test('writeContent escapes HTML-special characters in the value', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('n');
     $writer->writeContent('<a>&"\'</a>');
@@ -189,7 +189,7 @@ test('writeContent escapes HTML-special characters in the value', function (): v
 });
 
 test('writeCdata casts a non-string scalar to a string before writing it', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('n');
     $writer->writeCdata(42);
@@ -200,7 +200,7 @@ test('writeCdata casts a non-string scalar to a string before writing it', funct
 });
 
 test('writeCdata coerces a non-scalar value to empty CDATA content instead of erroring', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('n');
     $writer->writeCdata(['not', 'scalar']);
@@ -211,7 +211,7 @@ test('writeCdata coerces a non-scalar value to empty CDATA content instead of er
 });
 
 test('writeAttribute coerces a non-scalar value to an empty attribute value instead of erroring', function (): void {
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('n');
     $writer->writeAttribute('data', ['not', 'scalar']);
@@ -229,7 +229,7 @@ test('a self-closing element correctly decrements the indent level for its paren
     // If endPrev()'s decrement instead incremented, indentLevel would
     // be left 2 too high, flipping indent()'s `>` check for b's closing
     // tag from false to true and emitting a spurious extra tab.
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('a');
     $writer->startElement('b');
@@ -249,7 +249,7 @@ test('endElement ignores its own argument and always closes the innermost stacke
     // mutated implementation started using the argument instead of (or
     // in addition to) the stack, this would close with "totally-wrong-name"
     // instead of the real stack contents ('b' then 'a') and fail.
-    $writer = new PwgXmlWriter();
+    $writer = new XmlWriter();
 
     $writer->startElement('a');
     $writer->startElement('b');

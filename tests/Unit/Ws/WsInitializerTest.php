@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Ws\Protocol\PwgJsonEncoder;
-use Piwigo\Ws\Protocol\PwgRestEncoder;
+use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
-use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
-use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
+use Piwigo\Ws\Protocol\RestEncoder;
+use Piwigo\Ws\Protocol\SerialPhpEncoder;
+use Piwigo\Ws\Protocol\XmlRpcEncoder;
 use Piwigo\Ws\WsInitializer;
 
 /**
@@ -62,7 +62,7 @@ test('init defaults to a REST request handler and REST response encoder when no 
         ->and($server->responseFormat)
         ->toBe('rest')
         ->and($server->responseEncoder)
-        ->toBeInstanceOf(PwgRestEncoder::class);
+        ->toBeInstanceOf(RestEncoder::class);
 });
 
 test('init memoizes the built PwgServer across repeated calls on the same instance', function (): void {
@@ -84,7 +84,7 @@ test('init selects the response encoder matching ?format=json', function (): voi
     expect($server->responseFormat)
         ->toBe('json')
         ->and($server->responseEncoder)
-        ->toBeInstanceOf(PwgJsonEncoder::class);
+        ->toBeInstanceOf(JsonEncoder::class);
 });
 
 test('init selects the response encoder matching ?format=php', function (): void {
@@ -96,7 +96,7 @@ test('init selects the response encoder matching ?format=php', function (): void
     expect($server->responseFormat)
         ->toBe('php')
         ->and($server->responseEncoder)
-        ->toBeInstanceOf(PwgSerialPhpEncoder::class);
+        ->toBeInstanceOf(SerialPhpEncoder::class);
 });
 
 test('init selects the response encoder matching ?format=xmlrpc', function (): void {
@@ -108,7 +108,7 @@ test('init selects the response encoder matching ?format=xmlrpc', function (): v
     expect($server->responseFormat)
         ->toBe('xmlrpc')
         ->and($server->responseEncoder)
-        ->toBeInstanceOf(PwgXmlRpcEncoder::class);
+        ->toBeInstanceOf(XmlRpcEncoder::class);
 });
 
 test('init leaves the response encoder null for an unrecognized format', function (): void {

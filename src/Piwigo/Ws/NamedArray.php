@@ -18,9 +18,9 @@ namespace Piwigo\Ws;
  *
  * $content is genuinely arbitrary by design -- this wraps any WS method's
  * own response content generically for encoding, same rationale as
- * PwgNamedStruct/Encoder\PwgResponseEncoder.
+ * NamedStruct/Encoder\ResponseEncoder.
  */
-final class PwgNamedArray
+final class NamedArray
 {
     /**
      * @var array<string, int>

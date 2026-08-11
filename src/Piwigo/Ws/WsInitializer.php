@@ -12,11 +12,11 @@ use Piwigo\Event\Ws\GetHistory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Event\WsAddMethods;
 use Piwigo\Ws\Event\WsInvokeAllowed;
-use Piwigo\Ws\Protocol\PwgJsonEncoder;
-use Piwigo\Ws\Protocol\PwgRestEncoder;
+use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
-use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
-use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
+use Piwigo\Ws\Protocol\RestEncoder;
+use Piwigo\Ws\Protocol\SerialPhpEncoder;
+use Piwigo\Ws\Protocol\XmlRpcEncoder;
 use Piwigo\Ws\Request\WsFormatRequest;
 
 /**
@@ -81,16 +81,16 @@ final class WsInitializer
         $encoder = null;
         switch ($responseFormat) {
             case 'rest':
-                $encoder = new PwgRestEncoder();
+                $encoder = new RestEncoder();
                 break;
             case 'php':
-                $encoder = new PwgSerialPhpEncoder();
+                $encoder = new SerialPhpEncoder();
                 break;
             case 'json':
-                $encoder = new PwgJsonEncoder();
+                $encoder = new JsonEncoder();
                 break;
             case 'xmlrpc':
-                $encoder = new PwgXmlRpcEncoder();
+                $encoder = new XmlRpcEncoder();
                 break;
         }
         $service->setEncoder($responseFormat, $encoder);

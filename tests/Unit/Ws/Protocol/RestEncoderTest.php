@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Piwigo\Ws\Encoder\PwgResponseEncoder;
-use Piwigo\Ws\Protocol\PwgRestEncoder;
+use Piwigo\Ws\Encoder\ResponseEncoder;
+use Piwigo\Ws\NamedArray;
+use Piwigo\Ws\NamedStruct;
+use Piwigo\Ws\Protocol\RestEncoder;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgNamedArray;
-use Piwigo\Ws\PwgNamedStruct;
 
 /**
- * Piwigo\Ws\Protocol\PwgRestEncoder has no DB/HTTP dependency of its own --
+ * Piwigo\Ws\Protocol\RestEncoder has no DB/HTTP dependency of its own --
  * it's a pure XML-serialization state machine over an arbitrary PHP value,
- * same shape as its PwgXmlRpcEncoder/PwgSerialPhpEncoder siblings in this
+ * same shape as its XmlRpcEncoder/SerialPhpEncoder siblings in this
  * same directory -- so this follows their exact convention: encodeResponse()
  * is called directly with hand-built PHP values, not via a live WS request.
  *
@@ -46,7 +46,7 @@ test('encode_struct skips an integer array key in both scan loops, writing no el
     // [3 => ..., 'label' => ...] is not array_is_list() (key 3 isn't the
     // list's expected leading 0), so encode()'s bare 'array' case routes
     // this through encodeStruct(), not encodeArray().
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
     $response = [
         3 => 'numeric-key-value',
         'label' => 'kept',
@@ -67,7 +67,7 @@ test('encode_struct skips an integer array key in both scan loops, writing no el
 });
 
 test('encode_struct skips a null-valued key in both scan loops, omitting the element entirely', function (): void {
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
     $response = [
         'title' => 'Kept',
         'subtitle' => null,
@@ -93,7 +93,7 @@ test('encode() writes empty content for a NULL list element, reached only via en
     // gettype() case is only reachable for an element of a real *list*, via
     // encodeArray()'s unconditional `$this->encode($item, $xml_attributes)`
     // call, which has no null check of its own.
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
     $response = [null, 'x'];
 
     $result = $encoder->encodeResponse($response);
@@ -114,7 +114,7 @@ test('encode() trigger_error()s an E_USER_WARNING for a resource value and write
     // comment on the `default` arm) -- only a genuine resource (or PHP's
     // rare "unknown type") reaches here. fopen() gives a real, live PHP
     // resource, not a mock/stub of the class under test.
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
     $resource = fopen('php://memory', 'r');
     expect($resource)
         ->not->toBeFalse();
@@ -161,7 +161,7 @@ test('encode() trigger_error()s an E_USER_WARNING for a resource value and write
 test('encodeResponse renders a PwgError as a stat="fail" response, never routing it through the normal struct/object encode path', function (): void {
     // Kills `if ($response instanceof PwgError)` -> InstanceOfToFalse:
     // a false-forced check would fall through to `$this->encode($response)`,
-    // which (PwgError not being a PwgNamedArray/PwgNamedStruct) would hit
+    // which (PwgError not being a NamedArray/NamedStruct) would hit
     // the generic get_object_vars() fallback -- and PwgError's properties
     // are all private, so get_object_vars() from outside the class sees
     // none of them, producing an empty stat="ok" response instead.
@@ -169,8 +169,8 @@ test('encodeResponse renders a PwgError as a stat="fail" response, never routing
     // WsError-style code (>= 1000), not an HTTP-range 400-599 code, so
     // PwgError's own constructor doesn't reach for a booted
     // PresentationAccessor container -- same convention as the sibling
-    // PwgXmlRpcEncoder/PwgSerialPhpEncoder unit tests.
-    $encoder = new PwgRestEncoder();
+    // XmlRpcEncoder/SerialPhpEncoder unit tests.
+    $encoder = new RestEncoder();
     $error = new PwgError(1003, 'Bad param <x>');
 
     $result = $encoder->encodeResponse($error);
@@ -189,7 +189,7 @@ test('encode_struct pulls a later xml_attributes-designated key out even after a
     // Exercises encodeStruct()'s FIRST scan loop (attribute-extraction),
     // not just the second (element-writing) loop the numeric-key test
     // near the top of this file already covers: $xml_attributes is only
-    // ever non-empty via a PwgNamedStruct's own xmlAttributes, so 'id'
+    // ever non-empty via a NamedStruct's own xmlAttributes, so 'id'
     // must be pulled out here as a real XML attribute on <group>, never
     // as a child element -- and placing a numeric key *before* it proves
     // the loop keeps going past that entry instead of stopping on it.
@@ -200,9 +200,9 @@ test('encode_struct pulls a later xml_attributes-designated key out even after a
     // of the numeric one), and line 90 ContinueToBreak (the numeric
     // entry's `continue` becomes `break`, aborting the whole loop before
     // it ever reaches 'id').
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
     $response = [
-        'group' => new PwgNamedStruct([
+        'group' => new NamedStruct([
             5 => 'ignored-numeric',
             'id' => 7,
             'name' => 'bar',
@@ -231,10 +231,10 @@ test('encode_struct casts an integer attribute key to string before writing it',
     // string-keyed) -- every existing ATTRIBUTES_KEY/xml_attributes test
     // in this file uses only string keys ('id'), so none of them force
     // this cast to actually do anything.
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
     $response = [
         'group' => [
-            PwgResponseEncoder::ATTRIBUTES_KEY => [
+            ResponseEncoder::ATTRIBUTES_KEY => [
                 0 => 'attr-value',
             ],
             'label' => 'Public',
@@ -251,15 +251,15 @@ test('encode_struct casts an integer attribute key to string before writing it',
 
 test('encode() extracts an ATTRIBUTES_KEY property as an xml attribute source through the generic object fallback', function (): void {
     // The generic get_object_vars() object fallback (an arbitrary object
-    // that is neither PwgNamedArray nor PwgNamedStruct) still runs
+    // that is neither NamedArray nor NamedStruct) still runs
     // encodeStruct()'s full first scan loop, including the
     // ATTRIBUTES_KEY special case -- this proves that dispatch path
     // extracts real xml attributes from an arbitrary object's own
-    // ATTRIBUTES_KEY property, same as the plain-array/PwgNamedStruct
+    // ATTRIBUTES_KEY property, same as the plain-array/NamedStruct
     // paths this file's other ATTRIBUTES_KEY tests already cover.
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
     $response = new stdClass();
-    $response->{PwgResponseEncoder::ATTRIBUTES_KEY} = [
+    $response->{ResponseEncoder::ATTRIBUTES_KEY} = [
         'id' => 9,
     ];
     $response->label = 'Public';
@@ -284,9 +284,9 @@ test('encode_struct omits a null-valued xml_attributes-designated key entirely, 
     // isset($xml_attributes[...]) check at all -- and instead falls
     // through to writeAttribute('id', null), rendering a real but empty
     // `id=""` attribute instead of omitting 'id' altogether).
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
     $response = [
-        'group' => new PwgNamedStruct([
+        'group' => new NamedStruct([
             'id' => null,
             'name' => 'foo',
         ], ['id']),
@@ -307,9 +307,9 @@ test('encode_struct (first scan loop) only skips a null-valued entry itself, not
     // deliberately placed *before* the ATTRIBUTES_KEY-eligible 'id' entry,
     // so a `break` instead of `continue` aborts the loop on 'skip' and
     // 'id' never gets pulled out as an attribute.
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
     $response = [
-        'group' => new PwgNamedStruct([
+        'group' => new NamedStruct([
             'skip' => null,
             'id' => 9,
             'name' => 'foo',
@@ -331,7 +331,7 @@ test('encode_struct (second, element-writing scan loop) only skips a null-valued
     // to the test above: 'middle' is null and sits *before* 'last', so a
     // `break` instead of `continue` would abort the whole element-writing
     // loop and 'last' would never be written at all.
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
     $response = [
         'first' => 'A',
         'middle' => null,
@@ -348,9 +348,9 @@ test('encode_struct (second, element-writing scan loop) only skips a null-valued
         ->not->toContain('<middle');
 });
 
-test('encode() routes a PwgNamedArray through encodeArray()/its own content, not the generic object fallback', function (): void {
+test('encode() routes a NamedArray through encodeArray()/its own content, not the generic object fallback', function (): void {
     // Kills line 162 InstanceOfToFalse: a false-forced check sends a
-    // PwgNamedArray to the final generic-object `else` branch instead --
+    // NamedArray to the final generic-object `else` branch instead --
     // get_object_vars() on it (from outside the class) sees its public
     // content/itemName/xmlAttributes properties, and -- now that
     // skip_underscore no longer exists to hide them -- would encode them
@@ -360,8 +360,8 @@ test('encode() routes a PwgNamedArray through encodeArray()/its own content, not
     // (`<content><item>a</item><item>b</item></content><itemName>item</itemName>...`)
     // still contains the literal substrings '<item>a</item>'/'<item>b</item>',
     // so a toContain() assertion would silently stop catching this mutant.
-    $encoder = new PwgRestEncoder();
-    $response = new PwgNamedArray(['a', 'b'], 'item');
+    $encoder = new RestEncoder();
+    $response = new NamedArray(['a', 'b'], 'item');
 
     $result = $encoder->encodeResponse($response);
 
@@ -375,22 +375,22 @@ test('encode() routes a PwgNamedArray through encodeArray()/its own content, not
         ->toBe($expected);
 });
 
-test('encode() routes a PwgNamedStruct through encodeStruct()/its own content, not the generic object fallback', function (): void {
-    // Kills line 164 InstanceOfToFalse, the PwgNamedStruct counterpart to
-    // the PwgNamedArray test above: get_object_vars() would see only
+test('encode() routes a NamedStruct through encodeStruct()/its own content, not the generic object fallback', function (): void {
+    // Kills line 164 InstanceOfToFalse, the NamedStruct counterpart to
+    // the NamedArray test above: get_object_vars() would see only
     // content/xmlAttributes (both public), and -- with skip_underscore
     // gone -- the mutant would wrap the output in a <content> element
     // instead of writing <title>Hello</title> directly. Same toBe()
-    // reasoning as the PwgNamedArray test above: toContain() would not
+    // reasoning as the NamedArray test above: toContain() would not
     // distinguish the two.
     //
     // Explicit `[]` for $xmlAttributes (rather than the default null)
-    // turns off PwgNamedStruct's own auto-attribute-detection, so 'title'
+    // turns off NamedStruct's own auto-attribute-detection, so 'title'
     // is unambiguously a plain child element here, not an xml attribute
     // -- this response is encoded directly at the top level (no
     // enclosing parent element for an attribute to attach to).
-    $encoder = new PwgRestEncoder();
-    $response = new PwgNamedStruct([
+    $encoder = new RestEncoder();
+    $response = new NamedStruct([
         'title' => 'Hello',
     ], []);
 
@@ -406,15 +406,15 @@ test('encode() routes a PwgNamedStruct through encodeStruct()/its own content, n
         ->toBe($expected);
 });
 
-test('encode() no longer hides leading-underscore keys anywhere -- plain array, PwgNamedStruct, or the generic object fallback', function (): void {
+test('encode() no longer hides leading-underscore keys anywhere -- plain array, NamedStruct, or the generic object fallback', function (): void {
     // Confirms the new, correct contract now that skip_underscore is
     // gone: real PHP visibility (not a leading-underscore naming
     // convention) governs what's exposed. Covers all three routes
     // encode()/encodeStruct() can reach a leading-underscore key
-    // through -- a plain associative array, a PwgNamedStruct's own
+    // through -- a plain associative array, a NamedStruct's own
     // content, and an arbitrary object via get_object_vars() -- since
     // all three now behave identically (no more special-casing).
-    $encoder = new PwgRestEncoder();
+    $encoder = new RestEncoder();
 
     $arrayResult = $encoder->encodeResponse([
         '_hidden' => 'should-appear',
@@ -425,8 +425,8 @@ test('encode() no longer hides leading-underscore keys anywhere -- plain array, 
         ->and($arrayResult)
         ->toContain('<visible>yes</visible>');
 
-    $structEncoder = new PwgRestEncoder();
-    $structResult = $structEncoder->encodeResponse(new PwgNamedStruct([
+    $structEncoder = new RestEncoder();
+    $structResult = $structEncoder->encodeResponse(new NamedStruct([
         '_hidden' => 'should-appear',
         'label' => 'Public',
     ], []));
@@ -435,7 +435,7 @@ test('encode() no longer hides leading-underscore keys anywhere -- plain array, 
         ->and($structResult)
         ->toContain('<label>Public</label>');
 
-    $objectEncoder = new PwgRestEncoder();
+    $objectEncoder = new RestEncoder();
     $response = new stdClass();
     $response->_formerlyHidden = 'now-visible';
     $response->label = 'Public';

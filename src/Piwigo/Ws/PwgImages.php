@@ -57,7 +57,7 @@ use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\Request\ChunkedUploadRequest;
 use Piwigo\Ws\Request\TagListRequest;
 use Piwigo\Ws\Request\UploadedFileRequest;
@@ -328,7 +328,7 @@ final class PwgImages
      *    value for any registered param without WsParamFlag::ACCEPT_ARRAY, so
      *    they're always plain strings too (author has a string default,
      *    content/key are mandatory)
-     * @return PwgError|array{comment: PwgNamedStruct}
+     * @return PwgError|array{comment: NamedStruct}
      */
     public function addComment(array $params, PwgServer $service): PwgError|array
     {
@@ -365,7 +365,7 @@ final class PwgImages
                     'validation' => $comment_action === 'validate',
                 ];
                 return [
-                    'comment' => new PwgNamedStruct($ret),
+                    'comment' => new NamedStruct($ret),
                 ];
 
             default:
@@ -541,24 +541,24 @@ final class PwgImages
         }
 
         $ret['rates'] = [
-            PwgResponseEncoder::ATTRIBUTES_KEY => $rating,
+            ResponseEncoder::ATTRIBUTES_KEY => $rating,
         ];
-        $ret['categories'] = new PwgNamedArray(
+        $ret['categories'] = new NamedArray(
             $related_categories,
             'category',
             ['id', 'url', 'page_url']
         );
-        $ret['tags'] = new PwgNamedArray(
+        $ret['tags'] = new NamedArray(
             $related_tags,
             'tag',
             $this->wsHelper->stdGetTagXmlAttributes()
         );
         if (isset($comment_post_data)) {
             $ret['comment_post'] = [
-                PwgResponseEncoder::ATTRIBUTES_KEY => $comment_post_data,
+                ResponseEncoder::ATTRIBUTES_KEY => $comment_post_data,
             ];
         }
-        $ret['comments_paging'] = new PwgNamedStruct(
+        $ret['comments_paging'] = new NamedStruct(
             [
                 'page' => $params['comments_page'],
                 'per_page' => $params['comments_per_page'],
@@ -566,7 +566,7 @@ final class PwgImages
                 'total_count' => $nb_comments,
             ]
         );
-        $ret['comments'] = new PwgNamedArray(
+        $ret['comments'] = new NamedArray(
             $related_comments,
             'comment',
             ['id', 'date']
@@ -576,7 +576,7 @@ final class PwgImages
             return $ret; // for backward compatibility only
         } else {
             return [
-                'image' => new PwgNamedStruct($ret, null, ['name', 'comment']),
+                'image' => new NamedStruct($ret, null, ['name', 'comment']),
             ];
         }
     }
@@ -617,7 +617,7 @@ final class PwgImages
      *    query: no WS_TYPE flag, mandatory -- always a plain string (see
      *    WsHelper::stdImageSqlFilterCriteria()'s docblock for the shared f_* filter set,
      *    merged in via ws.php's $f_params)
-     * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
+     * @return array{paging: NamedStruct, images: NamedArray}
      */
     public function search(array $params, PwgServer $service): array
     {
@@ -716,7 +716,7 @@ final class PwgImages
         }
 
         return [
-            'paging' => new PwgNamedStruct(
+            'paging' => new NamedStruct(
                 [
                     'page' => $params['page'],
                     'per_page' => $params['per_page'],
@@ -724,7 +724,7 @@ final class PwgImages
                     'total_count' => count($search_items),
                 ]
             ),
-            'images' => new PwgNamedArray(
+            'images' => new NamedArray(
                 $images,
                 'image',
                 $this->wsHelper->stdGetImageXmlAttributes()

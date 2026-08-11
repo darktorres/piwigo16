@@ -6,7 +6,7 @@ namespace Piwigo\Config;
 
 /**
  * A decoded pwg.getCacheSize snapshot (see Ws\PwgCore::getCacheSize()) --
- * persisted as a {name, value} pair list (PwgNamedArray's own wire
+ * persisted as a {name, value} pair list (NamedArray's own wire
  * shape), looked up here by name rather than position. The real
  * producer also emits `msizes`/`tsizes` rows, but no consumer in this
  * codebase reads either one back out, so only the 2 fields real callers

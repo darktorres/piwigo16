@@ -14,8 +14,8 @@ use Piwigo\Db\DbConnection;
  * ws.php configurations:
  *  - Ws\WsInitializer's format=php/format=xmlrpc encoder-selection
  *    branches (every other Contract test uses the default format=json).
- *  - Ws\Protocol\PwgSerialPhpEncoder (format=php) and
- *    Ws\Protocol\PwgXmlRpcEncoder (format=xmlrpc, both success and
+ *  - Ws\Protocol\SerialPhpEncoder (format=php) and
+ *    Ws\Protocol\XmlRpcEncoder (format=xmlrpc, both success and
  *    PwgError/fault branches).
  *  - Ws\Protocol\PwgRestRequestHandler's own "missing method name" guard
  *    (a request with no `method` POST field at all).

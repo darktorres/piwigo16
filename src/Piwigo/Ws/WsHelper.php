@@ -238,7 +238,7 @@ final class WsHelper
      *
      * Each $categories row is genuinely arbitrary by design (a category
      * row, dynamically augmented in place with a 'sub_categories'
-     * PwgNamedArray) -- same rationale as AlbumsPageRenderer's own
+     * NamedArray) -- same rationale as AlbumsPageRenderer's own
      * dynamically-built tree.
      *
      * @param array<int|string, array<string, mixed>> $categories
@@ -268,11 +268,11 @@ final class WsHelper
                 $uppercat_key = $key_of_cat[$uppercat_id];
                 if (! isset($categories[$uppercat_key]['sub_categories'])) {
                     $categories[$uppercat_key]['sub_categories'] =
-                      new PwgNamedArray([], 'category', $this->stdGetCategoryXmlAttributes());
+                      new NamedArray([], 'category', $this->stdGetCategoryXmlAttributes());
                 }
 
                 $sub_categories = $categories[$uppercat_key]['sub_categories'];
-                if ($sub_categories instanceof PwgNamedArray) {
+                if ($sub_categories instanceof NamedArray) {
                     $sub_categories->content[] = &$node;
                 }
             }

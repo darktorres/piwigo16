@@ -38,7 +38,7 @@ final class PwgPermissions
      *   all three keys: WsParamFlag::OPTIONAL with no 'default' key -- may be
      *   entirely absent; FORCE_ARRAY always coerces to a list of positive
      *   ints when present.
-     * @return PwgError|array{categories: PwgNamedArray}
+     * @return PwgError|array{categories: NamedArray}
      */
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
@@ -106,7 +106,7 @@ final class PwgPermissions
         unset($cat);
 
         return [
-            'categories' => new PwgNamedArray(
+            'categories' => new NamedArray(
                 array_values($perms),
                 'category',
                 ['id']
@@ -127,7 +127,7 @@ final class PwgPermissions
      *   key -- mandatory, always present.
      * @return PwgError|array<array-key, mixed> PwgError, or the result of the
      *   pwg.permissions.getList invocation (really always
-     *   array{categories: PwgNamedArray} at runtime, but narrowGetListResult()
+     *   array{categories: NamedArray} at runtime, but narrowGetListResult()
      *   can't prove the sealed shape from a re-narrowed value, only that
      *   it's a real array)
      *
@@ -183,7 +183,7 @@ final class PwgPermissions
      *   entirely absent, same FORCE_ARRAY coercion when present.
      * @return PwgError|array<array-key, mixed> PwgError, or the result of the
      *   pwg.permissions.getList invocation (really always
-     *   array{categories: PwgNamedArray} at runtime, but narrowGetListResult()
+     *   array{categories: NamedArray} at runtime, but narrowGetListResult()
      *   can't prove the sealed shape from a re-narrowed value, only that
      *   it's a real array)
      */
@@ -213,7 +213,7 @@ final class PwgPermissions
      * PwgServer's own class docblock) -- its declared return type is
      * `mixed` by design. This narrows it to the real shape this specific
      * sub-invocation (always 'pwg.permissions.getList', which itself
-     * really does return PwgError|array{categories: PwgNamedArray}) is
+     * really does return PwgError|array{categories: NamedArray}) is
      * known to return, the same "resolve, narrow, or throw" idiom already
      * used throughout this codebase for other statically-unknowable-but-
      * really-fixed-shape values (e.g. PwgImage::currentConfig()'s

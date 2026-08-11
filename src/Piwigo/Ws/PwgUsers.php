@@ -391,7 +391,7 @@ final class PwgUsers
             $method_result = $users_id_arr;
         } else {
             $method_result = [
-                'paging' => new PwgNamedStruct(
+                'paging' => new NamedStruct(
                     [
                         'page' => $params['page'],
                         'per_page' => $params['per_page'],
@@ -399,7 +399,7 @@ final class PwgUsers
                         'total_count' => $total_count,
                     ]
                 ),
-                'users' => new PwgNamedArray(array_values($users), 'user'),
+                'users' => new NamedArray(array_values($users), 'user'),
             ];
         }
         // deprecated: kept for retrocompatibility
@@ -808,7 +808,7 @@ final class PwgUsers
      *   per_page/page: non-null int default, WsParamType::INT|WsParamType::POSITIVE --
      *   always present. order: null default, no 'type' flag -- always
      *   present, string|null.
-     * @return false|array{paging: PwgNamedStruct, images: PwgNamedArray}
+     * @return false|array{paging: NamedStruct, images: NamedArray}
      */
     public function favoritesGetList(array $params, PwgServer &$service): false|array
     {
@@ -845,14 +845,14 @@ final class PwgUsers
         $images = array_slice($images, $params['per_page'] * $params['page'], $params['per_page']);
 
         return [
-            'paging' => new PwgNamedStruct(
+            'paging' => new NamedStruct(
                 [
                     'page' => $params['page'],
                     'per_page' => $params['per_page'],
                     'count' => $count,
                 ]
             ),
-            'images' => new PwgNamedArray(
+            'images' => new NamedArray(
                 $images,
                 'image',
                 $this->wsHelper->stdGetImageXmlAttributes()

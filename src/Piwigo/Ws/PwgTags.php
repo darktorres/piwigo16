@@ -55,7 +55,7 @@ final class PwgTags
      *
      * @param array{sort_by_counter: bool, ...} $params non-null bool default,
      *   WsParamType::BOOL -- always present.
-     * @return array{tags: PwgNamedArray}
+     * @return array{tags: NamedArray}
      */
     public function getList(array $params, PwgServer &$service): array
     {
@@ -77,7 +77,7 @@ final class PwgTags
         }
 
         return [
-            'tags' => new PwgNamedArray(
+            'tags' => new NamedArray(
                 $tags,
                 'tag',
                 $this->wsHelper->stdGetTagXmlAttributes()
@@ -95,12 +95,12 @@ final class PwgTags
      * @param array<string, mixed> $params this method is registered with a
      *   null signature (zero registered params) -- $params is the raw,
      *   entirely unvalidated request array, but the body doesn't read it.
-     * @return array{tags: PwgNamedArray}
+     * @return array{tags: NamedArray}
      */
     public function getAdminList(array $params, PwgServer &$service): array
     {
         return [
-            'tags' => new PwgNamedArray(
+            'tags' => new NamedArray(
                 $this->tagService->getAllTags($this->htmlRenderer),
                 'tag',
                 $this->wsHelper->stdGetTagXmlAttributes()
@@ -121,7 +121,7 @@ final class PwgTags
      *   present, string|null. f_* keys: the shared $f_params block merged
      *   into this registration, see
      *   WsHelper::stdImageSqlFilterCriteria()/WsHelper::stdImageSqlOrder().
-     * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
+     * @return array{paging: NamedStruct, images: NamedArray}
      */
     public function getImages(array $params, PwgServer &$service): array
     {
@@ -225,7 +225,7 @@ final class PwgTags
                     ];
                 }
 
-                $image['tags'] = new PwgNamedArray($image_tags, 'tag', $this->wsHelper->stdGetTagXmlAttributes());
+                $image['tags'] = new NamedArray($image_tags, 'tag', $this->wsHelper->stdGetTagXmlAttributes());
                 $images[] = $image;
             }
 
@@ -234,7 +234,7 @@ final class PwgTags
         }
 
         return [
-            'paging' => new PwgNamedStruct(
+            'paging' => new NamedStruct(
                 [
                     'page' => $params['page'],
                     'per_page' => $params['per_page'],
@@ -242,7 +242,7 @@ final class PwgTags
                     'total_count' => $count_set,
                 ]
             ),
-            'images' => new PwgNamedArray(
+            'images' => new NamedArray(
                 $images,
                 'image',
                 $this->wsHelper->stdGetImageXmlAttributes()

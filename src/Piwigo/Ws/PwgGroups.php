@@ -51,7 +51,7 @@ final class PwgGroups
      *   positive ints when present. per_page/page: non-null int default --
      *   always present. order: non-null string default ('name'), no 'type'
      *   flag -- always present, always string.
-     * @return PwgError|array{paging: PwgNamedStruct, groups: PwgNamedArray}
+     * @return PwgError|array{paging: NamedStruct, groups: NamedArray}
      */
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
@@ -69,12 +69,12 @@ final class PwgGroups
             );
 
         return [
-            'paging' => new PwgNamedStruct([
+            'paging' => new NamedStruct([
                 'page' => $params['page'],
                 'per_page' => $params['per_page'],
                 'count' => count($groups),
             ]),
-            'groups' => new PwgNamedArray(array_map(
+            'groups' => new NamedArray(array_map(
                 static fn (GroupListing $g): array => $g->toArray(),
                 $groups
             ), 'group'),
@@ -122,7 +122,7 @@ final class PwgGroups
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces group_id to a list of positive ints.
      */
-    public function delete(array $params, PwgServer &$service): PwgError|PwgNamedArray
+    public function delete(array $params, PwgServer &$service): PwgError|NamedArray
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -136,7 +136,7 @@ final class PwgGroups
 
         PermissionCacheInvalidator::invalidate();
 
-        return new PwgNamedArray($groupnames, 'group_deleted');
+        return new NamedArray($groupnames, 'group_deleted');
     }
 
     /**
@@ -298,7 +298,7 @@ final class PwgGroups
      * PwgServer's own class docblock) -- its declared return type is
      * `mixed` by design. This narrows it to the real shape this specific
      * sub-invocation (always 'pwg.groups.getList', which itself really
-     * does return PwgError|array{paging: PwgNamedStruct, groups: PwgNamedArray})
+     * does return PwgError|array{paging: NamedStruct, groups: NamedArray})
      * is known to return, the same "resolve, narrow, or throw" idiom
      * already used throughout this codebase for other statically-
      * unknowable-but-really-fixed-shape values (e.g. PwgImage::

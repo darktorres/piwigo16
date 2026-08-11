@@ -5,23 +5,23 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Contract;
 
 /**
- * Ws\Protocol\PwgRestEncoder -- reached via ws.php?format=rest instead of
+ * Ws\Protocol\RestEncoder -- reached via ws.php?format=rest instead of
  * the suite's usual format=json (see WsInitializer's format switch).
  * WsImagesGetInfoAndCommentTest's own rest-format test already exercises
  * encodeResponse()'s success path plus encodeStruct()/encodeArray() via
- * PwgNamedStruct/PwgNamedArray (derivatives/categories/tags/rates); this
+ * NamedStruct/NamedArray (derivatives/categories/tags/rates); this
  * file covers what that one doesn't: encode()'s 'boolean' gettype() case,
  * a null struct value being skipped (encodeStruct()'s two null-skip
- * checks), and a plain (non-PwgNamedArray/PwgNamedStruct) associative PHP
+ * checks), and a plain (non-NamedArray/NamedStruct) associative PHP
  * array hitting encode()'s bare 'array' => encodeStruct() branch (as
  * opposed to the object-based encodeArray()/encodeStruct() calls the
- * PwgNamedArray/PwgNamedStruct branches already prove).
+ * NamedArray/NamedStruct branches already prove).
  *
  * Not chased here (no real WS response exercises these): encode()'s
  * 'NULL' gettype() case (only reachable for an element of a real list --
  * a PHP null skips straight past every real encodeStruct() call before
  * ever reaching encode() itself), the generic get_object_vars() object
- * fallback (every real response object is a PwgNamedArray/PwgNamedStruct/
+ * fallback (every real response object is a NamedArray/NamedStruct/
  * PwgError), and the `default` resource/unknown-type trigger_error()
  * branch (no real WS method ever returns a resource).
  */
@@ -68,10 +68,10 @@ final class WsRestFormatTest extends ContractTestCase
         $this->loginAsAdmin();
         $body = $this->restBody('pwg.getCacheSize');
 
-        // 'infos' itself is a PwgNamedArray of ['name' => ..., 'value' => ...]
+        // 'infos' itself is a NamedArray of ['name' => ..., 'value' => ...]
         // items (same "item/name/value" shape the tsizes assertion below
         // relies on) -- msizes' *value* is what's a genuinely plain PHP
-        // array<string, int> (not a PwgNamedArray/PwgNamedStruct):
+        // array<string, int> (not a NamedArray/NamedStruct):
         // array_is_list() is false (string keys), so encode()'s bare
         // 'array' case routes it through encodeStruct(), rendering each
         // key as its own XML element directly inside <value> (confirmed

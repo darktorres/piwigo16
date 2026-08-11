@@ -12,16 +12,16 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Protocol;
 
 use Override;
-use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\PwgError;
 
-final class PwgJsonEncoder extends PwgResponseEncoder
+final class SerialPhpEncoder extends ResponseEncoder
 {
     #[Override]
-    public function encodeResponse($response): string|false
+    public function encodeResponse($response): string
     {
         if ($response instanceof PwgError) {
-            return json_encode(
+            return serialize(
                 [
                     'stat' => 'fail',
                     'err' => $response->code(),
@@ -30,7 +30,7 @@ final class PwgJsonEncoder extends PwgResponseEncoder
             );
         }
         parent::flattenResponse($response);
-        return json_encode(
+        return serialize(
             [
                 'stat' => 'ok',
                 'result' => $response,

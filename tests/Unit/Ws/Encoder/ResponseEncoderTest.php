@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Ws\Encoder\PwgResponseEncoder;
-use Piwigo\Ws\PwgNamedArray;
-use Piwigo\Ws\PwgNamedStruct;
+use Piwigo\Ws\Encoder\ResponseEncoder;
+use Piwigo\Ws\NamedArray;
+use Piwigo\Ws\NamedStruct;
 
 /**
- * PwgResponseEncoder is abstract, but isStruct() and flattenResponse()
+ * ResponseEncoder is abstract, but isStruct() and flattenResponse()
  * are both real `public static` methods callable without subclassing --
  * this file drives them directly, same convention as the sibling
  * PwgRestEncoderTest/PwgSerialPhpEncoderTest files in ../Protocol/ but
@@ -15,8 +15,8 @@ use Piwigo\Ws\PwgNamedStruct;
  * implementation at all.
  *
  * tests/Unit/Ws/Protocol/PwgSerialPhpEncoderTest.php already exercises
- * flatten()'s PwgNamedArray/PwgNamedStruct unwrap and the ATTRIBUTES_KEY
- * merge indirectly (through PwgSerialPhpEncoder::encodeResponse()), but
+ * flatten()'s NamedArray/NamedStruct unwrap and the ATTRIBUTES_KEY
+ * merge indirectly (through SerialPhpEncoder::encodeResponse()), but
  * that file's own docblock explicitly declines to chase the
  * is_array($value) re-assertion guard right below the isStruct() call
  * (lines 74-84), and neither that file nor PwgRestEncoderTest exercises
@@ -38,7 +38,7 @@ test('isStruct returns false for a real sequential array with values that differ
     // flips the result to true.
     $data = [10, 20, 30];
 
-    expect(PwgResponseEncoder::isStruct($data))->toBeFalse();
+    expect(ResponseEncoder::isStruct($data))->toBeFalse();
 });
 
 test('isStruct returns true for an associative array with string keys', function (): void {
@@ -47,7 +47,7 @@ test('isStruct returns true for an associative array with string keys', function
         'name' => 'Alps',
     ];
 
-    expect(PwgResponseEncoder::isStruct($data))->toBeTrue();
+    expect(ResponseEncoder::isStruct($data))->toBeTrue();
 });
 
 test('isStruct returns true for integer keys that do not start at zero', function (): void {
@@ -56,7 +56,7 @@ test('isStruct returns true for integer keys that do not start at zero', functio
         2 => 'b',
     ];
 
-    expect(PwgResponseEncoder::isStruct($data))->toBeTrue();
+    expect(ResponseEncoder::isStruct($data))->toBeTrue();
 });
 
 test('isStruct returns true for integer keys with a gap', function (): void {
@@ -65,7 +65,7 @@ test('isStruct returns true for integer keys with a gap', function (): void {
         2 => 'b',
     ];
 
-    expect(PwgResponseEncoder::isStruct($data))->toBeTrue();
+    expect(ResponseEncoder::isStruct($data))->toBeTrue();
 });
 
 test('isStruct returns true for an empty array, because PHP range(0, -1) is not empty', function (): void {
@@ -86,7 +86,7 @@ test('isStruct returns true for an empty array, because PHP range(0, -1) is not 
     // pins the real, current return value either way.
     $data = [];
 
-    expect(PwgResponseEncoder::isStruct($data))->toBeTrue();
+    expect(ResponseEncoder::isStruct($data))->toBeTrue();
 });
 
 test('isStruct returns false for non-array scalar values', function (): void {
@@ -94,15 +94,15 @@ test('isStruct returns false for non-array scalar values', function (): void {
     $string = 'hello';
     $null = null;
 
-    expect(PwgResponseEncoder::isStruct($int))->toBeFalse()
-        ->and(PwgResponseEncoder::isStruct($string))->toBeFalse()
-        ->and(PwgResponseEncoder::isStruct($null))->toBeFalse();
+    expect(ResponseEncoder::isStruct($int))->toBeFalse()
+        ->and(ResponseEncoder::isStruct($string))->toBeFalse()
+        ->and(ResponseEncoder::isStruct($null))->toBeFalse();
 });
 
 test('flattenResponse leaves a non-array, non-wrapper scalar value completely unchanged', function (): void {
     // Exercises flatten()'s `if (! is_array($value)) { return; }` early
-    // return (line 75) for a value that is neither a PwgNamedArray nor a
-    // PwgNamedStruct, so it reaches that guard directly.
+    // return (line 75) for a value that is neither a NamedArray nor a
+    // NamedStruct, so it reaches that guard directly.
     //
     // A RemoveEarlyReturn mutation on that line is a genuine EQUIVALENT
     // MUTANT, confirmed live (sed the `return;` out of the if-block, rerun
@@ -117,34 +117,34 @@ test('flattenResponse leaves a non-array, non-wrapper scalar value completely un
     // pin flattenResponse()'s documented no-op contract for plain scalars.
     $value = 42;
 
-    PwgResponseEncoder::flattenResponse($value);
+    ResponseEncoder::flattenResponse($value);
 
     expect($value)
         ->toBe(42);
 });
 
-test('flattenResponse unwraps a PwgNamedArray to its raw list content', function (): void {
-    $value = new PwgNamedArray([10, 20, 30], 'item');
+test('flattenResponse unwraps a NamedArray to its raw list content', function (): void {
+    $value = new NamedArray([10, 20, 30], 'item');
 
-    PwgResponseEncoder::flattenResponse($value);
+    ResponseEncoder::flattenResponse($value);
 
     expect($value)
         ->toBe([10, 20, 30]);
 });
 
-test('flattenResponse unwraps a PwgNamedStruct, merging its attributes_xml_ marker key into the result', function (): void {
-    $value = new PwgNamedStruct(
+test('flattenResponse unwraps a NamedStruct, merging its attributes_xml_ marker key into the result', function (): void {
+    $value = new NamedStruct(
         [
             'id' => 7,
             'name' => 'Alps',
-            PwgResponseEncoder::ATTRIBUTES_KEY => [
+            ResponseEncoder::ATTRIBUTES_KEY => [
                 'visible' => 1,
             ],
         ],
         []
     );
 
-    PwgResponseEncoder::flattenResponse($value);
+    ResponseEncoder::flattenResponse($value);
 
     expect($value)
         ->toBe([
@@ -154,21 +154,21 @@ test('flattenResponse unwraps a PwgNamedStruct, merging its attributes_xml_ mark
         ]);
 });
 
-test('flattenResponse recursively flattens a nested PwgNamedStruct inside a plain array', function (): void {
+test('flattenResponse recursively flattens a nested NamedStruct inside a plain array', function (): void {
     // The outer value is already a plain array (not itself a wrapper), so
     // it reaches the `foreach ($value as $key => &$v) { self::flatten($v); }`
     // loop (lines 93-95) with one element whose value is still a wrapped
-    // PwgNamedStruct. If that foreach never actually iterated
+    // NamedStruct. If that foreach never actually iterated
     // (ForeachEmptyIterable on line 93) or iterated but never called
     // flatten() on each element (RemoveMethodCall on line 94), the nested
-    // value would survive as the raw PwgNamedStruct object instead of being
+    // value would survive as the raw NamedStruct object instead of being
     // unwrapped+merged -- so asserting on the fully-flattened nested shape
     // proves both the loop itself ran and its body's flatten() call fired.
     $value = [
-        'nested' => new PwgNamedStruct(
+        'nested' => new NamedStruct(
             [
                 'a' => 1,
-                PwgResponseEncoder::ATTRIBUTES_KEY => [
+                ResponseEncoder::ATTRIBUTES_KEY => [
                     'x' => 2,
                 ],
             ],
@@ -176,7 +176,7 @@ test('flattenResponse recursively flattens a nested PwgNamedStruct inside a plai
         ),
     ];
 
-    PwgResponseEncoder::flattenResponse($value);
+    ResponseEncoder::flattenResponse($value);
 
     expect($value)
         ->toBe([
@@ -187,17 +187,17 @@ test('flattenResponse recursively flattens a nested PwgNamedStruct inside a plai
         ]);
 });
 
-test('flattenResponse recursively flattens a nested PwgNamedArray inside a plain list', function (): void {
+test('flattenResponse recursively flattens a nested NamedArray inside a plain list', function (): void {
     // Same recursive-foreach proof as above, but for a *list*-shaped outer
-    // array (sequential int keys) containing a nested PwgNamedArray, so the
+    // array (sequential int keys) containing a nested NamedArray, so the
     // outer isStruct() takes the `false` branch (skips the ATTRIBUTES_KEY
     // merge block entirely) while the foreach at lines 93-95 still has to
     // run and recurse into the single element to unwrap it.
     $value = [
-        new PwgNamedArray([1, 2, 3], 'item'),
+        new NamedArray([1, 2, 3], 'item'),
     ];
 
-    PwgResponseEncoder::flattenResponse($value);
+    ResponseEncoder::flattenResponse($value);
 
     expect($value)
         ->toBe([[1, 2, 3]]);

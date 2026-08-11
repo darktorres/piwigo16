@@ -12,7 +12,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
-use Piwigo\Ws\Protocol\PwgJsonEncoder;
+use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -142,7 +142,7 @@ final class WsServerTest extends ContractTestCase
         try {
             $server = Kernel::container()->get(PwgServer::class);
             self::assertInstanceOf(PwgServer::class, $server);
-            $encoder = new PwgJsonEncoder();
+            $encoder = new JsonEncoder();
             $server->setEncoder('json', $encoder);
 
             ob_start();

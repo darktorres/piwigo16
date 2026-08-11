@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
+use Piwigo\Ws\NamedArray;
+use Piwigo\Ws\Protocol\XmlRpcEncoder;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgNamedArray;
 
 /**
- * PwgXmlRpcEncoder::xmlrpcEncode() switches on gettype() per value
+ * XmlRpcEncoder::xmlrpcEncode() switches on gettype() per value
  * (boolean/integer/double/string/array-or-object), and for arrays
  * decides "list" vs "struct" via the same
  * `range(0, count($data)-1) === array_keys($data)` idiom the parent
@@ -17,7 +17,7 @@ use Piwigo\Ws\PwgNamedArray;
  * (string) float casting) via standalone `php -r` calls -- never by
  * running the encoder itself and copying its output.
  *
- * As with the PwgSerialPhpEncoder tests, PwgError fixtures use a
+ * As with the SerialPhpEncoder tests, PwgError fixtures use a
  * WsError-style code (>= 1000), not an HTTP-range 400-599 code, to
  * avoid PwgError's constructor reaching for a booted container.
  *
@@ -29,13 +29,13 @@ use Piwigo\Ws\PwgNamedArray;
  * `(string)` cast in every case checked -- 1.0, 4.5, huge/tiny
  * magnitudes, NAN, INF, -0.0, and across `precision` ini values of 4,
  * -1, 14 (default), and 17 -- confirmed live via
- * `sed -i "80s/(string) \$data/\$data/" src/.../PwgXmlRpcEncoder.php`
+ * `sed -i "80s/(string) \$data/\$data/" src/.../XmlRpcEncoder.php`
  * followed by rerunning this suite (all green) and reverting. Removing
  * that cast is a true equivalent mutant here: no input can distinguish
  * the two, so no test is added to "kill" it.
  */
 test('encodeResponse renders a PwgError as a methodResponse/fault', function (): void {
-    $encoder = new PwgXmlRpcEncoder();
+    $encoder = new XmlRpcEncoder();
     $error = new PwgError(1003, 'Bad param <x>');
 
     $result = $encoder->encodeResponse($error);
@@ -64,7 +64,7 @@ test('encodeResponse renders a PwgError as a methodResponse/fault', function ():
 });
 
 test('encodeResponse renders a struct response mixing every scalar type plus a nested list', function (): void {
-    $encoder = new PwgXmlRpcEncoder();
+    $encoder = new XmlRpcEncoder();
     $response = [
         'id' => 42,
         'name' => 'Piwigo & Friends <3',
@@ -109,7 +109,7 @@ test('encodeResponse renders an empty array response as an empty struct, not an 
     // array_keys([]) = [] -- so an empty array takes the *struct*
     // branch (matching the parent class's own isStruct() having the
     // same quirk), producing "<struct>\n</struct>" with no members.
-    $encoder = new PwgXmlRpcEncoder();
+    $encoder = new XmlRpcEncoder();
 
     $result = $encoder->encodeResponse([]);
 
@@ -135,10 +135,10 @@ test('encodeResponse renders a raw stdClass object via the object branch of the 
     // === 'object') that get_object_vars()'s the value before applying
     // the same list-vs-struct check as arrays -- untested by the
     // array-only fixture above. Also: flatten() only unwraps
-    // PwgNamedArray/PwgNamedStruct and only recurses into is_array()
+    // NamedArray/NamedStruct and only recurses into is_array()
     // values, so a raw stdClass response passes through flattenResponse()
     // completely untouched and reaches xmlrpcEncode() as-is.
-    $encoder = new PwgXmlRpcEncoder();
+    $encoder = new XmlRpcEncoder();
     $response = new stdClass();
     $response->id = 9;
     $response->title = 'Peaks';
@@ -174,7 +174,7 @@ test('encodeResponse renders a null field as an empty value tag via the switch f
     // <nil/> extension, but this is the real, pre-existing encoding
     // behavior for a genuinely nullable WS response field, e.g.
     // pwg.session.getStatus's own 'connected_with' before any login).
-    $encoder = new PwgXmlRpcEncoder();
+    $encoder = new XmlRpcEncoder();
     $response = [
         'connected_with' => null,
     ];
@@ -201,18 +201,18 @@ test('encodeResponse renders a null field as an empty value tag via the switch f
         ->toBe($expected);
 });
 
-test('encodeResponse actually flattens a PwgNamedArray wrapper before encoding', function (): void {
+test('encodeResponse actually flattens a NamedArray wrapper before encoding', function (): void {
     // If parent::flattenResponse($response) weren't called, $response
-    // would still be a PwgNamedArray *object* by the time it reaches
-    // xmlrpcEncode(). That method has no special case for PwgNamedArray --
+    // would still be a NamedArray *object* by the time it reaches
+    // xmlrpcEncode(). That method has no special case for NamedArray --
     // it would fall into the generic 'object' branch and get_object_vars()
     // would leak content/itemName/xmlAttributes as struct members
     // instead of encoding the wrapped list directly. Calling flatten
     // first unwraps $response to plain [1, 2, 3] before xmlrpcEncode()
     // ever sees it, so the list branch runs and none of those wrapper
     // property names appear anywhere in the output.
-    $encoder = new PwgXmlRpcEncoder();
-    $response = new PwgNamedArray([1, 2, 3], 'item');
+    $encoder = new XmlRpcEncoder();
+    $response = new NamedArray([1, 2, 3], 'item');
 
     $result = $encoder->encodeResponse($response);
 
@@ -247,7 +247,7 @@ test('encodeResponse casts a non-string (integer) struct key to string before es
     // A lone int key already forces the struct branch on its own:
     // array_keys([3 => 'three']) is [3], which never equals
     // range(0, 0) = [0].
-    $encoder = new PwgXmlRpcEncoder();
+    $encoder = new XmlRpcEncoder();
     $response = [
         3 => 'three',
     ];
@@ -275,7 +275,7 @@ test('encodeResponse casts a non-string (integer) struct key to string before es
 });
 
 test('encodeResponse escapes HTML-special characters in a struct member name', function (): void {
-    $encoder = new PwgXmlRpcEncoder();
+    $encoder = new XmlRpcEncoder();
     $response = [
         '<tag>' => 'value',
         'a&b' => 'other',
@@ -305,6 +305,6 @@ test('encodeResponse escapes HTML-special characters in a struct member name', f
 });
 
 test('getContentType returns text/xml', function (): void {
-    expect(new PwgXmlRpcEncoder()->getContentType())
+    expect(new XmlRpcEncoder()->getContentType())
         ->toBe('text/xml');
 });

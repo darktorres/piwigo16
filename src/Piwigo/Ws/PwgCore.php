@@ -210,7 +210,7 @@ final class PwgCore
      * API method
      * Returns general informations about the installation
      * @param mixed[] $params
-     * @return array{infos: PwgNamedArray}
+     * @return array{infos: NamedArray}
      */
     public function getInfos(array $params, PwgServer &$service): array
     {
@@ -255,7 +255,7 @@ final class PwgCore
             ];
         }
         return [
-            'infos' => new PwgNamedArray($output, 'item'),
+            'infos' => new NamedArray($output, 'item'),
         ];
     }
 
@@ -265,7 +265,7 @@ final class PwgCore
      *
      * @since 12
      * @param mixed[] $params
-     * @return array{infos: PwgNamedArray}
+     * @return array{infos: NamedArray}
      */
     public function getCacheSize(array $params, PwgServer &$service): array
     {
@@ -347,7 +347,7 @@ final class PwgCore
 
         $infos['last_date_calc'] = date('Y-m-d H:i:s');
 
-        // $output matches PwgNamedArray::$content's own by-design generic
+        // $output matches NamedArray::$content's own by-design generic
         // array<int, mixed> contract (a name/value pair list encoded
         // generically for XML/REST) -- $infos itself is genuinely
         // heterogeneous (int/array/string/null per key).
@@ -363,7 +363,7 @@ final class PwgCore
         $this->configService->confUpdateParam('cache_sizes', $output, true);
 
         return [
-            'infos' => new PwgNamedArray($output, 'item'),
+            'infos' => new NamedArray($output, 'item'),
         ];
     }
 

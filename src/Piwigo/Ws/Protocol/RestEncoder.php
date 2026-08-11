@@ -12,27 +12,27 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Protocol;
 
 use Override;
-use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\Encoder\ResponseEncoder;
+use Piwigo\Ws\NamedArray;
+use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgNamedArray;
-use Piwigo\Ws\PwgNamedStruct;
 
 /**
  * mixed values/params throughout are by design -- see the parent class's
  * own docblock.
  */
-final class PwgRestEncoder extends PwgResponseEncoder
+final class RestEncoder extends ResponseEncoder
 {
-    private ?PwgXmlWriter $writer = null;
+    private ?XmlWriter $writer = null;
 
     /**
      * encode(), encodeArray() and encodeStruct() are only ever called
      * (directly or recursively) from encodeResponse(), which always sets
      * $writer before invoking them.
      */
-    private function writer(): PwgXmlWriter
+    private function writer(): XmlWriter
     {
-        assert($this->writer instanceof PwgXmlWriter);
+        assert($this->writer instanceof XmlWriter);
         return $this->writer;
     }
 
@@ -51,7 +51,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
             return $ret;
         }
 
-        $this->writer = new PwgXmlWriter();
+        $this->writer = new XmlWriter();
         $this->encode($response);
         $ret = $this->writer()
             ->getOutput();
@@ -99,7 +99,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
             if ($value === null) {
                 continue;
             } // null means we dont put it
-            if ($name === PwgResponseEncoder::ATTRIBUTES_KEY) {
+            if ($name === ResponseEncoder::ATTRIBUTES_KEY) {
                 if (is_array($value)) {
                     foreach ($value as $attr_name => $attr_value) {
                         $this->writer()
@@ -160,9 +160,9 @@ final class PwgRestEncoder extends PwgResponseEncoder
                 }
                 break;
             case 'object':
-                if ($data instanceof PwgNamedArray) {
+                if ($data instanceof NamedArray) {
                     $this->encodeArray($data->content, $data->itemName, $data->xmlAttributes);
-                } elseif ($data instanceof PwgNamedStruct) {
+                } elseif ($data instanceof NamedStruct) {
                     $this->encodeStruct($data->content, $data->xmlAttributes);
                 } else {
                     $this->encodeStruct(get_object_vars($data));

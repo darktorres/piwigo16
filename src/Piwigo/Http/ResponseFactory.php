@@ -14,7 +14,7 @@ final class ResponseFactory
 {
     /**
      * $data's values are genuinely arbitrary by design -- fed straight into
-     * json_encode(mixed $value), same category as PwgResponseEncoder's own
+     * json_encode(mixed $value), same category as ResponseEncoder's own
      * generic serialization boundary.
      *
      * @param array<string, mixed> $data

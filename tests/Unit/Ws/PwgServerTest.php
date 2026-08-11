@@ -37,8 +37,8 @@ use Piwigo\Ws\PwgServer;
  * to a real `PwgRequestHandler::handleRequest()`, itself a thin wrapper
  * around `invoke()`/`sendResponse()`, both covered directly below.
  * `sendResponse()` also isn't covered here -- it's a 3-line `header()`/
- * `print_r()`/event-dispatch wrapper around `PwgResponseEncoder::
- * encodeResponse()`, itself already covered per-encoder (PwgJsonEncoder/
+ * `print_r()`/event-dispatch wrapper around `ResponseEncoder::
+ * encodeResponse()`, itself already covered per-encoder (JsonEncoder/
  * PwgSerialPhpEncoderTest.php/etc).
  *
  * Kernel::boot() is required file-wide (same reasoning as PwgErrorTest.php):

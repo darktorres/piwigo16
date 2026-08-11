@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Piwigo\Ws\Protocol\PwgJsonEncoder;
+use Piwigo\Ws\NamedArray;
+use Piwigo\Ws\NamedStruct;
+use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgNamedArray;
-use Piwigo\Ws\PwgNamedStruct;
 
 /**
- * PwgJsonEncoder -- the JSON sibling of PwgSerialPhpEncoder/PwgRestEncoder
+ * JsonEncoder -- the JSON sibling of SerialPhpEncoder/RestEncoder
  * (see PwgSerialPhpEncoderTest.php for the shared flatten()/PwgError
  * fixture rationale, reused verbatim here). No dedicated Integration/
  * Browser spec of its own.
@@ -20,7 +20,7 @@ use Piwigo\Ws\PwgNamedStruct;
  * a booted container this Unit test doesn't set up.
  */
 test('encodeResponse json-encodes a PwgError as a fail/err/message triple', function (): void {
-    $encoder = new PwgJsonEncoder();
+    $encoder = new JsonEncoder();
     $error = new PwgError(1003, 'Invalid param foo');
 
     $result = $encoder->encodeResponse($error);
@@ -36,7 +36,7 @@ test('encodeResponse json-encodes a PwgError as a fail/err/message triple', func
 });
 
 test('encodeResponse json-encodes a plain array response as stat=ok/result', function (): void {
-    $encoder = new PwgJsonEncoder();
+    $encoder = new JsonEncoder();
 
     $result = $encoder->encodeResponse([
         'id' => 7,
@@ -47,9 +47,9 @@ test('encodeResponse json-encodes a plain array response as stat=ok/result', fun
         ->toBe('{"stat":"ok","result":{"id":7,"name":"Alps"}}');
 });
 
-test('encodeResponse flattens a PwgNamedStruct, merging its attributes_xml_ marker key into the result', function (): void {
-    $encoder = new PwgJsonEncoder();
-    $response = new PwgNamedStruct(
+test('encodeResponse flattens a NamedStruct, merging its attributes_xml_ marker key into the result', function (): void {
+    $encoder = new JsonEncoder();
+    $response = new NamedStruct(
         [
             'id' => 7,
             'name' => 'Alps',
@@ -75,9 +75,9 @@ test('encodeResponse flattens a PwgNamedStruct, merging its attributes_xml_ mark
         ]);
 });
 
-test('encodeResponse flattens a PwgNamedArray to its plain list content, with no attributes merge', function (): void {
-    $encoder = new PwgJsonEncoder();
-    $response = new PwgNamedArray([10, 20, 30], 'item');
+test('encodeResponse flattens a NamedArray to its plain list content, with no attributes merge', function (): void {
+    $encoder = new JsonEncoder();
+    $response = new NamedArray([10, 20, 30], 'item');
 
     $result = $encoder->encodeResponse($response);
 
@@ -91,6 +91,6 @@ test('encodeResponse flattens a PwgNamedArray to its plain list content, with no
 });
 
 test('getContentType returns text/plain', function (): void {
-    expect(new PwgJsonEncoder()->getContentType())
+    expect(new JsonEncoder()->getContentType())
         ->toBe('text/plain');
 });

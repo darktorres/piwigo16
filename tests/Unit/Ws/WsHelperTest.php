@@ -18,8 +18,8 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Event\WsInvokeAllowed;
+use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 
@@ -290,9 +290,9 @@ test('categoriesFlatlistToTree attaches a child under its real parent, root-leve
     expect($tree)
         ->toHaveCount(1)
         ->and($tree[0]['name'])->toBe('Root')
-        ->and($tree[0]['sub_categories'])->toBeInstanceOf(PwgNamedArray::class);
+        ->and($tree[0]['sub_categories'])->toBeInstanceOf(NamedArray::class);
     $subCategories = $tree[0]['sub_categories'];
-    if ($subCategories instanceof PwgNamedArray) {
+    if ($subCategories instanceof NamedArray) {
         expect($subCategories->content)->toHaveCount(1);
         $child = $subCategories->content[0];
         if (is_array($child)) {

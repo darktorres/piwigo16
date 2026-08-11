@@ -21,7 +21,7 @@ use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Event\Ws\SendResponse;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\Event\WsAddMethods;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 
@@ -42,7 +42,7 @@ final class PwgServer
 
     public ?string $requestFormat = null;
 
-    public ?PwgResponseEncoder $responseEncoder = null;
+    public ?ResponseEncoder $responseEncoder = null;
 
     public ?string $responseFormat = null;
 
@@ -73,9 +73,9 @@ final class PwgServer
      * sendResponse() is only ever called once setEncoder() has run
      * (the real app-level contract every real caller follows).
      */
-    private function responseEncoder(): PwgResponseEncoder
+    private function responseEncoder(): ResponseEncoder
     {
-        assert($this->responseEncoder instanceof PwgResponseEncoder);
+        assert($this->responseEncoder instanceof ResponseEncoder);
         return $this->responseEncoder;
     }
 
@@ -91,7 +91,7 @@ final class PwgServer
     /**
      *  Initializes the request handler.
      */
-    public function setEncoder(string $responseFormat, ?PwgResponseEncoder &$encoder): void
+    public function setEncoder(string $responseFormat, ?ResponseEncoder &$encoder): void
     {
         $this->responseEncoder = &$encoder;
         $this->responseFormat = $responseFormat;
@@ -103,7 +103,7 @@ final class PwgServer
      */
     public function run(): void
     {
-        if (! $this->responseEncoder instanceof PwgResponseEncoder) {
+        if (! $this->responseEncoder instanceof ResponseEncoder) {
             PresentationAccessor::htmlService()
                 ->setStatusHeader(400);
             @header('Content-Type: text/plain');
@@ -478,7 +478,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
      * WS reflection method implementation: lists all available methods
      *
      * @param array<string, mixed> $params
-     * @return array{methods: PwgNamedArray}
+     * @return array{methods: NamedArray}
      */
     public static function wsGetMethodList(array $params, self &$service): array
     {
@@ -487,7 +487,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
             fn (array $m): bool => in_array($m['options']['hidden'] ?? null, [null, false, 0, '0', '', []], true)
         );
         return [
-            'methods' => new PwgNamedArray(array_keys($methods), 'method'),
+            'methods' => new NamedArray(array_keys($methods), 'method'),
         ];
     }
 

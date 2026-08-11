@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
+use Piwigo\Ws\NamedArray;
+use Piwigo\Ws\NamedStruct;
+use Piwigo\Ws\Protocol\SerialPhpEncoder;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgNamedArray;
-use Piwigo\Ws\PwgNamedStruct;
 
 /**
- * PwgSerialPhpEncoder wraps the response in ['stat'=>..., ...] and hands
+ * SerialPhpEncoder wraps the response in ['stat'=>..., ...] and hands
  * it to PHP's own serialize() -- so the expected strings below were
  * computed via a standalone `php -r 'var_dump(serialize(...))'` on the
  * literal expected array (a pure PHP-builtin format check, not a call
@@ -21,7 +21,7 @@ use Piwigo\Ws\PwgNamedStruct;
  * HTTP-range codes, which needs a booted container this Unit test
  * doesn't set up.
  *
- * Ws\Encoder\PwgResponseEncoder::flatten()'s own re-assertion guard (`$is_struct
+ * Ws\Encoder\ResponseEncoder::flatten()'s own re-assertion guard (`$is_struct
  * = self::isStruct($value); if (! is_array($value)) { return; }`,
  * directly below the earlier `if (! is_array($value)) { return; }`) is not
  * chased here or anywhere else: it exists purely because isStruct()
@@ -37,7 +37,7 @@ use Piwigo\Ws\PwgNamedStruct;
  * in test coverage.
  */
 test('encodeResponse serializes a PwgError as a fail/err/message triple', function (): void {
-    $encoder = new PwgSerialPhpEncoder();
+    $encoder = new SerialPhpEncoder();
     $error = new PwgError(1003, 'Invalid param foo');
 
     $result = $encoder->encodeResponse($error);
@@ -53,7 +53,7 @@ test('encodeResponse serializes a PwgError as a fail/err/message triple', functi
 });
 
 test('encodeResponse serializes a plain array response as stat=ok/result', function (): void {
-    $encoder = new PwgSerialPhpEncoder();
+    $encoder = new SerialPhpEncoder();
 
     $result = $encoder->encodeResponse([
         'id' => 7,
@@ -64,13 +64,13 @@ test('encodeResponse serializes a plain array response as stat=ok/result', funct
         ->toBe('a:2:{s:4:"stat";s:2:"ok";s:6:"result";a:2:{s:2:"id";i:7;s:4:"name";s:4:"Alps";}}');
 });
 
-test('encodeResponse flattens a PwgNamedStruct, merging its attributes_xml_ marker key into the result', function (): void {
-    // flattenResponse() (inherited from PwgResponseEncoder) unwraps the
-    // PwgNamedStruct to its raw ->content, then -- because isStruct()
+test('encodeResponse flattens a NamedStruct, merging its attributes_xml_ marker key into the result', function (): void {
+    // flattenResponse() (inherited from ResponseEncoder) unwraps the
+    // NamedStruct to its raw ->content, then -- because isStruct()
     // is true for it -- merges the 'attributes_xml_' sub-array into the
     // parent and removes the marker key entirely.
-    $encoder = new PwgSerialPhpEncoder();
-    $response = new PwgNamedStruct(
+    $encoder = new SerialPhpEncoder();
+    $response = new NamedStruct(
         [
             'id' => 7,
             'name' => 'Alps',
@@ -96,14 +96,14 @@ test('encodeResponse flattens a PwgNamedStruct, merging its attributes_xml_ mark
         ]);
 });
 
-test('encodeResponse flattens a PwgNamedArray to its plain list content, with no attributes merge', function (): void {
-    // flatten()'s other branch: PwgNamedArray unwraps to ->content same
-    // as PwgNamedStruct does, but a sequential-int-keyed list is NOT a
+test('encodeResponse flattens a NamedArray to its plain list content, with no attributes merge', function (): void {
+    // flatten()'s other branch: NamedArray unwraps to ->content same
+    // as NamedStruct does, but a sequential-int-keyed list is NOT a
     // "struct" per isStruct(), so the attributes_xml_ merge block is
     // skipped entirely -- a genuinely different code path from the
-    // PwgNamedStruct case above.
-    $encoder = new PwgSerialPhpEncoder();
-    $response = new PwgNamedArray([10, 20, 30], 'item');
+    // NamedStruct case above.
+    $encoder = new SerialPhpEncoder();
+    $response = new NamedArray([10, 20, 30], 'item');
 
     $result = $encoder->encodeResponse($response);
 
@@ -117,6 +117,6 @@ test('encodeResponse flattens a PwgNamedArray to its plain list content, with no
 });
 
 test('getContentType returns text/plain', function (): void {
-    expect(new PwgSerialPhpEncoder()->getContentType())
+    expect(new SerialPhpEncoder()->getContentType())
         ->toBe('text/plain');
 });

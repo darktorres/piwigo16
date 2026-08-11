@@ -29,6 +29,7 @@ use Piwigo\Bootstrap\Projection\HeaderMessagesPageContext;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -554,13 +555,15 @@ final class RequestBootstrap
 
         // template instance
         if (self::adminContext()->isActive()) {// Admin template
-            $admin_theme = new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
-                ->getAdminThemePref() ?? self::currentConfig()->adminTheme;
+            $admin_theme = ThemeId::from(
+                new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
+                    ->getAdminThemePref() ?? self::currentConfig()->adminTheme
+            );
             $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
-            $theme = self::currentUser()->get()->theme->value;
+            $theme = self::currentUser()->get()->theme;
             if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'ws' and DeviceHelper::mobileTheme(self::sessionService(), self::currentConfig())) {
-                $theme = self::currentConfig()->mobileTheme;
+                $theme = ThemeId::from(self::currentConfig()->mobileTheme);
             }
             $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes', $theme);
         }

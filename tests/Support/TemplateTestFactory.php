@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Support;
 
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
@@ -64,7 +65,7 @@ final class TemplateTestFactory
             self::resolve(AccessLevelChecker::class) ?? new AccessLevelChecker($currentUser, $currentConfig),
             self::resolve(SessionService::class) ?? new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $currentConfig),
             $root,
-            $theme,
+            $theme === '' ? null : ThemeId::from($theme),
             $path,
         );
     }

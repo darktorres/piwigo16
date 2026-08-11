@@ -500,7 +500,7 @@ test('setTheme lets a parent theme\'s own load_parent_css/load_parent_local_head
     // themeconf's own load_parent_css=false/load_parent_local_head=false
     // must win over those caller-passed defaults for the recursive
     // parent-theme call.
-    $t->setTheme($root, 'gap-child', 'template');
+    $t->setTheme($root, ThemeId::from('gap-child'), 'template');
 
     $themes = template_test_themes($t);
     expect($themes)

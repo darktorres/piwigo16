@@ -15,6 +15,7 @@ use Exception;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\TemplateExtension;
@@ -131,7 +132,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         private readonly AccessLevelChecker $accessLevelChecker,
         private readonly SessionService $sessionService,
         string $root = '.',
-        string $theme = '',
+        ?ThemeId $theme = null,
         string $path = 'template'
     ) {
         // \Smarty\Exception::$escape = false;
@@ -277,7 +278,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         $this->smarty->setTemplateDir([]);
-        if ($theme !== '') {
+        if ($theme !== null) {
             $this->setTheme($root, $theme, $path);
             if (! $this->adminContext->isActive()) {
                 $this->setPrefilter('header', fn (string $source, SmartyTemplate $smarty): string => self::prefilterLocalCss($source, $smarty, $this->paths));
@@ -309,7 +310,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 static fn (TemplateExtension $e): array => [$e->handle, $e->param, $e->theme],
                 $this->currentConfig->extentsForTemplates,
             );
-            $this->setExtents($rawExtents, $this->paths->root . 'template-extension/', true, $theme);
+            $this->setExtents($rawExtents, $this->paths->root . 'template-extension/', true, $theme?->value ?? '');
         }
     }
 
@@ -446,35 +447,35 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Loads theme's parameters.
      *
      * @param string $root
-     * @param string $theme
      * @param string $path
      * @param bool $load_css
      * @param bool $load_local_head
      */
-    public function setTheme($root, $theme, $path, $load_css = true, $load_local_head = true, string $colorscheme = 'dark'): void
+    public function setTheme($root, ThemeId $theme, $path, $load_css = true, $load_local_head = true, string $colorscheme = 'dark'): void
     {
         // we need themeconf before std_pgs to see what themes use_standard_pages
-        $themeconf = $this->loadThemeconf($root . '/' . $theme);
+        $themeconf = $this->loadThemeconf($root . '/' . $theme->value);
 
         // We loop over the theme and the parent theme, so if we exclude default,
         // standard pages can't get the header to load the html header
         if (
-            $theme !== 'default'
+            $theme->value !== 'default'
             and in_array(PageFilterHelper::scriptBasename($this->currentConfig), ['identification', 'register', 'password', 'profile'], true)
             and ((bool) ($themeconf['use_standard_pages'] ?? false) or $this->currentConfig->useStandardPages)
         ) {
-            $theme = 'standard_pages';
-            $themeconf = $this->loadThemeconf($root . '/' . $theme);
+            $theme = ThemeId::from('standard_pages');
+            $themeconf = $this->loadThemeconf($root . '/' . $theme->value);
         }
 
-        $this->setTemplateDir($root . '/' . $theme . '/' . $path);
+        $this->setTemplateDir($root . '/' . $theme->value . '/' . $path);
 
-        if (isset($themeconf['parent']) and is_string($themeconf['parent']) and $themeconf['parent'] !== $theme) {
+        $parentTheme = isset($themeconf['parent']) ? ThemeId::tryFrom($themeconf['parent']) : null;
+        if ($parentTheme !== null and $parentTheme->value !== $theme->value) {
             $load_parent_css = $themeconf['load_parent_css'] ?? $load_css;
             $load_parent_local_head = $themeconf['load_parent_local_head'] ?? $load_local_head;
             $this->setTheme(
                 $root,
-                $themeconf['parent'],
+                $parentTheme,
                 $path,
                 is_bool($load_parent_css) ? $load_parent_css : $load_css,
                 is_bool($load_parent_local_head) ? $load_parent_local_head : $load_local_head,
@@ -483,13 +484,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         $tpl_var = [
-            'id' => $theme,
+            'id' => $theme->value,
             'load_css' => $load_css,
         ];
         if (! in_array($themeconf['local_head'] ?? null, [null, false, 0, '0', '', []], true) and $load_local_head and is_string($themeconf['local_head'])) {
-            $tpl_var['local_head'] = realpath($root . '/' . $theme . '/' . $themeconf['local_head']);
+            $tpl_var['local_head'] = realpath($root . '/' . $theme->value . '/' . $themeconf['local_head']);
         }
-        $themeconf['id'] = $theme;
+        $themeconf['id'] = $theme->value;
 
         if (! isset($themeconf['colorscheme'])) {
             $themeconf['colorscheme'] = $colorscheme;

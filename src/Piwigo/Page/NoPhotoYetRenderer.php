@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
@@ -86,9 +87,11 @@ final readonly class NoPhotoYetRenderer
                 // AppInfo::DEFAULT_TEMPLATE), so a getDefaultTheme() fallback
                 // for an empty theme here would be unreachable -- that
                 // fallback only ever checked for emptiness too, never
-                // filesystem installation.
+                // filesystem installation. Template's own constructor now
+                // accepts a real ThemeId directly, so no ->value unwrap is
+                // needed here either.
                 $user_theme = $this->currentUser->get()
-                    ->theme->value;
+                    ->theme;
                 $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->sessionService, $this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 

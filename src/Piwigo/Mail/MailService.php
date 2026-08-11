@@ -20,6 +20,7 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
@@ -506,7 +507,7 @@ final class MailService implements MailerInterface
      */
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template($this->currentConfig, $this->lang, $this->adminContext(), $this->eventDispatcher, $this->pageState, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->sessionService, $this->paths->root . 'themes', 'default', 'template/mail/' . $emailFormat);
+        return new Template($this->currentConfig, $this->lang, $this->adminContext(), $this->eventDispatcher, $this->pageState, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->sessionService, $this->paths->root . 'themes', ThemeId::from('default'), 'template/mail/' . $emailFormat);
     }
 
     public function getStrEmailFormat(bool $isHtml): string

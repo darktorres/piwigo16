@@ -8,6 +8,7 @@ use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\Projection\RedirectHtmlPageContext;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
@@ -186,10 +187,10 @@ final class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, $this->pageState, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), $paths->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, $this->pageState, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), $paths->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
             self::currentTemplate()->set($template);
         } elseif (self::adminContext()->isActive()) {
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, $this->pageState, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), self::paths()->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, $this->pageState, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), self::paths()->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
             self::currentTemplate()->set($template);
         }
 

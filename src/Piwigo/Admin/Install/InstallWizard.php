@@ -38,6 +38,7 @@ use Piwigo\Bootstrap\ExtendedDomainAccessor;
 use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\PresentationAccessor;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
@@ -333,7 +334,7 @@ final class InstallWizard
         // are submitted -- Template's own get_device modifier is never
         // actually invoked by install.tpl, so the DB is never touched in
         // practice either.
-        $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->paths->root . 'themes/admin', 'clear');
+        $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->paths->root . 'themes/admin', ThemeId::from('clear'));
         $this->currentTemplate->set($template);
         $template->setFilenames([
             'install' => 'install.tpl',

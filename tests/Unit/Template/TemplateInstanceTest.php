@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
@@ -201,7 +202,9 @@ function template_instance_test_assoc(mixed $value): array
  */
 final class TemplateInstanceTestThemeconfAppendSpy extends Smarty
 {
-    /** @var list<array<string, mixed>> */
+    /**
+     * @var list<array<string, mixed>>
+     */
     public array $themeconfAppends = [];
 
     public function append($tpl_var, $value = null, $merge = false, $nocache = false)
@@ -705,7 +708,7 @@ test('setTheme loads themeconf from exactly root/theme, joined with a literal sl
     ]);
     $t = TemplateTestFactory::build();
 
-    $t->setTheme($root, 'concat-theme', 'template');
+    $t->setTheme($root, ThemeId::from('concat-theme'), 'template');
 
     expect($t->getThemeconf('marker'))
         ->toBe('root-slash-theme');
@@ -728,7 +731,7 @@ test('setTheme recognizes every whitelisted auth-page basename for the standard-
             unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
             $t = TemplateTestFactory::build();
-            $t->setTheme($root, 'wl-theme', 'template');
+            $t->setTheme($root, ThemeId::from('wl-theme'), 'template');
 
             expect($t->getThemeconf('marker'))
                 ->toBe('swapped');
@@ -753,7 +756,7 @@ test('setTheme does not swap themes when the current page is not a whitelisted a
     $t = TemplateTestFactory::build();
 
     try {
-        $t->setTheme($root, 'not-auth-theme', 'template');
+        $t->setTheme($root, ThemeId::from('not-auth-theme'), 'template');
     } finally {
         template_instance_test_restore_server_keys($saved);
     }
@@ -781,7 +784,7 @@ test('setTheme never swaps away from the "default" theme itself even on a whitel
     $t = TemplateTestFactory::build();
 
     try {
-        $t->setTheme($root, 'default', 'template');
+        $t->setTheme($root, ThemeId::from('default'), 'template');
     } finally {
         template_instance_test_restore_server_keys($saved);
     }
@@ -806,7 +809,7 @@ test('setTheme swaps themes when the theme itself opts into standard pages, even
     $t = TemplateTestFactory::build();
 
     try {
-        $t->setTheme($root, 'opt-in-theme', 'template');
+        $t->setTheme($root, ThemeId::from('opt-in-theme'), 'template');
     } finally {
         template_instance_test_restore_server_keys($saved);
     }
@@ -830,7 +833,7 @@ test('setTheme does not swap themes when neither the theme nor the global config
     $t = TemplateTestFactory::build();
 
     try {
-        $t->setTheme($root, 'opt-out-theme', 'template');
+        $t->setTheme($root, ThemeId::from('opt-out-theme'), 'template');
     } finally {
         template_instance_test_restore_server_keys($saved);
     }
@@ -850,7 +853,7 @@ test('setTheme recurses into a distinct parent theme', function (): void {
     ]);
     $t = TemplateTestFactory::build();
 
-    $t->setTheme($root, 'child-theme', 'template');
+    $t->setTheme($root, ThemeId::from('child-theme'), 'template');
 
     $themes = template_instance_test_themes($t);
     expect($themes)
@@ -870,7 +873,7 @@ test('setTheme does not recurse when a theme names itself as its own parent', fu
     ]);
     $t = TemplateTestFactory::build();
 
-    $t->setTheme($root, 'self-parent-theme', 'template');
+    $t->setTheme($root, ThemeId::from('self-parent-theme'), 'template');
 
     expect($t->getTemplateVars('themes'))
         ->toHaveCount(1);
@@ -883,7 +886,7 @@ test('setTheme records both the theme id and the load_css flag on the appended t
     ]);
     $t = TemplateTestFactory::build();
 
-    $t->setTheme($root, 'plain-theme', 'template', false);
+    $t->setTheme($root, ThemeId::from('plain-theme'), 'template', false);
 
     $themes = template_instance_test_themes($t);
     expect($themes[0]['id'])->toBe('plain-theme')
@@ -900,7 +903,7 @@ test('setTheme resolves local_head to a real file path when present and load_loc
     ]);
     $t = TemplateTestFactory::build();
 
-    $t->setTheme($root, 'lh-theme', 'template', true, true);
+    $t->setTheme($root, ThemeId::from('lh-theme'), 'template', true, true);
 
     $themes = template_instance_test_themes($t);
     expect($themes[0]['local_head'])->toBe(realpath($root . '/lh-theme/local_head.tpl'));
@@ -914,7 +917,7 @@ test('setTheme treats a local_head value of "0" as absent, same as every other i
     ]);
     $t = TemplateTestFactory::build();
 
-    $t->setTheme($root, 'lh-zero-theme', 'template', true, true);
+    $t->setTheme($root, ThemeId::from('lh-zero-theme'), 'template', true, true);
 
     expect(template_instance_test_themes($t)[0])->not->toHaveKey('local_head');
 });
@@ -927,7 +930,7 @@ test('setTheme treats an empty-string local_head as absent', function (): void {
     ]);
     $t = TemplateTestFactory::build();
 
-    $t->setTheme($root, 'lh-empty-theme', 'template', true, true);
+    $t->setTheme($root, ThemeId::from('lh-empty-theme'), 'template', true, true);
 
     expect(template_instance_test_themes($t)[0])->not->toHaveKey('local_head');
 });
@@ -939,7 +942,7 @@ test('setTheme defaults colorscheme to the given value when the theme does not a
     ]);
     $t = TemplateTestFactory::build();
 
-    $t->setTheme($root, 'cs-theme', 'template', true, true, 'custom-scheme');
+    $t->setTheme($root, ThemeId::from('cs-theme'), 'template', true, true, 'custom-scheme');
 
     expect($t->getThemeconf('colorscheme'))
         ->toBe('custom-scheme');
@@ -953,7 +956,7 @@ test('setTheme preserves an already-set colorscheme instead of overwriting it', 
     ]);
     $t = TemplateTestFactory::build();
 
-    $t->setTheme($root, 'cs-theme2', 'template', true, true, 'custom-scheme');
+    $t->setTheme($root, ThemeId::from('cs-theme2'), 'template', true, true, 'custom-scheme');
 
     expect($t->getThemeconf('colorscheme'))
         ->toBe('theme-defined');
@@ -972,7 +975,7 @@ test('setTheme forwards $colorscheme into its own recursive parent-theme call in
     $spy = new TemplateInstanceTestThemeconfAppendSpy();
     $t->smarty = $spy;
 
-    $t->setTheme($root, 'cs-child-theme', 'template', true, true, 'caller-scheme');
+    $t->setTheme($root, ThemeId::from('cs-child-theme'), 'template', true, true, 'caller-scheme');
 
     // The parent's own recursive setTheme() call appends its themeconf
     // entry before this (outer, child) call resumes and appends its own --
@@ -993,7 +996,7 @@ test('setTheme merges themeconf directly into the flat "themeconf" template var,
     ]);
     $t = TemplateTestFactory::build();
 
-    $t->setTheme($root, 'merge-theme', 'template');
+    $t->setTheme($root, ThemeId::from('merge-theme'), 'template');
 
     $tc = template_instance_test_assoc($t->getTemplateVars('themeconf'));
     expect($tc['marker'] ?? null)->toBe('flat-merge-check')

@@ -106,7 +106,6 @@ final readonly class AccessLevelChecker
         // UserId::from()'s own invariant guarantees $currentUserId is
         // always a positive integer -- 0 can never match it, so the
         // fall-through path already lands on the same `return false`.
-        // Confirmed while investigating a mutation-testing gap.
         if ($commentAuthorId === null) {
             return false;
         }

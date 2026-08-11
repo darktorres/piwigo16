@@ -84,12 +84,12 @@ final class CookieService
             $scr = $_SERVER['SCRIPT_NAME'] ?? null;
         }
 
-        // Investigated for a mutation-testing gap: this fallback (and the
+        // This fallback (and the
         // $redirect_url/$path_info fallbacks above, and the 3-clause `and`
         // chain above them) only ever feed into strrpos()/substr()/
         // str_ends_with() calls, all of which treat any slash-free string
-        // identically to '' -- so a mutated non-'' fallback (confirmed via
-        // manual mutation) produces the exact same final cookiePath()
+        // identically to '' -- so a mutated non-'' fallback
+        // produces the exact same final cookiePath()
         // result as long as the replacement text contains no '/', which is
         // true of pest's own mutation placeholder text. Not chased further
         // (would require asserting against that specific undocumented
@@ -110,8 +110,7 @@ final class CookieService
         // str_repeat('../', 0) a no-op ('') and the while loop's own
         // preg_replace() finds nothing to normalize (no '../' segment was
         // ever appended), so $scr comes out identical whether the block
-        // runs or not. Confirmed while investigating a mutation-testing
-        // gap.
+        // runs or not.
         if ($mountDepth > 0) { // this is maybe a plugin inside pwg directory
             // Known, accepted scope boundary: this branch only normalizes
             // the already-narrow "plugin inside the Piwigo directory tree"
@@ -149,13 +148,12 @@ final class CookieService
         // Neither setcookie() options array below (here or in the branch
         // further down) is independently verifiable from a CLI test
         // process: setcookie() doesn't emit real, inspectable headers
-        // under the CLI SAPI (confirmed live -- headers_list() stays
+        // under the CLI SAPI (headers_list() stays
         // empty after a real setcookie() call), and there's no
         // dependency-injectable seam to intercept the call itself.
         // setcookie()'s own bool return value and $_COOKIE's own
         // superglobal mutation are the only externally observable effects
-        // this method has. Confirmed while investigating a
-        // mutation-testing gap.
+        // this method has.
         if ($value === null or $expire === 0) {
             unset($_COOKIE['pwg_' . $var]);
 
@@ -170,8 +168,8 @@ final class CookieService
 
         $_COOKIE['pwg_' . $var] = $value;
         // Both fallbacks below feed only the same not-independently-
-        // observable setcookie() call documented above -- confirmed live
-        // that neither an unconverted $expire (e.g. null) nor a
+        // observable setcookie() call documented above -- neither an
+        // unconverted $expire (e.g. null) nor a
         // non-empty $value_str changes setcookie()'s own bool return
         // value, and $_COOKIE was already written with the raw $value on
         // the line above, unaffected by either.

@@ -35,7 +35,7 @@ final readonly class EphemeralKeyService
         // round(x, 0) produce an identical (string) cast (no decimal
         // point at all) whenever the instant happens to round to a whole
         // second, which a live microtime(true) call does often enough
-        // (confirmed live) to make a "the issuedAt part has a decimal
+        // to make a "the issuedAt part has a decimal
         // point" assertion flaky. Not chased given this file's own
         // stated aversion to flaky, live-clock-dependent tests (see the
         // rounding-race comments elsewhere in this file).
@@ -44,9 +44,7 @@ final readonly class EphemeralKeyService
         $secret_key = $this->currentConfig->secretKey;
 
         // Both (string) casts below are redundant: `.` concatenation
-        // already stringifies a float identically to an explicit cast
-        // (confirmed live). Confirmed while investigating a
-        // mutation-testing gap.
+        // already stringifies a float identically to an explicit cast.
         return (string) $time . ':' . $validAfterSeconds . ':'
             . hash_hmac(
                 'sha256',
@@ -66,7 +64,7 @@ final readonly class EphemeralKeyService
         // the real clock (e.g. a true 1785265426.19 rounds up to .2),
         // making a key generated and verified mere microseconds apart, with
         // $validAfterSeconds = 0, look like it came "from the future" and
-        // get rejected -- confirmed live, intermittently (whichever way
+        // get rejected, intermittently (whichever way
         // that instant's rounding falls), not a cross-test leak. Same
         // "1 decimal place" argument as generate()'s own identical call --
         // not independently verifiable without a flaky assertion on the
@@ -87,8 +85,8 @@ final readonly class EphemeralKeyService
 
         // Both (float) casts on $issuedAt/$validAfterSeconds are redundant:
         // PHP's arithmetic/comparison operators already coerce a numeric
-        // string operand the same way an explicit cast would (confirmed
-        // live). The exact `>`/`>=` and `<`/`<=` boundaries just below
+        // string operand the same way an explicit cast would. The exact
+        // `>`/`>=` and `<`/`<=` boundaries just below
         // aren't chased either: proving them needs $issuedAt to exactly
         // equal $time (or $time - 3600) as computed by verify()'s own
         // internal, uncontrollable round(microtime(true), 1) call --

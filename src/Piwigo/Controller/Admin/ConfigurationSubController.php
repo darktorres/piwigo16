@@ -170,8 +170,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
-        // -------------------------------------------------------- sections definitions
-
         $configurationRequest = ConfigurationRequest::fromGlobals($this->inputValidator);
 
         $page_section = $configurationRequest->section;
@@ -300,7 +298,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         $save_success = null;
 
-        // ------------------------------ verification and registration of modifications
         if ($configurationRequest->isSubmitted) {
             new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -483,7 +480,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 ]);
             }
 
-            // ------------------------------------------------------ $conf reinitialization
             $this->configService->loadConfFromDb();
         }
 
@@ -507,11 +503,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             ]);
         }
 
-        // ----------------------------------------------------- template initialization
         $template->setFilename('config', 'configuration_' . $page_section . '.tpl');
 
-        // TabSheet
-        //
         // CoreTabsContext's confLink must be set here (nothing else sets it
         // for this page) so CoreTabs::addCoreTabs() renders this page's
         // "General/Photo sizes/Watermark/Display/Comments/Search" tab strip
@@ -805,7 +798,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             adminPageTitle: $this->lang->t('Configuration'),
         ));
 
-        // ----------------------------------------------------------- sending html code
         $template->assignVarFromHandle('ADMIN_CONTENT', 'config');
     }
 

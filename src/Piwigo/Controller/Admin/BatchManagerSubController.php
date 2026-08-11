@@ -149,19 +149,11 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             $duplicates_on_fields,
         );
 
-        // +-------------------------------------------------------------------+
-        // |                       first element to display                        |
-        // +-------------------------------------------------------------------+
-
         // $start contains the number of the first element in its category.
         // For example, $start = 12 means we must show elements #12 and the
         // renderer's own nb_images next elements.
 
         $start = $batchManagerRequest->start;
-
-        // +-------------------------------------------------------------------+
-        // |                                 Tabs                                  |
-        // +-------------------------------------------------------------------+
 
         $tab = $batchManagerRequest->tab;
 
@@ -174,22 +166,10 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
-        // +-------------------------------------------------------------------+
-        // |                              dimensions                               |
-        // +-------------------------------------------------------------------+
-
-        // +-------------------------------------------------------------------+
-        // | filesize                                                              |
-        // +-------------------------------------------------------------------+
-
         $template->assignContext(new BatchManagerFilterOptionsPageContext(
             dimensions: $this->computeDimensionOptions($bulk_filter),
             filesize: $this->computeFilesizeOptions($bulk_filter),
         ));
-
-        // +-------------------------------------------------------------------+
-        // |                         open specific mode                            |
-        // +-------------------------------------------------------------------+
 
         if ($tab === 'unit') {
             $this->batchManagerUnitPageRenderer

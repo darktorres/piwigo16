@@ -522,6 +522,33 @@ test('setTheme lets a parent theme\'s own load_parent_css/load_parent_local_head
     template_test_rrmdir($root);
 });
 
+test('setTheme does not recurse into a non-string parent themeconf value', function (): void {
+    // Real gap: a LogicalAndToLogicalOr mutation on this guard's own first
+    // `and` (isset(parent) and is_string(parent)) groups the first two
+    // clauses into an `or` instead -- isset(parent) alone being true is
+    // enough to trigger the recursive setTheme() call even when parent
+    // isn't a string, appending a second, unintended themes entry with a
+    // non-string 'id'. A non-string parent value proves the real `and`
+    // (not `or`) is what prevents that recursion.
+    $root = sys_get_temp_dir() . '/piwigo-template-test-' . bin2hex(random_bytes(8));
+    $childDir = $root . '/gap-child-nonstring-parent';
+    mkdir($childDir, 0o777, true);
+    file_put_contents(
+        $childDir . '/themeconf.inc.php',
+        "<?php\n\$themeconf = ['parent' => 123];\n"
+    );
+
+    $t = TemplateTestFactory::build();
+    $t->setTheme($root, 'gap-child-nonstring-parent', 'template');
+
+    $themes = template_test_themes($t);
+    expect($themes)
+        ->toHaveCount(1)
+        ->and($themes[0]['id'])->toBe('gap-child-nonstring-parent');
+
+    template_test_rrmdir($root);
+});
+
 // --- loadThemeconf caching ---------------------------------------------------
 
 test('loadThemeconf caches the computed themeconf so a second call for the same directory does not re-include a changed file', function (): void {

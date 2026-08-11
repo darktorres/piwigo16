@@ -255,6 +255,87 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
+// [Mutation] Remaining untested mutations after mutation testing, all
+// verified genuinely inert via hand-mutation (batched where the reasoning
+// is identical across sites, individually verified where it wasn't),
+// triaged into groups:
+//
+// 1. RemoveBooleanCast (`(bool) X` -> `X` inside an `if`/ternary
+//    condition, 12 sites: Lines 476/841/855x2/860/895/1008/1055/1256/
+//    1263/1300): batch-removed all 12 simultaneously -- the full Unit
+//    suite for this file stayed green (same universal `if((bool)X) ===
+//    if(X)` PHP semantics as every other file in this campaign), BUT
+//    `composer analyse:phpstan` on this exact mutated source reported
+//    exactly 12 errors (`if.condNotBoolean`/`ternary.condNotBoolean`) --
+//    these casts exist for PHPStan's own strict boolean-condition rule,
+//    not for any runtime behavior difference. A real, but static-analysis
+//    -only, reason to keep them.
+//
+// 2. RemoveStringCast/RemoveFunctionCall/EmptyStringToNotEmpty on
+//    dead/redundant code (4 sites): Line 602's `reset($filename_array);`
+//    before a `foreach` is a pure no-op (foreach never uses the array's
+//    internal pointer, unlike `current()`/`next()`-based iteration) --
+//    removed entirely, full suite green. Line 662's `(string) $param`
+//    cast is redundant because `is_scalar($param)` is already guaranteed
+//    by an earlier guard, and `.`-concatenation auto-coerces any scalar
+//    identically. Line 1289's `$ret = '';` initializer is dead code --
+//    both branches of the very next `if`/`else` unconditionally
+//    reassign $ret before it's ever read.
+//
+// 3. Sentinel `in_array(X, [null, false, 0, '0', '', []], true)`
+//    idiom-check clusters, gated by an independent is_string()/is_scalar()
+//    check elsewhere in the same condition (16 sites: Line 500's 7
+//    mutations gated by `is_string($themeconf['local_head'])`; Line 1212
+//    and 1324's 2 each gated by `is_scalar($require)`; Line 1347's 7
+//    gated by `!is_string($params['path'])` in an OR): is_string()/
+//    is_scalar() return false for null/false/int/array regardless of
+//    whether those specific values are still IN the sentinel list, so
+//    every mutation here (FalseToTrue, DecrementInteger/IncrementInteger
+//    on the int 0, RemoveArrayItem on null/false/0/[]) is inert --
+//    confirmed via batched hand-mutation combining several changes per
+//    line at once, full suite still green. NONE of these mutations touch
+//    the two STRING sentinels ('0'/'') in any of the 4 clusters -- those
+//    are the only slots that would be real gaps (is_string('0')/
+//    is_string('')===true), and Line 500/1347 already have dedicated
+//    tests exercising exactly those two values (see "setTheme treats a
+//    local_head value of '0' as absent"/"empty-string local_head" and
+//    "funcCombineCss fatal-errors for every path sentinel value").
+//
+// 4. IncrementInteger on a binary-flag ternary (Line 1243, `$load =
+//    ... ? 0 : 1;` -> `? 0 : 2;`): funcGetCombinedScripts()'s own
+//    downstream logic only ever checks `$load === 0`, treating any
+//    non-zero value identically -- confirmed via hand-mutation, full
+//    suite green.
+//
+// 5. BreakToContinue in a bare switch with no enclosing loop (3 sites,
+//    Lines 1202/1204/1206, funcCombineScript()'s own `load` switch):
+//    PHP treats a bare `continue` inside a switch as equivalent to
+//    `break` when there's no enclosing loop -- confirmed via
+//    hand-mutation, all assertions still pass. It DOES trigger a real
+//    PHP warning ("continue targeting switch is equivalent to break")
+//    as a side effect, which is why it's untested under this campaign's
+//    own `--do-not-fail-on-warning` mutate flag (see
+//    feedback_pest_mutate_needs_do_not_fail_on_warning) rather than a
+//    genuine behavioral gap.
+//
+// 6. RemoveStringCast/EmptyStringToNotEmpty inside postfilterLanguage()'s
+//    eval()-based closure (Line 1529, 2 mutations): $matches[1] is
+//    always a quoted PHP string literal per the enclosing regex, so
+//    `eval('$tmp=' . $matches[1] . ';')` always produces a real,
+//    already-string $tmp -- the `(string)` cast is redundant, and the
+//    `isset($tmp) ? ... : ''` fallback branch is provably unreachable
+//    through any real regex match. Confirmed via hand-mutation, full
+//    suite green for both.
+//
+// 7. RemoveEarlyReturn on a documented pure-optimization return (Line
+//    1626, loadThemeconf()'s own `return $themeconf;` right after
+//    caching it): the method's own docblock already states this return
+//    exists "purely to skip a redundant array lookup, not for
+//    correctness" -- ProcessCache::set()/get() round-trip a PHP array by
+//    plain value-copy with no serialization, so falling through to the
+//    get() read below returns an identical value. Confirmed via
+//    hand-mutation, full suite green.
+
 // --- constructor: Smarty engine base config -----------------------------
 
 test('constructor disables Smarty html escaping', function (): void {
@@ -500,6 +581,39 @@ test('constructor derives jquery_code and plupload_code from the lang code when 
     expect(LangTestFactory::get()->langInfo())->toBe($expected)
         ->and($t->getTemplateVars('lang_info'))
         ->toBe($expected);
+});
+
+test('constructor never overwrites an already-present jquery_code, even when code is also set', function (): void {
+    // Real gap: a LogicalAndToLogicalOr mutation on this guard's own `and`
+    // (isset(code) and !isset(jquery_code)) only differs from the real
+    // `or` once BOTH code and a pre-existing, different jquery_code are
+    // present -- the sibling test above only ever sets code alone.
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'en-UK',
+        'jquery_code' => 'already-set',
+    ]);
+
+    TemplateTestFactory::build();
+
+    expect(LangTestFactory::get()->langInfo()['jquery_code'])->toBe('already-set');
+});
+
+test('constructor skips deriving plupload_code when jquery_code is set but not a string, without throwing', function (): void {
+    // Real gap: a LogicalAndToLogicalOr mutation on this guard's own first
+    // `and` (isset(jquery_code) and is_string(jquery_code)) groups the
+    // first two clauses into an `or` instead -- isset(jquery_code) alone
+    // being true is enough to reach str_replace('-', '_', $jquery_code)
+    // even when jquery_code isn't a string, which throws a TypeError
+    // under strict_types. A non-string jquery_code proves the real `and`
+    // (not `or`) is what prevents that call.
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'en-UK',
+        'jquery_code' => true,
+    ]);
+
+    TemplateTestFactory::build();
+
+    expect(LangTestFactory::get()->langInfo())->not->toHaveKey('plupload_code');
 });
 
 test('constructor registers template-extension extents when not in admin context, later duplicates winning', function (): void {
@@ -2571,12 +2685,80 @@ test('prefilterLocalCss continues past an invalid theme entry instead of stoppin
         ->toBe("before {combine_css path='local/css/second-rules.css' order=10}\n{get_combined_css} after");
 });
 
+test('prefilterLocalCss skips a non-array theme entry even when it offers a real string id via ArrayAccess', function (): void {
+    // Real gap: a BooleanOrToBooleanAnd mutation on this guard's own first
+    // `||` (!is_array($theme) || !isset($theme['id'])) groups the first
+    // two clauses into an `and` instead -- the sibling test above only
+    // ever uses a bare string ('not-an-array'), which fails BOTH
+    // is_array() and isset($theme['id']) at once, so it can't distinguish
+    // the real `||` from an `&&`. An ArrayAccess object is not_array=true
+    // yet still answers isset()/offsetGet() for 'id' with a real string,
+    // the only way to make those two clauses genuinely differ.
+    mkdir(CurrentPathsTestFactory::get()->root . '/local/css', 0o777, true);
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/local/css/arrayaccess-rules.css', 'body{}');
+    $t = TemplateTestFactory::build();
+    $t->smarty->assign('themes', [
+        new class() implements ArrayAccess {
+            public function offsetExists(mixed $offset): bool
+            {
+                return $offset === 'id';
+            }
+
+            public function offsetGet(mixed $offset): mixed
+            {
+                return 'arrayaccess';
+            }
+
+            public function offsetSet(mixed $offset, mixed $value): void {}
+
+            public function offsetUnset(mixed $offset): void {}
+        },
+    ]);
+
+    $result = Template::prefilterLocalCss('before {get_combined_css} after', $t->smarty, CurrentPathsTestFactory::get());
+
+    expect($result)
+        ->toBe('before {get_combined_css} after');
+});
+
 // --- loadThemeconf ----------------------------------------------------------
 
 test('loadThemeconf returns an empty array for a theme directory that does not exist', function (): void {
     $t = TemplateTestFactory::build();
 
     expect($t->loadThemeconf(CurrentPathsTestFactory::get()->root . '/no-such-theme-dir'))->toBe([]);
+});
+
+test('loadThemeconf short-circuits on realpath() failure without ever attempting the include', function (): void {
+    // Real gap: the sibling test above only asserts the RETURN value, which
+    // stays [] whether the realpath()===false guard fires correctly OR is
+    // broken entirely -- $themeconf starts as [] and a failed include()
+    // never repopulates it either way, so a FalseToTrue/RemoveEarlyReturn
+    // mutation on that guard is invisible to a return-value assertion
+    // alone. The REAL observable difference is a genuine "Failed to open
+    // stream" warning from attempting `include $dir . '/themeconf.inc.php'`
+    // against a directory that was never realpath()-resolved -- confirmed
+    // live via hand-mutation. Capture warnings directly to prove the guard
+    // actually prevents that attempt.
+    $t = TemplateTestFactory::build();
+
+    $capturedWarnings = [];
+    set_error_handler(function (int $errno, string $errstr) use (&$capturedWarnings): bool {
+        $capturedWarnings[] = $errstr;
+
+        return true;
+    });
+
+    try {
+        $result = $t->loadThemeconf(CurrentPathsTestFactory::get()->root . '/no-such-theme-dir');
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($result)
+        ->toBe([])
+        ->and($capturedWarnings)
+        ->toBe([]);
 });
 
 test('loadThemeconf includes themeconf.inc.php, returns its $themeconf, and assigns its $theme_template_vars', function (): void {

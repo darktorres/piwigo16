@@ -28,7 +28,7 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
-# ─── Stage 3: production runtime (FrankenPHP — the recommended runtime, ADR-0013) ──
+# ─── Stage 3: production runtime (FrankenPHP — see docs/REFERENCE.md's "FrankenPHP worker-mode runtime, Apache as fallback" decision) ──
 FROM dunglas/frankenphp:1-php8.5 AS production
 
 # The base image already ships ctype, curl, dom (+lexbor), fileinfo, filter,

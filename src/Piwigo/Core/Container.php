@@ -14,8 +14,7 @@ use Psr\Container\ContainerInterface;
  * L1Infrastructure to depend on L0Data. Container is genuinely
  * infrastructure (the raw DI-wiring mechanism), not integration/
  * orchestration like RequestBootstrap. (See deptrac.yaml's own comment for
- * why the layer names have no hyphens -- a real deptrac 4.6.2 parsing bug,
- * found while verifying this placement.)
+ * why the layer names have no hyphens -- a real deptrac 4.6.2 parsing bug.)
  *
  * Adds an optional `Paths` parameter -- when the caller has already
  * minted one at the entry point (`index.php`/`bin/piwigo`), it's

@@ -15,8 +15,8 @@ final class AppInfo
     // Matches include/constants.php's real PHPWG_VERSION value exactly --
     // the app/codebase version Piwigo itself tracks (compared against
     // \Piwigo\Config\CurrentConfig::piwigoDbVersion() to trigger upgrade.php), NOT this
-    // project's own "17.x-rewrite" branch/milestone name. Confirmed via a
-    // real regression: an initial '17.0.0' guess here sent every request
+    // project's own "17.x-rewrite" branch/milestone name. An initial
+    // '17.0.0' guess here sent every request
     // into an upgrade.php redirect loop once real callers (common.inc.php's
     // version check) started reading this instead of the bare constant.
     public const string VERSION = '16.3.0';
@@ -29,7 +29,7 @@ final class AppInfo
     // here left every fresh install's themes table permanently empty
     // (InstallService::activateCoreThemes()'s scan never matched it) and
     // seeded CurrentUser::attachGlobals()'s guest placeholder with a theme
-    // id that resolves to a nonexistent directory. Confirmed this
+    // id that resolves to a nonexistent directory. This
     // project's actual bundled theme really is 'default' (themes/default/
     // themeconf.inc.php's own 'name' key agrees).
     public const string DEFAULT_TEMPLATE = 'default';

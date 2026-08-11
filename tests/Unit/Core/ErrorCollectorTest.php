@@ -135,6 +135,35 @@ test('a second drain after a first returns empty', function (): void {
  * ShutdownHandlerTest.php uses for its own SIGTERM-exit(143) branch: crash
  * a genuinely separate PHP subprocess instead of this shared worker. See
  * the dedicated subprocess test further down.
+ *
+ * IMPORTANT (same subprocess-invisibility blind spot documented in
+ * feedback_pest_mutate_invisible_to_subprocess_tests -- this is a
+ * recurrence of that same finding, not a new one; re-confirmed 2026-08-11
+ * via direct instrumentation of pest-mutate's own internals
+ * (Pest\Mutate\MutationTest::start()) specifically for this class's
+ * header-emission loop): every test
+ * below that reaches flush()'s header-emission loop or its fatal-type
+ * branch (lines 232/240/245/247/248/250) does so ONLY inside a spawned
+ * subprocess (proc_open()/php -S) -- that is genuinely correct and the
+ * only way to observe this behavior at all (see above). But pest-mutate's
+ * own `--covered-only` mutation selection relies on PHPUnit/Xdebug's
+ * PER-TEST line-coverage attribution, which is scoped to the current,
+ * single PHP process -- it cannot see code that only executes inside a
+ * child process, no matter how real or correct that child's own
+ * assertions are. Confirmed live: none of these subprocess tests are
+ * ever selected as a "covering test" for these lines by pest-mutate's
+ * own filter-construction step, so mutations on these lines can NEVER be
+ * credited as killed, by any subprocess-based technique, regardless of
+ * whether the test would actually catch the mutation if it *were* rerun
+ * (a hand-verified web-server mutation test below confirms it would). The
+ * ONE in-process test that pest-mutate does select for these lines
+ * (`flush leaves a non-empty buffer untouched when headers are already
+ * sent`, further down) deliberately asserts something true regardless of
+ * the mutation (see its own docblock), so it can't kill them either. This
+ * is a structural pest-mutate limitation, not a real gap in this file's
+ * own test coverage -- these lines stay permanently "untested" in any
+ * future scoped-verify-rerun of this class; do not mistake that for a new
+ * gap to chase.
  */
 test('writeTestErrorsLog is a no-op when test mode is not active, never touching the log file', function (): void {
     // The passed-in $paths deliberately points nowhere real (a throwaway
@@ -273,33 +302,30 @@ test('currentConfig throws when the container returns an unexpected type', funct
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfig::class);
 
 /**
- * Applies to every subprocess-based test in
- * this file (including the pre-existing E_ERROR/OOM test above): a real
- * `pest --mutate` run cannot credit ANY of them with killing a mutant on
- * line 232, even though each is independently, empirically verified
- * (via a temporary sed-applied mutation + a standalone `php -r`/subprocess
- * run) to
- * genuinely distinguish real from mutated behavior. Root cause: pest's
- * mutation harness swaps in the mutated source only within its own
- * controlling PHP process's special test-run mechanism -- a `proc_open()`-
- * spawned child process re-reads `src/Piwigo/Core/ErrorCollector.php`
- * directly off disk, seeing the real, unmutated file every time,
- * regardless of which mutant pest is currently "applying". This is a
- * structural limitation of the subprocess-crash technique itself (real,
- * uncatchable PHP errors are only reproducible via a genuinely separate
- * process), not a code-quality gap -- the 2 tests below (and the
- * pre-existing OOM one) are kept as real, valuable coverage despite
- * `pest --mutate` being permanently unable to see it.
+ * See the file-level docblock further up (right before the
+ * writeTestErrorsLog no-op test) for the full, confirmed root cause:
+ * every subprocess-based test in this file -- this one, the E_PARSE/
+ * E_ERROR tests below, the headers-already-sent subprocess test, and the
+ * real-web-server test further down -- is permanently invisible to `pest
+ * --mutate`'s own per-test coverage attribution, regardless of how
+ * correctly each one distinguishes real from mutated behavior when
+ * actually run (independently confirmed for each, via a temporary
+ * hand-applied mutation + a standalone rerun). Kept as real, valuable
+ * regression coverage despite `pest --mutate` being structurally unable
+ * to credit any of them.
  */
 test('flush does not record a non-fatal error_get_last() type as if it were fatal', function (): void {
-    // Kills line 232's BitwiseAndToBitwiseOr: E_USER_WARNING (512) shares
-    // no bits at all with the fatal mask (E_ERROR|E_PARSE|E_CORE_ERROR|
-    // E_COMPILE_ERROR = 85), so `&` correctly excludes it -- `|` would
-    // always be truthy regardless of $last['type'], wrongly recording
-    // every real error_get_last() state as a synthetic fatal entry.
-    // (RemoveBooleanCast on this same line is confirmed-equivalent,
-    // verified live: the surrounding `&&` already coerces its right
-    // operand to bool the same way an explicit cast would, for any int.)
+    // Would kill line 232's BitwiseAndToBitwiseOr (verified via a
+    // temporary hand-applied mutation, see the docblock above for why
+    // `pest --mutate` itself can never credit this): E_USER_WARNING (512)
+    // shares no bits at all with the fatal mask (E_ERROR|E_PARSE|
+    // E_CORE_ERROR|E_COMPILE_ERROR = 85), so `&` correctly excludes it --
+    // `|` would always be truthy regardless of $last['type'], wrongly
+    // recording every real error_get_last() state as a synthetic fatal
+    // entry. (RemoveBooleanCast on this same line is confirmed-
+    // equivalent, verified live: the surrounding `&&` already coerces its
+    // right operand to bool the same way an explicit cast would, for any
+    // int.)
     //
     // Run in an isolated subprocess, not a bare @trigger_error() here:
     // error_get_last() is only ever populated by PHP's own DEFAULT error
@@ -359,9 +385,11 @@ test('flush does not record a non-fatal error_get_last() type as if it were fata
 });
 
 test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed required file) in a real subprocess', function (): void {
-    // Kills 2 of line 232's 3 BitwiseOrToBitwiseAnd mutants (the ones
-    // pairing E_ERROR|E_PARSE and E_PARSE|E_CORE_ERROR -- either zeroes
-    // out E_PARSE's own bit, both distinguishable from a real E_PARSE).
+    // Would kill 2 of line 232's 3 BitwiseOrToBitwiseAnd mutants (the
+    // ones pairing E_ERROR|E_PARSE and E_PARSE|E_CORE_ERROR -- either
+    // zeroes out E_PARSE's own bit, both distinguishable from a real
+    // E_PARSE) -- see the docblock above the non-fatal test further up
+    // for why `pest --mutate` itself can never credit this.
     // The 3rd (pairing E_CORE_ERROR|E_COMPILE_ERROR) is not chased: both
     // of those types originate from PHP's own core/compile machinery,
     // not reachable via any userland mechanism -- confirmed here that
@@ -619,15 +647,17 @@ test('flush leaves a non-empty buffer untouched when headers are already sent', 
  * output does, which is why this script echoes something first).
  */
 test('flush never calls header() when headers are already sent, even with a non-empty buffer', function (): void {
-    // Kills the `if (Kernel::isBooted())`-guard's sibling on this class --
-    // IfNegated on `if ($this->collected === [] || headers_sent())`: negated,
-    // with collected non-empty and headers_sent() forced true, the guard
-    // would wrongly skip the early return and fall into the header loop.
-    // Also kills BooleanOrToBooleanAnd (`&&` in place of `||`): with
-    // collected non-empty, `false && true` is false, so that mutant skips
-    // the early return the exact same way. Both mutants call the real
-    // header() at least once (`X-PHP-Error-1: ...` at minimum); the
-    // correct guard calls it zero times.
+    // Would kill line 240's IfNegated (`if ($this->collected === [] ||
+    // headers_sent())`: negated, with collected non-empty and
+    // headers_sent() forced true, the guard would wrongly skip the early
+    // return and fall into the header loop) and BooleanOrToBooleanAnd
+    // (`&&` in place of `||`: with collected non-empty, `false && true`
+    // is false, so that mutant skips the early return the exact same
+    // way) -- both mutants call the real header() at least once
+    // (`X-PHP-Error-1: ...` at minimum); the correct guard calls it zero
+    // times. See the docblock above the non-fatal subprocess test further
+    // up for why `pest --mutate` itself can never credit this (this is a
+    // subprocess-based test, same as that one).
     $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
     expect(is_file($autoloadPath))
         ->toBeTrue();
@@ -781,6 +811,15 @@ function errorCollectorTestResponseHeaders(int $port): array
  * headers_list() stays empty and no warning fires for the very first
  * call), but a REAL web server can -- same `php -S` + raw-socket
  * technique HtmlServiceTest.php already established for setStatusHeader().
+ *
+ * This test's own assertions below DO correctly distinguish real from
+ * mutated behavior on every mutation they reference (independently
+ * confirmed via temporary hand-applied mutations against the real
+ * source). But see the file-level docblock further up (right before the
+ * writeTestErrorsLog no-op test) for why `pest --mutate` itself can never
+ * credit this test -- or any subprocess-based test in this file -- with
+ * killing them: its own per-test coverage attribution cannot see
+ * execution inside a spawned child process at all.
  */
 test('flush emits one real X-PHP-Error-N header per entry, stripped of newlines and capped at 500 chars, plus a real count header', function (): void {
     $docRoot = sys_get_temp_dir() . '/piwigo-error-collector-headers-' . bin2hex(random_bytes(8));
@@ -808,26 +847,28 @@ test('flush emits one real X-PHP-Error-N header per entry, stripped of newlines 
 
         expect($errorHeaders)
             ->toHaveCount(3)
-            // Kills line 245's ForeachEmptyIterable (would emit zero
+            // Would kill line 245's ForeachEmptyIterable (would emit zero
             // X-PHP-Error-N headers) and line 248's "$i + 1" numbering
             // mutations (PlusToMinus/DecrementInteger/IncrementInteger --
             // any of those would misnumber the 2nd entry).
             ->and($errorHeaders[0])->toStartWith('X-PHP-Error-1: [WARNING] line1')
-            // Kills line 247's UnwrapStrReplace (the raw \r\n would still
-            // be present instead of stripped to a single space).
+            // Would kill line 247's UnwrapStrReplace (the raw \r\n would
+            // still be present instead of stripped to a single space).
             // \r and \n are each independently replaced with their own
             // space (str_replace() with parallel arrays, not a joint
             // "\r\n" match), so the pair becomes two spaces, not one.
             ->and($errorHeaders[0])->toContain('line1  line2 in file.php:1')
             ->and($errorHeaders[0])->not->toContain("\r")
             ->and($errorHeaders[1])->toStartWith('X-PHP-Error-2: [ERROR] ' . str_repeat('x', 100))
-            // Kills line 247's UnwrapSubstr and its DecrementInteger/
+            // Would kill line 247's UnwrapSubstr and its DecrementInteger/
             // IncrementInteger/RemoveArrayItem mutations on the 500-char
             // cap -- '[ERROR] ' (9 chars) + 600 x's = 609 raw chars,
             // capped to exactly 500.
             ->and(mb_strlen($errorHeaders[1]) - mb_strlen('X-PHP-Error-2: '))->toBe(500)
-            // Kills line 250's RemoveFunctionCall/ConcatRemoveRight/
-            // ConcatSwitchSides on the X-PHP-Error-Count header.
+            // Would kill line 250's RemoveFunctionCall/ConcatRemoveRight/
+            // ConcatSwitchSides on the X-PHP-Error-Count header. ("Would
+            // kill" throughout this block: see the docblock above this
+            // test for why `pest --mutate` can never actually credit it.)
             ->and($errorHeaders[2])->toBe('X-PHP-Error-Count: 2');
     } finally {
         errorCollectorTestStopServer($proc);

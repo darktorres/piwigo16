@@ -79,10 +79,6 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
-        // +-------------------------------------------------------------------+
-        // | Commons parameters                                                    |
-        // +-------------------------------------------------------------------+
-
         $maintActions = [
             'derivatives' => [
                 'icon' => 'icon-trash-1',
@@ -149,10 +145,6 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
                 'label' => $this->lang->t('Purge compiled templates'),
             ],
         ];
-
-        // +-------------------------------------------------------------------+
-        // | tabs                                                                  |
-        // +-------------------------------------------------------------------+
 
         $tab = $maintenanceDispatch->tab;
 

@@ -75,10 +75,6 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
 
         $template->setFilename('permalinks', 'permalinks.tpl');
 
-        // +-----------------------------------------------------------------------+
-        // | tabs                                                                  |
-        // +-----------------------------------------------------------------------+
-
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
@@ -93,7 +89,6 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         $pwg_token = new CsrfService($this->currentConfig)
             ->getToken();
 
-        // --- generate display of active permalinks -----------------------------------
         $sortResult = $this->parseSortVariables(
             ['id', 'name', 'permalink'],
             'name',
@@ -116,8 +111,6 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         if ($sort_by[0] === 'name') {
             usort($categories, CategoryService::compareByGlobalRank(...));
         }
-
-        // --- generate display of old permalinks --------------------------------------
 
         $sortResult = $this->parseSortVariables(
             ['cat_id', 'permalink', 'date_deleted', 'last_hit', 'hit'],

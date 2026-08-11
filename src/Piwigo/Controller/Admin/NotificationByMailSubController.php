@@ -103,9 +103,6 @@ final readonly class NotificationByMailSubController implements AdminSubControll
         $page_mode = $notificationByMailRequest->pageMode;
         $post = $notificationByMailRequest->post;
 
-        // +-----------------------------------------------------------------------+
-        // | Initialization                                                        |
-        // +-----------------------------------------------------------------------+
         // Consumed by CoreTabs::addCoreTabs()'s own 'nbm' case (triggered
         // synchronously inside Tabsheet::select() further down -- must be
         // set before that call, not dead code) and by this method's own
@@ -115,28 +112,15 @@ final readonly class NotificationByMailSubController implements AdminSubControll
         $must_repost = false;
         $save_success = null;
 
-        // +-----------------------------------------------------------------------+
-        // | Check Access and exit when user status is not ok                      |
-        // +-----------------------------------------------------------------------+
         $this->accessControl->checkStatus(self::getTabStatus($page_mode));
 
-        // +-----------------------------------------------------------------------+
-        // | Add event handler                                                     |
-        // +-----------------------------------------------------------------------+
         $this->eventDispatcher->addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, $this->renderGlobalCustomizeMailContent(...));
         $this->eventDispatcher->dispatchNotify(new NbmEventHandlerAdded());
 
-        // +-----------------------------------------------------------------------+
-        // | Insert new users with mails                                           |
-        // +-----------------------------------------------------------------------+
         if (count($post) === 0) {
             // No insert data in post mode
             $this->insertNewDataUserMailNotification($this->lang, $nbmSender, $this->redirectService, $this->urlService, $this->sessionService, $this->currentConfig);
         }
-
-        // +-----------------------------------------------------------------------+
-        // | Treatment of tab post                                                 |
-        // +-----------------------------------------------------------------------+
 
         if ($post !== []) {
             new CsrfService($this->currentConfig)
@@ -207,9 +191,6 @@ final readonly class NotificationByMailSubController implements AdminSubControll
 
         }
 
-        // +-----------------------------------------------------------------------+
-        // | template initialization                                               |
-        // +-----------------------------------------------------------------------+
         $template->setFilenames(
             [
                 'double_select' => 'double_select.tpl',
@@ -353,9 +334,6 @@ final readonly class NotificationByMailSubController implements AdminSubControll
             adminPageTitle: $this->lang->t('Send mail to users'),
         ));
 
-        // +-----------------------------------------------------------------------+
-        // | Sending html code                                                     |
-        // +-----------------------------------------------------------------------+
         $template->assignVarFromHandle('ADMIN_CONTENT', 'notification_by_mail');
     }
 

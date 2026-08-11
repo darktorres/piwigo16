@@ -120,10 +120,6 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         // needless reconnects.
         $conn = DbConnection::build();
 
-        // +-----------------------------------------------------------------------+
-        // | tabs                                                                  |
-        // +-----------------------------------------------------------------------+
-
         if (IntroActionRequest::fromGlobals()->isHideNewsletterSubscription) {
             $this->preferencesService
                 ->updateParam('show_newsletter_subscription', 'false');
@@ -134,10 +130,6 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         $tabsheet->setId('admin_home');
         $tabsheet->select('', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
-
-        // +-----------------------------------------------------------------------+
-        // |                                actions                                |
-        // +-----------------------------------------------------------------------+
 
         $nb_pending_comments = $this->pageState->nbPendingComments;
         if ($nb_pending_comments !== null) {
@@ -180,10 +172,6 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         }
 
         $this->filesystemIntegrityChecker->fsQuickCheck();
-
-        // +-----------------------------------------------------------------------+
-        // |                             template init                             |
-        // +-----------------------------------------------------------------------+
 
         $template->setFilenames([
             'intro' => 'intro.tpl',
@@ -260,10 +248,6 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         }
 
         $this->eventDispatcher->dispatchNotify(new LocEndIntro());
-
-        // +-----------------------------------------------------------------------+
-        // |                           get activity data                           |
-        // +-----------------------------------------------------------------------+
 
         $nb_weeks = $this->currentConfig->dashboardActivityNbWeeks;
 
@@ -440,10 +424,6 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             $day_labels[] = mb_substr($day_name, 0, 3);
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                           get storage data                            |
-        // +-----------------------------------------------------------------------+
-
         $video_format = ['webm', 'webmv', 'ogg', 'ogv', 'mp4', 'm4v', 'mov'];
         /** @var array<string, array<string, array<string, mixed>>> $data_storage */
         $data_storage = [];
@@ -546,10 +526,6 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             storageTotal: $total_storage,
             storageChartData: $data_storage,
         ));
-
-        // +-----------------------------------------------------------------------+
-        // |                           sending html code                           |
-        // +-----------------------------------------------------------------------+
 
         $template->assignVarFromHandle('ADMIN_CONTENT', 'intro');
 

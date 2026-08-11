@@ -200,10 +200,9 @@ test('SystemActivityLogEntry::fromRow falls back to safe defaults for a fully em
 });
 
 test('SystemActivityLogEntry::fromRow narrows a real performed_by UserId instance', function (): void {
-    // Real gap, found via mutation testing: every other SystemActivityLogEntry
-    // fixture in this file passes performed_by: null, so nothing exercised
-    // the `instanceof UserId` branch that unwraps a real UserId into its
-    // plain int value.
+    // Every other SystemActivityLogEntry fixture in this file passes
+    // performed_by: null, so nothing exercised the `instanceof UserId`
+    // branch that unwraps a real UserId into its plain int value.
     $entry = SystemActivityLogEntry::fromRow([
         'performed_by' => UserId::from(7),
     ]);
@@ -213,9 +212,9 @@ test('SystemActivityLogEntry::fromRow narrows a real performed_by UserId instanc
 });
 
 test('SystemActivityLogEntry::fromRow narrows a real username string', function (): void {
-    // Real gap, found via mutation testing: every other SystemActivityLogEntry
-    // fixture in this file passes username: null, so nothing exercised the
-    // is_string() branch that keeps a real username string as-is.
+    // Every other SystemActivityLogEntry fixture in this file passes
+    // username: null, so nothing exercised the is_string() branch that
+    // keeps a real username string as-is.
     $entry = SystemActivityLogEntry::fromRow([
         'username' => 'fixture_admin',
     ]);

@@ -28,8 +28,8 @@ use Symfony\Component\Messenger\Transport\TransportInterface;
  * no DI container involvement (matches Piwigo\Storage\StorageRegistry's
  * own "load from a plain config array" shape). Not wired into any
  * existing page yet (a concern once a real console worker
- * exists) -- verified via a direct dispatch -> transport -> handler
- * round-trip integration test instead.
+ * exists); a direct dispatch -> transport -> handler round-trip
+ * integration test covers this instead.
  */
 final class MessengerFactory
 {

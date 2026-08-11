@@ -7,6 +7,7 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * Each test constructs its own fresh instance directly -- no reset()/
@@ -68,6 +69,34 @@ test('drain clears the buffer, unlike collected()', function (): void {
         ->toBe([]);
 });
 
+test('recordFatal appends a real [ERROR]-prefixed entry and writes the real message to error_log()', function (): void {
+    // Real gap: recordFatal() had no direct test at all -- only exercised
+    // transitively through other classes' own fatalError() call sites.
+    // Kills all 3 ConcatRemoveLeft/ConcatRemoveRight/ConcatSwitchSides
+    // mutations on the error_log() argument by redirecting the `error_log`
+    // ini setting to a real, readable temp file for the duration of this
+    // call (confirmed live: error_log() genuinely honors this in-process,
+    // no subprocess needed) rather than treating the message as an
+    // unverifiable diagnostic side effect.
+    $errorLogFile = tempnam(sys_get_temp_dir(), 'piwigo-error-collector-recordfatal-');
+    $originalErrorLog = ini_get('error_log');
+    ini_set('error_log', $errorLogFile);
+
+    try {
+        $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));
+
+        $errorCollector->recordFatal('a genuinely fatal condition');
+
+        expect($errorCollector->collected())
+            ->toBe(['[ERROR] a genuinely fatal condition'])
+            ->and(file_get_contents($errorLogFile))
+            ->toContain('PHP Fatal error: a genuinely fatal condition');
+    } finally {
+        ini_set('error_log', $originalErrorLog === false ? '' : $originalErrorLog);
+        @unlink($errorLogFile);
+    }
+});
+
 test('a second drain after a first returns empty', function (): void {
     $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1']);
@@ -86,11 +115,17 @@ test('a second drain after a first returns empty', function (): void {
  * same rationale as seedCollected() above.
  *
  * flush()'s own header-emission loop (only reached when `$this->collected
- * !== [] && ! headers_sent()`) stays genuinely unreachable from any test in
- * this repo: PHP's CLI SAPI hardwires headers_sent() to true
- * unconditionally (confirmed live, fresh process, zero prior output) --
- * there is no HTTP response to attach headers to outside of a real web SAPI
- * request, which no Unit test runs under.
+ * !== [] && ! headers_sent()`) was previously believed genuinely
+ * unreachable from any test in this repo, on the claim that CLI SAPI
+ * hardwires headers_sent() to true unconditionally. CORRECTED 2026-08-11:
+ * that claim was wrong -- a genuinely clean subprocess (writing its result
+ * to a file instead of echoing, so the check itself can't taint the state
+ * being checked) shows headers_sent() really does start false. The bare
+ * CLI subprocess tests further up still can't observe header() itself
+ * under plain CLI (headers_list() stays empty, no warning on a first call)
+ * -- but a real `php -S` web server can, via the same raw-socket technique
+ * HtmlServiceTest.php already established for setStatusHeader(). See the
+ * dedicated real-server test further down for the loop's own internals.
  *
  * flush()'s OTHER remaining branch -- the `error_get_last()`-is-a-fatal-type
  * body (E_ERROR/E_PARSE/E_CORE_ERROR/E_COMPILE_ERROR) -- was believed
@@ -224,11 +259,24 @@ test('currentConfig resolves the container-shared CurrentConfig instance when Ke
     }
 });
 
+test('currentConfig throws when the container returns an unexpected type', function (): void {
+    // Real gap: kills line 215's InstanceOfToTrue (`if (!true)`, never
+    // taking the throw branch). Only reachable while Kernel::isBooted()
+    // is true, matching every real call site's own established
+    // KernelContainerOverride::withWrongTypeFor() pattern.
+    $method = new ReflectionMethod(ErrorCollector::class, 'currentConfig');
+
+    KernelContainerOverride::withWrongTypeFor(
+        CurrentConfig::class,
+        static fn (): mixed => $method->invoke(null),
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfig::class);
+
 /**
  * Applies to every subprocess-based test in
  * this file (including the pre-existing E_ERROR/OOM test above): a real
  * `pest --mutate` run cannot credit ANY of them with killing a mutant on
- * line 174, even though each is independently, empirically verified
+ * line 232, even though each is independently, empirically verified
  * (via a temporary sed-applied mutation + a standalone `php -r`/subprocess
  * run) to
  * genuinely distinguish real from mutated behavior. Root cause: pest's
@@ -244,7 +292,7 @@ test('currentConfig resolves the container-shared CurrentConfig instance when Ke
  * `pest --mutate` being permanently unable to see it.
  */
 test('flush does not record a non-fatal error_get_last() type as if it were fatal', function (): void {
-    // Kills line 174's BitwiseAndToBitwiseOr: E_USER_WARNING (512) shares
+    // Kills line 232's BitwiseAndToBitwiseOr: E_USER_WARNING (512) shares
     // no bits at all with the fatal mask (E_ERROR|E_PARSE|E_CORE_ERROR|
     // E_COMPILE_ERROR = 85), so `&` correctly excludes it -- `|` would
     // always be truthy regardless of $last['type'], wrongly recording
@@ -311,7 +359,7 @@ test('flush does not record a non-fatal error_get_last() type as if it were fata
 });
 
 test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed required file) in a real subprocess', function (): void {
-    // Kills 2 of line 174's 3 BitwiseOrToBitwiseAnd mutants (the ones
+    // Kills 2 of line 232's 3 BitwiseOrToBitwiseAnd mutants (the ones
     // pairing E_ERROR|E_PARSE and E_PARSE|E_CORE_ERROR -- either zeroes
     // out E_PARSE's own bit, both distinguishable from a real E_PARSE).
     // The 3rd (pairing E_CORE_ERROR|E_COMPILE_ERROR) is not chased: both
@@ -638,5 +686,152 @@ test('flush never calls header() when headers are already sent, even with a non-
             ->and($result['headerCalls'])->toBe(0);
     } finally {
         @unlink($marker);
+    }
+});
+
+/**
+ * @return array{0: resource, 1: int}
+ */
+function errorCollectorTestStartServer(string $docRoot): array
+{
+    $descriptors = [
+        0 => ['pipe', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+
+    for ($attempt = 0; $attempt < 5; $attempt++) {
+        $port = random_int(20_000, 60_000);
+        $proc = proc_open(['php', '-S', '127.0.0.1:' . $port, '-t', $docRoot], $descriptors, $pipes);
+        if (! is_resource($proc)) {
+            throw new RuntimeException('failed to start local test server');
+        }
+
+        set_error_handler(static fn (): bool => true);
+        try {
+            for ($i = 0; $i < 100; $i++) {
+                $sock = @fsockopen('127.0.0.1', $port, $errno, $errstr, 0.1);
+                if (is_resource($sock)) {
+                    fclose($sock);
+
+                    return [$proc, $port];
+                }
+                usleep(20_000);
+            }
+        } finally {
+            restore_error_handler();
+        }
+
+        proc_terminate($proc);
+        proc_close($proc);
+    }
+
+    throw new RuntimeException('local test server never became reachable after 5 attempts');
+}
+
+/**
+ * @param resource $proc
+ */
+function errorCollectorTestStopServer($proc): void
+{
+    proc_terminate($proc);
+    proc_close($proc);
+}
+
+/**
+ * Issues a raw HTTP/1.1 request and returns every response header line
+ * (excluding the status line), same raw-socket technique as
+ * HtmlServiceTest.php's own htmlServiceTestRawStatusLine() but keeping
+ * the full header block instead of just the first line.
+ *
+ * @return list<string>
+ */
+function errorCollectorTestResponseHeaders(int $port): array
+{
+    $sock = fsockopen('127.0.0.1', $port, $errno, $errstr, 2.0);
+    if (! is_resource($sock)) {
+        throw new RuntimeException('failed to connect to local test server: ' . $errstr);
+    }
+    fwrite($sock, "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
+    $raw = '';
+    while (! feof($sock)) {
+        $raw .= fread($sock, 8192);
+    }
+    fclose($sock);
+
+    [$head] = explode("\r\n\r\n", $raw, 2) + [''];
+    $lines = explode("\r\n", $head);
+    array_shift($lines); // drop the status line
+
+    return $lines;
+}
+
+/**
+ * The header-emission loop's own internal string-building (line 245's
+ * ForeachEmptyIterable, line 247's substr()/str_replace() mutations, line
+ * 248's `$i + 1` numbering + concatenation mutations, line 250's
+ * X-PHP-Error-Count construction) was previously documented as
+ * "genuinely unreachable from any test in this repo" on the claim that
+ * CLI SAPI hardwires headers_sent() to true unconditionally. Re-verified
+ * live (2026-08-11) and that claim was WRONG: a genuinely clean
+ * subprocess (writing its result to a file instead of echoing, so the
+ * check itself can't taint the very state it's checking) shows
+ * headers_sent() really does start false. The earlier bare-CLI subprocess
+ * tests in this file still can't observe header() under CLI (confirmed:
+ * headers_list() stays empty and no warning fires for the very first
+ * call), but a REAL web server can -- same `php -S` + raw-socket
+ * technique HtmlServiceTest.php already established for setStatusHeader().
+ */
+test('flush emits one real X-PHP-Error-N header per entry, stripped of newlines and capped at 500 chars, plus a real count header', function (): void {
+    $docRoot = sys_get_temp_dir() . '/piwigo-error-collector-headers-' . bin2hex(random_bytes(8));
+    mkdir($docRoot, 0o777, true);
+    $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
+
+    $longMessage = str_repeat('x', 600);
+    file_put_contents(
+        $docRoot . '/index.php',
+        '<?php' . "\n"
+        . 'require ' . var_export($autoloadPath, true) . ';'
+        . '$ec = new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));'
+        . '$prop = new ReflectionProperty(\Piwigo\Core\ErrorCollector::class, "collected");'
+        . '$prop->setValue($ec, ["[WARNING] line1\\r\\nline2 in file.php:1", "[ERROR] ' . $longMessage . '"]);'
+        . '$method = new ReflectionMethod(\Piwigo\Core\ErrorCollector::class, "flush");'
+        . '$method->invoke($ec);',
+    );
+
+    [$proc, $port] = errorCollectorTestStartServer($docRoot);
+
+    try {
+        $headers = errorCollectorTestResponseHeaders($port);
+
+        $errorHeaders = array_values(array_filter($headers, static fn (string $h): bool => str_starts_with($h, 'X-PHP-Error-')));
+
+        expect($errorHeaders)
+            ->toHaveCount(3)
+            // Kills line 245's ForeachEmptyIterable (would emit zero
+            // X-PHP-Error-N headers) and line 248's "$i + 1" numbering
+            // mutations (PlusToMinus/DecrementInteger/IncrementInteger --
+            // any of those would misnumber the 2nd entry).
+            ->and($errorHeaders[0])->toStartWith('X-PHP-Error-1: [WARNING] line1')
+            // Kills line 247's UnwrapStrReplace (the raw \r\n would still
+            // be present instead of stripped to a single space).
+            // \r and \n are each independently replaced with their own
+            // space (str_replace() with parallel arrays, not a joint
+            // "\r\n" match), so the pair becomes two spaces, not one.
+            ->and($errorHeaders[0])->toContain('line1  line2 in file.php:1')
+            ->and($errorHeaders[0])->not->toContain("\r")
+            ->and($errorHeaders[1])->toStartWith('X-PHP-Error-2: [ERROR] ' . str_repeat('x', 100))
+            // Kills line 247's UnwrapSubstr and its DecrementInteger/
+            // IncrementInteger/RemoveArrayItem mutations on the 500-char
+            // cap -- '[ERROR] ' (9 chars) + 600 x's = 609 raw chars,
+            // capped to exactly 500.
+            ->and(mb_strlen($errorHeaders[1]) - mb_strlen('X-PHP-Error-2: '))->toBe(500)
+            // Kills line 250's RemoveFunctionCall/ConcatRemoveRight/
+            // ConcatSwitchSides on the X-PHP-Error-Count header.
+            ->and($errorHeaders[2])->toBe('X-PHP-Error-Count: 2');
+    } finally {
+        errorCollectorTestStopServer($proc);
+        unlink($docRoot . '/index.php');
+        rmdir($docRoot);
     }
 });

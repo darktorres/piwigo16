@@ -9,6 +9,7 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -16,6 +17,7 @@ use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\WsContext;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Lang\Translator;
+use Piwigo\Session\SessionService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -80,6 +82,145 @@ function urlServiceTestWithMountDepth(int $depth, callable $fn): mixed
     return KernelContainerOverride::with([RequestMountDepth::class => new RequestMountDepth($depth)], $fn);
 }
 
+/**
+ * parseSectionUrl()'s own return type is `array<string, mixed>` by
+ * design (see that method's own docblock) -- narrows $page['tags'][0]['id']
+ * for real rather than trusting an inline @var, used by the
+ * while-loop-collection tests below.
+ */
+function urlServiceTestFirstTagId(mixed $tags): int
+{
+    if (! is_array($tags) || ! isset($tags[0]) || ! is_array($tags[0]) || ! is_int($tags[0]['id'])) {
+        throw new RuntimeException('Expected $page[\'tags\'][0][\'id\'] to be an int.');
+    }
+
+    return $tags[0]['id'];
+}
+
+/**
+ * Same narrowing reasoning as urlServiceTestFirstTagId() above, for a
+ * single category/combined-category array entry's own 'id' key.
+ */
+function urlServiceTestCategoryId(mixed $category): int
+{
+    if (! is_array($category) || ! is_int($category['id'])) {
+        throw new RuntimeException('Expected a category array with an int \'id\' key.');
+    }
+
+    return $category['id'];
+}
+
+// [Mutation] Remaining untested mutations after mutation testing, all
+// verified genuinely inert via hand-mutation (batched where the
+// reasoning is identical across sites, individually verified where it
+// wasn't), triaged into groups:
+//
+// 1. ConcatEqualToEqual (`.=` -> `=`, 8 sites: getAbsoluteRootUrl()'s
+//    scheme prefix, makeSectionInUrl()'s per-section-case string
+//    building): every one of these targets a variable that was JUST
+//    initialized to '' immediately above (getAbsoluteRootUrl()'s $url)
+//    or is built inside a `switch` where each case is mutually
+//    exclusive and $section_string always starts from the same fresh
+//    '' (makeSectionInUrl()). Overwriting vs appending onto an empty
+//    string produces an identical result.
+//
+// 2. RemoveStringCast (`(string) $x` -> `$x` inside
+//    `is_scalar($x) ? (string) $x : ''`, 13 sites across
+//    makePictureUrl()/makeSectionInUrl()): PHP's `.=` operator already
+//    coerces a scalar operand to string, with or without the explicit
+//    cast -- same universal finding as every other file in this
+//    campaign. Batch-verified: all 13 removed simultaneously, full
+//    suite still green.
+//
+// 3. RemoveBooleanCast (`(bool) preg_match(...)` inside an `if`/`or`
+//    condition, 5 sites): universal `if((bool)X)` === `if(X)` PHP
+//    semantics, same finding as every other file in this campaign.
+//
+// 4. EmptyStringToNotEmpty (4 sites): configuredHost()'s own
+//    `$gallery_url === ''`/`$host === ''` guards (Lines 259/264) are
+//    pre-existing documented equivalents (see the dedicated comment
+//    right above the relevant test below) -- re-verified fresh this
+//    pass, not just trusted from the old note. parseSectionUrl()'s own
+//    search-token defaults (Lines 851/853, `$tokens[$nextToken] ?? ''`)
+//    are inert for a DIFFERENT, empirically-confirmed reason: the real
+//    pest-plugin-mutate sentinel string ('PEST Mutator was here!')
+//    contains no digits and doesn't match either regex any more than an
+//    empty string does, so a bare ['search'] token produces the
+//    identical "search identifier is missing" badRequest() either way,
+//    confirmed via a direct probe.
+//
+// 5. FalseToTrue (`$is_first = false;` -> `= true;`, Line 310,
+//    addUrlParams()): once the first param appends either '?' or the
+//    real separator, $url already contains '?' -- so a mutated
+//    "always take the is_first branch" still re-evaluates
+//    `!str_contains($url, '?')` as false for every later param,
+//    falling through to the exact same `$argSeparator` the real `else`
+//    branch would have used. Confirmed via a full multi-param suite run
+//    with the mutation applied.
+//
+// 6. DecrementInteger/IncrementInteger on regex capture-group indices
+//    (Lines 452/852/854/858, `$matches[1]` <-> `$matches[0]`/
+//    `$fname_wo_ext[0]` <-> `[1]`): each of these 3 regexes
+//    (`/^\d+(-|$)/`, `/^(psk-...)$/`, `/(\d+)/`) wraps its ENTIRE
+//    matched span in a single capturing group with nothing outside it
+//    -- so `$matches[0]` (the whole match) and `$matches[1]` (the
+//    group) are always identical whenever a match occurs, and
+//    `isset()` on either is equivalent. Line 452's own char-index swap
+//    is inert for a related structural reason: whenever
+//    `/^\d+(-|$)/` genuinely matches, the character immediately after
+//    the leading digit run can only be another digit, the literal '-',
+//    or absent (end of string) -- none of which can have
+//    `ord() > ord('9')`, so the ord()-comparison clause evaluates the
+//    same regardless of which index it reads. Verified with a real
+//    single-character numeric filename (the one case an out-of-bounds
+//    [1] read could have differed) -- no warning, identical output.
+//
+// 7. Line 682's and Line 703's DecrementInteger/IncrementInteger/
+//    PostIncrementToPostDecrement/GreaterToGreaterOrEqual
+//    (`$loop_counter = 0;` -> -1/1, and `$loop_counter++ > count($tokens)
+//    + 10` -> its own off-by-one/decrement/`>=` variants -- the
+//    categories-branch infinite-loop guard's own starting value and
+//    threshold check): verified difficult to exercise deterministically
+//    -- the guard only fires once the loop has genuinely iterated more
+//    than `count($tokens) + 10` times, which needs an intentionally
+//    oversized, purpose-built token array with no realistic real-world
+//    analogue; shifting the trigger by one iteration provides no
+//    meaningful regression-catching value beyond what the loop's own
+//    real termination tests (below) already cover. Line 703 itself only
+//    became a covered, generatable mutant once the while-loop-collection
+//    tests below started exercising the loop's own body at all -- it
+//    was untestable in exactly the same way before AND after that.
+//
+// 8. Line 723's DecrementInteger (`$category = $matches[1];` ->
+//    `$matches[0]`), Line 725's identical pattern for the
+//    `$combined_category_ids[] = $matches[1];` branch, and Line 814's
+//    identical pattern in the tags loop: all inert for the same reason
+//    as group 6 above, but only provably so once real "-suffix" test
+//    data exists to make $matches[0] and $matches[1] genuinely
+//    different strings (unlike the plain-numeric tokens used
+//    elsewhere) -- `(int) $category`/`(int) $cat_id` (categories,
+//    including the combined-category consumption loop at
+//    `getCategoryInfo((int) $cat_id)`) and the tags loop's own real
+//    MySQL numeric-string coercion (confirmed via a direct probe:
+//    `findTags(['3-family-name'])` finds tag id 3 exactly the same as
+//    `findTags(['3'])` does) both read only the leading digit run
+//    either way, discarding the "-suffix" difference before it can
+//    matter. Line 725 specifically re-verified with a dashed-suffix
+//    SECOND (combined) category token ('2-nested-sub-album') -- the
+//    mutated and unmutated output are identical: combined_categories[0]
+//    is still id 2, hit_by['cat_url_name'] still reads 'nested-sub-album'
+//    from $matches[2], unaffected by the [0]/[1] swap on $matches[1]
+//    itself.
+//
+// 9. Line 710's StrStartsWithToStrEndsWith (the categories loop's own
+//    'start-' continuation-token break check): this WAS a real,
+//    previously-undetected gap -- the sibling 'created-'/'posted-'/
+//    'startcat-' break checks each had their own dedicated test, but
+//    'start-' itself did not. Fixed with a new test below (mirroring
+//    the sibling tests' shape exactly); confirmed the new test fails
+//    under the mutation (falls through to the permalink-scan branch
+//    and a real DB lookup instead of breaking, producing an uncaught
+//    ResponseReadyException) and passes on the real source.
 test('getActionUrl builds action.php with id/part, adding a bare download flag when requested', function (): void {
     // addUrlParams()'s own default separator is the HTML-safe '&amp;'
     // (outside a WS request context) -- see that method's own docblock
@@ -545,15 +686,19 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url is an em
 });
 
 /**
- * configuredHost()'s `$gallery_url === ''` (line 159) EmptyStringToNotEmpty
- * mutant is a confirmed equivalent -- verified live the same way as above.
- * For the one input that distinguishes it (`$gallery_url === ''`), real
- * code returns null immediately via this guard; the mutant instead falls
- * through to `parse_url('', PHP_URL_HOST)`, which itself returns null (not
- * a string) -- so the very next guard (`! is_string($host) || ...`, line
- * 164) catches it and returns null anyway. Both paths produce the exact
- * same final `null`, so no test (including the one right above, which
- * exercises this literal input) can tell them apart.
+ * configuredHost()'s `$gallery_url === ''` (Line 259 as of this
+ * mutation-gap-closure pass -- re-verified fresh via hand-mutation, not
+ * just trusting this note's own stale prior line reference) is a
+ * confirmed equivalent. For the one input that distinguishes it
+ * (`$gallery_url === ''`), real code returns null immediately via this
+ * guard; the mutant instead falls through to
+ * `parse_url('', PHP_URL_HOST)`, which itself returns null (not a
+ * string) -- so the very next guard (`! is_string($host) || ...`,
+ * Line 264) catches it and returns null anyway. Both paths produce the
+ * exact same final `null`, so no test (including the one right above,
+ * which exercises this literal input) can tell them apart. Line 264's
+ * own `$host === ''` EmptyStringToNotEmpty mutant is equivalent for the
+ * identical reason, re-verified the same way.
  */
 test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an empty authority (no host at all)', function (): void {
     // parse_url('http:///x', PHP_URL_HOST) returns bool(false) (not a
@@ -1229,6 +1374,130 @@ test('parseSectionUrl enters the categories section for a token starting with "c
     );
 });
 
+test('parseSectionUrl collects a numeric category token as $category, and a second one as a combined category', function (): void {
+    // Real gap, newly surfaced by adding real loop-body coverage above:
+    // real category ids 1 ("Sample Album") and 2 ("Nested Sub Album")
+    // are committed fixture rows in this shared test DB. This is the
+    // ONLY way to distinguish Line 722's own `$category === null` check
+    // -- an IfNegated/IdenticalToNotIdentical mutation there makes the
+    // FIRST token also fall through to $combined_category_ids instead of
+    // becoming $category, leaving $category null forever (so
+    // $page['category'] never gets set at all) and stuffing BOTH ids
+    // into combined_categories instead of just the second one.
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            $service = UrlServiceTestFactory::build();
+            $i = 0;
+
+            $page = $service->parseSectionUrl(['category', '1', '2'], $i, new UrlServiceTestRedirectService());
+
+            $combinedCategories = $page['combined_categories'] ?? null;
+            if (! is_array($combinedCategories)) {
+                throw new RuntimeException('Expected $page[\'combined_categories\'] to be an array.');
+            }
+
+            expect($i)->toBe(3)
+                ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1)
+                ->and($combinedCategories)->toHaveCount(1)
+                ->and(urlServiceTestCategoryId($combinedCategories[0] ?? null))->toBe(2);
+        }
+    );
+});
+
+test('parseSectionUrl captures the dashed suffix of a category token as cat_url_name, using the real id capture group', function (): void {
+    // Real gap, newly surfaced by adding real loop-body coverage above:
+    // '1', '2' above have no "-suffix", so $matches[0] (whole match) and
+    // $matches[1] (id capture group) were identical either way -- a
+    // real "-suffix" makes them genuinely diverge ($matches[0] would be
+    // "1-sample-album", not the real id "1"), and $matches[2] being
+    // genuinely SET here (unlike '1'/'2' above) is the only way to
+    // distinguish Line 718's own isset($matches[2]) from an
+    // IncrementInteger mutation checking $matches[3] instead.
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            $service = UrlServiceTestFactory::build();
+            $i = 0;
+
+            $page = $service->parseSectionUrl(['category', '1-sample-album'], $i, new UrlServiceTestRedirectService());
+
+            expect($i)->toBe(2)
+                ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1)
+                ->and($page['hit_by'] ?? null)->toBe(['cat_url_name' => 'sample-album']);
+        }
+    );
+});
+
+test('parseSectionUrl stops the categories loop at a "created-" continuation token, without consuming it', function (): void {
+    // Real gap, newly surfaced by adding real loop-body coverage above --
+    // same reasoning as the tags-loop "created-"/"posted-" tests, for
+    // the categories loop's own break condition (Line 708).
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            $service = UrlServiceTestFactory::build();
+            $i = 0;
+
+            $page = $service->parseSectionUrl(['category', '1', 'created-x'], $i, new UrlServiceTestRedirectService());
+
+            expect($i)->toBe(2)
+                ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1);
+        }
+    );
+});
+
+test('parseSectionUrl stops the categories loop at a "posted-" continuation token, without consuming it', function (): void {
+    // Real gap, newly surfaced -- same reasoning as the sibling
+    // "created-" test above, for Line 709's own break check.
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            $service = UrlServiceTestFactory::build();
+            $i = 0;
+
+            $page = $service->parseSectionUrl(['category', '1', 'posted-x'], $i, new UrlServiceTestRedirectService());
+
+            expect($i)->toBe(2)
+                ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1);
+        }
+    );
+});
+
+test('parseSectionUrl stops the categories loop at a "start-" continuation token, without consuming it', function (): void {
+    // Real gap, newly surfaced by the SECOND verify rerun (Line 710's own
+    // break check) -- same reasoning as the sibling "created-" test above.
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            $service = UrlServiceTestFactory::build();
+            $i = 0;
+
+            $page = $service->parseSectionUrl(['category', '1', 'start-5'], $i, new UrlServiceTestRedirectService());
+
+            expect($i)->toBe(2)
+                ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1);
+        }
+    );
+});
+
+test('parseSectionUrl stops the categories loop at a "startcat-" continuation token, without consuming it', function (): void {
+    // Real gap, newly surfaced -- same reasoning as the sibling
+    // "created-" test above, for Line 711's own break check.
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            $service = UrlServiceTestFactory::build();
+            $i = 0;
+
+            $page = $service->parseSectionUrl(['category', '1', 'startcat-5'], $i, new UrlServiceTestRedirectService());
+
+            expect($i)->toBe(2)
+                ->and(urlServiceTestCategoryId($page['category'] ?? null))->toBe(1);
+        }
+    );
+});
+
 test('parseSectionUrl rejects a bare tags token with no tag identifiers', function (): void {
     $service = UrlServiceTestFactory::build(new UrlServiceTestHtmlRenderer());
     $i = 0;
@@ -1237,6 +1506,60 @@ test('parseSectionUrl rejects a bare tags token with no tag identifiers', functi
     // never touches the DB either.
     expect(fn () => $service->parseSectionUrl(['tags'], $i, new UrlServiceTestRedirectService()))
         ->toThrow(RuntimeException::class, 'badRequest: at least one tag required');
+});
+
+test('parseSectionUrl collects every tag token via the while loop before advancing nextToken and hitting the DB', function (): void {
+    // Real gap, found via mutation testing: `$i` is a by-ref parameter,
+    // updated in place by the real loop regardless of what the real,
+    // DB-backed findTags() lookup afterward finds. Tag id 3 ("family")
+    // is a real, committed fixture row in this shared test DB -- using
+    // it (rather than a made-up id) lets this assert on the loop's own
+    // real behavior without needing to fake or skip the DB call: $i
+    // ending at 3 proves the while loop genuinely iterated over BOTH
+    // '3' and '5' tokens (collecting into $requested_tag_ids) before
+    // $nextToken advanced past them -- a WhileAlwaysFalse mutation would
+    // leave $i at its initial value (0) instead.
+    $service = UrlServiceTestFactory::build();
+    $i = 0;
+
+    $page = $service->parseSectionUrl(['tags', '3', '5'], $i, new UrlServiceTestRedirectService());
+
+    expect($i)->toBe(3)
+        ->and($page['tags'])->toHaveCount(1)
+        ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
+});
+
+test('parseSectionUrl stops collecting tag tokens at a "start-" continuation token, without consuming it', function (): void {
+    // Real gap, found via mutation testing: this is the ONLY way to
+    // distinguish the loop's own str_starts_with('start-') break check
+    // (Line 809) from a StrStartsWithToStrEndsWith mutation -- a real
+    // "start-" token immediately after a real tag id, confirming the
+    // loop breaks (leaving $i pointed AT the "start-" token, not past
+    // it) rather than mistakenly consuming it as a third tag identifier.
+    $service = UrlServiceTestFactory::build();
+    $i = 0;
+
+    $page = $service->parseSectionUrl(['tags', '3', 'start-5'], $i, new UrlServiceTestRedirectService());
+
+    expect($i)->toBe(2)
+        ->and($page['tags'])->toHaveCount(1)
+        ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
+});
+
+test('parseSectionUrl stops collecting tag tokens at a "posted-" continuation token, without consuming it', function (): void {
+    // Real gap, found via mutation testing: same reasoning as the
+    // sibling "start-" test above, for Line 808's own
+    // str_starts_with('posted-') check specifically -- neither that
+    // test's own "start-" token nor the loop's real tag ids exercise
+    // this particular branch.
+    $service = UrlServiceTestFactory::build();
+    $i = 0;
+
+    $page = $service->parseSectionUrl(['tags', '3', 'posted-5'], $i, new UrlServiceTestRedirectService());
+
+    expect($i)->toBe(2)
+        ->and($page['tags'])->toHaveCount(1)
+        ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
 });
 
 test('parseSectionUrl advances nextToken past both the list token and its trailing increment', function (): void {
@@ -1448,6 +1771,32 @@ test('translator() throws when the container returns an unexpected type', functi
 
         expect(fn () => $method->invoke($service))
             ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . Translator::class);
+    });
+});
+
+test('currentLogger() throws when the container returns an unexpected type', function (): void {
+    // Real gap, newly surfaced this pass: the tags/categories while-loop
+    // tests above are the first tests in this file to ever construct a
+    // real TagService/CategoryService, which is what first exercises
+    // this private container-resolution guard at all.
+    KernelContainerOverride::withWrongTypeFor(CurrentLogger::class, function (): void {
+        $service = UrlServiceTestFactory::build();
+        $method = new ReflectionMethod(UrlService::class, 'currentLogger');
+
+        expect(fn () => $method->invoke($service))
+            ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . CurrentLogger::class);
+    });
+});
+
+test('sessionService() throws when the container returns an unexpected type', function (): void {
+    // Real gap, newly surfaced this pass -- same reasoning as
+    // currentLogger() above.
+    KernelContainerOverride::withWrongTypeFor(SessionService::class, function (): void {
+        $service = UrlServiceTestFactory::build();
+        $method = new ReflectionMethod(UrlService::class, 'sessionService');
+
+        expect(fn () => $method->invoke($service))
+            ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . SessionService::class);
     });
 });
 

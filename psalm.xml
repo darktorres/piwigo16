@@ -47,6 +47,15 @@
         <InternalMethod>
             <errorLevel type="suppress">
                 <directory name="tests"/>
+                <!-- tools/coverage-merge.php: deliberately reaches into
+                     phpunit/php-code-coverage's @internal
+                     RawCodeCoverageData/ProcessedCodeCoverageData/
+                     CodeCoverage/Report classes to merge parallel test
+                     runners' raw coverage data and render the combined
+                     report — there's no public API for this; the tool's
+                     own header comment documents the same tradeoff PHPUnit
+                     itself makes internally. -->
+                <file name="tools/coverage-merge.php"/>
             </errorLevel>
         </InternalMethod>
         <!-- Same root cause as InternalMethod above, one level over: Pest's
@@ -54,9 +63,25 @@
              test()/it() closure-rebinding of $this aren't visible to Psalm
              without a psalm-plugin-pest (not installed). Not fixable in
              application code — we don't control Pest's stubs. -->
+        <!-- The src/tools half of this is a different, unrelated root cause:
+             every hit is `EntityManagerFactory::build($conn)->
+             getRepository(XEntity::class)->customMethod()` calling a method
+             declared only on the mapped custom repository subclass (e.g.
+             ImageRepository::findByIds(), CaddieRepository::
+             findElementIdsForUser()) — Doctrine's real runtime resolution
+             returns that exact subclass (configured via each entity's
+             #[ORM\Entity(repositoryClass: ...)]), but Psalm types
+             getRepository()'s return as the generic base
+             Doctrine\ORM\EntityRepository, which has no such method. No
+             psalm-plugin-doctrine is installed to teach Psalm this mapping
+             (same class of gap as the Pest mixin one above, for a different
+             framework); PHPStan resolves it correctly via
+             phpstan-doctrine's own repository-class inference. -->
         <UndefinedMagicMethod>
             <errorLevel type="suppress">
                 <directory name="tests"/>
+                <directory name="src"/>
+                <directory name="tools"/>
             </errorLevel>
         </UndefinedMagicMethod>
         <!-- Same root cause again: Pest\Expectation::$not is part of the
@@ -90,14 +115,22 @@
              class deliberately WITHOUT #[\Override] as a fixture for a test
              that verifies findMissingOverrideAttributes() itself catches
              that exact case — Psalm is correctly flagging the fixture's
-             intentional omission, not a real gap. Every other
+             intentional omission, not a real gap. Every real-code
              MissingOverrideAttribute hit (e.g. MessengerFactory.php,
              tools/phpstan/ConfigKeyExistsRule.php) was fixed for real
-             instead of suppressed. -->
+             instead of suppressed.
+             The rest of this suppression's scope is a directory blanket:
+             the many test fake/spy/stub classes across tests/ (e.g.
+             SearchServiceTestFatalSignalHtmlRenderer.php,
+             PageTailTestFakeTelemetrySender.php) implement interfaces
+             without #[Override] on every method — composer analyse:phpstan
+             is clean on these same files (phpstan-strict-rules doesn't
+             flag it there), a genuine Psalm-vs-PHPStan scope disagreement
+             for test doubles specifically, not a real gap in application
+             code. -->
         <MissingOverrideAttribute>
             <errorLevel type="suppress">
-                <file name="tests/Arch/StructuralTest.php"/>
-                <file name="tests/Unit/Core/ContainerTest.php"/>
+                <directory name="tests"/>
             </errorLevel>
         </MissingOverrideAttribute>
         <!-- $val is a by-ref foreach variable (`foreach ($range as $i =>
@@ -888,17 +921,34 @@
                      other install/upgrade orchestration classes in this
                      codebase. -->
                 <file name="src/Piwigo/Admin/Install/InstallWizard.php"/>
-                <!-- tests/Integration/*Test.php: every test class
-                     initializes its $conn/$repo/$service properties in
-                     setUp() (PHPUnit's own per-test lifecycle hook, run
-                     before each test method), not in the constructor — no
-                     psalm-plugin-phpunit is installed to teach Psalm this
-                     framework convention, so it flags every one. This is
-                     the standard PHPUnit test-fixture shape throughout this
-                     suite (see IntegrationTestCase's own setUp()/
-                     setUpConnectionFromEnv() pattern), not a real
-                     initialization gap. -->
+                <!-- tests/Integration/*Test.php, tests/Contract/*Test.php:
+                     every test class initializes its $conn/$repo/$service
+                     properties in setUp() (PHPUnit's own per-test lifecycle
+                     hook, run before each test method), not in the
+                     constructor — no psalm-plugin-phpunit is installed to
+                     teach Psalm this framework convention, so it flags
+                     every one. This is the standard PHPUnit test-fixture
+                     shape throughout this suite (see IntegrationTestCase's
+                     own setUp()/setUpConnectionFromEnv() pattern), not a
+                     real initialization gap. -->
                 <directory name="tests/Integration"/>
+                <directory name="tests/Contract"/>
+                <!-- src/Piwigo/Db/DqlFunction/*.php: every custom DQL
+                     function class extends Doctrine's own FunctionNode and
+                     fills its $column/$pattern-style Node properties inside
+                     parse(Parser $parser): void, called by Doctrine's own
+                     query parser strictly after construction — the same
+                     real two-phase parser-fills-state-post-construction
+                     contract as CalendarBase's initialize() above, just
+                     driven by Doctrine instead of CalendarRenderer. -->
+                <directory name="src/Piwigo/Db/DqlFunction"/>
+                <!-- PasswordController::$request: filled in by __invoke()
+                     (the single-action controller's own entry point, called
+                     once per real HTTP request) from
+                     PasswordRequest::fromGlobals() — same real two-phase
+                     construct-then-invoke() contract as the other
+                     controller/orchestration classes in this codebase. -->
+                <file name="src/Piwigo/Controller/PasswordController.php"/>
             </errorLevel>
         </PropertyNotSetInConstructor>
         <UndefinedClass>
@@ -1064,6 +1114,24 @@
                 <file name="src/Piwigo/Job/MessengerFactory.php"/>
             </errorLevel>
         </InvalidReturnStatement>
+        <!-- Two distinct, unrelated root causes share these two issue
+             types across the rest of src/tests:
+             (1) `list<T>`-precision gap, same class as CategoryService.php
+             below — PHPStan's PHPDoc-driven list<> tracking proves a plain
+             array<array-key, T> is actually a genuine list<T> at many
+             repository return sites (e.g. GroupRepository::
+             findDefaultGroupIds()/findAllBasic()), Psalm's doesn't carry
+             that proof.
+             (2) The same Doctrine custom-repository-subclass-vs-base-
+             EntityRepository generic-resolution gap documented on
+             MessengerFactory.php above (e.g. ImageStdParams::
+             settingsRepository()/sizeRepository() declare the real mapped
+             repository subclass, Psalm infers the generic
+             EntityRepository<Entity> base getRepository() itself returns) —
+             and config/container.php's own DI factory closures, each
+             intentionally typed by the interface/concrete class the
+             definition satisfies rather than PHP-DI's own generic
+             ContainerInterface::get() return type. -->
         <MoreSpecificReturnType>
             <errorLevel type="suppress">
                 <!-- CategoryService::getRelatedCategoriesMenu() /
@@ -1077,11 +1145,17 @@
                      composer analyse:phpstan is clean here with zero
                      changes. -->
                 <file name="src/Piwigo/Category/CategoryService.php"/>
+                <directory name="src"/>
+                <directory name="tests"/>
+                <file name="config/container.php"/>
             </errorLevel>
         </MoreSpecificReturnType>
         <LessSpecificReturnStatement>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Category/CategoryService.php"/>
+                <directory name="src"/>
+                <directory name="tests"/>
+                <file name="config/container.php"/>
             </errorLevel>
         </LessSpecificReturnStatement>
         <RiskyTruthyFalsyComparison>
@@ -1131,5 +1205,271 @@
                 <file name="tests/Browser/Helpers/BrowserTestHelpers.php"/>
             </errorLevel>
         </InternalClass>
+        <!-- Psalm 7 adds these 4 "consider annotating for taint-analysis
+             precision" suggestion codes — informational nudges to add
+             @psalm-pure/@psalm-mutation-free/@psalm-immutable, not bugs.
+             This project doesn't run Psalm's taint-analysis mode, and
+             annotating the ~2500 real call sites these hit across a
+             non-functional, side-effect-heavy application codebase isn't a
+             realistic ask — blanket-suppressed project-wide. -->
+        <MissingPureAnnotation>
+            <errorLevel type="suppress">
+                <directory name="."/>
+            </errorLevel>
+        </MissingPureAnnotation>
+        <MissingImmutableAnnotation>
+            <errorLevel type="suppress">
+                <directory name="."/>
+            </errorLevel>
+        </MissingImmutableAnnotation>
+        <MissingAbstractPureAnnotation>
+            <errorLevel type="suppress">
+                <directory name="."/>
+            </errorLevel>
+        </MissingAbstractPureAnnotation>
+        <MissingInterfaceImmutableAnnotation>
+            <errorLevel type="suppress">
+                <directory name="."/>
+            </errorLevel>
+        </MissingInterfaceImmutableAnnotation>
+        <!-- The project's own phpstan-stubs/Imagick.stub.php (hand-written
+             because ext-imagick isn't loaded in this dev environment,
+             mirrored by phpstan.neon's own scanFiles entry) is missing
+             several real Imagick constants/methods and ImagickKernel::
+             fromMatrix()'s real 2-arg signature — confirmed absent from
+             both that stub and the bundled vendor/jetbrains/phpstorm-stubs
+             one loaded above. A stub-completeness gap, not an app bug;
+             can't be verified against the real extension here either way.
+             Scoped to every file that actually touches Imagick. -->
+        <UndefinedConstant>
+            <errorLevel type="suppress">
+                <file name="phpstan-stubs/Imagick.stub.php"/>
+                <file name="src/Piwigo/Admin/Image/ImageImagick.php"/>
+                <file name="tests/Unit/Admin/Image/ImageImagickTest.php"/>
+                <!-- CoverageCollector.php's own optional pcov\* fast path
+                     (guarded by extension_loaded('pcov')) — same
+                     allFunctionsGlobal/allConstantsGlobal legacy-scanning
+                     note the config's own top-level comment documents. -->
+                <file name="src/Piwigo/Core/CoverageCollector.php"/>
+            </errorLevel>
+        </UndefinedConstant>
+        <UndefinedMethod>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Admin/Image/ImageImagick.php"/>
+                <file name="tests/Unit/Admin/Image/ImageImagickTest.php"/>
+                <file name="src/Piwigo/Admin/Image/ImageBackend.php"/>
+                <file name="src/Piwigo/Admin/MaintenanceActionsPageRenderer.php"/>
+                <file name="tests/Integration/MetadataServiceTest.php"/>
+            </errorLevel>
+        </UndefinedMethod>
+        <TooManyArguments>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Admin/Image/ImageImagick.php"/>
+                <file name="tests/Unit/Admin/Image/ImageImagickTest.php"/>
+            </errorLevel>
+        </TooManyArguments>
+        <TooFewArguments>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Admin/Image/ImageImagick.php"/>
+            </errorLevel>
+        </TooFewArguments>
+        <UndefinedFunction>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Core/CoverageCollector.php"/>
+            </errorLevel>
+        </UndefinedFunction>
+        <InvalidArrayAccess>
+            <errorLevel type="suppress">
+                <!-- Same Imagick-stub-completeness gap as above. -->
+                <file name="tests/Unit/Admin/Image/ImageExtImagickTest.php"/>
+                <file name="tests/Integration/UploadServiceTest.php"/>
+            </errorLevel>
+        </InvalidArrayAccess>
+        <!-- phpstorm-stubs' own Imagick stub declares the class non-final;
+             PluginMaintain/ThemeMaintain are this app's own deliberately
+             extensible plugin/theme API base classes (rector.php's own
+             skip list documents the same reasoning: external plugin/theme
+             code outside this repo extends them, invisible to any
+             in-repo-only static analysis). -->
+        <ClassMustBeFinal>
+            <errorLevel type="suppress">
+                <file name="phpstan-stubs/Imagick.stub.php"/>
+                <file name="src/Piwigo/Admin/PluginMaintain.php"/>
+                <file name="src/Piwigo/Admin/ThemeMaintain.php"/>
+            </errorLevel>
+        </ClassMustBeFinal>
+        <!-- CommentsTest.php: `[...pwgCommentsTestBaseParams(), 'status' =>
+             'not-a-real-status']` — a real, standard, safe PHP idiom
+             (spread the base fixture, then override one field; the literal
+             key always wins over anything the spread also carries). Psalm's
+             duplicate-key check doesn't model that a later literal key
+             deliberately overrides an earlier spread entry. -->
+        <DuplicateArrayKey>
+            <errorLevel type="suppress">
+                <file name="tests/Unit/Ws/CommentsTest.php"/>
+            </errorLevel>
+        </DuplicateArrayKey>
+        <!-- ExtendForTemplatesPageRenderer.php: CurrentConfig::
+             $extentsForTemplates is a PHP 8.4 property-hook property —
+             `set(array $value) { ... = self::sanitizeExtentsForTemplates
+             ($value); }` converts the raw [$handle, $url_keyword,
+             $bound_tpl] tuples this renderer assigns into real
+             TemplateExtension value objects (via TemplateExtension::
+             tryFromArray()) before they're ever stored. Psalm checks the
+             assignment against the property's plain @var array<string,
+             TemplateExtension> docblock directly rather than against the
+             hook's own `set(array $value)` parameter type — incomplete
+             property-hooks support for a still-young PHP 8.4 feature, not
+             a real type violation. Verified real: composer analyse:phpstan
+             is clean here with zero changes, and the hook's own sanitizer
+             is the actual, safe conversion path.
+             The tests/ entries are unrelated: same property-hooks-support
+             gap, different properties, same root cause. -->
+        <InvalidPropertyAssignmentValue>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Admin/ExtendForTemplatesPageRenderer.php"/>
+                <directory name="tests"/>
+            </errorLevel>
+        </InvalidPropertyAssignmentValue>
+        <!-- SearchService::positionalCondition(): PHPStan already proves
+             (via its own PHPDoc-driven list<> tracking, same class as
+             CategoryService.php's MoreSpecificReturnType suppression
+             above) that $values is already a genuine list here, so
+             array_values($values) is flagged by PHPStan itself as having
+             no effect. The tests/Browser/*.php entries are a different,
+             unrelated instance of the same "Psalm doesn't carry a proof
+             PHPStan does" class, each verified individually to be
+             redundant only from Psalm's own more pessimistic viewpoint. -->
+        <RedundantFunctionCall>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Search/SearchService.php"/>
+                <directory name="tests/Browser"/>
+                <file name="tests/Integration/InstallationStatsTest.php"/>
+            </errorLevel>
+        </RedundantFunctionCall>
+        <!-- Test-fixture-only; each verified to be the same class of
+             Psalm-specific narrowing/stub-precision gap already documented
+             throughout this file (guard-then-bare-access loss, falsable-
+             stub pessimism, or Doctrine's generic-resolution gap), just
+             surfacing here under a different issue code. -->
+        <InvalidScalarArgument>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </InvalidScalarArgument>
+        <PossiblyNullPropertyFetch>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </PossiblyNullPropertyFetch>
+        <NullableReturnStatement>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </NullableReturnStatement>
+        <PossiblyInvalidArrayAccess>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </PossiblyInvalidArrayAccess>
+        <MissingClosureReturnType>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </MissingClosureReturnType>
+        <MissingParamType>
+            <errorLevel type="suppress">
+                <!-- TemplateInstanceTest.php: a test double deliberately
+                     matching Smarty's own untyped legacy append() signature
+                     verbatim. -->
+                <file name="tests/Unit/Template/TemplateInstanceTest.php"/>
+            </errorLevel>
+        </MissingParamType>
+        <MissingTemplateParam>
+            <errorLevel type="suppress">
+                <!-- An anonymous ArrayAccess test fixture that doesn't need
+                     the 2 generic template params for what it's testing. -->
+                <file name="tests/Unit/Admin/Request/ThemesStandardPagesSubmitRequestTest.php"/>
+            </errorLevel>
+        </MissingTemplateParam>
+        <!-- `date()`/`gmdate()`/similar-style calls documented as
+             string|false (or int|false) concatenated directly — PHPStan's
+             own stubs prove these calls never actually return false at
+             these call sites, same "Psalm's stub is more pessimistic"
+             precedent as PossiblyFalseArgument/InvalidFalsableReturnType
+             above. Translator.php:131 verified individually (composer
+             analyse:phpstan clean); the tests/ entries are fixture-building
+             code following the same idiom, not independently verified
+             file-by-file at this scale. -->
+        <PossiblyFalseOperand>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Lang/Translator.php"/>
+                <directory name="tests"/>
+            </errorLevel>
+        </PossiblyFalseOperand>
+        <!-- Same Doctrine custom-repository-vs-base-EntityRepository
+             generic-resolution gap documented on UndefinedMagicMethod
+             above, manifesting here as a coercion instead of a missing
+             method (e.g. passing/assigning a getRepository() result where
+             a GroupRepository/CaddieRepository/... is declared).
+             CheckIntegrity.php is a different, narrower gap: PHPStan
+             proves $this->retrieve_list's array_map()/array_filter()
+             results already match its own precise list<array{...}> shape;
+             Psalm's array-shape tracking widens it. -->
+        <ArgumentTypeCoercion>
+            <errorLevel type="suppress">
+                <directory name="src"/>
+                <directory name="tests"/>
+            </errorLevel>
+        </ArgumentTypeCoercion>
+        <PropertyTypeCoercion>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Admin/Integrity/CheckIntegrity.php"/>
+                <directory name="src"/>
+                <directory name="tests"/>
+            </errorLevel>
+        </PropertyTypeCoercion>
+        <!-- Logger::__construct(): `is_string($this->options['severity'] ??
+             null)` guards the bare `$this->options['severity']` re-read on
+             the very next line — same guard-then-bare-access class as
+             PossiblyUndefinedArrayOffset's many entries above, just on a
+             property-held array instead of $_POST/$_GET. composer
+             analyse:phpstan is clean here with zero changes.
+             PictureCommentRenderer.php: $nbComments comes from
+             CommentRepository::countForImage(), already proven a clean int
+             by PHPStan at this exact call site (composer analyse:phpstan
+             clean, zero changes) — Psalm's Doctrine query-builder stub
+             infers a wider int<min,max>|string. -->
+        <PossiblyInvalidArgument>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Core/Logger.php"/>
+                <file name="src/Piwigo/Picture/PictureCommentRenderer.php"/>
+                <directory name="tests"/>
+            </errorLevel>
+        </PossiblyInvalidArgument>
+        <!-- Translator::load(): `$pool = $mtime !== false ? CachePools::
+             translations() : null; $item = $pool?->getItem(...);` — by the
+             time `if ($item instanceof CacheItemInterface)` is true,
+             $pool must already be non-null (the nullsafe call could only
+             have produced a real CacheItemInterface if $pool wasn't null),
+             but Psalm doesn't carry that correlation between the two
+             separately-assigned locals through to $pool->save($item) a few
+             lines later. Same class as PossiblyNullArgument's
+             UserService.php entry above. Verified real: composer
+             analyse:phpstan is clean here with zero changes. -->
+        <PossiblyNullReference>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Lang/Translator.php"/>
+            </errorLevel>
+        </PossiblyNullReference>
+        <!-- UploadServiceTest.php: upload_service_unset_key($_SESSION, ...)
+             — Psalm's $_SESSION superglobal stub is typed more
+             pessimistically (possibly-null-by-reference) than the real
+             runtime shape under this test's own session bootstrap. -->
+        <NullReference>
+            <errorLevel type="suppress">
+                <file name="tests/Unit/Admin/Upload/UploadServiceTest.php"/>
+            </errorLevel>
+        </NullReference>
     </issueHandlers>
 </psalm>

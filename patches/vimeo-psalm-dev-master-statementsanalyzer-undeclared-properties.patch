@@ -1,0 +1,26 @@
+--- a/src/Psalm/Internal/Analyzer/StatementsAnalyzer.php
++++ b/src/Psalm/Internal/Analyzer/StatementsAnalyzer.php
+@@ -168,6 +168,23 @@
+      */
+     public readonly bool $owns_type_variable_tracker;
+ 
++    /**
++     * Recursion depth of analyze(), incremented on entry and decremented in
++     * its finally block. Used to gate unused-variable checking and
++     * initialization-alteration to only the outermost call.
++     */
++    private int $depth = 0;
++
++    /**
++     * Read at two sites in analyze() but never assigned anywhere in this
++     * class (nor any parent/trait) -- always false in practice today.
++     * Declared here to match that existing behavior without a dynamic-
++     * property warning; not wired up to actually flag the outermost scope,
++     * since that would change current analysis behavior rather than just
++     * silence the warning.
++     */
++    private bool $root_scope = false;
++
+     public function __construct(protected SourceAnalyzer $source, public NodeDataProvider $node_data)
+     {
+         $this->file_analyzer = $source->getFileAnalyzer();

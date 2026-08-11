@@ -91,7 +91,7 @@ final class MaintenanceEnvPageRenderer
         // |                             template init                             |
         // +-------------------------------------------------------------------+
 
-        $template->set_filenames([
+        $template->setFilenames([
             'maintenance' => 'maintenance_env.tpl',
         ]);
 
@@ -192,6 +192,6 @@ final class MaintenanceEnvPageRenderer
         // |                           sending html code                           |
         // +-------------------------------------------------------------------+
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'maintenance');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }
 }

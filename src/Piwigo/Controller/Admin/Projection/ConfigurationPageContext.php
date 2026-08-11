@@ -14,7 +14,7 @@ use Piwigo\Core\TemplatePageContext;
  * is active. Every per-tab template variable set is its own separate
  * context, constructed immediately at its own case in `handle()`'s
  * render-time `switch` (not deferred here) whenever a later
- * `Template::append()` call or a `Template::get_template_vars()` read
+ * `Template::append()` call or a `Template::getTemplateVars()` read
  * needs the value already live -- see {@see ConfigurationMainPageContext},
  * {@see ConfigurationCommentsPageContext},
  * {@see ConfigurationDefaultPageContext},

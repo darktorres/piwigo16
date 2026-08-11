@@ -75,7 +75,7 @@ final class CssLoader
      * @param string $path
      * @param string|false $version false disables version-based cache
      *   busting, mirroring Combinable::$version's own contract; no current
-     *   .tpl passes version=, but func_combine_css() forwards it verbatim
+     *   .tpl passes version=, but funcCombineCss() forwards it verbatim
      * @param int $order
      * @param bool $is_template
      */

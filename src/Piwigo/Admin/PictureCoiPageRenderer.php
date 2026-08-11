@@ -126,8 +126,8 @@ final class PictureCoiPageRenderer
             coi: $coi,
             croppedDerivatives: $cropped_derivatives,
         ));
-        $template->set_filename('picture_coi', 'picture_coi.tpl');
+        $template->setFilename('picture_coi', 'picture_coi.tpl');
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'picture_coi');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'picture_coi');
     }
 }

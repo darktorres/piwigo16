@@ -168,7 +168,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
     private function renderedThumbnailsHtml(): string
     {
-        $vars = $this->template->get_template_vars('THUMBNAILS');
+        $vars = $this->template->getTemplateVars('THUMBNAILS');
 
         return is_string($vars) ? $vars : '';
     }

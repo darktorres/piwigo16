@@ -716,11 +716,11 @@ final class PictureController implements ControllerInterface
             $slideshow = false;
         }
         if ($slideshow and $this->currentConfig->lightSlideshow) {
-            $template->set_filenames([
+            $template->setFilenames([
                 'slideshow' => 'slideshow.tpl',
             ]);
         } else {
-            $template->set_filenames([
+            $template->setFilenames([
                 'picture' => 'picture.tpl',
             ]);
         }
@@ -1207,7 +1207,7 @@ final class PictureController implements ControllerInterface
         $http_user_agent = is_string($http_user_agent) ? $http_user_agent : '';
         if (isset($picture['next'])
             and $picture['next']['src_image']->isOriginal()
-            and $template->get_template_vars('U_PREFETCH') === null
+            and $template->getTemplateVars('U_PREFETCH') === null
             and ! str_contains($http_user_agent, 'Chrome/')) {
             $prefetch_deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize;
             $u_prefetch = $picture['next']['derivatives'][$prefetch_deriv_type]->getUrl();
@@ -1274,7 +1274,7 @@ final class PictureController implements ControllerInterface
         }
 
         // include menubar
-        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if ($this->currentConfig->pictureMenu and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
@@ -1294,7 +1294,7 @@ final class PictureController implements ControllerInterface
         if ($slideshow and $this->currentConfig->lightSlideshow) {
             $template->parse('slideshow', false);
         } else {
-            $template->parse_picture_buttons();
+            $template->parsePictureButtons();
             $template->parse('picture', false);
         }
         // -------------------------------------------------- log informations
@@ -1383,7 +1383,7 @@ final class PictureController implements ControllerInterface
             $u_original = $element_info['element_url'];
         }
 
-        $template->set_filenames(
+        $template->setFilenames(
             [
                 'default_content' => 'picture_content.tpl',
             ]

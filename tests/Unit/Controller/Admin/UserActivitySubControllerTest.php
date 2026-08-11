@@ -259,7 +259,7 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'user_activity.tpl', 'users={$nb_users}');
         file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $activityService = userActivitySubControllerTestActivityService();
         $coreTabs = new CoreTabs(userActivitySubControllerTestLang(), UrlServiceTestFactory::build(), new CurrentConfig());
@@ -285,9 +285,9 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        expect($template->get_template_vars('nb_users'))
+        expect($template->getTemplateVars('nb_users'))
             ->toBe(4)
-            ->and($template->get_template_vars('ulist'))
+            ->and($template->getTemplateVars('ulist'))
             ->toBe([
                 [
                     'id' => 1,
@@ -295,7 +295,7 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
                     'nb_lines' => 17,
                 ],
             ])
-            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('users=4');
     } finally {
         $conn->executeStatement('DELETE FROM activity');

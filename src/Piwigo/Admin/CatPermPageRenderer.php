@@ -99,7 +99,7 @@ final class CatPermPageRenderer
         // |                       template initialization                     |
         // +-------------------------------------------------------------------+
 
-        $template->set_filename('cat_perm', 'cat_perm.tpl');
+        $template->setFilename('cat_perm', 'cat_perm.tpl');
 
         $categories_nav = $this->htmlService
             ->getCatDisplayNameFromId(
@@ -207,6 +207,6 @@ final class CatPermPageRenderer
             userGrantedIndirectGroups: $user_granted_indirect_groups,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_perm');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'cat_perm');
     }
 }

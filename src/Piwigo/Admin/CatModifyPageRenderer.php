@@ -119,7 +119,7 @@ final class CatModifyPageRenderer
         }
 
         // ----------------------------------------------------- template initialization
-        $template->set_filename('album_properties', 'cat_modify.tpl');
+        $template->setFilename('album_properties', 'cat_modify.tpl');
 
         $base_url = $urlService->getRootUrl() . 'admin.php?page=';
         $cat_list_url = $base_url . 'albums';
@@ -340,7 +340,7 @@ final class CatModifyPageRenderer
         $eventDispatcher->dispatchNotify(new LocEndCatModify());
 
         // ----------------------------------------------------------- sending html code
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'album_properties');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'album_properties');
     }
 
     /**

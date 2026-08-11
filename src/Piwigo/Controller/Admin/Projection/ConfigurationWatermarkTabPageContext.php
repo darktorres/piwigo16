@@ -13,7 +13,7 @@ use Piwigo\Core\TemplatePageContext;
  * own render-time `switch` -- distinct from {@see
  * ConfigurationWatermarkPageContext}, which is `processWatermark()`'s
  * own POST handler context. `$watermark` is genuinely optional -- the
- * original code only assigns it when `Template::get_template_vars(
+ * original code only assigns it when `Template::getTemplateVars(
  * 'watermark') === null` (i.e. `processWatermark()` hasn't already set
  * it on a validation failure earlier in this same request).
  */

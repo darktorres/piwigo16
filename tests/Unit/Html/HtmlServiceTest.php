@@ -2101,13 +2101,13 @@ test('flushPageMessages assigns only the non-empty PageState fields', function (
     HtmlServiceTestFactory::build()->flushPageMessages();
 
     $template = CurrentTemplate::current()->get();
-    expect($template->get_template_vars('errors'))
+    expect($template->getTemplateVars('errors'))
         ->toBe(['Something went wrong'])
-        ->and($template->get_template_vars('infos'))
+        ->and($template->getTemplateVars('infos'))
         ->toBe(['Saved successfully'])
-        ->and($template->get_template_vars('warnings'))
+        ->and($template->getTemplateVars('warnings'))
         ->toBeNull()
-        ->and($template->get_template_vars('messages'))
+        ->and($template->getTemplateVars('messages'))
         ->toBeNull();
 });
 
@@ -2123,7 +2123,7 @@ test('flushPageMessages does nothing when a page refresh is already assigned', f
 
     HtmlServiceTestFactory::build()->flushPageMessages();
 
-    expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBeNull();
+    expect(CurrentTemplate::current()->get()->getTemplateVars('errors'))->toBeNull();
 });
 
 test('flushPageMessages merges in and clears the session flash channel', function (): void {
@@ -2136,7 +2136,7 @@ test('flushPageMessages merges in and clears the session flash channel', functio
     try {
         HtmlServiceTestFactory::build()->flushPageMessages();
 
-        expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBe(['Live error', 'Flashed error'])
+        expect(CurrentTemplate::current()->get()->getTemplateVars('errors'))->toBe(['Live error', 'Flashed error'])
             ->and($_SESSION)
             ->not->toHaveKey('page_errors');
     } finally {
@@ -2153,7 +2153,7 @@ test('flushPageMessages filters out non string session flash values defensively'
     try {
         HtmlServiceTestFactory::build()->flushPageMessages();
 
-        expect(CurrentTemplate::current()->get()->get_template_vars('infos'))->toBe(['Real info']);
+        expect(CurrentTemplate::current()->get()->getTemplateVars('infos'))->toBe(['Real info']);
     } finally {
         unset($_SESSION['page_infos']);
     }
@@ -2167,7 +2167,7 @@ test('flushKeyedErrors assigns the keyed error bag under errors', function (): v
         'login_page_error' => 'Invalid username or password!',
     ]);
 
-    expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBe([
+    expect(CurrentTemplate::current()->get()->getTemplateVars('errors'))->toBe([
         'login_page_error' => 'Invalid username or password!',
     ]);
 });
@@ -2178,7 +2178,7 @@ test('flushKeyedErrors does nothing for an empty error bag', function (): void {
 
     HtmlServiceTestFactory::build()->flushKeyedErrors([]);
 
-    expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBeNull();
+    expect(CurrentTemplate::current()->get()->getTemplateVars('errors'))->toBeNull();
 });
 
 /**
@@ -2203,10 +2203,10 @@ test('flushPageMessages then flushKeyedErrors overwrites errors but leaves infos
     ]);
 
     $template = CurrentTemplate::current()->get();
-    expect($template->get_template_vars('errors'))
+    expect($template->getTemplateVars('errors'))
         ->toBe([
             'login_page_error' => 'Invalid username or password!',
         ])
-        ->and($template->get_template_vars('infos'))
+        ->and($template->getTemplateVars('infos'))
         ->toBe(['Some info']);
 });

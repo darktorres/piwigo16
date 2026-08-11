@@ -224,7 +224,7 @@ final class PhotosAddDirectPageRenderer
             strFormatExt: implode(', ', array_filter($conf_format_ext, is_string(...))),
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
     }
 
     /**

@@ -226,7 +226,7 @@ final class NotificationByMailSender
             $mailTemplate = $this->mailer
                 ->getMailTemplate($emailFormat);
             $this->mailTemplate = $mailTemplate;
-            $mailTemplate->set_filename('notification_by_mail', 'notification_by_mail.tpl');
+            $mailTemplate->setFilename('notification_by_mail', 'notification_by_mail.tpl');
         }
     }
 

@@ -160,7 +160,7 @@ final class Tabsheet
     {
         $template = $currentTemplate->get();
 
-        $template->set_filename('tabsheet', 'tabsheet.tpl');
+        $template->setFilename('tabsheet', 'tabsheet.tpl');
 
         $selected_tab = $this->getSelected();
 
@@ -171,7 +171,7 @@ final class Tabsheet
             titlenameValue: isset($selected_tab) ? '[' . $selected_tab->caption . ']' : null,
         ));
 
-        $template->assign_var_from_handle($this->name, 'tabsheet');
-        $template->clear_assign('tabsheet');
+        $template->assignVarFromHandle($this->name, 'tabsheet');
+        $template->clearAssign('tabsheet');
     }
 }

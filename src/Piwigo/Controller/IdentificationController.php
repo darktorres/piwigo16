@@ -171,7 +171,7 @@ final class IdentificationController implements ControllerInterface
         $title = $this->lang->t('Identification');
         $this->pageState->setBodyId('theIdentificationPage');
 
-        $template->set_filenames([
+        $template->setFilenames([
             'identification' => 'identification.tpl',
         ]);
 
@@ -185,7 +185,7 @@ final class IdentificationController implements ControllerInterface
             $lost_password = $urlService->getRootUrl() . 'password.php';
         }
 
-        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! $this->currentConfig->galleryLocked && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {

@@ -445,7 +445,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertSame(Section::Favorites, $ctx->section);
         // user 1's own 3 favorited images (1, 3, 5).
         self::assertCount(3, $ctx->items);
-        $favoriteVar = CurrentTemplate::current()->get()->get_template_vars('favorite');
+        $favoriteVar = CurrentTemplate::current()->get()->getTemplateVars('favorite');
         self::assertIsArray($favoriteVar);
         self::assertArrayHasKey('U_FAVORITE', $favoriteVar);
     }

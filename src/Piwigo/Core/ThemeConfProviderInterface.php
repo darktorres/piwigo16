@@ -22,7 +22,7 @@ interface ThemeConfProviderInterface
     /**
      * Returns the corresponding value from the active theme's $themeconf
      * if existing and a string, or an empty string -- the exact contract
-     * of the legacy get_themeconf() free function.
+     * of the legacy getThemeconf() free function.
      */
     public function themeConf(string $key): string;
 }

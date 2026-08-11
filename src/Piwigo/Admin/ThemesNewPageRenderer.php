@@ -152,7 +152,7 @@ final class ThemesNewPageRenderer
         // |                          template output                              |
         // +-----------------------------------------------------------------------+
 
-        $template->set_filenames([
+        $template->setFilenames([
             'themes' => 'themes_new.tpl',
         ]);
 
@@ -201,6 +201,6 @@ final class ThemesNewPageRenderer
             newThemes: $new_themes,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'themes');
     }
 }

@@ -214,10 +214,10 @@ final class ThemesStandardPagesPageRenderer
             saveError: $save_error,
         ));
 
-        $template->set_filenames([
+        $template->setFilenames([
             'themes' => 'themes_standard_pages.tpl',
         ]);
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'themes');
     }
 }

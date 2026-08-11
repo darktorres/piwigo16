@@ -466,7 +466,7 @@ final class BatchManagerGlobalPageRenderer
         // +-------------------------------------------------------------------+
         // |                             template init                             |
         // +-------------------------------------------------------------------+
-        $template->set_filenames([
+        $template->setFilenames([
             'batch_manager_global' => 'batch_manager_global.tpl',
         ]);
 
@@ -623,6 +623,6 @@ final class BatchManagerGlobalPageRenderer
         $this->eventDispatcher->dispatchNotify(new LocEndElementSetGlobal());
 
         // ----------------------------------------------------------- sending html code
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'batch_manager_global');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_global');
     }
 }

@@ -89,7 +89,7 @@ final class UserActivityPageRenderer
             exit();
         }
 
-        $template->set_filename('user_activity', 'user_activity.tpl');
+        $template->setFilename('user_activity', 'user_activity.tpl');
 
         $nb_lines_for_user = $activity_service->getCountByUser();
 
@@ -178,6 +178,6 @@ final class UserActivityPageRenderer
             actions: $actions,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'user_activity');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'user_activity');
     }
 }

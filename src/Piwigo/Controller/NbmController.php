@@ -101,11 +101,11 @@ final class NbmController implements ControllerInterface
         $title = $this->lang->t('Notification');
         $this->pageState->setBodyId('theNBMPage');
 
-        $template->set_filenames([
+        $template->setFilenames([
             'nbm' => 'nbm.tpl',
         ]);
 
-        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {

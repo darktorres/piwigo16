@@ -936,8 +936,8 @@ final class MailService implements MailerInterface
                 ];
                 $this->eventDispatcher->dispatchNotify(new BeforeParseMailTemplate($cacheKey, $contentType));
 
-                $template->set_filename('mail_header', 'header.tpl');
-                $template->set_filename('mail_footer', 'footer.tpl');
+                $template->setFilename('mail_header', 'header.tpl');
+                $template->setFilename('mail_footer', 'footer.tpl');
 
                 $addUrlParams = [];
                 if (isset($args['auth_key']) && ! self::emptyValue($args['auth_key'])) {
@@ -959,13 +959,13 @@ final class MailService implements MailerInterface
 
                 if ($contentType === 'text/html') {
                     if ($template->smarty->templateExists('global-mail-css.tpl')) {
-                        $template->set_filename('global-css', 'global-mail-css.tpl');
-                        $template->assign_var_from_handle('GLOBAL_MAIL_CSS', 'global-css');
+                        $template->setFilename('global-css', 'global-mail-css.tpl');
+                        $template->assignVarFromHandle('GLOBAL_MAIL_CSS', 'global-css');
                     }
 
                     if ($template->smarty->templateExists('mail-css-' . $args['theme'] . '.tpl')) {
-                        $template->set_filename('css', 'mail-css-' . $args['theme'] . '.tpl');
-                        $template->assign_var_from_handle('MAIL_CSS', 'css');
+                        $template->setFilename('css', 'mail-css-' . $args['theme'] . '.tpl');
+                        $template->assignVarFromHandle('MAIL_CSS', 'css');
                     }
                 }
             }
@@ -1005,10 +1005,10 @@ final class MailService implements MailerInterface
             // Runtime template.
             if (isset($tpl['filename'])) {
                 if (isset($tpl['dirname'])) {
-                    $template->set_template_dir($tpl['dirname'] . '/' . $contentType);
+                    $template->setTemplateDir($tpl['dirname'] . '/' . $contentType);
                 }
                 if ($template->smarty->templateExists($tpl['filename'] . '.tpl')) {
-                    $template->set_filename($tpl['filename'], $tpl['filename'] . '.tpl');
+                    $template->setFilename($tpl['filename'], $tpl['filename'] . '.tpl');
                     $template->assignContext(new MailRuntimeTemplatePageContext(
                         extra: (isset($tpl['assign']) && ! self::emptyValue($tpl['assign'])) ? $tpl['assign'] : [],
                         content: $mailContent,

@@ -72,7 +72,7 @@ use RuntimeException;
  *    fallback branch is never reached.
  *
  * Integration (not Unit) tier because render()'s own tail always calls a
- * real Smarty template render (assign_var_from_handle('ADMIN_CONTENT',
+ * real Smarty template render (assignVarFromHandle('ADMIN_CONTENT',
  * 'themes'), which compiles and renders the real
  * themes_standard_pages.tpl) -- matching PageTailRendererTest/
  * MaintenanceActionDispatcherTest's own "construct the real renderer/
@@ -314,7 +314,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $uploadDir = $fixtureRoot . 'logo';
             self::assertSame(
                 sprintf(LangTestFactory::get()->t('Add write access to the "%s" directory'), $uploadDir),
-                CurrentTemplate::current()->get()->get_template_vars('save_error')
+                CurrentTemplate::current()->get()->getTemplateVars('save_error')
             );
         } finally {
             @unlink($realPng);
@@ -365,7 +365,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $uploadDir = $fixtureRoot . 'logo';
             self::assertSame(
                 "{$uploadDir}/stdpageslogo.png " . LangTestFactory::get()->t('no write access'),
-                CurrentTemplate::current()->get()->get_template_vars('save_error')
+                CurrentTemplate::current()->get()->getTemplateVars('save_error')
             );
 
             // confUpdateParam('standard_pages_selected_logo_path', ...)
@@ -412,8 +412,8 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         $this->renderer->render();
 
         $template = CurrentTemplate::current()->get();
-        self::assertTrue($template->get_template_vars('is_standard_pages_used'));
-        self::assertSame(['Uses Standard Pages Theme'], $template->get_template_vars('standard_pages_used_by'));
+        self::assertTrue($template->getTemplateVars('is_standard_pages_used'));
+        self::assertSame(['Uses Standard Pages Theme'], $template->getTemplateVars('standard_pages_used_by'));
     }
 
     private function writeFixtureTheme(string $fixtureRoot, string $id, string $name, ?bool $useStandardPages): void

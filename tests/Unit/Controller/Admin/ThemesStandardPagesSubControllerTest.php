@@ -90,13 +90,13 @@ test('handle renders the real standard-pages config screen with no themes instal
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'themes_standard_pages.tpl', 'themes_standard_pages_rendered=yes');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $subController = themesStandardPagesSubControllerTestSubject();
 
         $subController->handle(new ServerRequest('GET', '/admin.php?page=themes_standard_pages'));
 
-        expect($template->get_template_vars('ADMIN_CONTENT'))
+        expect($template->getTemplateVars('ADMIN_CONTENT'))
             ->toContain('themes_standard_pages_rendered=yes');
 
         CurrentConfigTestFactory::get()->themesDir = $originalThemesDir;

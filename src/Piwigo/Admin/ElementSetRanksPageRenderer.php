@@ -138,7 +138,7 @@ final class ElementSetRanksPageRenderer
         // +-------------------------------------------------------------------+
         // |                             template init                         |
         // +-------------------------------------------------------------------+
-        $template->set_filenames(
+        $template->setFilenames(
             [
                 'element_set_ranks' => 'element_set_ranks.tpl',
             ]
@@ -218,6 +218,6 @@ final class ElementSetRanksPageRenderer
         // |                          sending html code                        |
         // +-------------------------------------------------------------------+
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'element_set_ranks');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'element_set_ranks');
     }
 }

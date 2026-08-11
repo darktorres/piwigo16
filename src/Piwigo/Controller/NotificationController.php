@@ -101,7 +101,7 @@ final class NotificationController implements ControllerInterface
             'nofollow' => 1,
         ]);
 
-        $template->set_filenames([
+        $template->setFilenames([
             'notification' => 'notification.tpl',
         ]);
 
@@ -110,7 +110,7 @@ final class NotificationController implements ControllerInterface
             feedImageOnlyUrl: $feed_image_only_url,
         ));
 
-        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()

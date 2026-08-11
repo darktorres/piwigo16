@@ -212,7 +212,7 @@ final class FileCombiner
             if ($real_path === false) {
                 throw new Exception("processCombinable(): file not found for {$combinable->path}");
             }
-            $template->set_filename($handle, $real_path);
+            $template->setFilename($handle, $real_path);
             $this->eventDispatcher->dispatchNotify(new CombinablePreparse($template, $combinable, $this)); // allow themes and plugins to set their own vars to template ...
             // parse($handle, true) is always string (never null) since we
             // always pass true here (see Template::parse()'s conditional

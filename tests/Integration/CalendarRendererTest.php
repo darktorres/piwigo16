@@ -135,7 +135,7 @@ namespace Piwigo\Tests\Integration {
 
         /**
          * Narrows through a chain of array offsets on a Smarty template var --
-         * TemplateInterface::get_template_vars() is declared `mixed` by design
+         * TemplateInterface::getTemplateVars() is declared `mixed` by design
          * (mirrors Smarty's own arbitrary-value assign() contract, see that
          * interface's own docblock), so every hop needs an explicit is_array()
          * check for PHPStan (level 10, project-wide, tests included) rather
@@ -279,7 +279,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('calendar', $result->chronologyView);
             self::assertSame([], $result->chronologyDate);
 
-            $calendarVars = $template->get_template_vars('chronology_calendar');
+            $calendarVars = $template->getTemplateVars('chronology_calendar');
             // ORDER BY YEAR(date_field) DESC -- 2025 sorts before 2024.
             $year2025 = $this->digArray($calendarVars, ['calendar_bars', 0]);
             $year2024 = $this->digArray($calendarVars, ['calendar_bars', 1]);
@@ -327,7 +327,7 @@ namespace Piwigo\Tests\Integration {
             // getDateWhere() filter, oldest-first (small selected period).
             self::assertSame([1, 2], $result->items);
 
-            $nav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
+            $nav = $this->digArray($template->getTemplateVars('chronology_navigation_bars'), [0]);
             self::assertArrayNotHasKey('previous', $nav);
             // "next" points at the real next period (2024-7), not the period
             // already being viewed.

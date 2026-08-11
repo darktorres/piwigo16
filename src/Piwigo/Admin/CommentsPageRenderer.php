@@ -27,7 +27,7 @@ final class CommentsPageRenderer
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
-        $template->set_filenames([
+        $template->setFilenames([
             'comments' => 'comments.tpl',
         ]);
 
@@ -47,6 +47,6 @@ final class CommentsPageRenderer
             adminPageTitle: $lang->t('User comments'),
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'comments');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'comments');
     }
 }

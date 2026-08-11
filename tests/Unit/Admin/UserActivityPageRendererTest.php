@@ -289,7 +289,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'user_activity.tpl', 'users={$nb_users}');
         file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $activityService = userActivityTestActivityService();
         $coreTabs = new CoreTabs(userActivityTestLang(), UrlServiceTestFactory::build(), new CurrentConfig());
@@ -325,9 +325,9 @@ test('render() lists real activity aggregated by user and skips the additional-f
         // The real fixture's own piwigo_activity data: 17 non-system rows,
         // all performed_by user 1 (fixture_admin), all sharing the exact
         // same occured_on '2026-08-01 03:00:00'.
-        expect($template->get_template_vars('nb_users'))
+        expect($template->getTemplateVars('nb_users'))
             ->toBe(4)
-            ->and($template->get_template_vars('ulist'))
+            ->and($template->getTemplateVars('ulist'))
             ->toBe([
                 [
                     'id' => 1,
@@ -335,21 +335,21 @@ test('render() lists real activity aggregated by user and skips the additional-f
                     'nb_lines' => 17,
                 ],
             ])
-            ->and($template->get_template_vars('ACTIVITY_DATES'))
+            ->and($template->getTemplateVars('ACTIVITY_DATES'))
             ->toBe([
                 'min' => '2026-08-01',
                 'max' => '2026-08-01',
             ])
-            ->and($template->get_template_vars('ADDITIONAL_FILT'))
+            ->and($template->getTemplateVars('ADDITIONAL_FILT'))
             ->toBe([
                 'type' => false,
                 'name' => null,
                 'value' => null,
             ])
-            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('users=4');
 
-        $actions = $template->get_template_vars('ACTIONS');
+        $actions = $template->getTemplateVars('ACTIONS');
         if (! is_array($actions)) {
             throw new LogicException('expected an array of actions');
         }

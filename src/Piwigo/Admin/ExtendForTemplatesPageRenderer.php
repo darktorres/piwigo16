@@ -170,7 +170,7 @@ final class ExtendForTemplatesPageRenderer
             $tpl_extension[$file] = ['N/A', 'N/A', 'N/A'];
         }
 
-        $template->set_filenames([
+        $template->setFilenames([
             'extend_for_templates' => 'extend_for_templates.tpl',
         ]);
 
@@ -199,6 +199,6 @@ final class ExtendForTemplatesPageRenderer
             extents: $extents,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'extend_for_templates');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'extend_for_templates');
     }
 }

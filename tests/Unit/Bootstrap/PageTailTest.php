@@ -100,7 +100,7 @@ test('renderToString returns the real parsed footer output, with update-check an
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'footer.tpl', 'version={$VERSION}');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $output = PageTail::renderToString();
 

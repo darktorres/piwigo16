@@ -141,7 +141,7 @@ final class PwgExtensions
         // No define('IN_ADMIN', true) call here: Template::__construct()
         // (the only reader that matters mid-request) already ran during
         // common.inc.php's bootstrap, before this WS callback executes,
-        // and delete_compiled_templates() below and plugins::
+        // and deleteCompiledTemplates() below and plugins::
         // perform_action() never read IN_ADMIN themselves. A define()
         // here would also violate the SEC-60 arch-test rule (no define()
         // under src/Piwigo/).
@@ -173,7 +173,7 @@ final class PwgExtensions
             return new PwgError(500, implode(', ', array_filter($errors, is_string(...))));
         } else {
             if (in_array($params['action'], ['activate', 'deactivate'], true)) {
-                $template->delete_compiled_templates();
+                $template->deleteCompiledTemplates();
             }
             return true;
         }
@@ -230,7 +230,7 @@ final class PwgExtensions
             return new PwgError(500, implode(', ', $errors));
         } else {
             if (in_array($params['action'], ['activate', 'deactivate'], true)) {
-                $template->delete_compiled_templates();
+                $template->deleteCompiledTemplates();
             }
             return true;
         }
@@ -353,7 +353,7 @@ final class PwgExtensions
         $template = $this->currentTemplate->get();
 
         /** @var Template $template */
-        $template->delete_compiled_templates();
+        $template->deleteCompiledTemplates();
 
         return match ($upgrade_status) {
             'ok' => $this->lang->t('%s has been successfully updated.', $extension_name),

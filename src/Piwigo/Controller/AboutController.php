@@ -84,7 +84,7 @@ final class AboutController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginAbout());
 
-        $template->set_filename('about', 'about.tpl');
+        $template->setFilename('about', 'about.tpl');
 
         $about_message_raw = $this->lang->load('about.html', '', [
             'return' => true,
@@ -102,7 +102,7 @@ final class AboutController implements ControllerInterface
             themeAbout: is_string($theme_about) ? $theme_about : null,
         ));
 
-        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theAboutPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()

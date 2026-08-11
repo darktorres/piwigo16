@@ -337,7 +337,7 @@ final readonly class CategoryCatsRenderer
             // Update filtered data
             $this->filterUpdater->updateCatsWithFilteredData($categories);
 
-            $template->set_filename('index_category_thumbnails', 'mainpage_categories.tpl');
+            $template->setFilename('index_category_thumbnails', 'mainpage_categories.tpl');
 
             $this->eventDispatcher->dispatchNotify(new LocBeginIndexCategoryThumbnails($categories));
 
@@ -439,7 +439,7 @@ final readonly class CategoryCatsRenderer
                 derivativeParams: $derivativeParams,
             ));
 
-            $template->assign_var_from_handle('CATEGORIES', 'index_category_thumbnails');
+            $template->assignVarFromHandle('CATEGORIES', 'index_category_thumbnails');
 
             // navigation bar
             $catsNavigationBar = [];

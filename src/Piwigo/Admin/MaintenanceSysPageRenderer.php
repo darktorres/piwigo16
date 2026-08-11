@@ -72,7 +72,7 @@ final class MaintenanceSysPageRenderer
         // +-------------------------------------------------------------------+
 
         $template->assignContext(new MaintenanceSysPageContext(isWebmaster: $accessControl->isWebmaster()));
-        $template->set_filenames([
+        $template->setFilenames([
             'maintenance' => 'maintenance_sys.tpl',
         ]);
 
@@ -80,6 +80,6 @@ final class MaintenanceSysPageRenderer
         // |                           sending html code                           |
         // +-------------------------------------------------------------------+
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'maintenance');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }
 }

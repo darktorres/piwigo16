@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Template;
 
 /**
- * Stream wrapper isolating set_extents()'s own "file_exists() passes but
+ * Stream wrapper isolating setExtents()'s own "file_exists() passes but
  * realpath() still fails" branch (Template.php's own
  * `if ($real_path !== false)` guard around the extents assignment).
  * realpath() never supports stream-wrapped schemes -- it only ever

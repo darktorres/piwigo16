@@ -99,7 +99,7 @@ test('invoke renders the real about page for a guest visitor, with menubar/updat
         file_put_contents($tplDir . 'header.tpl', 'title={$PAGE_TITLE}');
         file_put_contents($tplDir . 'menubar.tpl', 'menubar_rendered=yes');
         file_put_contents($tplDir . 'footer.tpl', 'version={$VERSION}');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $controller = Kernel::container()->get(AboutController::class);
         if (! $controller instanceof AboutController) {
@@ -112,7 +112,7 @@ test('invoke renders the real about page for a guest visitor, with menubar/updat
             ->toBe(200)
             ->and((string) $response->getBody())
             ->toContain('about_rendered=yes')
-            ->and($template->get_template_vars('PAGE_TITLE'))
+            ->and($template->getTemplateVars('PAGE_TITLE'))
             ->toBe('About Piwigo');
     } finally {
         CurrentTemplate::current()->reset();

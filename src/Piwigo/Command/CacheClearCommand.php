@@ -18,7 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * touch the legacy Smarty _data/templates_c/*.tpl.php compiled files or the
  * legacy _data/cache/*.cache PersistentCache files -- those are owned by
  * MaintenanceActionDispatcher's 'compiled-templates' case
- * (CurrentTemplate::get()->delete_compiled_templates()), reachable from the
+ * (CurrentTemplate::get()->deleteCompiledTemplates()), reachable from the
  * admin web UI only. Originally deferred here because that whole path
  * needed the legacy include/common.inc.php bootstrap chain -- that
  * constraint is gone (the legacy bootstrap chain doesn't exist anymore,

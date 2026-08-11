@@ -165,7 +165,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // Every fixture image resolves to a real file and none of them
         // share a path, so neither the missing-photos nor the
         // duplicate-paths branch ever assigns 'header_msgs'.
-        self::assertNull(CurrentTemplate::current()->get()->get_template_vars('header_msgs'));
+        self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('header_msgs'));
     }
 
     // -------------------------------------------------- run-once guard
@@ -271,7 +271,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
             self::assertSame(
                 ['We have found 2 duplicate paths. Details provided by plugin Check Uploads'],
-                CurrentTemplate::current()->get()->get_template_vars('header_msgs')
+                CurrentTemplate::current()->get()->getTemplateVars('header_msgs')
             );
         } finally {
             $this->conn->executeStatement(

@@ -83,7 +83,7 @@ final class UserPermPageRenderer
             $permissionService->grantUserAccess($user_id, $cat_false);
         }
 
-        $template->set_filenames(
+        $template->setFilenames(
             [
                 'user_perm' => 'user_perm.tpl',
                 'double_select' => 'double_select.tpl',
@@ -138,7 +138,7 @@ final class UserPermPageRenderer
             categoryOptionFalse: $categoryOptionFalse,
         ));
 
-        $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'user_perm');
+        $template->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'user_perm');
     }
 }

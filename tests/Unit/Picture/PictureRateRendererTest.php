@@ -73,6 +73,6 @@ test('render does nothing when rating is disabled', function (): void {
 
     $renderer->render(42, UrlServiceTestFactory::build(), [], '/picture.php');
 
-    expect(CurrentTemplate::current()->get()->get_template_vars('rate_summary'))->toBeNull()
-        ->and(CurrentTemplate::current()->get()->get_template_vars('rating'))->toBeNull();
+    expect(CurrentTemplate::current()->get()->getTemplateVars('rate_summary'))->toBeNull()
+        ->and(CurrentTemplate::current()->get()->getTemplateVars('rating'))->toBeNull();
 });

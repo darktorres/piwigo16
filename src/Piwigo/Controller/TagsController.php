@@ -79,7 +79,7 @@ final class TagsController implements ControllerInterface
         $title = $this->lang->t('Tags');
         $this->pageState->setBodyId('theTagsPage');
 
-        $template->set_filenames([
+        $template->setFilenames([
             'tags' => 'tags.tpl',
         ]);
 
@@ -203,7 +203,7 @@ final class TagsController implements ControllerInterface
             tags: $tpl_tags,
         ));
 
-        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theTagsPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()

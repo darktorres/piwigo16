@@ -181,7 +181,7 @@ final class CatListPageRenderer
         // +-------------------------------------------------------------------+
         // |                       template initialization                     |
         // +-------------------------------------------------------------------+
-        $template->set_filename('categories', 'cat_list.tpl');
+        $template->setFilename('categories', 'cat_list.tpl');
 
         $form_action = $this->urlService->getRootUrl() . 'admin.php?page=cat_list';
         if ($parent_id !== null) {
@@ -302,6 +302,6 @@ final class CatListPageRenderer
         // +-------------------------------------------------------------------+
         // |                          sending html code                        |
         // +-------------------------------------------------------------------+
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'categories');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'categories');
     }
 }

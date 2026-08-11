@@ -102,7 +102,7 @@ test('render() shows the English documentation message for an en_ user and defau
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'help.tpl', 'content={$HELP_CONTENT}|title={$HELP_SECTION_TITLE}');
         file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());
         $eventDispatcher = new EventDispatcher();
@@ -122,11 +122,11 @@ test('render() shows the English documentation message for an en_ user and defau
         new HelpPageRenderer()
             ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplate::current());
 
-        expect($template->get_template_vars('HELP_CONTENT'))
+        expect($template->getTemplateVars('HELP_CONTENT'))
             ->toBe('')
-            ->and($template->get_template_vars('HELP_SECTION_TITLE'))
+            ->and($template->getTemplateVars('HELP_SECTION_TITLE'))
             ->toBe('Add Photos')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('content=|title=Add Photos')
             ->and($pageState->messages)
             ->toHaveCount(1)

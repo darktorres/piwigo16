@@ -107,8 +107,8 @@ final class ProfileController implements ControllerInterface
         // Load language if cookie is set from login/register/password pages.
         // Real bug, found while adding coverage for this branch: this block
         // used to run much later in this method, *after*
-        // assign_var_from_handle('PROFILE_CONTENT', 'profile_content')
-        // below -- Smarty's assign_var_from_handle() renders the referenced
+        // assignVarFromHandle('PROFILE_CONTENT', 'profile_content')
+        // below -- Smarty's assignVarFromHandle() renders the referenced
         // template immediately (not lazily deferred to the final page
         // render), so profile_content.tpl was always rendered with
         // whatever language was active BEFORE this switch, and the
@@ -185,15 +185,15 @@ final class ProfileController implements ControllerInterface
         $this->pageState->errors = array_values($page_errors);
 
         $this->pageState->setBodyId('theProfilePage');
-        $template->set_filename('profile', 'profile.tpl');
-        $template->set_filename('profile_content', 'profile_content.tpl');
+        $template->setFilename('profile', 'profile.tpl');
+        $template->setFilename('profile_content', 'profile_content.tpl');
 
         $profileFormHandler->loadIntoTemplate(
             $this->urlService->getRootUrl() . 'profile.php', // action
             $this->urlService->makeIndexUrl(), // for redirect
             $userdata
         );
-        $template->assign_var_from_handle('PROFILE_CONTENT', 'profile_content');
+        $template->assignVarFromHandle('PROFILE_CONTENT', 'profile_content');
 
         $urlService = $this->urlService;
 
@@ -203,7 +203,7 @@ final class ProfileController implements ControllerInterface
         $title = $this->lang->t('Your Gallery Customization');
 
         // include menubar
-        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {

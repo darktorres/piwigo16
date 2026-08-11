@@ -58,7 +58,7 @@ final class HistoryPageRenderer
 
         $historyFilter = HistoryFilterRequest::fromGlobals($inputValidator);
 
-        $template->set_filename('history', 'history.tpl');
+        $template->setFilename('history', 'history.tpl');
 
         $coreTabs->setContext(new CoreTabsContext(linkStart: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
@@ -109,6 +109,6 @@ final class HistoryPageRenderer
             adminPageTitle: $lang->t('History'),
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'history');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'history');
     }
 }

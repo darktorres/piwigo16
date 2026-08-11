@@ -150,7 +150,7 @@ namespace Piwigo\Tests\Integration {
 
         /**
          * Narrows through a chain of array offsets on a Smarty template var --
-         * TemplateInterface::get_template_vars() is declared `mixed` by design
+         * TemplateInterface::getTemplateVars() is declared `mixed` by design
          * (mirrors Smarty's own arbitrary-value assign() contract, see that
          * interface's own docblock), so every hop needs an explicit is_array()
          * check for PHPStan (level 10, project-wide, tests included) rather
@@ -314,7 +314,7 @@ namespace Piwigo\Tests\Integration {
             // chronology_date stays empty.
             self::assertSame([], $calendar->chronology_date);
 
-            $calendarVars = $template->get_template_vars('chronology_calendar');
+            $calendarVars = $template->getTemplateVars('chronology_calendar');
             // ORDER BY YEAR(date_field) DESC -- 2025 sorts before 2024.
             $year2025 = $this->digArray($calendarVars, ['calendar_bars', 0]);
             $year2024 = $this->digArray($calendarVars, ['calendar_bars', 1]);
@@ -352,7 +352,7 @@ namespace Piwigo\Tests\Integration {
             // exactly as given.
             self::assertSame([2024], $calendar->chronology_date);
 
-            $calendarVars = $template->get_template_vars('chronology_calendar');
+            $calendarVars = $template->getTemplateVars('chronology_calendar');
             $month3 = $this->digArray($calendarVars, ['calendar_bars', 0]);
             $month7 = $this->digArray($calendarVars, ['calendar_bars', 1]);
 
@@ -395,7 +395,7 @@ namespace Piwigo\Tests\Integration {
 
             self::assertTrue($ret);
 
-            $calendarVars = $template->get_template_vars('chronology_calendar');
+            $calendarVars = $template->getTemplateVars('chronology_calendar');
 
             // March 2024: day 10 is week-row 1 (0-indexed) column 6 (Sunday,
             // Monday-start grid), day 15 is week-row 2 column 4 (Friday) --
@@ -604,7 +604,7 @@ namespace Piwigo\Tests\Integration {
             $ret = $calendar->generateCategoryContent($template);
 
             self::assertTrue($ret);
-            self::assertSame([], $this->digArray($template->get_template_vars('chronology_calendar'), ['calendar_bars']));
+            self::assertSame([], $this->digArray($template->getTemplateVars('chronology_calendar'), ['calendar_bars']));
         }
 
         /**
@@ -842,7 +842,7 @@ namespace Piwigo\Tests\Integration {
 
                 $calendar->generateCategoryContent($template);
 
-                $weeks = $this->digArray($template->get_template_vars('chronology_calendar'), ['month_view', 'weeks']);
+                $weeks = $this->digArray($template->getTemplateVars('chronology_calendar'), ['month_view', 'weeks']);
                 $firstWeek = $this->digArray($weeks, [0]);
                 self::assertArrayNotHasKey('DAY', $this->digArray($firstWeek, [0]));
                 self::assertSame(1, $this->dig($firstWeek, [6, 'DAY']));
@@ -869,7 +869,7 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $weeks = $this->digArray($template->get_template_vars('chronology_calendar'), ['month_view', 'weeks']);
+            $weeks = $this->digArray($template->getTemplateVars('chronology_calendar'), ['month_view', 'weeks']);
             $lastWeek = $this->digArray($weeks, [count($weeks) - 1]);
 
             self::assertCount(7, $lastWeek);
@@ -896,7 +896,7 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $weeks = $this->digArray($template->get_template_vars('chronology_calendar'), ['month_view', 'weeks']);
+            $weeks = $this->digArray($template->getTemplateVars('chronology_calendar'), ['month_view', 'weeks']);
             $dayCell = null;
             foreach ($weeks as $week) {
                 foreach ((array) $week as $cell) {

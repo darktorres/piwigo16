@@ -36,17 +36,17 @@ interface TemplateInterface
      */
     public function assignContext(TemplatePageContext $context): void;
 
-    public function assign_var_from_handle(string $varname, string $handle): bool;
+    public function assignVarFromHandle(string $varname, string $handle): bool;
 
-    public function set_filename(string $handle, string $filename): bool;
+    public function setFilename(string $handle, string $filename): bool;
 
     /**
      * @param array<string, string|null> $filename_array hashmap of
      *   handle=>filename; a null value unsets that handle
      */
-    public function set_filenames(array $filename_array): bool;
+    public function setFilenames(array $filename_array): bool;
 
-    public function clear_assign(string $tpl_var): void;
+    public function clearAssign(string $tpl_var): void;
 
     /**
      * Mirrors assign()'s own arbitrary-value contract -- returns whatever
@@ -54,5 +54,5 @@ interface TemplateInterface
      */
     // Same blind spot as CalendarBase::generateCategoryContent() -- heavily used, just not traced through the interface.
     // @phpstan-ignore shipmonk.deadMethod
-    public function get_template_vars(?string $tpl_var = null): mixed;
+    public function getTemplateVars(?string $tpl_var = null): mixed;
 }

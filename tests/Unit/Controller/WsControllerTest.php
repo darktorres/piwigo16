@@ -124,7 +124,7 @@ test('invoke returns a real 403 forbidden page when web services are disabled', 
         file_put_contents($tplDir . 'header.tpl', 'title={$PAGE_TITLE}');
         file_put_contents($tplDir . 'redirect.tpl', 'redirect_rendered=yes');
         file_put_contents($tplDir . 'footer.tpl', 'version={$VERSION}');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $controller = Kernel::container()->get(WsController::class);
         if (! $controller instanceof WsController) {

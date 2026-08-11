@@ -135,14 +135,14 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         $this->renderer->render(1, $this->urlService(), $this->picture(1, 87.5), '/picture.php?/1');
 
-        $rateSummary = CurrentTemplate::current()->get()->get_template_vars('rate_summary');
+        $rateSummary = CurrentTemplate::current()->get()->getTemplateVars('rate_summary');
         self::assertSame([
             'count' => 3,
             'score' => 87.5,
             'average' => 4.0,
         ], $rateSummary);
 
-        $rating = CurrentTemplate::current()->get()->get_template_vars('rating');
+        $rating = CurrentTemplate::current()->get()->getTemplateVars('rating');
         self::assertIsArray($rating);
         // Classic user (not anonymous) -- user_id=3's own vote (3), matched
         // with a null anonymous_id (isAuthorizeStatus(Classic) skips the
@@ -177,7 +177,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         try {
             $this->renderer->render(1, $this->urlService(), $this->picture(1, 90.0), '/picture.php?/1');
 
-            $rating = CurrentTemplate::current()->get()->get_template_vars('rating');
+            $rating = CurrentTemplate::current()->get()->getTemplateVars('rating');
             self::assertIsArray($rating);
             self::assertSame(5, $rating['USER_RATE']);
         } finally {
@@ -200,14 +200,14 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // SQL semantics, not the method's own `$row === false` fallback.
         $this->renderer->render(1, $this->urlService(), $this->picture(1, 0.0), '/picture.php?/1');
 
-        $rateSummary = CurrentTemplate::current()->get()->get_template_vars('rate_summary');
+        $rateSummary = CurrentTemplate::current()->get()->getTemplateVars('rate_summary');
         self::assertSame([
             'count' => 0,
             'score' => 0.0,
             'average' => null,
         ], $rateSummary);
 
-        $rating = CurrentTemplate::current()->get()->get_template_vars('rating');
+        $rating = CurrentTemplate::current()->get()->getTemplateVars('rating');
         self::assertIsArray($rating);
         // count === 0 -- findUserRate() is never even called.
         self::assertNull($rating['USER_RATE']);

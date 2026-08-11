@@ -182,7 +182,7 @@ final class WsExtensionsTest extends ContractTestCase
         // out immediately with $errors=[] (same fsEntry-absent shortcut as
         // the 'install' no-op test above), so $errors stays [] the whole
         // way through -- covers the success branch (not the error one),
-        // including the delete_compiled_templates() call gated on
+        // including the deleteCompiledTemplates() call gated on
         // action in {activate, deactivate}.
         $token = $this->getPwgToken();
 

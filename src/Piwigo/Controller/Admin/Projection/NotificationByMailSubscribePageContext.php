@@ -11,7 +11,7 @@ use Piwigo\Core\TemplatePageContext;
  * The template variable set assigned by
  * {@see \Piwigo\Controller\Admin\NotificationByMailSubController::handle()}'s
  * own `case 'subscribe':` display branch. Must be assigned before that
- * same branch's own `Template::assign_var_from_handle('DOUBLE_SELECT',
+ * same branch's own `Template::assignVarFromHandle('DOUBLE_SELECT',
  * 'double_select')` call, which parses `double_select.tpl` using only
  * the vars assigned up to that point.
  */

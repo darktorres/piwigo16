@@ -247,11 +247,11 @@ final class PasswordController implements ControllerInterface
 
         $this->pageState->setBodyId('thePasswordPage');
 
-        $template->set_filenames([
+        $template->setFilenames([
             'password' => 'password.tpl',
         ]);
 
-        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {

@@ -106,7 +106,7 @@ final class ThemesInstalledPageRenderer
 
             if ($action_errors === []) {
                 if ($themesAction->action === 'activate' or $themesAction->action === 'deactivate') {
-                    $template->delete_compiled_templates();
+                    $template->deleteCompiledTemplates();
                 }
                 $this->redirectService->redirect($base_url);
             }
@@ -157,10 +157,10 @@ final class ThemesInstalledPageRenderer
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
 
-        $template->set_filenames([
+        $template->setFilenames([
             'themes' => 'themes_installed.tpl',
         ]);
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'themes');
     }
 
     /**

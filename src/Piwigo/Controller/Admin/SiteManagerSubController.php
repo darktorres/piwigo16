@@ -87,7 +87,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
 
         $conn = DbConnection::build();
 
-        $template->set_filenames([
+        $template->setFilenames([
             'site_manager' => 'site_manager.tpl',
         ]);
 
@@ -207,6 +207,6 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             sites: $tpl_sites,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'site_manager');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'site_manager');
     }
 }

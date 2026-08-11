@@ -210,7 +210,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | template initialization                                               |
         // +-----------------------------------------------------------------------+
-        $template->set_filenames(
+        $template->setFilenames(
             [
                 'double_select' => 'double_select.tpl',
                 'notification_by_mail' => 'notification_by_mail.tpl',
@@ -281,7 +281,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     categoryOptionFalse: $opt_false,
                     categoryOptionFalseSelected: $opt_false_selected,
                 ));
-                $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
+                $template->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
                 break;
 
             case 'send':
@@ -356,7 +356,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | Sending html code                                                     |
         // +-----------------------------------------------------------------------+
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'notification_by_mail');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'notification_by_mail');
     }
 
     /**

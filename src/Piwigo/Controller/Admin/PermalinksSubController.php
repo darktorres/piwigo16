@@ -73,7 +73,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
                 ->deleteOldPermalinkByValue($permalinksRequest->deletePermanent);
         }
 
-        $template->set_filename('permalinks', 'permalinks.tpl');
+        $template->setFilename('permalinks', 'permalinks.tpl');
 
         // +-----------------------------------------------------------------------+
         // | tabs                                                                  |
@@ -167,7 +167,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             categoriesOptions: $categories_options,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'permalinks');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'permalinks');
     }
 
     /**

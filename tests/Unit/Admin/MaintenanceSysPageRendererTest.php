@@ -93,7 +93,7 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'maintenance_sys.tpl', 'isWebmaster={$isWebmaster}');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
         $pageState = new PageState();
 
         new MaintenanceSysPageRenderer()
@@ -102,7 +102,7 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
         expect($pageState->warnings)
             ->toHaveCount(1)
             ->and($pageState->warnings[0])->toContain('status is required to edit parameters.')
-            ->and($template->get_template_vars('isWebmaster'))
+            ->and($template->getTemplateVars('isWebmaster'))
             ->toBe(0);
     } finally {
         CurrentTemplate::current()->reset();
@@ -122,7 +122,7 @@ test('render() adds no warning for a webmaster and reaches the template tail wit
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'maintenance_sys.tpl', 'isWebmaster={$isWebmaster}');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
         $pageState = new PageState();
 
         new MaintenanceSysPageRenderer()
@@ -130,7 +130,7 @@ test('render() adds no warning for a webmaster and reaches the template tail wit
 
         expect($pageState->warnings)
             ->toBe([])
-            ->and($template->get_template_vars('isWebmaster'))
+            ->and($template->getTemplateVars('isWebmaster'))
             ->toBe(1);
     } finally {
         CurrentTemplate::current()->reset();

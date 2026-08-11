@@ -757,7 +757,7 @@ final class MailServiceTest extends IntegrationTestCase
     {
         // 'dirname' set (any value -- Smarty's addTemplateDir() appends
         // rather than validates/replaces, so this alone can't hide the
-        // real theme's own templates) exercises set_template_dir() being
+        // real theme's own templates) exercises setTemplateDir() being
         // called at all; the genuinely nonexistent 'filename' is what
         // actually forces templateExists() to return false, independent
         // of dirname.

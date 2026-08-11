@@ -256,7 +256,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
     private function renderedCategoriesHtml(): string
     {
-        $vars = $this->template->get_template_vars('CATEGORIES');
+        $vars = $this->template->getTemplateVars('CATEGORIES');
 
         return is_string($vars) ? $vars : '';
     }

@@ -99,7 +99,7 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'history.tpl', 'start={$START}');
         file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());
         $eventDispatcher = new EventDispatcher();
@@ -119,11 +119,11 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
         $today = Env::now()->format('Y-m-d');
-        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))
+        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('History')
-            ->and($template->get_template_vars('START'))
+            ->and($template->getTemplateVars('START'))
             ->toBe($today)
-            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('start=' . $today);
     } finally {
         CurrentTemplate::current()->reset();

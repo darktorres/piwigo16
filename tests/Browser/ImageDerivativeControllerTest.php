@@ -1061,7 +1061,7 @@ it('rejects a syntactically valid custom size that was never registered in the a
     // fraction in [0, 1]), so this reaches the *separate*
     // `isset(ImageStdParams::$custom[$key])` allow-list check 403s
     // instead. (ImageStdParams::$custom is only ever populated by a real
-    // Template::func_define_derivative() custom-size request elsewhere --
+    // Template::funcDefineDerivative() custom-size request elsewhere --
     // i.php itself never adds to it.)
     $uniqueWidth = 700 + ((int) (microtime(true) * 1000) % 300);
     $uniqueHeight = $uniqueWidth - 137;
@@ -1211,7 +1211,7 @@ it('generates a custom size once its own key is registered, averaging sharpen ac
         // DerivativeParams::addUrlTokens(), not hand-derived).
         // JSON_OBJECT(), not JSON_SET() -- verified live against the
         // fixture DB: no real production code path ever populates
-        // ImageStdParams::$custom (func_define_derivative()'s width/height
+        // ImageStdParams::$custom (funcDefineDerivative()'s width/height
         // form is dead code -- grep confirms its only real template call
         // site is commented out), so self::save()'s own json_encode([])
         // persists custom_json as the JSON *array* `[]`, never `{}` --

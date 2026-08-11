@@ -283,7 +283,7 @@ final class PictureModifyPageRenderer
         // |                             template init                         |
         // +-------------------------------------------------------------------+
 
-        $template->set_filenames(
+        $template->setFilenames(
             [
                 'picture_modify' => 'picture_modify.tpl',
             ]
@@ -499,6 +499,6 @@ final class PictureModifyPageRenderer
         $this->eventDispatcher->dispatchNotify(new LocEndPictureModify());
 
         // ----------------------------------------------------------- sending html code
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'picture_modify');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'picture_modify');
     }
 }

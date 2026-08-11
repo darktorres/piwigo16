@@ -207,7 +207,7 @@ final class GalleryController implements ControllerInterface
         $categoryCountCategories = new MenubarRenderer()
             ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
 
-        $template->set_filename('index', 'index.tpl');
+        $template->setFilename('index', 'index.tpl');
 
         // +-----------------------------------------------------------------+
         // |  index page (categories, thumbnails, search, calendar, etc.)    |
@@ -387,8 +387,8 @@ final class GalleryController implements ControllerInterface
         $combinable_tags = null;
 
         if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
-            $template->set_filename('selected_tags', 'include/selected_tags.inc.tpl');
-            $template->assign_var_from_handle('SELECTED_TAGS_TEMPLATE', 'selected_tags');
+            $template->setFilename('selected_tags', 'include/selected_tags.inc.tpl');
+            $template->assignVarFromHandle('SELECTED_TAGS_TEMPLATE', 'selected_tags');
 
             $body_data_tag_ids = array_values(array_filter($bodyData['tag_ids'], is_scalar(...)));
 
@@ -512,7 +512,7 @@ final class GalleryController implements ControllerInterface
         }
 
         if ($section_context->category !== null and $categoryCountCategories === 0) {// count_categories might be computed by menubar - if the case unassign flat link if no sub albums
-            $template->clear_assign('U_MODE_FLAT');
+            $template->clearAssign('U_MODE_FLAT');
         }
 
         // -------------------------------------------- main part : thumbnails
@@ -538,9 +538,9 @@ final class GalleryController implements ControllerInterface
                     ]
                 );
 
-                $derivative_params_var = $template->get_template_vars('derivative_params');
+                $derivative_params_var = $template->getTemplateVars('derivative_params');
                 $selected_type = ($derivative_params_var instanceof DerivativeParams) ? $derivative_params_var->type : null;
-                $template->clear_assign('derivative_params');
+                $template->clearAssign('derivative_params');
                 $type_map = $this->imageStdParams->getDefinedTypeMap();
                 unset($type_map[ImageStdParams::XXLARGE], $type_map[ImageStdParams::XLARGE]);
 
@@ -617,7 +617,7 @@ final class GalleryController implements ControllerInterface
         $this->eventDispatcher->dispatchNotify(new LocEndIndex());
         $this->htmlService
             ->flushPageMessages();
-        $template->parse_index_buttons();
+        $template->parseIndexButtons();
         $template->parse('index', false);
 
         // ------------------------------------------------ log informations

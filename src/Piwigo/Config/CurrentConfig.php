@@ -1890,7 +1890,7 @@ final class CurrentConfig
     // === extents_for_templates ===
     /**
      * Per-template-file handle/URL-keyword/theme overrides applied by
-     * Template::set_extents() -- keyed by template filename.
+     * Template::setExtents() -- keyed by template filename.
      * @var array<string, TemplateExtension>
      */
     public array $extentsForTemplates = [] {

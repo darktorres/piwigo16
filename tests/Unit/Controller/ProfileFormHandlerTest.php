@@ -126,9 +126,9 @@ test('loadIntoTemplate populates the real profile form template context', functi
             'show_nb_hits' => false,
         ]);
 
-        expect($template->get_template_vars('USERNAME'))
+        expect($template->getTemplateVars('USERNAME'))
             ->toBe('fixture_user')
-            ->and($template->get_template_vars('F_ACTION'))
+            ->and($template->getTemplateVars('F_ACTION'))
             ->toBe('admin.php?page=user_list');
     } finally {
         CurrentTemplate::current()->reset();

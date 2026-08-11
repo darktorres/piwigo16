@@ -34,7 +34,7 @@ function tabsheetTestRrmdir(string $dir): void
 // compile directory under CurrentPathsTestFactory::get()->root -- same
 // "point CurrentPaths at a fresh temp root, clean it up after" shape as
 // PictureCommentRendererTest's own makePictureCommentTestTemplate().
-// Tabsheet::assign()'s own assign_var_from_handle() call actually parses
+// Tabsheet::assign()'s own assignVarFromHandle() call actually parses
 // a real 'tabsheet.tpl' through Smarty (theme='' -> template_dir is the
 // $root passed to the constructor), so a trivial real file is seeded at
 // that same root -- its rendered content is never asserted on, only the
@@ -307,7 +307,7 @@ test('assign makes the sheets array available to the tabsheet.tpl template befor
     $tabsheet->assign(CurrentTemplate::current());
 
     $template = CurrentTemplate::current()->get();
-    expect($template->get_template_vars('MY_TABSHEET'))
+    expect($template->getTemplateVars('MY_TABSHEET'))
         ->toBe('CAPTION:General Settings');
 });
 
@@ -318,7 +318,7 @@ test('assign clears the temporary tabsheet template var after compiling it', fun
     $tabsheet->assign(CurrentTemplate::current());
 
     $template = CurrentTemplate::current()->get();
-    expect($template->get_template_vars('tabsheet'))
+    expect($template->getTemplateVars('tabsheet'))
         ->toBeNull();
 });
 
@@ -341,9 +341,9 @@ test('assign writes the sheets, the selected key, and the bracketed selected cap
     $tabsheet->assign(CurrentTemplate::current());
 
     $template = CurrentTemplate::current()->get();
-    expect($template->get_template_vars('tabsheet_selected'))
+    expect($template->getTemplateVars('tabsheet_selected'))
         ->toBe('general');
-    expect($template->get_template_vars('MY_TITLE'))
+    expect($template->getTemplateVars('MY_TITLE'))
         ->toBe('[General Settings]');
 });
 
@@ -354,8 +354,8 @@ test('assign does not set the titlename var when nothing is selected', function 
     $tabsheet->assign(CurrentTemplate::current());
 
     $template = CurrentTemplate::current()->get();
-    expect($template->get_template_vars('tabsheet_selected'))
+    expect($template->getTemplateVars('tabsheet_selected'))
         ->toBe('');
-    expect($template->get_template_vars('MY_TITLE'))
+    expect($template->getTemplateVars('MY_TITLE'))
         ->toBeNull();
 });

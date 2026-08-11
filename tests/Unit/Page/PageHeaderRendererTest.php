@@ -61,7 +61,7 @@ test('render() assigns the page title and gallery chrome with no refresh meta an
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'header.tpl', 'title={$PAGE_TITLE}');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $pageState = new PageState();
         $eventDispatcher = new EventDispatcher();
@@ -69,13 +69,13 @@ test('render() assigns the page title and gallery chrome with no refresh meta an
         new PageHeaderRenderer()
             ->render('<b>My Gallery</b>', $eventDispatcher, $pageState, CurrentTemplate::current(), CurrentConfigTestFactory::get());
 
-        expect($template->get_template_vars('PAGE_TITLE'))
+        expect($template->getTemplateVars('PAGE_TITLE'))
             ->toBe('My Gallery')
-            ->and($template->get_template_vars('meta_ref'))
+            ->and($template->getTemplateVars('meta_ref'))
             ->toBe(1)
-            ->and($template->get_template_vars('page_refresh'))
+            ->and($template->getTemplateVars('page_refresh'))
             ->toBeNull()
-            ->and($template->get_template_vars('header_notes'))
+            ->and($template->getTemplateVars('header_notes'))
             ->toBeNull();
     } finally {
         CurrentTemplate::current()->reset();

@@ -76,7 +76,7 @@ test('renderToString() returns the parsed footer output and always sends telemet
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'footer.tpl', 'version={$VERSION}');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $currentConfig = new CurrentConfig();
         $currentUser = CurrentUserTestFactory::get();
@@ -107,9 +107,9 @@ test('renderToString() returns the parsed footer output and always sends telemet
 
         expect($telemetrySender->sendWasCalled)
             ->toBeTrue()
-            ->and($template->get_template_vars('contactMail'))
+            ->and($template->getTemplateVars('contactMail'))
             ->toBeNull()
-            ->and($template->get_template_vars('toggleMobileThemeUrl'))
+            ->and($template->getTemplateVars('toggleMobileThemeUrl'))
             ->toBeNull()
             ->and($output)
             ->toContain('version=');

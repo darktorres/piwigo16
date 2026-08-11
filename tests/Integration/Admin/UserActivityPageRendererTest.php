@@ -192,6 +192,6 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             ->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get());
 
         $template = CurrentTemplate::current()->get();
-        self::assertSame([], $template->get_template_vars('ulist'));
+        self::assertSame([], $template->getTemplateVars('ulist'));
     }
 }

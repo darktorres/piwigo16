@@ -60,17 +60,17 @@ test('render() falls back to empty ftp help content when the real language file 
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'photos_add.tpl', 'ftp={$FTP_HELP_CONTENT}|title={$ADMIN_PAGE_TITLE}');
-        $template->set_template_dir($tplDir);
-        $template->set_filename('photos_add', 'photos_add.tpl');
+        $template->setTemplateDir($tplDir);
+        $template->setFilename('photos_add', 'photos_add.tpl');
 
         new PhotosAddFtpPageRenderer()
             ->render(LangTestFactory::get(), CurrentTemplate::current());
 
-        expect($template->get_template_vars('FTP_HELP_CONTENT'))
+        expect($template->getTemplateVars('FTP_HELP_CONTENT'))
             ->toBe('')
-            ->and($template->get_template_vars('ADMIN_PAGE_TITLE'))
+            ->and($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('Upload Photos')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('ftp=|title=Upload Photos');
     } finally {
         photosAddFtpTestRrmdir($root);

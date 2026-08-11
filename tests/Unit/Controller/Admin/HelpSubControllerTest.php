@@ -105,7 +105,7 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'help.tpl', 'title={$HELP_SECTION_TITLE}');
         file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());
         $eventDispatcher = new EventDispatcher();
@@ -124,9 +124,9 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        expect($template->get_template_vars('HELP_SECTION_TITLE'))
+        expect($template->getTemplateVars('HELP_SECTION_TITLE'))
             ->toBe('Add Photos')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('title=Add Photos');
     } finally {
         CurrentTemplate::current()->reset();

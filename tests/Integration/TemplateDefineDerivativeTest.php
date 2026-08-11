@@ -18,7 +18,7 @@ use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
- * Piwigo\Template\Template::func_define_derivative() -- the single
+ * Piwigo\Template\Template::funcDefineDerivative() -- the single
  * largest red-line cluster in this class (roughly a third of its own
  * total gap). Genuinely needs a real DB: ImageStdParams::getCustom()'s
  * own first-use-in-24h path calls ConfigService::confUpdateParam()
@@ -69,8 +69,8 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
     {
         set_error_handler(static fn (): bool => true);
         try {
-            $this->template->func_define_derivative($params, $this->template->smarty);
-            self::fail('func_define_derivative() should have thrown ResponseReadyException.');
+            $this->template->funcDefineDerivative($params, $this->template->smarty);
+            self::fail('funcDefineDerivative() should have thrown ResponseReadyException.');
         } catch (ResponseReadyException $e) {
             self::assertStringContainsString($expectedMessage, (string) $e->response()->getBody());
         } finally {
@@ -92,12 +92,12 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
 
     public function testTypeParamAssignsARealKnownDerivative(): void
     {
-        $this->template->func_define_derivative([
+        $this->template->funcDefineDerivative([
             'name' => 'd',
             'type' => 'thumb',
         ], $this->template->smarty);
 
-        $derivative = $this->template->get_template_vars('d');
+        $derivative = $this->template->getTemplateVars('d');
         self::assertInstanceOf(DerivativeParams::class, $derivative);
         self::assertSame('thumb', $derivative->type);
     }
@@ -145,13 +145,13 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
 
     public function testABasicWidthAndHeightBuildsACustomDerivative(): void
     {
-        $this->template->func_define_derivative([
+        $this->template->funcDefineDerivative([
             'name' => 'd',
             'width' => 100,
             'height' => 80,
         ], $this->template->smarty);
 
-        $derivative = $this->template->get_template_vars('d');
+        $derivative = $this->template->getTemplateVars('d');
         self::assertInstanceOf(DerivativeParams::class, $derivative);
         self::assertSame([100, 80], $derivative->sizing->ideal_size);
         self::assertSame(0, $derivative->sizing->max_crop);
@@ -160,14 +160,14 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
 
     public function testCropAsATrueBooleanDefaultsMinSizeToTheFullWidthAndHeight(): void
     {
-        $this->template->func_define_derivative([
+        $this->template->funcDefineDerivative([
             'name' => 'd',
             'width' => 100,
             'height' => 80,
             'crop' => true,
         ], $this->template->smarty);
 
-        $derivative = $this->template->get_template_vars('d');
+        $derivative = $this->template->getTemplateVars('d');
         self::assertInstanceOf(DerivativeParams::class, $derivative);
         self::assertSame(1, $derivative->sizing->max_crop);
         self::assertSame([100, 80], $derivative->sizing->min_size);
@@ -175,14 +175,14 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
 
     public function testCropAsAFalseBooleanLeavesCropDisabled(): void
     {
-        $this->template->func_define_derivative([
+        $this->template->funcDefineDerivative([
             'name' => 'd',
             'width' => 100,
             'height' => 80,
             'crop' => false,
         ], $this->template->smarty);
 
-        $derivative = $this->template->get_template_vars('d');
+        $derivative = $this->template->getTemplateVars('d');
         self::assertInstanceOf(DerivativeParams::class, $derivative);
         self::assertSame(0, $derivative->sizing->max_crop);
         self::assertNull($derivative->sizing->min_size);
@@ -190,14 +190,14 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
 
     public function testCropAsANumericPercentageIsDividedBy100(): void
     {
-        $this->template->func_define_derivative([
+        $this->template->funcDefineDerivative([
             'name' => 'd',
             'width' => 100,
             'height' => 80,
             'crop' => 50,
         ], $this->template->smarty);
 
-        $derivative = $this->template->get_template_vars('d');
+        $derivative = $this->template->getTemplateVars('d');
         self::assertInstanceOf(DerivativeParams::class, $derivative);
         self::assertSame(0.5, $derivative->sizing->max_crop);
     }
@@ -217,7 +217,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
 
     public function testCropWithAnExplicitMinWidthIsUsedVerbatim(): void
     {
-        $this->template->func_define_derivative(
+        $this->template->funcDefineDerivative(
             [
                 'name' => 'd',
                 'width' => 100,
@@ -228,7 +228,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
             $this->template->smarty
         );
 
-        $derivative = $this->template->get_template_vars('d');
+        $derivative = $this->template->getTemplateVars('d');
         self::assertInstanceOf(DerivativeParams::class, $derivative);
         self::assertSame([50, 80], $derivative->sizing->min_size);
     }
@@ -267,7 +267,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
 
     public function testCropWithAnExplicitMinHeightIsUsedVerbatim(): void
     {
-        $this->template->func_define_derivative(
+        $this->template->funcDefineDerivative(
             [
                 'name' => 'd',
                 'width' => 100,
@@ -278,7 +278,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
             $this->template->smarty
         );
 
-        $derivative = $this->template->get_template_vars('d');
+        $derivative = $this->template->getTemplateVars('d');
         self::assertInstanceOf(DerivativeParams::class, $derivative);
         self::assertSame([100, 50], $derivative->sizing->min_size);
     }

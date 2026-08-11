@@ -80,7 +80,7 @@ final class RatingPageRenderer
         $nb_images = $rate_repository->countRatedElements($filterUserId, $exclude_filter_user, $cat_ids);
         $nb_elements = $rate_repository->countAllRates();
 
-        $template->set_filename('rating', 'rating.tpl');
+        $template->setFilename('rating', 'rating.tpl');
 
         $navbar = new PaginationService($currentConfig)
             ->createNavigationBar($urlService->getRootUrl() . 'admin.php' . $urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page);
@@ -175,6 +175,6 @@ final class RatingPageRenderer
             images: $tpl_images,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'rating');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'rating');
     }
 }

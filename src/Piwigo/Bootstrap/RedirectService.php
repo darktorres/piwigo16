@@ -206,7 +206,7 @@ final class RedirectService implements RedirectServiceInterface
         $url_link = $url;
         $title = 'redirection';
 
-        $template->set_filenames([
+        $template->setFilenames([
             'redirect' => 'redirect.tpl',
         ]);
 
@@ -214,7 +214,7 @@ final class RedirectService implements RedirectServiceInterface
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
 
-        $template->set_filenames([
+        $template->setFilenames([
             'redirect' => 'redirect.tpl',
         ]);
         $template->assignContext(new RedirectHtmlPageContext(redirectMsg: $msg));

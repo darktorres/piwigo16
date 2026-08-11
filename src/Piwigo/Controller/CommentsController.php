@@ -410,7 +410,7 @@ final class CommentsController implements ControllerInterface
         $title = $this->lang->t('User comments');
         $this->pageState->setBodyId('theCommentsPage');
 
-        $template->set_filenames([
+        $template->setFilenames([
             'comments' => 'comments.tpl',
             'comment_list' => 'comment_list.tpl',
         ]);
@@ -646,7 +646,7 @@ final class CommentsController implements ControllerInterface
         ));
 
         // include menubar
-        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
@@ -662,7 +662,7 @@ final class CommentsController implements ControllerInterface
         $this->htmlService
             ->flushPageMessages();
         if (count($comments) > 0) {
-            $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
+            $template->assignVarFromHandle('COMMENT_LIST', 'comment_list');
         }
         $template->parse('comments', false);
         $body = PageTail::renderToString();

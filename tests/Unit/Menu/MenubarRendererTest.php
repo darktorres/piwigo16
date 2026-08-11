@@ -95,7 +95,7 @@ test('render skips every real DB-backed block when no listener has registered an
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'menubar.tpl', 'menubar_rendered=yes');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $renderer = menubarRendererTestSubject();
 
@@ -148,7 +148,7 @@ test('render skips every real DB-backed block when no listener has registered an
 
         expect($countCategories)
             ->toBeNull()
-            ->and($template->get_template_vars('MENUBAR'))
+            ->and($template->getTemplateVars('MENUBAR'))
             ->toContain('menubar_rendered=yes');
     } finally {
         CurrentTemplate::current()->reset();

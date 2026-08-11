@@ -82,7 +82,7 @@ final readonly class PageTailRenderer
     {
         $template = $this->currentTemplate->get();
 
-        $template->set_filenames([
+        $template->setFilenames([
             'tail' => 'footer.tpl',
         ]);
 

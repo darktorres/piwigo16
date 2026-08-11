@@ -1395,7 +1395,7 @@ test('src/Piwigo/ contains no ->smarty->assign()/->smarty->append() reach-around
     // this guard targets the one remaining bypass PHP's own type system
     // can't forbid: reaching through Template's public `$smarty` property
     // directly (`$template->smarty->assign(...)`). Template.php itself is
-    // the sole legitimate caller (assignContext()/assign_var_from_handle()/
+    // the sole legitimate caller (assignContext()/assignVarFromHandle()/
     // concat()/the theme-conf-vars/plugin-button internal call sites all
     // route through $this->smarty->assign() directly, by design).
     $repoRoot = __DIR__ . '/../..';

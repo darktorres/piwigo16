@@ -82,7 +82,7 @@ final class LanguagesNewPageRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
-        $template->set_filenames([
+        $template->setFilenames([
             'languages' => 'languages_new.tpl',
         ]);
 
@@ -212,6 +212,6 @@ final class LanguagesNewPageRenderer
             languages: $tpl_languages,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'languages');
     }
 }

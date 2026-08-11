@@ -593,7 +593,7 @@ namespace Piwigo\Tests\Integration {
             // $this->dispatcher (built in setUp()) already has no persistent
             // cache -- its constructor's $persistentCache param defaults to
             // null, and setUp() never passes one.
-            // delete_compiled_templates() runs before the persistent-cache
+            // deleteCompiledTemplates() runs before the persistent-cache
             // guard -- needs a real Template instance, unset by default since
             // this test never boots a full RequestBootstrap.
             CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));

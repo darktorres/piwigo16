@@ -102,7 +102,7 @@ test('render() defaults the date range to today and skips the user-id lookup whe
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'history.tpl', 'start={$START}|end={$END}');
         file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());
         $eventDispatcher = new EventDispatcher();
@@ -112,19 +112,19 @@ test('render() defaults the date range to today and skips the user-id lookup whe
             ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplate::current(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator());
 
         $today = Env::now()->format('Y-m-d');
-        expect($template->get_template_vars('START'))
+        expect($template->getTemplateVars('START'))
             ->toBe($today)
-            ->and($template->get_template_vars('END'))
+            ->and($template->getTemplateVars('END'))
             ->toBe($today)
-            ->and($template->get_template_vars('USER_ID'))
+            ->and($template->getTemplateVars('USER_ID'))
             ->toBe(-1)
-            ->and($template->get_template_vars('USER_NAME'))
+            ->and($template->getTemplateVars('USER_NAME'))
             ->toBeNull()
-            ->and($template->get_template_vars('display_thumbnail_selected'))
+            ->and($template->getTemplateVars('display_thumbnail_selected'))
             ->toBe('no_display_thumbnail')
-            ->and($template->get_template_vars('ADMIN_PAGE_TITLE'))
+            ->and($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('History')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('start=' . $today . '|end=' . $today);
     } finally {
         CurrentTemplate::current()->reset();

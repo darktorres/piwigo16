@@ -82,7 +82,7 @@ final class LanguagesInstalledPageRenderer
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
-        $template->set_filenames([
+        $template->setFilenames([
             'languages' => 'languages_installed.tpl',
         ]);
 
@@ -171,6 +171,6 @@ final class LanguagesInstalledPageRenderer
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'languages');
     }
 }

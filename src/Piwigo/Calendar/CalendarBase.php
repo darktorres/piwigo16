@@ -123,7 +123,7 @@ abstract class CalendarBase
      * shared between buildNavBar()/buildNextPrev() via a private
      * instance property rather than the live Smarty template variable
      * itself, avoiding an append-then-read-modify-write round trip
-     * through Template::append()/get_template_vars()/assign(): both
+     * through Template::append()/getTemplateVars()/assign(): both
      * methods are declared on this same class, so no subclass access is
      * needed; CalendarRenderer (an unrelated class) reads the final
      * result via {@see self::getChronologyNavigationBars()} once every

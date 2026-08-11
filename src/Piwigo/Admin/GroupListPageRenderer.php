@@ -56,7 +56,7 @@ final class GroupListPageRenderer
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
-        $template->set_filenames([
+        $template->setFilenames([
             'group_list' => 'group_list.tpl',
         ]);
 
@@ -104,6 +104,6 @@ final class GroupListPageRenderer
             groups: $tpl_groups,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'group_list');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'group_list');
     }
 }

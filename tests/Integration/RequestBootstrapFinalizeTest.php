@@ -130,7 +130,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             self::assertTrue(CurrentTemplate::current()->isInitialized());
             self::assertStringContainsString(
                 dirname(__DIR__, 2) . '/themes/mobile-theme-name/template',
-                CurrentTemplate::current()->get()->get_template_dir()
+                CurrentTemplate::current()->get()->getTemplateDir()
             );
         } finally {
             unset($_SESSION['pwg_mobile_theme']);
@@ -186,7 +186,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // template var is the only place left to observe it afterwards.
         self::assertSame(
             [LangTestFactory::get()->t('Bad status for user "guest", default status will be used. Please notify the webmaster.')],
-            CurrentTemplate::current()->get()->get_template_vars('header_msgs')
+            CurrentTemplate::current()->get()->getTemplateVars('header_msgs')
         );
     }
 

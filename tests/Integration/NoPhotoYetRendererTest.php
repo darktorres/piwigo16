@@ -49,7 +49,7 @@ namespace Piwigo\Tests\Integration {
      * RedirectServiceInterface::redirect() before reaching real terminal
      * behavior. The nb_photos===0 branch's remaining "neither browse nor
      * deactivate" sub-branch (NoPhotoYetRenderer.php's own real body, roughly
-     * lines 76-111: the header()/set_filenames() calls, both isAdmin()
+     * lines 76-111: the header()/setFilenames() calls, both isAdmin()
      * template->assign() arms, the loc_end_no_photo_yet EventDispatcher
      * notify, and finally $template->pparse() + a bare exit()) stays
      * genuinely untested from here, for 2 independent reasons:

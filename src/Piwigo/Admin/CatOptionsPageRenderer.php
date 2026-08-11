@@ -69,7 +69,7 @@ final class CatOptionsPageRenderer
                 ->setCategoryOption($catOptionsRequest->catFalse, $catOptionsRequest->sectionRaw, true, $this->activityService);
         }
 
-        $template->set_filenames(
+        $template->setFilenames(
             [
                 'cat_options' => 'cat_options.tpl',
                 'double_select' => 'double_select.tpl',
@@ -152,7 +152,7 @@ final class CatOptionsPageRenderer
             categoryOptionFalse: $categoryOptionFalse,
         ));
 
-        $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_options');
+        $template->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'cat_options');
     }
 }

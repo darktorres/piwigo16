@@ -335,7 +335,7 @@ final class InstallWizard
         // practice either.
         $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->paths->root . 'themes/admin', 'clear');
         $this->currentTemplate->set($template);
-        $template->set_filenames([
+        $template->setFilenames([
             'install' => 'install.tpl',
         ]);
         $this->template = $template;

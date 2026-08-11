@@ -129,7 +129,7 @@ test('__invoke returns a 400 "Hacking attempt!" response for an invalid page val
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'header.tpl', 'header');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $controller = new AdminPopuphelpController(
             LangTestFactory::get(),

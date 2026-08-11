@@ -56,7 +56,7 @@ it('handles a CSRF-valid activate action on the already-active default theme as 
     // ($dbRow !== null), before any real activation logic runs -- 'default'
     // is always installed in this test environment, so this exercises the
     // CSRF-valid action-dispatch block (fs-entry lookup + performAction()
-    // call + the action_errors===[] "delete_compiled_templates()+redirect"
+    // call + the action_errors===[] "deleteCompiledTemplates()+redirect"
     // branch) as a genuine no-op, without ever mutating real theme state.
     $page = H::loginAsAdmin($this);
     $token = H::pwgToken($page);

@@ -60,7 +60,7 @@ final class UserListPageRenderer
 
         $register_dates = $userService->getDistinctRegistrationYearMonths();
 
-        $template->set_filenames([
+        $template->setFilenames([
             'user_list' => 'user_list.tpl',
         ]);
 
@@ -212,7 +212,7 @@ final class UserListPageRenderer
             pagination: $pagination,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'user_list');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'user_list');
     }
 
     private static function webmasterIdIsLocal(Paths $paths): bool

@@ -142,8 +142,8 @@ test('render does nothing when no related category is commentable', function ():
         ],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
-    expect(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBeNull()
-        ->and(CurrentTemplate::current()->get()->get_template_vars('comment_add'))->toBeNull();
+    expect(CurrentTemplate::current()->get()->getTemplateVars('comments'))->toBeNull()
+        ->and(CurrentTemplate::current()->get()->getTemplateVars('comment_add'))->toBeNull();
 });
 
 // A mutation-testing sweep found `(bool) $category['commentable']` inside
@@ -324,7 +324,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
         ],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
-    expect(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBeNull();
+    expect(CurrentTemplate::current()->get()->getTemplateVars('comments'))->toBeNull();
 });
 
 test('render does not reject a logged-in (non-guest) user\'s posted comment even when comments_forall is off (`and`, not `or`)', function (): void {
@@ -346,7 +346,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // complete: it seeds a real (trivial, static-content) comment_list.tpl
     // into this test's own throwaway template root (same temp root
     // beforeEach already points CurrentPaths at) so the final
-    // assign_var_from_handle('COMMENT_LIST', ...) resolves cleanly too,
+    // assignVarFromHandle('COMMENT_LIST', ...) resolves cleanly too,
     // and asserts on the fully-rendered result -- stronger evidence than
     // merely "didn't throw".
     //
@@ -356,7 +356,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     CurrentConfigTestFactory::get()->commentsForall = false;
     $_POST['content'] = 'nice photo!';
     file_put_contents(CurrentPathsTestFactory::get()->root . '/comment_list.tpl', 'STATIC-COMMENT-LIST-CONTENT');
-    CurrentTemplate::current()->get()->set_template_dir(CurrentPathsTestFactory::get()->root);
+    CurrentTemplate::current()->get()->setTemplateDir(CurrentPathsTestFactory::get()->root);
 
     $renderer = new PictureCommentRenderer();
     // A nonexistent image id keeps countForImage()'s real COUNT(*) query
@@ -369,6 +369,6 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
         ],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
-    expect(CurrentTemplate::current()->get()->get_template_vars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')
-        ->and(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBe([]);
+    expect(CurrentTemplate::current()->get()->getTemplateVars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')
+        ->and(CurrentTemplate::current()->get()->getTemplateVars('comments'))->toBe([]);
 });

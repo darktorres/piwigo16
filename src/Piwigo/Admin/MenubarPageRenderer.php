@@ -121,8 +121,8 @@ final class MenubarPageRenderer
             blocks: $blocks,
         ));
 
-        $template->set_filename('menubar_admin_content', 'menubar.tpl');
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'menubar_admin_content');
+        $template->setFilename('menubar_admin_content', 'menubar.tpl');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'menubar_admin_content');
     }
 
     /**

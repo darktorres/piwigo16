@@ -99,7 +99,7 @@ test('handle() delegates to CommentsPageRenderer::render() with every one of its
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'comments.tpl', 'title={$ADMIN_PAGE_TITLE}');
         file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());
         $eventDispatcher = new EventDispatcher();
@@ -117,11 +117,11 @@ test('handle() delegates to CommentsPageRenderer::render() with every one of its
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))
+        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('User comments')
-            ->and($template->get_template_vars('F_ACTION'))
+            ->and($template->getTemplateVars('F_ACTION'))
             ->toContain('admin.php?page=comments')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('title=User comments');
     } finally {
         CurrentTemplate::current()->reset();

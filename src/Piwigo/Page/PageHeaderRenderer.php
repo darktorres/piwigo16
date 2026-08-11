@@ -69,7 +69,7 @@ final class PageHeaderRenderer
     {
         $template = $currentTemplate->get();
 
-        $template->set_filenames([
+        $template->setFilenames([
             'header' => 'header.tpl',
         ]);
 

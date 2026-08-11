@@ -205,7 +205,7 @@ final class BatchManagerUnitPageRenderer
         // |                             template init                             |
         // +-------------------------------------------------------------------+
 
-        $template->set_filenames(
+        $template->setFilenames(
             [
                 'batch_manager_unit' => 'batch_manager_unit.tpl',
             ]
@@ -510,6 +510,6 @@ final class BatchManagerUnitPageRenderer
         // |                           sending html code                           |
         // +-------------------------------------------------------------------+
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'batch_manager_unit');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_unit');
     }
 }

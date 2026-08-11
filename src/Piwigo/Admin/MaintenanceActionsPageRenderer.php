@@ -98,7 +98,7 @@ final class MaintenanceActionsPageRenderer
         // |                             template init                             |
         // +-------------------------------------------------------------------+
 
-        $template->set_filenames([
+        $template->setFilenames([
             'maintenance' => 'maintenance_actions.tpl',
         ]);
         $pwg_token = new CsrfService($this->currentConfig)
@@ -230,6 +230,6 @@ final class MaintenanceActionsPageRenderer
         // |                           sending html code                           |
         // +-------------------------------------------------------------------+
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'maintenance');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }
 }

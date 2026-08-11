@@ -172,7 +172,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         $this->renderer->render('themes');
 
-        $tplThemes = CurrentTemplate::current()->get()->get_template_vars('tpl_themes');
+        $tplThemes = CurrentTemplate::current()->get()->getTemplateVars('tpl_themes');
         self::assertIsArray($tplThemes);
 
         $ids = array_map(

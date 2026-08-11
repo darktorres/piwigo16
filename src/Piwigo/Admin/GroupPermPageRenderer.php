@@ -119,7 +119,7 @@ final class GroupPermPageRenderer
                 ]);
         }
 
-        $template->set_filenames(
+        $template->setFilenames(
             [
                 'group_perm' => 'group_perm.tpl',
                 'double_select' => 'double_select.tpl',
@@ -150,7 +150,7 @@ final class GroupPermPageRenderer
             categoryOptionFalse: $categoryOptionFalse,
         ));
 
-        $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'group_perm');
+        $template->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'group_perm');
     }
 }

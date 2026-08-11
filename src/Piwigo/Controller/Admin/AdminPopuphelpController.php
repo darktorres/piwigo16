@@ -100,7 +100,7 @@ final class AdminPopuphelpController implements ControllerInterface
         $help_content = $this->eventDispatcher->dispatchChange(new GetPopupHelpContent($help_content, $rawPage))
             ->content;
 
-        $template->set_filename('popuphelp', 'popuphelp.tpl');
+        $template->setFilename('popuphelp', 'popuphelp.tpl');
         $template->assignContext(new PopuphelpPageContext(helpContent: $help_content));
 
         if ($output === 'content_only') {

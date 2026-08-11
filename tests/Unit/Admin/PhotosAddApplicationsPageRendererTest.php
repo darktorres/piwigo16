@@ -20,11 +20,11 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * PhotosAddApplicationsPageContext assignment) has no branches worth a
  * duplicate end-to-end HTTP test.
  *
- * A real Template is required (not a fake): assign_var_from_handle()
+ * A real Template is required (not a fake): assignVarFromHandle()
  * calls Template::parse(), which needs a real, registered .tpl file for
  * the 'photos_add' handle or it hits Template's own htmlRenderer()->
  * fatalError() branch -- same real-fs technique
- * TemplateInstanceTest.php's own "assign_var_from_handle assigns the
+ * TemplateInstanceTest.php's own "assignVarFromHandle assigns the
  * parsed handle output" test already established.
  */
 function photosAddApplicationsTestRoot(): string
@@ -67,15 +67,15 @@ test('render() assigns the page title and parses the photos_add handle into ADMI
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'photos_add.tpl', 'title={$ADMIN_PAGE_TITLE}');
-        $template->set_template_dir($tplDir);
-        $template->set_filename('photos_add', 'photos_add.tpl');
+        $template->setTemplateDir($tplDir);
+        $template->setFilename('photos_add', 'photos_add.tpl');
 
         new PhotosAddApplicationsPageRenderer()
             ->render(LangTestFactory::get(), CurrentTemplate::current());
 
-        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))
+        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('Upload Photos')
-            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('title=Upload Photos');
     } finally {
         photosAddApplicationsTestRrmdir($root);

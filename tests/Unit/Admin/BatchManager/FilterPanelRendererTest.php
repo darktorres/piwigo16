@@ -47,7 +47,7 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
  *
  * Unlike every other renderer test in this campaign, this class takes a
  * real Template directly (not CurrentTemplate) and never calls
- * assign_var_from_handle()/set_filename() -- no .tpl fixture file
+ * assignVarFromHandle()/setFilename() -- no .tpl fixture file
  * needed at all.
  */
 function filterPanelTestRoot(): string
@@ -131,7 +131,7 @@ test('render() shows every built-in prefilter and no active filter/selection whe
                 CurrentConfigTestFactory::get(),
             );
 
-        $prefilters = $template->get_template_vars('prefilters');
+        $prefilters = $template->getTemplateVars('prefilters');
         if (! is_array($prefilters)) {
             throw new LogicException('expected an array of prefilters');
         }
@@ -143,15 +143,15 @@ test('render() shows every built-in prefilter and no active filter/selection whe
         // adding 'no_sync_md5sum'/'no_virtual_album' to the built-in 7.
         expect($ids)
             ->toBe(['all_photos', 'caddie', 'duplicates', 'last_import', 'no_album', 'no_sync_md5sum', 'no_tag', 'no_virtual_album', 'favorites'])
-            ->and($template->get_template_vars('filter'))
+            ->and($template->getTemplateVars('filter'))
             ->toBe([])
-            ->and($template->get_template_vars('selection'))
+            ->and($template->getTemplateVars('selection'))
             ->toBe([])
-            ->and($template->get_template_vars('associated_categories'))
+            ->and($template->getTemplateVars('associated_categories'))
             ->toBe([])
-            ->and($template->get_template_vars('filter_tags'))
+            ->and($template->getTemplateVars('filter_tags'))
             ->toBe([])
-            ->and($template->get_template_vars('ADMIN_PAGE_TITLE'))
+            ->and($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('Batch Manager');
     } finally {
         CurrentConfigTestFactory::get()->reset();

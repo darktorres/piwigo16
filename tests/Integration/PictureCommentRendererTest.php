@@ -99,7 +99,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // to persist a "don't recheck this" cache flag -- skip it the same
         // way a real request's 2nd-and-later call already does.
         CurrentConfigTestFactory::get()->dataDirChecked = '1';
-        // render()'s final assign_var_from_handle() really compiles
+        // render()'s final assignVarFromHandle() really compiles
         // comment_list.tpl -- root/theme='default' is what points
         // Smarty's template_dir at the real themes/default/template/
         // directory that file lives in (same root shape every real
@@ -305,7 +305,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
                 PageStateTestFactory::get()->errors
             );
 
-            $commentAdd = CurrentTemplate::current()->get()->get_template_vars('comment_add');
+            $commentAdd = CurrentTemplate::current()->get()->getTemplateVars('comment_add');
             self::assertIsArray($commentAdd);
             self::assertSame('Some Author', $commentAdd['AUTHOR']);
             // stripslashes() is a no-op here (no backslashes); htmlspecialchars()
@@ -333,7 +333,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('desc', SessionServiceTestFactory::get()->getCommentsOrder());
             // The nav link toggles to the opposite of whatever order is now
             // active ('desc' -> offers 'ASC').
-            $orderUrl = CurrentTemplate::current()->get()->get_template_vars('COMMENTS_ORDER_URL');
+            $orderUrl = CurrentTemplate::current()->get()->getTemplateVars('COMMENTS_ORDER_URL');
             self::assertIsString($orderUrl);
             self::assertStringContainsString('comments_order=ASC', $orderUrl);
         } finally {
@@ -433,11 +433,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         try {
             $this->seedUser(1, UserStatus::Admin);
             $this->renderComments($imageId);
-            $adminCount = CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT');
+            $adminCount = CurrentTemplate::current()->get()->getTemplateVars('COMMENT_COUNT');
 
             $this->seedUser(3, UserStatus::Normal);
             $this->renderComments($imageId);
-            $normalCount = CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT');
+            $normalCount = CurrentTemplate::current()->get()->getTemplateVars('COMMENT_COUNT');
 
             self::assertSame(2, $adminCount);
             self::assertSame(1, $normalCount);
@@ -459,8 +459,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $this->renderComments($imageId);
 
-        self::assertSame(0, CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT'));
-        self::assertNull(CurrentTemplate::current()->get()->get_template_vars('COMMENTS_ORDER_URL'));
+        self::assertSame(0, CurrentTemplate::current()->get()->getTemplateVars('COMMENT_COUNT'));
+        self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('COMMENTS_ORDER_URL'));
     }
 
     public function testRenderSetsTheCommentsOrderUrlWhenTheImageHasExactlyOneComment(): void
@@ -475,8 +475,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         try {
             $this->renderComments($imageId);
 
-            self::assertSame(1, CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT'));
-            self::assertIsString(CurrentTemplate::current()->get()->get_template_vars('COMMENTS_ORDER_URL'));
+            self::assertSame(1, CurrentTemplate::current()->get()->getTemplateVars('COMMENT_COUNT'));
+            self::assertIsString(CurrentTemplate::current()->get()->getTemplateVars('COMMENTS_ORDER_URL'));
         } finally {
             $this->conn->executeStatement('DELETE FROM comments WHERE id = ?', [$commentId->value]);
         }
@@ -506,8 +506,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         try {
             $this->renderComments($imageId);
 
-            self::assertSame(3, CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT'));
-            $navbar = CurrentTemplate::current()->get()->get_template_vars('navbar');
+            self::assertSame(3, CurrentTemplate::current()->get()->getTemplateVars('COMMENT_COUNT'));
+            $navbar = CurrentTemplate::current()->get()->getTemplateVars('navbar');
             self::assertIsArray($navbar);
             self::assertArrayHasKey('URL_NEXT', $navbar);
             self::assertIsString($navbar['URL_NEXT']);
@@ -543,7 +543,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $this->renderComments($imageId);
 
-        $commentAdd = CurrentTemplate::current()->get()->get_template_vars('comment_add');
+        $commentAdd = CurrentTemplate::current()->get()->getTemplateVars('comment_add');
         self::assertIsArray($commentAdd);
         self::assertArrayHasKey('KEY', $commentAdd);
         self::assertIsString($commentAdd['KEY']);
@@ -582,7 +582,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             $this->renderer()
                 ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $commentId, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
-            self::assertNull(CurrentTemplate::current()->get()->get_template_vars('comment_add'));
+            self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('comment_add'));
         } finally {
             $this->conn->executeStatement('DELETE FROM comments WHERE id = ?', [$commentId->value]);
         }
@@ -596,7 +596,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $this->renderComments($imageId);
 
-        self::assertNull(CurrentTemplate::current()->get()->get_template_vars('comment_add'));
+        self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('comment_add'));
     }
 
     public function testRenderHidesTheEmailPromptForAClassicUserWithARealRegisteredEmail(): void
@@ -606,7 +606,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $this->renderComments($imageId);
 
-        $commentAdd = CurrentTemplate::current()->get()->get_template_vars('comment_add');
+        $commentAdd = CurrentTemplate::current()->get()->getTemplateVars('comment_add');
         self::assertIsArray($commentAdd);
         self::assertFalse($commentAdd['SHOW_EMAIL']);
     }
@@ -623,7 +623,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $this->renderComments($imageId);
 
-        $commentAdd = CurrentTemplate::current()->get()->get_template_vars('comment_add');
+        $commentAdd = CurrentTemplate::current()->get()->getTemplateVars('comment_add');
         self::assertIsArray($commentAdd);
         self::assertTrue($commentAdd['SHOW_AUTHOR']);
         self::assertTrue($commentAdd['SHOW_EMAIL']);
@@ -645,7 +645,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             $this->renderer()
                 ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
-            $commentAdd = CurrentTemplate::current()->get()->get_template_vars('comment_add');
+            $commentAdd = CurrentTemplate::current()->get()->getTemplateVars('comment_add');
             self::assertIsArray($commentAdd);
             self::assertSame('', $commentAdd['AUTHOR']);
             self::assertSame('mutation-check.example.test', $commentAdd['WEBSITE_URL']);
@@ -969,7 +969,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
      */
     private function renderedComments(): array
     {
-        $vars = CurrentTemplate::current()->get()->get_template_vars('comments');
+        $vars = CurrentTemplate::current()->get()->getTemplateVars('comments');
 
         return is_array($vars) ? array_values($vars) : [];
     }

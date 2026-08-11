@@ -86,7 +86,7 @@ test('handle dispatches ?tab=standard_pages to the real standard-pages renderer'
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
         file_put_contents($tplDir . 'themes_standard_pages.tpl', 'themes_standard_pages_rendered=yes');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
         if (! $eventDispatcher instanceof EventDispatcher) {
@@ -105,7 +105,7 @@ test('handle dispatches ?tab=standard_pages to the real standard-pages renderer'
 
         $subController->handle(new ServerRequest('GET', '/admin.php?page=themes&tab=standard_pages'));
 
-        expect($template->get_template_vars('ADMIN_CONTENT'))
+        expect($template->getTemplateVars('ADMIN_CONTENT'))
             ->toContain('themes_standard_pages_rendered=yes');
     } finally {
         $_GET = $get;

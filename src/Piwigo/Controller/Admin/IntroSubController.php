@@ -184,7 +184,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // |                             template init                             |
         // +-----------------------------------------------------------------------+
 
-        $template->set_filenames([
+        $template->setFilenames([
             'intro' => 'intro.tpl',
         ]);
 
@@ -550,7 +550,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // |                           sending html code                           |
         // +-----------------------------------------------------------------------+
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'intro');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'intro');
 
         // Check integrity
         $integrityRepo = EntityManagerFactory::build($conn)->getRepository(IntegrityIgnoredAnomalyEntity::class);

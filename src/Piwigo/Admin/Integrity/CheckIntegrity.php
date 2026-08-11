@@ -206,7 +206,7 @@ final class CheckIntegrity
         $submit_ignore = false;
 
         if (count($this->retrieve_list) > 0) {
-            $template->set_filenames([
+            $template->setFilenames([
                 'check_integrity' => 'check_integrity.tpl',
             ]);
 

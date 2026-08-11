@@ -6,7 +6,7 @@ namespace Piwigo\Config;
 
 /**
  * A single template-extension override -- the [handle, param, theme]
- * 3-tuple Template::set_extents() destructures positionally.
+ * 3-tuple Template::setExtents() destructures positionally.
  */
 final readonly class TemplateExtension
 {

@@ -507,7 +507,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         }
 
         // ----------------------------------------------------- template initialization
-        $template->set_filename('config', 'configuration_' . $page_section . '.tpl');
+        $template->setFilename('config', 'configuration_' . $page_section . '.tpl');
 
         // TabSheet
         //
@@ -735,7 +735,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $watermark_filemap[$file] = $display;
                 }
                 $watermark = null;
-                if ($template->get_template_vars('watermark') === null) {
+                if ($template->getTemplateVars('watermark') === null) {
                     $wm = $this->imageStdParams->getWatermark();
 
                     $position = 'custom';
@@ -802,7 +802,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         ));
 
         // ----------------------------------------------------------- sending html code
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'config');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'config');
     }
 
     /**

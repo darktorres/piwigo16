@@ -93,7 +93,7 @@ final class PopuphelpController implements ControllerInterface
         $help_content = $this->eventDispatcher->dispatchChange(new GetPopupHelpContent($help_content, $rawPage))
             ->content;
 
-        $template->set_filename('popuphelp', 'popuphelp.tpl');
+        $template->setFilename('popuphelp', 'popuphelp.tpl');
         $template->assignContext(new PopuphelpPageContext(helpContent: $help_content));
 
         $template->parse('popuphelp', false);

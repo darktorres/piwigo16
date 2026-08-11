@@ -52,7 +52,7 @@ final class PluginsInstalledPageRenderer
     {
         $template = $currentTemplate->get();
 
-        $template->set_filenames([
+        $template->setFilenames([
             'plugins' => 'plugins_installed.tpl',
         ]);
 
@@ -255,6 +255,6 @@ final class PluginsInstalledPageRenderer
             pluginStates: $plugin_states,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'plugins');
     }
 }

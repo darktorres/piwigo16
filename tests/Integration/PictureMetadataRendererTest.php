@@ -211,7 +211,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
-        $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
+        $metadata = CurrentTemplate::current()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
         self::assertIsArray($metadata[0]);
@@ -254,7 +254,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
-        $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
+        $metadata = CurrentTemplate::current()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
         self::assertIsArray($metadata[0]);
@@ -278,7 +278,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
-        self::assertNull(CurrentTemplate::current()->get()->get_template_vars('metadata'));
+        self::assertNull(CurrentTemplate::current()->get()->getTemplateVars('metadata'));
     }
 
     public function testRenderAppendsIptcMetadataTranslatingKnownFields(): void
@@ -312,7 +312,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
-        $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
+        $metadata = CurrentTemplate::current()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
         self::assertIsArray($metadata[0]);
@@ -346,7 +346,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
-        $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
+        $metadata = CurrentTemplate::current()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(2, $metadata);
         self::assertIsArray($metadata[0]);

@@ -39,7 +39,7 @@ final class HelpPageRenderer
 
         $eventDispatcher->dispatchNotify(new LocEndHelp());
 
-        $template->set_filenames([
+        $template->setFilenames([
             'help' => 'help.tpl',
         ]);
 
@@ -71,6 +71,6 @@ final class HelpPageRenderer
             ));
         }
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'help');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'help');
     }
 }

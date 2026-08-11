@@ -61,12 +61,12 @@ use Smarty\TemplateBase;
  * actually called".
  *
  * Every `mixed` below stays that way by design: assign()/append()/
- * get_template_vars() mirror Smarty's own arbitrary-value assign()
+ * getTemplateVars() mirror Smarty's own arbitrary-value assign()
  * contract (see TemplateInterface's own rationale); every mod_*()/
  * block_*()/func_*() modifier/block/function plugin's $param(s) is
  * Smarty's own tag-attribute API -- genuinely template-author-supplied,
  * already defensively is_string()/is_scalar()/is_numeric()-validated at
- * each real use site (see func_define_derivative() for the fullest
+ * each real use site (see funcDefineDerivative() for the fullest
  * example), the same "parse, don't trust" boundary as InputValidator.
  */
 final class Template implements ThemeConfProviderInterface, TemplateInterface
@@ -234,8 +234,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->setCompileDir($compile_dir);
 
         $this->smarty->assign('pwg', new PwgTemplateAdapter($this->currentConfig));
-        $this->smarty->registerPlugin('modifiercompiler', 'translate', $this->modcompiler_translate(...));
-        $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', $this->modcompiler_translate_dec(...));
+        $this->smarty->registerPlugin('modifiercompiler', 'translate', $this->modcompilerTranslate(...));
+        $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', $this->modcompilerTranslateDec(...));
         $this->smarty->registerPlugin('modifier', 'sprintf', 'sprintf');
         $this->smarty->registerPlugin('modifier', 'urlencode', 'urlencode');
         $this->smarty->registerPlugin('modifier', 'intval', 'intval');
@@ -254,18 +254,18 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->registerPlugin('modifier', 'md5', 'md5');
         $this->smarty->registerPlugin('modifier', 'strtolower', 'strtolower');
         $this->smarty->registerPlugin('modifier', 'str_ireplace', 'str_ireplace');
-        $this->smarty->registerPlugin('modifier', 'explode', self::mod_explode(...));
-        $this->smarty->registerPlugin('modifier', 'ternary', self::mod_ternary(...));
-        $this->smarty->registerPlugin('modifier', 'get_extent', $this->get_extent(...));
-        $this->smarty->registerPlugin('block', 'html_head', $this->block_html_head(...));
-        $this->smarty->registerPlugin('block', 'html_style', $this->block_html_style(...));
-        $this->smarty->registerPlugin('function', 'combine_script', $this->func_combine_script(...));
-        $this->smarty->registerPlugin('function', 'get_combined_scripts', $this->func_get_combined_scripts(...));
-        $this->smarty->registerPlugin('function', 'combine_css', $this->func_combine_css(...));
-        $this->smarty->registerPlugin('function', 'define_derivative', $this->func_define_derivative(...));
-        $this->smarty->registerPlugin('compiler', 'get_combined_css', $this->func_get_combined_css(...));
-        $this->smarty->registerPlugin('block', 'footer_script', $this->block_footer_script(...));
-        $this->smarty->registerFilter('pre', self::prefilter_white_space(...));
+        $this->smarty->registerPlugin('modifier', 'explode', self::modExplode(...));
+        $this->smarty->registerPlugin('modifier', 'ternary', self::modTernary(...));
+        $this->smarty->registerPlugin('modifier', 'get_extent', $this->getExtent(...));
+        $this->smarty->registerPlugin('block', 'html_head', $this->blockHtmlHead(...));
+        $this->smarty->registerPlugin('block', 'html_style', $this->blockHtmlStyle(...));
+        $this->smarty->registerPlugin('function', 'combine_script', $this->funcCombineScript(...));
+        $this->smarty->registerPlugin('function', 'get_combined_scripts', $this->funcGetCombinedScripts(...));
+        $this->smarty->registerPlugin('function', 'combine_css', $this->funcCombineCss(...));
+        $this->smarty->registerPlugin('function', 'define_derivative', $this->funcDefineDerivative(...));
+        $this->smarty->registerPlugin('compiler', 'get_combined_css', $this->funcGetCombinedCss(...));
+        $this->smarty->registerPlugin('block', 'footer_script', $this->blockFooterScript(...));
+        $this->smarty->registerFilter('pre', self::prefilterWhiteSpace(...));
         $this->smarty->registerPlugin('modifier', 'url_is_remote', self::urlService()->urlIsRemote(...));
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', $this->lang->t(...));
@@ -285,17 +285,17 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 
         if ($this->currentConfig->compiledTemplateCacheLanguage) {
-            $this->smarty->registerFilter('post', self::postfilter_language(...));
+            $this->smarty->registerFilter('post', self::postfilterLanguage(...));
         }
 
         $this->smarty->setTemplateDir([]);
         if ($theme !== '') {
-            $this->set_theme($root, $theme, $path);
+            $this->setTheme($root, $theme, $path);
             if (! $this->adminContext->isActive()) {
-                $this->set_prefilter('header', fn (string $source, SmartyTemplate $smarty): string => self::prefilter_local_css($source, $smarty, $this->paths));
+                $this->setPrefilter('header', fn (string $source, SmartyTemplate $smarty): string => self::prefilterLocalCss($source, $smarty, $this->paths));
             }
         } else {
-            $this->set_template_dir($root);
+            $this->setTemplateDir($root);
         }
 
         $lang_info = $this->lang->langInfo();
@@ -311,8 +311,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->assign('lang_info', $lang_info);
 
         if (! $this->adminContext->isActive()) {
-            // set_extents() itself stays untouched -- it's also called by
-            // set_extent() with an arbitrary, genuinely-untyped $param a
+            // setExtents() itself stays untouched -- it's also called by
+            // setExtent() with an arbitrary, genuinely-untyped $param a
             // third-party plugin supplies, so its own polymorphic
             // is_array()/is_string() handling is load-bearing, not legacy
             // cruft. Unwrap back to the raw [handle, param, theme] shape it
@@ -321,7 +321,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 static fn (TemplateExtension $e): array => [$e->handle, $e->param, $e->theme],
                 $this->currentConfig->extentsForTemplates,
             );
-            $this->set_extents($rawExtents, $this->paths->root . 'template-extension/', true, $theme);
+            $this->setExtents($rawExtents, $this->paths->root . 'template-extension/', true, $theme);
         }
     }
 
@@ -330,7 +330,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * stays on this established, already-correct pattern rather than
      * being folded into the required-collaborator list above for no
      * reason. `private static` (not `private`) so it's reachable from
-     * make_script_src() below, which is itself an instance method but
+     * makeScriptSrc() below, which is itself an instance method but
      * keeps calling this via `self::` like every other caller in this
      * class. Resolves the container-shared instance, not a throwaway
      * `new UrlService($this->htmlRenderer())` -- see Image\SrcImage's
@@ -350,7 +350,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * `public` (unlike urlService() above) and referenced by its
      * fully-qualified name: the generated PHP source text
-     * (modcompiler_translate()/modcompiler_translate_dec()'s own output)
+     * (modcompilerTranslate()/modcompilerTranslateDec()'s own output)
      * is spliced by Smarty into `templates_c/*.php` compiled-cache files
      * and executed later by a Smarty-internal render function with no
      * `Template` instance (`$this`) or class scope available at all -- a
@@ -375,7 +375,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * as lang() above -- used inside
      * themes/standard_pages/themeconf.inc.php. Unlike lang()'s own
      * compiled-cache-codegen use case, this file is a real, direct PHP
-     * `include` from load_themeconf() below -- `$this` genuinely IS the
+     * `include` from loadThemeconf() below -- `$this` genuinely IS the
      * including Template instance there (an `include`d file shares its
      * including method's `$this` binding, including private-property
      * access) -- but PHPStan analyses every file independently and can't
@@ -424,7 +424,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * install.php has ever confirmed the schema exists (the
      * `derivative_settings` table doesn't exist yet on a fresh install).
      * Kept lazy here, so nothing forces this cost except
-     * func_define_derivative() actually running.
+     * funcDefineDerivative() actually running.
      */
     private function imageStdParams(): ImageStdParams
     {
@@ -463,10 +463,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param bool $load_css
      * @param bool $load_local_head
      */
-    public function set_theme($root, $theme, $path, $load_css = true, $load_local_head = true, string $colorscheme = 'dark'): void
+    public function setTheme($root, $theme, $path, $load_css = true, $load_local_head = true, string $colorscheme = 'dark'): void
     {
         // we need themeconf before std_pgs to see what themes use_standard_pages
-        $themeconf = $this->load_themeconf($root . '/' . $theme);
+        $themeconf = $this->loadThemeconf($root . '/' . $theme);
 
         // We loop over the theme and the parent theme, so if we exclude default,
         // standard pages can't get the header to load the html header
@@ -476,15 +476,15 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             and ((bool) ($themeconf['use_standard_pages'] ?? false) or $this->currentConfig->useStandardPages)
         ) {
             $theme = 'standard_pages';
-            $themeconf = $this->load_themeconf($root . '/' . $theme);
+            $themeconf = $this->loadThemeconf($root . '/' . $theme);
         }
 
-        $this->set_template_dir($root . '/' . $theme . '/' . $path);
+        $this->setTemplateDir($root . '/' . $theme . '/' . $path);
 
         if (isset($themeconf['parent']) and is_string($themeconf['parent']) and $themeconf['parent'] !== $theme) {
             $load_parent_css = $themeconf['load_parent_css'] ?? $load_css;
             $load_parent_local_head = $themeconf['load_parent_local_head'] ?? $load_local_head;
-            $this->set_theme(
+            $this->setTheme(
                 $root,
                 $themeconf['parent'],
                 $path,
@@ -516,7 +516,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *
      * @param string $dir
      */
-    public function set_template_dir($dir): void
+    public function setTemplateDir($dir): void
     {
         $this->smarty->addTemplateDir($dir);
 
@@ -530,7 +530,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Gets the template root directory for this Template object.
      */
-    public function get_template_dir(): string
+    public function getTemplateDir(): string
     {
         $dir = $this->smarty->getTemplateDir(0);
         return is_string($dir) ? $dir : '';
@@ -539,7 +539,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Deletes all compiled templates.
      */
-    public function delete_compiled_templates(): void
+    public function deleteCompiledTemplates(): void
     {
         $save_compile_id = $this->smarty->compile_id;
         $this->smarty->compile_id = null;
@@ -554,14 +554,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $val
      * @return mixed
      */
-    public function get_themeconf($val)
+    public function getThemeconf($val)
     {
         $tc = $this->smarty->getTemplateVars('themeconf');
         return is_array($tc) ? ($tc[$val] ?? '') : '';
     }
 
     /**
-     * String-narrowed variant of get_themeconf() above: the corresponding
+     * String-narrowed variant of getThemeconf() above: the corresponding
      * $themeconf value if existing and a string, otherwise an empty
      * string. Implements Piwigo\Core\ThemeConfProviderInterface so L2a
      * callers (SrcImage) can reach it without depending on this L3 class;
@@ -570,7 +570,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     #[Override]
     public function themeConf(string $key): string
     {
-        $value = $this->get_themeconf($key);
+        $value = $this->getThemeconf($key);
 
         return is_string($value) ? $value : '';
     }
@@ -582,9 +582,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $filename
      */
     #[Override]
-    public function set_filename($handle, $filename): bool
+    public function setFilename($handle, $filename): bool
     {
-        return $this->set_filenames([
+        return $this->setFilenames([
             $handle => $filename,
         ]);
     }
@@ -597,14 +597,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *   first-party caller exercises this, but the API supports it)
      */
     #[Override]
-    public function set_filenames($filename_array): bool
+    public function setFilenames($filename_array): bool
     {
         reset($filename_array);
         foreach ($filename_array as $handle => $filename) {
             if ($filename === null) {
                 unset($this->files[$handle]);
             } else {
-                $this->files[$handle] = $this->get_extent($filename, $handle);
+                $this->files[$handle] = $this->getExtent($filename, $handle);
             }
         }
         return true;
@@ -619,9 +619,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param bool $overwrite
      * @param string $theme
      */
-    public function set_extent($filename, $param, $dir = '', $overwrite = true, $theme = 'N/A'): bool
+    public function setExtent($filename, $param, $dir = '', $overwrite = true, $theme = 'N/A'): bool
     {
-        return $this->set_extents([
+        return $this->setExtents([
             $filename => $param,
         ], $dir, $overwrite);
     }
@@ -630,13 +630,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Sets template extentions filenames for handles.
      *
      * @param mixed $filename_array hashmap of handle=>filename; also called
-     *   directly with a plugin-supplied value (set_extent()'s caller),
+     *   directly with a plugin-supplied value (setExtent()'s caller),
      *   which is not guaranteed to be an array
      * @param string $dir
      * @param bool $overwrite
      * @param string $theme
      */
-    public function set_extents($filename_array, $dir = '', $overwrite = true, $theme = 'N/A'): bool
+    public function setExtents($filename_array, $dir = '', $overwrite = true, $theme = 'N/A'): bool
     {
         if (! is_array($filename_array)) {
             return false;
@@ -679,7 +679,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $handle
      * @return string
      */
-    public function get_extent($filename = '', $handle = '')
+    public function getExtent($filename = '', $handle = '')
     {
         if (isset($this->extents[$handle])) {
             $filename = $this->extents[$handle];
@@ -702,7 +702,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @return true
      */
     #[Override]
-    public function assign_var_from_handle($varname, string $handle): bool
+    public function assignVarFromHandle($varname, string $handle): bool
     {
         $this->smarty->assign($varname, $this->parse($handle, true));
         return true;
@@ -730,7 +730,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $tpl_var
      */
     #[Override]
-    public function clear_assign($tpl_var): void
+    public function clearAssign($tpl_var): void
     {
         $this->smarty->clearAssign($tpl_var);
     }
@@ -742,7 +742,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string|null $tpl_var
      */
     #[Override]
-    public function get_template_vars($tpl_var = null): mixed
+    public function getTemplateVars($tpl_var = null): mixed
     {
         return $this->smarty->getTemplateVars($tpl_var);
     }
@@ -769,7 +769,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->assign('ROOT_PATH', $this->paths->root);
 
         $save_compile_id = $this->smarty->compile_id;
-        $this->load_external_filters($handle);
+        $this->loadExternalFilters($handle);
 
         $lang_info = $this->lang->langInfo();
         if ($this->currentConfig->compiledTemplateCacheLanguage and isset($lang_info['code']) and is_string($lang_info['code'])) {
@@ -779,7 +779,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $v = $this->smarty->fetch($this->files[$handle]);
 
         $this->smarty->compile_id = $save_compile_id;
-        $this->unload_external_filters($handle);
+        $this->unloadExternalFilters($handle);
 
         if ($return) {
             return $v;
@@ -824,7 +824,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 foreach ($scripts as $script) {
                     $content[] =
                         '<script type="text/javascript" src="'
-                        . $this->make_script_src($script)
+                        . $this->makeScriptSrc($script)
                         . '"></script>';
                 }
 
@@ -921,7 +921,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $str
      * @return mixed
      */
-    public static function get_php_str_val($str)
+    public static function getPhpStrVal($str)
     {
         if (strlen($str) > 1) {
             if (($str[0] === '\'' && $str[strlen($str) - 1] === '\'')
@@ -929,7 +929,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 // $tmp is always really reassigned by the eval() below --
                 // this initializer exists only to give PHPStan a definite
                 // assignment to trace, since it can't see into eval()'s
-                // string content (same blind spot as prefilter_white_space()
+                // string content (same blind spot as prefilterWhiteSpace()
                 // below).
                 $tmp = null;
                 eval('$tmp=' . $str . ';');
@@ -947,13 +947,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @see Template::lang()
      * @param array<int, string> $params
      */
-    public function modcompiler_translate(array $params): string
+    public function modcompilerTranslate(array $params): string
     {
 
         switch (count($params)) {
             case 1:
-                $key = self::get_php_str_val($params[0]);
-                // get_php_str_val() evaluates a quoted PHP string literal
+                $key = self::getPhpStrVal($params[0]);
+                // getPhpStrVal() evaluates a quoted PHP string literal
                 // via eval(), which PHPStan can't trace the return type of
                 // -- it's always a real string here since $params[0] is a
                 // template-compiled string literal expression, but narrow
@@ -983,7 +983,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             default:
                 if ($this->currentConfig->compiledTemplateCacheLanguage) {
                     $ret = 'sprintf(';
-                    $ret .= $this->modcompiler_translate([$params[0]]);
+                    $ret .= $this->modcompilerTranslate([$params[0]]);
                     $ret .= ',' . implode(',', array_slice($params, 1));
                     $ret .= ')';
                     return $ret;
@@ -1001,7 +1001,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @see Template::lang()
      * @param array<int, string> $params
      */
-    public function modcompiler_translate_dec(array $params): string
+    public function modcompilerTranslateDec(array $params): string
     {
         if ($this->currentConfig->compiledTemplateCacheLanguage) {
             $ret = 'sprintf(';
@@ -1011,14 +1011,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 $ret .= '($tmp=(' . $params[0] . '))>1';
             }
             $ret .= '?';
-            $ret .= $this->modcompiler_translate([$params[2]]);
+            $ret .= $this->modcompilerTranslate([$params[2]]);
             $ret .= ':';
-            $ret .= $this->modcompiler_translate([$params[1]]);
+            $ret .= $this->modcompilerTranslate([$params[1]]);
             $ret .= ',$tmp';
             $ret .= ')';
             return $ret;
         }
-        // Permanent exception -- see modcompiler_translate()'s own comment
+        // Permanent exception -- see modcompilerTranslate()'s own comment
         // on its identical single-param-branch return above.
         return '\Piwigo\Template\Template::lang()->plural(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
     }
@@ -1032,10 +1032,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $delimiter
      * @return string[]
      */
-    public static function mod_explode($text, $delimiter = ','): array
+    public static function modExplode($text, $delimiter = ','): array
     {
         if ($delimiter === '') {
-            throw new Exception('mod_explode(): delimiter must not be empty');
+            throw new Exception('modExplode(): delimiter must not be empty');
         }
         return explode($delimiter, $text);
     }
@@ -1050,7 +1050,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param mixed $false
      * @return mixed
      */
-    public static function mod_ternary($param, $true, $false)
+    public static function modTernary($param, $true, $false)
     {
         return (bool) $param ? $true : $false;
     }
@@ -1062,7 +1062,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param array<int, mixed> $params (unused)
      * @param string|null $content
      */
-    public function block_html_head($params, $content): void
+    public function blockHtmlHead($params, $content): void
     {
         // Smarty calls block plugins twice: null $content on the opening
         // tag, real content on the closing tag ("second call" below).
@@ -1079,7 +1079,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param array<int, mixed> $params (unused)
      * @param string|null $content
      */
-    public function block_html_style($params, $content): void
+    public function blockHtmlStyle($params, $content): void
     {
         // Smarty calls block plugins twice: null $content on the opening
         // tag, real content on the closing tag ("second call" below).
@@ -1104,7 +1104,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param array<string, mixed> $params
      * @param Smarty $smarty
      */
-    public function func_define_derivative(array $params, $smarty): void
+    public function funcDefineDerivative(array $params, $smarty): void
     {
         $name = $params['name'] ?? null;
         (! in_array($name, [null, false, 0, '0', '', []], true) && is_string($name)) or $this->htmlRenderer()
@@ -1183,7 +1183,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *   - version (optional) used to force a browser refresh
      * @param array<string, mixed> $params
      */
-    public function func_combine_script(array $params): void
+    public function funcCombineScript(array $params): void
     {
         if (! isset($params['id']) || ! is_string($params['id'])) {
             // recordFatal() records the fatal condition without halting
@@ -1235,7 +1235,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *    - load (required)
      * @param array<string, mixed> $params
      */
-    public function func_get_combined_scripts(array $params): string
+    public function funcGetCombinedScripts(array $params): string
     {
         if (! isset($params['load'])) {
             $this->errorCollector->recordFatal("get_combined_scripts: missing 'load' parameter");
@@ -1250,7 +1250,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             foreach ($scripts->sync as $script) {
                 $content[] =
                   '<script type="text/javascript" src="'
-                  . $this->make_script_src($script)
+                  . $this->makeScriptSrc($script)
                   . '"></script>';
             }
             if ((bool) count($this->scriptLoader->inline_scripts)) {
@@ -1268,7 +1268,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 JS;
                 foreach ($scripts->async as $script) {
                     $content[] = <<<JS
-                    s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='{$this->make_script_src($script)}';
+                    s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='{$this->makeScriptSrc($script)}';
                     JS;
                     $content[] = 'after = after.parentNode.insertBefore(s, after);';
                 }
@@ -1284,7 +1284,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *
      * @param Combinable $script
      */
-    private function make_script_src($script): string
+    private function makeScriptSrc($script): string
     {
         $ret = '';
         if ($script->isRemote(self::urlService())) {
@@ -1314,7 +1314,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param array<string, mixed> $params
      * @param string|null $content
      */
-    public function block_footer_script(array $params, $content): void
+    public function blockFooterScript(array $params, $content): void
     {
         // Smarty calls block plugins twice: null $content on the opening
         // tag, real content on the closing tag ("second call" below).
@@ -1342,7 +1342,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *    - template (optional) set to true to allow smarty syntax in the css file
      * @param array<string, mixed> $params
      */
-    public function func_combine_css(array $params): void
+    public function funcCombineCss(array $params): void
     {
         if (in_array($params['path'] ?? null, [null, false, 0, '0', '', []], true) || ! is_string($params['path'])) {
             $this->htmlRenderer()
@@ -1371,7 +1371,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *
      * @param array<int, mixed> $params (unused)
      */
-    public function func_get_combined_css($params): string
+    public function funcGetCombinedCss($params): string
     {
         return self::COMBINED_CSS_TAG;
     }
@@ -1385,7 +1385,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $handle
      * @param callable $callback
      */
-    public function set_prefilter($handle, $callback, int $weight = 50): void
+    public function setPrefilter($handle, $callback, int $weight = 50): void
     {
         $this->external_filters[$handle][$weight][] = ['pre', $callback];
         ksort($this->external_filters[$handle]);
@@ -1399,7 +1399,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $handle
      * @param callable $callback
      */
-    public function set_postfilter($handle, $callback, int $weight = 50): void
+    public function setPostfilter($handle, $callback, int $weight = 50): void
     {
         $this->external_filters[$handle][$weight][] = ['post', $callback];
         ksort($this->external_filters[$handle]);
@@ -1413,7 +1413,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $handle
      * @param callable $callback
      */
-    public function set_outputfilter($handle, $callback, int $weight = 50): void
+    public function setOutputfilter($handle, $callback, int $weight = 50): void
     {
         $this->external_filters[$handle][$weight][] = ['output', $callback];
         ksort($this->external_filters[$handle]);
@@ -1424,7 +1424,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *
      * @param string $handle
      */
-    public function load_external_filters($handle): void
+    public function loadExternalFilters($handle): void
     {
         if (isset($this->external_filters[$handle])) {
             $compile_id = '';
@@ -1454,7 +1454,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *
      * @param string $handle
      */
-    public function unload_external_filters($handle): void
+    public function unloadExternalFilters($handle): void
     {
         if (isset($this->external_filters[$handle])) {
             foreach ($this->external_filters[$handle] as $filters) {
@@ -1467,12 +1467,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * @toto : description of Template::prefilter_white_space
+     * @toto : description of Template::prefilterWhiteSpace
      *
      * @param string $source
      * @param Smarty $smarty
      */
-    public static function prefilter_white_space($source, $smarty): ?string
+    public static function prefilterWhiteSpace($source, $smarty): ?string
     {
         $ld = $smarty->getLeftDelimiter();
         $rd = $smarty->getRightDelimiter();
@@ -1501,7 +1501,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $source
      * @param Smarty $smarty
      */
-    public static function postfilter_language($source, $smarty): ?string
+    public static function postfilterLanguage($source, $smarty): ?string
     {
         // replaces echo PHP_STRING_LITERAL; with the string literal value
         $source = preg_replace_callback(
@@ -1517,7 +1517,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 // as undefined in the enclosing scope (it doesn't parse the
                 // evaluated string) -- there's no provable guard possible.
                 // Tried the same pre-initialize-before-eval() trick that
-                // fixed get_php_str_val()'s bare `return $tmp;` above --
+                // fixed getPhpStrVal()'s bare `return $tmp;` above --
                 // backfires here specifically because of the isset() guard:
                 // pre-setting $tmp = null makes PHPStan conclude isset($tmp)
                 // is always false (a variable PHPStan believes always exists
@@ -1537,7 +1537,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Prefilter used to add theme local CSS files.
      *
      * Registered against a real Smarty compile pass (see the constructor's
-     * own set_prefilter() call below), Smarty always invokes this with the
+     * own setPrefilter() call below), Smarty always invokes this with the
      * currently-compiling Smarty\Template, not the top-level Smarty\Smarty
      * engine -- confirmed live (a bare `Smarty $smarty` closure param there
      * throws a real TypeError). This method's own $smarty param is typed to
@@ -1552,7 +1552,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param TemplateBase $smarty
      * @return string
      */
-    public static function prefilter_local_css($source, $smarty, Paths $paths)
+    public static function prefilterLocalCss($source, $smarty, Paths $paths)
     {
         // The relative directory name (e.g. 'local/' or a PIWIGO_LOCAL_DIR
         // override) -- combine_css's own path= attribute needs a
@@ -1592,7 +1592,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @param string $dir
      * @return array<string, mixed>
      */
-    public function load_themeconf($dir)
+    public function loadThemeconf($dir)
     {
         $real_dir = realpath($dir);
         if ($real_dir === false) {
@@ -1637,7 +1637,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *
      * @param string $content
      */
-    public function add_picture_button($content, int $rank = 50): void
+    public function addPictureButton($content, int $rank = 50): void
     {
         $this->picture_buttons[$rank][] = $content;
     }
@@ -1647,7 +1647,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *
      * @param string $content
      */
-    public function add_index_button($content, int $rank = 50): void
+    public function addIndexButton($content, int $rank = 50): void
     {
         $this->index_buttons[$rank][] = $content;
     }
@@ -1655,7 +1655,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Assigns PLUGIN_PICTURE_BUTTONS template variable with registered picture buttons.
      */
-    public function parse_picture_buttons(): void
+    public function parsePictureButtons(): void
     {
         if ($this->picture_buttons !== []) {
             ksort($this->picture_buttons);
@@ -1678,7 +1678,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Assigns PLUGIN_INDEX_BUTTONS template variable with registered index buttons.
      */
-    public function parse_index_buttons(): void
+    public function parseIndexButtons(): void
     {
         if ($this->index_buttons !== []) {
             ksort($this->index_buttons);

@@ -11,7 +11,7 @@ use Piwigo\Image\DerivativeParams;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Category\CategoryDefaultRenderer::render()} before its
- * own `assign_var_from_handle('THUMBNAILS', 'index_thumbnails')` call
+ * own `assignVarFromHandle('THUMBNAILS', 'index_thumbnails')` call
  * parses the template using these vars.
  */
 final readonly class CategoryDefaultThumbnailsPageContext implements TemplatePageContext

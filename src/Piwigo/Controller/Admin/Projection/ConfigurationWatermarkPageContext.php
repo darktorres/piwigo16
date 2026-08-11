@@ -14,7 +14,7 @@ use Piwigo\Core\TemplatePageContext;
  * `handle()`'s own assigns. `$saveSuccess` (the form-submitted-
  * successfully branch) and `$watermark`/`$ferrors` (the
  * validation-failure branch, which also makes `handle()`'s own
- * `$template->get_template_vars('watermark') === null` guard false)
+ * `$template->getTemplateVars('watermark') === null` guard false)
  * are mutually exclusive.
  */
 final readonly class ConfigurationWatermarkPageContext implements TemplatePageContext

@@ -202,7 +202,7 @@ final class UpdatesPwgPageRenderer
             majorVersionPwg: $major_version_pwg,
             adminPageTitle: $this->lang->t('Updates'),
         ));
-        $template->set_filename('plugin_admin_content', 'updates_pwg.tpl');
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
+        $template->setFilename('plugin_admin_content', 'updates_pwg.tpl');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'plugin_admin_content');
     }
 }

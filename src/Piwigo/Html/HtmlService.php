@@ -901,7 +901,7 @@ final class HtmlService implements HtmlRenderingInterface
     public function flushPageMessages(): void
     {
         $template = $this->currentTemplate->get();
-        if ($template->get_template_vars('page_refresh') === null) {
+        if ($template->getTemplateVars('page_refresh') === null) {
             $pageState = $this->pageState;
             $template->assignContext(new PageMessagesContext(
                 errors: $this->flushMessageMode('errors', $pageState->errors),
@@ -937,7 +937,7 @@ final class HtmlService implements HtmlRenderingInterface
     public function flushKeyedErrors(array $keyedErrors): void
     {
         $template = $this->currentTemplate->get();
-        if ($template->get_template_vars('page_refresh') === null) {
+        if ($template->getTemplateVars('page_refresh') === null) {
             $template->assignContext(new PageMessagesContext(
                 errors: $this->flushMessageMode('errors', $keyedErrors),
                 infos: null,

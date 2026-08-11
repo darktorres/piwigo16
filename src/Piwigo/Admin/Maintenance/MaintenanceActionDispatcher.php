@@ -198,7 +198,7 @@ final class MaintenanceActionDispatcher
             case 'compiled-templates':
 
                 $this->currentTemplate->get()
-                    ->delete_compiled_templates();
+                    ->deleteCompiledTemplates();
                 FileCombiner::clearCombinedFiles($this->currentConfig, $this->paths);
                 if (! $this->persistentCache instanceof PersistentCache) {
                     $this->htmlRenderer

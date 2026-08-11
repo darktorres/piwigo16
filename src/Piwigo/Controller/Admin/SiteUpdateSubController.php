@@ -961,7 +961,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
         // |                        template initialization                        |
         // +-----------------------------------------------------------------------+
-        $template->set_filenames([
+        $template->setFilenames([
             'update' => 'site_update.tpl',
         ]);
         $result_title = '';
@@ -1084,6 +1084,6 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
         // |                          sending html code                            |
         // +-----------------------------------------------------------------------+
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'update');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'update');
     }
 }

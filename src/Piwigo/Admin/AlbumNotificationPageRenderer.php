@@ -229,7 +229,7 @@ final class AlbumNotificationPageRenderer
         // |                       template initialization                     |
         // +-------------------------------------------------------------------+
 
-        $template->set_filename('album_notification', 'album_notification.tpl');
+        $template->setFilename('album_notification', 'album_notification.tpl');
 
         // $page['cat'] was set to $category['id'] (a real int) above, in
         // this same method scope with no intervening by-reference calls,
@@ -338,6 +338,6 @@ final class AlbumNotificationPageRenderer
         // |                           sending html code                       |
         // +-------------------------------------------------------------------+
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'album_notification');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'album_notification');
     }
 }

@@ -161,7 +161,7 @@ final class AlbumsPageRenderer
         // +-------------------------------------------------------------------+
         // |                       template initialization                     |
         // +-------------------------------------------------------------------+
-        $template->set_filename('albums', 'albums.tpl');
+        $template->setFilename('albums', 'albums.tpl');
 
         // +-------------------------------------------------------------------+
         // |                          Album display                            |
@@ -275,7 +275,7 @@ final class AlbumsPageRenderer
         // |                          sending html code                        |
         // +-------------------------------------------------------------------+
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'albums');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'albums');
     }
 
     /**

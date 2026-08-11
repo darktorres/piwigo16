@@ -368,7 +368,7 @@ final readonly class CoreUpdateService
         ]);
 
         if ($this->stepIs($step, 2)) {
-            $template->delete_compiled_templates();
+            $template->deleteCompiledTemplates();
             $this->configService->confDeleteParam('fs_quick_check_last_check');
 
             $this->pageState->addInfo($this->lang->t('Update Complete'));

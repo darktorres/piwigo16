@@ -281,7 +281,7 @@ final class AdminShell
         $this->pageState->setPageBanner('<h1>' . $this->lang->t('Piwigo Administration') . '</h1>');
         $this->pageState->setBodyId('theAdminPage');
 
-        $template->set_filenames([
+        $template->setFilenames([
             'admin' => 'admin.tpl',
         ]);
 

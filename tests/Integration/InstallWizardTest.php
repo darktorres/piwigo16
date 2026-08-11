@@ -479,7 +479,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * render(), so this is the first one to reach render() with real,
      * analyzeForm()-collected errors still present. Verified both via the
      * template's own assigned var directly (matching the config-write-
-     * fallback test's own use of get_template_vars() elsewhere in this
+     * fallback test's own use of getTemplateVars() elsewhere in this
      * file) and via install.tpl's real `{if isset($errors)}` HTML
      * rendering of it.
      */
@@ -512,7 +512,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $template = $this->reflectPrivate($wizard, 'template');
         self::assertInstanceOf(Template::class, $template);
-        self::assertSame($this->reflectPrivate($wizard, 'errors'), $template->get_template_vars('errors'));
+        self::assertSame($this->reflectPrivate($wizard, 'errors'), $template->getTemplateVars('errors'));
 
         self::assertStringContainsString('please enter the webmaster username', $output);
     }

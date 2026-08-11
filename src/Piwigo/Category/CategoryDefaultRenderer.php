@@ -132,7 +132,7 @@ final readonly class CategoryDefaultRenderer
         }
 
         // template thumbnail initialization
-        $template->set_filenames([
+        $template->setFilenames([
             'index_thumbnails' => 'thumbnails.tpl',
         ]);
 
@@ -226,9 +226,9 @@ final readonly class CategoryDefaultRenderer
             thumbnails: $tplThumbnailsVar,
         ));
 
-        $template->assign_var_from_handle('THUMBNAILS', 'index_thumbnails');
+        $template->assignVarFromHandle('THUMBNAILS', 'index_thumbnails');
         unset($pictures, $selection, $tplThumbnailsVar);
-        $template->clear_assign('thumbnails');
+        $template->clearAssign('thumbnails');
         TimingHelper::debug('end CategoryDefaultRenderer::render()', $this->pageState);
 
         return $slideshowUrl;

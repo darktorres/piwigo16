@@ -61,7 +61,7 @@ final class TagsPageRenderer
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=tags');
         }
 
-        $template->set_filenames([
+        $template->setFilenames([
             'tags' => 'tags.tpl',
         ]);
 
@@ -154,6 +154,6 @@ final class TagsPageRenderer
             adminPageTitle: $this->lang->t('Tags'),
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'tags');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'tags');
     }
 }

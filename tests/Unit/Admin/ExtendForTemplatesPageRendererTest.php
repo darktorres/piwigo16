@@ -134,7 +134,7 @@ test('render() has nothing to show when no extents are configured, no theme temp
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'extend_for_templates.tpl', 'title={$ADMIN_PAGE_TITLE}');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $conn = DbConnection::build();
 
@@ -151,11 +151,11 @@ test('render() has nothing to show when no extents are configured, no theme temp
                 Paths::fromRoot($root),
             );
 
-        expect($template->get_template_vars('ADMIN_PAGE_TITLE'))
+        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('Extend for templates')
-            ->and($template->get_template_vars('extents'))
+            ->and($template->getTemplateVars('extents'))
             ->toBeNull()
-            ->and($template->get_template_vars('ADMIN_CONTENT'))
+            ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('title=Extend for templates');
     } finally {
         CurrentTemplate::current()->reset();

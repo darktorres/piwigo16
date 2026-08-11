@@ -75,7 +75,7 @@ test('handle renders the real menubar-order admin screen with no registered bloc
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
         file_put_contents($tplDir . 'menubar.tpl', 'menubar_admin_rendered=yes');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),
@@ -104,7 +104,7 @@ test('handle renders the real menubar-order admin screen with no registered bloc
 
         $subController->handle(new ServerRequest('GET', '/admin.php?page=menubar'));
 
-        expect($template->get_template_vars('ADMIN_CONTENT'))
+        expect($template->getTemplateVars('ADMIN_CONTENT'))
             ->toContain('menubar_admin_rendered=yes');
     } finally {
         $_POST = $post;

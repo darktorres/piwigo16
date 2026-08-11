@@ -96,7 +96,7 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'thumbnails.tpl', 'count={$thumbnails|@count}');
-        $template->set_template_dir($tplDir);
+        $template->setTemplateDir($tplDir);
 
         $conn = DbConnection::build();
 
@@ -118,13 +118,13 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
 
         $slideshowUrl = $renderer->render([], 0, 10, Section::Categories);
 
-        // render() explicitly clear_assign('thumbnails')s right after
+        // render() explicitly clearAssign('thumbnails')s right after
         // parsing the handle -- 'thumbnails' itself is genuinely gone by
         // the time render() returns; THUMBNAILS (the parsed output) is
         // the real, lasting observable.
         expect($slideshowUrl)
             ->toBeNull()
-            ->and($template->get_template_vars('THUMBNAILS'))
+            ->and($template->getTemplateVars('THUMBNAILS'))
             ->toBe('count=0');
     } finally {
         CurrentTemplate::current()->reset();

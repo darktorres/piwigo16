@@ -93,7 +93,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
-        $template->set_filenames([
+        $template->setFilenames([
             'photos_add' => 'photos_add_' . $tab . '.tpl',
         ]);
 

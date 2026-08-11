@@ -79,7 +79,7 @@ final class PluginsNewPageRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
-        $template->set_filenames([
+        $template->setFilenames([
             'plugins' => 'plugins_new.tpl',
         ]);
 
@@ -295,6 +295,6 @@ final class PluginsNewPageRenderer
             plugins: $tpl_plugins,
         ));
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'plugins');
     }
 }

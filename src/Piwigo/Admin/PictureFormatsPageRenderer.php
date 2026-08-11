@@ -73,8 +73,8 @@ final class PictureFormatsPageRenderer
                 ->getToken(),
         ));
 
-        $template->set_filename('picture_formats', 'picture_formats.tpl');
+        $template->setFilename('picture_formats', 'picture_formats.tpl');
 
-        $template->assign_var_from_handle('ADMIN_CONTENT', 'picture_formats');
+        $template->assignVarFromHandle('ADMIN_CONTENT', 'picture_formats');
     }
 }

@@ -239,10 +239,10 @@ final class RegisterController implements ControllerInterface
         $title = $this->lang->t('Registration');
         $this->pageState->setBodyId('theRegisterPage');
 
-        $template->set_filenames([
+        $template->setFilenames([
             'register' => 'register.tpl',
         ]);
-        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = $template->getTemplateVars('themeconf');
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
         if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
             new MenubarRenderer()

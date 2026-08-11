@@ -161,7 +161,7 @@ final class Lang
      * Thin `$this->translator->plural()` delegate: `Translator::plural()`
      * requires a strict native `int`, but this boundary's real caller is
      * Smarty-compiled-template expressions (`Template::
-     * modcompiler_translate_dec()`'s generated code -- the only real
+     * modcompilerTranslateDec()`'s generated code -- the only real
      * caller, confirmed by grep) whose runtime value can be a numeric
      * DB-row string (e.g. menubar_categories.tpl passes one). Every
      * hand-written .php call site instead calls its own

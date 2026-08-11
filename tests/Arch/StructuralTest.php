@@ -714,40 +714,34 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
         ->toBe([]);
 });
 
-test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PHPWG_URL/PHPWG_DOMAIN/PEM_URL reads', function (): void {
-    // All 6 are fully retired, zero-tolerance -- typed
-    // replacements (Piwigo\Core\AdminContext/WsContext/InstallationFlag/
+test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PWG_CHARSET/PHPWG_URL/PHPWG_DOMAIN/PEM_URL reads', function (): void {
+    // All 7 are fully retired, zero-tolerance -- typed replacements
+    // (Piwigo\Core\AdminContext/WsContext/InstallationFlag/
     // AppInfo::DOMAIN/AppInfo::URL/Bootstrap\RequestBootstrap::pemUrl())
-    // cover every real caller, so unlike PHPWG_ROOT_PATH/PWG_LOCAL_DIR
-    // above there's no legitimate exception left to allowlist. The 2
-    // entry-shell define()s that still legitimately exist (admin.php/
-    // admin/popuphelp.php call AdminContext::mark(), not define()) and
-    // install.php's own `define('PHPWG_INSTALLED', true)` (right next to
-    // its own PWG_CHARSET/DB_CHARSET/DB_COLLATE `defined(...) or
-    // define(...)` guards) are outside src/Piwigo/, so this scan never
-    // sees them.
+    // cover every real caller, and PWG_CHARSET's own 2 former readers
+    // (CharsetHelper::getPwgCharset()/StringHelper::pwgTransliterate())
+    // now use the literal 'utf-8' directly instead, so unlike
+    // PHPWG_ROOT_PATH/PWG_LOCAL_DIR above there's no legitimate exception
+    // left to allowlist. The 2 entry-shell define()s that still
+    // legitimately exist (admin.php/admin/popuphelp.php call
+    // AdminContext::mark(), not define()) are outside src/Piwigo/, so this
+    // scan never sees them; install.php itself has no define()s left at
+    // all. DB_CHARSET/DB_COLLATE never had a raw read anywhere in
+    // src/Piwigo/ to begin with, so they don't need their own scan entries
+    // here.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'IN_ADMIN'),
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'IN_WS'),
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_INSTALLED'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PWG_CHARSET'),
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_URL'),
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_DOMAIN'),
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PEM_URL'),
     ];
 
-    // Piwigo\Core\InstallationFlag::isActive() itself legitimately reads
-    // `defined('PHPWG_INSTALLED')` -- it IS the typed replacement, not a
-    // caller of it (this same style of test elsewhere in this file
-    // doesn't ban PWG_CHARSET/DB_CHARSET's own identical self-reads
-    // either, since there's no sibling "no PWG_CHARSET" test at all).
-    $unexpected = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! str_ends_with($hit['path'], 'Core/InstallationFlag.php')
-    ));
-
-    expect(describeCallSites($unexpected))
+    expect(describeCallSites($hits))
         ->toBe([]);
 });
 

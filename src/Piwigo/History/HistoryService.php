@@ -11,8 +11,8 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\PageState;
-use Piwigo\Event\Picture\PwgLogAllowed;
-use Piwigo\Event\Picture\PwgLogUpdateLastVisit;
+use Piwigo\Event\Picture\LogAllowed;
+use Piwigo\Event\Picture\LogUpdateLastVisit;
 use Piwigo\History\Projection\HistorySummaryRow;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
@@ -51,7 +51,7 @@ final readonly class HistoryService
             $doLog = $this->currentConfig->historyGuest;
         }
 
-        return $this->eventDispatcher->dispatchChange(new PwgLogAllowed($doLog, ImageId::tryFrom($imageId), $imageType))
+        return $this->eventDispatcher->dispatchChange(new LogAllowed($doLog, ImageId::tryFrom($imageId), $imageType))
             ->doLog;
     }
 
@@ -96,7 +96,7 @@ final readonly class HistoryService
         if (in_array($lastVisit, [null, false, 0, '0', '', []], true) or strtotime($lastVisitStr) < time() - $sessionLength) {
             $updateLastVisit = true;
         }
-        $updateLastVisit = $this->eventDispatcher->dispatchChange(new PwgLogUpdateLastVisit($updateLastVisit))
+        $updateLastVisit = $this->eventDispatcher->dispatchChange(new LogUpdateLastVisit($updateLastVisit))
             ->update;
 
         $userId = $user->id->value;

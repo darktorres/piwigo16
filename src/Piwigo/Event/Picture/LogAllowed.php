@@ -13,7 +13,7 @@ use Piwigo\Common\ValueObject\ImageId;
  * this branch yet (confirmed against `HistoryService::isLoggingAllowed()`'s
  * own real `?string $imageType` parameter).
  */
-final readonly class PwgLogAllowed
+final readonly class LogAllowed
 {
     public function __construct(
         public bool $doLog,

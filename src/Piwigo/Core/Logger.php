@@ -23,8 +23,6 @@ use RuntimeException;
  * array<int|string, mixed> by design -- matches PSR-3 LoggerInterface's own
  * $context parameter, var_export()'d as-is by contextToString() regardless
  * of shape.
- *
- * @author  Kenny Katzgrau <katzgrau@gmail.com>
  */
 final class Logger
 {

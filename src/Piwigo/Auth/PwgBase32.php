@@ -9,7 +9,6 @@ namespace Piwigo\Auth;
  * Requires 20% more space than base64
  * Great for case-insensitive filesystems like Windows and URL's  (except for = char which can be excluded using the pad option for urls)
  *
- * @author Bryan Ruiz
  * @url https://www.php.net/manual/en/function.base-convert.php#102232
  */
 final class PwgBase32

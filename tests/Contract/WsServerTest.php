@@ -32,11 +32,11 @@ use Piwigo\Ws\PwgServer;
  * going through the (nonexistent) WS route -- closes real line coverage
  * without pretending a fake WS method registration exists.
  *
- * run()'s own "no request handler" branch (`! $this->_requestHandler
+ * run()'s own "no request handler" branch (`! $this->requestHandler
  * instanceof PwgRequestHandler`) is similarly unreachable in practice
  * through ws.php: WsInitializer::init() hardcodes $requestFormat = 'rest'
  * and always constructs a PwgRestRequestHandler for it, so
- * _requestHandler is never null by the time run() checks it through the
+ * requestHandler is never null by the time run() checks it through the
  * real ws.php entry point. test_run_without_a_request_handler_returns_unknown_request_format()
  * below reaches it by constructing a real PwgServer directly and calling
  * setEncoder() without ever calling setHandler() -- a real object in a
@@ -105,9 +105,9 @@ final class WsServerTest extends ContractTestCase
         // (accessControl's own chain reaches HtmlService/MailService/
         // UrlService and every one of their own collaborators) would make
         // a full var_export($this) exhaust the request's memory limit.
-        self::assertStringContainsString("'_requestFormat' => 'rest'", $body);
-        self::assertStringContainsString("'_responseFormat' => 'not-a-real-format'", $body);
-        self::assertStringContainsString("'_methods' => \n  array (\n  )", $body);
+        self::assertStringContainsString("'requestFormat' => 'rest'", $body);
+        self::assertStringContainsString("'responseFormat' => 'not-a-real-format'", $body);
+        self::assertStringContainsString("'methods' => \n  array (\n  )", $body);
     }
 
     /**

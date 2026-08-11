@@ -572,7 +572,7 @@ final class PwgImages
             ['id', 'date']
         );
 
-        if ($service->_responseFormat !== 'rest') {
+        if ($service->responseFormat !== 'rest') {
             return $ret; // for backward compatibility only
         } else {
             return [

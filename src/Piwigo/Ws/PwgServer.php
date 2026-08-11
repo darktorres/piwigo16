@@ -27,7 +27,7 @@ use Piwigo\Ws\Event\WsInvokeAllowed;
 
 /**
  * The WS framework's own generic method registry/dispatcher -- every
- * `mixed` in this class is genuinely by-design, not unnarrowed: `$_methods`
+ * `mixed` in this class is genuinely by-design, not unnarrowed: `$methods`
  * holds arbitrarily-shaped per-method registrations (each WS method defines
  * its own param `signature`/`options`), `sendResponse()`/`invoke()` handle
  * an arbitrary WS method's arbitrary return value, and
@@ -38,18 +38,18 @@ use Piwigo\Ws\Event\WsInvokeAllowed;
  */
 final class PwgServer
 {
-    public ?PwgRequestHandler $_requestHandler = null;
+    public ?PwgRequestHandler $requestHandler = null;
 
-    public ?string $_requestFormat = null;
+    public ?string $requestFormat = null;
 
-    public ?PwgResponseEncoder $_responseEncoder = null;
+    public ?PwgResponseEncoder $responseEncoder = null;
 
-    public ?string $_responseFormat = null;
+    public ?string $responseFormat = null;
 
     /**
      * @var array<string, array{callback: string|array<int, string>|Closure, description: string, signature: array<string, array<string, mixed>>, options: array<string, mixed>}>
      */
-    public $_methods = [];
+    private $methods = [];
 
     public function __construct(
         private readonly EventDispatcher $eventDispatcher,
@@ -59,14 +59,14 @@ final class PwgServer
     ) {}
 
     /**
-     * $_requestHandler is only read after run()'s own null-check, but
+     * $requestHandler is only read after run()'s own null-check, but
      * intervening method calls (addMethod(), trigger_notify()) mean
      * PHPStan can't carry that narrowing to handleRequest()'s call site.
      */
     private function requestHandler(): PwgRequestHandler
     {
-        assert($this->_requestHandler instanceof PwgRequestHandler);
-        return $this->_requestHandler;
+        assert($this->requestHandler instanceof PwgRequestHandler);
+        return $this->requestHandler;
     }
 
     /**
@@ -75,8 +75,8 @@ final class PwgServer
      */
     private function responseEncoder(): PwgResponseEncoder
     {
-        assert($this->_responseEncoder instanceof PwgResponseEncoder);
-        return $this->_responseEncoder;
+        assert($this->responseEncoder instanceof PwgResponseEncoder);
+        return $this->responseEncoder;
     }
 
     /**
@@ -84,8 +84,8 @@ final class PwgServer
      */
     public function setHandler(string $requestFormat, ?PwgRequestHandler &$requestHandler): void
     {
-        $this->_requestHandler = &$requestHandler;
-        $this->_requestFormat = $requestFormat;
+        $this->requestHandler = &$requestHandler;
+        $this->requestFormat = $requestFormat;
     }
 
     /**
@@ -93,8 +93,8 @@ final class PwgServer
      */
     public function setEncoder(string $responseFormat, ?PwgResponseEncoder &$encoder): void
     {
-        $this->_responseEncoder = &$encoder;
-        $this->_responseFormat = $responseFormat;
+        $this->responseEncoder = &$encoder;
+        $this->responseFormat = $responseFormat;
     }
 
     /**
@@ -103,12 +103,12 @@ final class PwgServer
      */
     public function run(): void
     {
-        if (! $this->_responseEncoder instanceof PwgResponseEncoder) {
+        if (! $this->responseEncoder instanceof PwgResponseEncoder) {
             PresentationAccessor::htmlService()
                 ->setStatusHeader(400);
             @header('Content-Type: text/plain');
             echo 'Cannot process your request. Unknown response format.
-Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_responseFormat . "\n";
+Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->responseFormat . "\n";
             // var_export($this) directly would recursively serialize this
             // class's own DI-injected collaborators too -- accessControl's
             // own dependency chain reaches HtmlService/MailService/UrlService
@@ -118,16 +118,16 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             // that whole graph, not just report this class's own shallow
             // request/response debug state. Export only that state instead.
             var_export([
-                '_requestHandler' => $this->_requestHandler,
-                '_requestFormat' => $this->_requestFormat,
-                '_responseEncoder' => $this->_responseEncoder,
-                '_responseFormat' => $this->_responseFormat,
-                '_methods' => $this->_methods,
+                'requestHandler' => $this->requestHandler,
+                'requestFormat' => $this->requestFormat,
+                'responseEncoder' => $this->responseEncoder,
+                'responseFormat' => $this->responseFormat,
+                'methods' => $this->methods,
             ]);
             die(0);
         }
 
-        if (! $this->_requestHandler instanceof PwgRequestHandler) {
+        if (! $this->requestHandler instanceof PwgRequestHandler) {
             $this->sendResponse(new PwgError(400, 'Unknown request format'));
             return;
         }
@@ -144,7 +144,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         );
 
         $this->eventDispatcher->dispatchNotify(new WsAddMethods($this));
-        uksort($this->_methods, strnatcmp(...));
+        uksort($this->methods, strnatcmp(...));
         $this->requestHandler()
             ->handleRequest($this);
     }
@@ -237,7 +237,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             }
         }
 
-        $this->_methods[$methodName] = [
+        $this->methods[$methodName] = [
             'callback' => $callback,
             'description' => $description,
             'signature' => $signature,
@@ -247,12 +247,12 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     public function hasMethod(string $methodName): bool
     {
-        return isset($this->_methods[$methodName]);
+        return isset($this->methods[$methodName]);
     }
 
     public function getMethodDescription(string $methodName): string
     {
-        return $this->_methods[$methodName]['description'] ?? '';
+        return $this->methods[$methodName]['description'] ?? '';
     }
 
     /**
@@ -260,7 +260,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      */
     public function getMethodSignature(string $methodName): array
     {
-        return $this->_methods[$methodName]['signature'] ?? [];
+        return $this->methods[$methodName]['signature'] ?? [];
     }
 
     /**
@@ -268,7 +268,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      */
     public function getMethodOptions(string $methodName): array
     {
-        return $this->_methods[$methodName]['options'] ?? [];
+        return $this->methods[$methodName]['options'] ?? [];
     }
 
     /**
@@ -377,11 +377,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      */
     public function invoke(string $methodName, array $params): mixed
     {
-        if (! isset($this->_methods[$methodName])) {
+        if (! isset($this->methods[$methodName])) {
             return new PwgError(WsError::INVALID_METHOD, 'Method name is not valid');
         }
 
-        $method = $this->_methods[$methodName];
+        $method = $this->methods[$methodName];
 
         if (isset($method['options']['post_only']) and (bool) $method['options']['post_only'] and ! self::isPost()) {
             return new PwgError(405, 'This method requires HTTP POST');
@@ -402,7 +402,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         foreach ($signature as $name => $options) {
             // addMethod() always populates 'flags' as an int (WS_PARAM_*
             // constants or 0); the signature is stored back through the
-            // loosely-typed $_methods property though, so re-assert it here.
+            // loosely-typed $methods property though, so re-assert it here.
             $flags = $options['flags'];
             $flags = is_int($flags) ? $flags : 0;
 
@@ -483,7 +483,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     public static function ws_getMethodList(array $params, self &$service): array
     {
         $methods = array_filter(
-            $service->_methods,
+            $service->methods,
             fn (array $m): bool => in_array($m['options']['hidden'] ?? null, [null, false, 0, '0', '', []], true)
         );
         return [
@@ -518,7 +518,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         foreach ($service->getMethodSignature($methodName) as $name => $options) {
             // same reasoning as invoke(): addMethod() always populates
             // 'flags'/'type' as ints, but the signature travels back out
-            // through the loosely-typed $_methods property.
+            // through the loosely-typed $methods property.
             $flags = $options['flags'];
             $flags = is_int($flags) ? $flags : 0;
             $type = $options['type'];

@@ -55,13 +55,13 @@ test('init defaults to a REST request handler and REST response encoder when no 
     $server = wsInitializerTestGet()
         ->init();
 
-    expect($server->_requestFormat)
+    expect($server->requestFormat)
         ->toBe('rest')
-        ->and($server->_requestHandler)
+        ->and($server->requestHandler)
         ->toBeInstanceOf(PwgRestRequestHandler::class)
-        ->and($server->_responseFormat)
+        ->and($server->responseFormat)
         ->toBe('rest')
-        ->and($server->_responseEncoder)
+        ->and($server->responseEncoder)
         ->toBeInstanceOf(PwgRestEncoder::class);
 });
 
@@ -81,9 +81,9 @@ test('init selects the response encoder matching ?format=json', function (): voi
     $server = wsInitializerTestGet()
         ->init();
 
-    expect($server->_responseFormat)
+    expect($server->responseFormat)
         ->toBe('json')
-        ->and($server->_responseEncoder)
+        ->and($server->responseEncoder)
         ->toBeInstanceOf(PwgJsonEncoder::class);
 });
 
@@ -93,9 +93,9 @@ test('init selects the response encoder matching ?format=php', function (): void
     $server = wsInitializerTestGet()
         ->init();
 
-    expect($server->_responseFormat)
+    expect($server->responseFormat)
         ->toBe('php')
-        ->and($server->_responseEncoder)
+        ->and($server->responseEncoder)
         ->toBeInstanceOf(PwgSerialPhpEncoder::class);
 });
 
@@ -105,9 +105,9 @@ test('init selects the response encoder matching ?format=xmlrpc', function (): v
     $server = wsInitializerTestGet()
         ->init();
 
-    expect($server->_responseFormat)
+    expect($server->responseFormat)
         ->toBe('xmlrpc')
-        ->and($server->_responseEncoder)
+        ->and($server->responseEncoder)
         ->toBeInstanceOf(PwgXmlRpcEncoder::class);
 });
 
@@ -117,8 +117,8 @@ test('init leaves the response encoder null for an unrecognized format', functio
     $server = wsInitializerTestGet()
         ->init();
 
-    expect($server->_responseFormat)
+    expect($server->responseFormat)
         ->toBe('not-a-real-format')
-        ->and($server->_responseEncoder)
+        ->and($server->responseEncoder)
         ->toBeNull();
 });

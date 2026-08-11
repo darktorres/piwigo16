@@ -18,9 +18,9 @@ use Piwigo\Bootstrap\PresentationAccessor;
  */
 final class PwgError
 {
-    private readonly int $_code;
+    private readonly int $code;
 
-    private readonly string $_codeText;
+    private readonly string $codeText;
 
     public function __construct(
         int $code,
@@ -31,17 +31,17 @@ final class PwgError
                 ->setStatusHeader($code, $codeText);
         }
 
-        $this->_code = $code;
-        $this->_codeText = $codeText;
+        $this->code = $code;
+        $this->codeText = $codeText;
     }
 
     public function code(): int
     {
-        return $this->_code;
+        return $this->code;
     }
 
     public function message(): string
     {
-        return $this->_codeText;
+        return $this->codeText;
     }
 }

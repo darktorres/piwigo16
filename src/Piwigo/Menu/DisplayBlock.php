@@ -19,14 +19,14 @@ final class DisplayBlock
     /**
      * @var int
      */
-    private $_position;
+    private $position;
 
     /**
      * @var string|null null until set_title() is called (the constructor
      *   never sets it) — get_title() falls back to the registered block's
      *   own name in that case
      */
-    private $_title;
+    private $title;
 
     /**
      * Genuinely polymorphic by design -- MenubarRenderer sets this to a
@@ -59,10 +59,10 @@ final class DisplayBlock
     public $id;
 
     /**
-     * @param RegisteredBlock $_registeredBlock
+     * @param RegisteredBlock $registeredBlock
      */
     public function __construct(
-        private $_registeredBlock
+        private $registeredBlock
     ) {}
 
     /**
@@ -70,7 +70,7 @@ final class DisplayBlock
      */
     public function get_block()
     {
-        return $this->_registeredBlock;
+        return $this->registeredBlock;
     }
 
     /**
@@ -78,7 +78,7 @@ final class DisplayBlock
      */
     public function get_position()
     {
-        return $this->_position;
+        return $this->position;
     }
 
     /**
@@ -86,7 +86,7 @@ final class DisplayBlock
      */
     public function set_position($position): void
     {
-        $this->_position = $position;
+        $this->position = $position;
     }
 
     /**
@@ -94,10 +94,10 @@ final class DisplayBlock
      */
     public function get_title()
     {
-        if (isset($this->_title)) {
-            return $this->_title;
+        if (isset($this->title)) {
+            return $this->title;
         } else {
-            return $this->_registeredBlock->get_name();
+            return $this->registeredBlock->get_name();
         }
     }
 
@@ -106,6 +106,6 @@ final class DisplayBlock
      */
     public function set_title($title): void
     {
-        $this->_title = $title;
+        $this->title = $title;
     }
 }

@@ -23,17 +23,17 @@ use Piwigo\Ws\PwgNamedStruct;
  */
 final class PwgRestEncoder extends PwgResponseEncoder
 {
-    private ?PwgXmlWriter $_writer = null;
+    private ?PwgXmlWriter $writer = null;
 
     /**
      * encode(), encode_array() and encode_struct() are only ever called
      * (directly or recursively) from encodeResponse(), which always sets
-     * $_writer before invoking them.
+     * $writer before invoking them.
      */
     private function writer(): PwgXmlWriter
     {
-        assert($this->_writer instanceof PwgXmlWriter);
-        return $this->_writer;
+        assert($this->writer instanceof PwgXmlWriter);
+        return $this->writer;
     }
 
     #[Override]
@@ -51,7 +51,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
             return $ret;
         }
 
-        $this->_writer = new PwgXmlWriter();
+        $this->writer = new PwgXmlWriter();
         $this->encode($response);
         $ret = $this->writer()
             ->getOutput();

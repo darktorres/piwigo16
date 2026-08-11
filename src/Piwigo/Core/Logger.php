@@ -69,7 +69,7 @@ final class Logger
      * Standard messages produced by the class.
      * @var array<string, string>
      */
-    private static array $_messages = [
+    private static array $messages = [
         'writefail' => 'The file could not be written to. Check that appropriate permissions have been set.',
         'opensuccess' => 'The log file was opened successfully.',
         'openfail' => 'The file could not be opened. Check permissions.',
@@ -96,14 +96,14 @@ final class Logger
     /**
      * Current status of the logger.
      */
-    private int $_logStatus = self::STATUS_LOG_CLOSED;
+    private int $logStatus = self::STATUS_LOG_CLOSED;
 
     /**
      * File handle for this instance's log file.
      * @var resource|null null until open() successfully opens the file
      *   (never assigned falsy on failure — that path throws instead)
      */
-    private $_fileHandle;
+    private $fileHandle;
 
     /**
      * @param array{directory?: string|null, filename?: string|null, globPattern?: string, severity?: int|string, dateFormat?: string, archiveDays?: int} $options
@@ -154,17 +154,17 @@ final class Logger
             $filePath = is_string($filePath) ? $filePath : '';
 
             if (file_exists($filePath) && ! is_writable($filePath)) {
-                $this->_logStatus = self::STATUS_OPEN_FAILED;
-                throw new RuntimeException(self::$_messages['writefail']);
+                $this->logStatus = self::STATUS_OPEN_FAILED;
+                throw new RuntimeException(self::$messages['writefail']);
             }
 
             $handle = fopen($filePath, 'a');
             if ($handle !== false) {
-                $this->_fileHandle = $handle;
-                $this->_logStatus = self::STATUS_LOG_OPEN;
+                $this->fileHandle = $handle;
+                $this->logStatus = self::STATUS_LOG_OPEN;
             } else {
-                $this->_logStatus = self::STATUS_OPEN_FAILED;
-                throw new RuntimeException(self::$_messages['openfail']);
+                $this->logStatus = self::STATUS_OPEN_FAILED;
+                throw new RuntimeException(self::$messages['openfail']);
             }
         }
     }
@@ -174,8 +174,8 @@ final class Logger
      */
     public function __destruct()
     {
-        if ((bool) $this->_fileHandle) {
-            fclose($this->_fileHandle);
+        if ((bool) $this->fileHandle) {
+            fclose($this->fileHandle);
         }
     }
 
@@ -184,7 +184,7 @@ final class Logger
      */
     public function status(): int
     {
-        return $this->_logStatus;
+        return $this->logStatus;
     }
 
     /**
@@ -349,10 +349,10 @@ final class Logger
         $this->open();
         if ($this->status() === self::STATUS_LOG_OPEN) {
             // status() only reaches STATUS_LOG_OPEN in open()'s branch that
-            // also assigns _fileHandle a real resource.
-            assert($this->_fileHandle !== null);
-            if (fwrite($this->_fileHandle, $line) === false) {
-                throw new RuntimeException(self::$_messages['writefail']);
+            // also assigns fileHandle a real resource.
+            assert($this->fileHandle !== null);
+            if (fwrite($this->fileHandle, $line) === false) {
+                throw new RuntimeException(self::$messages['writefail']);
             }
         }
     }

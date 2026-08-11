@@ -95,7 +95,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
         // No `method=` field at all -- WsRawRequest::fromGlobals()->method
         // stays null, hitting PwgRestRequestHandler::handleRequest()'s own
         // dedicated guard rather than PwgServer::invoke()'s
-        // "not isset($this->_methods[...])" check (which needs a non-null,
+        // "not isset($this->methods[...])" check (which needs a non-null,
         // just-unrecognized method name).
         $body = $this->rawCall('json', 'not_method=irrelevant');
 

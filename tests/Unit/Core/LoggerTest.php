@@ -306,8 +306,8 @@ test('throws openfail when fopen cannot create the target file inside a locked d
 
 /**
  * Confirmed-equivalent: line 174's RemoveBooleanCast in __destruct()
- * (`if ($this->_fileHandle)` instead of `if ((bool) $this->_fileHandle)`).
- * $this->_fileHandle is typed `resource|null`, and PHP's own `if`
+ * (`if ($this->fileHandle)` instead of `if ((bool) $this->fileHandle)`).
+ * $this->fileHandle is typed `resource|null`, and PHP's own `if`
  * coercion already treats a resource as truthy and null as falsy
  * identically to an explicit (bool) cast -- there is no value of this
  * property for which the two could ever disagree.
@@ -320,7 +320,7 @@ test('closes the underlying file handle on destruction after a successful write'
     ]);
     $logger->write('line');
 
-    $prop = new ReflectionProperty(Logger::class, '_fileHandle');
+    $prop = new ReflectionProperty(Logger::class, 'fileHandle');
     $handle = $prop->getValue($logger);
     expect(is_resource($handle))
         ->toBeTrue();

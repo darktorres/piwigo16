@@ -8,9 +8,9 @@ use Piwigo\Ws\Protocol\PwgXmlWriter;
  * PwgXmlWriter is a small hand-rolled state machine (an open-tag flag +
  * an element-name stack + an indent level), not a DOM/XMLWriter wrapper.
  * Every expected string below was built by tracing that state machine
- * call by call: _end_prev() decides whether an element self-closes
+ * call by call: end_prev() decides whether an element self-closes
  * (' />') or gets an explicit closing tag, based purely on whether
- * anything was written since start_element(); _indent()/_eol_indent()
+ * anything was written since start_element(); indent()/eol_indent()
  * only emit whitespace on the way *into* a nested element, never on the
  * way back out.
  */
@@ -148,17 +148,17 @@ test('a tag name is prefixed based on its first character, not its last', functi
 
 test('end_element still emits indent whitespace before the closing tag when the indent level runs ahead of the element stack', function (): void {
     // Through the ordinary start_element()/end_element() call sequence,
-    // $this->_indentLevel and count($this->_elementStack) are always kept
+    // $this->indentLevel and count($this->elementStack) are always kept
     // in lockstep (every increment is paired with a push, every decrement
-    // with a pop), so the `_indentLevel > count($_elementStack)` check
+    // with a pop), so the `indentLevel > count($elementStack)` check
     // inside end_element()'s close_tag branch never actually trips.
     // Every field here is `public` specifically so a test can drive the
     // state directly -- force the indent level one step ahead of the
-    // stack to exercise that branch's call to _indent() for real.
+    // stack to exercise that branch's call to indent() for real.
     $writer = new PwgXmlWriter();
-    $writer->_elementStack = ['a', 'b', 'c'];
-    $writer->_indentLevel = 4;
-    $writer->_lastTagOpen = false;
+    $writer->elementStack = ['a', 'b', 'c'];
+    $writer->indentLevel = 4;
+    $writer->lastTagOpen = false;
 
     $writer->end_element('c');
 
@@ -222,12 +222,12 @@ test('write_attribute coerces a non-scalar value to an empty attribute value ins
 });
 
 test('a self-closing element correctly decrements the indent level for its parent\'s later explicit close tag', function (): void {
-    // c self-closes with no content, decrementing _indentLevel inside
-    // _end_prev() (line 124). b then closes via the *other* path
+    // c self-closes with no content, decrementing indentLevel inside
+    // end_prev() (line 124). b then closes via the *other* path
     // (end_element()'s own decrement) because it already has child
     // content, at a point where the element stack is non-empty (['a']).
-    // If _end_prev()'s decrement instead incremented, _indentLevel would
-    // be left 2 too high, flipping _indent()'s `>` check for b's closing
+    // If end_prev()'s decrement instead incremented, indentLevel would
+    // be left 2 too high, flipping indent()'s `>` check for b's closing
     // tag from false to true and emitting a spurious extra tab.
     $writer = new PwgXmlWriter();
 
@@ -244,7 +244,7 @@ test('a self-closing element correctly decrements the indent level for its paren
 
 test('end_element ignores its own argument and always closes the innermost stacked tag', function (): void {
     // end_element(string $x) never reads $x -- the closing tag name
-    // always comes from array_pop($this->_elementStack). Passing a
+    // always comes from array_pop($this->elementStack). Passing a
     // completely different, mismatched name here proves that: if a
     // mutated implementation started using the argument instead of (or
     // in addition to) the stack, this would close with "totally-wrong-name"

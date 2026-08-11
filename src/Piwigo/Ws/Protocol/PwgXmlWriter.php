@@ -22,84 +22,84 @@ final class PwgXmlWriter
     /**
      * @var string
      */
-    public $_indentStr;
+    public $indentStr;
 
     /**
      * @var string[]
      */
-    public $_elementStack;
+    public $elementStack;
 
     /**
      * @var bool
      */
-    public $_lastTagOpen;
+    public $lastTagOpen;
 
     /**
      * @var int
      */
-    public $_indentLevel;
+    public $indentLevel;
 
     /**
      * @var string
      */
-    public $_encodedXml;
+    public $encodedXml;
 
     public function __construct()
     {
-        $this->_elementStack = [];
-        $this->_lastTagOpen = false;
-        $this->_indentLevel = 0;
+        $this->elementStack = [];
+        $this->lastTagOpen = false;
+        $this->indentLevel = 0;
 
-        $this->_encodedXml = '';
-        $this->_indentStr = "\t";
+        $this->encodedXml = '';
+        $this->indentStr = "\t";
     }
 
     public function &getOutput(): string
     {
-        return $this->_encodedXml;
+        return $this->encodedXml;
     }
 
     public function start_element(string $name): void
     {
-        $this->_end_prev(false);
-        if ($this->_elementStack !== []) {
-            $this->_eol_indent();
+        $this->end_prev(false);
+        if ($this->elementStack !== []) {
+            $this->eol_indent();
         }
-        $this->_indentLevel++;
-        $this->_indent();
+        $this->indentLevel++;
+        $this->indent();
         $diff = ord($name[0]) - ord('0');
         if ($diff >= 0 && $diff <= 9) {
             $name = '_' . $name;
         }
-        $this->_output('<' . $name);
-        $this->_lastTagOpen = true;
-        $this->_elementStack[] = $name;
+        $this->output('<' . $name);
+        $this->lastTagOpen = true;
+        $this->elementStack[] = $name;
     }
 
     public function end_element(string $x): void
     {
-        $close_tag = $this->_end_prev(true);
-        $name = array_pop($this->_elementStack);
+        $close_tag = $this->end_prev(true);
+        $name = array_pop($this->elementStack);
         if ($close_tag) {
-            $this->_indentLevel--;
-            $this->_indent();
-            //      $this->_eol_indent();
-            $this->_output('</' . $name . '>');
+            $this->indentLevel--;
+            $this->indent();
+            //      $this->eol_indent();
+            $this->output('</' . $name . '>');
         }
     }
 
     public function write_content(mixed $value): void
     {
-        $this->_end_prev(false);
+        $this->end_prev(false);
         $value = is_scalar($value) ? (string) $value : '';
-        $this->_output(htmlspecialchars($value));
+        $this->output(htmlspecialchars($value));
     }
 
     public function write_cdata(mixed $value): void
     {
-        $this->_end_prev(false);
+        $this->end_prev(false);
         $value = is_scalar($value) ? (string) $value : '';
-        $this->_output(
+        $this->output(
             '<![CDATA['
       . str_replace(']]>', ']]&gt;', $value)
       . ']]>'
@@ -108,7 +108,7 @@ final class PwgXmlWriter
 
     public function write_attribute(string $name, mixed $value): void
     {
-        $this->_output(' ' . $name . '="' . $this->encode_attribute($value) . '"');
+        $this->output(' ' . $name . '="' . $this->encode_attribute($value) . '"');
     }
 
     public function encode_attribute(mixed $value): string
@@ -116,39 +116,39 @@ final class PwgXmlWriter
         return htmlspecialchars(is_scalar($value) ? (string) $value : '');
     }
 
-    public function _end_prev(bool $done): bool
+    private function end_prev(bool $done): bool
     {
         $ret = true;
-        if ($this->_lastTagOpen) {
+        if ($this->lastTagOpen) {
             if ($done) {
-                $this->_indentLevel--;
-                $this->_output(' />');
-                // $this->_eol_indent();
+                $this->indentLevel--;
+                $this->output(' />');
+                // $this->eol_indent();
                 $ret = false;
             } else {
-                $this->_output('>');
+                $this->output('>');
             }
-            $this->_lastTagOpen = false;
+            $this->lastTagOpen = false;
         }
         return $ret;
     }
 
-    public function _eol_indent(): void
+    private function eol_indent(): void
     {
-        $this->_output("\n");
+        $this->output("\n");
     }
 
-    public function _indent(): void
+    private function indent(): void
     {
-        if ($this->_indentLevel > count($this->_elementStack)) {
-            $this->_output(
-                str_repeat($this->_indentStr, count($this->_elementStack))
+        if ($this->indentLevel > count($this->elementStack)) {
+            $this->output(
+                str_repeat($this->indentStr, count($this->elementStack))
             );
         }
     }
 
-    public function _output(string $raw_content): void
+    private function output(string $raw_content): void
     {
-        $this->_encodedXml .= $raw_content;
+        $this->encodedXml .= $raw_content;
     }
 }

@@ -32,8 +32,8 @@ use Piwigo\Users\UserEntity;
  * bound into an `IN (:x)` clause always unwrap to raw ints with an explicit
  * `ArrayParameterType::INTEGER` first -- Doctrine's array-parameter binding
  * does not reliably route each element through a custom field Type, unlike
- * the single-value path (verified against the installed doctrine/dbal
- * source, not assumed). Plain-DBAL (`getConnection()`) queries always bind
+ * the single-value path, per the installed doctrine/dbal source. Plain-DBAL
+ * (`getConnection()`) queries always bind
  * raw scalars, single or array -- DBAL itself has no notion of a custom
  * ORM field Type.
  *
@@ -579,12 +579,12 @@ final class GroupRepository extends EntityRepository
             ->getResult();
 
         return array_map(static function (array $row): CategoryId {
-            // Confirmed via GroupRepositoryTest: DQL scalar-field selects
-            // against a custom-typed column (ga.catId) hydrate straight
-            // into the real VO, same as full-entity hydration -- getResult()'s
-            // own generic array-row return type just can't express that
-            // statically, so this narrows explicitly rather than casting a
-            // value that could never actually be a raw int here.
+            // DQL scalar-field selects against a custom-typed column
+            // (ga.catId) hydrate straight into the real VO, same as
+            // full-entity hydration -- getResult()'s own generic array-row
+            // return type just can't express that statically, so this
+            // narrows explicitly rather than casting a value that could
+            // never actually be a raw int here.
             if (! $row['catId'] instanceof CategoryId) {
                 throw new LogicException('Expected DQL hydration to produce a CategoryId for ga.catId.');
             }

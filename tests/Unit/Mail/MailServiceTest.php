@@ -167,39 +167,52 @@ function mail_service_capture_send(MailService $service, string|array $to, array
  * ResponseEmitterTest's own local-server helper, except the readiness
  * signal can't be "connect and disconnect" the way that helper's is: this
  * server only ever accepts ONE connection, so a throwaway probe connection
- * would consume it and starve the real client.
+ * would consume it and starve the real client. Unlike that sibling helper,
+ * this one used to give up after a single 2s poll window (100 x 20ms) with
+ * no outer retry -- confirmed live (2026-08-11, under real system load from
+ * several concurrent processes) that 2s isn't always enough for a fresh
+ * `php` subprocess to boot and bind a socket, causing a real, reproducible
+ * "fake SMTP test server never became ready" failure though the technique
+ * itself was sound. Fixed to match ResponseEmitterTestStartServer's real
+ * shape (5 attempts, a fresh port each time, same 2s-per-attempt budget)
+ * instead of just enlarging the single window.
  *
- * @return array{0: resource, 1: string} the process handle and a throwaway marker-file path
+ * @return array{0: resource, 1: string, 2: int} the process handle, a throwaway marker-file path, and the bound port
  */
-function mail_service_start_fake_smtp(string $mode, int $port): array
+function mail_service_start_fake_smtp(string $mode): array
 {
-    $markerFile = tempnam(sys_get_temp_dir(), 'pwg_smtp_marker_');
-    $readyFile = tempnam(sys_get_temp_dir(), 'pwg_smtp_ready_');
-    @unlink($markerFile);
-    @unlink($readyFile);
-
     $descriptors = [
         0 => ['pipe', 'r'],
         1 => ['pipe', 'w'],
         2 => ['pipe', 'w'],
     ];
-    $proc = proc_open(['php', __DIR__ . '/MailServiceTestFakeSmtpServer.php', $mode, (string) $port, $markerFile, $readyFile], $descriptors, $pipes);
-    if (! is_resource($proc)) {
-        throw new RuntimeException('failed to start the fake SMTP test server');
-    }
 
-    for ($i = 0; $i < 100; $i++) {
-        if (file_exists($readyFile)) {
-            @unlink($readyFile);
+    for ($attempt = 0; $attempt < 5; $attempt++) {
+        $port = random_int(20_000, 60_000);
+        $markerFile = tempnam(sys_get_temp_dir(), 'pwg_smtp_marker_');
+        $readyFile = tempnam(sys_get_temp_dir(), 'pwg_smtp_ready_');
+        @unlink($markerFile);
+        @unlink($readyFile);
 
-            return [$proc, $markerFile];
+        $proc = proc_open(['php', __DIR__ . '/MailServiceTestFakeSmtpServer.php', $mode, (string) $port, $markerFile, $readyFile], $descriptors, $pipes);
+        if (! is_resource($proc)) {
+            throw new RuntimeException('failed to start the fake SMTP test server');
         }
-        usleep(20_000);
+
+        for ($i = 0; $i < 100; $i++) {
+            if (file_exists($readyFile)) {
+                @unlink($readyFile);
+
+                return [$proc, $markerFile, $port];
+            }
+            usleep(20_000);
+        }
+
+        proc_terminate($proc);
+        proc_close($proc);
+        @unlink($readyFile);
     }
 
-    proc_terminate($proc);
-    proc_close($proc);
-    @unlink($readyFile);
     throw new RuntimeException('fake SMTP test server never became ready');
 }
 
@@ -1674,8 +1687,7 @@ test('mail actually reaches a real Transport and sends when no before_send_mail 
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $port = random_int(20_000, 60_000);
-    [$proc, $markerFile] = mail_service_start_fake_smtp('success', $port);
+    [$proc, $markerFile, $port] = mail_service_start_fake_smtp('success');
     CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:' . $port;
 
     try {
@@ -1705,8 +1717,7 @@ test('mail returns false and logs a Mailer Error when the real Transport rejects
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $port = random_int(20_000, 60_000);
-    [$proc, $markerFile] = mail_service_start_fake_smtp('reject_rcpt', $port);
+    [$proc, $markerFile, $port] = mail_service_start_fake_smtp('reject_rcpt');
     CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:' . $port;
 
     // The rejected RCPT also makes Symfony's own EsmtpTransport attempt a

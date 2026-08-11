@@ -322,8 +322,7 @@ final class StatsPageRenderer
         // is redundant: $year/$month/$day/$hour are int|string per this
         // method's own docblock, and `.` concatenation stringifies an int
         // operand identically to an explicit (string) cast -- removing the
-        // cast can't change the built $date_string. Confirmed while
-        // investigating a mutation-testing gap.
+        // cast can't change the built $date_string.
         $year = $row['year'];
         $date_string = is_numeric($year) ? (string) $year : '';
 

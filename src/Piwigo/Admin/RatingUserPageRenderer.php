@@ -219,7 +219,7 @@ final class RatingUserPageRenderer
      * elsewhere (e.g. {@see \Piwigo\Category\CategoryService::compareByGlobalRank()}).
      *
      * Two mutation-testing-confirmed-equivalent shapes repeated across all 4
-     * numeric comparators below (found while investigating a coverage gap):
+     * numeric comparators below:
      * - Each side's `(float)` cast, taken alone, can't change $d's numeric
      *   VALUE (is_numeric() already guarantees an int/float/numeric-string,
      *   which all coerce identically under `-`) -- it can only affect $d's

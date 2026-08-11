@@ -84,9 +84,6 @@ final readonly class UpdatesPwgPageRenderer
         $core_update_service = $this->coreUpdateService;
         $new_versions = $core_update_service->getPiwigoNewVersions();
 
-        // +-----------------------------------------------------------------------+
-        // |                                Step 0                                 |
-        // +-----------------------------------------------------------------------+
         $check_version = null;
         $dev_version = null;
         if ($step === 0) {
@@ -105,16 +102,10 @@ final readonly class UpdatesPwgPageRenderer
             $dev_version = $new_versions->isDev;
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                                Step 1                                 |
-        // +-----------------------------------------------------------------------+
         if ($step === 1) {
             // nothing to do here
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                                Step 2                                 |
-        // +-----------------------------------------------------------------------+
         if ($step === 2 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
                 new CsrfService($this->currentConfig)
@@ -123,9 +114,6 @@ final readonly class UpdatesPwgPageRenderer
             }
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                                Step 3                                 |
-        // +-----------------------------------------------------------------------+
         $missing = null;
         if ($step === 3 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
@@ -138,10 +126,6 @@ final readonly class UpdatesPwgPageRenderer
             $missing = $extension_update_checker->getMissingExtensions($upgrade_to);
         }
 
-        // +-----------------------------------------------------------------------+
-        // | Check for requirements                                                |
-        // +-----------------------------------------------------------------------+
-
         $minor_release_php_required = null;
         if ($new_versions->minorPhp !== null and version_compare(PHP_VERSION, $new_versions->minorPhp, '<')) {
             $minor_release_php_required = $new_versions->minorPhp;
@@ -151,10 +135,6 @@ final readonly class UpdatesPwgPageRenderer
         if ($new_versions->majorPhp !== null and version_compare(PHP_VERSION, $new_versions->majorPhp, '<')) {
             $major_release_php_required = $new_versions->majorPhp;
         }
-
-        // +-----------------------------------------------------------------------+
-        // |                        Process template                               |
-        // +-----------------------------------------------------------------------+
 
         if (! $this->accessControl->isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));

@@ -91,10 +91,6 @@ final readonly class ThemesInstalledPageRenderer
         $plugin_migration_repo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
         $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl, $this->paths, $this->currentUser, $this->eventDispatcher);
 
-        // +-----------------------------------------------------------------------+
-        // |                          perform actions                              |
-        // +-----------------------------------------------------------------------+
-
         $themesAction = ThemesInstalledActionRequest::fromGlobals();
         if ($themesAction->action !== null and $themesAction->themeId !== null and $this->accessControl->isWebmaster()) {
             new CsrfService($this->currentConfig)
@@ -111,10 +107,6 @@ final readonly class ThemesInstalledPageRenderer
                 $this->redirectService->redirect($base_url);
             }
         }
-
-        // +-----------------------------------------------------------------------+
-        // |                     start template output                             |
-        // +-----------------------------------------------------------------------+
 
         // ExtensionScanner::scan()'s own declared return type is a generic
         // array<string, array<string, mixed>> dispatch shape by design (see
@@ -217,8 +209,7 @@ final readonly class ThemesInstalledPageRenderer
             // is the theme "activable" ?
             // The (bool) cast is redundant: `!` already coerces its operand
             // to bool, so removing the cast can't change this condition's
-            // truth value. Confirmed while investigating a mutation-testing
-            // gap.
+            // truth value.
             if (isset($fs_theme['activable']) and ! (bool) $fs_theme['activable']) {
                 $tpl_theme['ACTIVABLE'] = false;
                 $tpl_theme['ACTIVABLE_TOOLTIP'] = $this->lang->t('This theme was not designed to be directly activated');
@@ -248,8 +239,7 @@ final readonly class ThemesInstalledPageRenderer
                 // reachable case: getChildrenThemes()'s own loop already
                 // only ever appends a value after its own is_string() guard,
                 // so $children is provably all-strings before this line
-                // ever sees it. Confirmed while investigating a
-                // mutation-testing gap.
+                // ever sees it.
                 $tpl_theme['DELETE_TOOLTIP'] = $this->lang->t(
                     'Impossible to delete this theme. Other themes depends on it: %s',
                     implode(', ', array_filter($children, is_string(...)))
@@ -272,8 +262,7 @@ final readonly class ThemesInstalledPageRenderer
         // 0-vs-1. Decrementing 'active' to -1, or dropping the 'inactive'
         // entry entirely (its own `?? 1` fallback already equals its
         // removed value), can't change any `>=` outcome in that reduced
-        // 2-value domain. Confirmed while investigating a mutation-testing
-        // gap.
+        // 2-value domain.
         $s = [
             'active' => 0,
             'inactive' => 1,
@@ -281,7 +270,7 @@ final readonly class ThemesInstalledPageRenderer
 
         // The (bool) casts below are redundant: if() already coerces its
         // condition to bool, so removing either cast can't change which
-        // branch runs. Confirmed while investigating a mutation-testing gap.
+        // branch runs.
         if ((bool) ($a['IS_DEFAULT'] ?? false)) {
             return -1;
         }
@@ -314,8 +303,7 @@ final readonly class ThemesInstalledPageRenderer
         // the OTHER side is exactly 0 -- and $a_state/$b_state being equal
         // (the only case where $a's own weight-vs-2-vs-1 distinction could
         // matter) is already handled by the strcasecmp() branch above,
-        // never reaching this line. Confirmed while investigating a
-        // mutation-testing gap.
+        // never reaching this line.
         return ($s[$a_state] ?? 1) >= ($s[$b_state] ?? 1) ? 1 : -1;
     }
 }

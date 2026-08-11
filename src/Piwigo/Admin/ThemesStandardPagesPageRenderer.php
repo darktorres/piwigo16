@@ -63,10 +63,6 @@ final readonly class ThemesStandardPagesPageRenderer
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
-        // +-----------------------------------------------------------------------+
-        // | Update standard pages configuration                                   |
-        // +-----------------------------------------------------------------------+
-
         $std_pgs_logo_options = [
             'piwigo_logo',
             'custom_logo',
@@ -182,10 +178,6 @@ final readonly class ThemesStandardPagesPageRenderer
                 array_push($standard_pages_used_by, $theme['name']);
             }
         }
-
-        // +-----------------------------------------------------------------------+
-        // |                          template output                              |
-        // +-----------------------------------------------------------------------+
 
         // Served by Piwigo\Controller\CustomLogoController (public/logo.php) --
         // a fixed, parameter-less, server-resolved URL, not the disk-relative

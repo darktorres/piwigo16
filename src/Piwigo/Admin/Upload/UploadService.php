@@ -195,10 +195,7 @@ final class UploadService
                 // reaches here at all -- its bool default routes it
                 // through the branch above instead), so this whole elseif
                 // is unreachable via any real call today; kept for a
-                // future field that sets can_be_null => true. Confirmed
-                // while investigating a mutation-testing gap: with no
-                // reachable input, a mutation here can't be observed
-                // either way.
+                // future field that sets can_be_null => true.
                 $upload_form_config[$field]['can_be_null'] and self::isFalsy($value)
             ) {
                 $updates[] = [
@@ -224,15 +221,13 @@ final class UploadService
                     // the `$pattern === ''` literal) unobservable: `false
                     // [op] false` gives the same result under either
                     // operator, so the guard's outcome still depends
-                    // entirely on is_scalar($value). Confirmed while
-                    // investigating a mutation-testing gap.
+                    // entirely on is_scalar($value).
                     continue;
                 }
 
                 // The (bool) cast is redundant: `and` already coerces its
                 // left operand to bool, so removing it can't change which
-                // branch runs. Confirmed while investigating a
-                // mutation-testing gap.
+                // branch runs.
                 if ((bool) preg_match($pattern, (string) $value) and $value >= $min and $value <= $max) {
                     $updates[] = [
                         'param' => $field,
@@ -359,11 +354,7 @@ final class UploadService
                     throw new ImageProcessingException('[' . __METHOD__ . '] this photo does not exist in the database');
                 }
 
-                // Real bug, found while writing a real "update an existing
-                // photo" integration test (confirmed live, matching what
-                // WsImagesUploadGapsTest's own docblock already documented as
-                // a pre-existing 500: "getimagesize(upload/2026/08/01/....jpg):
-                // Failed to open stream"): images.path is stored root-relative
+                // images.path is stored root-relative
                 // (see the "new photo" branch's own preg_replace() a bit
                 // further down, and addFormat()'s own identical "images.path
                 // ... is relative, not yet an absolute path" handling just
@@ -400,7 +391,6 @@ final class UploadService
 
                 // upload directory hierarchy
                 //
-                // Real bug, found via a fixture-regeneration discrepancy:
                 // CurrentConfig::uploadDir()'s own default already ends in '/'
                 // ('upload/'), so appending another literal '/' before %s below
                 // produced a double slash (e.g. 'upload//2026/08/01/...') in
@@ -626,9 +616,7 @@ final class UploadService
 
         // cache a derivative
         //
-        // Real bug, found alongside the update-branch $file_path one above
-        // (also confirmed live via WsImagesUploadGapsTest's own documented
-        // "Undefined array key 'file' in SrcImage.php"): SrcImage::
+        // SrcImage::
         // __construct()'s own docblock states id/path/file are all
         // NOT-NULL DB columns it trusts will be present -- unlike
         // representative_ext, which it reads via `?? null` as genuinely
@@ -741,8 +729,7 @@ final class UploadService
         // `false` branch of each ternary is unreachable in practice: an
         // actual DOMNodeList is the only value either can ever produce
         // here. That makes `!== false` and `!== true` equivalent for both
-        // (a DOMNodeList is !== either boolean), confirmed while
-        // investigating a mutation-testing gap.
+        // (a DOMNodeList is !== either boolean).
         $scriptNodes = $xpath->query('//*[local-name()="script"]');
         // Every instanceof check in this loop and the next is a PHPStan-
         // narrowing guard over a case the DOM API itself already
@@ -901,9 +888,8 @@ final class UploadService
         $exec = escapeshellarg($ext_imagick_dir) . ImageBackend::getExtImagickCommand();
         // Both (string) casts below are redundant under `.` concatenation
         // (which stringifies int|false identically to an explicit cast) --
-        // confirmed while investigating a mutation-testing gap, same
-        // reasoning as StatsPageRenderer::getDateObject()'s own equivalent
-        // casts.
+        // same reasoning as StatsPageRenderer::getDateObject()'s own
+        // equivalent casts.
         $exec .= ' ' . escapeshellarg((string) realpath($file_path) . '[0]');
         if ($ext === 'jpg') {
             $exec .= ' -quality ' . (string) $jpg_quality;
@@ -1039,8 +1025,7 @@ final class UploadService
         // ImageProcessingException trying to create one) -- realpath()
         // returning false here would require the directory to vanish in
         // the brief window between that call and this one, not a
-        // realistically triggerable case. Confirmed while investigating a
-        // mutation-testing gap.
+        // realistically triggerable case.
         $dest_dirname_realpath = realpath($dest['dirname']);
         if ($dest_dirname_realpath === false) {
             throw new Exception("unable to resolve directory {$dest['dirname']}");
@@ -1210,8 +1195,7 @@ final class UploadService
         $dest = pathinfo($representative_file_path);
         // prepareDirectoryStatic() just above already guarantees $dest['dirname']
         // exists (see uploadFileTiff()'s own identical comment for the
-        // full reasoning). Confirmed while investigating a mutation-testing
-        // gap.
+        // full reasoning).
         $dest_dirname_realpath = realpath($dest['dirname']);
         if ($dest_dirname_realpath === false) {
             throw new Exception("unable to resolve directory {$dest['dirname']}");
@@ -1325,12 +1309,10 @@ final class UploadService
             if (str_starts_with(PHP_OS, 'WIN')) {
                 $directory = str_replace('/', DIRECTORY_SEPARATOR, $directory);
             }
-            // Real bug, found live via mutation testing on FilesystemHelper::
-            // mkgetdir()'s own sibling umask(0)/restore pair: this method
-            // never restored the process-wide umask afterward, permanently
-            // corrupting it to 0 for the rest of the request (or, in a
-            // shared PHPUnit/Pest worker, for every later test too) --
-            // matches piwigo16-rewrite's own reference UploadService, which
+            // This method never restored the process-wide umask afterward,
+            // which would permanently corrupt it to 0 for the rest of the
+            // request (or, in a shared PHPUnit/Pest worker, for every later
+            // test too) -- matches piwigo16-rewrite's own reference UploadService, which
             // delegates directory creation to Filesystem::mkgetdir() instead
             // of reimplementing it here without the restore.
             $umask = umask(0000);
@@ -1348,9 +1330,9 @@ final class UploadService
 
             // PHPStan assumes two is_writable() calls on the same path return
             // the same result, since it doesn't model chmod()'s real side
-            // effect (confirmed independently: PHP's own filesystem functions,
-            // including chmod(), clear the stat cache for the affected path, so
-            // this recheck genuinely can and does observe the chmod() above).
+            // effect: PHP's own filesystem functions, including chmod(),
+            // clear the stat cache for the affected path, so this recheck
+            // genuinely can and does observe the chmod() above.
             // @phpstan-ignore booleanNot.alwaysTrue
             if (! is_writable($directory)) {
                 throw new ImageProcessingException('[prepare_directory] directory "' . $directory . '" has no write access');
@@ -1541,9 +1523,7 @@ final class UploadService
         // 'upload_max_filesize' is a real, always-registered core PHP
         // directive -- ini_get() only ever returns false for an unknown
         // directive name, so the `=== false` branch below is unreachable
-        // in practice (confirmed live: ini_get('upload_max_filesize')
-        // always returns a string). Confirmed while investigating a
-        // mutation-testing gap, same reasoning as
+        // in practice, same reasoning as
         // ServerInfoService::curatedInfo()'s own equivalent guard.
         $ini_size = $this->getIniSize('upload_max_filesize', false);
 
@@ -1673,7 +1653,7 @@ final class UploadService
 
             // The (bool) cast is redundant: if() already coerces its
             // condition to bool, so removing it can't change which branch
-            // runs. Confirmed while investigating a mutation-testing gap.
+            // runs.
             if ((bool) $params) {
                 [$w, $h] = $params->sizing->ideal_size;
             }
@@ -1684,8 +1664,7 @@ final class UploadService
         // Both (float) casts are redundant: $w/$h are always int (the 2000
         // default, or SizingParams::$ideal_size's own int[] contract), and
         // int * float already promotes to float in PHP regardless of an
-        // explicit cast on the int operand. Confirmed while investigating
-        // a mutation-testing gap.
+        // explicit cast on the int operand.
         return [(int) ((float) $w * $margin_coef), (int) ((float) $h * $margin_coef)];
     }
 }

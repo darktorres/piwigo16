@@ -77,18 +77,10 @@ final readonly class ThemesNewPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
 
-        // +-----------------------------------------------------------------------+
-        // |                           setup check                                 |
-        // +-----------------------------------------------------------------------+
-
         $themes_dir = $this->paths->themes;
         if (! is_writable($themes_dir)) {
             $this->pageState->addError($this->lang->t('Add write access to the "%s" directory', 'themes'));
         }
-
-        // +-----------------------------------------------------------------------+
-        // |                       perform installation                            |
-        // +-----------------------------------------------------------------------+
 
         $themesNewInstall = ThemesNewInstallRequest::fromGlobals();
 
@@ -106,10 +98,6 @@ final readonly class ThemesNewPageRenderer
                 $this->redirectService->redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . $theme_id);
             }
         }
-
-        // +-----------------------------------------------------------------------+
-        // |                        installation result                            |
-        // +-----------------------------------------------------------------------+
 
         if ($themesNewInstall->installStatus !== null) {
             switch ($themesNewInstall->installStatus) {
@@ -147,10 +135,6 @@ final readonly class ThemesNewPageRenderer
                     );
             }
         }
-
-        // +-----------------------------------------------------------------------+
-        // |                          template output                              |
-        // +-----------------------------------------------------------------------+
 
         $template->setFilenames([
             'themes' => 'themes_new.tpl',

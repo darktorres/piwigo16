@@ -18,8 +18,8 @@ use function Sentry\captureException;
  * Catches everything downstream, logs it, reports it to Sentry, and returns
  * a generic 500. LoggerInterface resolves to the Monolog "app" channel
  * (config/container.php). captureException() is a safe no-op when the
- * Sentry SDK isn't initialized (no DSN configured) -- verified directly in
- * the installed SDK source, not assumed.
+ * Sentry SDK isn't initialized (no DSN configured), per the installed SDK
+ * source.
  */
 final readonly class ExceptionHandlerMiddleware implements MiddlewareInterface
 {

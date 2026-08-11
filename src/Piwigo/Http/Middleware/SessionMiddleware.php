@@ -23,8 +23,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  * active is a hard PHP error, not just a warning.
  *
  * session_start() can silently fail to activate (e.g. once any output has
- * already been sent -- confirmed empirically under CLI, not just
- * documented behavior) without raising an exception, leaving $_SESSION
+ * already been sent) without raising an exception, leaving $_SESSION
  * unset. $_SESSION ??= [] guards that regardless of cause, not just for
  * CLI/test contexts.
  */

@@ -32,9 +32,9 @@ use Symfony\Contracts\HttpClient\ResponseInterface as SymfonyResponseInterface;
  * Location header is guarded before it's requested.
  *
  * No reference implementation exists for this class or for SEC-23/24 --
- * confirmed via the reference repo that it never built either, even at its
- * own fully-evolved HEAD (AdminService::fetchRemote() there still has the
- * raw local-file-read fallback this class's SEC-24 companion removes, and
+ * the reference repo never built either, even at its own fully-evolved
+ * HEAD (AdminService::fetchRemote() there still has the raw
+ * local-file-read fallback this class's SEC-24 companion removes, and
  * zero SSRF/IP-range validation). Built from the security doc's own SEC-23
  * description.
  *
@@ -189,19 +189,17 @@ final readonly class HttpClientService implements ClientInterface
         // attacker-influenceable, so it must not be held to the guard's
         // https-only + no-private-IP rules the way a genuinely external
         // target is.
-        // Bug found live via HttpClientServiceTest's own real self-request
-        // round trip against a non-default-port local test server: PHP_URL_HOST
-        // alone strips the port, but $_SERVER['HTTP_HOST'] (and therefore a
-        // same-process-built self-request URL, see UrlService::
-        // getAbsoluteRootUrl()) includes it whenever the request came in on
-        // a non-standard port -- comparing host-only against host[:port]
-        // meant a self-request was NEVER recognized as one on any
-        // non-default port, silently defeating both the X-Piwigo-Env
-        // forwarding above and the SSRF exemption below for exactly the
-        // deployment shape this class's own docblock calls out (a
-        // Docker-mapped "localhost:8080" install). Reattaching the port
-        // here mirrors assertUrlIsSafe()'s own identical host[:port]
-        // comparison for $trustedSelfHost.
+        // PHP_URL_HOST alone strips the port, but $_SERVER['HTTP_HOST']
+        // (and therefore a same-process-built self-request URL, see
+        // UrlService::getAbsoluteRootUrl()) includes it whenever the
+        // request came in on a non-standard port -- comparing host-only
+        // against host[:port] would mean a self-request is never
+        // recognized as one on any non-default port, silently defeating
+        // both the X-Piwigo-Env forwarding above and the SSRF exemption
+        // below for exactly the deployment shape this class's own docblock
+        // calls out (a Docker-mapped "localhost:8080" install). Reattaching
+        // the port here mirrors assertUrlIsSafe()'s own identical
+        // host[:port] comparison for $trustedSelfHost.
         $srcHost = parse_url($url, PHP_URL_HOST);
         $srcPort = parse_url($url, PHP_URL_PORT);
         $srcHostAndPort = is_string($srcHost) ? $srcHost . (is_int($srcPort) ? ':' . $srcPort : '') : null;
@@ -245,10 +243,10 @@ final readonly class HttpClientService implements ClientInterface
         } catch (ClientExceptionInterface) {
             return null;
         } catch (InvalidArgumentException) {
-            // Real bug, found via a new Integration test that legitimately
-            // calls UploadService::addUploadedFile() with no real HTTP host
-            // configured (no `gallery_url`, no Host/X-Forwarded-Host
-            // header -- a CLI-driven upload path): the self-request's own
+            // UploadService::addUploadedFile() can legitimately call this
+            // with no real HTTP host configured (no `gallery_url`, no
+            // Host/X-Forwarded-Host header -- a CLI-driven upload path):
+            // the self-request's own
             // "full" URL ends up with an empty host segment
             // (`http:///i.php?...`), and nyholm/psr7's Uri constructor
             // throws InvalidArgumentException while merely *parsing* that

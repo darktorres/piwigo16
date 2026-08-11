@@ -12,8 +12,7 @@ use Piwigo\Core\CurrentLogger;
 
 /**
  * __construct()'s 2 real failure branches (unsupported extension,
- * undecodable content) used to die() -- first test coverage for this
- * class, confirming both now throw ImageProcessingException instead.
+ * undecodable content) both throw ImageProcessingException.
  *
  * crop()/resize() have a real, directly reachable
  * imagecreatetruecolor() failure path -- unlike

@@ -514,7 +514,7 @@ test('findWithMemberCounts() respects per_page and page', function (): void {
 });
 
 test('findIdsByNameLike() matches a wildcard pattern', function (): void {
-    // Item 14 DQL audit regression test: g.id is the custom `group_id`
+    // Regression test: g.id is the custom `group_id`
     // Doctrine Type, but getSingleColumnResult() uses HYDRATE_SCALAR_COLUMN
     // (a raw fetchFirstColumn(), no per-field Type conversion at all) --
     // an earlier version of this method wrongly assumed VO hydration

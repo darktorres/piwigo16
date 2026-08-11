@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Search\Inflector\Inflector_en;
+use Piwigo\Search\Inflector\InflectorEn;
 
 /**
- * Piwigo\Search\Inflector\Inflector_en::get_variants() -- the quick-search
+ * Piwigo\Search\Inflector\InflectorEn::get_variants() -- the quick-search
  * word-stemming engine (generates plural/singular/verb-form variants of a
  * search term so e.g. searching "cat" also matches "cats"). Had zero
  * dedicated coverage despite being pure, deterministic, side-effect-free
@@ -15,21 +15,21 @@ use Piwigo\Search\Inflector\Inflector_en;
  * blindly).
  */
 test('a regular singular word gets its "s"-suffixed plural as a variant', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('cat'))
         ->toBe(['cats']);
 });
 
 test('a regular plural word gets its singular as a variant', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('cats'))
         ->toBe(['cat']);
 });
 
 test('an irregular exception word maps directly to its counterpart', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('man'))
         ->toBe(['men']);
@@ -38,14 +38,14 @@ test('an irregular exception word maps directly to its counterpart', function ()
 });
 
 test('an uncountable exception word (0 in the exceptions map) has no variants', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('fish'))
         ->toBe([]);
 });
 
 test('a consonant+y word pluralizes via the "ies" rule', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('city'))
         ->toBe(['cities']);
@@ -54,7 +54,7 @@ test('a consonant+y word pluralizes via the "ies" rule', function (): void {
 });
 
 test('an x/ch/ss/sh-ending word pluralizes via the "es" rule', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('box'))
         ->toBe(['boxes']);
@@ -63,7 +63,7 @@ test('an x/ch/ss/sh-ending word pluralizes via the "es" rule', function (): void
 });
 
 test('a hive/quiz/bus/octopus-style word uses its dedicated pluralization rule', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('hive'))
         ->toBe(['hives']);
@@ -76,7 +76,7 @@ test('a hive/quiz/bus/octopus-style word uses its dedicated pluralization rule',
 });
 
 test('a word over 4 chars ending in "er" also gets an -ing variant (er2ing branch)', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     // 'runner' (6 chars, > 4 and > 5) exercises both the pluralizer and
     // the er2ing branch: 'runners' (plural) then 'running' (er->ing).
@@ -85,7 +85,7 @@ test('a word over 4 chars ending in "er" also gets an -ing variant (er2ing branc
 });
 
 test('a word over 5 chars ending in "ing" also gets an -er variant plus that variant\'s own plural (ing2er branch)', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     // 'running' (7 chars): the generic pluralizer fallback ('runnings'),
     // then ing2er ('runner'), then the pluralizer re-applied to that new
@@ -95,7 +95,7 @@ test('a word over 5 chars ending in "ing" also gets an -er variant plus that var
 });
 
 test('a short word (<=4 chars) never reaches the er2ing branch', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     // 'car' (3 chars) only gets the plain pluralizer variant -- too short
     // for either the er2ing or ing2er branch to run at all.
@@ -118,7 +118,7 @@ test('a short word (<=4 chars) never reaches the er2ing branch', function (): vo
  * hand-tracing).
  */
 test('further irregular exception words map to their counterparts', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('virus'))
         ->toBe(['viruses']);
@@ -142,7 +142,7 @@ test('the zombie/serie/movie exceptions need a case- or direction-sensitive witn
     // reverse direction is the real witness: without the exception,
     // 'zombies' falls through to the ([^aeiouy]|qu)y$ singularizer rule
     // and becomes 'zomby' (not 'zombie'), and 'movies' becomes 'movy'.
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('zombie'))
         ->toBe(['zombies']);
@@ -176,7 +176,7 @@ test('the move/moves exception is only provably exercised in the moves->move dir
     // 'moves' falls through to the singularizer's generic
     // ([^f])ves$ rule and becomes 'mofe', not 'move' -- confirmed live
     // by blanking the entry.
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('move'))
         ->toBe(['moves']);
@@ -185,7 +185,7 @@ test('the move/moves exception is only provably exercised in the moves->move dir
 });
 
 test('further pluralizer rules produce their specific irregular plurals', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     // '/^(ax|test)is$/' => '\1es' (line 70)
     expect($inflector->get_variants('axis'))
@@ -218,7 +218,7 @@ test('further pluralizer rules produce their specific irregular plurals', functi
 });
 
 test('further singularizer rules produce their specific irregular singulars', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     // '/(ss)$/' => '\1' (line 87) is another self-mapping rule; its
     // witness is that it suppresses the word so the generic '/s$/' =>
@@ -290,14 +290,14 @@ test('er2ing correctly excludes be/draw/liv-ending words from the generic -ing r
     // (line 111) weren't present -- which also requires er2ing's
     // array_reverse (line 109) to actually put that exclusion ahead of
     // the generic rule.
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('liver'))
         ->toBe(['livers']);
 });
 
 test('ing2er correctly excludes snow/rain, th/hous/dur/spr/wedd, and liv/draw-ending words from the generic -er rule', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     // '/(snow|rain)ing$/' => '\1' (line 116) drops the "ing" entirely,
     // keeping just the "snow"/"rain" prefix, instead of becoming
@@ -320,7 +320,7 @@ test('the exceptions lookup is case-insensitive via strtolower', function (): vo
     // Without strtolower() (line 131), 'MAN' would miss the lowercase
     // 'man' key entirely and fall through to the regex pipeline instead
     // of the exception table.
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('MAN'))
         ->toBe(['men']);
@@ -334,7 +334,7 @@ test('an exception value that IS an empty string is never pushed as a variant', 
     // unreachable from public input. Reflection exercises it directly:
     // without that check, an empty-string exception value would be
     // wrongly pushed into $res instead of being skipped.
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
     $property = new ReflectionProperty($inflector, 'exceptions');
     $exceptions = $property->getValue($inflector);
     if (! is_array($exceptions)) {
@@ -349,7 +349,7 @@ test('an exception value that IS an empty string is never pushed as a variant', 
 });
 
 test('strlen(word) > 4 is the exact threshold for entering the er2ing branch', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     // 'over' is exactly 4 chars: too short to enter er2ing (line 143),
     // so no 'oving' variant is produced even though it ends in 'er'.
@@ -361,7 +361,7 @@ test('strlen(word) > 4 is the exact threshold for entering the er2ing branch', f
 });
 
 test('strlen(word) > 5 is the exact threshold for entering the ing2er branch', function (): void {
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     // 'swing' is exactly 5 chars: too short to enter ing2er (line 146),
     // so no 'swer' variant is produced even though it ends in 'ing'.
@@ -378,7 +378,7 @@ test('run() applies its regex rules case-insensitively', function (): void {
     // (which needs a lowercase literal to match) and fall through to
     // the generic '/$/' => 's' fallback instead, producing 'BOXs'
     // rather than 'BOXes'.
-    $inflector = new Inflector_en();
+    $inflector = new InflectorEn();
 
     expect($inflector->get_variants('BOX'))
         ->toBe(['BOXes']);

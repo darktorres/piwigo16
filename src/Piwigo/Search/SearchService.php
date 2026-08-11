@@ -1537,7 +1537,7 @@ final readonly class SearchService
         $inflector = null;
         $userService = $this->userService ?? new UserService($this->lang, new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), $this->mailer, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), $this->processCache(), $this->paths);
         $langCode = substr($userService->getDefaultLanguage(), 0, 2);
-        $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
+        $className = '\\Piwigo\\Search\\Inflector\\Inflector' . ucfirst($langCode);
         if (class_exists($className)) {
             $inflector = new $className();
             if (! $inflector instanceof InflectorInterface) {

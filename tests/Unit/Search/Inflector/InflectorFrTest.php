@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Search\Inflector\Inflector_fr;
+use Piwigo\Search\Inflector\InflectorFr;
 
 /**
  * get_variants() first checks a small hardcoded exception dictionary
@@ -15,7 +15,7 @@ use Piwigo\Search\Inflector\Inflector_fr;
  * literals) before picking the expected value.
  */
 beforeEach(function (): void {
-    $this->inflector = new Inflector_fr();
+    $this->inflector = new InflectorFr();
 });
 
 test('a word in the exception dictionary returns only its mapped form', function (): void {
@@ -57,7 +57,7 @@ test('an exception dictionary entry mapped to the empty string yields no variant
     // of appending it to the result.
     $inflector = $this->inflector;
 
-    $prop = new ReflectionProperty(Inflector_fr::class, 'exceptions');
+    $prop = new ReflectionProperty(InflectorFr::class, 'exceptions');
     $exceptions = $prop->getValue($inflector);
     if (! is_array($exceptions)) {
         throw new RuntimeException('Expected exceptions to be an array');

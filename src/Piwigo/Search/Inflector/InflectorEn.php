@@ -13,7 +13,7 @@ namespace Piwigo\Search\Inflector;
 
 use Override;
 
-final class Inflector_en implements InflectorInterface
+final class InflectorEn implements InflectorInterface
 {
     /**
      * @var array<string, int|string>

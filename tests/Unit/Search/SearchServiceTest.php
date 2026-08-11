@@ -1220,7 +1220,7 @@ test('getQuickSearchResultsNoCache() widens a match via the default-language Inf
     // Every OTHER test in this file exercises the Inflector-loading
     // machinery only incidentally (via its own default 'en' language)
     // without ever observing that a generated variant actually reaches
-    // the query -- confirmed live: Inflector_en::get_variants('nature')
+    // the query -- confirmed live: InflectorEn::get_variants('nature')
     // really does return ['natures']. A throwaway 'natures' tag (only
     // reachable via the variant, not the literal search term 'nature')
     // proves qsearchGetTextTokenSearchSql()'s own `array_merge([term],
@@ -2276,8 +2276,8 @@ test('getQuickSearchResultsNoCache() writes the default-user lookup through the 
 test('getQuickSearchResultsNoCache() throws when the default user language resolves to an Inflector class that does not implement the interface', function (): void {
     // See SearchServiceTestNotAnInflector's own docblock above for why
     // class_alias() is the only real way in.
-    if (! class_exists('Piwigo\\Search\\Inflector\\Inflector_zz', false)) {
-        class_alias(SearchServiceTestNotAnInflector::class, 'Piwigo\\Search\\Inflector\\Inflector_zz');
+    if (! class_exists('Piwigo\\Search\\Inflector\\InflectorZz', false)) {
+        class_alias(SearchServiceTestNotAnInflector::class, 'Piwigo\\Search\\Inflector\\InflectorZz');
     }
 
     $conn = searchServiceTestConn();
@@ -2293,7 +2293,7 @@ test('getQuickSearchResultsNoCache() throws when the default user language resol
 
     try {
         expect(fn () => searchServiceTestService()->getQuickSearchResultsNoCache('nature', []))
-            ->toThrow(LogicException::class, 'qsearch: \Piwigo\Search\Inflector\Inflector_zz does not implement InflectorInterface');
+            ->toThrow(LogicException::class, 'qsearch: \Piwigo\Search\Inflector\InflectorZz does not implement InflectorInterface');
     } finally {
         $conn->executeStatement('UPDATE user_infos SET language = ? WHERE user_id = 2', [$originalLanguage]);
         searchServiceTestProcessCache()

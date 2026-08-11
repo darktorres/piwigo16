@@ -187,11 +187,11 @@ namespace Piwigo\Tests\Integration {
 
     /**
      * A real class that deliberately does NOT implement InflectorInterface --
-     * class_alias()'d onto a fake 'Piwigo\Search\Inflector\Inflector_zz' FQCN
+     * class_alias()'d onto a fake 'Piwigo\Search\Inflector\InflectorZz' FQCN
      * by the Inflector-guard test below, standing in for exactly the real-world
      * scenario that guard defends against (a 3rd-party language pack shipping
-     * a broken Inflector_xx.php for its own 2-letter code). Every real
-     * Inflector_* class under src/Piwigo/Search/Inflector (currently only 'en'
+     * a broken InflectorXx.php for its own 2-letter code). Every real
+     * Inflector* class under src/Piwigo/Search/Inflector (currently only 'en'
      * and 'fr') correctly implements the interface, so there is no way to
      * reach this branch through any real language code -- class_alias() is a
      * genuine PHP class-resolution mechanism, not a mock of SearchService
@@ -1713,8 +1713,8 @@ namespace Piwigo\Tests\Integration {
         {
             // See SearchServiceTestNotAnInflector's own docblock above for why
             // class_alias() is the only real way in.
-            if (! class_exists('Piwigo\\Search\\Inflector\\Inflector_zz', false)) {
-                class_alias(SearchServiceTestNotAnInflector::class, 'Piwigo\\Search\\Inflector\\Inflector_zz');
+            if (! class_exists('Piwigo\\Search\\Inflector\\InflectorZz', false)) {
+                class_alias(SearchServiceTestNotAnInflector::class, 'Piwigo\\Search\\Inflector\\InflectorZz');
             }
 
             $originalLanguage = $this->conn->fetchOne('SELECT language FROM user_infos WHERE user_id = 2');
@@ -1728,7 +1728,7 @@ namespace Piwigo\Tests\Integration {
 
             try {
                 $this->expectException(LogicException::class);
-                $this->expectExceptionMessageIsOrContains('Inflector_zz does not implement InflectorInterface');
+                $this->expectExceptionMessageIsOrContains('InflectorZz does not implement InflectorInterface');
 
                 $this->service->getQuickSearchResultsNoCache('nature', []);
             } finally {

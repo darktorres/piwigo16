@@ -16,8 +16,8 @@ use Piwigo\Core\TemplatePageContext;
  * and `element_url` is present, omitted here (not present as a null
  * value) to match that exact original behavior. `$pdfViewerFilesizeThreshold`
  * is `picture_content.tpl`'s own real consumer (its `{if ...
- * $current.filesize < $PDF_VIEWER_FILESIZE_THRESHOLD}` guard) -- real
- * bug found live: this used to be assigned by `PicturePageContext`
+ * $current.filesize < $PDF_VIEWER_FILESIZE_THRESHOLD}` guard) -- this
+ * used to be assigned by `PicturePageContext`
  * instead, whose own `assignContext()` call in `__invoke()` runs *after*
  * this class's, so the value was never actually live when
  * `picture_content.tpl` parsed (silently evaluated the comparison

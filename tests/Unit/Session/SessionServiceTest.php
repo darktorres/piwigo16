@@ -641,3 +641,44 @@ test('getPictureDeriv returns null when unset or non-string, and the string when
     expect($service->getPictureDeriv())
         ->toBe('2large');
 });
+
+/**
+ * [Mutation] A scoped `pest --mutate` rerun leaves 12 mutations
+ * "untested" -- zero real Unit-suite gaps, all individually
+ * hand-mutation-verified against the real source (temporary sed edit +
+ * a full rerun of this file, reverted after):
+ *
+ * 1. generateKey()'s own `$size + 10` buffer padding (Line 52, both
+ *    directions) and its substr() start offset (Line 56, 0 -> 1) are
+ *    genuinely unobservable: shifting a fixed-length slice of
+ *    already-random base64 data by a byte, or trimming the spare
+ *    padding by one, produces output that's just as validly random and
+ *    the same length -- no black-box assertion (length, charset) can
+ *    distinguish "starts here" from "starts one byte later" in uniform
+ *    random data without mocking random_bytes() itself, which isn't a
+ *    seam this class exposes.
+ * 2. remoteAddrHash()'s own `?? ''` fallback (Line 102) is masked by
+ *    what happens right after it: neither explode('.', ...) nor
+ *    str_contains(..., ':') distinguish an empty string from any other
+ *    '.'/':'-free sentinel text, so both real and mutated fallbacks
+ *    reach the exact same ipv4/ipv6/neither branch.
+ * 3. array_slice($octets, 0, 2)'s own Line 122 mutations (raising the
+ *    limit, or removing the wrapper entirely and passing the full
+ *    4-element $octets) are provably inert: vsprintf('%02X%02X', ...)
+ *    only ever consumes the first 2 array elements its format string
+ *    needs, silently ignoring any extras -- confirmed live for both.
+ * 4. sessionRead()/sessionWrite()/sessionDestroy()'s own
+ *    `getRemoteAddrSessionHash() . $sessionId` concatenation (Lines
+ *    133/148/158) is out of scope for the Unit suite by this file's own
+ *    established design (see the top-of-file comment: every test here
+ *    deliberately avoids SessionRepository's real DB-backed methods,
+ *    using an unreachable db_host) -- SessionRepository is `final`
+ *    (can't be faked via subclassing), so covering this needs a real
+ *    database. tests/Integration/SessionHandlerTest.php's own docblock
+ *    already documents this exact split: "SessionServiceTest (Unit
+ *    suite) deliberately only covers the DB-independent methods...
+ *    real DB-backed sessionRead()/sessionWrite()/sessionDestroy()...
+ *    closes both gaps at once with a real DB connection" -- already
+ *    covered, just at the Integration layer this Unit-suite-focused
+ *    campaign doesn't touch.
+ */

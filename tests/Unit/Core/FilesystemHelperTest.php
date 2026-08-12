@@ -375,19 +375,22 @@ test('mkgetdir throws when an already-existing directory has lost its write perm
 /**
  * A mutation-testing sweep found several more confirmed-equivalent
  * mutants in mkgetdir(), all verified live via temporary sed-applied
- * mutations against this file's own existing test suite:
- * - Line 99's `str_starts_with(PHP_OS, 'WIN')` (IfNegated,
+ * mutations against this file's own existing test suite. Line numbers
+ * refreshed 2026-08-11 (a live rerun still reports every one of these as
+ * untested under its own current line number, re-verified fresh rather
+ * than assumed to still hold from a stale reference):
+ * - Line 150's `str_starts_with(PHP_OS, 'WIN')` (IfNegated,
  *   StrStartsWithToStrEndsWith): the same platform-gated dead branch
  *   this file's own top docblock already documents -- PHP_OS is fixed
  *   for the whole process on this Linux environment.
- * - Line 110's RemoveBooleanCast (on the ternary's own recursive-flag
- *   condition) and every other RemoveBooleanCast in this method (lines
- *   118/121/123/125/127/131, all `(bool) (...)` inside an `if`/`!`/`or`
- *   context): the surrounding boolean context already coerces its
- *   operand the same way an explicit cast would.
- * - Line 117's whole `$mkd === false && ! is_dir($dir)` guard
+ * - Line 172's RemoveBooleanCast (on the guard's own `! (bool) ($flags &
+ *   ...)` condition) and every other RemoveBooleanCast in this method
+ *   (lines 175/177/179/181/185, all `(bool) (...)` inside an
+ *   `if`/`!`/`or` context): the surrounding boolean context already
+ *   coerces its operand the same way an explicit cast would.
+ * - Line 171's whole `$mkd === false && ! is_dir($dir)` guard
  *   (IdenticalToNotIdentical, BooleanAndToBooleanOr, FalseToTrue,
- *   RemoveNot, all 4 verified together) and line 119's own
+ *   RemoveNot, all 4 verified together) and line 173's own
  *   RemoveEarlyReturn (`return false;` right after it): every mutated
  *   variant either still enters the fail branch (where DIE_ON_ERROR-set
  *   already threw a line earlier, making the return itself unreachable
@@ -454,9 +457,52 @@ test('nearestExistingAncestor walks up to the dirname()-fixed-point root and sto
         ]);
 });
 
+test('getDirs returns only real subdirectory names, excluding dot entries, .svn, and plain files', function (): void {
+    // Real gap: getDirs()'s own top-of-file docblock claims full coverage
+    // via other suites' real callers, but its only Unit-suite caller
+    // (ExtendForTemplatesPageRendererTest.php, via
+    // AdminUiHelper::getExtents() -> FilesystemHelper::getDirs($paths->
+    // themes)) only ever exercises it against an EMPTY themes/ directory
+    // -- opendir()/readdir()/closedir() all run, but readdir() only ever
+    // yields '.' and '..', both excluded before the loop body's own
+    // 3-clause `and` chain, path concatenation, or `$sub_dirs[] = $file`
+    // ever meaningfully executes. A populated directory is the only way
+    // to exercise (and kill mutations on) the real filtering logic.
+    $dir = $this->root . '/getdirs-target';
+    mkdir($dir);
+    mkdir($dir . '/alpha');
+    mkdir($dir . '/beta');
+    mkdir($dir . '/.svn');
+    file_put_contents($dir . '/not-a-dir.txt', 'plain file, not a directory');
+
+    $result = FilesystemHelper::getDirs($dir);
+
+    expect($result)
+        ->toEqualCanonicalizing(['alpha', 'beta']);
+});
+
 test('deltree returns true when rmdir succeeds directly, with no trash_path needed', function (): void {
     $victim = $this->root . '/empty-deletable';
     mkdir($victim);
+
+    expect(FilesystemHelper::deltree($victim))->toBeTrue()
+        ->and(is_dir($victim))
+        ->toBeFalse();
+});
+
+test('deltree recurses into a nested subdirectory before removing the parent, not just its own direct children', function (): void {
+    // Real gap: kills the recursive self::deltree($pathfile, $trash_path)
+    // call's own RemoveMethodCall mutation. Every other deltree() test in
+    // this file uses a single-level victim (files directly inside, no
+    // subdirectories) -- with the recursive call removed, a nested
+    // subdirectory's own contents are never unlinked, so rmdir($path)
+    // would fail with ENOTEMPTY (the subdirectory itself still exists)
+    // and deltree() would wrongly return false, leaving the whole tree in
+    // place instead of true with everything gone.
+    $victim = $this->root . '/nested-deletable';
+    mkdir($victim);
+    mkdir($victim . '/child');
+    file_put_contents($victim . '/child/leaf.txt', 'leaf contents');
 
     expect(FilesystemHelper::deltree($victim))->toBeTrue()
         ->and(is_dir($victim))
@@ -632,20 +678,30 @@ test('deltree actually renames an undeletable directory into the trash path when
 /**
  * Also confirmed-equivalent (both verified live via
  * temporary sed-applied mutations against this file's own existing
- * suite): line 251's own RemoveBooleanCast (redundant, same `while`-
- * context coercion pattern as the mkgetdir() cluster above) and
- * TrueToFalse (uniqid()'s own more-entropy flag never changes the
- * OUTPUT FORMAT md5() then normalizes away, only its underlying
- * randomness source); line 260's RemoveEarlyReturn (the trash_path
- * branch's own `return null;`, once removed, falls through to this
- * same method's final line -- also a bare `return null;`, identical
- * either way); and lines 236/296's RemoveFunctionCall on closedir() (in
- * deltree() and getCacheSizeDerivatives() respectively) -- PHP's own
+ * suite, line numbers refreshed 2026-08-11): line 305's own
+ * RemoveBooleanCast (redundant, same `while`-context coercion pattern as
+ * the mkgetdir() cluster above) and TrueToFalse (uniqid()'s own
+ * more-entropy flag never changes the OUTPUT FORMAT md5() then
+ * normalizes away, only its underlying randomness source); line 314's
+ * RemoveEarlyReturn (the trash_path branch's own `return null;`, once
+ * removed, falls through to this same method's final line -- also a
+ * bare `return null;`, identical either way); and lines 290/369's
+ * RemoveFunctionCall on closedir() (in deltree() and
+ * getCacheSizeDerivatives() respectively; getDirs()'s own sibling
+ * closedir() at line 264 re-confirmed the same way) -- PHP's own
  * refcounted resource GC already closes a directory handle once its
  * local variable goes out of scope at function return, confirmed live
  * via a real /proc/self/fd descriptor-count check across 10 repeated
  * calls with the closedir() call removed: the count never grows past
  * its first-call baseline, ruling out a genuine per-call leak.
+ *
+ * deltree()'s own recursive `self::deltree($pathfile, $trash_path);`
+ * call (line 284, RemoveMethodCall) is NOT equivalent -- a real gap,
+ * closed by the "deltree recurses into a nested subdirectory..." test
+ * above: every pre-existing deltree() test used a single-level victim
+ * (files directly inside, no subdirectories), so removing the recursive
+ * call left a nested subdirectory's own contents never unlinked,
+ * invisible to any of them.
  */
 test('getCacheSizeDerivatives sums file sizes per two-character derivative code across nested directories', function (): void {
     $root = $this->root . '/cache-sizes';
@@ -700,12 +756,13 @@ test('getCacheSizeDerivatives accumulates multiple files sharing the same size c
 
 /**
  * Not chased further -- both confirmed-equivalent for every
- * realistic input (verified live via temporary sed-applied mutations):
- * line 287's FalseToTrue/DecrementInteger/IncrementInteger, guarding
+ * realistic input (verified live via temporary sed-applied mutations,
+ * line numbers refreshed 2026-08-11): line 360's
+ * FalseToTrue/DecrementInteger/IncrementInteger, guarding
  * `filesize() === false` -- a broken symlink (the only realistic way a
  * directory entry's filesize() could fail) already fails this method's
  * own preceding is_file() check, so the guarded branch is never
- * reachable to begin with; and line 289's ConcatRemoveRight,
+ * reachable to begin with; and line 362's ConcatRemoveRight,
  * `is_dir($path . '/' . $node)` -> `is_dir($path . '/')` (always true,
  * since we're already inside `if (is_dir($path))`) -- the RECURSIVE
  * CALL's own argument is a separate, unmutated expression, so a real
@@ -713,5 +770,8 @@ test('getCacheSizeDerivatives accumulates multiple files sharing the same size c
  * and a non-file/non-dir entry (e.g. a broken symlink) recurses into a
  * non-existent nested path under both real and mutant code, which
  * harmlessly returns an empty array either way (confirmed live with a
- * broken symlink present).
+ * broken symlink present); and line 350's RemoveBooleanCast on
+ * `if ((bool) ($contents = opendir($path)))`, the same universal
+ * redundant-cast-in-boolean-context pattern as every other RemoveBoolean
+ * Cast finding in this file.
  */

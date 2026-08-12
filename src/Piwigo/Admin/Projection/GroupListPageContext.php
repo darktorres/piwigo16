@@ -10,8 +10,8 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Admin\GroupListPageRenderer::render()}. `$groups` is
- * always included (even empty) since `group_list.tpl` reads it with
- * `{if not empty($groups)}`, not `isset()`.
+ * always included (even empty) since `group_list.latte` reads it with
+ * `{if !empty($groups)}`, not `isset()`.
  */
 final readonly class GroupListPageContext implements TemplatePageContext
 {

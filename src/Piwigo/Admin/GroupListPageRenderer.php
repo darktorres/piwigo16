@@ -56,10 +56,6 @@ final readonly class GroupListPageRenderer
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
-        $template->setFilenames([
-            'group_list' => 'group_list.tpl',
-        ]);
-
         $group_repo = EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class);
         $groups = $group_repo->findAllBasic();
 
@@ -79,7 +75,7 @@ final readonly class GroupListPageRenderer
                 'NAME' => $row->name,
                 // Explicit ->value, not relying on GroupId's Stringable
                 // -- Smarty templates elsewhere in this page do real
-                // arithmetic on ID (group_list.tpl's `$group.ID%5`),
+                // arithmetic on ID (group_list.latte's `$group['ID']%5`),
                 // which would TypeError against a bare VO object.
                 'ID' => $row->id->value,
                 'IS_DEFAULT' => ($row->isDefault ? ' [' . $this->lang->t('default') . ']' : ''),
@@ -104,6 +100,6 @@ final readonly class GroupListPageRenderer
             groups: $tpl_groups,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'group_list');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'group_list.latte');
     }
 }

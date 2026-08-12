@@ -179,8 +179,8 @@ PHPStan, Psalm, Rector, Deptrac (config deferred to P6), ComposerRequireChecker/
 Unused, PHPBench, roave/security-advisories — additive only, no first-party
 code modified. Baselines recorded, not yet gated (ECS/Rector became
 code-modifying passes later; Psalm gating was paused at P5, then Psalm was
-dropped as a dependency entirely — see `docs/REFERENCE.md`'s "Key design
-decisions").
+dropped as a dependency entirely, then later reinstalled non-gating — see
+the P5 entry below for the full history).
 
 **P1 — Frontend tooling + baselines.** bun/Vite/TS/ESLint/Stylelint/Vitest,
 knip, size-limit, commitlint, Lighthouse CI, `web-vitals` installed. A
@@ -219,8 +219,18 @@ codebase at this scale — investigated properly (ruled out cache
 staleness, parallel-worker races), concluded it's a real tool limitation
 at this codebase's shape, not a bug in the code. Psalm gating paused here
 — PHPStan remains the sole blocking static-analysis gate. Psalm was later
-dropped as a dependency entirely; see `docs/REFERENCE.md`'s "Psalm gating
-is moot, not just paused" decision.
+dropped as a dependency entirely (2026-08-07), then reinstalled
+(2026-08-11, `4118adbb85`, pinned to the `7.x-dev` branch — the latest
+tagged release caps `sebastian/diff` below what Pest 5 needs) once
+`psalm.xml`'s drifted path references were fixed and a real Psalm 7.x-dev
+crash (undeclared `StatementsAnalyzer` properties, no upstream fix) was
+patched via `composer-patches`. Both `composer.json`'s `vimeo/psalm`
+entry and `vendor/bin/psalm` are real again today, along with a real
+"psalm Batch 5/6/7" cleanup (`(p24)`-tagged) that fixed 25+ genuine
+Psalm-flagged issues. Still not a CI gate — no dedicated `psalm` job
+exists — so "gating is moot" still holds, but "dropped as a dependency"
+no longer does; see `docs/REFERENCE.md`'s Psalm entry, which needs the
+same correction.
 
 **`mdetect.php`'s removal left device detection entirely unimplemented,
 not just library-free.** `Core\DeviceHelper::getDevice()` has a single
@@ -436,33 +446,43 @@ resolved:
   `Tables::` (DBAL) instead, which had become the real, working, tested
   pattern for query-heavy repositories, not a legacy-only shim. Migrating
   all of them for real was tracked as its own remediation initiative,
-  sequenced after P23, and is now done: `find src/Piwigo -iname
-  '*Repository.php'` gives 32 files, one of which
-  (`Db/AbstractRepository.php`) is the shared base class itself — **31
-  real domain repositories**. Of the 31: **16** extend
+  sequenced after P23. **Update, since superseded again**: the "8
+  repositories deliberately stay on `AbstractRepository`/DBAL" tier this
+  section originally described no longer exists — `Db/AbstractRepository.php`
+  itself has been deleted (confirmed: zero files in `src/Piwigo` extend
+  it). `find src/Piwigo -iname '*Repository.php'` gives **38 real domain
+  repositories** today (no shared abstract base file left to subtract),
+  split two ways instead of three: **23** extend
   `Doctrine\ORM\EntityRepository` (not Symfony's `ServiceEntityRepository`
-  — that class isn't used anywhere in this codebase, which doesn't run on
-  the Symfony framework/DoctrineBundle) — `Activity`, `Audit`, `Category`,
-  `Comment`, `Config`, `Feed`, `Group`, `History`, `Image`, `Lang`,
-  `PluginConfig\Plugin`, `Rate`, `Session`, `Site`, `Tag`, `User`. **8**
-  deliberately stay on `AbstractRepository`/DBAL, each with its own
-  documented reason in its class docblock: `Password`, `Calendar`,
-  `Search`, `Section`, `Caddie`, `Notification`, `NotificationByMail`, and
-  `MailRecipient` all stay on generic parameterized DBAL executors
-  because their query shapes are assembled dynamically per-caller rather
-  than fixed enough for entity mapping to help (see e.g.
-  `Search\SearchRepository`'s own docblock: "deliberately NOT
-  QueryBuilder-per-query"). **7** extend neither base class at all,
-  holding `EntityManagerInterface` directly via constructor injection
-  instead: `Permission\PermissionRepository` (`user_access` is a shared
-  join table with no single owning repository), `Auth\AuthRepository`,
-  `Auth\ApiKeyRepository`, `Metadata\MetadataRepository`,
-  `Permalink\PermalinkRepository`, `Admin\Maintenance\DbMaintenanceRepository`,
-  and `Admin\Extensions\ExtensionRepository` — each touches tables
-  *other* repositories own (`Users\UserInfoEntity`/`Auth\UserAuthKeyEntity`/
+  — still unused, this codebase doesn't run on the Symfony framework/
+  DoctrineBundle) — `Activity`, `Audit`, `Caddie`, `Comment`, `Config`,
+  `Feed`, `Group`, `History`, `Image`, `Image\DerivativeSettings`,
+  `Image\DerivativeSize`, `Lang`, `Notification\NotificationByMail`,
+  `PluginConfig\Plugin`, `Rate`, `Session`, `Site`, `Tag`,
+  `Admin\Extensions\PluginMigration`, `Admin\Extensions\ExtensionIgnoredUpdate`,
+  `Admin\Integrity\IntegrityIgnoredAnomaly`, `Core\Theme`,
+  `Auth\UserFailedLogin` — the last five, plus `Caddie` and
+  `NotificationByMail`, weren't previously on this list at all (new
+  repositories, or migrated off the now-gone DBAL tier since). **15**
+  extend neither base class, holding `EntityManagerInterface` directly via
+  constructor injection instead: `Permission` (`user_access` is a shared
+  join table with no single owning repository), `Auth`, `Auth\ApiKey`,
+  `Auth\Password`, `Metadata`, `Permalink`, `Admin\Maintenance\Db`,
+  `Admin\Extensions\Extension`, `Calendar`, `Search`, `Section`,
+  `Notification`, `Mail\Recipient`, `Category`, `Users\User` — each
+  touches tables *other* repositories own
+  (`Users\UserInfoEntity`/`Auth\UserAuthKeyEntity`/
   images/categories), reaching them via DQL for simple writes or plain
-  DBAL for reads/dynamic fragments, never claiming ownership of a table
-  itself.
+  DBAL for reads/dynamic fragments (`Search\SearchRepository`'s own
+  current docblock: query/column/operator combinations that vary per
+  caller "has no DQL representation" — the same rationale the old
+  DBAL-tier docblocks gave, now applied directly instead of through
+  `AbstractRepository`), never claiming ownership of a table itself.
+  `Category` and `User` (`final readonly class CategoryRepository`/
+  `final readonly class UserRepository implements
+  WebmasterMailProviderInterface`, neither with an `extends` clause) both
+  moved into this group since this section was last written — previously
+  listed as `EntityRepository` subclasses.
 - The Doctrine Migrations decision itself was reversed on 2026-07-24,
   before any real install existed — real installs created the schema
   from a static, hand-maintained `install/piwigo_structure-mysql.sql`
@@ -718,13 +738,17 @@ record.
 
 **Part B — DBAL → ORM migration.** 16 of 31 domain repositories converted
 from `AbstractRepository`+`Tables::` (hand-written DBAL) to real Doctrine
-`EntityRepository` + attribute-mapped entities — the P14 remediation
-promised above (see that section for the exact current breakdown). 8
-repositories stay on `AbstractRepository`/DBAL by design (dynamic query
-shapes) and 7 more hold `EntityManagerInterface` directly instead of
-extending either base class, since they touch tables owned by a
-different repository; see P14 above for the full breakdown of all three
-groups. Real findings along the way: the shared Doctrine identity map
+`EntityRepository` + attribute-mapped entities at the time this batch of
+work landed — the P14 remediation promised above. **The "8 stay on
+`AbstractRepository`/DBAL by design" tier described here no longer
+exists** — `SectionRepository`, the last remaining `AbstractRepository`
+subclass, dropped it for a directly-injected `EntityManagerInterface` in
+a separate SQL-modernization initiative's "Item 15H" (`c4125eeb43`,
+2026-08-05 — before the table-prefix removal below, not part of it), at
+which point `Db/AbstractRepository.php` itself was deleted outright, zero
+subclasses left. See P14 above for the current, corrected two-group
+breakdown (38 repositories total today, not 31). Real findings along the
+way: the shared Doctrine identity map
 serves stale data after bulk/raw writes outside the ORM (needs
 `HINT_REFRESH` for reads or `clear()` after bulk ops) — first hit twice
 while converting the repositories themselves (`TagRepository`'s
@@ -869,34 +893,44 @@ before that session's own pcov work) — combined line coverage raised from
 files read in full, not sampled) found several items — most already
 resolved by later work above — but 3 items are still genuinely open:
 
-- **Two real, still-live bugs, both cheap to fix, neither fixed since
-  being found**: `Template::p()` (`src/Piwigo/Template/Template.php`)
-  calls `\Smarty_Internal_Debug::display_debug($this->smarty)` when
+- **Two real bugs found here, both now fixed** (`48f01836b8`, 2026-07-30,
+  the coverage-gap-closing workflow below — not cross-referenced from that
+  section's own summary, but confirmed by its diff): `Template::p()`
+  (`src/Piwigo/Template/Template.php`) called
+  `\Smarty_Internal_Debug::display_debug($this->smarty)` when
   `CurrentConfig::debugTemplate()` is enabled — that class doesn't exist
-  in the installed Smarty 5.x package (the adjacent comment in the code
-  already diagnoses the fix, `Smarty\Debug`, an instantiable class with
-  the same `display_debug()` method, but it was never applied). Would
-  fatal the instant anyone enables `debugTemplate`. Separately,
-  `MailService::generateResetPasswordMail()` (line ~1069) uses
-  `$message = Lang::t(...) . '</p>';` instead of `.=`, silently
-  discarding the opening `<p>` tag set the line above — the sibling
-  method `generateSetPasswordMail()` does this correctly. Cosmetic
-  (malformed HTML in one transactional email), not security-relevant,
-  but a genuine, still-unfixed bug in a real user flow.
-- **Superseded, not just historical**: this finding said `psalm.xml`
-  (1143 lines at review time) and `vimeo/psalm` were both still a live
-  dependency despite Psalm gating being paused since P5, and proposed
-  deleting both outright. `vimeo/psalm` was fully dropped from
+  in the installed Smarty 5.x package, so this would fatal the instant
+  anyone enabled `debugTemplate`. Live code now uses `Smarty\Debug`
+  correctly, plus a documented fix for a second, deeper bug the original
+  finding didn't catch (`Smarty\Debug::display_debug()` unconditionally
+  calls `getSource()`, which the bare `Smarty` engine object doesn't
+  implement — worked around with a throwaway `'string:'` resource
+  template). Separately, `MailService::generateResetPasswordMail()` used
+  `$message = Lang::t(...) . '</p>';` instead of `.=`, silently discarding
+  the opening `<p>` tag set the line above; live code now uses `.=`
+  consistently throughout, matching the sibling
+  `generateSetPasswordMail()`.
+- **Superseded twice over, not just historical**: this finding said
+  `psalm.xml` (1143 lines at review time) and `vimeo/psalm` were both
+  still a live dependency despite Psalm gating being paused since P5, and
+  proposed deleting both outright. `vimeo/psalm` was fully dropped from
   `composer.json` on 2026-08-07 (a real dependency conflict with the
-  Pest 5 bump — see `docs/REFERENCE.md`'s "Psalm gating is moot, not
-  just paused" decision), so half the proposal happened on its own. Only
-  the orphaned `psalm.xml` config file remains, read by no installed
-  tool — the one piece of the original finding still genuinely open.
-- **TODO/FIXME/HACK/XXX markers in `src/Piwigo/`**: 50 today (was 46 at
-  review time), still uninventoried as a set — 2 concrete ones the review
-  triaged (`DerivativeParams::is_identity()`'s docblock,
-  `HtmlService`'s 4 `@todo nice display if $template loaded` markers)
-  remain unresolved alongside the other ~46-50, none picked up since.
+  Pest 5 bump), so the finding's proposal briefly happened on its own —
+  but `vimeo/psalm` (pinned to `7.x-dev`) and a rebuilt `psalm.xml` were
+  both reinstated on 2026-08-11 (see the P5 entry above for why), so the
+  dependency is live again today, just still non-gating. This specific
+  finding's original proposal (delete both) no longer applies either way.
+- **TODO/FIXME/HACK/XXX markers in `src/Piwigo/`**: 0 today, not 50 — the
+  literal-marker convention this finding counted is fully gone (a
+  side-effect of some later cleanup pass, not tracked as its own item
+  anywhere in this doc). The 2 concrete `@todo`-convention items the
+  review separately triaged are still genuinely unresolved though:
+  `DerivativeParams::isIdentity()`'s docblock (`@todo : description of
+  DerivativeParams::isIdentity`) and `HtmlService`'s 4 `@todo nice display
+  if $template loaded` markers (lines 493/514/536/563) — 5 of today's 6
+  live `@todo` markers. The 6th, `DerivativeImage::build()`'s own
+  undocumented `@todo` (line 242), wasn't named by the original review at
+  all.
 
 **Coverage-gap closing, Wave 1** (2026-07-27/28, `test(p24)`/`feat(p24)`).
 Closed the remaining zero-coverage classes across the Admin/Search/Mail/
@@ -1180,15 +1214,17 @@ Verified green: full-repo `vendor/bin/phpstan analyse` (0 errors),
 `composer test:integration` (2041 passed, 4 skipped, 0 failed),
 `composer test:contract` (595 passed, 0 failed) — all against Postgres
 (`.env.test`'s current driver); not independently re-verified against
-MySQL this pass. One item deliberately deferred, not forgotten: `ecs.php`
-has excluded `tests/` from ECS's scope since this project's very first
-commit (`chore(p0)`), originally with a "deferred to P5" comment that a
-later cleanup sweep stripped while leaving the exclusion itself in place
-— silently making it permanent. Un-skipping it surfaces 882 fixable
-findings, several genuinely wrong for this codebase's established style
-(e.g. forcing every Pest `expect()->toBe()` chain and every array onto
-multiple lines); needs its own properly-scoped pass with the disruptive
-fixers explicitly excluded, not folded into this one.
+MySQL this pass. **Since resolved, not deferred anymore**: `ecs.php` had
+excluded `tests/` from ECS's scope since this project's very first commit
+(`chore(p0)`), originally with a "deferred to P5" comment that a later
+cleanup sweep stripped while leaving the exclusion itself in place —
+silently making it permanent. Fixed in `e44aeb8f2a` (2026-08-10,
+"un-skip tests/ from ECS scope, run the full fix") — the exclusion is
+gone from `ecs.php` and the full fixer set ran across all 882 test files
+(import ordering, PSR-12/PhpCsFixer `cleanCode`/`common` style,
+string-concat collapsing, PHPUnit test-method casing), with no new fixer
+exclusions added despite the "several genuinely wrong for this codebase's
+established style" concern this section originally raised.
 
 ### Epoch G — REST/OpenAPI (P25)
 
@@ -1587,9 +1623,12 @@ bunx commitlint --from origin/16.x --to HEAD
 k6 run tests/Load/*.js                      # non-blocking, tests/Load/ doesn't exist yet
 ```
 
-**Not in this list anymore**: `vendor/bin/psalm` (Psalm isn't a
-dependency anymore — see `docs/REFERENCE.md`'s "Psalm gating is moot, not
-just paused" decision), `composer lint:latte`/`precompile:templates` (P31
+**Not in this list**: `vendor/bin/psalm` — reinstalled 2026-08-11 (see the
+P5 entry in Epoch B above), so it's a real, working dependency again
+today, just deliberately non-gating (no dedicated CI job, no `composer`
+script wired to it) — "gating is moot" still holds even though "doesn't
+exist" no longer does, see `docs/REFERENCE.md`'s Psalm entry for the same
+correction. `composer lint:latte`/`precompile:templates` (P31
 is in progress but not yet complete — some controllers still render
 Smarty, some already render Latte; a repo-wide Latte lint/precompile step
 isn't meaningful until P31 finishes, and lands for real in P32),

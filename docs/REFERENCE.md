@@ -421,7 +421,7 @@ fails on any drift between that snapshot and what a fresh
 | --- | --- |
 | `composer test` | Pest `Unit`+`Arch` — fast, no DB/webserver |
 | `composer analyse:phpstan` | PHPStan — the sole **blocking** static-analysis gate |
-| `composer analyse` | Alias for `analyse:phpstan` — `analyse:psalm` doesn't exist; Psalm isn't a dependency anymore (see "Key design decisions" below) |
+| `composer analyse` | Alias for `analyse:phpstan` — `analyse:psalm` doesn't exist; Psalm is installed again but has no `composer` script and isn't a CI gate (see "Key design decisions" below) |
 | `composer lint:php` | ECS in check mode — **still not blocking** (see CI below) |
 | `composer require-checker` | Composer-require-checker |
 | `composer unused` | Composer-unused |
@@ -441,14 +441,15 @@ fails on any drift between that snapshot and what a fresh
 
 PHPStan has no baseline file (`phpstan-baseline.neon` was deleted once the
 codebase reached a clean run — CI runs `phpstan analyse` with zero
-suppressions). Psalm is not used: `vimeo/psalm` was dropped from
-`composer.json` entirely (`c7a5b8366a`, 2026-08-07) — the Pest 5 bump
-needed PHPUnit ^13.2 → `sebastian/diff` ^9.0, which conflicts with Psalm
-6.x's own cap of `sebastian/diff` ^8.0, and Psalm has no stable v7 yet;
-Psalm was already non-gating (not wired into CI, superseded by
-PHPStan/ECS/deptrac), so dropping it was a clean unblock.
-`vendor/bin/psalm` no longer exists. Only the orphaned `psalm.xml` config
-file survives, read by no installed tool.
+suppressions). Psalm is not gated, but is installed: `vimeo/psalm` was
+dropped from `composer.json` entirely (`c7a5b8366a`, 2026-08-07 — the
+Pest 5 bump needed PHPUnit ^13.2 → `sebastian/diff` ^9.0, which conflicted
+with Psalm 6.x's own cap of `sebastian/diff` ^8.0, and Psalm had no stable
+v7 yet), then reinstalled (`4118adbb85`, 2026-08-11) pinned to the
+`7.x-dev` branch once that cap was dropped upstream. `vendor/bin/psalm`
+and `psalm.xml` are both real again — see "Psalm gating is moot, not just
+paused" below for the full history — just still non-gating (superseded by
+PHPStan/ECS/deptrac, no CI job, no `composer` script).
 
 ### Tests
 
@@ -569,9 +570,10 @@ practice regardless of which branch is currently default),
 `ecs` and `rector` are still `continue-on-error: true` (non-blocking),
 each with an inline comment saying so "until P5" — see `docs/PLAN.md` for
 P5's completion status; the CI file itself hasn't been revisited to make
-either job blocking since. Psalm gating was never reconsidered either,
-but that's moot now — see "Psalm gating is moot, not just paused" under
-Key design decisions. Rector's own rule set is narrower than
+either job blocking since. Psalm has no CI job at all (gating was never
+reconsidered, and would be moot regardless — see "Psalm gating is moot,
+not just paused" under Key design decisions), even though the dependency
+itself is installed again. Rector's own rule set is narrower than
 "non-blocking" implies: `rector.php` has `withPhpSets()`/
 `withPreparedSets()` commented out, leaving exactly one trivial rule
 live (`RemoveUselessAliasInUseStatementRector`) — the `rector` job runs
@@ -752,12 +754,21 @@ features and the already-adopted Symfony/Doctrine layer over
 vendored/third-party libraries, invoked whenever a phase finds its own
 vendored/legacy surface to replace.
 
-**Psalm gating is moot, not just paused.** Psalm was never wired into CI
-as a blocking gate — PHPStan is the sole blocking static-analysis gate;
-Psalm's global-function-resolution scanner didn't hold up against this
-codebase's large, non-namespaced procedural legacy tree. `vimeo/psalm`
-was dropped from `composer.json` entirely on 2026-08-07 (real dependency
-conflict with the Pest 5 bump — see Development → CI above), so there is
-no tool left to gate. `psalm-baseline.xml` is gone, and so is the
-`vimeo/psalm` dependency itself — only the orphaned `psalm.xml` config
-file survives, read by no installed tool.
+**Psalm gating is moot, not just paused — but Psalm itself is back.**
+Psalm was never wired into CI as a blocking gate — PHPStan is the sole
+blocking static-analysis gate; Psalm's global-function-resolution scanner
+didn't hold up against this codebase's large, non-namespaced procedural
+legacy tree, so gating stays moot regardless of whether the dependency is
+installed. `vimeo/psalm` was dropped from `composer.json` entirely on
+2026-08-07 (real dependency conflict with the Pest 5 bump — see
+Development → CI above), then reinstalled on 2026-08-11 (`4118adbb85`),
+pinned to the `7.x-dev` branch once that branch dropped the
+`sebastian/diff` cap that caused the original conflict. `psalm.xml`'s
+drifted path references were fixed in the same pass, and a real Psalm
+7.x-dev crash (undeclared `StatementsAnalyzer` properties — no upstream
+fix exists) is patched via `composer-patches`. `vendor/bin/psalm` and a
+rebuilt `psalm.xml` are both real again today; `psalm-baseline.xml`
+stays gone (a 25+-error "Batch 5/6/7" cleanup ran clean instead of
+re-baselining). Still no dedicated CI job and no `composer` script wired
+to it — reinstalled for real, local, best-effort use, not as a
+resurrected gate.

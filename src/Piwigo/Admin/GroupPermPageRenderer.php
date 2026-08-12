@@ -119,12 +119,6 @@ final readonly class GroupPermPageRenderer
                 ]);
         }
 
-        $template->setFilenames(
-            [
-                'group_perm' => 'group_perm.tpl',
-            ]
-        );
-
         // only private categories are listed
         $categoryOptionTrue = $categoryService->displaySelectPrivateGrantedToGroup($groupId->value, $this->htmlRenderer);
 
@@ -150,6 +144,6 @@ final readonly class GroupPermPageRenderer
         ));
 
         $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'group_perm');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'group_perm.latte');
     }
 }

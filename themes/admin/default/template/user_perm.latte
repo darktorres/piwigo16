@@ -1,0 +1,23 @@
+<h2>{$TITLE}</h2>
+
+{if isset($categories_because_of_groups)}
+<fieldset>
+  <legend>{='Albums authorized thanks to group associations'|translate}</legend>
+
+  <ul>
+    {foreach $categories_because_of_groups as $cat}
+    <li>{$cat|noescape}</li>
+    {/foreach}
+  </ul>
+</fieldset>
+{/if}
+
+
+<fieldset>
+  <legend>{='Other private albums'|translate}</legend>
+
+  <form method="post" action="{$F_ACTION|noescape}">
+    {$DOUBLE_SELECT|noescape}
+    <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
+  </form>
+</fieldset>

@@ -83,12 +83,6 @@ final readonly class UserPermPageRenderer
             $permissionService->grantUserAccess($user_id, $cat_false);
         }
 
-        $template->setFilenames(
-            [
-                'user_perm' => 'user_perm.tpl',
-            ]
-        );
-
         // retrieve category ids authorized to the groups the user belongs to
         $group_authorized = [];
         $categories_because_of_groups = null;
@@ -138,6 +132,6 @@ final readonly class UserPermPageRenderer
         ));
 
         $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'user_perm');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'user_perm.latte');
     }
 }

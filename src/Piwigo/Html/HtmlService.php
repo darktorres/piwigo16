@@ -926,7 +926,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
      * than accumulating duplicates) -- no template anywhere reads
      * `$errors` by specific key (a full-repo
      * grep of every theme template found none); every real consumer
-     * (`infos_errors.tpl`'s own `{foreach from=$errors item=error}`)
+     * (`infos_errors.latte`'s own `{foreach $errors as $error}`)
      * reads values only, so the keys never actually reach the rendered
      * page. Every real value across every real call site
      * (Identification/Register/PasswordController) is a translated

@@ -31,6 +31,6 @@ final class PhotosAddFtpPageRenderer
             adminPageTitle: $lang->t('Upload Photos'),
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'photos_add_ftp.latte');
     }
 }

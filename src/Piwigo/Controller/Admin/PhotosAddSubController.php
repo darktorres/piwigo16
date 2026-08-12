@@ -93,10 +93,6 @@ final readonly class PhotosAddSubController implements AdminSubControllerInterfa
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
-        $template->setFilenames([
-            'photos_add' => 'photos_add_' . $tab . '.tpl',
-        ]);
-
         if ($tab === 'direct') {
             $this->photosAddDirectPageRenderer
                 ->render();

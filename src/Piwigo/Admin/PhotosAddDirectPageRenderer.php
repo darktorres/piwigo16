@@ -208,7 +208,7 @@ final readonly class PhotosAddDirectPageRenderer
             strFormatExt: implode(', ', array_filter($conf_format_ext, is_string(...))),
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'photos_add_direct.latte');
     }
 
     /**

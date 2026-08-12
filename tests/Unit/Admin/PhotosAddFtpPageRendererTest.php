@@ -59,18 +59,26 @@ test('render() falls back to empty ftp help content when the real language file 
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'photos_add.tpl', 'ftp={$FTP_HELP_CONTENT}|title={$ADMIN_PAGE_TITLE}');
+        file_put_contents($tplDir . 'photos_add_ftp.latte', 'ftp={$FTP_HELP_CONTENT}|title={$ADMIN_PAGE_TITLE}');
         $template->setTemplateDir($tplDir);
-        $template->setFilename('photos_add', 'photos_add.tpl');
 
         new PhotosAddFtpPageRenderer()
             ->render(LangTestFactory::get(), CurrentTemplateTestFactory::get());
+
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
 
         expect($template->getTemplateVars('FTP_HELP_CONTENT'))
             ->toBe('')
             ->and($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('Upload Photos')
-            ->and($template->getTemplateVars('ADMIN_CONTENT'))
+            ->and((string) $adminContent)
             ->toBe('ftp=|title=Upload Photos');
     } finally {
         photosAddFtpTestRrmdir($root);

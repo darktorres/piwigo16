@@ -20,6 +20,6 @@ final class PhotosAddApplicationsPageRenderer
 
         $template->assignContext(new PhotosAddApplicationsPageContext(adminPageTitle: $lang->t('Upload Photos')));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'photos_add_applications.latte');
     }
 }

@@ -58,7 +58,7 @@ function photosAddApplicationsTestRrmdir(string $dir): void
     rmdir($dir);
 }
 
-test('render() assigns the page title and parses the photos_add handle into ADMIN_CONTENT', function (): void {
+test('render() assigns the page title and parses photos_add_applications.latte into ADMIN_CONTENT', function (): void {
     $root = photosAddApplicationsTestRoot();
 
     try {
@@ -66,16 +66,24 @@ test('render() assigns the page title and parses the photos_add handle into ADMI
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'photos_add.tpl', 'title={$ADMIN_PAGE_TITLE}');
+        file_put_contents($tplDir . 'photos_add_applications.latte', 'title={$ADMIN_PAGE_TITLE}');
         $template->setTemplateDir($tplDir);
-        $template->setFilename('photos_add', 'photos_add.tpl');
 
         new PhotosAddApplicationsPageRenderer()
             ->render(LangTestFactory::get(), CurrentTemplateTestFactory::get());
 
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
         expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('Upload Photos')
-            ->and($template->getTemplateVars('ADMIN_CONTENT'))
+            ->and((string) $adminContent)
             ->toBe('title=Upload Photos');
     } finally {
         photosAddApplicationsTestRrmdir($root);

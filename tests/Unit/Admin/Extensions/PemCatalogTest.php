@@ -19,11 +19,12 @@ use Piwigo\Users\CurrentUser;
 // class's remaining, genuinely pure/file-based surface instead: the 4
 // sort comparators and the 2 local-filesystem helpers
 // (getLocallyMergedExtensions()/deleteObsoleteFiles()). Both read
-// Piwigo\Core\CurrentPaths directly (getLocallyMergedExtensions() for the
-// real, committed install/obsolete_extensions.list; deleteObsoleteFiles()
-// via ExtensionType::scanDirectory() for its own trash-path string), so
-// this suite seeds it against this repo's real root, same convention as
-// every other Unit test touching CurrentPaths (e.g. ExtensionTypeTest).
+// Piwigo\Core\CurrentPaths directly (getLocallyMergedExtensions() for
+// install/obsolete_extensions.list, removed entirely -- always [] against
+// the real repo root now; deleteObsoleteFiles() via
+// ExtensionType::scanDirectory() for its own trash-path string), so this
+// suite seeds it against this repo's real root, same convention as every
+// other Unit test touching CurrentPaths (e.g. ExtensionTypeTest).
 //
 // [Mutation] The above architectural gap -- the same conclusion
 // ExtensionUpdateCheckerTest's own docblock independently reaches --
@@ -260,17 +261,16 @@ test('compareByDownloads treats an identical count as a tie, not "$a has fewer"'
     expect(PemCatalog::compareByDownloads($same, $same))->toBe(-1);
 });
 
-test('getLocallyMergedExtensions parses the real install/obsolete_extensions.list', function (): void {
+test('getLocallyMergedExtensions returns an empty array against the real repo root -- install/obsolete_extensions.list is gone', function (): void {
+    // install/obsolete_extensions.list (a static list of pre-fork PWG-era
+    // plugin ids merged into core) was removed entirely -- no committed
+    // asset left to parse, so this now always returns [] for the real
+    // repo root. The other 2 tests below cover the real parsing/error
+    // paths against their own throwaway fixture files.
     $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
-    $merged = $catalog->getLocallyMergedExtensions();
 
-    // install/obsolete_extensions.list is a committed, static asset --
-    // asserting a couple of its real, known entries plus the exact total
-    // count.
-    expect($merged)
-        ->toHaveCount(13);
-    expect($merged[411])->toBe('pwg_images_addSimple');
-    expect($merged[286])->toBe('admin_multi_view');
+    expect($catalog->getLocallyMergedExtensions())
+        ->toBe([]);
 });
 
 test('getLocallyMergedExtensions reads the paths->root-prefixed file, not a bare CWD-relative one', function (): void {

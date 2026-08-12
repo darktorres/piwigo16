@@ -157,8 +157,6 @@ test('install/ contains only data files and the anti-listing stub', function ():
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/install'))->toBe([
         'config.sql',
         'index.php',
-        'obsolete.list',
-        'obsolete_extensions.list',
         'piwigo_structure-mysql.sql',
         'piwigo_structure-pgsql.sql',
     ]);

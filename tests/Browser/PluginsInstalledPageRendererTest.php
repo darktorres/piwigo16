@@ -114,49 +114,6 @@ function pluginsInstalledDb(): mysqli|Connection
     return H::connect();
 }
 
-it('flags a plugin whose PEM extension id is in the locally-merged list as STATE=merged, overwrites its description, and persists the DB state flip to inactive', function (): void {
-    $pluginId = 'pwgtest-plugins-installed-merged';
-
-    // eid=411 matches a real, committed entry in
-    // install/obsolete_extensions.list (pwg_images_addSimple) -- see
-    // PemCatalogTest's own "getLocallyMergedExtensions parses the real
-    // install/obsolete_extensions.list" test for that file's exact,
-    // asserted contents.
-    pluginsInstalledWriteFixturePlugin($pluginId, <<<'PHP'
-    <?php
-
-    declare(strict_types=1);
-
-    /*
-    Plugin Name: Plugins Installed Test -- Merged Into Core
-    Version: 3.0.0
-    Plugin URI: https://piwigo.org/ext/extension_view.php?eid=411
-    Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
-    */
-    PHP);
-
-    $db = pluginsInstalledDb();
-    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '3.0.0')", H::dbEscape($db, $pluginId)));
-
-    try {
-        $page = H::loginAsAdmin($this);
-        $page = H::navigateOk($page, '/admin.php?page=plugins');
-
-        // Common to both the raw msgid and its (differently-worded)
-        // en_UK translation -- see language/en_UK/admin.po -- so this
-        // substring is stable regardless of catalog-loading state.
-        $page->assertSee('THIS PLUGIN IS NOW PART OF PIWIGO CORE');
-        $page->assertNoJavaScriptErrors();
-
-        $row = H::fetchAssocOrFail($db, sprintf("SELECT state FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
-        expect($row['state'])->toBe('inactive');
-    } finally {
-        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
-        H::dbClose($db);
-        pluginsInstalledRemoveFixturePlugin($pluginId);
-    }
-});
-
 it('resolves a settings URL from a real get_admin_plugin_menu_links hook via both the legacy "plugin-X" and the "section=X" regex fallbacks', function (): void {
     $hooksId = 'pwgtest-plugins-installed-hooks';
     $targetId = 'pwgtest-plugins-installed-target';

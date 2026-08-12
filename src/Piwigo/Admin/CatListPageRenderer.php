@@ -163,8 +163,6 @@ final readonly class CatListPageRenderer
                     $base_url . '&amp;parent_id='
                 );
         }
-        $template->setFilename('categories', 'cat_list.tpl');
-
         $form_action = $this->urlService->getRootUrl() . 'admin.php?page=cat_list';
         if ($parent_id !== null) {
             $form_action .= '&amp;parent_id=' . $parent_id;
@@ -277,6 +275,6 @@ final readonly class CatListPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocEndCatList());
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'categories');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_list.latte');
     }
 }

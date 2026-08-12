@@ -10,7 +10,7 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Admin\CatListPageRenderer::render()} once its own
- * categories-display loop finishes -- `cat_list.tpl`'s own
+ * categories-display loop finishes -- `cat_list.latte`'s own
  * `{if count($categories)}` requires the key to always exist, so
  * `$categories` is a plain required field, always included (even
  * empty), not the optional-omission idiom. `$parentEditUrl` is

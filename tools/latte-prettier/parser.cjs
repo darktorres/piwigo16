@@ -425,12 +425,38 @@ function parseNodeList(s, opts) {
       continue;
     }
     if (allowElements && s.peek() === "<") {
-      nodes.push(parseHtmlAngle(s));
+      nodes.push(parseHtmlAngle(s, stopKeywords));
       continue;
     }
     nodes.push(consumeTextRun(s, { allowElements, stopChar }));
   }
   return nodes;
+}
+
+// Loops parseNodeList, absorbing any closing tag it can't explain as literal
+// passthrough instead of erroring. A "body" context (an {if} branch, a
+// {foreach}/{spaceless} body, the top-level document) doesn't necessarily
+// *own* every closing tag syntactically interleaved within it — real Piwigo
+// markup overlaps HTML and Latte scopes (`<span>{spaceless}...{/if}</span>
+// {/spaceless}`: the </span> belongs to a <span> opened *outside*
+// {spaceless}'s own body, since Latte's real {spaceless} isn't HTML-aware at
+// compile time — it's a pure text transform, not a balanced-tag construct).
+// parseNodeList already stops (without consuming) at any unmatched `</...>`;
+// this is what lets the loop tell "a real stopKeywords tag showed up" apart
+// from "an ancestor's/orphan's closing tag showed up" and keep going for the
+// latter, exactly like the top-level document already did for its own
+// unclosed-fragment case (header.latte/footer.latte's split <div>).
+function parseBodyLoop(s, allowElements, stopKeywords) {
+  const nodes = [];
+  for (;;) {
+    nodes.push(...parseNodeList(s, { allowElements, stopKeywords }));
+    if (s.eof()) return nodes;
+    if (allowElements && s.startsWith("</")) {
+      nodes.push(parseOrphanCloseTag(s));
+      continue;
+    }
+    return nodes; // stopped at a real stopKeywords-matching tag; caller consumes it
+  }
 }
 
 function consumeTextRun(s, { allowElements, stopChar }) {
@@ -449,10 +475,10 @@ function consumeTextRun(s, { allowElements, stopChar }) {
   return { type: "HtmlText", value: s.text.slice(start, s.pos), start, end: s.pos };
 }
 
-function parseHtmlAngle(s) {
+function parseHtmlAngle(s, stopKeywords) {
   if (s.startsWith("<!--")) return parseHtmlComment(s);
   if (s.startsWithCI("<!doctype")) return parseDoctype(s);
-  return parseElement(s);
+  return parseElement(s, stopKeywords);
 }
 
 function parseHtmlComment(s) {
@@ -477,7 +503,7 @@ function parseDoctype(s) {
 // markup conditionally renders whole attributes via {if}/{else} sitting
 // directly among an element's attributes (not just inside one value).
 // ---------------------------------------------------------------------------
-function parseElement(s) {
+function parseElement(s, inheritedStopKeywords) {
   const start = s.pos;
   s.advance(); // '<'
   const name = readIdentifier(s);
@@ -507,7 +533,12 @@ function parseElement(s) {
       children = rawValue.length ? [{ type: "HtmlText", value: rawValue, start: s.pos, end: idxLower }] : [];
       s.pos = idxLower;
     } else {
-      children = parseNodeList(s, { allowElements: true });
+      // Forwarding the enclosing {if}/{foreach}/{spaceless} branch's own
+      // stop keywords lets a deliberately-unclosed element nested inside it
+      // (legacy HTML relying on implicit closing, e.g. a <td> never closed
+      // before the next {else}) recognize that keyword as its own implicit
+      // close instead of trying to parse it as a fresh, unrecognized tag.
+      children = parseNodeList(s, { allowElements: true, stopKeywords: inheritedStopKeywords });
     }
     // A same-file document fragment (Piwigo's header/footer split) can leave
     // elements open at EOF, or close an element opened by a sibling file's
@@ -583,6 +614,27 @@ function parseAttributeItems(s, stopKeywords) {
   return items;
 }
 
+// Like parseNodeList(s, {allowElements:false}) but bounded by whitespace/
+// '>'/'/' instead of a single stopChar (there's no quote to look for).
+function parseUnquotedAttrValue(s) {
+  const nodes = [];
+  for (;;) {
+    if (s.eof() || isSpace(s.peek()) || s.peek() === ">" || s.peek() === "/") break;
+    const head = peekLatteHead(s);
+    if (isRealLatteStart(head)) {
+      nodes.push(parseLatteNode(s, head, { allowElements: false }));
+      continue;
+    }
+    const start = s.pos;
+    while (!s.eof() && !isSpace(s.peek()) && s.peek() !== ">" && s.peek() !== "/") {
+      if (isRealLatteStart(peekLatteHead(s))) break;
+      s.advance();
+    }
+    nodes.push({ type: "HtmlText", value: s.text.slice(start, s.pos), start, end: s.pos });
+  }
+  return nodes;
+}
+
 function parseOneAttribute(s) {
   const start = s.pos;
   if (!isIdentStart(s.peek()) && s.peek() !== "-" && s.peek() !== ":") {
@@ -608,10 +660,14 @@ function parseOneAttribute(s) {
       if (s.peek() !== q) s.error(`unterminated attribute value for "${name}"`);
       s.advance();
     } else {
-      // unquoted attribute value (not present in corpus, handled defensively)
-      const vs = s.pos;
-      while (!s.eof() && !isSpace(s.peek()) && s.peek() !== ">" && s.peek() !== "/") s.advance();
-      value = [{ type: "HtmlText", value: s.text.slice(vs, s.pos), start: vs, end: s.pos }];
+      // Unquoted attribute value (e.g. `id={$key}`) — real, live Piwigo
+      // markup, confirmed via the AST-equivalence test catching a silent
+      // corruption here: a first cut at this treated the whole span as
+      // literal text, which silently turned a real `{$key}` substitution
+      // into the 7 literal characters "{$key}" once reprinted and
+      // re-parsed. Needs the same Latte-tag-aware scanning as a quoted
+      // value, just bounded by whitespace/`>`/`/` instead of a quote char.
+      value = parseUnquotedAttrValue(s);
     }
   } else {
     s.pos = save;
@@ -675,7 +731,7 @@ function parseIf(s, start, listOpts) {
   const branchOf = () =>
     isAttrList
       ? parseAttributeItems(s, ifStops)
-      : parseNodeList(s, { allowElements: Boolean(listOpts && listOpts.allowElements), stopKeywords: ifStops });
+      : parseBodyLoop(s, Boolean(listOpts && listOpts.allowElements), ifStops);
 
   const consequent = branchOf();
   const elseifs = [];
@@ -727,7 +783,7 @@ function parseForeach(s, start, listOpts) {
   const foreachStops = new Set(["/foreach"]);
   const body = isAttrList
     ? parseAttributeItems(s, foreachStops)
-    : parseNodeList(s, { allowElements: Boolean(listOpts && listOpts.allowElements), stopKeywords: foreachStops });
+    : parseBodyLoop(s, Boolean(listOpts && listOpts.allowElements), foreachStops);
   const head = peekLatteHead(s);
   if (!head || stopKey(head) !== "/foreach") s.error("expected {/foreach}");
   s.advance();
@@ -758,7 +814,7 @@ function parseSpaceless(s, start, listOpts) {
   const spacelessStops = new Set(["/spaceless"]);
   const body = isAttrList
     ? parseAttributeItems(s, spacelessStops)
-    : parseNodeList(s, { allowElements: Boolean(listOpts && listOpts.allowElements), stopKeywords: spacelessStops });
+    : parseBodyLoop(s, Boolean(listOpts && listOpts.allowElements), spacelessStops);
   const head = peekLatteHead(s);
   if (!head || stopKey(head) !== "/spaceless") s.error("expected {/spaceless}");
   s.advance();
@@ -827,15 +883,12 @@ function splitTopLevelCommas(src) {
 // ---------------------------------------------------------------------------
 function parse(text) {
   const s = new Scanner(text);
-  const children = [];
-  for (;;) {
-    children.push(...parseNodeList(s, { allowElements: true }));
-    if (s.eof()) break;
-    // Only remaining reason parseNodeList stops early is a `</name>` with no
-    // open ancestor in this fragment (e.g. footer.latte closing a <div> that
-    // header.latte opened) — preserve it verbatim rather than erroring.
-    children.push(parseOrphanCloseTag(s));
-  }
+  // Empty stopKeywords: the top level has no real terminator but EOF, so
+  // parseBodyLoop's other branch (absorb an unowned closing tag as an
+  // orphan and keep going) handles the header.latte/footer.latte
+  // split-fragment case — e.g. footer.latte closing a <div> that
+  // header.latte opened — the same way it now does at every nested level.
+  const children = parseBodyLoop(s, true, new Set());
   return { type: "Document", children, start: 0, end: text.length };
 }
 

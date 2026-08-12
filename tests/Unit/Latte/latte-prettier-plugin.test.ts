@@ -85,15 +85,17 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
     });
   });
 
-  // The plugin's grammar coverage was built and verified against the 4
-  // corpus files above, not the whole tree — it fails loudly (not silently)
-  // on constructs it doesn't know yet: newer keywords ({for}, {define},
-  // {breakIf}), newer expression syntax (??, array literals, casts,
-  // \FULLY_QUALIFIED constants), and an unresolved {elseif}/{else}
-  // structural mismatch in a handful of files. This floor is a regression
-  // guard, not a completeness claim — it must only ever go up as grammar
-  // coverage grows; if it drops, something real broke.
-  it("does not regress below its current real-tree pass rate", async () => {
+  // Grammar coverage started at the 4 corpus files above and was extended,
+  // one real root-caused construct at a time, until it reached full
+  // coverage of the tree (109/109 as of this writing). That's a hard
+  // requirement now, not a floor: P31 (Smarty -> Latte migration) is still
+  // in progress, so new templates keep landing. If one hits an unsupported
+  // construct, that's real signal — extend the grammar (see
+  // tools/latte-prettier/README.md's Architecture section for how the
+  // existing constructs were each added from real source, not guessed) or,
+  // if it's a deliberate carve-out, adjust this test with a clear reason at
+  // that time. Silent regression is what this guards against.
+  it("formats every real .latte file in the tree without throwing", async () => {
     const files = findLatteFiles(THEMES_DIR);
     const failures: string[] = [];
     for (const file of files) {
@@ -103,33 +105,23 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
         failures.push(`${file}: ${(e as Error).message.split("\n")[0]}`);
       }
     }
-    const passCount = files.length - failures.length;
     expect(
-      passCount,
-      `only ${passCount}/${files.length} real .latte files format cleanly (floor is 85); failures:\n${failures.join("\n")}`,
-    ).toBeGreaterThanOrEqual(85);
+      failures,
+      `${failures.length}/${files.length} real .latte files failed to format`,
+    ).toEqual([]);
   });
 
-  // Stronger than the floor above: "doesn't throw" alone doesn't rule out
-  // silent corruption. For every real file the plugin *does* currently
-  // accept — whichever those are, no hardcoded list, so this automatically
-  // covers newly-converted templates and newly-closed grammar gaps alike —
-  // it must also be idempotent and produce an AST equivalent to the
-  // original. A file failing to parse at all is out of scope here (that's
-  // the floor test's job); a file that parses but silently mangles content
-  // or never converges is a real bug, not a known gap.
-  it("every file it accepts is idempotent and semantically unchanged", async () => {
+  // Stronger than "doesn't throw" alone: rules out silent corruption. Every
+  // real file in the tree must also be idempotent and produce an AST
+  // equivalent to its original — a file that parses but silently mangles
+  // content or never converges is a real bug, not a known gap.
+  it("every real .latte file is idempotent and semantically unchanged", async () => {
     const files = findLatteFiles(THEMES_DIR);
     const idempotencyFailures: string[] = [];
     const equivalenceFailures: string[] = [];
     for (const file of files) {
       const src = readFileSync(file, "utf8");
-      let once: string;
-      try {
-        once = await format(src);
-      } catch {
-        continue; // not accepted yet — covered by the floor test above
-      }
+      const once = await format(src);
       const twice = await format(once);
       if (twice !== once) idempotencyFailures.push(file);
       if (
@@ -140,11 +132,11 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
     }
     expect(
       idempotencyFailures,
-      "formatting twice should converge for every accepted file",
+      "formatting twice should converge for every real file",
     ).toEqual([]);
     expect(
       equivalenceFailures,
-      "formatted output should be AST-equivalent to its source for every accepted file",
+      "formatted output should be AST-equivalent to its source for every real file",
     ).toEqual([]);
   });
 });

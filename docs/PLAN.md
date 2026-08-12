@@ -122,7 +122,7 @@ onto the original scope.
 | P29 | Browserslist decision + legacy back-compat removal | Not started | 0 |
 | P30 | Asset-pipeline foundation (ScriptLoader/CssLoader/FileCombiner retirement + ViteManifest resolution) | Not started | 0 |
 | P31 | Smarty → Latte template migration | Done — all 139 real templates converted, Smarty engine fully removed (`smarty/smarty` dropped, `Template.php` Latte-only). Deferred asset-pipeline items (`ViteManifest`, `<picture>`, ThumbHash) out of scope, pick up under P29/P30/P43 | 80 |
-| P32 | Latte lint/format | Format-half landed (`tools/latte-prettier/`, real Prettier plugin, 85/109 real templates); lint-half (`composer lint:latte` etc.) not started | 1 |
+| P32 | Latte lint/format | Format-half landed (`tools/latte-prettier/`, real Prettier plugin, full 109/109 real-tree coverage); lint-half (`composer lint:latte` etc.) not started | 3 |
 | P33 | Latte idiomatic modernization | Not started | 0 |
 | P34 | Inline JS extraction | Not started | 0 |
 | P35 | Inline CSS extraction | Not started | 0 |
@@ -1542,20 +1542,24 @@ below.
 through Prettier's own `Doc` builders, the same architecture
 `prettier-plugin-laravel-blade` uses for Blade, not a mask-and-delegate
 tool). `bun run format:latte` / `format:latte:fix`; `!themes/**/*.latte`
-carved out of `.prettierignore`'s per-extension excludes. Verified
-correct (no-throw, idempotent, AST-semantically-equivalent to the
-original) against 4 real theme files, and currently formats 85/109 real
-`.latte` templates in the tree cleanly — the rest hit real, uncovered
-grammar (newer keywords like `{for}`/`{define}`/`{breakIf}`, PHP `??`/
-array-literal/cast syntax, an unresolved `{elseif}`/`{else}` structural
-gap) and fail loudly rather than silently mangling anything; see
-`tools/latte-prettier/README.md`. `tests/Unit/Latte/latte-prettier-plugin.test.ts`
-asserts an 85-file regression floor across the real tree plus strict
-correctness against the 4 verified files. Deliberately **not** wired into
-`lefthook` pre-commit or CI yet — that's premature before grammar
-coverage is closer to complete; extending coverage is the natural next
-step, tracked here rather than as a new phase since it's still this
-phase's "format" half.
+carved out of `.prettierignore`'s per-extension excludes. Full real-tree
+coverage as of this writing: **109/109** `.latte` files under `themes/`
+parse, format, are idempotent, and are AST-semantically-equivalent to
+their source — reached incrementally from the original 4-file corpus by
+root-causing each real gap against actual source (elseif/else/spaceless
+structural mismatches from HTML left deliberately unclosed or scopes
+that overlap rather than nest; a real silent-corruption bug in unquoted
+attribute values, caught only by the AST-equivalence check; `??`/array
+literals/casts/`\CONST`/ternary in the expression grammar; `{for}`/
+`{define}`/`{breakIf}`/bare-call-output tags), never a guessed fix; see
+`tools/latte-prettier/README.md`.
+`tests/Unit/Latte/latte-prettier-plugin.test.ts` asserts full-tree
+coverage as a hard requirement (not a floor) plus strict correctness
+against the 4 originally-verified files. Deliberately **still not**
+wired into `lefthook` pre-commit or CI — full coverage of *today's* tree
+doesn't cover templates P31 hasn't converted yet, and wiring in
+enforcement is a separate decision for whoever wants it next, not
+assumed here.
 
 **P33 — Latte idiomatic modernization.** Not started. A content pass over
 templates once formatting is enforced — idiomatic Latte constructs,

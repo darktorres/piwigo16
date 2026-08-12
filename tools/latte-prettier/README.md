@@ -17,57 +17,75 @@ bun run format:latte:fix    # write
 
 ## Status
 
-Built and verified against 4 real theme files (`header.latte`, `footer.latte`,
-`comment_list.latte`, `register.latte`): every construct they contain parses,
-formats, round-trips idempotently, and is AST-semantically-equivalent to the
-original (see `tests/Unit/Latte/latte-prettier-plugin.test.ts`).
+**Full real-tree coverage: 109/109.** Every `.latte` file under `themes/` as
+of this writing parses, formats, converges on a second pass (idempotent), and
+is AST-semantically-equivalent to its source — verified across the whole
+tree, not sampled (see `tests/Unit/Latte/latte-prettier-plugin.test.ts`).
 
-Run against the full real tree (109 `.latte` files under `themes/` as of this
-writing), it currently formats **85/109** cleanly — and, checked with the same
-rigor as the 4-file corpus (not just "didn't throw"), all 85 are idempotent
-and AST-semantically-equivalent to their source. No silent corruption found
-anywhere in the grammar it currently covers. On the rest, it fails loudly (a
-real parse/print error naming the exact construct) rather than guessing. The
-remaining ~24 files hit one of:
+Coverage started at 4 real theme files (`header.latte`, `footer.latte`,
+`comment_list.latte`, `register.latte`) and was extended to the full tree one
+real, root-caused construct at a time — never a guessed fix. Along the way:
 
-- **Unrecognized keywords**: `{for}`, `{define}`, `{breakIf}` — real Latte
-  constructs never encountered in the original 4-file corpus, not yet in the
-  parser's dispatch table.
-- **Unrecognized expression syntax**: PHP's `??` null-coalescing operator,
-  array literals (`[]`, `["a", "b"]`), casts (`(string) $x`), and
-  backslash-qualified constants (`\JSON_UNESCAPED_UNICODE`) — the expression
-  grammar only covers what the original corpus actually used.
-- **An unresolved `{elseif}`/`{else}`/`{/spaceless}` structural mismatch** in
-  a handful of files — needs real per-file investigation (something is
-  desyncing the parser's position before it reaches the branch tag), not a
-  guessed fix.
+- **Structural**: HTML elements deliberately left unclosed (legacy markup
+  relying on implicit closing, e.g. a `<td>` never closed before the next
+  `{else}`) needed the enclosing `{if}`/`{foreach}`/`{spaceless}` branch's
+  stop-keywords threaded into their own children-parsing. Separately, real
+  markup also _overlaps_ HTML and Latte scopes (`<span>{spaceless}...{/if}
+</span>{/spaceless}` — the `</span>` belongs to a `<span>` opened _outside_
+  `{spaceless}`'s own body, since `{spaceless}` isn't HTML-aware at compile
+  time). Both fixed by generalizing the same "absorb an unowned closing tag
+  as literal passthrough" mechanism the top-level document already used for
+  its own header/footer split-fragment case.
+- **A real silent-corruption bug**, caught only by the AST-equivalence check
+  (not by "doesn't throw"): an unquoted attribute value (`id={$key}`) was
+  captured as literal text instead of a real Latte tag, turning a live
+  variable substitution into 7 literal characters once reprinted.
+- **Expression grammar**: `??` null-coalescing, array literals, PHP casts,
+  backslash-qualified global constants (`\JSON_UNESCAPED_UNICODE`), and a
+  ternary (`cond ? then : else`).
+- **New tag keywords**: `{for INIT; COND; STEP}` (with a small
+  assignment/increment statement grammar for INIT/STEP that a general
+  expression position doesn't allow), `{define name}...{/define}` (a named
+  fragment invoked later via `{include name, arg: val}`), and `{breakIf}`.
+- **Bare output**: `{funcName(...)}` and `{(...)...}` with no leading `$`/`=`
+  are real, valid Latte for an implicit output expression (e.g.
+  `{count($x)}`), not unrecognized tags.
 
-This is still why `format:latte`/`format:latte:fix` aren't wired into
-`lefthook` pre-commit or CI yet — 24 files still fail outright, even though
-none of the 85 that succeed show any corruption risk.
-`tests/Unit/Latte/latte-prettier-plugin.test.ts` asserts: strict correctness
-(no-throw, idempotency, AST-equivalence) against the 4 verified corpus files;
-an 85-file no-throw floor across the real tree (regression guard, must only
-go up); and — across *every* real file the plugin currently accepts, no
-hardcoded list — idempotency and AST-equivalence, so a newly-converted
-template or a newly-closed grammar gap that silently corrupts content fails
-the suite immediately rather than needing a hand-picked fixture to catch it.
+None of this is wired into `lefthook` pre-commit or CI — that's a deliberate,
+separate decision left for whoever wants it, not assumed here.
+`tests/Unit/Latte/latte-prettier-plugin.test.ts` asserts, as a hard
+requirement (not a floor): every real `.latte` file in the tree formats
+without throwing, is idempotent, and is AST-equivalent to its source. P31
+(Smarty → Latte migration) is still in progress, so new templates keep
+landing — if one hits an unsupported construct, that test goes red with the
+exact file and error, which is the intended signal to extend the grammar the
+same way every construct above was added.
 
 ## Architecture
 
 - **Lexer**: integrated into the parser (no separate token-array pass). A
   `{` only starts a real Latte tag when immediately followed by `$`, `=`,
-  `*`, `/`+letter, or a letter — `{` followed by whitespace is literal text,
-  which is what makes CSS bodies like `.el{ width: ... }` inside `{capture}`
-  safe, matching Latte's own real tag-lexer behavior.
+  `*`, `(`, `/`+letter, or a letter — `{` followed by whitespace is literal
+  text, which is what makes CSS bodies like `.el{ width: ... }` inside
+  `{capture}` safe, matching Latte's own real tag-lexer behavior.
+  `parseBodyLoop` gives every "body" context (an `{if}` branch, a
+  `{foreach}`/`{spaceless}`/`{for}`/`{define}` body, the top-level document)
+  the ability to absorb a closing tag it doesn't own as literal passthrough
+  instead of erroring, for markup where HTML and Latte scopes overlap rather
+  than nest.
 - **Parser**: recursive-descent, typed AST (`Document`, `HtmlElement`,
-  `Attribute`, `LatteIf`/`LatteForeach`/`LatteVar`/`LatteDo`/`LatteCapture`/
-  `LatteSpaceless`/`LatteInclude`/`LatteComment`/`LatteOutput`, plus a small
-  Latte-specific expression grammar: variables with `->`/`[]` access,
-  literals, unary/binary ops, positional+named-arg calls, filter chains).
-  Attribute _lists_ — not just attribute _values_ — can contain `{if}`/
-  `{foreach}` directly (real Piwigo markup conditionally renders whole
-  attributes: `<img {if $x}src="a"{else}src="b" data-src="c"{/if}>`).
+  `Attribute`, `LatteIf`/`LatteForeach`/`LatteFor`/`LatteVar`/`LatteDo`/
+  `LatteBreakIf`/`LatteCapture`/`LatteSpaceless`/`LatteDefine`/
+  `LatteInclude`/`LatteComment`/`LatteOutput`, plus a small Latte-specific
+  expression grammar: variables with `->`/`[]` access, literals, unary/
+  binary ops incl. `??`, ternary, array literals, casts, positional+named-arg
+  calls, filter chains — and a separate tiny statement grammar, used only by
+  `{for}`'s init/step clauses and `{do}`, for assignment and
+  post-increment/decrement, which Latte doesn't allow in a general
+  expression position). Attribute _lists_ — not just attribute _values_ —
+  can contain `{if}`/`{foreach}` directly (real Piwigo markup conditionally
+  renders whole attributes: `<img {if $x}src="a"{else}src="b"
+data-src="c"{/if}>`).
 - **Printer**: real Prettier `Doc` builders (`group`/`indent`/`line`/
   `softline`/`hardline`) — reindents HTML structure, wraps long attribute
   lists, applies canonical expression spacing. Attribute values and

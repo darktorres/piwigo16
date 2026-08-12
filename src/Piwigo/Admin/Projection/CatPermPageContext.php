@@ -15,7 +15,7 @@ use Piwigo\Core\TemplatePageContext;
  * template keys under their own runtime condition (the latter two share
  * the same `count($group_granted_ids) > 0` branch), omitted here (not
  * present as a null value) to match that exact original behavior --
- * `cat_perm.tpl` itself only ever reads `$user_granted_indirect_groups`
+ * `cat_perm.latte` itself only ever reads `$user_granted_indirect_groups`
  * inside its own `{if isset($nb_users_granted_indirect) && ... > 0}`
  * guard anyway.
  */

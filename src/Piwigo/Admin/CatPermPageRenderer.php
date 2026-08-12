@@ -87,8 +87,6 @@ final readonly class CatPermPageRenderer
             $save_success = $this->lang->t('Album updated successfully');
         }
 
-        $template->setFilename('cat_perm', 'cat_perm.tpl');
-
         $categories_nav = $this->htmlService
             ->getCatDisplayNameFromId(
                 $page['cat'],
@@ -188,6 +186,6 @@ final readonly class CatPermPageRenderer
             userGrantedIndirectGroups: $user_granted_indirect_groups,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'cat_perm');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_perm.latte');
     }
 }

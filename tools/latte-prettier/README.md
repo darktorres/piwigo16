@@ -143,6 +143,30 @@ css.latte`, `mail-css-clear.latte`, `mail-css-dark.latte` — raw CSS meant
   nested inside a real `{if}`/`{foreach}` body elsewhere isn't handled
   (no such file exists today) — if one lands, the fix generalizes the
   same way, at that Document-relative body's own print site.
+- **A real, if narrower, correctness bug in the same spirit**: `mail/text/
+plain/notification_by_mail.latte` (a `{contentType text}` template — its
+  output *is* the literal email body a recipient reads, not markup) lost
+  meaningful leading whitespace on two lines nested inside `{if}`/
+  `{foreach}` bodies — a signature line's indent dropped entirely, a
+  bulleted list's indent changed from 2 to 4 spaces — because indentation
+  there was, same as everywhere else, being re-derived from nesting depth.
+  Verified against the real Latte compiler (this repo has it installed)
+  that this is a genuine rendering difference, not just cosmetic: a line
+  that's *purely* whitespace + a control tag (`{if}`, `{foreach}`, `{/if}`)
+  is auto-trimmed by Latte regardless of its indentation, but a line
+  carrying an output tag (`{$var}`) or literal text renders its leading
+  whitespace verbatim — so reformatting is unconditionally safe for the
+  former and unconditionally unsafe for the latter. Rather than special-
+  case which lines qualify, fixed by making every gap inside a `{contentType
+  text}` document's `Document`/`{if}`/`{foreach}`/etc. bodies print the
+  original captured whitespace byte-verbatim instead of a hardline
+  recomputed from indent() depth (harmless on the auto-trimmed lines,
+  required on the others) — the same "gaps between items" machinery
+  already used everywhere else, just fed the literal string instead of a
+  synthesized one when this pragma is present. Confirmed the flag (stashed
+  on the shared `options` object once `{contentType text}` is seen at the
+  top of a `Document`) can't leak across files formatted in the same
+  process — Prettier hands each file its own `options` object.
 
 None of this is wired into `lefthook` pre-commit or CI — that's a deliberate,
 separate decision left for whoever wants it, not assumed here.

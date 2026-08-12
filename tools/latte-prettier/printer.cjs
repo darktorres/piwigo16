@@ -102,8 +102,15 @@ function buildContentSequence(rawNodes) {
   return { items, trailingGap: pendingGap };
 }
 
-function gapDoc(gap) {
+// `raw`: true inside a {contentType text} document, where gaps are literal
+// recipient-visible output (real Latte only auto-trims a line that is
+// *purely* whitespace + a control tag; a line like `  {$var}` renders its
+// two leading spaces verbatim) rather than source-code indentation safely
+// re-derived from nesting depth. Printing the original gap string outright
+// keeps it byte-exact instead of recomputing it from the current indent().
+function gapDoc(gap, raw) {
   if (!gap) return "";
+  if (raw) return gap;
   const nl = (gap.match(/\n/g) || []).length;
   if (nl === 0) return " ";
   if (nl === 1) return hardline;
@@ -115,23 +122,26 @@ function gapDoc(gap) {
 // for long prose, but on short trailing fragments (e.g. a lone ") -" between
 // two Latte tags) it would just as happily break between two tokens that
 // have no business being split, dangling a stray "-" on its own line.
-function textFillDoc(core) {
+// `raw`: see gapDoc — leaves the text fully untouched.
+function textFillDoc(core, raw) {
+  if (raw) return core;
   return core.split(/\s+/).filter(Boolean).join(" ");
 }
 
 // Returns null for an empty (whitespace-only-or-empty) body, else
 // {leadBreak, inner, trailBreak} for the caller to wrap with indent().
 function computeBlock(nodes, options) {
+  const raw = Boolean(options.__latteContentTypeText);
   const { items, trailingGap } = buildContentSequence(nodes);
   if (items.length === 0) return null;
   const inner = [];
   for (let i = 0; i < items.length; i++) {
-    if (i > 0) inner.push(gapDoc(items[i].gapBefore));
-    inner.push(items[i].kind === "text" ? textFillDoc(items[i].core) : printNode(items[i].node, options, "block"));
+    if (i > 0) inner.push(gapDoc(items[i].gapBefore, raw));
+    inner.push(items[i].kind === "text" ? textFillDoc(items[i].core, raw) : printNode(items[i].node, options, "block"));
   }
   const lead = items[0].gapBefore;
-  const leadBreak = lead.includes("\n") ? hardline : lead ? " " : "";
-  const trailBreak = trailingGap.includes("\n") ? hardline : trailingGap ? " " : "";
+  const leadBreak = raw ? lead : lead.includes("\n") ? hardline : lead ? " " : "";
+  const trailBreak = raw ? trailingGap : trailingGap.includes("\n") ? hardline : trailingGap ? " " : "";
   return { leadBreak, inner, trailBreak };
 }
 
@@ -242,11 +252,24 @@ function printNode(node, options, mode = "block") {
         const raw = node.children.map((c) => c.value).join("");
         return [raw.trim(), hardline];
       }
+      // {contentType text} (mail/text/plain/*.latte) declares this template's
+      // *output* is the literal email body, not source code -- unlike every
+      // other template, its whitespace isn't ours to renormalize by nesting
+      // depth. Sets a flag every descendant print call sees (they all share
+      // this same `options` object), so a {$var}/text line's original
+      // indentation survives even nested inside {if}/{foreach} bodies. See
+      // gapDoc's `raw` param for why this is safe to do unconditionally: a
+      // control-tag-only line still gets auto-trimmed by real Latte
+      // regardless of what indentation we print before it.
+      if (node.children.some((c) => c.type === "LatteContentType" && c.value === "text")) {
+        options.__latteContentTypeText = true;
+      }
+      const raw = Boolean(options.__latteContentTypeText);
       const { items } = buildContentSequence(node.children);
       const parts = [];
       for (let i = 0; i < items.length; i++) {
-        if (i > 0) parts.push(gapDoc(items[i].gapBefore));
-        parts.push(items[i].kind === "text" ? textFillDoc(items[i].core) : printNode(items[i].node, options, "block"));
+        if (i > 0) parts.push(gapDoc(items[i].gapBefore, raw));
+        parts.push(items[i].kind === "text" ? textFillDoc(items[i].core, raw) : printNode(items[i].node, options, "block"));
       }
       // The one place responsible for "the file ends in exactly one
       // newline" — deliberately not delegated to a descendant's own

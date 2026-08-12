@@ -203,8 +203,6 @@ final readonly class GalleryController implements ControllerInterface
         $categoryCountCategories = new MenubarRenderer()
             ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
 
-        $template->setFilename('index', 'index.tpl');
-
         $this->pageState->setBodyId('theCategoryPage');
 
         $u_mode_normal = null;
@@ -379,8 +377,7 @@ final readonly class GalleryController implements ControllerInterface
         $combinable_tags = null;
 
         if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
-            $template->setFilename('selected_tags', 'include/selected_tags.inc.tpl');
-            $template->assignVarFromHandle('SELECTED_TAGS_TEMPLATE', 'selected_tags');
+            $template->assignVarFromTemplate('SELECTED_TAGS_TEMPLATE', 'include/selected_tags.inc.latte');
 
             $body_data_tag_ids = array_values(array_filter($bodyData['tag_ids'], is_scalar(...)));
 
@@ -608,7 +605,7 @@ final readonly class GalleryController implements ControllerInterface
         $this->htmlService
             ->flushPageMessages();
         $template->parseIndexButtons();
-        $template->parse('index', false);
+        $template->parse('index.latte', false);
 
         $this->historyService
             ->logVisit(

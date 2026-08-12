@@ -10,7 +10,7 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Controller\GalleryController::__invoke()} after its
- * `assignVarFromHandle('SELECTED_TAGS_TEMPLATE', 'selected_tags')`
+ * `assignVarFromTemplate('SELECTED_TAGS_TEMPLATE', 'include/selected_tags.inc.latte')`
  * call -- see {@see GalleryPageContext} for what it assigns before that
  * point. `$searchInSetButton`/`$searchInSetAction`/`$searchInSetUrl`/
  * `$combinableTags` are this controller's "viewing a tag" variant of

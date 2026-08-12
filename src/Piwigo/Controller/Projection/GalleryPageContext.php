@@ -10,8 +10,8 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Controller\GalleryController::__invoke()} up through its
- * `assignVarFromHandle('SELECTED_TAGS_TEMPLATE', 'selected_tags')`
- * call -- the `selected_tags.inc.tpl` sub-template it parses there reads
+ * `assignVarFromTemplate('SELECTED_TAGS_TEMPLATE', 'include/selected_tags.inc.latte')`
+ * call -- the `selected_tags.inc.latte` sub-template it parses there reads
  * `SELECT_RELATED_TAGS`, so that field (and everything assigned before
  * it) must reach the real template before that parse happens. See
  * {@see GalleryThumbnailsPageContext} for everything __invoke() assigns

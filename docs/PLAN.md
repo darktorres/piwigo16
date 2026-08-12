@@ -1461,9 +1461,62 @@ what's actually landing, since every `p31.x` commit is a `.tpl`→`.latte`
 conversion, nothing manifest/combiner/image-format related.
 
 **P32 — Latte lint/format.** Not started. No Latte-native lint/format
-tool is confirmed installed today — first sub-step is evaluating what
-exists before wiring it into the `bun run lint:*`/`format:*` pattern
-JS/CSS already use. Depends on P31 only; sequenced immediately after it
+tool is installed in this repo today, but `16.x-rewrite` (136 real
+`.latte` templates, unlike `16.x-v2` which has none at all) already built
+real prior art — REPLAY this, don't design from scratch:
+
+Three of the four pieces below are confirmed *proven*, not just
+present — checked that the reference's own CI actually runs them
+(`.github/workflows/*.yml`), not merely that the code exists (a
+reference repo can contain real but unexercised code — verify usage,
+don't assume presence means proven):
+
+- **Linting**: `composer lint:latte` → `tools/latte-lint.php`, a thin
+  wrapper around Latte's own bundled `Latte\Tools\Linter` (from
+  `latte/latte` itself, already this repo's real dependency — not a
+  third-party tool to newly adopt), registering a custom
+  `Piwigo\Template\Latte\PiwigoExtension` (so Piwigo-specific filters
+  like `|translate` don't false-positive as "unknown filter") plus
+  Latte's bundled `LinterExtension`, `strict: true`. Runs as a subprocess
+  specifically because `Linter` is `final` and writes warnings only to
+  stderr via a private error handler the wrapper can't hook into
+  directly from the same process. **Confirmed run in CI** — a directly
+  portable pattern, no excluded-scope entanglement.
+- **Precompilation as a build gate**: `composer precompile:templates` →
+  `tools/precompile_templates.php` — calls `LatteEngine::warmupCache()`
+  on every bundled `.latte` file, catching a real syntax error as a
+  build failure while also warming the production compile cache.
+  **Confirmed run in CI** — same, directly portable.
+- **Static analysis inside templates**: `efabrica/phpstan-latte` (real
+  composer dependency there) plus a locally vendored/patched copy at
+  `tools/phpstan-latte`, wired into `phpstan.neon` (`includes:
+  vendor/efabrica/phpstan-latte/rules.neon`, a real
+  `engineBootstrap`) letting PHPStan type-check variables used inside
+  `.latte` templates against their real PHP types. **Confirmed run in
+  CI** (`vendor/bin/phpstan analyse` runs there, phpstan-latte included)
+  — also directly portable once this fork's own PHPStan setup is ready
+  to take it.
+- **CSP-aligned inline-script guard**: `composer lint:no-inline-scripts`
+  → `tools/check-no-executable-inline-scripts.php` — scans `.latte`
+  (and `.php`) for `<script>` tags missing `type=` or carrying one
+  outside a CSP3-safe allow-list (`application/json`, `application/
+  ld+json`, `importmap`, `speculationrules`); skips `.php` `<script
+  src=...>` externals and mail templates. **Not confirmed run in CI**
+  despite being a real, defined `composer` script with working code
+  behind it — grepped the reference's own workflow files, no invocation
+  found, only `lint:latte` and `precompile:templates` are. This tool
+  also exists in the reference *because of* its own CSP `script-src
+  'self'` hardening (a different, bundled scope this fork's plan keeps
+  separate as P26) — per the standing "reference repo is a pattern
+  source, not a scope target" lesson, borrow this pattern when P26's own
+  CSP work is scoped, don't pull it into P32 just because it's adjacent
+  and Latte-shaped.
+
+**No dedicated formatter exists even in `16.x-rewrite`** — this phase's
+"format" half has no reference prior art to replay, unlike its "lint"
+half; scope it as genuinely new work (or confirm none is needed if
+Prettier's plugin ecosystem or another tool covers Latte by the time
+this phase starts). Depends on P31 only; sequenced immediately after it
 (not at the track's tail) since it's independent of every JS/CSS/TS phase
 below.
 

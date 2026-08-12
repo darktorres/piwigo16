@@ -1,0 +1,19 @@
+{if isset($errors) }
+<div class="errors">
+  <ul>
+    {foreach $errors as $error}
+    <li>{$error|noescape}</li>
+    {/foreach}
+  </ul>
+</div>
+{/if}
+
+{if !empty($infos)}
+<div class="infos">
+  <ul>
+    {foreach $infos as $info}
+    <li>{$info|noescape}</li>
+    {/foreach}
+  </ul>
+</div>
+{/if}

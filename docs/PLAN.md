@@ -1071,28 +1071,48 @@ informally in ~78 Request DTO docblocks and this doc — a naming drift,
 not a functional gap). Not complete — no claim of "0 remaining" has been
 verified — but real, ongoing, and aligned with its own stated goal.
 
-**Remaining `mixed` gap.** Total raw `mixed` token count keeps climbing
-with new code (1491 today) — the wrong metric on its own, since a large,
+**Remaining `mixed` gap — one claim here was flatly wrong, the rest
+holds up.** Total raw `mixed` token count keeps climbing with new code
+(1593 today, up from 1491) — the wrong metric on its own, since a large,
 legitimate by-design residual will always exist (DBAL scalar-narrowing
 closures, `ValueObject::tryFrom()`, `Db/Type::convert*()`
 vendor-dictated signatures, the WS RPC layer's arbitrary protocol
 params, PSR-3 `LoggerInterface` context, and more — see the campaign's
-own plan file for the full by-design inventory). The per-module
+own plan file for the full by-design inventory). "Projection" turns out
+to be a real, repo-wide directory convention (`{Domain}/Projection/`,
+confirmed present in 40+ namespaces, not a vague description) — worth
+noting since this section never says so explicitly. The per-module
 Projection-wiring gap (a repository/service method still declaring
 `array<string, mixed>` where a sibling typed Projection already exists)
 is real but uneven: `CategoryRepository`/`CategoryService` are
 substantially already fixed (`findCategoriesByIds()`/
-`findFullCategoriesByIds()` already return typed Projections; most of
-the remaining `mixed` there is the already-accepted narrowing-closure
-pattern). `ImageRepository`/`ImageService` and `UserRepository` still
-have the gap for real — no Projection-wiring work has reached them yet.
-`CommentRepository`/`TagRepository`/`GroupRepository` are near-resolved
-(3 occurrences each, plausibly by-design, unconfirmed). `SearchRepository`'s
-count grew since it was last checked (7 → 17) — genuinely unexplained,
-worth a fresh single-file look before anything else. `Ws` (12 of 17
-files besides `PwgCore`), `Admin` (27 of 32 files), `Core` (13 of 14
-files), and `Controller` (10 of 11 files) are still entirely unaudited
-for this pattern.
+`findFullCategoriesByIds()` already return typed Projections — confirmed,
+`@return list<CategoryListingRow>`; most of the remaining `mixed` there
+is the already-accepted narrowing-closure pattern). **"`ImageRepository`/
+`ImageService` and `UserRepository` still have the gap for real — no
+Projection-wiring work has reached them yet" is simply false**:
+`src/Piwigo/Image/Projection/` has 17 real classes (`ImageIdExt`,
+`ImageFormat`, `ImageCategoryLink`, `PathRepresentativeExt`, and 13
+more), 17 of them actually referenced from `ImageRepository.php`;
+`src/Piwigo/Users/Projection/` has 10 (`ActivationKeyRow`,
+`NotificationRecipient`, `UsernameById`, `UserInfo`, and 6 more), 7
+referenced from `UserRepository.php`. Both domains have substantial,
+already-wired Projection-typed accessors — this claim needs a real
+re-audit, not a status flip, since "how much of the *remaining* `mixed`
+there is by-design vs. a real gap" (the actual open question, same as
+the `Category` entry above) was never answered, just asserted as "not
+started." `CommentRepository`/`TagRepository`/`GroupRepository` are
+near-resolved (3 occurrences each today, confirmed — matches exactly).
+`SearchRepository`'s count is unchanged at 17 (confirmed) — still
+genuinely unexplained, still worth a fresh single-file look.
+`Admin`/`Core`/`Controller` all have real `Projection/` directories too
+(51/2/15 files respectively) — same caveat as Image/Users applies: file
+existence isn't the same claim as "audited for this specific gap," so
+"still entirely unaudited for this pattern" isn't necessarily wrong for
+these three, just worth knowing Projection classes already exist there
+before assuming a from-scratch audit. `Ws` is the one domain confirmed
+to have zero `Projection/` directory at all — that part of the original
+claim holds cleanly.
 
 **Direct continuation of this sub-track's own goal, not yet started as
 its own tracked work: superglobal/array-offset access beyond `$_POST`/

@@ -121,6 +121,14 @@ final class PiwigoExtension extends Extension
     public function getFunctions(): array
     {
         return [
+            // Also registered as filters above -- Latte rejects filter
+            // pipes inside {if} conditions (confirmed live converting
+            // header.tpl: `{if $PAGE_TITLE != 'Home'|l10n}`), so the same
+            // translate() needs to be callable both ways: `{='x'|l10n}`
+            // as a filter, `{if $x != l10n('Home')}` as a function.
+            'translate' => $this->translate(...),
+            'l10n' => $this->translate(...),
+            'translate_dec' => $this->translateDec(...),
             'combineScript' => $this->template->combineScript(...),
             'getCombinedScripts' => $this->template->getCombinedScripts(...),
             'combineCss' => $this->template->combineCss(...),

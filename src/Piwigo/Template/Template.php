@@ -677,10 +677,41 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             if ($filename === null) {
                 unset($this->files[$handle]);
             } else {
-                $this->files[$handle] = $this->getExtent($filename, $handle);
+                $this->files[$handle] = $this->preferLatteSibling($this->getExtent($filename, $handle));
             }
         }
         return true;
+    }
+
+    /**
+     * If `$filename` (e.g. `'header.tpl'`) has a `.latte` sibling
+     * somewhere in the current theme's directory chain, prefer it.
+     *
+     * Needed for callers shared across themes that haven't converted at
+     * the same time -- confirmed live converting `header.tpl`:
+     * `PageHeaderRenderer` renders through the same `setFilename('header',
+     * 'header.tpl')` + `parse('header')` handle-based call for *every*
+     * theme, admin included. Without this check, `parse()`'s dispatch
+     * (see below) would see the handle is registered and always take the
+     * Smarty path, even for a theme whose `header.tpl` has since become
+     * `header.latte` -- Smarty would then fail to find a file that no
+     * longer exists. This lets that one shared call site keep working
+     * unmodified while each theme converts on its own schedule; no
+     * per-caller theme-awareness needed.
+     */
+    private function preferLatteSibling(string $filename): string
+    {
+        if (! str_ends_with($filename, '.tpl')) {
+            return $filename;
+        }
+        $latteName = substr($filename, 0, -4) . '.latte';
+        foreach ($this->templateDirs as $dir) {
+            if (file_exists(rtrim($dir, '/') . '/' . $latteName)) {
+                return $latteName;
+            }
+        }
+
+        return $filename;
     }
 
     /**
@@ -850,21 +881,29 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Renders `$handle` and appends the result to the output (or returns it
      * if `$return` is true).
      *
-     * Dispatches per-argument: if `$handle` is a key in `$this->files` --
-     * i.e. it was registered via `setFilename()`/`setFilenames()` -- it
-     * resolves and renders exactly as before, through Smarty. Otherwise
-     * `$handle` is treated as a real filename (the direct-filename calling
-     * convention added for P31 -- see docs/PLAN.md's P31 section,
-     * "Transition strategy") and resolved/rendered through Latte. Both
-     * calling conventions coexist until every caller has migrated;
-     * `setFilename()`/`setFilenames()` and this handle-lookup branch are
-     * removed together once they are (P31.7).
+     * Dispatches on the *resolved* file's real extension, not merely on
+     * whether `$handle` happens to be a registered handle -- a handle
+     * registered via `setFilename()`/`setFilenames()` may have already
+     * been resolved to a `.latte` sibling by `preferLatteSibling()`
+     * (see that method's own docblock for why this matters: a caller
+     * shared across themes, like `PageHeaderRenderer`, must pick up a
+     * per-theme conversion automatically). If `$handle` isn't a
+     * registered handle at all, it's treated as a real filename directly
+     * (the calling convention added for P31 -- see docs/PLAN.md's P31
+     * section, "Transition strategy"). Both calling conventions coexist
+     * until every caller has migrated; `setFilename()`/`setFilenames()`
+     * and the handle-lookup branch are removed together once they are
+     * (P31.7).
      *
      * @phpstan-return ($return is true ? string : null)
      */
     public function parse(string $handle, bool $return = false): ?string
     {
         if (isset($this->files[$handle])) {
+            if (str_ends_with($this->files[$handle], '.latte')) {
+                return $this->parseLatte($this->files[$handle], $return);
+            }
+
             return $this->parseSmarty($handle, $return);
         }
 

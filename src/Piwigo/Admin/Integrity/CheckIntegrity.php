@@ -206,10 +206,6 @@ final class CheckIntegrity
         $submit_ignore = false;
 
         if (count($this->retrieve_list) > 0) {
-            $template->setFilenames([
-                'check_integrity' => 'check_integrity.tpl',
-            ]);
-
             $c13y_do_check = null;
             $c13y_list = [];
             foreach ($this->retrieve_list as $i => $c13y) {
@@ -273,7 +269,7 @@ final class CheckIntegrity
                 c13yDoCheck: $c13y_do_check,
             ));
 
-            $template->concat('ADMIN_CONTENT', $template->parse('check_integrity', true));
+            $template->concat('ADMIN_CONTENT', $template->parse('check_integrity.latte', true));
 
         }
     }

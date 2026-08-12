@@ -1,6 +1,6 @@
-{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 
-{footer_script}
+{capture $tmpFooterScript}
 (function(){
   var targets = {
     'input[name="comments_validation"]' : '#email_admin_on_comment_validation',
@@ -28,9 +28,10 @@
     check_activate_comments();
   });
 }());
-{/footer_script}
+{/capture}
+{do footerScript($tmpFooterScript)}
 
-<form method="post" action="{$F_ACTION}" class="properties">
+<form method="post" action="{$F_ACTION|noescape}" class="properties">
 
 <div id="configContent">
 
@@ -39,8 +40,8 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="activate_comments" id="activate_comments"{if ($comments.activate_comments)} checked="checked"{/if}>
-          {'Activate comments'|translate}
+          <input type="checkbox" name="activate_comments" id="activate_comments"{if ($comments['activate_comments'])} checked="checked"{/if}>
+          {='Activate comments'|translate}
         </label>
       </li>
     </ul>
@@ -49,23 +50,23 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="comments_forall" {if ($comments.comments_forall)}checked="checked"{/if}>
-          {'Comments for all'|translate}
+          <input type="checkbox" name="comments_forall" {if ($comments['comments_forall'])}checked="checked"{/if}>
+          {='Comments for all'|translate}
         </label>
       </li>
 
       <li>
         <label>
-          {'Number of comments per page'|translate}
-          <input type="text" size="3" maxlength="4" name="nb_comment_page" id="nb_comment_page" value="{$comments.NB_COMMENTS_PAGE}">
+          {='Number of comments per page'|translate}
+          <input type="text" size="3" maxlength="4" name="nb_comment_page" id="nb_comment_page" value="{$comments['NB_COMMENTS_PAGE']}">
         </label>
       </li>
 
       <li>
         <label>
-          {'Default comments order'|translate}
+          {='Default comments order'|translate}
           <select name="comments_order">
-            {html_options options=$comments.comments_order_options selected=$comments.comments_order}
+            {=htmlOptions(options: $comments['comments_order_options'], selected: $comments['comments_order'])}
           </select>
         </label>
       </li>
@@ -73,76 +74,76 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="comments_validation" {if ($comments.comments_validation)}checked="checked"{/if}>
-          {'Validation'|translate}
+          <input type="checkbox" name="comments_validation" {if ($comments['comments_validation'])}checked="checked"{/if}>
+          {='Validation'|translate}
         </label>
       </li>
 
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="comments_author_mandatory" {if ($comments.comments_author_mandatory)}checked="checked"{/if}>
-          {'Username is mandatory'|translate}
+          <input type="checkbox" name="comments_author_mandatory" {if ($comments['comments_author_mandatory'])}checked="checked"{/if}>
+          {='Username is mandatory'|translate}
         </label>
       </li>
 
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="comments_email_mandatory" {if ($comments.comments_email_mandatory)}checked="checked"{/if}>
-          {'Email address is mandatory'|translate}
+          <input type="checkbox" name="comments_email_mandatory" {if ($comments['comments_email_mandatory'])}checked="checked"{/if}>
+          {='Email address is mandatory'|translate}
         </label>
       </li>
 
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="comments_enable_website" {if ($comments.comments_enable_website)}checked="checked"{/if}>
-          {'Allow users to add a link to their website'|translate}
+          <input type="checkbox" name="comments_enable_website" {if ($comments['comments_enable_website'])}checked="checked"{/if}>
+          {='Allow users to add a link to their website'|translate}
         </label>
       </li>
 
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="user_can_edit_comment" {if ($comments.user_can_edit_comment)}checked="checked"{/if}>
-          {'Allow users to edit their own comments'|translate}
+          <input type="checkbox" name="user_can_edit_comment" {if ($comments['user_can_edit_comment'])}checked="checked"{/if}>
+          {='Allow users to edit their own comments'|translate}
         </label>
       </li>
 
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="user_can_delete_comment" {if ($comments.user_can_delete_comment)}checked="checked"{/if}>
-          {'Allow users to delete their own comments'|translate}
+          <input type="checkbox" name="user_can_delete_comment" {if ($comments['user_can_delete_comment'])}checked="checked"{/if}>
+          {='Allow users to delete their own comments'|translate}
         </label>
       </li>
 
       <li id="notifyAdmin">
-        <strong>{'Notify administrators when a comment is'|translate}</strong>
+        <strong>{='Notify administrators when a comment is'|translate}</strong>
 
         <label id="email_admin_on_comment_validation" class="font-checkbox no-bold">
           <span class="icon-check"></span>
-          <input type="checkbox" name="email_admin_on_comment_validation" {if ($comments.email_admin_on_comment_validation)}checked="checked"{/if}>
-          {'pending validation'|translate}
+          <input type="checkbox" name="email_admin_on_comment_validation" {if ($comments['email_admin_on_comment_validation'])}checked="checked"{/if}>
+          {='pending validation'|translate}
         </label>
 
         <label class="font-checkbox no-bold">
           <span class="icon-check"></span>
-          <input type="checkbox" name="email_admin_on_comment" {if ($comments.email_admin_on_comment)}checked="checked"{/if}>
-          {'added'|translate}
+          <input type="checkbox" name="email_admin_on_comment" {if ($comments['email_admin_on_comment'])}checked="checked"{/if}>
+          {='added'|translate}
         </label>
 
         <label id="email_admin_on_comment_edition" class="font-checkbox no-bold">
           <span class="icon-check"></span>
-          <input type="checkbox" name="email_admin_on_comment_edition" {if ($comments.email_admin_on_comment_edition)}checked="checked"{/if}>
-          {'modified'|translate}
+          <input type="checkbox" name="email_admin_on_comment_edition" {if ($comments['email_admin_on_comment_edition'])}checked="checked"{/if}>
+          {='modified'|translate}
         </label>
 
         <label id="email_admin_on_comment_deletion" class="font-checkbox no-bold">
           <span class="icon-check"></span>
-          <input type="checkbox" name="email_admin_on_comment_deletion" {if ($comments.email_admin_on_comment_deletion)}checked="checked"{/if}>
-          {'deleted'|translate}
+          <input type="checkbox" name="email_admin_on_comment_deletion" {if ($comments['email_admin_on_comment_deletion'])}checked="checked"{/if}>
+          {='deleted'|translate}
         </label>
       </li>
     </ul>
@@ -162,7 +163,7 @@
     </div>
 {/if}
     <div class="savebar-footer-block">
-      <button class="buttonLike"  type="submit" name="submit" {if $isWebmaster != 1}disabled{/if}><i class="icon-floppy"></i> {'Save Settings'|@translate}</button>
+      <button class="buttonLike"  type="submit" name="submit" {if $isWebmaster != 1}disabled{/if}><i class="icon-floppy"></i> {='Save Settings'|translate}</button>
     </div>
   </div>
   <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">

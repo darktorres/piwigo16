@@ -1,0 +1,30 @@
+{capture $tmpHtmlHead}
+<link rel="alternate" type="application/rss+xml" title="{='Photos only RSS feed'|translate}" href="{$U_FEED_IMAGE_ONLY|noescape}">
+<link rel="alternate" type="application/rss+xml" title="{='Complete RSS feed (photos, comments)'|translate}" href="{$U_FEED|noescape}">
+{/capture}
+{do htmlHead($tmpHtmlHead)}
+
+{if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
+<div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
+
+  <div class="titrePage">
+    <ul class="categoryActions">
+    </ul>
+    <h2><a href="{$U_HOME|noescape}">{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Notification'|translate}</h2>
+  </div>
+
+  {include 'infos_errors.latte'}
+
+  <div class="notification">
+  <p>{='The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader.'|translate}</p>
+
+  <dl>
+    <dt>
+      <a href="{$U_FEED_IMAGE_ONLY|noescape}">{='Photos only RSS feed'|translate}</a><br><br>
+    </dt>
+    <dt>
+      <a href="{$U_FEED|noescape}">{='Complete RSS feed (photos, comments)'|translate}</a>
+    </dt>
+  </dl>
+  </div>
+</div>

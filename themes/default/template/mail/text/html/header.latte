@@ -27,3 +27,14 @@
 to merge the margin with the element bellow (typically h1/h2/...) --> *}
             <div id="topSpacer"></div>
             {* <!-- begin CONTENT --> *}
+            {*
+              One of cat_group_info.latte / notification_by_mail.latte /
+              notification_admin.latte is appended here next, followed by
+              footer.latte -- all three rendered independently by real
+              Latte and joined by raw PHP string concatenation in
+              MailService.php (parse('header.latte', true) .=
+              parse($contentTemplate, true) .= parse('footer.latte', true)),
+              not {include}. footer.latte closes </td></tr> (the <tr><td
+              id="content"> opened above), plus everything else down to
+              </body></html>.
+            *}

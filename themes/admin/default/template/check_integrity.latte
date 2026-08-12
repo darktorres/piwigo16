@@ -1,3 +1,13 @@
+{*
+  Appended after intro.latte's own output, conditionally (only when
+  there's a real integrity anomaly to show) -- see
+  CheckIntegrity.php's Template::concat('ADMIN_CONTENT', ...) call, not
+  {include}. Unrelated to that: this file's own <dl> below is never
+  closed anywhere in this file either -- a pre-existing typo in the
+  original source (every other cell/row here is properly closed),
+  harmless because browsers tolerate an unclosed <dl> at end-of-document,
+  not something to "fix" by trying to close it from intro.latte.
+*}
 <dl>
   <dt>{='Check integrity'|translate}</dt>
   <dd>

@@ -1,4 +1,11 @@
 {contentType text}
+{*
+  Appended after header.latte + one of cat_group_info.latte /
+  notification_by_mail.latte / notification_admin.latte (all three
+  rendered independently and joined by raw PHP string concatenation in
+  MailService.php, not {include}) -- this file is not a standalone
+  document.
+*}
 ----
 {='Sent by'|translate} "{$GALLERY_TITLE}" {$GALLERY_URL}
 {='Powered by'|translate} "Piwigo{if !empty($VERSION)} {$VERSION}{/if}" {$APP_URL}

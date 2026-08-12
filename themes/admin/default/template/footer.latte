@@ -1,6 +1,12 @@
 {*
           Warning : This is the admin pages footer only
           don't be confusing with the public page footer
+
+          Appended after header.latte + the page's own content (both via
+          Template::parse()'s shared output buffer, not {include}) -- this
+          file is not a standalone document. The </div> below (and
+          </div>/</body>/</html> further down) close tags opened in
+          header.latte, not anything in this file.
 *}
 </div>{* <!-- pwgMain --> *}
 

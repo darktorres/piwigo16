@@ -1,3 +1,11 @@
+{*
+  Appended after header.latte + the page's own content (both via
+  Template::parse()'s shared output buffer, not {include}) -- this file
+  is not a standalone document. The </body>/</html> below close tags
+  opened in header.latte; <div id="the_page"> (also opened in
+  header.latte) is never explicitly closed anywhere -- real browsers
+  handle that fine at end-of-document.
+*}
 <!-- BEGIN get_combined -->
 {=getCombinedScripts('footer')}
 <!-- END get_combined -->

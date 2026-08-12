@@ -1,3 +1,9 @@
+{*
+  Appended after header.latte + the page's own content (both via
+  Template::parse()'s shared output buffer, not {include}) -- this file
+  is not a standalone document. The </div>/</body>/</html> below close
+  tags opened in header.latte, not anything in this file.
+*}
 <div id="copyright">
   {if isset($debug['TIME'])}
     {='Page generated in'|translate} {$debug['TIME']} ({$debug['NB_QUERIES']} {='SQL queries in'|translate} {$debug['SQL_TIME']}) -

@@ -275,3 +275,13 @@ translate_type['{$type_to_translate|noescape}'] = "{$type_to_translate|translate
 
 
 </p>
+
+{*
+  check_integrity.latte's own output may be appended here, conditionally
+  (only when there's a real integrity anomaly to show) -- see
+  CheckIntegrity.php's Template::concat('ADMIN_CONTENT', ...) call,
+  which appends onto the string this file's own
+  assignVarFromTemplate('ADMIN_CONTENT', 'intro.latte') already set, not
+  {include}. This file is otherwise a complete, self-closed document on
+  its own.
+*}

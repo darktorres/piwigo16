@@ -41,3 +41,12 @@
 <body id="{$BODY_ID}" class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}"  data-infos='{$BODY_DATA}'>
 
 <div id="the_page">
+
+{*
+  This file is deliberately left unclosed here (<div id="the_page">,
+  <body>, <html> above are never closed in this file). The rest of the
+  page (varies by controller) is appended next, followed by footer.latte,
+  both via Template::parse()'s shared output buffer (PageHeaderRenderer /
+  PageTailRenderer) -- not {include}. footer.latte is the file that
+  closes </div>/</body>/</html>.
+*}

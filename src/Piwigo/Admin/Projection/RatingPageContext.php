@@ -10,7 +10,7 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Admin\RatingPageRenderer::render()}. `$orderByOptions`
- * and `$images` are both always included -- `rating.tpl` reads
+ * and `$images` are both always included -- `rating.latte` reads
  * `order_by_options` via an unguarded `{html_options}` and `images` via
  * an unguarded `{foreach}`, both matching the original code's own
  * unconditional loops.

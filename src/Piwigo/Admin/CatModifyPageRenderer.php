@@ -119,8 +119,6 @@ final class CatModifyPageRenderer
         }
 
         // ----------------------------------------------------- template initialization
-        $template->setFilename('album_properties', 'cat_modify.tpl');
-
         $base_url = $urlService->getRootUrl() . 'admin.php?page=';
         $cat_list_url = $base_url . 'albums';
 
@@ -133,7 +131,7 @@ final class CatModifyPageRenderer
         // int or string here, same pattern this file's own site_id
         // handling uses just below (representative_picture_id decision,
         // ~L299). $category_id_uppercat and PARENT_CAT_ID (below) feed
-        // cat_modify.tpl's own `var parent_album`/`related_categories_ids`
+        // cat_modify.latte's own `var parent_album`/`related_categories_ids`
         // JS globals, which the move-album jstree widget
         // (themes/admin/default/js/cat_modify.js) uses to preselect the
         // album's current parent.
@@ -340,7 +338,7 @@ final class CatModifyPageRenderer
         $eventDispatcher->dispatchNotify(new LocEndCatModify());
 
         // ----------------------------------------------------------- sending html code
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'album_properties');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_modify.latte');
     }
 
     /**

@@ -95,9 +95,6 @@ final readonly class MaintenanceActionsPageRenderer
         new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->persistentCache)
             ->dispatch($action);
 
-        $template->setFilenames([
-            'maintenance' => 'maintenance_actions.tpl',
-        ]);
         $pwg_token = new CsrfService($this->currentConfig)
             ->getToken();
         $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
@@ -219,6 +216,6 @@ final readonly class MaintenanceActionsPageRenderer
             advancedFeatures: $advanced_features_event->advancedFeatures,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_actions.latte');
     }
 }

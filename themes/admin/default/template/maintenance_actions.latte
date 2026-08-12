@@ -1,0 +1,293 @@
+{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
+{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
+{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
+{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
+{capture $tmpFooterScript}
+const confirm_msg = '{='Yes, I am sure'|translate|noescape}';
+const cancel_msg = "{='No, I have changed my mind'|translate|noescape}";
+const no_time_elapsed = "{='right now'|translate|noescape}";
+const unit_MB = "{='%s MB'|translate|noescape}"
+let selected = [];
+$(".lock-gallery-button").each(function() {
+  const gallery_tip = '{='A locked gallery is only visible to administrators'|translate|escapeJavascript|noescape}';
+  {if isset($U_MAINT_LOCK_GALLERY)}
+    let title = '{='Are you sure you want to lock the gallery?'|translate|noescape}';
+  {else}
+    let title = '{='Are you sure you want to unlock the gallery?'|translate|noescape}';
+  {/if}
+
+  let confirm_msg_gallery = '{='Yes, I want to lock the gallery'|translate|noescape}';
+  let cancel_msg_gallery = '{='Keep it unlocked'|translate|noescape}';
+  $(this).pwg_jconfirm_follow_href({
+    alert_title: title,
+    alert_confirm: confirm_msg,
+    alert_cancel: cancel_msg,
+    alert_content: gallery_tip
+  });
+});
+$(".purge-history-detail-button").each(function() {
+  const title = '{='Purge history detail'|translate|escapeJavascript|noescape}';
+  $(this).pwg_jconfirm_follow_href({
+    alert_title: title,
+    alert_confirm: confirm_msg,
+    alert_cancel: cancel_msg
+  });
+});
+$(".purge-history-summary-button").each(function() {
+  const title = '{='Purge history summary'|translate|escapeJavascript|noescape}';
+  $(this).pwg_jconfirm_follow_href({
+    alert_title: title,
+    alert_confirm: confirm_msg,
+    alert_cancel: cancel_msg
+  });
+});
+$(".purge-search-history-button").each(function() {
+  const title = '{='Purge search history'|translate|escapeJavascript|noescape}';
+  $(this).pwg_jconfirm_follow_href({
+    alert_title: title,
+    alert_confirm: confirm_msg,
+    alert_cancel: cancel_msg
+  });
+});
+$(".delete-all-sizes-button").each(function() {
+  const title = '{='Are you sure you want to delete all sizes?'|translate|escapeJavascript|noescape}';
+  $(this).pwg_jconfirm_follow_href({
+    alert_title: title,
+    alert_confirm: confirm_msg,
+    alert_cancel: cancel_msg
+  });
+});
+
+$(".delete-size-check").click(function () {
+  if ($(this).attr('data-selected') == '1') {
+    $(this).attr('data-selected', '0');
+    $(this).find("i").hide();
+  } else {
+    $(this).attr('data-selected', '1');
+    $(this).find("i").show();
+  }
+  $(this).trigger("change");
+});
+$(".delete-size-check:first").change(function() {
+  if ($(this).attr('data-selected') == '1') {
+    $(".delete-size-check").hide();
+    $(".delete-size-check").attr("data-selected", "1");
+    $(this).show();
+  } else {
+    $(".delete-size-check").show();
+    $(".delete-size-check").attr("data-selected", "0");
+  }
+})
+const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
+$(".delete-size-check").change(function() {
+  let delete_deriv_with_token = delete_deriv_URL + "pwg_token=" + "{$pwg_token}&";
+  let types_str = '';
+  let selected = []
+  $(".delete-size-check").each(function () {
+    if ($(this).attr("data-selected") == '1') {
+      selected.push($(this).attr("name"));
+    }
+  })
+  if (selected.length == 0) {
+    $(".delete-sizes").attr("href", "");
+  } else {
+    if (selected[0] == "all") {
+      types_str = "all";
+    } else {
+      types_str = selected.join("_");
+    }
+    console.log(selected);
+    $(".delete-sizes").attr("href", delete_deriv_with_token + "type=" + types_str);
+  }
+})
+
+$(".delete-sizes").hide();
+$(".delete-size-check").click( function () {
+  let displayDeleteSizes = false;
+  $(".delete-size-check").each(function() {
+    if ($(this).attr("data-selected") == 1) {
+      displayDeleteSizes = true;
+    }
+  });
+
+  (displayDeleteSizes ? $(".delete-sizes").show() : $(".delete-sizes").hide())
+
+})
+
+{/capture}
+{do footerScript($tmpFooterScript)}
+
+{do combineScript(id: 'ajax', load: 'footer', path: 'themes/admin/default/js/maintenance.js')}
+
+{if $isWebmaster == 1}
+
+<fieldset class="">
+  <legend><span class="icon-globe icon-blue"></span>{='Global Gallery Actions'|translate}</legend>
+  <div style="display:flex;flex-wrap: wrap;">
+{if isset($U_MAINT_LOCK_GALLERY)}
+    <a href="{$U_MAINT_LOCK_GALLERY|noescape}" class="lock-gallery-button {$maint_actions['lock_gallery']['icon']} maintenance-action">{$maint_actions['lock_gallery']['label']}</a>
+{else}
+    <a href="{$U_MAINT_UNLOCK_GALLERY|noescape}" class="lock-gallery-button {$maint_actions['unlock_gallery']['icon']} maintenance-action">{$maint_actions['unlock_gallery']['label']}</a>
+{/if}
+    <a href="{$U_MAINT_CATEGORIES|noescape}" class="{$maint_actions['categories']['icon']} maintenance-action">{$maint_actions['categories']['label']}</a>
+    <a href="{$U_MAINT_IMAGES|noescape}" class="{$maint_actions['images']['icon']} maintenance-action">{$maint_actions['images']['label']}</a>
+    <a href="{$U_MAINT_DATABASE|noescape}" class="{$maint_actions['database']['icon']} maintenance-action">{$maint_actions['database']['label']}</a>
+    <a href="{$U_MAINT_C13Y|noescape}" class="{$maint_actions['c13y']['icon']} maintenance-action">{$maint_actions['c13y']['label']}</a>
+{if isset($U_EMPTY_LOUNGE)}
+    <a href="{$U_EMPTY_LOUNGE|noescape}" class="{$maint_actions['empty_lounge']['icon']} maintenance-action tiptip" title="{='There is currently %d photos in the lounge (upload buffer)'|translate: $LOUNGE_COUNTER}">{$maint_actions['empty_lounge']['label']}<span class="multiple-pictures-sizes">{$LOUNGE_COUNTER}</span></a>
+{/if}
+  </div>
+</fieldset>
+<fieldset class="">
+  <legend><span class="icon-trash-1 icon-green"></span>{='Purge Actions'|translate}</legend>
+  <div style="display:flex;flex-wrap: wrap;">
+    <a href="{$U_MAINT_USER_CACHE|noescape}" class="{$maint_actions['user_cache']['icon']} maintenance-action">{$maint_actions['user_cache']['label']}</a>
+    <a href="{$U_MAINT_ORPHAN_TAGS|noescape}" class="{$maint_actions['delete_orphan_tags']['icon']} maintenance-action">{$maint_actions['delete_orphan_tags']['label']}</a>
+    <a href="{$U_MAINT_HISTORY_DETAIL|noescape}" class="{$maint_actions['history_detail']['icon']} maintenance-action purge-history-detail-button">{$maint_actions['history_detail']['label']}</a>
+    <a href="{$U_MAINT_HISTORY_SUMMARY|noescape}" class="{$maint_actions['history_summary']['icon']} maintenance-action purge-history-summary-button">{$maint_actions['history_summary']['label']}</a>
+    <a href="{$U_MAINT_SESSIONS|noescape}" class="{$maint_actions['sessions']['icon']} maintenance-action">{$maint_actions['sessions']['label']}</a>
+    <a href="{$U_MAINT_FEEDS|noescape}" class="{$maint_actions['feeds']['icon']} maintenance-action">{$maint_actions['feeds']['label']}</a>
+    <a href="{$U_MAINT_SEARCH|noescape}" class="{$maint_actions['search']['icon']} maintenance-action purge-search-history-button">{$maint_actions['search']['label']}</a>
+  </div>
+</fieldset>
+
+{if isset($advanced_features) and !(count($advanced_features) < 1)}
+  <fieldset class="">
+  <legend><span class="icon-puzzle icon-purple"></span>{='Advanced features'|translate}</legend>
+  <div style="display:flex;flex-wrap: wrap;">
+  {foreach $advanced_features as $key => $feature}
+    <a href="{$feature['URL']}" class="{$feature['ICON']} maintenance-action">{$feature['CAPTION']}</a>
+  {/foreach}
+  </div>
+</fieldset>
+{/if}
+
+<fieldset class="">
+  <legend><span class="icon-trash-1 icon-red"></span>{='Purge Cache'|translate}</legend>
+
+  <div class="template-purge">
+    <div class="cache-infos">
+        <span class="cache-size-text">{='Cache size'|translate}</span>
+        <span class="cache-size-value">
+{if isset($cache_sizes)}
+          {='%s MB'|translate: round($cache_sizes[0]['value']/1024/1024, 2)}
+{else}
+          {='N/A'|translate}
+{/if}
+        </span>
+        <span class="cache-lastCalculated-text">{if $time_elapsed_since_last_calc}&ThickSpace;{='calculated'|translate}{/if}</span>
+        <span class="cache-lastCalculated-value">{if $time_elapsed_since_last_calc} {$time_elapsed_since_last_calc} {else} &ThickSpace;{='never calculated'|translate} {/if}</span>
+        <a class="refresh-cache-size"><span class="refresh-icon icon-arrows-cw"></span>{='Refresh'|translate}</a>
+    </div>
+    <a href="{$U_MAINT_COMPILED_TEMPLATES|noescape}" class="{$maint_actions['compiled-templates']['icon']} maintenance-action">{$maint_actions['compiled-templates']['label']}
+      <span class="multiple-compiledTemplate-sizes">
+{if isset($cache_sizes)}
+        {='%s MB'|translate: round($cache_sizes[2]['value']/1024/1024, 2)}
+{else}
+        {='N/A'|translate}
+{/if}
+      </span>
+    </a>
+  </div>
+
+  <div class="delete-size-checks">
+    <span id="label-delete-size-checkbox">{$maint_actions['derivatives']['label']}
+      <span class="multiple-pictures-sizes">
+{if isset($cache_sizes)}
+        {='%s MB'|translate: round($cache_sizes[1]['value']['all']/1024/1024, 2)}
+{else}
+        {='N/A'|translate}
+{/if}
+      </span>
+    </span>
+    <div class="delete-check-container">
+{foreach $purge_derivatives as $name => $url}
+      <div class="delete-size-check" title="{if isset($cache_sizes) and isset($cache_sizes[1]['value'][$url])}{='%s MB'|translate: round($cache_sizes[1]['value'][$url]/1024/1024, 2)}{else}{='N/A'|translate}{/if}" data-selected="0" name="{$url}">
+          <span class="select-checkbox"><i class="icon-ok" style="margin-left:8px"></i></span>
+          <span class="picture-deletion-size" style="font-size:14px;margin-left:5px;padding-top:2px;">{$name}</span>
+      </div>
+{/foreach}
+    </div>
+  </div>
+
+  <a class="icon-ok delete-sizes">{='Delete these sizes'|translate}</a>
+</fieldset>
+
+{/if}
+<style>
+#label-delete-size-checkbox {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.maintenance-action:hover {
+  color: #ff7700;
+  text-decoration: none;
+}
+
+.maintenance-action {
+  border: solid 1px;
+  padding: 8px 10px;
+  margin-right: 20px;
+  margin-bottom: 20px;
+}
+.maintenance-action.icon-th-list {
+  font-size: 13px;
+}
+
+.delete-size-checks {
+  display: flex;
+  text-align: left;
+  margin-bottom: 5px;
+
+  flex-direction: column;
+}
+
+.delete-check-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.delete-size-check {
+  margin-right: 15px;
+  margin-bottom: 10px;
+  display: flex;
+  cursor: pointer
+}
+
+.select-checkbox {
+  display: inline-block;
+}
+
+.delete-sizes {
+  display: block;
+  width: max-content;
+  text-align: left;
+}
+
+.delete-sizes {
+  cursor: pointer;
+  padding: 8px 10px;
+  font-weight: bold;
+  background-color: #ffa744;
+  color: #3c3c3c;
+}
+
+.delete-sizes:hover {
+  background-color: #ff7700;
+  color: #3c3c3c;
+  text-decoration: none;
+}
+
+.rotate-anim {
+  animation: spin 4s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+</style>

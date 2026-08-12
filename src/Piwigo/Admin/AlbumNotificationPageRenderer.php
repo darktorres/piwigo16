@@ -217,8 +217,6 @@ final readonly class AlbumNotificationPageRenderer
             $this->urlService->unsetMakeFullUrl();
         }
 
-        $template->setFilename('album_notification', 'album_notification.tpl');
-
         // $page['cat'] was set to $category['id'] (a real int) above, in
         // this same method scope with no intervening by-reference calls,
         // so its narrowing is still provably int here ($page itself is
@@ -318,6 +316,6 @@ final readonly class AlbumNotificationPageRenderer
             userOptions: $user_options,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'album_notification');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'album_notification.latte');
     }
 }

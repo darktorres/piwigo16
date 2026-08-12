@@ -1,10 +1,10 @@
-{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
+{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
+{do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
+{do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize.{$themeconf['colorscheme']}.css")}
 
-{footer_script}
+{capture $tmpFooterScript}
 
-const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
+const cat_nav = '{$CATEGORIES_NAV|escapeJavascript|noescape}';
 
 jQuery(document).ready(function() {
 
@@ -45,9 +45,10 @@ jQuery(document).ready(function() {
     }
   });
 });
-{/footer_script}
+{/capture}
+{do footerScript($tmpFooterScript)}
 
-{html_style}
+{capture $tmpHtmlStyle}
 .who_option {
   margin-top:5px;
 }
@@ -58,63 +59,64 @@ span.errors {
   margin:0;
   border-radius:5px;
 }
-{/html_style}
+{/capture}
+{do htmlStyle($tmpHtmlStyle)}
 
-<form action="{$F_ACTION}" method="post" id="categoryNotify">
+<form action="{$F_ACTION|noescape}" method="post" id="categoryNotify">
 <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
 
 <fieldset id="emailCatInfo">
-  <legend><span class="icon-mail-1 icon-green"></span>{'Send mail to users'|@translate}</legend>
+  <legend><span class="icon-mail-1 icon-green"></span>{='Send mail to users'|translate}</legend>
 
   <p>
-    <strong>{'Recipients'|@translate}</strong>
+    <strong>{='Recipients'|translate}</strong>
     <label class="font-checkbox">
       <span class="icon-dot-circled"></span>
       <input type="radio" name="who" value="group" checked="checked">
-      {'Group'|translate}
+      {='Group'|translate}
     </label>
 
     <label class="font-checkbox">
       <span class="icon-dot-circled"></span>
       <input type="radio" name="who" value="users">
-      {'Users'|translate}
+      {='Users'|translate}
     </label>
   </p>
 
   <p class="who_option who_group">
 {if isset($group_mail_options)}
-    <select name="group" placeholder="{'Type in a search term'|translate}" style="width:524px;">
-      {html_options options=$group_mail_options}
+    <select name="group" placeholder="{='Type in a search term'|translate}" style="width:524px;">
+      {=htmlOptions(options: $group_mail_options)}
     </select>
 {elseif isset($no_group_in_gallery) and $no_group_in_gallery}
-    {'There is no group in this gallery.'|@translate} <a href="admin.php?page=group_list" class="externalLink">{'Group management'|@translate}</a>
+    {='There is no group in this gallery.'|translate} <a href="admin.php?page=group_list" class="externalLink">{='Group management'|translate}</a>
 {else}
-    {'No group is permitted to see this private album'|@translate}.
-    <a href="{$permission_url}" class="externalLink">{'Permission management'|@translate}</a>
+    {='No group is permitted to see this private album'|translate}.
+    <a href="{$permission_url|noescape}" class="externalLink">{='Permission management'|translate}</a>
 {/if}
     </p>
 
     <p class="who_option who_users">
 {if isset($user_options)}
-    <select name="users[]" multiple placeholder="{'Type in a search term'|translate}" style="width:524px;">
-      {html_options options=$user_options}
+    <select name="users[]" multiple placeholder="{='Type in a search term'|translate}" style="width:524px;">
+      {=htmlOptions(options: $user_options)}
     </select>
 {else}
-    {'No user is permitted to see this private album'|@translate}.
-    <a href="{$permission_url}" class="externalLink">{'Permission management'|@translate}</a>
+    {='No user is permitted to see this private album'|translate}.
+    <a href="{$permission_url|noescape}" class="externalLink">{='Permission management'|translate}</a>
 {/if}
     </p>
 
   <p>
-    <strong>{'Complementary mail content'|@translate}</strong>
+    <strong>{='Complementary mail content'|translate}</strong>
     <br>
 <textarea cols="50" rows="5" name="mail_content" id="mail_content" class="description">{if isset($MAIL_CONTENT)}{$MAIL_CONTENT}{/if}</textarea>
   </p>
 
 {if isset($auth_key_duration)}
   <p>
-  {'Each email sent will contain its own automatic authentication key on links, valid for %s.'|translate:$auth_key_duration}
-  <br>{'For security reason, authentication keys do not work for administrators.'|translate}
+  {='Each email sent will contain its own automatic authentication key on links, valid for %s.'|translate: $auth_key_duration}
+  <br>{='For security reason, authentication keys do not work for administrators.'|translate}
   </p>
 {/if}
 
@@ -130,9 +132,9 @@ span.errors {
         </div>
       </div>
 {/if}
-    
+
       <div class="savebar-footer-block">
-        <button class="buttonLike" type="submit" name="submitEmail"><i class="icon-mail"></i> {'Send'|@translate}</button>
+        <button class="buttonLike" type="submit" name="submitEmail"><i class="icon-mail"></i> {='Send'|translate}</button>
       </div>
     </div>
   </div>

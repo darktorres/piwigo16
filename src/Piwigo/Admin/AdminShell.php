@@ -257,10 +257,6 @@ final readonly class AdminShell
         $this->pageState->setPageBanner('<h1>' . $this->lang->t('Piwigo Administration') . '</h1>');
         $this->pageState->setBodyId('theAdminPage');
 
-        $template->setFilenames([
-            'admin' => 'admin.tpl',
-        ]);
-
         $u_updates = null;
         if ($this->currentConfig->enableCoreUpdate) {
             $u_updates = $link_start . 'updates';
@@ -477,7 +473,7 @@ final readonly class AdminShell
         $this->htmlService
             ->flushPageMessages();
 
-        $template->pparse('admin');
+        $template->pparse('admin.latte');
 
         PageTail::render();
     }

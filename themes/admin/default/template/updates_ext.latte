@@ -1,20 +1,19 @@
-{combine_script id='jquery.ajaxmanager' load='footer' require='jquery' path='themes/default/js/plugins/jquery.ajaxmanager.js'}
-{combine_script id='jquery.jgrowl' load='footer' require='jquery' path='themes/default/js/plugins/jquery.jgrowl_minimized.js'}
-{combine_css path="themes/default/js/plugins/jquery.jgrowl.css"}
+{do combineScript(id: 'jquery.ajaxmanager', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery.ajaxmanager.js')}
+{do combineScript(id: 'jquery.jgrowl', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery.jgrowl_minimized.js')}
+{do combineCss(path: "themes/default/js/plugins/jquery.jgrowl.css")}
 
-{footer_script require='jquery.ui.effect-blind,jquery.ajaxmanager,jquery.jgrowl'}
+{capture $tmpFooterScript}
 var pwg_token = '{$CSRF_TOKEN}';
 var extType = '{$EXT_TYPE}';
-var confirmMsg  = '{'Are you sure?'|@translate|@escape:'javascript'}';
-var errorHead   = '{'ERROR'|@translate|@escape:'javascript'}';
-var successHead = '{'Update Complete'|@translate|@escape:'javascript'}';
-var errorMsg    = '{'an error happened'|@translate|@escape:'javascript'}';
-var restoreMsg  = '{'Reset ignored updates'|@translate|@escape:'javascript'}';
+var confirmMsg  = '{='Are you sure?'|translate|escapeJavascript|noescape}';
+var errorHead   = '{='ERROR'|translate|escapeJavascript|noescape}';
+var successHead = '{='Update Complete'|translate|escapeJavascript|noescape}';
+var errorMsg    = '{='an error happened'|translate|escapeJavascript|noescape}';
+var restoreMsg  = '{='Reset ignored updates'|translate|escapeJavascript|noescape}';
 
-{literal}
 var todo = 0;
-var queuedManager = $.manageAjax.create('queued', { 
-	queue: true,  
+var queuedManager = $.manageAjax.create('queued', {
+	queue: true,
 	maxRequests: 1,
   beforeSend: function() { autoupdate_bar_toggle(1); },
   complete: function() { autoupdate_bar_toggle(-1); }
@@ -155,18 +154,18 @@ function autoupdate_bar_toggle(i) {
 }
 
 checkFieldsets();
-{/literal}
-{/footer_script}
-{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
-{footer_script}
+{/capture}
+{do footerScript($tmpFooterScript, 'jquery.ui.effect-blind,jquery.ajaxmanager,jquery.jgrowl')}
+{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
+{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
+{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
+{capture $tmpFooterScript2}
 
-const are_you_sure_msg  = '{'Are you sure?'|@translate|@escape:'javascript'}';
-const confirm_msg = '{"Yes, I am sure"|@translate}';
-const cancel_msg = "{"No, I have changed my mind"|@translate}";
+const are_you_sure_msg  = '{='Are you sure?'|translate|escapeJavascript|noescape}';
+const confirm_msg = '{='Yes, I am sure'|translate|noescape}';
+const cancel_msg = "{='No, I have changed my mind'|translate|noescape}";
 $("#update_all").click(function() {
-  const title_msg = "{'Are you sure you want to update all extensions?'|@translate}";
+  const title_msg = "{='Are you sure you want to update all extensions?'|translate|noescape}";
   $.confirm({
       title: title_msg,
       buttons: {
@@ -184,49 +183,50 @@ $("#update_all").click(function() {
       ...jConfirm_confirm_options
     });
 })
-{/footer_script}
+{/capture}
+{do footerScript($tmpFooterScript2)}
 
 {if $isWebmaster == 1}
 
 <div class="autoupdate_bar">
-<div class="head-button-1 icon-ok-circled" id="update_all">{'Update All'|@translate}</div>
-<div class="head-button-2 icon-block" id="ignore_all" onClick="ignoreAll(); return false;">{'Ignore All'|@translate}</div>
-<div class="head-button-2 icon-ccw" id="reset_ignore" onClick="resetIgnored(); return false;" {if !$SHOW_RESET}style="display:none;"{/if}>{'Reset ignored updates'|@translate}</div>
+<div class="head-button-1 icon-ok-circled" id="update_all">{='Update All'|translate}</div>
+<div class="head-button-2 icon-block" id="ignore_all" onClick="ignoreAll(); return false;">{='Ignore All'|translate}</div>
+<div class="head-button-2 icon-ccw" id="reset_ignore" onClick="resetIgnored(); return false;" {if !$SHOW_RESET}style="display:none;"{/if}>{='Reset ignored updates'|translate}</div>
 </div>
 <div class="autoupdate_bar" style="display:none;">
-{'Please wait...'|@translate}<br><img src="themes/admin/default/images/ajax-loader-bar.gif">
+{='Please wait...'|translate}<br><img src="themes/admin/default/images/ajax-loader-bar.gif">
 </div>
 
-<p id="up_to_date" style="display:none; text-align:left; margin-left:20px;">{'All %s are up to date.'|@sprintf:$EXT_TYPE|@translate}</p>
+<p id="up_to_date" style="display:none; text-align:left; margin-left:20px;">{='All %s are up to date.'|sprintf: $EXT_TYPE|translate}</p>
 
-{foreach from=$UPDATES_EXTENSION key=type item=updates}
-  {if not empty($updates)}
+{foreach $UPDATES_EXTENSION as $type => $updates}
+  {if !empty($updates)}
     <fieldset id="{$type}" class="pluginContainer pluginUpdateContainer line-form" data-type="{$type}">
     <legend>
     {if $type=='plugins'}
-      <span class="icon-puzzle icon-green"></span>{'Plugins'|@translate}
+      <span class="icon-puzzle icon-green"></span>{='Plugins'|translate}
     {elseif $type=='themes'}
-      <span class="icon-brush icon-blue"></span>{'Themes'|@translate}
+      <span class="icon-brush icon-blue"></span>{='Themes'|translate}
     {elseif $type=='languages'}
-      <span class="icon-language icon-purple"></span>{'Languages'|@translate}
+      <span class="icon-language icon-purple"></span>{='Languages'|translate}
     {/if}
     </legend>
-    
-    {foreach from=$updates item=extension}
-      <div class="pluginBox pluginMiniBox" id="{$type}_{$extension.EXT_ID}" {if $extension.IGNORED}data-ignored="true" style="display:none;"{/if}>
+
+    {foreach $updates as $extension}
+      <div class="pluginBox pluginMiniBox" id="{$type}_{$extension['EXT_ID']}" {if $extension['IGNORED']}data-ignored="true" style="display:none;"{/if}>
         <div class="pluginContent">
           <div class="pluginName">
-            {$extension.EXT_NAME}
+            {$extension['EXT_NAME']}
           </div>
-          <div class="pluginDesc" id="desc_{$extension.ID}">
-            <span class="plugin-version plugin-version-old icon-flow-branch" title="{"Current Version"|@translate}">{$extension.CURRENT_VERSION}</span> <i class="icon-right"></i> <span class="plugin-version icon-flow-branch" title="{"New Version"|@translate}">{$extension.NEW_VERSION}</span>
-            <div class="plugin-revision-info"><span>{$extension.REV_DESC}</span></div>
-            <a href='{$extension.EXT_URL}' target="_blank" class="plugin-update-link icon-info-circled-1">{'More information'|@translate}</a>
+          <div class="pluginDesc" id="desc_{$extension['ID']}">
+            <span class="plugin-version plugin-version-old icon-flow-branch" title="{='Current Version'|translate}">{$extension['CURRENT_VERSION']}</span> <i class="icon-right"></i> <span class="plugin-version icon-flow-branch" title="{='New Version'|translate}">{$extension['NEW_VERSION']}</span>
+            <div class="plugin-revision-info"><span>{$extension['REV_DESC']}</span></div>
+            <a href='{$extension['EXT_URL']|noescape}' target="_blank" class="plugin-update-link icon-info-circled-1">{='More information'|translate}</a>
           </div>
           <div class="pluginActions">
-            <a href="#" onClick="updateExtension('{$type}', '{$extension.EXT_ID}', {$extension.REVISION_ID});" class="updateExtension pluginActionLevel1"> <i class="icon-ok-circled"></i> {'Install'|@translate}</a>
-            <a href="{$extension.URL_DOWNLOAD}" class="pluginActionLevel2"> <i class="icon-download"></i> {'Download'|@translate}</a>
-            <a href="#" onClick="ignoreExtension('{$type}', '{$extension.EXT_ID}'); return false;" class="ignoreExtension pluginActionLevel2"><i class="icon-block"></i>{'Ignore this update'|@translate}</a>
+            <a href="#" onClick="updateExtension({$type}, {$extension['EXT_ID']}, {$extension['REVISION_ID']});" class="updateExtension pluginActionLevel1"> <i class="icon-ok-circled"></i> {='Install'|translate}</a>
+            <a href="{$extension['URL_DOWNLOAD']|noescape}" class="pluginActionLevel2"> <i class="icon-download"></i> {='Download'|translate}</a>
+            <a href="#" onClick="ignoreExtension({$type}, {$extension['EXT_ID']}); return false;" class="ignoreExtension pluginActionLevel2"><i class="icon-block"></i>{='Ignore this update'|translate}</a>
           </div>
         </div>
       </div>

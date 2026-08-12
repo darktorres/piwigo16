@@ -164,7 +164,6 @@ final class UpdatesExtPageRenderer
             isWebmaster: ($accessControl->isWebmaster()) ? 1 : 0,
             adminPageTitle: $lang->t('Updates'),
         ));
-        $template->setFilename('plugin_admin_content', 'updates_ext.tpl');
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'plugin_admin_content');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'updates_ext.latte');
     }
 }

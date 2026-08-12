@@ -701,7 +701,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *   handle=>filename; a null value unsets that handle (no current
      *   first-party caller exercises this, but the API supports it)
      */
-    #[Override]
     public function setFilenames(array $filename_array): bool
     {
         reset($filename_array);
@@ -840,13 +839,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * downstream -- the direct-filename sibling of `assignVarFromHandle()`
      * above, added for already-converted callers. Both coexist until every
      * caller has migrated (docs/PLAN.md's P31 section) and
-     * `assignVarFromHandle()` is removed. Concrete-class-only for now, not
-     * declared on `TemplateInterface` -- no L2a/L2b caller reaches it
-     * through that interface yet; added there only once a real one does
-     * (whichever P31.2+ sub-item converts that class's own template),
-     * matching this codebase's standing bias against adding interface
-     * surface ahead of a real caller.
+     * `assignVarFromHandle()` is removed.
      */
+    #[Override]
     public function assignVarFromTemplate(string $varname, string $file): void
     {
         $rendered = $this->parse($file, true);

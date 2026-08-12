@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
 use Error;
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Category\CategoryDefaultRenderer;
@@ -44,7 +45,7 @@ use Piwigo\Users\User;
  *
  * Real service construction throughout, same shape as
  * tests/Integration/NoPhotoYetRendererTest.php/PictureCommentRendererTest.php:
- * a real Template compiling the actual themes/default/template/thumbnails.tpl,
+ * a real Template compiling the actual themes/default/template/thumbnails.latte,
  * a real ImageRepository/CommentRepository against the fixture DB.
  */
 final class CategoryDefaultRendererTest extends IntegrationTestCase
@@ -81,7 +82,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // reach for a full RequestBootstrap dependency this test never
         // boots.
         $currentConfig->dataDirChecked = '1';
-        // thumbnails.tpl reads $derivative_params (assigned from
+        // thumbnails.latte reads $derivative_params (assigned from
         // ImageStdParams::getByType() by CategoryDefaultRenderer::render()
         // itself) -- ImageStdParams::$all_type_map starts empty until
         // loadFromDb() populates it. loadFromDb() reaches its own
@@ -92,7 +93,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // sizing if not, same as UploadServiceTest's own identical setup).
         // loadConfFromDb() below is unrelated to ImageStdParams -- it's
         // this test's own way of seeding every other real config-backed
-        // display flag CategoryDefaultRenderer/thumbnails.tpl reads.
+        // display flag CategoryDefaultRenderer/thumbnails.latte reads.
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->loadFromDb();
@@ -103,8 +104,8 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $commentRepo = $em->getRepository(CommentEntity::class);
 
         $htmlService = HtmlServiceTestFactory::build();
-        // thumbnails.tpl's own {assign var=derivative
-        // value=$pwg->derivative(...)} constructs a real DerivativeImage per
+        // thumbnails.latte's own {var $derivative =
+        // $pwg->derivative(...)} constructs a real DerivativeImage per
         // thumbnail, whose getUrl() resolves UrlServiceInterface live from
         // the container -- $urlService below must share the same
         // container-shared RootPathOverride for setMakeFullUrl()-style
@@ -145,9 +146,9 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
     private function buildTemplate(): Template
     {
-        // root/theme='default' points Smarty's template_dir at the real
-        // themes/default/template/ directory thumbnails.tpl lives in, same
-        // real-root shape every real Template() construction site uses.
+        // root/theme='default' points the template-dir chain at the real
+        // themes/default/template/ directory thumbnails.latte lives in,
+        // same real-root shape every real Template() construction site uses.
         $this->template = TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default');
 
         return $this->template;
@@ -166,7 +167,12 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
     private function renderedThumbnailsHtml(): string
     {
+        // assignVarFromTemplate() wraps THUMBNAILS in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
         $vars = $this->template->getTemplateVars('THUMBNAILS');
+        if ($vars instanceof Html) {
+            return (string) $vars;
+        }
 
         return is_string($vars) ? $vars : '';
     }
@@ -269,8 +275,8 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // just that some prefix is absent.
         $this->setImageHit(3, 17);
 
-        // show_nb_hits=true makes thumbnails.tpl assign+display NB_HITS via
-        // the "translate_dec" modifier (fixed bug: it used to call the
+        // show_nb_hits=true makes thumbnails.latte assign+display NB_HITS
+        // via the "translate_dec" filter (fixed bug: it used to call the
         // deprecated $pwg->l10n_dec() method directly).
         $this->renderer->render([3], 0, 1, Section::MostVisited);
 
@@ -311,8 +317,8 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $this->renderer->render([3], 0, 1, Section::Categories);
 
         $html = $this->renderedThumbnailsHtml();
-        // thumbnails.tpl renders NB_COMMENTS via the "translate_dec"
-        // modifier -- the other of its 2 call sites (NB_HITS is covered
+        // thumbnails.latte renders NB_COMMENTS via the "translate_dec"
+        // filter -- the other of its 2 call sites (NB_HITS is covered
         // above).
         self::assertStringContainsString('1 comment', $html);
         self::assertStringNotContainsString('1 comments', $html);

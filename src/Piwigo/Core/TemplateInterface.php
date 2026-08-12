@@ -38,13 +38,13 @@ interface TemplateInterface
 
     public function assignVarFromHandle(string $varname, string $handle): bool;
 
-    public function setFilename(string $handle, string $filename): bool;
-
     /**
-     * @param array<string, string|null> $filename_array hashmap of
-     *   handle=>filename; a null value unsets that handle
+     * Direct-filename sibling of `assignVarFromHandle()` above -- see
+     * `Template::assignVarFromTemplate()`'s own docblock.
      */
-    public function setFilenames(array $filename_array): bool;
+    public function assignVarFromTemplate(string $varname, string $file): void;
+
+    public function setFilename(string $handle, string $filename): bool;
 
     public function clearAssign(string $tpl_var): void;
 }

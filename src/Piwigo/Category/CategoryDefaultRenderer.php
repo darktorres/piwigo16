@@ -131,11 +131,6 @@ final readonly class CategoryDefaultRenderer
             }
         }
 
-        // template thumbnail initialization
-        $template->setFilenames([
-            'index_thumbnails' => 'thumbnails.tpl',
-        ]);
-
         $this->eventDispatcher->dispatchNotify(new LocBeginIndexThumbnails($pictures));
         $tplThumbnailsVar = [];
 
@@ -225,7 +220,7 @@ final readonly class CategoryDefaultRenderer
             thumbnails: $tplThumbnailsVar,
         ));
 
-        $template->assignVarFromHandle('THUMBNAILS', 'index_thumbnails');
+        $template->assignVarFromTemplate('THUMBNAILS', 'thumbnails.latte');
         unset($pictures, $selection, $tplThumbnailsVar);
         $template->clearAssign('thumbnails');
         TimingHelper::debug('end CategoryDefaultRenderer::render()', $this->pageState);

@@ -95,7 +95,7 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'thumbnails.tpl', 'count={$thumbnails|@count}');
+        file_put_contents($tplDir . 'thumbnails.latte', 'count={$thumbnails|count}');
         $template->setTemplateDir($tplDir);
 
         $conn = DbConnection::build();
@@ -119,12 +119,19 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
         $slideshowUrl = $renderer->render([], 0, 10, Section::Categories);
 
         // render() explicitly clearAssign('thumbnails')s right after
-        // parsing the handle -- 'thumbnails' itself is genuinely gone by
-        // the time render() returns; THUMBNAILS (the parsed output) is
-        // the real, lasting observable.
+        // parsing the template -- 'thumbnails' itself is genuinely gone
+        // by the time render() returns; THUMBNAILS (the parsed output,
+        // wrapped in Html by assignVarFromTemplate()) is the real,
+        // lasting observable.
+        $thumbnailsVar = $template->getTemplateVars('THUMBNAILS');
         expect($slideshowUrl)
             ->toBeNull()
-            ->and($template->getTemplateVars('THUMBNAILS'))
+            ->and($thumbnailsVar)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $thumbnailsVar instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+        expect((string) $thumbnailsVar)
             ->toBe('count=0');
     } finally {
         CurrentTemplateTestFactory::get()->reset();

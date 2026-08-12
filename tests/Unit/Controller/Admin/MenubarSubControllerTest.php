@@ -74,7 +74,7 @@ test('handle renders the real menubar-order admin screen with no registered bloc
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
-        file_put_contents($tplDir . 'menubar.tpl', 'menubar_admin_rendered=yes');
+        file_put_contents($tplDir . 'menubar.latte', 'menubar_admin_rendered=yes');
         $template->setTemplateDir($tplDir);
 
         CurrentUserTestFactory::get()->set(new User(
@@ -104,7 +104,16 @@ test('handle renders the real menubar-order admin screen with no registered bloc
 
         $subController->handle(new ServerRequest('GET', '/admin.php?page=menubar'));
 
-        expect($template->getTemplateVars('ADMIN_CONTENT'))
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
+        expect((string) $adminContent)
             ->toContain('menubar_admin_rendered=yes');
     } finally {
         $_POST = $post;

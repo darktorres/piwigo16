@@ -64,10 +64,7 @@ final class MaintenanceSysPageRenderer
         }
 
         $template->assignContext(new MaintenanceSysPageContext(isWebmaster: $accessControl->isWebmaster()));
-        $template->setFilenames([
-            'maintenance' => 'maintenance_sys.tpl',
-        ]);
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_sys.latte');
     }
 }

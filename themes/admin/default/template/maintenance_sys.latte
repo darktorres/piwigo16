@@ -1,22 +1,22 @@
 {if $isWebmaster == 1}
-    {combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-    {combine_script id='sys' load='footer' path='themes/admin/default/js/maintenance_sys.js'}
+    {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
+    {do combineScript(id: 'sys', load: 'footer', path: 'themes/admin/default/js/maintenance_sys.js')}
     <fieldset id="activities-system">
         <div class="tab-header">
             <div class="tab-object">
-                <p>{'Object'|translate}</p>
+                <p>{='Object'|translate}</p>
             </div>
             <div class="tab-action">
-                <p>{'Action'|translate}</p>
+                <p>{='Action'|translate}</p>
             </div>
             <div class="tab-users">
-                <p>{'Users'|translate}</p>
+                <p>{='Users'|translate}</p>
             </div>
             <div class="tab-date">
-                <p>{'Date'|translate}</p>
+                <p>{='Date'|translate}</p>
             </div>
             <div class="tab-details">
-                <p>{'Details'|translate}</p>
+                <p>{='Details'|translate}</p>
             </div>
         </div>
 

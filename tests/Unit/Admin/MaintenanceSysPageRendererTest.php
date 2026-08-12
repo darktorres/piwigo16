@@ -92,7 +92,7 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'maintenance_sys.tpl', 'isWebmaster={$isWebmaster}');
+        file_put_contents($tplDir . 'maintenance_sys.latte', 'isWebmaster={$isWebmaster}');
         $template->setTemplateDir($tplDir);
         $pageState = new PageState();
 
@@ -121,7 +121,7 @@ test('render() adds no warning for a webmaster and reaches the template tail wit
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'maintenance_sys.tpl', 'isWebmaster={$isWebmaster}');
+        file_put_contents($tplDir . 'maintenance_sys.latte', 'isWebmaster={$isWebmaster}');
         $template->setTemplateDir($tplDir);
         $pageState = new PageState();
 

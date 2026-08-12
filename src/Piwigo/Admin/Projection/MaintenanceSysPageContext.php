@@ -8,7 +8,7 @@ use Override;
 use Piwigo\Core\TemplatePageContext;
 
 /**
- * The full 'maintenance_sys.tpl' template variable set assigned by
+ * The full 'maintenance_sys.latte' template variable set assigned by
  * {@see \Piwigo\Admin\MaintenanceSysPageRenderer::render()}.
  */
 final readonly class MaintenanceSysPageContext implements TemplatePageContext

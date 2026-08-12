@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
@@ -101,7 +105,7 @@ test('constructs a default log_YYYY-MM-DD.txt filename when none is given, creat
 });
 
 test('creates a nested log directory recursively, protected with .htaccess and index.htm', function (): void {
-    // Kills line 147's BooleanAndToBooleanOr-on-bitmask mutation
+    // Kills line 150's BooleanAndToBooleanOr-on-bitmask mutation
     // (`MKGETDIR_DEFAULT & MKGETDIR_PROTECT_HTACCESS` instead of `|`):
     // ANDing these two non-overlapping bitmasks together yields 0 (no
     // flags at all) instead of all four flags -- confirmed live this
@@ -125,7 +129,7 @@ test('creates a nested log directory recursively, protected with .htaccess and i
 });
 
 /**
- * Confirmed-equivalent: line 121's UnwrapRtrim (dropping the
+ * Confirmed-equivalent: line 124's UnwrapRtrim (dropping the
  * `rtrim(..., '\/')` call, storing the directory with any trailing
  * slash it was given intact rather than stripped before
  * DIRECTORY_SEPARATOR is appended). Confirmed live via Reflection on a
@@ -140,7 +144,7 @@ test('creates a nested log directory recursively, protected with .htaccess and i
  * which would be testing an implementation detail, not behavior.
  */
 test('treats a missing directory option as empty, not as a literal option value, and fails accordingly', function (): void {
-    // Kills line 121's EmptyStringToNotEmpty: without the real '' fallback,
+    // Kills line 124's EmptyStringToNotEmpty: without the real '' fallback,
     // a non-empty placeholder would be used as the directory instead,
     // producing a working (non-root, permission-granted) relative path
     // instead of the real fallback's absolute filesystem root -- which
@@ -159,7 +163,7 @@ test('treats a missing directory option as empty, not as a literal option value,
 });
 
 test('treats an explicitly empty filename the same as an omitted one, generating the default name', function (): void {
-    // Kills line 124's EmptyStringToNotEmpty: without the real ''
+    // Kills line 127's EmptyStringToNotEmpty: without the real ''
     // comparison, an explicitly empty (but non-null) filename would
     // skip the auto-generated-name fallback entirely, leaving $filename
     // as '' -- fopen()'ing a bare directory path instead of a real file
@@ -304,8 +308,55 @@ test('throws openfail when fopen cannot create the target file inside a locked d
     }
 });
 
+test('open() throws when the container returns an unexpected type for CurrentConfig', function (): void {
+    // Real gap: currentConfig()'s own InstanceOfToTrue guard is only
+    // reached (Kernel::isBooted()) from open()'s mkgetdir() call, for a
+    // directory that doesn't exist yet -- KernelContainerOverride's own
+    // Kernel::boot()/reset() dance around the callback satisfies that.
+    $dir = $this->root . '/current-config-guard-dir';
+
+    KernelContainerOverride::withWrongTypeFor(
+        CurrentConfig::class,
+        static function () use ($dir): void {
+            $logger = new Logger([
+                'directory' => $dir,
+                'filename' => 'guard.txt',
+            ]);
+            $logger->write('unreachable');
+        },
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfig::class);
+
+test('open() uses the container-shared CurrentConfig, not a disconnected fresh one, once Kernel is booted', function (): void {
+    // Real gap: kills currentConfig()'s own RemoveEarlyReturn. A fresh,
+    // unmemoized CurrentConfig() (the not-booted fallback, what the
+    // mutant would fall through to even with Kernel booted) defaults
+    // chmodValue to 0755 under the CLI SAPI these tests run under --
+    // setting the container-shared instance's own chmodValue to
+    // something else and observing it on the real, newly-created
+    // directory's own permissions proves currentConfig() actually
+    // returned THAT instance, not a disconnected new one.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    CurrentConfigTestFactory::get()->chmodValue = 0o700;
+
+    try {
+        $dir = $this->root . '/current-config-identity-dir';
+        $logger = new Logger([
+            'directory' => $dir,
+            'filename' => 'identity.txt',
+        ]);
+        $logger->write('anything');
+
+        expect(fileperms($dir) & 0o777)
+            ->toBe(0o700);
+    } finally {
+        CurrentConfigTestFactory::get()->reset();
+        Kernel::reset();
+    }
+});
+
 /**
- * Confirmed-equivalent: line 174's RemoveBooleanCast in __destruct()
+ * Confirmed-equivalent: line 177's RemoveBooleanCast in __destruct()
  * (`if ($this->fileHandle)` instead of `if ((bool) $this->fileHandle)`).
  * $this->fileHandle is typed `resource|null`, and PHP's own `if`
  * coercion already treats a resource as truthy and null as falsy
@@ -460,7 +511,7 @@ test('pageState() reuses the container-shared instance once booted, not a fresh 
 });
 
 test('getTimestamp computes a real, current sub-second microsecond value, not a garbage one', function (): void {
-    // Kills line 415's ArithmeticOperator (`+ floor()` instead of `-
+    // Kills line 466's ArithmeticOperator (`+ floor()` instead of `-
     // floor()`, producing a value roughly double the real microtime()
     // and wildly out of the [0, 999999] microsecond window once scaled
     // and truncated), line 416's ConcatRemoveRight (dropping the actual
@@ -480,7 +531,7 @@ test('getTimestamp computes a real, current sub-second microsecond value, not a 
     // proves it's a real, current microsecond value.
     //
     // Also confirmed equivalent/untestable while investigating this
-    // line: line 415's RemoveIntegerCast (dropping the `(int)` before
+    // line: line 466's RemoveIntegerCast (dropping the `(int)` before
     // sprintf('%06d', ...)) is PROVABLY equivalent -- sprintf()'s own
     // %d conversion already truncates a float exactly like an (int)
     // cast would (confirmed directly: sprintf('%06d', 999999.9) and
@@ -599,7 +650,7 @@ test('contextToString formats every case var_export() can produce: multiple keys
     //   context entries would run together on one line instead of each
     //   getting its own indented line.
     //
-    // Line 438's own RemoveArrayItem (the third pattern/replacement
+    // Line 489's own RemoveArrayItem (the third pattern/replacement
     // pair, '/^  |\G  /m' -> '  ') is NOT closable by any test: it's a
     // pattern that matches a literal 2-space run and replaces it with
     // the identical 2-space string, a no-op by construction regardless

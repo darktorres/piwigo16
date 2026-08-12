@@ -123,6 +123,26 @@ real, root-caused construct at a time — never a guessed fix. Along the way:
   browsers apply that same auto-closing rule when *they* parse the output,
   so the rendered DOM is unaffected either way — same class of caveat as
   the existing orphan-tag-indentation note.
+- **A real destructive bug**, also found by manual review, in three files
+  with no HTML elements or Latte tags at all: `mail/text/html/global-mail-
+css.latte`, `mail-css-clear.latte`, `mail-css-dark.latte` — raw CSS meant
+  to be dropped verbatim into a sibling file's `<style>` block via
+  `{$GLOBAL_MAIL_CSS|noescape}`. With nothing to split the file into
+  separate items, the whole 100+-line file parsed as one continuous
+  `HtmlText` node and went through the normal prose-reflow path, which
+  collapses all internal whitespace (including every deliberate line
+  break between CSS rules) down to single spaces — flattening
+  hand-formatted, readable CSS onto one unreadable line. Confirmed
+  harmless to the *rendered* page (CSS is whitespace-insensitive between
+  tokens) but a real loss of source readability and diffability, so fixed
+  rather than accepted: a `Document` whose children are 100% plain text
+  (no element, no Latte construct — checked directly, not inferred) is
+  now printed byte-verbatim instead of through the reflow path. Confirmed
+  isolated to these three files by checking every `.latte` file with no
+  `<` character in it at all in the whole tree; the same shape recurring
+  nested inside a real `{if}`/`{foreach}` body elsewhere isn't handled
+  (no such file exists today) — if one lands, the fix generalizes the
+  same way, at that Document-relative body's own print site.
 
 None of this is wired into `lefthook` pre-commit or CI — that's a deliberate,
 separate decision left for whoever wants it, not assumed here.

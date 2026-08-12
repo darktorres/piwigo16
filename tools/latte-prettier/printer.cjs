@@ -228,6 +228,20 @@ function printOpenTag(node, options) {
 function printNode(node, options, mode = "block") {
   switch (node.type) {
     case "Document": {
+      // A document with no real HTML elements or Latte tags at all -- e.g.
+      // themes/default/template/mail/text/html/global-mail-css.latte, raw
+      // CSS meant to be dropped verbatim into a sibling file's <style>
+      // block via {$GLOBAL_MAIL_CSS|noescape} -- has no Latte-tag/element
+      // boundaries for the usual gap-based item reformatting below to work
+      // from: the whole file is one continuous HtmlText run, so it would
+      // go through textFillDoc and have every deliberate line break in
+      // hand-formatted multi-line CSS collapsed into a single unreadable
+      // line. Preserve it byte-verbatim instead (just trimmed of the
+      // outer whitespace the trailing hardline below already accounts for).
+      if (node.children.length && node.children.every((c) => c.type === "HtmlText")) {
+        const raw = node.children.map((c) => c.value).join("");
+        return [raw.trim(), hardline];
+      }
       const { items } = buildContentSequence(node.children);
       const parts = [];
       for (let i = 0; i < items.length; i++) {

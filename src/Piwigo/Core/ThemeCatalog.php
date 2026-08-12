@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Projection\ThemeListing;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\GetPwgThemes;
@@ -34,6 +35,31 @@ final class ThemeCatalog
 
         $conn = DbConnection::build();
         $rows = EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class)->findAllIdsAndNames();
+
+        // AppInfo::DEFAULT_TEMPLATE is a base layer other themes load on
+        // top of, never something a real install activates (see
+        // ExtensionLifecycle::performThemeAction()'s own $id === 'default'
+        // no-op guard) -- it deliberately never gets a real `themes` row.
+        // Unlike upstream Piwigo (which never surfaces this: a real
+        // account's theme is always the genuinely-activatable 'modus',
+        // never the base theme), this fork ships no other theme yet, so
+        // every account's theme is this one -- synthesize its row here,
+        // ahead of the loop below, so it passes through the exact same
+        // mobile-suffix/checkThemeInstalled() handling as a real row
+        // rather than being merged in separately afterward.
+        $hasDefaultRow = false;
+        foreach ($rows as $row) {
+            if ($row->id === AppInfo::DEFAULT_TEMPLATE) {
+                $hasDefaultRow = true;
+
+                break;
+            }
+        }
+
+        if (! $hasDefaultRow) {
+            $rows[] = new ThemeListing(AppInfo::DEFAULT_TEMPLATE, $lang->t('Default'));
+        }
+
         foreach ($rows as $row) {
             $id = $row->id;
             $name = $row->name;

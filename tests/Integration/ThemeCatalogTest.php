@@ -89,11 +89,15 @@ final class ThemeCatalogTest extends IntegrationTestCase
             $this->conn->executeStatement("DELETE FROM themes WHERE id = 'broken-theme'");
         }
 
-        // The fixture's themes table is otherwise empty, so a
-        // fully empty result confirms the row was skipped, not merely
-        // filtered out for some unrelated reason.
+        // The fixture's themes table is otherwise empty -- getPwgThemes()
+        // always synthesizes a 'default' entry regardless (see its own
+        // docblock), so a result containing only that confirms the
+        // null-named row was skipped, not merely filtered out for some
+        // unrelated reason.
         expect($themes)
-            ->toBe([]);
+            ->toBe([
+                'default' => 'Default',
+            ]);
     }
 
     public function testGetPwgThemesSkipsTheConfiguredMobileThemeWhenShowMobileIsFalse(): void
@@ -113,8 +117,13 @@ final class ThemeCatalogTest extends IntegrationTestCase
             $this->conn->executeStatement("DELETE FROM themes WHERE id = 'mobile-candidate'");
         }
 
+        // getPwgThemes() always synthesizes a 'default' entry (see its own
+        // docblock) -- confirms 'mobile-candidate' itself was hidden, not
+        // merely that the whole result happened to be empty.
         expect($themes)
-            ->toBe([]);
+            ->toBe([
+                'default' => 'Default',
+            ]);
     }
 
     public function testGetPwgThemesAppendsTheMobileSuffixAndIncludesTheThemeWhenShowMobileIsTrue(): void
@@ -163,5 +172,36 @@ final class ThemeCatalogTest extends IntegrationTestCase
             // Integration test's own getPwgThemes()/EventDispatcher call.
             EventDispatcherTestFactory::get()->reset();
         }
+    }
+
+    public function testGetPwgThemesSynthesizesTheDefaultThemeAndStillExposesItToTheGetPwgThemesEvent(): void
+    {
+        // No themes row at all (this file's own fixture starts and stays
+        // empty) -- confirms 'default' is present even with nothing in
+        // the DB, not just when a real row happens to exist.
+        $handler = static function (GetPwgThemes $event): GetPwgThemes {
+            $themes = $event->themes;
+            if (isset($themes['default']) && is_string($themes['default'])) {
+                $themes['default'] .= ' (filtered)';
+            }
+
+            return new GetPwgThemes($themes);
+        };
+        EventDispatcherTestFactory::get()->addTypedHandler(GetPwgThemes::class, $handler);
+
+        try {
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get());
+        } finally {
+            EventDispatcherTestFactory::get()->removeEventHandler(GetPwgThemes::class, $handler);
+        }
+
+        // The suffix only lands if the handler actually received 'default'
+        // in $event->themes -- proves the synthetic entry flows through
+        // the real GetPwgThemes event like any other row, not as a
+        // special-cased bypass of the plugin filter hook.
+        expect($themes)
+            ->toBe([
+                'default' => 'Default (filtered)',
+            ]);
     }
 }

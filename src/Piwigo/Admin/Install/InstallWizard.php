@@ -330,13 +330,10 @@ final class InstallWizard
         // connections are lazy (no real socket opens until a query
         // actually runs), so this is safe even before real credentials
         // are submitted -- Template's own get_device modifier is never
-        // actually invoked by install.tpl, so the DB is never touched in
+        // actually invoked by install.latte, so the DB is never touched in
         // practice either.
         $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->paths->root . 'themes/admin', ThemeId::from('clear'));
         $this->currentTemplate->set($template);
-        $template->setFilenames([
-            'install' => 'install.tpl',
-        ]);
         $this->template = $template;
     }
 
@@ -790,6 +787,6 @@ final class InstallWizard
         ));
 
         // ------------------------------------------------- html code display
-        $template->pparse('install');
+        $template->pparse('install.latte');
     }
 }

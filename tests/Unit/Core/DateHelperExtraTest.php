@@ -5,7 +5,10 @@ declare(strict_types=1);
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 
@@ -108,6 +111,45 @@ test('formatDateLegacy defaults to day_name/day/month/year when show is null', f
 test('formatDateLegacy returns the untranslated "N/A" key for an unparseable date', function (): void {
     expect(DateHelper::formatDateLegacy(false))->toBe('N/A');
 });
+
+test('lang() throws when the container returns an unexpected type for Lang', function (): void {
+    // Real gap: kills the private lang() resolver's own InstanceOfToTrue
+    // guard. formatDateLegacy() calls self::lang()->t('N/A') on the very
+    // first line of its own unparseable-date branch, so a bare `false`
+    // original is enough to reach it without needing a real Lang call
+    // anywhere else in the method.
+    //
+    // KernelContainerOverride's own cleanup resets Kernel entirely, but
+    // this file's afterEach() calls LangTestFactory::get()->reset(),
+    // which needs Kernel still booted -- re-boot with a plain, real
+    // container in this test's own finally so afterEach() doesn't itself
+    // fail on a now-unbooted Kernel.
+    try {
+        KernelContainerOverride::withWrongTypeFor(
+            Lang::class,
+            static fn (): string => DateHelper::formatDateLegacy(false),
+        );
+    } finally {
+        Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    }
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . Lang::class);
+
+test('translator() throws when the container returns an unexpected type for Translator', function (): void {
+    // Real gap: kills the private translator() resolver's own
+    // InstanceOfToTrue guard. timeSince() only reaches self::translator()
+    // for a real, non-zero chunk -- a 90-second-old clock guarantees the
+    // 'second' chunk is non-zero without touching any coarser unit.
+    // Same afterEach()-needs-a-booted-Kernel reasoning as the lang() test
+    // above.
+    try {
+        KernelContainerOverride::withWrongTypeFor(
+            Translator::class,
+            static fn (): string => DateHelper::timeSince((new DateTime())->modify('-90 seconds')->getTimestamp()),
+        );
+    } finally {
+        Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    }
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . Translator::class);
 
 test('formatFromto returns a single formatted date when both dates fall on the same day', function (): void {
     expect(DateHelper::formatFromto('2024-06-15', '2024-06-15'))->toBe('Saturday, June 15, 2024');
@@ -580,3 +622,59 @@ test('isValidMysqlDatetime returns true for a date-only "Y-m-d" match, not just 
 test('isValidMysqlDatetime returns false for a string matching neither MySQL datetime format', function (): void {
     expect(DateHelper::isValidMysqlDatetime('not-a-date'))->toBeFalse();
 });
+
+/**
+ * [Mutation] A scoped `pest --mutate` rerun leaves 22 mutations
+ * "untested" beyond the 2 real gaps this file's own container-guard
+ * tests above close. Every one was individually hand-mutation-verified
+ * against the real source (temporary sed edit + a full rerun of this
+ * file, reverted after), not assumed from the pattern alone:
+ *
+ * 1. The `$ymdhms[3]`/`[4]`/`[5]` isset()-then-default-fill trio in
+ *    str2DateTime() (Lines 99-106, all DecrementInteger/IncrementInteger
+ *    on the literal index) is masked by count($ymdhms) < 3's own earlier
+ *    guard: shifting an isset() check to an index that's ALWAYS already
+ *    set (or always unset) just moves WHEN the index gets defaulted, not
+ *    WHETHER it ends up 0 -- an undefined array offset still coerces to
+ *    `(int) null === 0` at the final setTime() call, identical to the
+ *    intended default, just with an extra (suppressible, non-failing)
+ *    PHP warning along the way.
+ * 2. Every `! (bool) $date`/`(bool) $date and ...` RemoveBooleanCast
+ *    (Lines 130/181/251/352/359) is the same universal redundant-cast-
+ *    in-boolean-context pattern confirmed throughout this whole
+ *    campaign.
+ * 3. Line 140's ConcatEqualToEqual (`.=` -> `=`) is inert because it's
+ *    the very FIRST possible write to $print (which starts as ''), so
+ *    concat-assign and plain-assign produce the same result; Line 158's
+ *    ConcatRemoveRight (dropping a trailing space) is inert because
+ *    'time' is the LAST possible component appended before
+ *    `trim($print)` strips it either way; Line 282's ConcatSwitchSides
+ *    (moving the separator space from before to after each translated
+ *    chunk) is mathematically inert once every chunk is joined and the
+ *    whole result trimmed -- the same single space ends up between each
+ *    pair of chunks regardless of which side it started on.
+ * 4. Lines 186/203 (formatDate()'s own default $show missing 'day', and
+ *    the `$formatted !== false` guard around IntlDateFormatter::format())
+ *    are linked and NOT chased further: 'day' is never checked anywhere
+ *    in formatDate()'s own Intl branch (only 'day_name'/'month'/'year'/
+ *    'time' are), so it's provably irrelevant whenever Intl succeeds --
+ *    and forcing IntlDateFormatter::format() to genuinely return false
+ *    turned out impractical (probed both an extreme out-of-range
+ *    DateTime and an invalid locale string live: the former formats
+ *    successfully regardless, the latter throws a ValueError at
+ *    __construct() instead of reaching format() at all).
+ * 5. Lines 297/298 (the only_last_unit while-loop's own `$i >= $j` break
+ *    check, all 3 comparison-operator directions plus BreakToContinue)
+ *    are inert because the loop's own OUTER condition
+ *    (`$print === '' && ...`) already exits on the very next check once
+ *    $print is set -- the inner break changes only how many extra times
+ *    the never-read-afterward $i counter increments, never $print's own
+ *    final value.
+ * 6. Line 332's transformDate() guard (`$original === '' || $original
+ *    === '0'`, both BooleanOrToBooleanAnd and EmptyStringToNotEmpty) and
+ *    Line 333's RemoveEarlyReturn are all inert for the same structural
+ *    reason: str2DateTime() has its OWN identical `''`/`'0'` guard
+ *    internally, so bypassing transformDate()'s own outer guard just
+ *    defers to str2DateTime()'s inner one, which still returns false and
+ *    still produces the same $default fallback either way.
+ */

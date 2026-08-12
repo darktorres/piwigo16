@@ -1,8 +1,7 @@
-<form method="post" action="{$F_ACTION}" id="cat_options">
+<form method="post" action="{$F_ACTION|noescape}" id="cat_options">
   <fieldset>
     <legend>{$L_SECTION}</legend>
-    {$DOUBLE_SELECT}
+    {$DOUBLE_SELECT|noescape}
   </fieldset>
 <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
 </form>
-

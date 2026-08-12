@@ -69,12 +69,6 @@ final readonly class CatOptionsPageRenderer
                 ->setCategoryOption($catOptionsRequest->catFalse, $catOptionsRequest->sectionRaw, true, $this->activityService);
         }
 
-        $template->setFilenames(
-            [
-                'cat_options' => 'cat_options.tpl',
-            ]
-        );
-
         $section = $catOptionsRequest->section;
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&amp;section=';
 
@@ -152,6 +146,6 @@ final readonly class CatOptionsPageRenderer
         ));
 
         $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'cat_options');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_options.latte');
     }
 }

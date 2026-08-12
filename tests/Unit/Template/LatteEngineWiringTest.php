@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -73,7 +74,9 @@ test('parse() renders a real .latte file through Latte, exercising a filter, the
         ,
     );
     $t->setTemplateDir($tplDir);
-    $t->smarty->assign('name', 'world');
+    $t->assignContext(new AdHocPageContext([
+        'name' => 'world',
+    ]));
 
     $output = $t->parse('fixture.latte', true);
 
@@ -107,7 +110,9 @@ test('assignVarFromTemplate() renders a real .latte file and assigns the result 
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . '/partial.latte', 'Hello {$name}');
     $t->setTemplateDir($tplDir);
-    $t->smarty->assign('name', 'World');
+    $t->assignContext(new AdHocPageContext([
+        'name' => 'World',
+    ]));
 
     $t->assignVarFromTemplate('greeting', 'partial.latte');
 

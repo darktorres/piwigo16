@@ -60,7 +60,7 @@ final readonly class PageTailRenderer
     {
         $this->prepareTail($startTime);
         $this->currentTemplate->get()
-            ->p();
+            ->flush();
     }
 
     /**

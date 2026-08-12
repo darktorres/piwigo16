@@ -13,7 +13,6 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
@@ -92,7 +91,6 @@ function noPhotoYetTestRenderer(AdminContext $adminContext): NoPhotoYetRenderer
         CurrentUserTestFactory::get(),
         CurrentTemplateTestFactory::get(),
         CurrentConfigTestFactory::get(),
-        new PageState(),
         new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir())),
         new ProcessCache(),
         CurrentConfigServiceTestFactory::get(),

@@ -604,10 +604,16 @@ test('getMailTemplate resolves the real, absolute theme root and the given email
     $htmlTemplate = $service->getMailTemplate('text/html');
     $plainTemplate = $service->getMailTemplate('text/plain');
 
-    expect($htmlTemplate->smarty->getTemplateDir())
-        ->toBe([$fakeRoot->root . 'themes/default/template/mail/text/html/']);
-    expect($plainTemplate->smarty->getTemplateDir())
-        ->toBe([$fakeRoot->root . 'themes/default/template/mail/text/plain/']);
+    // No trailing slash: unlike the old Smarty engine (which normalized
+    // every registered template dir), Template::getTemplateDir() now
+    // returns the exact string setTheme()/setTemplateDir() built --
+    // 'root/theme/path' with no separate normalization step. No real
+    // production caller ever depended on the trailing slash (this method
+    // has none at all besides this test).
+    expect($htmlTemplate->getTemplateDir())
+        ->toBe($fakeRoot->root . 'themes/default/template/mail/text/html');
+    expect($plainTemplate->getTemplateDir())
+        ->toBe($fakeRoot->root . 'themes/default/template/mail/text/plain');
 });
 
 test('getStrEmailFormat maps the html flag to a MIME content type', function (): void {

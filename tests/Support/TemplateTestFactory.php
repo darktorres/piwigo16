@@ -14,7 +14,6 @@ use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
@@ -43,7 +42,7 @@ use Throwable;
  * (SessionRepository extends Doctrine's lazy EntityRepository), so a
  * throwaway instance built from a fresh DbConnection::build() is safe as
  * the no-Kernel-booted fallback -- it is only queried if Template's
- * get_device modifier is invoked, which no production template does.
+ * get_device function is invoked, which no production template does.
  */
 final class TemplateTestFactory
 {
@@ -57,7 +56,6 @@ final class TemplateTestFactory
             self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
             self::resolve(AdminContext::class) ?? new AdminContext(),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
-            self::resolve(PageState::class) ?? new PageState(),
             self::resolve(ErrorCollector::class) ?? new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir())),
             self::resolve(ProcessCache::class) ?? new ProcessCache(),
             self::resolve(CurrentConfigService::class) ?? new CurrentConfigService(),

@@ -2,10 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
-use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -20,28 +17,9 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Users\User;
-use Piwigo\Users\UserStatus;
-use Smarty\Smarty;
 
-// getPhpStrVal() stays a static, instance-free utility (the only
-// remaining eval() surface in this codebase) -- tested directly with no
-// Template instance needed. modcompilerTranslate()/modcompilerTranslateDec()
-// are real instance methods, reading their own compile-time
-// CurrentConfig/Lang checks onto $this->currentConfig/$this->lang -- the
-// literal compiled-cache-text return values they still produce are
-// untouched, a documented permanent exception (see Template's own
-// docblock) -- so these tests build a real instance via
-// TemplateTestFactory::build(), the same "point CurrentPaths/Paths
-// at a fresh temp root" way PictureRateRendererTest.php's own docblock
-// establishes elsewhere in this suite.
-//
-// modcompilerTranslate() goes through $this->lang->t(); Lang is a real,
-// container-shared instance that delegates to TranslatorTestFactory::get()'s
-// singleton -- reset both, matching LangTest.php's own established
-// pattern, so no test's loaded PO state/lang table leaks into another.
 // LangTestFactory::get() is a live container resolve with no pre-boot
-// fallback (unlike TranslatorTestFactory::get()), so this file also
+// fallback (unlike TranslatorTestFactory::get()), so this file
 // boots/resets a real Kernel around each test. A real Paths must be
 // supplied to boot() too -- Lang's own constructor needs one, and PHP-DI
 // can't autowire Paths on its own (every property is a required string
@@ -154,247 +132,6 @@ test('assignContext flattens a TemplatePageContext to individually-assigned temp
         ->toBe(42);
 });
 
-test('getPhpStrVal evaluates a single-quoted PHP string literal', function (): void {
-    expect(Template::getPhpStrVal("'hello world'"))->toBe('hello world');
-});
-
-test('getPhpStrVal evaluates a double-quoted PHP string literal', function (): void {
-    expect(Template::getPhpStrVal('"hello world"'))->toBe('hello world');
-});
-
-test('getPhpStrVal returns null for an unquoted value', function (): void {
-    expect(Template::getPhpStrVal('$variable'))->toBeNull();
-});
-
-test('getPhpStrVal returns null for a string too short to be quoted', function (): void {
-    expect(Template::getPhpStrVal("'"))->toBeNull();
-});
-
-test('getPhpStrVal evaluates a minimal 2-character empty single-quoted string', function (): void {
-    expect(Template::getPhpStrVal("''"))->toBe('');
-});
-
-test('getPhpStrVal checks the first character for a matching quote, not just the last', function (): void {
-    // Ends with a single quote but does not start with one -- under a
-    // buggy "only check the last character" implementation this would
-    // wrongly look like a valid quoted literal and attempt to eval() the
-    // syntactically invalid "5'", instead of returning null cleanly.
-    expect(Template::getPhpStrVal("5'"))->toBeNull();
-});
-
-test('getPhpStrVal checks the first character for a matching double-quote, not just the last', function (): void {
-    expect(Template::getPhpStrVal('5"'))->toBeNull();
-});
-
-test('modcompilerTranslate returns a cached lang lookup when compiled_template_cache_language is on', function (): void {
-    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
-    LangTestFactory::get()->loadArray([
-        'Comment' => 'Commentaire',
-    ]);
-
-    $result = TemplateTestFactory::build()->modcompilerTranslate(["'Comment'"]);
-
-    expect($result)
-        ->toBe(var_export('Commentaire', true));
-});
-
-test('modcompilerTranslate falls back to a runtime Template::lang()->t() call when caching is off', function (): void {
-    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = false;
-    LangTestFactory::get()->loadArray([
-        'Comment' => 'Commentaire',
-    ]);
-
-    $result = TemplateTestFactory::build()->modcompilerTranslate(["'Comment'"]);
-
-    expect($result)
-        ->toBe("\\Piwigo\\Template\\Template::lang()->t('Comment')");
-});
-
-test('modcompilerTranslate falls back to a runtime Template::lang()->t() call when the key is not in the cached lang table', function (): void {
-    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
-    LangTestFactory::get()->loadArray([]);
-
-    $result = TemplateTestFactory::build()->modcompilerTranslate(["'Unknown'"]);
-
-    expect($result)
-        ->toBe("\\Piwigo\\Template\\Template::lang()->t('Unknown')");
-});
-
-test('modcompilerTranslate wraps a runtime Template::lang()->t() call in sprintf when extra params are given', function (): void {
-    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = false;
-    LangTestFactory::get()->loadArray([]);
-
-    $result = TemplateTestFactory::build()->modcompilerTranslate(["'%d comments'", '$count']);
-
-    expect($result)
-        ->toBe("\\Piwigo\\Template\\Template::lang()->t('%d comments',\$count)");
-});
-
-test('modcompilerTranslateDec falls back to a runtime Template::lang()->plural() call when caching is off', function (): void {
-    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = false;
-
-    $result = TemplateTestFactory::build()->modcompilerTranslateDec(['$count', "'%d comment'", "'%d comments'"]);
-
-    expect($result)
-        ->toBe("\\Piwigo\\Template\\Template::lang()->plural('%d comment','%d comments',\$count)");
-});
-
-test('modcompilerTranslate wraps a cached lang lookup in sprintf when extra params are given and caching is on', function (): void {
-    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
-    LangTestFactory::get()->loadArray([
-        '%d comments' => '%d commentaires',
-    ]);
-
-    $result = TemplateTestFactory::build()->modcompilerTranslate(["'%d comments'", '$count']);
-
-    expect($result)
-        ->toBe('sprintf(' . var_export('%d commentaires', true) . ',$count)');
-});
-
-test('modcompilerTranslateDec builds a plain >1 ternary from cached lang lookups when caching is on and zero is not plural', function (): void {
-    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
-    LangTestFactory::get()->setLangInfo([
-        'zero_plural' => false,
-    ]);
-    LangTestFactory::get()->loadArray([
-        '%d comment' => '%d commentaire',
-        '%d comments' => '%d commentaires',
-    ]);
-
-    $result = TemplateTestFactory::build()->modcompilerTranslateDec(['$count', "'%d comment'", "'%d comments'"]);
-
-    expect($result)
-        ->toBe("sprintf((\$tmp=(\$count))>1?'%d commentaires':'%d commentaire',\$tmp)");
-});
-
-test('modcompilerTranslateDec also treats zero as plural when zero_plural is set', function (): void {
-    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
-    LangTestFactory::get()->setLangInfo([
-        'zero_plural' => true,
-    ]);
-    LangTestFactory::get()->loadArray([
-        '%d comment' => '%d commentaire',
-        '%d comments' => '%d commentaires',
-    ]);
-
-    $result = TemplateTestFactory::build()->modcompilerTranslateDec(['$count', "'%d comment'", "'%d comments'"]);
-
-    expect($result)
-        ->toBe("sprintf((\$tmp=(\$count))>1||\$tmp==0?'%d commentaires':'%d commentaire',\$tmp)");
-});
-
-test('modExplode splits on the given delimiter', function (): void {
-    expect(Template::modExplode('a,b,c', ','))->toBe(['a', 'b', 'c']);
-});
-
-test('modExplode defaults to comma when no delimiter is given', function (): void {
-    expect(Template::modExplode('a,b,c'))->toBe(['a', 'b', 'c']);
-});
-
-test('modExplode throws for an empty delimiter', function (): void {
-    Template::modExplode('a,b,c', '');
-})->throws(Exception::class, 'modExplode(): delimiter must not be empty');
-
-test('modTernary returns the true branch for a truthy param', function (): void {
-    expect(Template::modTernary(1, 'yes', 'no'))->toBe('yes');
-});
-
-test('modTernary returns the false branch for a falsy param', function (): void {
-    expect(Template::modTernary(0, 'yes', 'no'))->toBe('no');
-});
-
-test('modTernary returns the false branch for an empty string param', function (): void {
-    expect(Template::modTernary('', 'yes', 'no'))->toBe('no');
-});
-
-test('postfilterLanguage replaces a compiled echo-string-literal with its evaluated value', function (): void {
-    // $smarty is genuinely unused by this method's own body -- a bare
-    // Smarty instance (no template dirs configured) is enough to satisfy
-    // the parameter type.
-    $result = Template::postfilterLanguage("<?php echo 'Hello World';?>\n", new Smarty());
-
-    expect($result)
-        ->toBe('Hello World');
-});
-
-test('postfilterLanguage handles a double-quoted literal and leaves non-matching PHP untouched', function (): void {
-    $result = Template::postfilterLanguage("<?php echo \"Bonjour\";?>\n<?php \$x = 1; ?>\n", new Smarty());
-
-    expect($result)
-        ->toBe("Bonjour<?php \$x = 1; ?>\n");
-});
-
-test('prefilterWhiteSpace strips leading whitespace before every recognized tag, and their closing counterparts where applicable', function (): void {
-    // Trailing "END" sentinel line: without something after the last real
-    // tag, \s*$ (greedy, multiline) would swallow the source string's own
-    // final newline too -- a pre-existing quirk of this regex, not
-    // something this test is trying to pin down.
-    $source = "  {if x}\n  {/if}\n  {foreach x}\n  {/foreach}\n  {section x}\n  {/section}\n  {footer_script}\n  {/footer_script}\n  {include x}\n  {else}\n  {combine_script x}\n  {html_head}\nEND\n";
-
-    $result = Template::prefilterWhiteSpace($source, new Smarty());
-
-    $expected = "{if x}\n{/if}\n{foreach x}\n{/foreach}\n{section x}\n{/section}\n{footer_script}\n{/footer_script}\n{include x}\n{else}\n{combine_script x}\n{html_head}\nEND\n";
-    expect($result)
-        ->toBe($expected);
-});
-
-// --- constructor-registered is_admin/is_classic_user modifier defaults -----
-//
-// Smarty always calls a piped `|is_admin`/`|is_classic_user` modifier with
-// the piped value as its one argument, so these closures' own `$userStatus
-// = ''` default is unreachable through ordinary `{$x|is_admin}` template
-// syntax -- but the closures themselves are real, directly reachable PHP
-// values via Smarty's own public `registered_plugins` property (already
-// established as a legitimate access path by
-// TemplateInstanceTest.php:420), so calling the registered closure
-// directly with zero arguments exercises that default exactly like any
-// other real caller reaching it (AccessLevelChecker::getUserStatus()'s own
-// `$userStatus === ''` branch falls back to the real current user).
-
-test('constructor registers an is_admin modifier that reads the current user\'s own status when called with no argument', function (): void {
-    CurrentUserTestFactory::get()->set(new User(
-        id: UserId::from(7),
-        username: Username::from('admin-user'),
-        email: null,
-        language: LangCode::from('en_GB'),
-        theme: ThemeId::from('dummy'),
-        status: UserStatus::Admin,
-        enabledHigh: false,
-    ));
-
-    $t = TemplateTestFactory::build();
-    // Smarty's own @var array docblock on $registered_plugins (vendor/
-    // smarty/smarty/src/Smarty.php) doesn't specify the real nested shape
-    // -- registerPlugin() always stores [callback, cacheable] pairs keyed
-    // by [type][name].
-    /** @var array<string, array<string, array{0: callable, 1: bool}>> $registeredPlugins */
-    $registeredPlugins = $t->smarty->registered_plugins;
-    $isAdmin = $registeredPlugins['modifier']['is_admin'][0];
-
-    expect($isAdmin())
-        ->toBeTrue();
-});
-
-test('constructor registers an is_classic_user modifier that reads the current user\'s own status when called with no argument', function (): void {
-    CurrentUserTestFactory::get()->set(new User(
-        id: UserId::from(8),
-        username: Username::from('normal-user'),
-        email: null,
-        language: LangCode::from('en_GB'),
-        theme: ThemeId::from('dummy'),
-        status: UserStatus::Normal,
-        enabledHigh: false,
-    ));
-
-    $t = TemplateTestFactory::build();
-    /** @var array<string, array<string, array{0: callable, 1: bool}>> $registeredPlugins */
-    $registeredPlugins = $t->smarty->registered_plugins;
-    $isClassicUser = $registeredPlugins['modifier']['is_classic_user'][0];
-
-    expect($isClassicUser())
-        ->toBeTrue();
-});
-
 // --- container-resolver LogicException guards -------------------------------
 //
 // Every real Kernel::container()->get(X::class) call in config/container.php
@@ -410,15 +147,22 @@ test('constructor registers an is_classic_user modifier that reads the current u
 // in particular, which has no pre-boot fallback) requires a booted Kernel.
 
 test('urlService resolver throws when the container returns an unexpected type', function (): void {
+    // Construction alone no longer touches urlService() (the old Smarty
+    // modifier registrations that resolved it eagerly are gone) -- parse()
+    // is the real, live call site that still needs it, for its own
+    // ROOT_URL assign. Passing __FILE__ (a real, absolute, existing path)
+    // takes resolveLatteTemplatePath()'s own short-circuit branch, so
+    // parse() reaches the urlService() call instead of failing earlier
+    // via htmlRenderer()->fatalError() on an unresolvable file -- Latte
+    // never actually renders this PHP file, since urlService() throws
+    // first.
+    $t = TemplateTestFactory::build();
+
     expect(static fn (): mixed => KernelContainerOverride::with(
         [
-            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
             UrlServiceInterface::class => new stdClass(),
         ],
-        static function (): void {
-            CurrentConfigTestFactory::get()->dataDirChecked = '1';
-            TemplateTestFactory::build();
-        }
+        static fn (): ?string => $t->parse(__FILE__)
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . UrlServiceInterface::class);
 
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
@@ -506,9 +250,9 @@ test('setTheme lets a parent theme\'s own load_parent_css/load_parent_local_head
     expect($themes)
         ->toHaveCount(2);
     // The parent's own setTheme() call (and therefore its own
-    // smarty->append('themes', ...)) runs during the child's recursive
-    // call, before the child appends its own entry -- so the parent's
-    // entry comes first.
+    // append('themes', ...)) runs during the child's recursive call,
+    // before the child appends its own entry -- so the parent's entry
+    // comes first.
     expect($themes[0]['id'])->toBe('gap-parent');
     // A CoalesceRemoveLeft or TernaryNegated mutation on either
     // load_parent_css or load_parent_local_head makes this recursive call
@@ -539,7 +283,7 @@ test('setTheme does not recurse into a non-string parent themeconf value', funct
     );
 
     $t = TemplateTestFactory::build();
-    $t->setTheme($root, 'gap-child-nonstring-parent', 'template');
+    $t->setTheme($root, ThemeId::from('gap-child-nonstring-parent'), 'template');
 
     $themes = template_test_themes($t);
     expect($themes)

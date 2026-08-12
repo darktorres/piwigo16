@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
-use Exception;
 use Latte\Runtime\Html;
 use LogicException;
 use Override;
@@ -22,20 +21,17 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\TemplateExtension;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TemplatePageContext;
 use Piwigo\Core\ThemeConfProviderInterface;
-use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
@@ -45,10 +41,6 @@ use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\Request\TemplateExtentsRequest;
-use Smarty\Debug;
-use Smarty\Smarty;
-use Smarty\Template as SmartyTemplate;
-use Smarty\TemplateBase;
 
 /**
  * The data_dir_checked write inside __construct() goes through
@@ -66,33 +58,34 @@ use Smarty\TemplateBase;
  *
  * Every `mixed` below stays that way by design: assign()/append()/
  * getTemplateVars() mirror Smarty's own arbitrary-value assign()
- * contract (see TemplateInterface's own rationale); every mod_*()/
- * block_*()/func_*() modifier/block/function plugin's $param(s) is
- * Smarty's own tag-attribute API -- genuinely template-author-supplied,
- * already defensively is_string()/is_scalar()/is_numeric()-validated at
- * each real use site (see funcDefineDerivative() for the fullest
- * example), the same "parse, don't trust" boundary as InputValidator.
+ * contract (see TemplateInterface's own rationale); every
+ * defineDerivative()/htmlHead()/etc. Latte-facing function's $param(s)
+ * is genuinely template-author-supplied, already defensively
+ * is_string()/is_scalar()/is_numeric()-validated at each real use site,
+ * the same "parse, don't trust" boundary as InputValidator.
  */
 final class Template implements ThemeConfProviderInterface, TemplateInterface
 {
-    public Smarty $smarty;
-
     public string $output = '';
 
     /**
-     * @var string[] - Hash of filenames for each template handle.
+     * Plain-array replacement for Smarty's own `Data::$tpl_vars` --
+     * `assign()`/`append()`/`getTemplateVars()`/`clearAssign()` below
+     * replicate Smarty's own semantics exactly (confirmed against
+     * `vendor/smarty/smarty/src/Data.php` before removing the real
+     * `Smarty\Smarty` engine this class used to delegate to), since
+     * `setTheme()`'s parent/child theme accumulation (a plain-list
+     * `append()` for `themes`, a key-merging `append(..., true)` for
+     * `themeconf`) depends on getting that precisely right.
+     *
+     * @var array<string, mixed>
      */
-    public array $files = [];
+    private array $vars = [];
 
     /**
      * @var string[] - Template extents filenames for each template handle.
      */
     public array $extents = [];
-
-    /**
-     * @var array<string, array<int, array<int, array{0: string, 1: callable}>>> - Templates prefilter from external sources (plugins)
-     */
-    public array $external_filters = [];
 
     /**
      * @var string[] - Content to add before </head> tag
@@ -123,12 +116,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public array $index_buttons = [];
 
     /**
-     * Plain-array mirror of the directory chain `setTemplateDir()` also
-     * hands to `$this->smarty->addTemplateDir()` -- Smarty's own chain
-     * isn't reachable from the Latte dispatch path added for P31, so this
-     * class tracks it itself instead of delegating entirely to Smarty for
-     * directory resolution, same shape as `resolveLatteTemplatePath()`
-     * uses it.
+     * The theme/template-extension directory chain, in resolution order --
+     * read by `resolveLatteTemplatePath()` to find a bare `.latte`
+     * filename's real path.
      *
      * @var list<string>
      */
@@ -159,7 +149,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         private readonly Lang $lang,
         private readonly AdminContext $adminContext,
         private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
         private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
         private readonly CurrentConfigService $currentConfigService,
@@ -170,28 +159,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         ?ThemeId $theme = null,
         string $path = 'template'
     ) {
-        // \Smarty\Exception::$escape = false;
-
         $this->scriptLoader = new ScriptLoader();
         $this->cssLoader = new CssLoader();
-        $this->smarty = new Smarty();
-        $this->smarty->escape_html = false;
-        // CurrentConfig::debugTemplate() is SCHEMA-typed 'bool' only -- the
-        // int=2 "per-template debug window" mode Smarty's own $debugging
-        // property supports (vendor/smarty/smarty/src/Smarty.php) isn't a
-        // reachable value here, so no is_int() passthrough is needed.
-        $this->smarty->debugging = $this->currentConfig->debugTemplate;
-        if (! $this->smarty->debugging) {
-            $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
-        }
-        // compile_check/force_compile mirror Smarty's own setCompileCheck()/
-        // setForceCompile() coercions (vendor/smarty/smarty/src/TemplateBase.php,
-        // vendor/smarty/smarty/src/Smarty.php), whose own @var docblocks
-        // (int / boolean respectively) don't carry the same bool|int
-        // flexibility as $debugging above.
-        $compile_check = $this->currentConfig->templateCompileCheck;
-        $this->smarty->compile_check = (int) $compile_check;
-        $this->smarty->force_compile = $this->currentConfig->templateForceCompile;
 
         $conf_data_location = $this->currentConfig->dataLocation;
 
@@ -252,72 +221,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             }
         }
 
-        $compile_dir = $this->paths->root . $conf_data_location . 'templates_c';
-        FilesystemHelper::mkgetdir($compile_dir, $this->currentConfig);
+        $this->assign('pwg', new TemplateAdapter($this->currentConfig));
 
-        $this->smarty->setCompileDir($compile_dir);
-
-        $this->smarty->assign('pwg', new TemplateAdapter($this->currentConfig));
-        $this->smarty->registerPlugin('modifiercompiler', 'translate', $this->modcompilerTranslate(...));
-        $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', $this->modcompilerTranslateDec(...));
-        $this->smarty->registerPlugin('modifier', 'sprintf', 'sprintf');
-        $this->smarty->registerPlugin('modifier', 'urlencode', 'urlencode');
-        $this->smarty->registerPlugin('modifier', 'intval', 'intval');
-        $this->smarty->registerPlugin('modifier', 'file_exists', 'file_exists');
-        $this->smarty->registerPlugin('modifier', 'constant', 'constant');
-        $this->smarty->registerPlugin('modifier', 'json_encode', 'json_encode');
-        $this->smarty->registerPlugin('modifier', 'json_decode', 'json_decode');
-        $this->smarty->registerPlugin('modifier', 'htmlspecialchars', 'htmlspecialchars');
-        $this->smarty->registerPlugin('modifier', 'implode', 'implode');
-        $this->smarty->registerPlugin('modifier', 'stripslashes', 'stripslashes');
-        $this->smarty->registerPlugin('modifier', 'in_array', 'in_array');
-        $this->smarty->registerPlugin('modifier', 'ucfirst', 'ucfirst');
-        $this->smarty->registerPlugin('modifier', 'strstr', 'strstr');
-        $this->smarty->registerPlugin('modifier', 'stristr', 'stristr');
-        $this->smarty->registerPlugin('modifier', 'trim', 'trim');
-        $this->smarty->registerPlugin('modifier', 'md5', 'md5');
-        $this->smarty->registerPlugin('modifier', 'strtolower', 'strtolower');
-        $this->smarty->registerPlugin('modifier', 'str_ireplace', 'str_ireplace');
-        $this->smarty->registerPlugin('modifier', 'explode', self::modExplode(...));
-        $this->smarty->registerPlugin('modifier', 'ternary', self::modTernary(...));
-        $this->smarty->registerPlugin('modifier', 'get_extent', $this->getExtent(...));
-        $this->smarty->registerPlugin('block', 'html_head', $this->blockHtmlHead(...));
-        $this->smarty->registerPlugin('block', 'html_style', $this->blockHtmlStyle(...));
-        $this->smarty->registerPlugin('function', 'combine_script', $this->funcCombineScript(...));
-        $this->smarty->registerPlugin('function', 'get_combined_scripts', $this->funcGetCombinedScripts(...));
-        $this->smarty->registerPlugin('function', 'combine_css', $this->funcCombineCss(...));
-        $this->smarty->registerPlugin('function', 'define_derivative', $this->funcDefineDerivative(...));
-        $this->smarty->registerPlugin('compiler', 'get_combined_css', $this->funcGetCombinedCss(...));
-        $this->smarty->registerPlugin('block', 'footer_script', $this->blockFooterScript(...));
-        $this->smarty->registerFilter('pre', self::prefilterWhiteSpace(...));
-        $this->smarty->registerPlugin('modifier', 'url_is_remote', self::urlService()->urlIsRemote(...));
-        $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
-        $this->smarty->registerPlugin('modifier', 'l10n', $this->lang->t(...));
-        $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        // AccessLevelChecker has no dependency chain that can throw -- a
-        // required constructor property is safe here, including for
-        // InstallWizard::render()'s own Template construction before
-        // submitted DB credentials are known to be valid.
-        $this->smarty->registerPlugin('modifier', 'is_admin', fn (string $userStatus = ''): bool => $this->accessLevelChecker->isAdmin($userStatus));
-        $this->smarty->registerPlugin('modifier', 'is_classic_user', fn (string $userStatus = ''): bool => $this->accessLevelChecker->isClassicUser($userStatus));
-        $this->smarty->registerPlugin('modifier', 'get_device', fn (): string => DeviceHelper::getDevice($this->sessionService));
-        $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
-        $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
-        $this->smarty->registerPlugin('modifier', 'preg_match', 'preg_match');
-        $this->smarty->registerPlugin('modifier', 'get_gallery_home_url', self::urlService()->getGalleryHomeUrl(...));
-        $this->smarty->registerPlugin('modifier', 'sizeOf', 'sizeOf');
-        $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
-
-        if ($this->currentConfig->compiledTemplateCacheLanguage) {
-            $this->smarty->registerFilter('post', self::postfilterLanguage(...));
-        }
-
-        $this->smarty->setTemplateDir([]);
         if ($theme instanceof ThemeId) {
             $this->setTheme($root, $theme, $path);
-            if (! $this->adminContext->isActive()) {
-                $this->setPrefilter('header', fn (string $source, SmartyTemplate $smarty): string => self::prefilterLocalCss($source, $smarty, $this->paths));
-            }
         } else {
             $this->setTemplateDir($root);
         }
@@ -332,7 +239,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         $this->lang->setLangInfo($lang_info);
-        $this->smarty->assign('lang_info', $lang_info);
+        $this->assign('lang_info', $lang_info);
 
         if (! $this->adminContext->isActive()) {
             // setExtents() itself stays untouched -- it's also called by
@@ -372,17 +279,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * `public` (unlike urlService() above) and referenced by its
-     * fully-qualified name: the generated PHP source text
-     * (modcompilerTranslate()/modcompilerTranslateDec()'s own output)
-     * is spliced by Smarty into `templates_c/*.php` compiled-cache files
-     * and executed later by a Smarty-internal render function with no
-     * `Template` instance (`$this`) or class scope available at all -- a
-     * `private`/`self::`-style resolver like urlService() isn't reachable
-     * from there, only a real `public static` method called by its
-     * fully-qualified class name is. No pre-boot fallback needed: a
-     * Smarty template only ever compiles/renders after a real request
-     * has fully booted.
+     * `public` (unlike urlService() above) and called from well outside
+     * this class -- `Core\DateHelper`, `Core\FilesystemHelper`, and
+     * `Bootstrap\RequestBootstrap` all resolve `Lang` this way rather than
+     * carrying their own constructor-injected reference, the same
+     * permanent-exception shape `currentConfig()` below has for
+     * `themeconf.inc.php`.
      */
     public static function lang(): Lang
     {
@@ -448,7 +350,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * install.php has ever confirmed the schema exists (the
      * `derivative_settings` table doesn't exist yet on a fresh install).
      * Kept lazy here, so nothing forces this cost except
-     * funcDefineDerivative() actually running.
+     * defineDerivative() actually running.
      */
     private function imageStdParams(): ImageStdParams
     {
@@ -621,24 +523,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $themeconf['colorscheme'] = $colorscheme;
         }
 
-        $this->smarty->append('themes', $tpl_var);
-        $this->smarty->append('themeconf', $themeconf, true);
+        $this->append('themes', $tpl_var);
+        $this->append('themeconf', $themeconf, true);
     }
 
     /**
      * Adds template directory for this Template object.
-     * Also set compile id if not exists.
      */
     public function setTemplateDir(string $dir): void
     {
-        $this->smarty->addTemplateDir($dir);
         $this->templateDirs[] = $dir;
-
-        if (! isset($this->smarty->compile_id)) {
-            $compile_id = '1';
-            $compile_id .= ($real_dir = realpath($dir)) === false ? $dir : $real_dir;
-            $this->smarty->compile_id = base_convert(hash('crc32b', $compile_id), 16, 36);
-        }
     }
 
     /**
@@ -646,27 +540,17 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function getTemplateDir(): string
     {
-        $dir = $this->smarty->getTemplateDir(0);
-        return is_string($dir) ? $dir : '';
+        return $this->templateDirs[0] ?? '';
     }
 
     /**
-     * Deletes all compiled templates -- both engines' caches during the
-     * P31 transition, since a site admin clicking "clear template cache"
-     * reasonably expects both cleared together, not just whichever engine
-     * happens to render the majority of templates right now. `Piwigo\
-     * Command\CacheClearCommand` (the CLI `cache:clear`) is a *different*
-     * mechanism with a deliberately narrower, Latte-only scope -- see that
-     * class's own docblock.
+     * Deletes all compiled Latte templates -- the CLI `bin/piwigo
+     * cache:clear` (`Piwigo\Command\CacheClearCommand`) is a *different*,
+     * narrower mechanism for the same directory; see that class's own
+     * docblock.
      */
     public function deleteCompiledTemplates(): void
     {
-        $save_compile_id = $this->smarty->compile_id;
-        $this->smarty->compile_id = null;
-        $this->smarty->clearCompiledTemplate();
-        $this->smarty->compile_id = $save_compile_id;
-        file_put_contents($this->smarty->getCompileDir() . '/index.htm', 'Not allowed!');
-
         $this->clearLatteCacheDir(LatteEngine::defaultCacheDir($this->paths->root, $this->currentConfig->dataLocation));
     }
 
@@ -675,7 +559,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function getThemeconf(string $val): mixed
     {
-        $tc = $this->smarty->getTemplateVars('themeconf');
+        $tc = $this->getTemplateVars('themeconf');
         return is_array($tc) ? ($tc[$val] ?? '') : '';
     }
 
@@ -763,7 +647,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     #[Override]
     public function assignContext(TemplatePageContext $context): void
     {
-        $this->smarty->assign($context->toArray());
+        $this->assign($context->toArray());
     }
 
     /**
@@ -776,7 +660,58 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function assignVarFromTemplate(string $varname, string $file): void
     {
         $rendered = $this->parse($file, true);
-        $this->smarty->assign($varname, new Html($rendered));
+        $this->assign($varname, new Html($rendered));
+    }
+
+    /**
+     * Assigns one or more template variables -- mirrors Smarty's own
+     * `Data::assign()` polymorphic shape (a single key+value, or a bulk
+     * `array<string, mixed>` when `$var` is an array and `$value` is
+     * `null`), confirmed against `vendor/smarty/smarty/src/Data.php`
+     * before this class stopped delegating to the real Smarty engine.
+     *
+     * @param array<string, mixed>|string $var
+     */
+    private function assign(array|string $var, mixed $value = null): void
+    {
+        if (is_array($var)) {
+            foreach ($var as $key => $val) {
+                $this->assign($key, $val);
+            }
+
+            return;
+        }
+
+        $this->vars[$var] = $value;
+    }
+
+    /**
+     * Appends a value onto an existing template variable -- mirrors
+     * Smarty's own `Data::append()`: the current value (defaulting to `[]`
+     * when unset, cast to a one-element array when scalar) either gets
+     * `$value` appended as a new list element, or -- when `$merge` is true
+     * and `$value` is itself an array -- has `$value`'s own keys merged in
+     * directly. `setTheme()`'s parent/child theme accumulation depends on
+     * this exact distinction: a plain list for `themes` (each theme in the
+     * chain is its own entry), a key-merged single array for `themeconf`
+     * (child keys must win over parent keys assigned earlier).
+     */
+    private function append(string $var, mixed $value, bool $merge = false): void
+    {
+        $newValue = $this->vars[$var] ?? [];
+        if (! is_array($newValue)) {
+            $newValue = (array) $newValue;
+        }
+
+        if ($merge && is_array($value)) {
+            foreach ($value as $key => $val) {
+                $newValue[$key] = $val;
+            }
+        } else {
+            $newValue[] = $value;
+        }
+
+        $this->vars[$var] = $newValue;
     }
 
     /**
@@ -838,8 +773,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function concat(string $tpl_var, string $value): void
     {
-        $current = $this->smarty->getTemplateVars($tpl_var);
-        $this->smarty->assign(
+        $current = $this->getTemplateVars($tpl_var);
+        $this->assign(
             $tpl_var,
             (is_string($current) || $current instanceof Html ? (string) $current : '') . $value
         );
@@ -847,123 +782,49 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     /**
      * Removes an assigned template variable.
-     * @see http://www.smarty.net/manual/en/api.clear_assign.php
      */
     #[Override]
     public function clearAssign(string $tpl_var): void
     {
-        $this->smarty->clearAssign($tpl_var);
+        unset($this->vars[$tpl_var]);
     }
 
     /**
-     * Returns an assigned template variable.
-     * @see http://www.smarty.net/manual/en/api.get_template_vars.php
+     * Returns an assigned template variable, or the full assigned-var
+     * array when `$tpl_var` is omitted.
      */
     public function getTemplateVars(?string $tpl_var = null): mixed
     {
-        return $this->smarty->getTemplateVars($tpl_var);
+        if ($tpl_var === null) {
+            return $this->vars;
+        }
+
+        return $this->vars[$tpl_var] ?? null;
     }
 
     /**
      * Renders `$file` (a real filename, e.g. `'header.latte'`) and appends
      * the result to the output (or returns it if `$return` is true).
      *
-     * `$this->files`/`parseSmarty()` below are unreachable dead weight at
-     * this point -- `setFilename()`/`setFilenames()` (the only writers of
-     * `$this->files`) were removed once every real caller migrated to
-     * this direct-filename convention -- kept structurally in place only
-     * until the P31.7 Smarty-engine removal itself, so this stays a
-     * separately-verifiable, narrowly-scoped diff rather than folding the
-     * two together.
-     *
      * @phpstan-return ($return is true ? string : null)
      */
-    public function parse(string $handle, bool $return = false): ?string
+    public function parse(string $file, bool $return = false): ?string
     {
-        if (isset($this->files[$handle])) {
-            if (str_ends_with($this->files[$handle], '.latte')) {
-                return $this->parseLatte($this->files[$handle], $return);
-            }
+        // Resolve first, before touching urlService()/Lang/etc. below --
+        // confirmed live: a genuinely unresolvable $file has to fail here
+        // (TemplateTest.php's own "htmlRenderer resolver throws" case).
+        $path = $this->resolveLatteTemplatePath($file);
 
-            return $this->parseSmarty($handle, $return);
-        }
-
-        return $this->parseLatte($handle, $return);
-    }
-
-    /**
-     * @phpstan-return ($return is true ? string : null)
-     */
-    private function parseSmarty(string $handle, bool $return): ?string
-    {
-        $this->smarty->assign('ROOT_URL', self::urlService()->getRootUrl());
+        $this->assign('ROOT_URL', self::urlService()->getRootUrl());
         // ROOT_PATH is the template-side equivalent of PHPWG_ROOT_PATH for
         // the handful of templates that need a real filesystem existence
         // check (datepicker.inc.latte's own
         // `{if ($ROOT_PATH|cat:...|file_exists)}`), not a URL -- ROOT_URL
         // above is request-relative and wrong for file_exists().
-        $this->smarty->assign('ROOT_PATH', $this->paths->root);
-
-        $save_compile_id = $this->smarty->compile_id;
-        $this->loadExternalFilters($handle);
-
-        $lang_info = $this->lang->langInfo();
-        if ($this->currentConfig->compiledTemplateCacheLanguage and isset($lang_info['code']) and is_string($lang_info['code'])) {
-            $this->smarty->compile_id .= '_' . $lang_info['code'];
-        }
-
-        $v = $this->smarty->fetch($this->files[$handle]);
-
-        $this->smarty->compile_id = $save_compile_id;
-        $this->unloadExternalFilters($handle);
-
-        if ($return) {
-            return $v;
-        }
-        $this->output .= $v;
-
-        return null;
-    }
-
-    /**
-     * @phpstan-return ($return is true ? string : null)
-     */
-    private function parseLatte(string $file, bool $return): ?string
-    {
-        // Resolve first, exactly like parseSmarty()'s own "does this exist
-        // at all" check runs before any other work -- a genuinely
-        // unresolvable $file (neither a registered Smarty handle nor a
-        // real Latte file) must fail here, before touching urlService()/
-        // Lang/etc. below. Confirmed live: reordering this after the
-        // ROOT_URL assign changed which exception a broken-container edge
-        // case surfaces (TemplateTest.php's own "htmlRenderer resolver
-        // throws" case) -- resolving first keeps that failure path
-        // identical to parseSmarty()'s.
-        $path = $this->resolveLatteTemplatePath($file);
-
-        // Same ROOT_URL/ROOT_PATH assigns as parseSmarty() above, into the
-        // same shared var storage -- so both engines see them, and any
-        // later template rendered in this same request (Smarty or Latte)
-        // still finds them already assigned.
-        $this->smarty->assign('ROOT_URL', self::urlService()->getRootUrl());
-        $this->smarty->assign('ROOT_PATH', $this->paths->root);
-        // Smarty::getTemplateVars(null) always returns the full assigned-var
-        // array, string-keyed by template variable name (vendor/smarty/
-        // smarty/src/Data.php's own array_merge(...)-based implementation)
-        // -- the vendor stub just doesn't declare that precisely, hence the
-        // real (not cast-based) narrowing below.
-        $rawParams = $this->smarty->getTemplateVars();
-        $params = [];
-        if (is_array($rawParams)) {
-            foreach ($rawParams as $key => $value) {
-                if (is_string($key)) {
-                    $params[$key] = $value;
-                }
-            }
-        }
+        $this->assign('ROOT_PATH', $this->paths->root);
 
         $v = $this->latteEngine()
-            ->render($path, $params);
+            ->render($path, $this->vars);
 
         if ($return) {
             return $v;
@@ -1069,388 +930,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Same as flush() but with optional debugging.
-     * @see Template::flush()
-     */
-    public function p(): void
-    {
-        $this->flush();
-
-        if ((bool) $this->smarty->debugging) {
-            $this->smarty->assign(
-                [
-                    'AAAA_DEBUG_TOTAL_TIME__' => TimingHelper::getElapsedTime($this->pageState->requestStart, TimingHelper::getMoment()),
-                ]
-            );
-            // Smarty\Debug::display_debug() unconditionally calls
-            // $obj->getSource() (vendor/smarty/smarty/src/Debug.php) before
-            // ever checking its own `$obj instanceof Smarty` branch --
-            // Smarty\Smarty itself has no getSource() method (only
-            // Smarty\Template/Smarty\Template\Cached do), so passing the
-            // bare engine here always throws `Error: Call to undefined
-            // method Smarty\Smarty::getSource()`. A throwaway 'string:'
-            // resource template gives display_debug() a real getSource()
-            // to read, taking its Template branch instead (labels the
-            // console 'string:' rather than aggregating per-template
-            // timings) -- debug.tpl's own markup treats
-            // template_name/template_data as optional, so this degrades
-            // gracefully instead of reproducing the crash.
-            new Debug()
-                ->display_debug($this->smarty->createTemplate('string:'), true);
-        }
-    }
-
-    /**
-     * Eval a temp string to retrieve the original PHP value.
-     */
-    public static function getPhpStrVal(string $str): mixed
-    {
-        if (strlen($str) > 1) {
-            if (($str[0] === '\'' && $str[strlen($str) - 1] === '\'')
-              || ($str[0] === '"' && $str[strlen($str) - 1] === '"')) {
-                // $tmp is always really reassigned by the eval() below --
-                // this initializer exists only to give PHPStan a definite
-                // assignment to trace, since it can't see into eval()'s
-                // string content (same blind spot as prefilterWhiteSpace()
-                // below).
-                $tmp = null;
-                eval('$tmp=' . $str . ';');
-                return $tmp;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * "translate" variable modifier.
-     * Usage :
-     *    - {'Comment'|translate}
-     *    - {'%d comments'|translate:$count}
-     * @see Template::lang()
-     * @param array<int, string> $params
-     */
-    public function modcompilerTranslate(array $params): string
-    {
-
-        switch (count($params)) {
-            case 1:
-                $key = self::getPhpStrVal($params[0]);
-                // getPhpStrVal() evaluates a quoted PHP string literal
-                // via eval(), which PHPStan can't trace the return type of
-                // -- it's always a real string here since $params[0] is a
-                // template-compiled string literal expression, but narrow
-                // explicitly since the callee's return type is opaque.
-                if ($this->currentConfig->compiledTemplateCacheLanguage
-                  && is_string($key)
-                  && $this->lang->has($key)
-                ) {
-                    return var_export($this->lang->t($key), true);
-                }
-                // Deliberately NOT $this->lang->t(...) -- this string is
-                // literal PHP source text Smarty splices into the compiled
-                // templates_c cache file (Smarty's own "modifiercompiler"
-                // mechanism -- see this method's own registration in
-                // __construct()), executed later by a Smarty-internal
-                // render function with no `$this` of this Template
-                // instance available. Reached whenever the translation
-                // can't be resolved at compile time (cache-by-language is
-                // off -- the common, default case -- or the key is a
-                // runtime variable, or it's an unknown key): self::lang()
-                // (a public static resolver) is a permanent exception to
-                // this class's constructor-injected dependencies, needed
-                // because no `$this` is available where this generated
-                // code runs.
-                return '\Piwigo\Template\Template::lang()->t(' . $params[0] . ')';
-
-            default:
-                if ($this->currentConfig->compiledTemplateCacheLanguage) {
-                    $ret = 'sprintf(';
-                    $ret .= $this->modcompilerTranslate([$params[0]]);
-                    $ret .= ',' . implode(',', array_slice($params, 1));
-                    $ret .= ')';
-                    return $ret;
-                }
-                // Same permanent-exception reasoning as the single-param
-                // branch above.
-                return '\Piwigo\Template\Template::lang()->t(' . $params[0] . ',' . implode(',', array_slice($params, 1)) . ')';
-        }
-    }
-
-    /**
-     * "translate_dec" variable modifier.
-     * Usage :
-     *    - {$count|translate_dec:'%d comment':'%d comments'}
-     * @see Template::lang()
-     * @param array<int, string> $params
-     */
-    public function modcompilerTranslateDec(array $params): string
-    {
-        if ($this->currentConfig->compiledTemplateCacheLanguage) {
-            $ret = 'sprintf(';
-            if ((bool) $this->lang->langInfo()['zero_plural']) {
-                $ret .= '($tmp=(' . $params[0] . '))>1||$tmp==0';
-            } else {
-                $ret .= '($tmp=(' . $params[0] . '))>1';
-            }
-            $ret .= '?';
-            $ret .= $this->modcompilerTranslate([$params[2]]);
-            $ret .= ':';
-            $ret .= $this->modcompilerTranslate([$params[1]]);
-            $ret .= ',$tmp';
-            $ret .= ')';
-            return $ret;
-        }
-        // Permanent exception -- see modcompilerTranslate()'s own comment
-        // on its identical single-param-branch return above.
-        return '\Piwigo\Template\Template::lang()->plural(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
-    }
-
-    /**
-     * "explode" variable modifier.
-     * Usage :
-     *    - {assign var=valueExploded value=$value|explode:','}
-     *
-     * @return string[]
-     */
-    public static function modExplode(string $text, string $delimiter = ','): array
-    {
-        if ($delimiter === '') {
-            throw new Exception('modExplode(): delimiter must not be empty');
-        }
-        return explode($delimiter, $text);
-    }
-
-    /**
-     * ternary variable modifier.
-     * Usage :
-     *    - {$variable|ternary:'yes':'no'}
-     */
-    public static function modTernary(mixed $param, mixed $true, mixed $false): mixed
-    {
-        return (bool) $param ? $true : $false;
-    }
-
-    /**
-     * The "html_head" block allows to add content just before
-     * </head> element in the output after the head has been parsed.
-     *
-     * @param array<int, mixed> $params (unused)
-     */
-    public function blockHtmlHead(array $params, ?string $content): void
-    {
-        // Smarty calls block plugins twice: null $content on the opening
-        // tag, real content on the closing tag ("second call" below).
-        $content = trim((string) $content);
-        if ($content !== '') { // second call
-            $this->html_head_elements[] = $content;
-        }
-    }
-
-    /**
-     * The "html_style" block allows to add CSS juste before
-     * </head> element in the output after the head has been parsed.
-     *
-     * @param array<int, mixed> $params (unused)
-     */
-    public function blockHtmlStyle(array $params, ?string $content): void
-    {
-        // Smarty calls block plugins twice: null $content on the opening
-        // tag, real content on the closing tag ("second call" below).
-        $content = trim((string) $content);
-        if ($content !== '') { // second call
-            $this->html_style .= "\n" . $content;
-        }
-    }
-
-    /**
-     * The "define_derivative" function allows to define derivative from tpl file.
-     * It assigns a DerivativeParams object to _name_ template variable.
-     *
-     * @param array<string, mixed> $params
-     *    - name (required)
-     *    - type (optional)
-     *    - width (required if type is empty)
-     *    - height (required if type is empty)
-     *    - crop (optional, used if type is empty)
-     *    - min_width (optional, used with crop)
-     *    - min_height (optional, used with crop)
-     */
-    public function funcDefineDerivative(array $params, TemplateBase $smarty): void
-    {
-        $name = $params['name'] ?? null;
-        (! in_array($name, [null, false, 0, '0', '', []], true) && is_string($name)) or $this->htmlRenderer()
-            ->fatalError('define_derivative missing name');
-        if (isset($params['type'])) {
-            $type = $params['type'];
-            is_string($type) or $this->htmlRenderer()
-                ->fatalError('define_derivative type must be a string');
-            $derivative = $this->imageStdParams()
-                ->getByType($type);
-            $smarty->assign($name, $derivative);
-            return;
-        }
-        ! in_array($params['width'] ?? null, [null, false, 0, '0', '', []], true) or $this->htmlRenderer()->fatalError('define_derivative missing width');
-        ! in_array($params['height'] ?? null, [null, false, 0, '0', '', []], true) or $this->htmlRenderer()->fatalError('define_derivative missing height');
-        $width = $params['width'];
-        $height = $params['height'];
-        is_scalar($width) or $this->htmlRenderer()
-            ->fatalError('define_derivative width must be scalar');
-        is_scalar($height) or $this->htmlRenderer()
-            ->fatalError('define_derivative height must be scalar');
-
-        $w = intval($width);
-        $h = intval($height);
-        $crop = 0;
-        $minw = null;
-        $minh = null;
-
-        if (isset($params['crop'])) {
-            if (is_bool($params['crop'])) {
-                $crop = $params['crop'] ? 1 : 0;
-            } else {
-                $crop_val = $params['crop'];
-                is_numeric($crop_val) or $this->htmlRenderer()
-                    ->fatalError('define_derivative crop must be numeric');
-                $crop = round((float) $crop_val / 100.0, 2);
-            }
-
-            if ((bool) $crop) {
-                if (in_array($params['min_width'] ?? null, [null, false, 0, '0', '', []], true)) {
-                    $minw = $w;
-                } else {
-                    $min_width = $params['min_width'];
-                    is_scalar($min_width) or $this->htmlRenderer()
-                        ->fatalError('define_derivative min_width must be scalar');
-                    $minw = intval($min_width);
-                }
-                $minw <= $w or $this->htmlRenderer()
-                    ->fatalError('define_derivative invalid min_width');
-                if (in_array($params['min_height'] ?? null, [null, false, 0, '0', '', []], true)) {
-                    $minh = $h;
-                } else {
-                    $min_height = $params['min_height'];
-                    is_scalar($min_height) or $this->htmlRenderer()
-                        ->fatalError('define_derivative min_height must be scalar');
-                    $minh = intval($min_height);
-                }
-                $minh <= $h or $this->htmlRenderer()
-                    ->fatalError('define_derivative invalid min_height');
-            }
-        }
-
-        $smarty->assign($name, $this->imageStdParams()->getCustom($w, $h, $crop, $minw, $minh));
-    }
-
-    /**
-     * The "combine_script" functions allows inclusion of a javascript file in the current page.
-     * The engine will combine several js files into a single one.
-     *
-     * @param array $params
-     *   - id (required)
-     *   - path (optional) falls back to ScriptLoader's well-known script paths when omitted
-     *   - load (optional) 'header', 'footer' or 'async'
-     *   - require (optional) comma separated list of script ids required to be loaded
-     *     and executed before this one
-     *   - version (optional) used to force a browser refresh
-     * @param array<string, mixed> $params
-     */
-    public function funcCombineScript(array $params): void
-    {
-        if (! isset($params['id']) || ! is_string($params['id'])) {
-            // recordFatal() records the fatal condition without halting
-            // execution (see HtmlService::fatalError()'s own docblock for
-            // the reasoning) -- this return is what actually prevents
-            // $params['id'] from being read below when it's genuinely
-            // missing/non-string.
-            $this->errorCollector->recordFatal("combine_script: missing 'id' parameter");
-
-            return;
-        }
-        $id = $params['id'];
-        $load = 0;
-        if (isset($params['load'])) {
-            switch ($params['load']) {
-                case 'header': break;
-                case 'footer': $load = 1;
-                    break;
-                case 'async': $load = 2;
-                    break;
-                default: $this->errorCollector->recordFatal("combine_script: invalid 'load' parameter");
-            }
-        }
-
-        $require = $params['require'] ?? null;
-        $require_list = (! in_array($require, [null, false, 0, '0', '', []], true) && is_scalar($require)) ? explode(',', (string) $require) : [];
-
-        $path = $params['path'] ?? null;
-        $path = is_string($path) ? $path : null;
-
-        $version = $params['version'] ?? '0';
-        $version = ($version === false || is_string($version)) ? $version : '0';
-
-        $this->scriptLoader->add(
-            $id,
-            $load,
-            $require_list,
-            $path,
-            $version,
-            (bool) ($params['template'] ?? false)
-        );
-    }
-
-    /**
-     * The "get_combined_scripts" function returns HTML tag of combined scripts.
-     * It can returns a placeholder for delayed JS files combination and minification.
-     *
-     * @param array $params
-     *    - load (required)
-     * @param array<string, mixed> $params
-     */
-    public function funcGetCombinedScripts(array $params): string
-    {
-        if (! isset($params['load'])) {
-            $this->errorCollector->recordFatal("get_combined_scripts: missing 'load' parameter");
-        }
-        $load = $params['load'] === 'header' ? 0 : 1;
-        $content = [];
-
-        if ($load === 0) {
-            return self::COMBINED_SCRIPTS_TAG;
-        } else {
-            $scripts = $this->scriptLoader->getFooterScripts($this->accessLevelChecker);
-            foreach ($scripts->sync as $script) {
-                $content[] =
-                  '<script type="text/javascript" src="'
-                  . $this->makeScriptSrc($script)
-                  . '"></script>';
-            }
-            if ((bool) count($this->scriptLoader->inline_scripts)) {
-                $content[] = '<script type="text/javascript">//<![CDATA[
-';
-                $content = array_merge($content, $this->scriptLoader->inline_scripts);
-                $content[] = '//]]></script>';
-            }
-
-            if ((bool) count($scripts->async)) {
-                $content[] = '<script type="text/javascript">';
-                $content[] = <<<'JS'
-                (function() {
-                var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
-                JS;
-                foreach ($scripts->async as $script) {
-                    $content[] = <<<JS
-                    s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='{$this->makeScriptSrc($script)}';
-                    JS;
-                    $content[] = 'after = after.parentNode.insertBefore(s, after);';
-                }
-                $content[] = '})();';
-                $content[] = '</script>';
-            }
-        }
-        return implode("\n", $content);
-    }
-
-    /**
      * Returns clean relative URL to script file.
      */
     private function makeScriptSrc(Combinable $script): string
@@ -1476,82 +955,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * The "footer_script" block allows to add runtime script in the HTML page.
-     *
-     * @param array<string, mixed> $params
-     *    - require (optional) comma separated list of script ids
-     */
-    public function blockFooterScript(array $params, ?string $content): void
-    {
-        // Smarty calls block plugins twice: null $content on the opening
-        // tag, real content on the closing tag ("second call" below).
-        $content = trim((string) $content);
-        if ($content !== '') { // second call
-            $require = $params['require'] ?? null;
-            $require_list = (! in_array($require, [null, false, 0, '0', '', []], true) && is_scalar($require)) ? explode(',', (string) $require) : [];
-
-            $this->scriptLoader->addInline(
-                $content,
-                $require_list
-            );
-        }
-    }
-
-    /**
-     * The "combine_css" function allows inclusion of a css file in the current page.
-     * The engine will combine several css files into a single one.
-     *
-     * @param array $params
-     *    - id (optional) used to deal with multiple inclusions from plugins
-     *    - path (required)
-     *    - version (optional) used to force a browser refresh
-     *    - order (optional)
-     *    - template (optional) set to true to allow smarty syntax in the css file
-     * @param array<string, mixed> $params
-     */
-    public function funcCombineCss(array $params): void
-    {
-        if (in_array($params['path'] ?? null, [null, false, 0, '0', '', []], true) || ! is_string($params['path'])) {
-            $this->htmlRenderer()
-                ->fatalError('combine_css missing path');
-        }
-        $path = $params['path'];
-
-        if (! isset($params['id']) || ! is_string($params['id'])) {
-            $id = md5($path);
-        } else {
-            $id = $params['id'];
-        }
-
-        $version = $params['version'] ?? '0';
-        $version = ($version === false || is_string($version)) ? $version : '0';
-
-        $order = $params['order'] ?? 0;
-        $order = is_numeric($order) ? (int) $order : 0;
-
-        $this->cssLoader->add($id, $path, $version, $order, (bool) ($params['template'] ?? false));
-    }
-
-    /**
-     * The "get_combined_css" function returns a placeholder for delayed
-     * CSS files combination and minification.
-     *
-     * @param array<int, mixed> $params (unused)
-     */
-    public function funcGetCombinedCss(array $params): string
-    {
-        return self::COMBINED_CSS_TAG;
-    }
-
-    /**
-     * Latte-facing sibling of `funcCombineScript()` above -- same
-     * `ScriptLoader::add()` call, real typed named parameters instead of a
-     * loose Smarty tag-attribute array. `$id` has no default, so a `.latte`
-     * template omitting it gets a real PHP `ArgumentCountError` at the call
-     * site rather than `funcCombineScript()`'s own soft
-     * `$errorCollector->recordFatal()` -- a deliberate strengthening
-     * (real, required arguments now backed by PHP's own type system), not
-     * a behavior gap: no real converted template omits it.
+     * `{do combineScript(...)}` -- registers a JS file with `ScriptLoader`.
+     * `$id` has no default, so a `.latte` template omitting it gets a real
+     * PHP `ArgumentCountError` at the call site: real, required arguments
+     * backed by PHP's own type system, not a behavior gap -- no real
+     * converted template omits it.
      */
     public function combineScript(string $id, ?string $load = null, ?string $require = null, ?string $path = null, string|false $version = '0', bool $template = false): void
     {
@@ -1577,11 +985,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Latte-facing sibling of `funcGetCombinedScripts()` above -- same
-     * body, wrapped in `Latte\Runtime\Html` since this one (unlike
-     * `combineScript()`) prints real markup at its own call site and would
-     * otherwise be HTML-escaped by Latte's auto-escaping (see
-     * docs/PLAN.md's P31 section, "Auto-escaping").
+     * `{=getCombinedScripts(...)}` -- returns `Latte\Runtime\Html` (not a
+     * plain string), since this one (unlike `combineScript()`) prints real
+     * markup at its own call site and would otherwise be HTML-escaped by
+     * Latte's auto-escaping (see docs/PLAN.md's P31 section,
+     * "Auto-escaping").
      */
     public function getCombinedScripts(string $load): Html
     {
@@ -1624,9 +1032,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Latte-facing sibling of `funcCombineCss()` above -- same
-     * `CssLoader::add()` call, real typed named parameters. `$path` has no
-     * default, same reasoning as `combineScript()`'s `$id` above.
+     * `{do combineCss(...)}` -- registers a CSS file with `CssLoader`.
+     * `$path` has no default, same reasoning as `combineScript()`'s `$id`
+     * above.
      */
     public function combineCss(string $path, ?string $id = null, string|false $version = '0', int $order = 0, bool $template = false): void
     {
@@ -1634,9 +1042,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Latte-facing sibling of `funcGetCombinedCss()` above -- prints the
-     * placeholder literal, so it needs the same `Html` wrap as
-     * `getCombinedScripts()` above.
+     * `{=getCombinedCss()}` -- prints the placeholder literal, so it needs
+     * the same `Html` wrap as `getCombinedScripts()` above.
      */
     public function getCombinedCss(): Html
     {
@@ -1644,15 +1051,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Latte-facing sibling of `funcDefineDerivative()` above. Smarty's
-     * version assigned a `DerivativeParams` into the compiling template's
-     * own scope via a `name` parameter; Latte has no equivalent scope-
-     * mutation hook, so this returns the value instead, bound at the call
-     * site via `{var $x = defineDerivative(...)}` -- confirmed real usage
-     * in `piwigo16-rewrite/tools/smarty-to-latte/Converter.php:602-632`.
-     * `$crop` folds Smarty's own dual bool/numeric-percentage handling
-     * into one parameter (bool: whole 0/1 crop ratio; float|int: a percent,
-     * matching `funcDefineDerivative()`'s own `$crop_val / 100.0` math).
+     * `{var $x = defineDerivative(...)}` -- Latte has no scope-mutation
+     * hook for a called function to assign a variable into the caller's
+     * own template scope, so this returns the value directly, bound at the
+     * call site (confirmed real usage in
+     * `piwigo16-rewrite/tools/smarty-to-latte/Converter.php:602-632`).
+     * `$crop` folds Smarty's own dual bool/numeric-percentage semantics
+     * into one parameter: `bool` for a whole 0/1 crop ratio, `float|int`
+     * for a percent.
      */
     public function defineDerivative(?string $type = null, ?int $width = null, ?int $height = null, bool|float|int $crop = 0, ?int $minWidth = null, ?int $minHeight = null): DerivativeParams
     {
@@ -1688,13 +1094,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Latte-facing sibling of `blockHtmlHead()` above -- called via
-     * `{capture $v}...{/capture}{do htmlHead($v)}` (Latte's own native
-     * tags compose the same open/close content-capture Smarty's block
-     * plugin API gave `blockHtmlHead()`, so no custom Latte tag is needed;
-     * see docs/PLAN.md's P31 section, "Blocks/functions"). Takes the
-     * content directly rather than being called twice with `null` then the
-     * real body -- `{capture}` only ever hands back the final string once.
+     * `{capture $v}...{/capture}{do htmlHead($v)}` -- Latte's own native
+     * tags compose the open/close content-capture Smarty's own
+     * `html_head` block plugin API used to give, so no custom Latte tag is
+     * needed; see docs/PLAN.md's P31 section, "Blocks/functions".
      */
     public function htmlHead(string|Html $content): void
     {
@@ -1705,8 +1108,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Latte-facing sibling of `blockHtmlStyle()` above -- same
-     * `{capture}`+`{do}` composition as `htmlHead()`.
+     * Same `{capture}`+`{do}` composition as `htmlHead()` above.
      */
     public function htmlStyle(string|Html $content): void
     {
@@ -1717,9 +1119,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Latte-facing sibling of `blockFooterScript()` above -- same
-     * `{capture}`+`{do}` composition, same `ScriptLoader::addInline()`
-     * call.
+     * Same `{capture}`+`{do}` composition as `htmlHead()` above, calling
+     * `ScriptLoader::addInline()`.
      */
     public function footerScript(string|Html $content, ?string $require = null): void
     {
@@ -1731,19 +1132,15 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Latte-facing port of `prefilterLocalCss()`'s real logic -- NOT the
-     * same thing as `$theme.local_head` (that's already an ordinary
-     * `{include}` on both engines, no special mechanism at all; see
-     * docs/PLAN.md's P31 section, "Prefilters"). `prefilterLocalCss()`
-     * injects `{combine_css}` calls for admin-configurable override files
-     * at *compile time*; since `combine_css` is now a plain function
-     * rather than a Smarty tag, this moves the same `file_exists()`-gated
-     * walk to an explicit call from the converted `header.latte` instead
-     * of a source-text injection. Only ever needed on the front-end
-     * `'header'` handle today (`prefilterLocalCss()`'s own registration is
-     * gated on `! $adminContext->isActive()`), but this method itself
-     * doesn't need that guard -- it's simply never called from an admin
-     * template.
+     * Admin-configurable local CSS override files
+     * (`local/css/{theme}-rules.css`, `local/css/rules.css`) -- NOT the
+     * same thing as `$theme.local_head` (that's an ordinary `{include}`,
+     * no special mechanism at all; see docs/PLAN.md's P31 section,
+     * "Prefilters"). Called explicitly from `header.latte` (both
+     * `themes/default/template/` and `themes/standard_pages/template/`,
+     * the two real front-end headers) right before `{=getCombinedCss()}`
+     * -- never from an admin template, matching this feature's original,
+     * Smarty-era front-end-only scope.
      *
      * @param array<int, array<string, mixed>> $themes
      */
@@ -1766,219 +1163,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if (file_exists($this->paths->root . $f)) {
             $this->combineCss($f, order: 10);
         }
-    }
-
-    /**
-     * Declares a Smarty prefilter from a plugin, allowing it to modify template
-     * source before compilation and without changing core files.
-     * They will be processed by weight ascending.
-     * @see http://www.smarty.net/manual/en/advanced.features.prefilters.php
-     */
-    public function setPrefilter(string $handle, callable $callback, int $weight = 50): void
-    {
-        $this->external_filters[$handle][$weight][] = ['pre', $callback];
-        ksort($this->external_filters[$handle]);
-    }
-
-    /**
-     * Declares a Smarty postfilter.
-     * They will be processed by weight ascending.
-     * @see http://www.smarty.net/manual/en/advanced.features.postfilters.php
-     */
-    public function setPostfilter(string $handle, callable $callback, int $weight = 50): void
-    {
-        $this->external_filters[$handle][$weight][] = ['post', $callback];
-        ksort($this->external_filters[$handle]);
-    }
-
-    /**
-     * Declares a Smarty outputfilter.
-     * They will be processed by weight ascending.
-     * @see http://www.smarty.net/manual/en/advanced.features.outputfilters.php
-     */
-    public function setOutputfilter(string $handle, callable $callback, int $weight = 50): void
-    {
-        $this->external_filters[$handle][$weight][] = ['output', $callback];
-        ksort($this->external_filters[$handle]);
-    }
-
-    /**
-     * Register the filters for the tpl file.
-     */
-    public function loadExternalFilters(string $handle): void
-    {
-        if (isset($this->external_filters[$handle])) {
-            $compile_id = '';
-            foreach ($this->external_filters[$handle] as $filters) {
-                foreach ($filters as $filter) {
-                    [$type, $callback] = $filter;
-                    if (is_array($callback)) {
-                        $callback_key = implode('', array_map(
-                            static fn (mixed $part): string => is_string($part) ? $part : get_debug_type($part),
-                            $callback
-                        ));
-                    } elseif (is_string($callback)) {
-                        $callback_key = $callback;
-                    } else {
-                        $callback_key = get_debug_type($callback);
-                    }
-                    $compile_id .= $type . $callback_key;
-                    $this->smarty->registerFilter($type, $callback);
-                }
-            }
-            $this->smarty->compile_id .= '.' . base_convert(hash('crc32b', $compile_id), 16, 36);
-        }
-    }
-
-    /**
-     * Unregister the filters for the tpl file.
-     */
-    public function unloadExternalFilters(string $handle): void
-    {
-        if (isset($this->external_filters[$handle])) {
-            foreach ($this->external_filters[$handle] as $filters) {
-                foreach ($filters as $filter) {
-                    [$type, $callback] = $filter;
-                    $this->smarty->unregisterFilter($type, $callback);
-                }
-            }
-        }
-    }
-
-    /**
-     * Strips leading tab/space indentation immediately before each
-     * recognized Smarty block/include tag (and their closing counterparts,
-     * where applicable), so the compiled template's literal output doesn't
-     * carry stray leading whitespace from the source .tpl's own
-     * indentation. `\s*$` is greedy enough to also eat the source's final
-     * trailing newline when a recognized tag is the very last line with
-     * nothing following -- a pre-existing quirk of this regex (see
-     * TemplateTest.php's own "prefilterWhiteSpace strips leading
-     * whitespace..." test), invisible in real compiled HTML output and not
-     * worth a regex behavior change on its own.
-     *
-     * $smarty accepts both real shapes this static method is actually
-     * called with: Smarty's own filter dispatch (Smarty\Extension\
-     * BCPluginsAdapter -> Smarty\Filter\FilterPluginWrapper::filter())
-     * always passes the currently-compiling `Smarty\Template`, never the
-     * bare engine -- but this method's own Unit tests call it directly
-     * against `Smarty\Smarty`, and `getLeftDelimiter()`/`getRightDelimiter()`
-     * below are declared separately on each of those two classes, not on
-     * their shared `TemplateBase` ancestor, so neither type alone covers
-     * both real call sites.
-     */
-    public static function prefilterWhiteSpace(string $source, Smarty|SmartyTemplate $smarty): ?string
-    {
-        $ld = $smarty->getLeftDelimiter();
-        $rd = $smarty->getRightDelimiter();
-        // $ld = $smarty->left_delimiter;
-        // $rd = $smarty->right_delimiter;
-        $ldq = preg_quote($ld, '#');
-        $rdq = preg_quote($rd, '#');
-
-        $regex = [];
-        $tags = ['if', 'foreach', 'section', 'footer_script'];
-        foreach ($tags as $tag) {
-            $regex[] = "#^[ \t]+({$ldq}{$tag}[^{$ld}{$rd}]*{$rdq})\s*$#m";
-            $regex[] = "#^[ \t]+({$ldq}/{$tag}{$rdq})\s*$#m";
-        }
-        $tags = ['include', 'else', 'combine_script', 'html_head'];
-        foreach ($tags as $tag) {
-            $regex[] = "#^[ \t]+({$ldq}{$tag}[^{$ld}{$rd}]*{$rdq})\s*$#m";
-        }
-        $source = preg_replace($regex, '$1', $source);
-        return $source;
-    }
-
-    /**
-     * Postfilter used when \Piwigo\Config\CurrentConfig::compiledTemplateCacheLanguage() is true.
-     *
-     * $smarty is unused below -- it exists only to match Smarty's own
-     * post-filter callback signature (same real-call-site duality as
-     * prefilterWhiteSpace() above: Smarty's own dispatch always passes a
-     * `Smarty\Template`, this method's own Unit tests pass the bare
-     * `Smarty\Smarty` engine), so the shared `TemplateBase` ancestor
-     * covers both without needing either subclass's own members.
-     */
-    public static function postfilterLanguage(string $source, TemplateBase $smarty): ?string
-    {
-        // replaces echo PHP_STRING_LITERAL; with the string literal value
-        $source = preg_replace_callback(
-            '/\\<\\?php echo ((?:\'(?:(?:\\\\.)|[^\'])*\')|(?:"(?:(?:\\\\.)|[^"])*"));\\?\\>\\n/',
-            /**
-             * @param array<string> $matches
-             */
-            function (array $matches): string {
-                eval('$tmp=' . $matches[1] . ';');
-                // $matches[1] is always a quoted PHP string literal (per the
-                // regex above), so eval() always produces a real string here.
-                // PHPStan treats variables only ever assigned inside eval()
-                // as undefined in the enclosing scope (it doesn't parse the
-                // evaluated string) -- there's no provable guard possible.
-                // Tried the same pre-initialize-before-eval() trick that
-                // fixed getPhpStrVal()'s bare `return $tmp;` above --
-                // backfires here specifically because of the isset() guard:
-                // pre-setting $tmp = null makes PHPStan conclude isset($tmp)
-                // is always false (a variable PHPStan believes always exists
-                // and is always null), so the ?: 'string cast' branch became
-                // unreachable *NEVER* instead. This is a genuine
-                // static-analysis blind spot on eval(), not a missed
-                // narrowing opportunity.
-                // @phpstan-ignore cast.string, isset.variable, variable.undefined
-                return isset($tmp) ? (string) $tmp : '';
-            },
-            $source
-        );
-        return $source;
-    }
-
-    /**
-     * Prefilter used to add theme local CSS files.
-     *
-     * Registered against a real Smarty compile pass (see the constructor's
-     * own setPrefilter() call below), Smarty always invokes this with the
-     * currently-compiling Smarty\Template, not the top-level Smarty\Smarty
-     * engine (a bare `Smarty $smarty` closure param there throws a real
-     * TypeError). This method's own $smarty param is typed to
-     * their shared common ancestor instead of the narrower Smarty\Template,
-     * since it only ever calls getTemplateVars() (declared on that shared
-     * base), and this file's own Unit tests call it directly against
-     * $this->smarty (the Smarty\Smarty engine) rather than a real compiling
-     * Smarty\Template, a legitimate substitution given both share the same
-     * variable-storage API.
-     */
-    public static function prefilterLocalCss(string $source, TemplateBase $smarty, Paths $paths): string
-    {
-        // The relative directory name (e.g. 'local/' or a PIWIGO_LOCAL_DIR
-        // override) -- combine_css's own path= attribute needs a
-        // root-relative string, same shape the retired PWG_LOCAL_DIR
-        // constant already was, so the absolute Paths::$siteLocal has its
-        // $paths->root prefix stripped back off here.
-        $siteLocalDir = substr($paths->siteLocal, strlen($paths->root));
-
-        $css = [];
-        $themes = $smarty->getTemplateVars('themes');
-        if (is_array($themes)) {
-            foreach ($themes as $theme) {
-                if (! is_array($theme) || ! isset($theme['id']) || ! is_string($theme['id'])) {
-                    continue;
-                }
-                $f = $siteLocalDir . 'css/' . $theme['id'] . '-rules.css';
-                if (file_exists($paths->root . $f)) {
-                    $css[] = "{combine_css path='{$f}' order=10}";
-                }
-            }
-        }
-        $f = $siteLocalDir . 'css/rules.css';
-        if (file_exists($paths->root . $f)) {
-            $css[] = "{combine_css path='{$f}' order=10}";
-        }
-
-        if ($css !== []) {
-            $source = str_replace('{get_combined_css}', implode("\n", $css) . "\n{get_combined_css}", $source);
-        }
-
-        return $source;
     }
 
     /**
@@ -2007,7 +1191,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             // a no-op, so no need to guard the common case where it's unset.
             $theme_template_vars = [];
             include $dir . '/themeconf.inc.php';
-            $this->smarty->assign($theme_template_vars);
+            $this->assign($theme_template_vars);
             // Put themeconf in cache
             $this->processCache->set($cache_key, $themeconf);
 
@@ -2053,7 +1237,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             foreach ($this->picture_buttons as $k => $row) {
                 $buttons = array_merge($buttons, $row);
             }
-            $this->smarty->assign('PLUGIN_PICTURE_BUTTONS', $buttons);
+            $this->assign('PLUGIN_PICTURE_BUTTONS', $buttons);
 
             // only for PHP 5.3
             // $this->assign('PLUGIN_PICTURE_BUTTONS',
@@ -2076,7 +1260,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             foreach ($this->index_buttons as $k => $row) {
                 $buttons = array_merge($buttons, $row);
             }
-            $this->smarty->assign('PLUGIN_INDEX_BUTTONS', $buttons);
+            $this->assign('PLUGIN_INDEX_BUTTONS', $buttons);
 
             // only for PHP 5.3
             // $this->assign('PLUGIN_INDEX_BUTTONS',

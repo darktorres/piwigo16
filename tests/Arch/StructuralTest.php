@@ -1343,36 +1343,6 @@ test('RequestFactory, ResponseEmitter, and the middleware/pipeline/routing class
     }
 });
 
-test('src/Piwigo/ contains no ->smarty->assign()/->smarty->append() reach-around outside Template.php', function (): void {
-    // Template::assign()/append() (pure Smarty pass-throughs) are deleted
-    // entirely -- every real caller now goes through
-    // Template::assignContext(TemplatePageContext) instead, the sole
-    // sanctioned way any L1/L2a/L2b/L3 caller writes into the current
-    // request's template (see TemplateInterface's own docblock). A bare
-    // `$template->assign(`/`->append(` call is already impossible post-
-    // deletion (PHP/PHPStan both catch it as an undefined method), so
-    // this guard targets the one remaining bypass PHP's own type system
-    // can't forbid: reaching through Template's public `$smarty` property
-    // directly (`$template->smarty->assign(...)`). Template.php itself is
-    // the sole legitimate caller (assignContext()/assignVarFromTemplate()/
-    // concat()/the theme-conf-vars/plugin-button internal call sites all
-    // route through $this->smarty->assign() directly, by design).
-    $repoRoot = __DIR__ . '/../..';
-
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', '->smarty->assign('),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', '->smarty->append('),
-    ];
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! str_ends_with($hit['path'], '/src/Piwigo/Template/Template.php')
-    ));
-
-    expect(describeCallSites($disallowed))
-        ->toBe([]);
-});
-
 test('every tools/*.php script guards against non-CLI execution (SEC-02)', function (): void {
     // tools/build-config-accessors.php
     // had no PHP_SAPI guard and would run its logic (regenerating

@@ -32,6 +32,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -1545,9 +1546,11 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
         CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
         $template = TemplateTestFactory::build();
-        $template->smarty->assign('themeconf', [
-            'icon_dir' => '/my-theme/icons',
-        ]);
+        $template->assignContext(new AdHocPageContext([
+            'themeconf' => [
+                'icon_dir' => '/my-theme/icons',
+            ],
+        ]));
         CurrentTemplateTestFactory::get()->set($template);
         // A non-empty root url is required to kill line 576's
         // ConcatRemoveRight (drops getRootUrl() from the src entirely) and
@@ -2306,10 +2309,12 @@ test('flushPageMessages does nothing when a page refresh is already assigned', f
     CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Should not appear');
-    CurrentTemplateTestFactory::get()->get()->smarty->assign('page_refresh', [
-        'TIME' => '5',
-        'U_REFRESH' => '/next',
-    ]);
+    CurrentTemplateTestFactory::get()->get()->assignContext(new AdHocPageContext([
+        'page_refresh' => [
+            'TIME' => '5',
+            'U_REFRESH' => '/next',
+        ],
+    ]));
 
     HtmlServiceTestFactory::build()->flushPageMessages();
 
@@ -2362,14 +2367,14 @@ test('flushPageMessages leaves a non-array session flash value untouched, withou
     // natively typed `array`, so reaching it here would throw a
     // TypeError under this file's declare(strict_types=1)).
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
-    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     $_SESSION['page_warnings'] = 'not an array';
 
     try {
         HtmlServiceTestFactory::build()->flushPageMessages();
 
-        expect(CurrentTemplate::current()->get()->getTemplateVars('warnings'))->toBeNull()
+        expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('warnings'))->toBeNull()
             ->and($_SESSION)
             ->toHaveKey('page_warnings');
     } finally {

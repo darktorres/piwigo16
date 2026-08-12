@@ -249,7 +249,7 @@ test('loadIntoTemplate includes the default theme as a real, selectable dropdown
 
     try {
         $template = TemplateTestFactory::build();
-        CurrentTemplate::current()->set($template);
+        CurrentTemplateTestFactory::get()->set($template);
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),
             username: null,
@@ -280,7 +280,7 @@ test('loadIntoTemplate includes the default theme as a real, selectable dropdown
                 'default' => 'Default',
             ]);
     } finally {
-        CurrentTemplate::current()->reset();
+        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();

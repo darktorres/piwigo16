@@ -14,6 +14,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Combinable;
 use Piwigo\Template\Event\CombinablePreparse;
 use Piwigo\Template\FileCombiner;
+use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -891,7 +892,9 @@ test('processCombinable returns rendered content directly for a template combina
 
     try {
         $template = TemplateTestFactory::build();
-        $template->smarty->assign('value', 42);
+        $template->assignContext(new AdHocPageContext([
+            'value' => 42,
+        ]));
         CurrentTemplateTestFactory::get()->set($template);
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;

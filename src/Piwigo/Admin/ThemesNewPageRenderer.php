@@ -136,10 +136,6 @@ final readonly class ThemesNewPageRenderer
             }
         }
 
-        $template->setFilenames([
-            'themes' => 'themes_new.tpl',
-        ]);
-
         $fs_theme_ids = [];
         foreach ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig) as $fs_theme) {
             $extension = $fs_theme['extension'] ?? null;
@@ -185,6 +181,6 @@ final readonly class ThemesNewPageRenderer
             newThemes: $new_themes,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'themes');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'themes_new.latte');
     }
 }

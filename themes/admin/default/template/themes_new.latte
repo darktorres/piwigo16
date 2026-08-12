@@ -1,5 +1,5 @@
-{include file='include/colorbox.inc.tpl'} 
-{footer_script}{literal}
+{include 'include/colorbox.inc.latte'}
+{capture $tmpFooterScript}
 
 $(window).bind("load", function() {
   $('.themeBox').each(function() {
@@ -18,18 +18,19 @@ $(window).bind("load", function() {
     }
   })
 })
-{/literal}{/footer_script}
+{/capture}
+{do footerScript($tmpFooterScript)}
 
-{if not empty($new_themes)}
+{if !empty($new_themes)}
 <div class="themeBoxes">
-{foreach from=$new_themes item=theme name=themes_loop}
+{foreach $new_themes as $theme}
 <div class="themeBox">
-  <div class="themeShot"><a href="{$theme.screenshot}" class="preview-box" title="{$theme.name}"><img src="{$theme.screenshot}" onerror="this.src='{$default_screenshot}'"></a></div>
-  <div class="themeName" title="{$theme.name}">{$theme.name}</div>
-  <div class="themeActions"><a href="{$theme.install_url}">{'Install'|@translate}</a></div>
+  <div class="themeShot"><a href="{$theme['screenshot']|noescape}" class="preview-box" title="{$theme['name']}"><img src="{$theme['screenshot']|noescape}" onerror="this.src='{$default_screenshot|noescape}'"></a></div>
+  <div class="themeName" title="{$theme['name']}">{$theme['name']}</div>
+  <div class="themeActions"><a href="{$theme['install_url']|noescape}">{='Install'|translate}</a></div>
 </div>
 {/foreach}
 </div> <!-- themeBoxes -->
 {else}
-<p>{'There is no other theme available.'|@translate}</p>
+<p>{='There is no other theme available.'|translate}</p>
 {/if}

@@ -64,8 +64,6 @@ final class StatsPageRenderer
         $historyService
             ->summarize(50000);
 
-        $template->setFilename('stats', 'stats.tpl');
-
         // CoreTabs::setContext() must be called with linkStart here so this
         // page's tab strip renders correct admin.php?page=... hrefs instead
         // of broken relative ones.
@@ -148,7 +146,7 @@ final class StatsPageRenderer
             adminPageTitle: $lang->t('History'),
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'stats');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'stats.latte');
     }
 
     /**

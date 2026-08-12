@@ -27,6 +27,12 @@ function exprToDoc(e) {
       return ["(", e.to, ") ", exprToDoc(e.expr)];
     case "ArrayLiteral":
       return ["[", join(", ", e.items.map(exprToDoc)), "]"];
+    case "Assignment":
+      return [exprToDoc(e.target), " ", e.op, " ", exprToDoc(e.value)];
+    case "PostIncDec":
+      return [exprToDoc(e.target), e.op];
+    case "Ternary":
+      return [exprToDoc(e.cond), " ? ", exprToDoc(e.then), " : ", exprToDoc(e.else)];
     case "Binary":
       return [exprToDoc(e.left), " ", e.op, " ", exprToDoc(e.right)];
     case "PropAccess":
@@ -159,14 +165,19 @@ function printPlainAttribute(a, options) {
   return [a.name, "=", q, valueParts, q];
 }
 
+const SIMPLE_ATTR_PASSTHROUGH = new Set([
+  "LatteOutput", "LatteComment", "LatteVar", "LatteDo", "LatteBreakIf", "LatteFor", "LatteDefine",
+]);
+
 function attrPieces(item, options) {
   if (item.type === "Attribute") return [printPlainAttribute(item, options)];
   // parseAttributeItems() dispatches any real Latte tag generically, so a
-  // bare {$expr}/{=expr}, {* comment *}, {var}, or {do} can sit directly
-  // among attributes too, not just {if}/{foreach}. None of these branch on
-  // `mode` in printNode, so 'inline' just reuses the same rendering as
-  // everywhere else they appear.
-  if (item.type === "LatteOutput" || item.type === "LatteComment" || item.type === "LatteVar" || item.type === "LatteDo") {
+  // bare {$expr}/{=expr}, {* comment *}, {var}, {do}, {breakIf}, {for}, or
+  // {define} can sit directly among attributes too, not just {if}/
+  // {foreach}. printNode's 'inline' mode handles all of these correctly
+  // (the block-bodied ones just print their body inline, same as anywhere
+  // else a construct like this shows up in an attribute value).
+  if (SIMPLE_ATTR_PASSTHROUGH.has(item.type)) {
     return [printNode(item, options, "inline")];
   }
   if (item.type === "LatteIf") {
@@ -259,6 +270,9 @@ function printNode(node, options, mode = "block") {
     case "LatteDo":
       return ["{do ", exprToDoc(node.expr), "}"];
 
+    case "LatteBreakIf":
+      return ["{breakIf ", exprToDoc(node.cond), "}"];
+
     case "LatteInclude": {
       const parts = ["{include ", exprToDoc(node.target)];
       for (const a of node.args) {
@@ -320,6 +334,30 @@ function printNode(node, options, mode = "block") {
       const b = computeBlock(node.body, options);
       if (b) parts.push(indent([b.leadBreak, ...b.inner]), b.trailBreak);
       parts.push("{/spaceless}");
+      return parts;
+    }
+
+    case "LatteFor": {
+      const head = ["{for ", exprToDoc(node.init), "; ", exprToDoc(node.cond), "; ", exprToDoc(node.step), "}"];
+      if (mode === "inline") {
+        return [head, ...node.body.map((n) => printInlinePart(n, options)), "{/for}"];
+      }
+      const parts = [head];
+      const b = computeBlock(node.body, options);
+      if (b) parts.push(indent([b.leadBreak, ...b.inner]), b.trailBreak);
+      parts.push("{/for}");
+      return parts;
+    }
+
+    case "LatteDefine": {
+      const head = ["{define ", node.name, "}"];
+      if (mode === "inline") {
+        return [head, ...node.body.map((n) => printInlinePart(n, options)), "{/define}"];
+      }
+      const parts = [head];
+      const b = computeBlock(node.body, options);
+      if (b) parts.push(indent([b.leadBreak, ...b.inner]), b.trailBreak);
+      parts.push("{/define}");
       return parts;
     }
 

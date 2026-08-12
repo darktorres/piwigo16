@@ -99,6 +99,11 @@ function peekLatteHead(s) {
   if (c === "$") return { sigil: "$", bodyStart: i + 1 };
   if (c === "=") return { sigil: "=", bodyStart: i + 1 };
   if (c === "*") return { sigil: "*", bodyStart: i + 1 };
+  // `(` starts a real tag too — a parenthesized expression is a valid bare
+  // output with no `$`/`=` prefix, e.g. `{(cond) ? 'a' : 'b'}` (real Piwigo
+  // markup, tags.latte). Unlike the other sigils, '(' is itself part of the
+  // expression to reparse, so bodyStart doesn't skip past it.
+  if (c === "(") return { sigil: "(", bodyStart: i };
   let closing = false;
   if (c === "/") {
     closing = true;
@@ -206,8 +211,30 @@ function parseExprString(text) {
   return expr;
 }
 
+// `cond ? then : else` — real Piwigo markup (tags.latte's bare
+// `{(cond) ? 'a' : 'b'}`). No Elvis/short-ternary (`cond ?: else`) form
+// observed, so not supported. Binds looser than `??` (parseBinary(0)) but
+// tighter than filters, matching how the one real usage is written: the
+// filter chain, if any, would apply to the ternary's overall result.
+function parseTernary(es) {
+  const cond = parseBinary(es, 0);
+  es.skipSpace();
+  if (es.peek() === "?" && es.peek(1) !== "?") {
+    es.advance();
+    es.skipSpace();
+    const thenExpr = parseTernary(es);
+    es.skipSpace();
+    if (es.peek() !== ":") es.error("expected ':' in ternary expression");
+    es.advance();
+    es.skipSpace();
+    const elseExpr = parseTernary(es);
+    return { type: "Ternary", cond, then: thenExpr, else: elseExpr };
+  }
+  return cond;
+}
+
 function parseFiltered(es) {
-  let expr = parseBinary(es, 0);
+  let expr = parseTernary(es);
   const filters = [];
   es.skipSpace();
   while (es.peek() === "|") {
@@ -747,6 +774,11 @@ function parseLatteNode(s, head, listOpts) {
     const expr = parseExprString(head.sigil === "=" ? body.replace(/^=/, "") : body);
     return { type: "LatteOutput", form: head.sigil, expr, start, end: s.pos };
   }
+  if (head.sigil === "(") {
+    const body = readTagBody(s);
+    const expr = parseExprString(body);
+    return { type: "LatteOutput", form: "bare", expr, start, end: s.pos };
+  }
   if (head.closing) {
     s.error(`unexpected closing tag {/${head.keyword}}`);
   }
@@ -755,17 +787,34 @@ function parseLatteNode(s, head, listOpts) {
       return parseIf(s, start, listOpts);
     case "foreach":
       return parseForeach(s, start, listOpts);
+    case "for":
+      return parseFor(s, start, listOpts);
     case "var":
       return parseVar(s, start);
     case "do":
       return parseDo(s, start);
+    case "breakIf":
+      return parseBreakIf(s, start);
     case "spaceless":
       return parseSpaceless(s, start, listOpts);
     case "capture":
       return parseCapture(s, start);
     case "include":
       return parseInclude(s, start);
+    case "define":
+      return parseDefine(s, start, listOpts);
     default:
+      // A bare `{funcName(...)}` (no leading `$`/`=`) with no recognized
+      // control-tag keyword is real, valid Piwigo Latte markup for an
+      // implicit output expression — e.g. `{count($TAGS_FOUND)}`, the same
+      // as writing `{=count($TAGS_FOUND)}`. Only treat it that way when
+      // it's unambiguously a call (keyword immediately followed by '('),
+      // not an actually-unrecognized control tag.
+      if (s.text[head.bodyStart] === "(") {
+        const body = readTagBody(s);
+        const expr = parseExprString(body);
+        return { type: "LatteOutput", form: "bare", expr, start, end: s.pos };
+      }
       s.error(`unknown Latte tag {${head.keyword}}`);
   }
 }
@@ -839,6 +888,63 @@ function parseForeach(s, start, listOpts) {
   return { type: "LatteForeach", iterable, keyVar, valueVar, body, start, end: s.pos };
 }
 
+// A tiny statement grammar (assignment, post-increment/decrement) on top of
+// the expression grammar — used by {for}'s INIT/STEP clauses (`{for $day =
+// 1; $day <= 32; $day++}`) and by {do}, which can also carry an assignment
+// with side effects (`{do $all_selected_album[$element['ID']] =
+// json_decode(...)}`, real Piwigo markup). Not allowed in a general
+// expression position, only here — same restriction real PHP/Latte apply.
+// The target can be any postfix chain (`$x`, `$x[$k]`, `$x->prop`), not
+// just a bare variable, so it's parsed with parsePostfix, not a plain
+// identifier read.
+function parseStatement(text) {
+  const es = new ExprScanner(text);
+  es.skipSpace();
+  if (es.peek() === "$") {
+    const save = es.pos;
+    const target = parsePostfix(es);
+    es.skipSpace();
+    if (es.startsWithOp("++") || es.startsWithOp("--")) {
+      const op = es.text.slice(es.pos, es.pos + 2);
+      es.advance(2);
+      return { type: "PostIncDec", op, target };
+    }
+    const twoCharAssignOps = ["+=", "-=", "*=", "/="];
+    let op = twoCharAssignOps.find((o) => es.startsWithOp(o));
+    if (!op && es.peek() === "=" && es.peek(1) !== "=") op = "=";
+    if (op) {
+      es.advance(op.length);
+      es.skipSpace();
+      const value = parseFiltered(es);
+      return { type: "Assignment", op, target, value };
+    }
+    es.pos = save;
+  }
+  const expr = parseFiltered(es);
+  es.skipSpace();
+  if (!es.eof()) es.error("unexpected trailing content");
+  return expr;
+}
+
+function parseFor(s, start, listOpts) {
+  const src = readTagBody(s).replace(/^for\s+/, "");
+  const clauses = splitTopLevel(src, ";");
+  if (clauses.length !== 3) s.error(`malformed {for ${src}}: expected "INIT; COND; STEP"`);
+  const init = parseStatement(clauses[0]);
+  const cond = parseExprString(clauses[1].trim());
+  const step = parseStatement(clauses[2]);
+  const isAttrList = Boolean(listOpts && listOpts.isAttrList);
+  const forStops = new Set(["/for"]);
+  const body = isAttrList
+    ? parseAttributeItems(s, forStops)
+    : parseBodyLoop(s, Boolean(listOpts && listOpts.allowElements), forStops);
+  const head = peekLatteHead(s);
+  if (!head || stopKey(head) !== "/for") s.error("expected {/for}");
+  s.advance();
+  readTagBody(s);
+  return { type: "LatteFor", init, cond, step, body, start, end: s.pos };
+}
+
 function parseVar(s, start) {
   const src = readTagBody(s).replace(/^var\s+/, "");
   const eq = src.indexOf("=");
@@ -850,9 +956,15 @@ function parseVar(s, start) {
   return { type: "LatteVar", name, value, start, end: s.pos };
 }
 
+function parseBreakIf(s, start) {
+  const src = readTagBody(s).replace(/^breakIf\s+/, "");
+  const cond = parseExprString(src);
+  return { type: "LatteBreakIf", cond, start, end: s.pos };
+}
+
 function parseDo(s, start) {
   const src = readTagBody(s).replace(/^do\s+/, "");
-  const expr = parseExprString(src);
+  const expr = parseStatement(src);
   return { type: "LatteDo", expr, start, end: s.pos };
 }
 
@@ -870,6 +982,24 @@ function parseSpaceless(s, start, listOpts) {
   return { type: "LatteSpaceless", body, start, end: s.pos };
 }
 
+// `{define name}...{/define}` — a named, reusable template fragment,
+// invoked later via `{include name, arg: val, ...}` (already-supported
+// syntax — {define} itself takes no parameter list, only a bare name).
+function parseDefine(s, start, listOpts) {
+  const src = readTagBody(s).replace(/^define\s+/, "");
+  const name = src.trim();
+  const isAttrList = Boolean(listOpts && listOpts.isAttrList);
+  const defineStops = new Set(["/define"]);
+  const body = isAttrList
+    ? parseAttributeItems(s, defineStops)
+    : parseBodyLoop(s, Boolean(listOpts && listOpts.allowElements), defineStops);
+  const head = peekLatteHead(s);
+  if (!head || stopKey(head) !== "/define") s.error("expected {/define}");
+  s.advance();
+  readTagBody(s);
+  return { type: "LatteDefine", name, body, start, end: s.pos };
+}
+
 function parseCapture(s, start) {
   const src = readTagBody(s).replace(/^capture\s+/, "");
   if (!src.startsWith("$")) s.error(`malformed {capture ${src}}: expected a variable name`);
@@ -884,15 +1014,16 @@ function parseCapture(s, start) {
 
 function parseInclude(s, start) {
   const src = readTagBody(s).replace(/^include\s+/, "");
-  const parts = splitTopLevelCommas(src);
+  const parts = splitTopLevel(src, ",");
   const target = parseExprString(parts[0]);
   const args = parts.slice(1).map((p) => parseArg(new ExprScanner(p.trim())));
   return { type: "LatteInclude", target, args, start, end: s.pos };
 }
 
-// Splits "a, name: b, name2: c" on top-level commas only (not inside quotes/
-// brackets/parens) — used for {include}'s "target, arg, arg" argument tail.
-function splitTopLevelCommas(src) {
+// Splits on a top-level separator char only (not inside quotes/brackets/
+// parens) — used for {include}'s "target, arg, arg" argument tail (','),
+// and {for}'s "init; cond; step" clauses (';').
+function splitTopLevel(src, sep) {
   const parts = [];
   let depth = 0;
   let cur = "";
@@ -915,7 +1046,7 @@ function splitTopLevelCommas(src) {
     }
     if (ch === "(" || ch === "[") depth++;
     if (ch === ")" || ch === "]") depth--;
-    if (ch === "," && depth === 0) {
+    if (ch === sep && depth === 0) {
       parts.push(cur);
       cur = "";
       continue;

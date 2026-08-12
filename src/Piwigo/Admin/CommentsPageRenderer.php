@@ -27,10 +27,6 @@ final class CommentsPageRenderer
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
-        $template->setFilenames([
-            'comments' => 'comments.tpl',
-        ]);
-
         // CoreTabs::setContext() must be called with myBaseUrl here so this
         // page's tab strip renders correct admin.php?page=... hrefs instead
         // of broken relative ones.
@@ -47,6 +43,6 @@ final class CommentsPageRenderer
             adminPageTitle: $lang->t('User comments'),
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'comments');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'comments.latte');
     }
 }

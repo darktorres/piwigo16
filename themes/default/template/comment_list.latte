@@ -28,7 +28,7 @@
   {/if}
 	<div class="illustration">
 		<a href="{$comment['U_PICTURE']|noescape}">
-		<img {if $derivative->isCached()}src="{$derivative->getUrl()}"{else}src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png" data-src="{$derivative->getUrl()}"{/if} alt="{$comment['ALT']}">
+		<img {if $derivative->isCached()}src="{$derivative->getUrl()|noescape}"{else}src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png" data-src="{$derivative->getUrl()|noescape}"{/if} alt="{$comment['ALT']}">
 		</a>
 	</div>
 	{/if}

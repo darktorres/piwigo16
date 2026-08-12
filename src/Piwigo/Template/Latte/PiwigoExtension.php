@@ -161,9 +161,11 @@ final class PiwigoExtension extends Extension
             // Also registered as filters above, same names -- same
             // {if}-rejects-pipes reason as translate/l10n above. Real live
             // sites: search_filters.inc.tpl's `{if ''|is_admin}` ->
-            // `{if is_admin('')}`.
+            // `{if is_admin('')}`; picture_modify.tpl's
+            // `{if !($PATH|url_is_remote)}` -> `{if !url_is_remote($PATH)}`.
             'is_admin' => $this->isAdmin(...),
             'is_classic_user' => $this->isClassicUser(...),
+            'url_is_remote' => $this->urlService->urlIsRemote(...),
         ];
     }
 

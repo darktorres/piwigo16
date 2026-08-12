@@ -272,12 +272,6 @@ final readonly class PictureModifyPageRenderer
 
         $image_file = $row['file'];
 
-        $template->setFilenames(
-            [
-                'picture_modify' => 'picture_modify.tpl',
-            ]
-        );
-
         $admin_url_start = $adminPhotoBaseUrl . '-properties';
 
         $src_image = new SrcImage($row);
@@ -488,6 +482,6 @@ final readonly class PictureModifyPageRenderer
         $this->eventDispatcher->dispatchNotify(new LocEndPictureModify());
 
         // ----------------------------------------------------------- sending html code
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'picture_modify');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'picture_modify.latte');
     }
 }

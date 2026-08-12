@@ -1,0 +1,13 @@
+{if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
+<div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
+
+<div class="titrePage">
+	<ul class="categoryActions">
+	</ul>
+	<h2><a href="{$U_HOME|noescape}">{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Profile'|translate}</h2>
+</div>
+
+{include 'infos_errors.latte'}
+
+{$PROFILE_CONTENT|noescape}
+</div> <!-- content -->

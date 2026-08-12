@@ -7,6 +7,17 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
+/**
+ * [Mutation] getAdminClientCacheKeys() is deliberately NOT covered here --
+ * it needs a real DB connection (a live COUNT/MAX(lastmodified) per
+ * table via DbInfo::getTableFingerprint()), so it's covered instead at
+ * tests/Integration/AdminUiHelperCacheKeysTest.php (see that file's own
+ * top docblock for the full split rationale). A scoped `pest --mutate`
+ * run against the Unit suite alone will list its mutations as untested
+ * -- expected, not a gap; the class's other, pure/file-based methods
+ * (getExtents/pwgUrl/getActiveMenu/numberFormatHumanReadable) are what
+ * this file covers.
+ */
 beforeEach(function (): void {
     // getExtents()'s no-args default is anchored to the live, container-bound Paths->
     // root (a real HTTP request's cwd is wherever Apache/PHP-FPM started

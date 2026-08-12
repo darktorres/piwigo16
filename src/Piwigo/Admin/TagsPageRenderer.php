@@ -61,10 +61,6 @@ final readonly class TagsPageRenderer
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=tags');
         }
 
-        $template->setFilenames([
-            'tags' => 'tags.tpl',
-        ]);
-
         $warning_tags = '';
 
         $orphan_tags = $tagService->getOrphanTags();
@@ -154,6 +150,6 @@ final readonly class TagsPageRenderer
             adminPageTitle: $this->lang->t('Tags'),
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'tags');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'tags.latte');
     }
 }

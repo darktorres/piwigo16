@@ -34,15 +34,15 @@ function tabsheetTestRrmdir(string $dir): void
 // compile directory under CurrentPathsTestFactory::get()->root -- same
 // "point CurrentPaths at a fresh temp root, clean it up after" shape as
 // PictureCommentRendererTest's own makePictureCommentTestTemplate().
-// Tabsheet::assign()'s own assignVarFromHandle() call actually parses
-// a real 'tabsheet.tpl' through Smarty (theme='' -> template_dir is the
+// Tabsheet::assign()'s own assignVarFromTemplate() call actually parses
+// a real 'tabsheet.latte' through Latte (theme='' -> template_dir is the
 // $root passed to the constructor), so a trivial real file is seeded at
 // that same root -- its rendered content is never asserted on, only the
 // other template vars assign() also sets.
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-tabsheet-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    file_put_contents($root . '/tabsheet.tpl', '');
+    file_put_contents($root . '/tabsheet.latte', '');
     // Captured on $this, not re-read via CurrentPathsTestFactory::get() in
     // afterEach() below -- if Kernel::boot() throws here (a prior test left
     // Kernel booted against a different root without resetting), afterEach()
@@ -298,8 +298,8 @@ test('select throws when a tabsheet_before_select handler returns something othe
     }
 });
 
-test('assign makes the sheets array available to the tabsheet.tpl template before rendering', function (): void {
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/tabsheet.tpl', 'CAPTION:{$tabsheet.general.caption}');
+test('assign makes the sheets array available to the tabsheet.latte template before rendering', function (): void {
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/tabsheet.latte', 'CAPTION:{$tabsheet[\'general\'][\'caption\']}');
 
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General Settings', '/general');
@@ -307,7 +307,15 @@ test('assign makes the sheets array available to the tabsheet.tpl template befor
     $tabsheet->assign(CurrentTemplateTestFactory::get());
 
     $template = CurrentTemplateTestFactory::get()->get();
-    expect($template->getTemplateVars('MY_TABSHEET'))
+    // assignVarFromTemplate() wraps the result in Latte\Runtime\Html (see
+    // that method's own docblock), not a plain string.
+    $tabsheetVar = $template->getTemplateVars('MY_TABSHEET');
+    expect($tabsheetVar)
+        ->toBeInstanceOf(Latte\Runtime\Html::class);
+    if (! $tabsheetVar instanceof Latte\Runtime\Html) {
+        throw new LogicException('unreachable -- asserted above');
+    }
+    expect((string) $tabsheetVar)
         ->toBe('CAPTION:General Settings');
 });
 

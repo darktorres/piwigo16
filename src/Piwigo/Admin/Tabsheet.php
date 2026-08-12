@@ -155,8 +155,6 @@ final class Tabsheet
     {
         $template = $currentTemplate->get();
 
-        $template->setFilename('tabsheet', 'tabsheet.tpl');
-
         $selected_tab = $this->getSelected();
 
         $template->assignContext(new TabsheetPageContext(
@@ -166,7 +164,7 @@ final class Tabsheet
             titlenameValue: isset($selected_tab) ? '[' . $selected_tab->caption . ']' : null,
         ));
 
-        $template->assignVarFromHandle($this->name, 'tabsheet');
+        $template->assignVarFromTemplate($this->name, 'tabsheet.latte');
         $template->clearAssign('tabsheet');
     }
 }

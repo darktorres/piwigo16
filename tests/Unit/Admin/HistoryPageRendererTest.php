@@ -100,7 +100,7 @@ test('render() defaults the date range to today and skips the user-id lookup whe
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'history.tpl', 'start={$START}|end={$END}');
+        file_put_contents($tplDir . 'history.latte', 'start={$START}|end={$END}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -112,6 +112,16 @@ test('render() defaults the date range to today and skips the user-id lookup whe
             ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator());
 
         $today = Env::now()->format('Y-m-d');
+
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
         expect($template->getTemplateVars('START'))
             ->toBe($today)
             ->and($template->getTemplateVars('END'))
@@ -124,7 +134,7 @@ test('render() defaults the date range to today and skips the user-id lookup whe
             ->toBe('no_display_thumbnail')
             ->and($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('History')
-            ->and($template->getTemplateVars('ADMIN_CONTENT'))
+            ->and((string) $adminContent)
             ->toBe('start=' . $today . '|end=' . $today);
     } finally {
         CurrentTemplateTestFactory::get()->reset();

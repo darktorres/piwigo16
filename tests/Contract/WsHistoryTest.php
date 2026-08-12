@@ -635,7 +635,7 @@ final class WsHistoryTest extends ContractTestCase
     /**
      * Real bug found live: a real browser client always sends every
      * current_param key, including image_id as the literal empty string
-     * when no image filter is active (history.tpl's own `image_id: {if
+     * when no image filter is active (history.latte's own `image_id: {if
      * isset($IMAGE_ID)}"{$IMAGE_ID}"{else}""{/if}`) -- unlike this test
      * suite's own wsAdmin() helper, which (like the other tests in this
      * file) simply omits the key entirely when unused, so this exact

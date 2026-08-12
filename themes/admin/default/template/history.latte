@@ -1,7 +1,7 @@
 
-{include file='include/datepicker.inc.tpl'}
+{include 'include/datepicker.inc.latte'}
 
-{footer_script}
+{capture $tmpFooterScript}
 jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
   jQuery('[data-datepicker]').pwgDatepicker();
 });
@@ -11,7 +11,7 @@ var month = dateObj.getUTCMonth() + 1; //months from 1-12
 var day = dateObj.getUTCDate();
 var year = dateObj.getUTCFullYear();
 
-var filter_user_name = "{$USER_NAME}";
+var filter_user_name = "{$USER_NAME|noescape}";
 
 if (month < 10) month = "0" + month;
 if (day < 10) day = "0" + day;
@@ -35,96 +35,97 @@ var current_param = {
 }
 
 const API_METHOD = "{$API_METHOD}";
-const str_dwld = "{'Downloaded'|translate}";
-const str_most_visited = "{'Most visited'|translate}";
-const str_best_rated = "{'Best rated'|translate}";
-const str_list = "{'Random photo'|translate}";
-const str_favorites = "{'Your favorites'|translate}";
-const str_recent_cats = "{'Recent albums'|translate}";
-const str_recent_pics = "{'Recent photos'|translate}";
-const str_memories = "{'Memories'|translate}";
-const str_no_longer_exist_photo = "{'This photo no longer exists'|@translate}";
-const str_tags = "{'Tags'|translate}";
-const unit_MB = "{"%s MB"|@translate}";
-const str_guest = '{'guest'|@translate}';
-const str_contact_form = '{'Contact Form'|@translate}';
-const str_edit_img = '{'Edit photo'|@translate}';
+const str_dwld = "{='Downloaded'|translate|noescape}";
+const str_most_visited = "{='Most visited'|translate|noescape}";
+const str_best_rated = "{='Best rated'|translate|noescape}";
+const str_list = "{='Random photo'|translate|noescape}";
+const str_favorites = "{='Your favorites'|translate|noescape}";
+const str_recent_cats = "{='Recent albums'|translate|noescape}";
+const str_recent_pics = "{='Recent photos'|translate|noescape}";
+const str_memories = "{='Memories'|translate|noescape}";
+const str_no_longer_exist_photo = "{='This photo no longer exists'|translate|noescape}";
+const str_tags = "{='Tags'|translate|noescape}";
+const unit_MB = "{="%s MB"|translate|noescape}";
+const str_guest = '{='guest'|translate|noescape}';
+const str_contact_form = '{='Contact Form'|translate|noescape}';
+const str_edit_img = '{='Edit photo'|translate|noescape}';
 
 const str_search_details = {
-    "allwords": "{'Search for words'|@translate}",
-    "date_posted": "{'Post date'|@translate}",
+    "allwords": "{='Search for words'|translate|noescape}",
+    "date_posted": "{='Post date'|translate|noescape}",
     "tags": str_tags,
-    "cat": "{'Album'|@translate}",
-    "author": "{'Author'|@translate}",
-    "added_by": "{'Added by'|@translate}",
-    "filetypes": "{'File type'|@translate}",
+    "cat": "{='Album'|translate|noescape}",
+    "author": "{='Author'|translate|noescape}",
+    "added_by": "{='Added by'|translate|noescape}",
+    "filetypes": "{='File type'|translate|noescape}",
 };
-const str_and_more = "{'and %d more'|@translate}"
+const str_and_more = "{='and %d more'|translate|noescape}"
 
 const guest_id = {$guest_id};
-{/footer_script}
+{/capture}
+{do footerScript($tmpFooterScript)}
 
-{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
-{combine_script id='history' load='footer' path='themes/admin/default/js/history.js'}
+{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
+{do combineScript(id: 'history', load: 'footer', path: 'themes/admin/default/js/history.js')}
 
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
+{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
+{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
+{do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
 
 <form class="filter" method="post" name="filter" action="">
 <fieldset class="history-filter">
   <div class="selectable-filter">
     <div class="filter-part date-start">
-      <label>{'Start-Date'|@translate}</label>
+      <label>{='Start-Date'|translate}</label>
         <input type="hidden" name="start" value="{$START}">
         <label>
           <input type="text" data-datepicker="start" data-datepicker-end="end" data-datepicker-unset="start_unset" readonly>
         </label>
-        <a href="#" class="icon-cancel-circled" id="start_unset">{'unset'|translate}</a>
+        <a href="#" class="icon-cancel-circled" id="start_unset">{='unset'|translate}</a>
     </div>
     <div class="filter-part date-end">
-      <label>{'End-Date'|@translate}</label>
+      <label>{='End-Date'|translate}</label>
         <input type="hidden" name="end" value="{$END}">
         <label>
           <input type="text" data-datepicker="end" data-datepicker-start="start" data-datepicker-unset="end_unset" readonly>
         </label>
-        <a href="#" class="icon-cancel-circled" id="end_unset">{'unset'|translate}</a>
+        <a href="#" class="icon-cancel-circled" id="end_unset">{='unset'|translate}</a>
     </div>
     <div class="filter-part elem-type advanced-filter-select-container">
       <label>
-        {'Action'|@translate}
+        {='Action'|translate}
         <select name="types[]" class="elem-type-select user-action-select advanced-filter-select">
           <option value=""></option>
-          <option value="visited">{'Visited'|@translate} </option>
-          <option value="downloaded">{'Downloaded'|@translate} </option>
+          <option value="visited">{='Visited'|translate} </option>
+          <option value="downloaded">{='Downloaded'|translate} </option>
         </select>
       </label>
     </div>
   </div>
   <div class="filter-tags">
-    <label>{'Additional filters'|translate}</label>
+    <label>{='Additional filters'|translate}</label>
     <div class="filter-container">
       <div id="default-filter" class="filter-item hide">
         <span class="filter-icon"></span><span class="filter-title"> test </span><span class="remove-filter icon-cancel"></span>
       </div>
     </div>
   </div>
-  <div class="refresh-results icon-arrows-cw tiptip" title="{'Refresh'|translate}">
+  <div class="refresh-results icon-arrows-cw tiptip" title="{='Refresh'|translate}">
   </div>
 </fieldset>
 </form>
 
 {if isset($search_summary)}
 <fieldset>
-  <legend>{'Summary'|@translate}</legend>
+  <legend>{='Summary'|translate}</legend>
 
   <ul>
-    <li>{$search_summary.NB_LINES}, {$search_summary.FILESIZE}</li>
+    <li>{$search_summary['NB_LINES']}, {$search_summary['FILESIZE']}</li>
     <li>
-      {$search_summary.USERS}
+      {$search_summary['USERS']}
       <ul>
-        <li>{$search_summary.MEMBERS}</li>
-        <li>{$search_summary.GUESTS}</li>
+        <li>{$search_summary['MEMBERS']}</li>
+        <li>{$search_summary['GUESTS']}</li>
       </ul>
     </li>
   </ul>
@@ -134,7 +135,7 @@ const guest_id = {$guest_id};
 {* Used to be copied in JS *}
 <span id="-2" class="icon-green summary-user-item hide">
   <i class="icon-user-1"> </i>
-  <i class="icon-plus-circled"> </i> 
+  <i class="icon-plus-circled"> </i>
   <span class="user-item-name"> User test </span>
 </span>
 {*  *}
@@ -162,27 +163,27 @@ const guest_id = {$guest_id};
   </div>
 </div>
 
-{if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}{/if}
 
-<div class="loading hide"> 
+<div class="loading hide">
   <span class="icon-spin6 animate-spin"> </span>
 </div>
 <div class="noResults">
-  {'No results'|@translate}
+  {='No results'|translate}
 </div>
 <div class="container">
   <div class="tab-title">
     <div class="date-title">
-        {'Date'|translate}
+        {='Date'|translate}
     </div>
     <div class="user-title">
-        {'User'|translate}
+        {='User'|translate}
     </div>
     <div class="type-title">
-        {'Object'|translate}
+        {='Object'|translate}
     </div>
     <div class="detail-title">
-        {'Details'|translate}
+        {='Details'|translate}
     </div>
   </div>
 
@@ -197,16 +198,16 @@ const guest_id = {$guest_id};
       </div>
 
       <div class="user-section">
-        <span class="user-name bold" title="{'Add as filter'|translate}"> Zac le boss <i class="add-filter icon-plus-circled"></i></span>
-        <span class="user-ip" title="{'Add as filter'|translate}"> 192.168.0.0 <i class="add-filter icon-plus-circled"></i></span>
+        <span class="user-name bold" title="{='Add as filter'|translate}"> Zac le boss <i class="add-filter icon-plus-circled"></i></span>
+        <span class="user-ip" title="{='Add as filter'|translate}"> 192.168.0.0 <i class="add-filter icon-plus-circled"></i></span>
       </div>
 
       <div class="type-section">
         <a class="type-icon no-img" target="_blank"> <i class="icon-file-image"> </i> </a>
         <span class="icon-ellipsis-vert toggle-img-option">
           <div class="img-option">
-            <a class="add-img-as-filter icon-filter"> {'Add as filter'|translate} </a>
-            <a class="edit-img icon-pencil" href="" target="_blank">{'Edit'|@translate}</a>
+            <a class="add-img-as-filter icon-filter"> {='Add as filter'|translate} </a>
+            <a class="edit-img icon-pencil" href="" target="_blank">{='Edit'|translate}</a>
           </div>
         </span>
 
@@ -214,7 +215,7 @@ const guest_id = {$guest_id};
           <span class="type-name bold"> WIP </span>
           <span class="type-id"> tag #99 </span>
         </div>
-        
+
       </div>
 
       <div class="detail-section">
@@ -237,7 +238,7 @@ const guest_id = {$guest_id};
       <span class="icon-left-open"></span>
     </div>
     <div class="pagination-item-container">
-    
+
     </div>
     <div class="pagination-arrow rigth">
       <span class="icon-left-open"></span>
@@ -245,11 +246,11 @@ const guest_id = {$guest_id};
   </div>
 </div>
 
-{if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}{/if}
 
-{combine_script id='jquery.geoip' load='async' path='themes/admin/default/js/jquery.geoip.js'}
+{do combineScript(id: 'jquery.geoip', load: 'async', path: 'themes/admin/default/js/jquery.geoip.js')}
 
-{footer_script}{literal}
+{capture $tmpFooterScript2}
 jQuery(document).ready( function() {
   jQuery(".IP").one( "mouseenter", function(){
   	var that = $(this);
@@ -260,13 +261,13 @@ jQuery(document).ready( function() {
   		});
   	GeoIp.get( that.text(), function(data) {
   		if (!data.fullName) return;
-  
+
       var content = data.fullName;
       if (data.latitude && data.region_name) {
-        content += '<br><a class="ipGeoOpen" data-lat="'+data.latitude+'" data-lon="'+data.longitude+'"';
+        content += '\x3Cbr>\x3Ca class="ipGeoOpen" data-lat="'+data.latitude+'" data-lon="'+data.longitude+'"';
         content += ' href="#">show on a Google Map</a>';
       }
-  
+
   		that.tipTip( {
   			content: content,
         keepAlive: true,
@@ -277,21 +278,22 @@ jQuery(document).ready( function() {
   			that.trigger("mouseenter");
   	});
   } );
-  
+
   jQuery(document).on('click', '.ipGeoOpen',  function() {
     var lat = jQuery(this).data("lat");
     var lon = jQuery(this).data("lon");
     var parent = jQuery(this).parent();
     jQuery(this).remove();
-  
-    var append = '<br><img width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
+
+    var append = '\x3Cbr>\x3Cimg width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
     append += '?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C' + lat + ',' + lon + '">';
-  
+
     jQuery(parent).append(append);
     return false;
   });
 });
-{/literal}{/footer_script}
+{/capture}
+{do footerScript($tmpFooterScript2)}
 
 <style>
 

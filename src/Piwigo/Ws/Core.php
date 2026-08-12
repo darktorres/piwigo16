@@ -889,7 +889,7 @@ final readonly class Core
         // image -- Server::checkType() deliberately skips its own
         // int/positive coercion for an empty-string param (its own
         // `elseif ($param !== '')` guard), so a real browser client that
-        // always sends every key (history.tpl's own `image_id: {if
+        // always sends every key (history.latte's own `image_id: {if
         // isset($IMAGE_ID)}"{$IMAGE_ID}"{else}""{/if}`, unlike a WS caller
         // that just omits the key) reaches this method with the literal
         // string ''. The old `!== 0` check missed that case (only the

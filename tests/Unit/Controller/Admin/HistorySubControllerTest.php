@@ -97,7 +97,7 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'history.tpl', 'start={$START}');
+        file_put_contents($tplDir . 'history.latte', 'start={$START}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -119,11 +119,21 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
         $today = Env::now()->format('Y-m-d');
+
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
         expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('History')
             ->and($template->getTemplateVars('START'))
             ->toBe($today)
-            ->and($template->getTemplateVars('ADMIN_CONTENT'))
+            ->and((string) $adminContent)
             ->toBe('start=' . $today);
     } finally {
         CurrentTemplateTestFactory::get()->reset();

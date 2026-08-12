@@ -206,10 +206,6 @@ final readonly class ThemesStandardPagesPageRenderer
             saveError: $save_error,
         ));
 
-        $template->setFilenames([
-            'themes' => 'themes_standard_pages.tpl',
-        ]);
-
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'themes');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'themes_standard_pages.latte');
     }
 }

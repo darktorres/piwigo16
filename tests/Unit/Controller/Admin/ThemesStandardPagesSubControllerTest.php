@@ -89,14 +89,23 @@ test('handle renders the real standard-pages config screen with no themes instal
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'themes_standard_pages.tpl', 'themes_standard_pages_rendered=yes');
+        file_put_contents($tplDir . 'themes_standard_pages.latte', 'themes_standard_pages_rendered=yes');
         $template->setTemplateDir($tplDir);
 
         $subController = themesStandardPagesSubControllerTestSubject();
 
         $subController->handle(new ServerRequest('GET', '/admin.php?page=themes_standard_pages'));
 
-        expect($template->getTemplateVars('ADMIN_CONTENT'))
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
+        expect((string) $adminContent)
             ->toContain('themes_standard_pages_rendered=yes');
 
         CurrentConfigTestFactory::get()->themesDir = $originalThemesDir;

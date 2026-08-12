@@ -133,7 +133,7 @@ test('render() has nothing to show when no extents are configured, no theme temp
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'extend_for_templates.tpl', 'title={$ADMIN_PAGE_TITLE}');
+        file_put_contents($tplDir . 'extend_for_templates.latte', 'title={$ADMIN_PAGE_TITLE}');
         $template->setTemplateDir($tplDir);
 
         $conn = DbConnection::build();
@@ -151,11 +151,20 @@ test('render() has nothing to show when no extents are configured, no theme temp
                 Paths::fromRoot($root),
             );
 
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
         expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('Extend for templates')
             ->and($template->getTemplateVars('extents'))
             ->toBeNull()
-            ->and($template->getTemplateVars('ADMIN_CONTENT'))
+            ->and((string) $adminContent)
             ->toBe('title=Extend for templates');
     } finally {
         CurrentTemplateTestFactory::get()->reset();

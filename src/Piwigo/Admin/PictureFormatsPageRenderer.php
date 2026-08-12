@@ -74,8 +74,6 @@ final class PictureFormatsPageRenderer
                 ->getToken(),
         ));
 
-        $template->setFilename('picture_formats', 'picture_formats.tpl');
-
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'picture_formats');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'picture_formats.latte');
     }
 }

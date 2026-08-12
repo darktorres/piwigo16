@@ -170,10 +170,6 @@ final class ExtendForTemplatesPageRenderer
             $tpl_extension[$file] = ['N/A', 'N/A', 'N/A'];
         }
 
-        $template->setFilenames([
-            'extend_for_templates' => 'extend_for_templates.tpl',
-        ]);
-
         ksort($tpl_extension);
         $extents = null;
         foreach ($tpl_extension as $file => $conditions) {
@@ -199,6 +195,6 @@ final class ExtendForTemplatesPageRenderer
             extents: $extents,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'extend_for_templates');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'extend_for_templates.latte');
     }
 }

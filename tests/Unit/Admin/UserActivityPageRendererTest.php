@@ -287,7 +287,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'user_activity.tpl', 'users={$nb_users}');
+        file_put_contents($tplDir . 'user_activity.latte', 'users={$nb_users}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -322,6 +322,15 @@ test('render() lists real activity aggregated by user and skips the additional-f
                 $eventDispatcher,
             );
 
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
         // The real fixture's own piwigo_activity data: 17 non-system rows,
         // all performed_by user 1 (fixture_admin), all sharing the exact
         // same occured_on '2026-08-01 03:00:00'.
@@ -346,7 +355,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
                 'name' => null,
                 'value' => null,
             ])
-            ->and($template->getTemplateVars('ADMIN_CONTENT'))
+            ->and((string) $adminContent)
             ->toBe('users=4');
 
         $actions = $template->getTemplateVars('ACTIONS');

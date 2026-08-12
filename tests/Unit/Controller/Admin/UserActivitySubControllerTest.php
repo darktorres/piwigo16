@@ -257,7 +257,7 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'user_activity.tpl', 'users={$nb_users}');
+        file_put_contents($tplDir . 'user_activity.latte', 'users={$nb_users}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -285,6 +285,15 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
         expect($template->getTemplateVars('nb_users'))
             ->toBe(4)
             ->and($template->getTemplateVars('ulist'))
@@ -295,7 +304,7 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
                     'nb_lines' => 17,
                 ],
             ])
-            ->and($template->getTemplateVars('ADMIN_CONTENT'))
+            ->and((string) $adminContent)
             ->toBe('users=4');
     } finally {
         $conn->executeStatement('DELETE FROM activity');

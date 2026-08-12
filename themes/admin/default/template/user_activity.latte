@@ -1,22 +1,22 @@
-{include file='include/colorbox.inc.tpl'}
-{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{include 'include/colorbox.inc.latte'}
+{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
+{do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
+{do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize." . $themeconf['colorscheme'] . ".css")}
 
-{combine_script id='LocalStorageCache' load='footer' path='themes/admin/default/js/LocalStorageCache.js'}
-{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{footer_script}
+{do combineScript(id: 'LocalStorageCache', load: 'footer', path: 'themes/admin/default/js/LocalStorageCache.js')}
+{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
+{capture $tmpFooterScript}
 {* <!-- USERS --> *}
 var usersCache = new UsersCache({
-  serverKey: '{$CACHE_KEYS.users}',
-  serverId: '{$CACHE_KEYS._hash}',
+  serverKey: '{$CACHE_KEYS['users']}',
+  serverId: '{$CACHE_KEYS['_hash']}',
   rootUrl: '{$ROOT_URL}'
 });
 const nb_users = {$nb_users};
 
-const additional_filt_type = '{$ADDITIONAL_FILT.type}';
-const additional_filt_value = {if $ADDITIONAL_FILT.type} {$ADDITIONAL_FILT.value} {else} null {/if};
+const additional_filt_type = '{$ADDITIONAL_FILT['type']|noescape}';
+const additional_filt_value = {if $ADDITIONAL_FILT['type']} {$ADDITIONAL_FILT['value']|noescape} {else} null {/if};
 
 const color_icons = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
 var activity_page = 1;
@@ -27,119 +27,120 @@ let end_page = false;
 let uid_filter;
 let action_filter;
 let object_filter;
-let date_min_filter = '{$ACTIVITY_DATES.min}';
-let date_max_filter = '{$ACTIVITY_DATES.max}';
+let date_min_filter = '{$ACTIVITY_DATES['min']}';
+let date_max_filter = '{$ACTIVITY_DATES['max']}';
 
-const date_min = '{$ACTIVITY_DATES.min}';
-const date_max = '{$ACTIVITY_DATES.max}';
+const date_min = '{$ACTIVITY_DATES['min']}';
+const date_max = '{$ACTIVITY_DATES['max']}';
 
 const page_ellipsis = '<span>...</span>'
 const page_item = '<a data-page="%d">%d</a>';
 var create_selecter = true;
-const users_key = "{"Users"|@translate}";
+const users_key = "{="Users"|translate|noescape}";
 
-const line_key = "{'%s line'|translate}";
-const lines_key = "{'%s lines'|translate}";
+const line_key = "{='%s line'|translate|noescape}";
+const lines_key = "{='%s lines'|translate|noescape}";
 
 {*<-- Translation keys -->*}
 
-var actionType_add = "{'add'|translate}";
-var actionType_delete = "{'deletion'|translate}";
-var actionType_move = "{'move'|translate}";
-var actionType_edit = "{'edit'|translate}";
-var actionType_login = "{'login'|translate}";
-var actionType_logout = "{'logout'|translate}";
+var actionType_add = "{='add'|translate|noescape}";
+var actionType_delete = "{='deletion'|translate|noescape}";
+var actionType_move = "{='move'|translate|noescape}";
+var actionType_edit = "{='edit'|translate|noescape}";
+var actionType_login = "{='login'|translate|noescape}";
+var actionType_logout = "{='logout'|translate|noescape}";
 
 {* Album keys *}
 
-var actionInfos_album_added = "{'%d album added'|translate}";
-var actionInfos_album_deleted = "{'%d album deleted'|translate}";
-var actionInfos_album_edited = "{'%d album edited'|translate}";
-var actionInfos_album_moved = "{'%d album moved'|translate}";
+var actionInfos_album_added = "{='%d album added'|translate|noescape}";
+var actionInfos_album_deleted = "{='%d album deleted'|translate|noescape}";
+var actionInfos_album_edited = "{='%d album edited'|translate|noescape}";
+var actionInfos_album_moved = "{='%d album moved'|translate|noescape}";
 
-var actionInfos_albums_added = "{'%d albums added'|translate}";
-var actionInfos_albums_deleted = "{'%d albums deleted'|translate}";
-var actionInfos_albums_edited = "{'%d albums edited'|translate}";
-var actionInfos_albums_moved = "{'%d albums moved'|translate}";
+var actionInfos_albums_added = "{='%d albums added'|translate|noescape}";
+var actionInfos_albums_deleted = "{='%d albums deleted'|translate|noescape}";
+var actionInfos_albums_edited = "{='%d albums edited'|translate|noescape}";
+var actionInfos_albums_moved = "{='%d albums moved'|translate|noescape}";
 
 {* User keys *}
 
-var actionInfos_user_added = "{'%d user added'|translate}";
-var actionInfos_user_deleted = "{'%d user deleted'|translate}";
-var actionInfos_user_edited = "{'%d user edited'|translate}";
-var actionInfos_user_logged_in = "{'%d user logged in'|translate}";
-var actionInfos_user_logged_out = "{'%d user logged out'|translate}";
+var actionInfos_user_added = "{='%d user added'|translate|noescape}";
+var actionInfos_user_deleted = "{='%d user deleted'|translate|noescape}";
+var actionInfos_user_edited = "{='%d user edited'|translate|noescape}";
+var actionInfos_user_logged_in = "{='%d user logged in'|translate|noescape}";
+var actionInfos_user_logged_out = "{='%d user logged out'|translate|noescape}";
 
-var actionInfos_users_added = "{'%d users added'|translate}";
-var actionInfos_users_deleted = "{'%d users deleted'|translate}";
-var actionInfos_users_edited = "{'%d users edited'|translate}";
-var actionInfos_users_logged_in = "{'%d users logged in'|translate}";
-var actionInfos_users_logged_out = "{'%d users logged out'|translate}";
+var actionInfos_users_added = "{='%d users added'|translate|noescape}";
+var actionInfos_users_deleted = "{='%d users deleted'|translate|noescape}";
+var actionInfos_users_edited = "{='%d users edited'|translate|noescape}";
+var actionInfos_users_logged_in = "{='%d users logged in'|translate|noescape}";
+var actionInfos_users_logged_out = "{='%d users logged out'|translate|noescape}";
 
 {* Photo keys *}
 
-var actionInfos_photo_added = "{'%d photo added'|translate}";
-var actionInfos_photo_deleted = "{'%d photo deleted'|translate}";
-var actionInfos_photo_edited = "{'%d photo edited'|translate}";
-var actionInfos_photo_moved = "{'%d photo moved'|translate}";
+var actionInfos_photo_added = "{='%d photo added'|translate|noescape}";
+var actionInfos_photo_deleted = "{='%d photo deleted'|translate|noescape}";
+var actionInfos_photo_edited = "{='%d photo edited'|translate|noescape}";
+var actionInfos_photo_moved = "{='%d photo moved'|translate|noescape}";
 
-var actionInfos_photos_added = "{'%d photos added'|translate}";
-var actionInfos_photos_deleted = "{'%d photos deleted'|translate}";
-var actionInfos_photos_edited = "{'%d photos edited'|translate}";
-var actionInfos_photos_moved = "{'%d photos moved'|translate}";
+var actionInfos_photos_added = "{='%d photos added'|translate|noescape}";
+var actionInfos_photos_deleted = "{='%d photos deleted'|translate|noescape}";
+var actionInfos_photos_edited = "{='%d photos edited'|translate|noescape}";
+var actionInfos_photos_moved = "{='%d photos moved'|translate|noescape}";
 
 {* Group keys *}
 
-var actionInfos_group_added = "{'%d group added'|translate}";
-var actionInfos_group_deleted = "{'%d group deleted'|translate}";
-var actionInfos_group_edited = "{'%d group edited'|translate}";
-var actionInfos_group_moved = "{'%d group moved'|translate}";
+var actionInfos_group_added = "{='%d group added'|translate|noescape}";
+var actionInfos_group_deleted = "{='%d group deleted'|translate|noescape}";
+var actionInfos_group_edited = "{='%d group edited'|translate|noescape}";
+var actionInfos_group_moved = "{='%d group moved'|translate|noescape}";
 
-var actionInfos_groups_added = "{'%d groups added'|translate}";
-var actionInfos_groups_deleted = "{'%d groups deleted'|translate}";
-var actionInfos_groups_edited = "{'%d groups edited'|translate}";
-var actionInfos_groups_moved = "{'%d groups moved'|translate}";
+var actionInfos_groups_added = "{='%d groups added'|translate|noescape}";
+var actionInfos_groups_deleted = "{='%d groups deleted'|translate|noescape}";
+var actionInfos_groups_edited = "{='%d groups edited'|translate|noescape}";
+var actionInfos_groups_moved = "{='%d groups moved'|translate|noescape}";
 
 {* Tags keys *}
 
-var actionInfos_tag_added = "{'%d tag added'|translate}";
-var actionInfos_tag_deleted = "{'%d tag deleted'|translate}";
-var actionInfos_tag_edited = "{'%d tag edited'|translate}";
-var actionInfos_tag_moved = "{'%d tag moved'|translate}";
+var actionInfos_tag_added = "{='%d tag added'|translate|noescape}";
+var actionInfos_tag_deleted = "{='%d tag deleted'|translate|noescape}";
+var actionInfos_tag_edited = "{='%d tag edited'|translate|noescape}";
+var actionInfos_tag_moved = "{='%d tag moved'|translate|noescape}";
 
-var actionInfos_tags_added = "{'%d tags added'|translate}";
-var actionInfos_tags_deleted = "{'%d tags deleted'|translate}";
-var actionInfos_tags_edited = "{'%d tags edited'|translate}";
-var actionInfos_tags_moved = "{'%d tags moved'|translate}";
+var actionInfos_tags_added = "{='%d tags added'|translate|noescape}";
+var actionInfos_tags_deleted = "{='%d tags deleted'|translate|noescape}";
+var actionInfos_tags_edited = "{='%d tags edited'|translate|noescape}";
+var actionInfos_tags_moved = "{='%d tags moved'|translate|noescape}";
 
-{/footer_script}
+{/capture}
+{do footerScript($tmpFooterScript)}
 
-{combine_script id='user_activity' load='async' require='jquery' path='themes/admin/default/js/user_activity.js'}
-<div class="container"> 
+{do combineScript(id: 'user_activity', load: 'async', require: 'jquery', path: 'themes/admin/default/js/user_activity.js')}
+<div class="container">
     <div>
         <div class="activity-header">
             <div class="user_activity_end_options">
-                <a class="download_csv tiptip" title="{'Download all activities'|translate}" href="admin.php?page=user_activity&type=download_logs"> 
+                <a class="download_csv tiptip" title="{='Download all activities'|translate}" href="admin.php?page=user_activity&type=download_logs">
                     <i class="icon-download"> </i>
                 </a>
                 <div id="activityMoreFilters" class="activity-more-filters">
-                    <span class="icon-filter"></span>{'Filters'|@translate}
+                    <span class="icon-filter"></span>{='Filters'|translate}
                 </div>
             </div>
         </div>
         <div id="activityMoreFiltersContent" class="activity-more-filters-content">
             <div class="activity-select">
-                <span class="activity-select"> {'User'|translate} </span>
-            
+                <span class="activity-select"> {='User'|translate} </span>
+
                 <select class="user-selecter" placeholder="---" single>
                     <option value="none">
                         <span class='username_filter'>---</span>
                     </option>
-                    {foreach from=$ulist item=user}
-                        <option value="{$user.id}">
-                            <span class='username_filter'>{$user.username}</span>
+                    {foreach $ulist as $user}
+                        <option value="{$user['id']}">
+                            <span class='username_filter'>{$user['username']}</span>
                             <span class='nb_lines_str'>
-                                {'(%d)'|translate:$user.nb_lines}
+                                {='(%d)'|translate:$user['nb_lines']}
                             </span>
                         </option>
                     {/foreach}
@@ -147,66 +148,66 @@ var actionInfos_tags_moved = "{'%d tags moved'|translate}";
             </div>
 
             <div class="activity-select">
-                <span class="activity-select"> {'Action'|translate} </span>
-            
+                <span class="activity-select"> {='Action'|translate} </span>
+
                 <select class="action-selecter" placeholder="---" single>
                     <option value="none">
                         <span class='action_filter'>---</span>
                     </option>
-                    {foreach from=$ACTIONS item=action}
-                        <option value="{$action.value}">
+                    {foreach $ACTIONS as $action}
+                        <option value="{$action['value']}">
                             <span class='action_filter'>
-                                {ucfirst($action.object)|translate}
+                                {=ucfirst($action['object'])|translate}
                                 /
-                                {if $action.action == 'delete'}
-                                    {'deletion'|translate : $action.object}
+                                {if $action['action'] == 'delete'}
+                                    {='deletion'|translate:$action['object']}
                                 {else}
-                                    {$action.action|translate}
+                                    {$action['action']|translate}
                                 {/if}
-                                {' (%d)'|translate : $action.counter}
+                                {=' (%d)'|translate:$action['counter']}
                             </span>
                         </option>
                     {/foreach}
                 </select>
             </div>
-            
+
             <div class="activity-select">
-                <span class="activity-select">{'Start-Date'|translate}</span>
-                <input 
+                <span class="activity-select">{='Start-Date'|translate}</span>
+                <input
                     class="activity-date-selecter"
                     type="date"
                     id="date_min_activity"
-                    value="{$ACTIVITY_DATES.min}"
-                    min="{$ACTIVITY_DATES.min}"
-                    max="{$ACTIVITY_DATES.max}"
+                    value="{$ACTIVITY_DATES['min']}"
+                    min="{$ACTIVITY_DATES['min']}"
+                    max="{$ACTIVITY_DATES['max']}"
                 />
             </div>
 
             <div class="activity-select">
-                <span class="activity-select">{'End-Date'|translate}</span>
-                <input 
+                <span class="activity-select">{='End-Date'|translate}</span>
+                <input
                     class="activity-date-selecter"
                     type="date"
                     id="date_max_activity"
-                    value="{$ACTIVITY_DATES.max}"
-                    min="{$ACTIVITY_DATES.min}"
-                    max="{$ACTIVITY_DATES.max}"
+                    value="{$ACTIVITY_DATES['max']}"
+                    min="{$ACTIVITY_DATES['min']}"
+                    max="{$ACTIVITY_DATES['max']}"
                 />
             </div>
 
-            {if $ADDITIONAL_FILT.type}
+            {if $ADDITIONAL_FILT['type']}
             <div class="additional-filters-section">
                 <div class="additional-filters-info">
-                    {'Additional filters'|translate}
+                    {='Additional filters'|translate}
                 </div>
                 <div class="additional-filters">
                     <div class="activity-filter-container">
-                    {if $ADDITIONAL_FILT.type == 'photo'}
-                        <span class="icon-picture">{$ADDITIONAL_FILT.name}</span>
-                    {else if $ADDITIONAL_FILT.type == 'album'}
-                        <span class="icon-folder-open">{$ADDITIONAL_FILT.name}</span>
+                    {if $ADDITIONAL_FILT['type'] == 'photo'}
+                        <span class="icon-picture">{$ADDITIONAL_FILT['name']}</span>
+                    {elseif $ADDITIONAL_FILT['type'] == 'album'}
+                        <span class="icon-folder-open">{$ADDITIONAL_FILT['name']}</span>
                     {else}
-                        <span class="icon-group">{$ADDITIONAL_FILT.name}</span>
+                        <span class="icon-group">{$ADDITIONAL_FILT['name']}</span>
                     {/if}
                     </div>
                 </div>
@@ -228,32 +229,32 @@ var actionInfos_tags_moved = "{'%d tags moved'|translate}";
     </div>
 
     <div class="activity-noresult">
-        {'No results'|translate}
+        {='No results'|translate}
     </div>
 
-    
+
 
     <div class="tab-title">
         <div class="action-title">
-            {'Action'|translate}
+            {='Action'|translate}
         </div>
 
         <div class="date-title">
-            {'Date'|translate}
+            {='Date'|translate}
         </div>
 
         <div class="user-title">
-            {'User'|translate}
+            {='User'|translate}
         </div>
 
         <div class="detail-title">
-            {'Details'|translate}
+            {='Details'|translate}
         </div>
     </div>
 
 
     <div class="tab">
-    <div class="loading"> 
+    <div class="loading">
         <span class="icon-spin6 animate-spin"> </span>
     </div>
         <div class="line hide" id="-1">
@@ -271,7 +272,7 @@ var actionInfos_tags_moved = "{'%d tags moved'|translate}";
                 <span class="icon-clock"> </span>
                 <span class="date-day">1 Janvier 1970</span>
                 <span class="date-hour">a 00:00</span>
-            </div> 
+            </div>
 
             <div class="user-section">
                 <div class="user-pic">
@@ -333,7 +334,7 @@ var actionInfos_tags_moved = "{'%d tags moved'|translate}";
     margin: 0 0 10px 35px;
 }
 
-.tab-title .action-title, 
+.tab-title .action-title,
 .line .action-section {
     min-width: 320px;
     max-width: 340px;
@@ -342,13 +343,13 @@ var actionInfos_tags_moved = "{'%d tags moved'|translate}";
     min-width: 298px !important;
 }
 
-.tab-title .date-title, 
+.tab-title .date-title,
 .line .date-section {
     min-width: 280px;
     max-width: 300px;
 }
 
-.tab-title .user-title, 
+.tab-title .user-title,
 .line .user-section {
     min-width: 200px;
     max-width: 250px;

@@ -1115,8 +1115,8 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame(["tsv_search @@ to_tsquery('simple', ?)"], $clauses);
                 self::assertSame(['nature'], $values);
             } else {
-                self::assertSame(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'], $clauses);
-                self::assertSame(['"nature"'], $values);
+                self::assertSame(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE) AND (name LIKE ? OR comment LIKE ?)'], $clauses);
+                self::assertSame(['"nature"', '%nature%', '%nature%'], $values);
             }
         }
 
@@ -1130,8 +1130,8 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame(["tsv_search @@ to_tsquery('simple', ?)"], $clauses);
                 self::assertSame(['travel:*'], $values);
             } else {
-                self::assertSame(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'], $clauses);
-                self::assertSame(['travel*'], $values);
+                self::assertSame(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE) AND (name LIKE ? OR comment LIKE ?)'], $clauses);
+                self::assertSame(['travel*', 'travel%', 'travel%'], $values);
             }
         }
 

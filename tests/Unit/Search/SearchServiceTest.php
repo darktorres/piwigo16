@@ -107,6 +107,21 @@ function searchServiceTestRepo(): SearchRepository
     return new SearchRepository(EntityManagerFactory::build(searchServiceTestConn()));
 }
 
+/**
+ * InnoDB's FULLTEXT index is not updated synchronously on INSERT -- new
+ * words sit in an in-memory cache (`innodb_ft_cache_size`) until the
+ * table is closed or optimized, so a MATCH()/AGAINST() query run
+ * immediately after inserting a fresh row can miss it (confirmed via a
+ * direct probe: 0 rows before OPTIMIZE TABLE, 1 row after, for the same
+ * unmodified data). Only tests that insert a row and then search for it
+ * by a >3-char term (qsearchGetTextTokenSearchSql()'s own FULLTEXT
+ * threshold) in the same request are affected.
+ */
+function searchServiceTestFlushFulltext(Connection $conn, string $table): void
+{
+    $conn->executeStatement('OPTIMIZE TABLE ' . $table);
+}
+
 function searchServiceTestFilterState(): FilterState
 {
     $filterState = Kernel::container()->get(FilterState::class);
@@ -1263,6 +1278,7 @@ test('getQuickSearchResultsNoCache() a term matching a real tag with zero curren
     $conn = searchServiceTestConn();
     $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('zqualifiesonly', 'zqualifiesonly', NOW())");
     $tagId = (int) $conn->lastInsertId();
+    searchServiceTestFlushFulltext($conn, 'tags');
 
     try {
         $results = searchServiceTestService()
@@ -1284,6 +1300,7 @@ test('getQuickSearchResultsNoCache() a term matching a real category with zero c
     $conn = searchServiceTestConn();
     $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('zqualifiesonlycat')");
     $catId = (int) $conn->lastInsertId();
+    searchServiceTestFlushFulltext($conn, 'categories');
 
     try {
         $results = searchServiceTestService()
@@ -1446,10 +1463,14 @@ test('qsearchGetTextTokenSearchSql() stays on FULLTEXT when the longest split pa
         // $ft is the whole original variant, hyphen included -- the
         // split-into-parts step above is only ever used for the
         // eligibility check itself, never to transform the bound value.
+        // The trailing "AND (name LIKE ? OR comment LIKE ?)" is a
+        // literal-substring confirmation ANDed onto the FULLTEXT clause
+        // -- see this method's own docblock on the ngram-parser false-
+        // positive class it closes.
         expect($clauses)
-            ->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'])
+            ->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE) AND (name LIKE ? OR comment LIKE ?)'])
             ->and($values)
-            ->toBe(['abc-defg']);
+            ->toBe(['abc-defg', '%abc-defg%', '%abc-defg%']);
     }
 });
 
@@ -1463,9 +1484,9 @@ test('qsearchGetTextTokenSearchSql() wraps a quoted term in double quotes for FU
             ->and($values)
             ->toBe(['nature']);
     } else {
-        expect($clauses)->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'])
+        expect($clauses)->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE) AND (name LIKE ? OR comment LIKE ?)'])
             ->and($values)
-            ->toBe(['"nature"']);
+            ->toBe(['"nature"', '%nature%', '%nature%']);
     }
 });
 
@@ -1479,9 +1500,9 @@ test('qsearchGetTextTokenSearchSql() appends a star for a trailing wildcard FULL
             ->and($values)
             ->toBe(['travel:*']);
     } else {
-        expect($clauses)->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'])
+        expect($clauses)->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE) AND (name LIKE ? OR comment LIKE ?)'])
             ->and($values)
-            ->toBe(['travel*']);
+            ->toBe(['travel*', 'travel%', 'travel%']);
     }
 });
 

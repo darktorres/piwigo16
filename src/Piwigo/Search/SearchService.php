@@ -916,6 +916,7 @@ final readonly class SearchService
         $values = [];
         $variants = array_merge([$token->term], $token->variants);
         $fts = [];
+        $ftVariants = [];
         foreach ($variants as $variant) {
             $useFt = mb_strlen($variant) > 3;
             if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) {
@@ -981,6 +982,7 @@ final readonly class SearchService
                 }
 
                 $fts[] = $ft;
+                $ftVariants[] = $variant;
             }
         }
 
@@ -1000,8 +1002,37 @@ final readonly class SearchService
                 // to keep a phrase's words grouped together.
                 $values[] = implode(' | ', $fts);
             } else {
-                $clauses[] = 'MATCH(' . implode(', ', $fields) . ') AGAINST(? IN BOOLEAN MODE)';
-                $values[] = implode(' ', $fts);
+                // WITH PARSER ngram (see Version20260804122300.php, chosen
+                // for CJK support -- no word boundaries to split on)
+                // indexes overlapping ngram_token_size=2 character
+                // fragments rather than whole words, so MATCH() AGAINST()
+                // alone can score a document positively via pure
+                // coincidental fragment overlap with content that shares
+                // none of the query's actual words -- confirmed live: a
+                // widened Inflector variant ('families', searching
+                // 'family') scored 0.09 relevance against a category
+                // named "Nested Sub Album" purely because both strings
+                // contain the 2-char fragment 'es' ('famil-i-ES' /
+                // 'Nest-ED'... 'N-ES-ted'), with nothing else in common.
+                // An exact-substring LIKE confirmation, ANDed with the
+                // FULLTEXT clause, keeps FULLTEXT as the fast
+                // index-backed candidate filter while eliminating this
+                // ngram false-positive class -- LIKE is a literal byte/
+                // character substring test, so this is not
+                // English-specific and stays correct for the same CJK
+                // content the ngram parser exists to serve.
+                $wildcardEnd = (bool) ($token->modifier & QSingleToken::QST_WILDCARD_END);
+                $likeClauses = [];
+                foreach ($fields as $field) {
+                    foreach ($ftVariants as $ftVariant) {
+                        $escaped = str_replace(['%', '_'], ['\\%', '\\_'], $ftVariant);
+                        $likeClauses[] = $field . ' LIKE ?';
+                        $values[] = $wildcardEnd ? ($escaped . '%') : ('%' . $escaped . '%');
+                    }
+                }
+
+                $clauses[] = 'MATCH(' . implode(', ', $fields) . ') AGAINST(? IN BOOLEAN MODE) AND (' . implode(' OR ', $likeClauses) . ')';
+                array_splice($values, count($values) - count($likeClauses), 0, [implode(' ', $fts)]);
             }
         }
 

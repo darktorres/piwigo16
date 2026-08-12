@@ -114,7 +114,7 @@ final class MenubarRenderer
                 }
             }
             if (! self::emptyValue($block->data)) {
-                $block->template = 'menubar_links.tpl';
+                $block->template = 'menubar_links.latte';
             }
         }
 
@@ -148,7 +148,7 @@ final class MenubarRenderer
                     'section' => 'categories',
                 ]),
             ];
-            $block->template = 'menubar_categories.tpl';
+            $block->template = 'menubar_categories.latte';
         }
 
         $block = $menu->getBlock('mbRelatedCategories');
@@ -185,7 +185,7 @@ final class MenubarRenderer
             ];
 
             if (! self::emptyValue($block->data['MENU_CATEGORIES'])) {
-                $block->template = 'menubar_related_categories.tpl';
+                $block->template = 'menubar_related_categories.latte';
             }
         }
 
@@ -208,7 +208,7 @@ final class MenubarRenderer
             }
 
             if (! self::emptyValue($block->data)) {
-                $block->template = 'menubar_tags.tpl';
+                $block->template = 'menubar_tags.latte';
             }
         }
 
@@ -285,7 +285,7 @@ final class MenubarRenderer
                   'NAME' => $lang->t('Calendar'),
                   'REL' => 'rel="nofollow"',
               ];
-            $block->template = 'menubar_specials.tpl';
+            $block->template = 'menubar_specials.latte';
         }
 
         if (($block = $menu->getBlock('mbMenu')) !== null) {
@@ -340,7 +340,7 @@ final class MenubarRenderer
                   'URL' => $urlService->getRootUrl() . 'notification.php',
                   'REL' => 'rel="nofollow"',
               ];
-            $block->template = 'menubar_menu.tpl';
+            $block->template = 'menubar_menu.latte';
         }
 
         $u_login = null;
@@ -376,7 +376,7 @@ final class MenubarRenderer
             }
         }
         if (($block = $menu->getBlock('mbIdentification')) !== null) {
-            $block->template = 'menubar_identification.tpl';
+            $block->template = 'menubar_identification.latte';
         }
 
         $template->assignContext(new MenubarIdentificationPageContext(

@@ -69,6 +69,16 @@ final class PiwigoExtension extends Extension
             // PHP passthroughs whose first argument is the piped value.
             'sprintf' => sprintf(...),
             'urlencode' => urlencode(...),
+            // Smarty's `|escape:'url'` (as opposed to its `|urlencode`
+            // modifier, a straight `urlencode()` passthrough registered in
+            // Template.php) compiles to `rawurlencode()`, not `urlencode()`
+            // -- confirmed against vendor/smarty/smarty's own
+            // EscapeModifierCompiler.php, not assumed from the reference's
+            // converter comment. Using `|urlencode` for an `|escape:'url'`
+            // conversion site is a real behavior change (`+` vs `%20` for
+            // spaces) -- caught live via the golden-HTML diff on
+            // `favorites` (footer.tpl's mailto subject).
+            'rawurlencode' => rawurlencode(...),
             'intval' => intval(...),
             'json_encode' => json_encode(...),
             'json_decode' => json_decode(...),
@@ -164,7 +174,17 @@ final class PiwigoExtension extends Extension
         return $this->lang->t($key, ...$stringArgs);
     }
 
-    public function translateDec(int|float $count, string $singular, string $plural): string
+    /**
+     * `$count` is `mixed`, not `int|float`, to match `Lang::plural()`'s own
+     * signature -- a template like `menubar_categories.latte` can genuinely
+     * pipe a `null` count through here (`nb_total_images` is a real,
+     * legitimate `?? null` fallback, not a bug), and `Lang::plural()`
+     * already treats non-numeric input as 0 rather than rejecting it.
+     * Confirmed live: a strict `int|float` parameter type here throws a
+     * real `TypeError` on `gallery-home` the moment a fresh user has no
+     * `nb_total_images` yet.
+     */
+    public function translateDec(mixed $count, string $singular, string $plural): string
     {
         return $this->lang->plural($singular, $plural, $count);
     }

@@ -91,6 +91,20 @@ test('fromArrays coerces non-string parameter keys to string', function (): void
         ]);
 });
 
+/**
+ * [Mutation] The `(string) $name` cast this test above targets (Line
+ * 57) is confirmed genuinely inert -- not just untested -- via a
+ * temporary sed-applied mutation + a full rerun of this file (reverted
+ * after): PHP itself already auto-coerces any numeric-string array key
+ * back to an int key on assignment, and $name can only ever be int or
+ * string (PHP's own array-key type), so casting an already-int key to
+ * string just gets silently coerced right back by the SAME assignment
+ * -- the resulting $params array's own key set is byte-identical either
+ * way. The test above's own `'0' => 'positional'` literal demonstrates
+ * this exact coercion: PHP normalizes that string key back to int 0 in
+ * the expected array too, so the assertion can't distinguish the cast
+ * from its absence.
+ */
 test('fromArrays continues past the format key instead of stopping the loop', function (): void {
     $request = WsRawRequest::fromArrays([
         'format' => 'json',

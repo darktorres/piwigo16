@@ -61,10 +61,6 @@ final class UserListPageRenderer
 
         $register_dates = $userService->getDistinctRegistrationYearMonths();
 
-        $template->setFilenames([
-            'user_list' => 'user_list.tpl',
-        ]);
-
         $default_user = $userService->getDefaultUserInfo();
         if (! $default_user instanceof DefaultUserInfo) {
             $htmlRenderer
@@ -213,7 +209,7 @@ final class UserListPageRenderer
             pagination: $pagination,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'user_list');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'user_list.latte');
     }
 
     private static function webmasterIdIsLocal(Paths $paths): bool

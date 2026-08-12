@@ -510,6 +510,33 @@ final class MailService implements MailerInterface
         return new Template($this->currentConfig, $this->lang, $this->adminContext(), $this->eventDispatcher, $this->pageState, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->sessionService, $this->paths->root . 'themes', ThemeId::from('default'), 'template/mail/' . $emailFormat);
     }
 
+    /**
+     * Resolves a mail template base name (no extension) to whichever real
+     * file actually exists in $template's current directory chain --
+     * $template->smarty->templateExists() (Smarty's own method, used
+     * directly by every real caller of this helper) has no Latte
+     * awareness at all, unlike setFilename()'s own preferLatteSibling()
+     * fallback, so a bare '$baseName.tpl' check would go permanently
+     * false, and silently skip that mail section, the moment
+     * $baseName.tpl becomes $baseName.latte. Prefers .latte, matching
+     * the migration's own end-state; still checks .tpl so a
+     * not-yet-converted plugin-provided runtime template (the
+     * $tpl['filename'] mechanism in mail()/mailAdmins()/mailGroup()) keeps
+     * working unchanged.
+     */
+    private function resolveMailTemplateFilename(Template $template, string $baseName): ?string
+    {
+        if ($template->smarty->templateExists($baseName . '.latte')) {
+            return $baseName . '.latte';
+        }
+
+        if ($template->smarty->templateExists($baseName . '.tpl')) {
+            return $baseName . '.tpl';
+        }
+
+        return null;
+    }
+
     public function getStrEmailFormat(bool $isHtml): string
     {
         return $isHtml ? 'text/html' : 'text/plain';
@@ -959,13 +986,15 @@ final class MailService implements MailerInterface
                 ));
 
                 if ($contentType === 'text/html') {
-                    if ($template->smarty->templateExists('global-mail-css.tpl')) {
-                        $template->setFilename('global-css', 'global-mail-css.tpl');
+                    $globalMailCssFilename = $this->resolveMailTemplateFilename($template, 'global-mail-css');
+                    if ($globalMailCssFilename !== null) {
+                        $template->setFilename('global-css', $globalMailCssFilename);
                         $template->assignVarFromHandle('GLOBAL_MAIL_CSS', 'global-css');
                     }
 
-                    if ($template->smarty->templateExists('mail-css-' . $args['theme'] . '.tpl')) {
-                        $template->setFilename('css', 'mail-css-' . $args['theme'] . '.tpl');
+                    $themeMailCssFilename = $this->resolveMailTemplateFilename($template, 'mail-css-' . $args['theme']);
+                    if ($themeMailCssFilename !== null) {
+                        $template->setFilename('css', $themeMailCssFilename);
                         $template->assignVarFromHandle('MAIL_CSS', 'css');
                     }
                 }
@@ -1008,8 +1037,9 @@ final class MailService implements MailerInterface
                 if (isset($tpl['dirname'])) {
                     $template->setTemplateDir($tpl['dirname'] . '/' . $contentType);
                 }
-                if ($template->smarty->templateExists($tpl['filename'] . '.tpl')) {
-                    $template->setFilename($tpl['filename'], $tpl['filename'] . '.tpl');
+                $runtimeTemplateFilename = $this->resolveMailTemplateFilename($template, $tpl['filename']);
+                if ($runtimeTemplateFilename !== null) {
+                    $template->setFilename($tpl['filename'], $runtimeTemplateFilename);
                     $template->assignContext(new MailRuntimeTemplatePageContext(
                         extra: (isset($tpl['assign']) && ! self::emptyValue($tpl['assign'])) ? $tpl['assign'] : [],
                         content: $mailContent,

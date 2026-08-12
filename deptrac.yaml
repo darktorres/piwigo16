@@ -125,7 +125,7 @@ deptrac:
     # Psr\Http\Client\ClientInterface) around the app's shared Symfony
     # HTTP transport, with an SSRF guard.
     # Piwigo\Mail\MailService constructs a real Piwigo\Template\Template
-    # (Smarty-rendered mail/*.tpl themes) to build outgoing mail, so it
+    # (Latte-rendered mail/*.latte themes) to build outgoing mail, so it
     # sits at L3Presentation/L4Integration rather than L1Infrastructure,
     # same layer as Template itself (same-layer deps are always
     # allowed). This is why L2aCoreDomain/L2bExtendedDomain classes may

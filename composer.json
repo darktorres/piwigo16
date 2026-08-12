@@ -44,7 +44,6 @@
     "psr/http-server-middleware": "^1.0",
     "psr/log": "^3.0",
     "sentry/sentry": "^4",
-    "smarty/smarty": "^5",
     "symfony/cache": "^8.0",
     "symfony/console": "^8.0",
     "symfony/doctrine-messenger": "^8.1",
@@ -188,11 +187,6 @@
       "pestphp/pest-plugin-mutate": {
         "Bound the composed --filter argument length in MutationTest::start() -- a mutation covered by hundreds/thousands of tests can build a --filter regex past Linux's 128 KiB MAX_ARG_STRLEN, crashing proc_open() with ProcessStartFailedException (\"Argument list too long\") and killing the entire test:mutate run; falls back to running the full testsuite for that one mutant instead, which is always correctness-preserving": "patches/pest-plugin-mutate-5.0.1-bound-filter-argument-length.patch",
         "Fix MutationTestRunner::run() building $coveredLines directly from lineCoverage()'s raw per-line array, which since phpunit/php-code-coverage 14 is keyed by an interned test index (int) with the hit count as the value, not a list of test id strings -- MutationTest::start() then fed a hit-count int straight into preg_match(), fatalling with 'Argument #2 ($subject) must be of type string, int given' on the very first covered mutation. Resolves each surviving index back to its real test id via testIds() before handing $coveredLines off": "patches/pest-plugin-mutate-5.0.1-resolve-interned-test-index.patch"
-      },
-      "smarty/smarty": {
-        "Fix TemplateBase::$compile_id's @var docblock (string) contradicting its own `= null` default and setCompileId()'s real usage -- confirmed by reading the class itself; no native property type declared, so PHPStan trusts the wrong docblock": "patches/smarty-smarty-5.8.4-compile-id-nullable-docblock.patch",
-        "Fix Smarty::unregisterFilter()'s @param docblock typo `callback|string` (not a real PHP/PHPStan type -- resolves to the unrelated class Smarty\\callback) to the real accepted type `callable|string`, matching its own _getFilterName() implementation": "patches/smarty-smarty-5.8.4-unregisterfilter-callable-docblock.patch",
-        "Fix Smarty::$error_reporting's @var docblock (int) contradicting its own `= null` default -- only ever set to an int by the constructor when template debugging is off, so it genuinely stays null when debugging is on (confirmed by reading the constructor + TemplateInstanceTest.php's own already-passing coverage of both branches); same class of bug as $compile_id above": "patches/smarty-smarty-5.8.4-error-reporting-nullable-docblock.patch"
       },
       "doctrine/dbal": {
         "Fix Driver\\PgSQL\\Statement::__destruct() unconditionally running a DEALLOCATE cleanup query even when the connection's transaction was already aborted by an earlier failed query -- PostgreSQL rejects every subsequent command in an aborted transaction, so the DEALLOCATE itself fails with 'current transaction is aborted, commands ignored until end of transaction block', surfacing as a spurious PHP warning during exception unwinding, strictly before any higher-level rollback (e.g. Doctrine ORM UnitOfWork::commit()'s own finally block) gets a chance to run. Guards with pg_transaction_status(), which requires a preceding pg_connection_busy() call to avoid reading a stale ACTIVE status (confirmed via live reproduction against a real aborted transaction) -- see doctrine/dbal#5893, which added the destructor with no aborted-transaction handling and no known upstream fix": "patches/doctrine-dbal-4.4.4-pgsql-statement-skip-deallocate-on-aborted-transaction.patch"

@@ -119,14 +119,17 @@ resolved to `Piwigo\Controller\*` classes (L4Integration).
 if loaded, else filesystem, when unset). Both `CacheItemPoolInterface` and
 `Psr\SimpleCache\CacheInterface` bind to the same pool in
 `config/container.php` (PSR-16 wraps it via `Symfony\Component\Cache\Psr16Cache`).
-Coexists with two separate legacy mechanisms `bin/piwigo cache:clear`
+Coexists with a separate legacy mechanism `bin/piwigo cache:clear`
 deliberately does not touch: `Piwigo\Cache\PersistentCache`
 (`_data/cache/*.cache` files — used by `MaintenanceActionDispatcher`,
-constructor-injected directly as a plain `?PersistentCache`) and the
-legacy Smarty compiled-template files (`_data/templates_c/*.tpl.php`,
-separate from the Latte compiled-template cache `cache:clear` does purge).
+constructor-injected directly as a plain `?PersistentCache`).
 `cache:clear` only purges what the new infrastructure owns: the Latte
-compiled-template cache dir and the `CacheFactory` PSR-6 pool.
+compiled-template cache dir and the `CacheFactory` PSR-6 pool. The
+template engine itself is Latte-only now (P31: Smarty fully removed,
+no `.tpl` files or `smarty/smarty` dependency remain) —
+`Template::deleteCompiledTemplates()` (the admin-UI "clear compiled
+templates" action) purges the same Latte cache dir `cache:clear` does,
+not a separate mechanism.
 
 **Session storage is separate from this pool** — `Piwigo\Session\PwgSession`
 (`SessionHandlerInterface`) is registered via

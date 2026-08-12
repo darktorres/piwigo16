@@ -21,7 +21,7 @@ parameters:
             # that exists purely to override one bundled-stub method
             # signature, not real application code to lint/scan.
             - phpstan-stubs/*
-            # Runtime-compiled Smarty templates + combined JS/CSS cache, not
+            # Runtime-compiled Latte templates + combined JS/CSS cache, not
             # source (verified real: temporarily un-excluding produces
             # 1000+ errors in generated template code).
             - _data/*

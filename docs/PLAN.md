@@ -71,8 +71,8 @@ into 17 single-concern phases, ordered refactor/modernization first
 the track's tail, since neither depends on the JS/CSS/TS work) and any
 phase adding a genuinely new capability (Picture pipeline, Dark mode —
 now P43–P44) last, gates closing the epoch at P45. P31 (Smarty→Latte,
-in-flight `p31.x` commits) keeps its number unchanged. See Epoch J below
-for the full breakdown.
+`p31.x` commits, since completed) keeps its number unchanged. See Epoch J
+below for the full breakdown.
 
 **1 commit landed under the tag `chore(p32): delete doc/`**, not the
 "layer decoupling + repository restructure" phase's full scope — a
@@ -121,7 +121,7 @@ onto the original scope.
 | P28 | Layer decoupling + repository restructure | Not started (1 unrelated commit borrowed the tag — `doc/` cleanup) | 1 |
 | P29 | Browserslist decision + legacy back-compat removal | Not started | 0 |
 | P30 | Asset-pipeline foundation (ScriptLoader/CssLoader/FileCombiner retirement + ViteManifest resolution) | Not started | 0 |
-| P31 | Smarty → Latte template migration | In progress (`p31.x` commits) | 47 |
+| P31 | Smarty → Latte template migration | Done — all 139 real templates converted, Smarty engine fully removed (`smarty/smarty` dropped, `Template.php` Latte-only). Deferred asset-pipeline items (`ViteManifest`, `<picture>`, ThumbHash) out of scope, pick up under P29/P30/P43 | 80 |
 | P32 | Latte lint/format | Not started | 0 |
 | P33 | Latte idiomatic modernization | Not started | 0 |
 | P34 | Inline JS extraction | Not started | 0 |
@@ -628,10 +628,10 @@ stance and the later deletion of the entire `DbPatch`/`VersionUpgrade`
 chain (see P23's gap-closure list below) — there's no upgrade mechanism
 left to drive an `Upgrade`/`UpgradeFeed` controller, so their absence is
 a real, consistent consequence of that design decision, not an oversight.
-Render via an engine-agnostic `$vars` array (P31's Latte swap is meant to
-be a one-line render-call change per controller, not a rewrite — P31 is
-in progress; check the controller's own `parse()` call for its current
-template engine rather than assuming Smarty). A 2026-07-13 audit found
+Render via an engine-agnostic `$vars` array (P31's Latte swap was a
+one-line render-call change per controller, not a rewrite — P31 is
+done; every controller's `parse()` call now renders through Latte, no
+Smarty left anywhere). A 2026-07-13 audit found
 `GalleryController` only relocated `include/section_init.inc.php`'s
 `include()` call site into the controller — the ~450 lines of raw SQL
 logic P20's own docblock said belonged here (`$page['items']`,
@@ -1454,11 +1454,24 @@ driving everything except the `vitals` entry) for real `ViteManifest`
 resolution reading `dist/manifest.json`. No template content moves — this
 only builds the delivery mechanism P34/P35 need.
 
-**P31 — Smarty → Latte template migration.** In progress (47 `p31.x`
-commits). Scope narrowed from the original plan: the old "+ asset
-pipeline" clause is split out to P29/P30 above and P43 below — matches
-what's actually landing, since every `p31.x` commit is a `.tpl`→`.latte`
-conversion, nothing manifest/combiner/image-format related.
+**P31 — Smarty → Latte template migration.** Done (80 `p31.x` commits).
+Scope narrowed from the original plan: the old "+ asset pipeline"
+clause is split out to P29/P30 above and P43 below — matches what
+actually landed, since every `p31.x` commit is a `.tpl`→`.latte`
+conversion or Smarty-engine cleanup, nothing manifest/combiner/
+image-format related. All 139 real templates converted (P31.1–P31.6),
+then the Smarty engine itself fully retired (P31.7): `Template.php` no
+longer has a Smarty dependency at all (dropped `$smarty`/`$files`/
+`$external_filters`, `setFilename()`/`setFilenames()`/
+`assignVarFromHandle()`, every Smarty-only registration/helper), the
+`smarty/smarty` Composer dependency and its 3 patches are gone, and
+`tests/Arch/StructuralTest.php`'s Smarty-reach-around guard was
+retired (PHP's own private-method visibility on `Template::assign()`/
+`append()` enforces the same invariant now, no regex-based arch test
+needed). The deferred asset-pipeline items (`ViteManifest`,
+`<picture>`/AVIF/WebP responsive markup, ThumbHash blur placeholders)
+were never part of this narrower scope — they pick up whenever
+P29/P30 (Vite adoption) actually start, tracked under P43.
 
 **P32 — Latte lint/format.** Not started. No Latte-native lint/format
 tool is installed in this repo today, but `16.x-rewrite` (136 real
@@ -1665,14 +1678,16 @@ Still the governing process for whoever picks up P24+:
    not reintroduce the fragmentation this consolidation just closed.
 
 **Risk register** (highest blast-radius remaining phases): P31 (Smarty →
-Latte across ~140 templates) risks visual regressions — mitigated by the
-committed VR baselines + per-template review, both a real, already-daily
-mechanism. **The "a11y gate" this line used to claim alongside them isn't
-one** — no automated accessibility tooling (`axe-core`, `pa11y`, or a
+Latte across 139 templates) is done — the visual-regression risk it
+carried was mitigated by the committed VR baselines + per-template
+review the whole way through, both a real, already-daily mechanism
+(and both stay in place for whatever templates P32+ still touch).
+**The "a11y gate" this line used to claim alongside them isn't one** —
+no automated accessibility tooling (`axe-core`, `pa11y`, or a
 Lighthouse `assert` block scoped to the a11y category) exists anywhere in
 this repo; `lighthouserc.json` is collect-only (see P45 below). What
-actually runs today is the VR baseline plus manual per-template review,
-nothing more. P27 (plugin/theme contracts, god-class decomposition)
+actually ran during P31 was the VR baseline plus manual per-template
+review, nothing more. P27 (plugin/theme contracts, god-class decomposition)
 breaks external extensions by design — an accepted product decision, not
 an oversight; in-tree callers migrate in the same phase. Cross-cutting:
 MySQL 9.x is a non-LTS line — pin the exact server version, hedge via the
@@ -1758,12 +1773,11 @@ P5 entry in Epoch B above), so it's a real, working dependency again
 today, just deliberately non-gating (no dedicated CI job, no `composer`
 script wired to it) — "gating is moot" still holds even though "doesn't
 exist" no longer does, see `docs/REFERENCE.md`'s Psalm entry for the same
-correction. `composer lint:latte`/`precompile:templates` (P31
-is in progress but not yet complete — some controllers still render
-Smarty, some already render Latte; a repo-wide Latte lint/precompile step
-isn't meaningful until P31 finishes, and lands for real in P32),
-`tools/plan-lint` (deleted along with `docs/plan/manifest.yaml` in this
-consolidation).
+correction. `composer lint:latte`/`precompile:templates` (P31 is now
+done — every template renders through Latte, no Smarty left anywhere
+— but the lint/precompile tooling itself is still P32 scope, not yet
+built), `tools/plan-lint` (deleted along with `docs/plan/manifest.yaml`
+in this consolidation).
 
 **Real consequence of that last deletion**: the original plan's SEC-NN
 traceability design (every `SEC-NN` reachable from threat model → phase

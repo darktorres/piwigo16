@@ -503,8 +503,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             ]);
         }
 
-        $template->setFilename('config', 'configuration_' . $page_section . '.tpl');
-
         // CoreTabsContext's confLink must be set here (nothing else sets it
         // for this page) so CoreTabs::addCoreTabs() renders this page's
         // "General/Photo sizes/Watermark/Display/Comments/Search" tab strip
@@ -798,7 +796,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             adminPageTitle: $this->lang->t('Configuration'),
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'config');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'configuration_' . $page_section . '.latte');
     }
 
     /**

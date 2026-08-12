@@ -365,10 +365,26 @@ P23 is long done and this hasn't been picked back up.
 autowire-by-default.
 
 **P9 — PSR-15 middleware + routing.** 7-stage middleware pipeline
-(`RequestPipeline.php`'s own registration list; the `16.x-rewrite`
-reference branch runs 8 stages, per `PLAN-REPLAY.md`'s own "Codebase
-baselines" table — no record explains which stage this fork's own design
-omits, or whether it was a deliberate simplification). Routes, extensible
+(`RequestPipeline.php`'s own registration list: `ExceptionHandler`,
+`SecurityHeaders`, `Session`, `ServerTiming`, `Sentry`, `Routing`,
+`ControllerInvoker`). **The "no record explains which stage" gap is now
+answered, not just narrowed**: checked `16.x-rewrite`'s own pipeline
+directly (`Core\Kernel.php`, not `RequestPipeline.php` — different file
+name there) — its real 8 stages are `SecurityHeaders`,
+`ExceptionHandler`, `Session`, `Auth`, `Filter`, `Csrf`, `Routing`,
+`ControllerInvoker`. Not "this fork omits 1 stage" — it's a different
+composition entirely: the reference has `AuthMiddleware`/
+`FilterMiddleware`/`CsrfMiddleware` as real pipeline stages that this
+fork doesn't (this fork's own `Http/Middleware/` has no `Csrf`/`Auth`
+middleware class at all — confirmed, consistent with SEC-42's own "CSRF
+middleware: remove `/admin*` exemption... Not started (P26)" implying no
+such middleware exists yet to have an exemption from), while this fork
+adds `ServerTiming`/`Sentry` the reference doesn't have. *Why* auth/
+CSRF/filter checks moved off the pipeline here (into services/
+controllers directly, presumably) — deliberate design or a genuine gap —
+isn't established by this comparison alone; flagging the real
+composition difference precisely rather than guessing the intent behind
+it. Routes, extensible
 `SecurityHeadersMiddleware`, cross-server SEC-01 deny rules. A 2026-07-13
 audit (SEC-11/SEC-12) found `CsrfService` still used
 `hash_hmac('md5', ...)` + `===` despite the identical weak-hash pattern

@@ -259,10 +259,24 @@ test('parseCustomParams() 400s a plain size token that is the only token given, 
 test('parseCustomParams() accepts a size+crop+min-size token triple, exactly at the 2-remaining-tokens boundary', function (): void {
     // 3 total tokens -> exactly 2 remain after the first shift, the
     // real code's own boundary for "just enough" (`count($tokens) < 2`
-    // is false only right at this count). Kills line 520's IfNegated,
+    // is false only right at this count). Kills line 496's IfNegated,
     // SmallerToGreaterOrEqual, SmallerToSmallerOrEqual, and
     // IncrementInteger mutants -- each would wrongly 400 this exact
     // input instead of succeeding.
+    //
+    // [Mutation] Line 496's own DecrementInteger (`< 2` -> `< 1`) is
+    // NOT closable by any test, confirmed live: for exactly 1 remaining
+    // token, the mutant skips this early guard, but the very next
+    // array_shift() (line 503) then returns null on the now-empty
+    // array, hitting the "impossible null-token" guard a few lines down
+    // (line 504) -- which calls the exact same
+    // `$this->ierror('Sizing arr', 400)` with identical arguments (see
+    // the "400s its own impossible null-token guard" test further
+    // below, which already proves that late guard's own observable
+    // output). Both guards are `never`-returning calls to the same
+    // method with the same arguments, so the final observable outcome
+    // is byte-identical whether this early guard or that late one
+    // catches it.
     $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger(), new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $params = callParseCustomParams($controller, ['100x100', 'n', '50x50']);

@@ -127,8 +127,6 @@ final readonly class PictureCoiPageRenderer
             coi: $coi,
             croppedDerivatives: $cropped_derivatives,
         ));
-        $template->setFilename('picture_coi', 'picture_coi.tpl');
-
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'picture_coi');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'picture_coi.latte');
     }
 }

@@ -132,12 +132,6 @@ final readonly class ElementSetRanksPageRenderer
             $template->assignContext(new ElementSetRanksSaveSuccessPageContext($message));
         }
 
-        $template->setFilenames(
-            [
-                'element_set_ranks' => 'element_set_ranks.tpl',
-            ]
-        );
-
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
         $category = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
@@ -204,6 +198,6 @@ final readonly class ElementSetRanksPageRenderer
             imageOrder: $image_order_tpl,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'element_set_ranks');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'element_set_ranks.latte');
     }
 }

@@ -10,8 +10,8 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Controller\Admin\SiteManagerSubController::handle()}.
- * `$sites` is always included (even empty) since `site_manager.tpl`
- * reads it with `{if not empty($sites)}`, not `isset()`.
+ * `$sites` is always included (even empty) since `site_manager.latte`
+ * reads it with `{if !empty($sites)}`, not `isset()`.
  */
 final readonly class SiteManagerSubControllerPageContext implements TemplatePageContext
 {

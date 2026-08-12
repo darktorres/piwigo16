@@ -87,10 +87,6 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
 
         $conn = DbConnection::build();
 
-        $template->setFilenames([
-            'site_manager' => 'site_manager.tpl',
-        ]);
-
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
@@ -201,6 +197,6 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             sites: $tpl_sites,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'site_manager');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'site_manager.latte');
     }
 }

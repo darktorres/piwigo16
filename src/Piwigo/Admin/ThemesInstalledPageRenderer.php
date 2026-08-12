@@ -149,10 +149,7 @@ final readonly class ThemesInstalledPageRenderer
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
 
-        $template->setFilenames([
-            'themes' => 'themes_installed.tpl',
-        ]);
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'themes');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'themes_installed.latte');
     }
 
     /**

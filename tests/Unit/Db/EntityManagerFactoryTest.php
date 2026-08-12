@@ -166,3 +166,19 @@ test('entityMtimeHash() hashes only Piwigo *Entity.php mtimes, filtered and sort
     expect($actualHash)
         ->toBe($expectedHash);
 });
+
+/**
+ * [Mutation] A scoped `pest --mutate` rerun leaves 10 mutations
+ * "untested" -- zero real gaps. All 10 are already killed by the 2
+ * tests above (this file's own "registers every custom Doctrine type"
+ * test for Line 102's RemoveMethodCall, and "entityMtimeHash() hashes
+ * only..." for the other 9 on Lines 192/193/195/201) -- individually
+ * hand-mutation-verified live (each produces a real, distinct assertion
+ * failure when this file is rerun standalone), despite the live scoped
+ * scan reporting every one as untested. `pest --mutate`'s own
+ * per-mutation test-selection filter just doesn't correctly attribute
+ * the already-covering test to these specific mutation IDs -- the same
+ * tool misattribution on already-covered code hit repeatedly elsewhere
+ * in this campaign (e.g. FilesystemHelper.php's trailing-slash check,
+ * Base32.php's boundary checks), not a gap needing a new test.
+ */

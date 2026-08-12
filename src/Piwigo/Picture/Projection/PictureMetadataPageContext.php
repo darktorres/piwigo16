@@ -13,7 +13,7 @@ use Piwigo\Core\TemplatePageContext;
  * optional -- the EXIF and IPTC panels are 2 independent conditional
  * branches, each appending its own row only when real data was found;
  * omitted here (not present as an empty-array value) to match
- * `picture.tpl`'s own `{if isset($metadata)}` guard exactly.
+ * `picture.latte`'s own `{if isset($metadata)}` guard exactly.
  */
 final readonly class PictureMetadataPageContext implements TemplatePageContext
 {

@@ -704,13 +704,9 @@ final readonly class PictureController implements ControllerInterface
             $slideshow = false;
         }
         if ($slideshow and $this->currentConfig->lightSlideshow) {
-            $template->setFilenames([
-                'slideshow' => 'slideshow.tpl',
-            ]);
+            $pictureTemplateFile = 'slideshow.latte';
         } else {
-            $template->setFilenames([
-                'picture' => 'picture.tpl',
-            ]);
+            $pictureTemplateFile = 'picture.latte';
         }
 
         // $image_id is always in $ids (see the query above) and
@@ -850,7 +846,7 @@ final readonly class PictureController implements ControllerInterface
             }
         }
 
-        // U_DOWNLOAD/formats are picture.tpl's own $current.U_DOWNLOAD/
+        // U_DOWNLOAD/formats are picture.latte's own $current.U_DOWNLOAD/
         // $current.formats -- merged straight into $nav['current'] (built
         // above, always set whenever $download_url_present can be true,
         // since that itself reads $picture['current']) rather than through
@@ -1034,7 +1030,7 @@ final readonly class PictureController implements ControllerInterface
         // date of availability -- date_available is nullable (a photo can
         // simply lack EXIF/IPTC date info); PicturePageContext::$infoPostedDate
         // stays a required string (this info row is unconditional in
-        // picture.tpl, unlike the optional INFO_CREATION_DATE above), so
+        // picture.latte, unlike the optional INFO_CREATION_DATE above), so
         // fall back to an empty string instead of feeding formatDate()/
         // substr() a null. $picture['current'] comes from a raw DBAL row
         // here, not ImageEntity, so this was never protected by the former
@@ -1269,10 +1265,10 @@ final readonly class PictureController implements ControllerInterface
         $this->htmlService
             ->flushPageMessages();
         if ($slideshow and $this->currentConfig->lightSlideshow) {
-            $template->parse('slideshow', false);
+            $template->parse($pictureTemplateFile, false);
         } else {
             $template->parsePictureButtons();
-            $template->parse('picture', false);
+            $template->parse($pictureTemplateFile, false);
         }
         $current_image_id = $picture['current']['id'];
         $this->historyService
@@ -1359,12 +1355,6 @@ final readonly class PictureController implements ControllerInterface
             $u_original = $element_info['element_url'];
         }
 
-        $template->setFilenames(
-            [
-                'default_content' => 'picture_content.tpl',
-            ]
-        );
-
         $pdf_viewer_filesize_threshold = null;
         if (in_array(strtolower(StringHelper::getExtension($element_info['file'])), ['pdf'], true)) {
             $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold * 1024;
@@ -1382,7 +1372,7 @@ final readonly class PictureController implements ControllerInterface
                 'unique_derivatives' => $unique_derivatives,
             ],
         ));
-        $event->content = $template->parse('default_content', true);
+        $event->content = $template->parse('picture_content.latte', true);
 
         return $event;
     }

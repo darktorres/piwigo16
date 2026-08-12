@@ -52,10 +52,6 @@ final class PluginsInstalledPageRenderer
     {
         $template = $currentTemplate->get();
 
-        $template->setFilenames([
-            'plugins' => 'plugins_installed.tpl',
-        ]);
-
         $pluginsDisplay = PluginsInstalledDisplayRequest::fromGlobals();
 
         // should we display details on plugins?
@@ -248,6 +244,6 @@ final class PluginsInstalledPageRenderer
             pluginStates: $plugin_states,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'plugins');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'plugins_installed.latte');
     }
 }

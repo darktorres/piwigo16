@@ -8,8 +8,14 @@ dist/
 # Piwigo specific directories
 _data/
 
-# Legacy CSS — excluded until P33 (docs/PLAN.md's additive-only rule)
-themes/
+# Legacy CSS/JSON/MD under themes/ — excluded until P33 (docs/PLAN.md's
+# additive-only rule). Listed by extension rather than a blanket `themes/`
+# directory ignore: gitignore-style negation can't re-include a path whose
+# parent directory is already fully excluded, and P32's Latte formatter
+# (tools/latte-prettier/) needs `themes/**/*.latte` reachable in the same tree.
+themes/**/*.css
+themes/**/*.json
+themes/**/*.md
 template-extension/
 tools/ws/
 

@@ -1,0 +1,846 @@
+"use strict";
+
+// ---------------------------------------------------------------------------
+// Latte template parser: hand-written recursive-descent parser with an
+// integrated, contextually-moded scanner (no separate token-array pass).
+//
+// Produces a typed AST covering: HTML elements/attributes/text/comments,
+// interleaved with real Latte constructs (if/elseif/else, foreach, var, do,
+// spaceless, capture, include, comments, {$expr}/{=expr} output with filter
+// chains), plus a small Latte expression grammar (variables with -> and []
+// access, literals, unary/binary ops, positional+named-arg calls, filters).
+// ---------------------------------------------------------------------------
+
+const VOID_ELEMENTS = new Set([
+  "area", "base", "br", "col", "embed", "hr", "img", "input",
+  "link", "meta", "param", "source", "track", "wbr",
+]);
+
+const RAW_TEXT_ELEMENTS = new Set(["script", "style"]);
+
+class ParseError extends Error {
+  constructor(message, pos, text) {
+    const { line, col } = offsetToLineCol(text, pos);
+    super(`${message} (line ${line}, col ${col}, offset ${pos})`);
+    this.pos = pos;
+  }
+}
+
+function offsetToLineCol(text, pos) {
+  let line = 1;
+  let col = 1;
+  for (let i = 0; i < pos && i < text.length; i++) {
+    if (text[i] === "\n") {
+      line++;
+      col = 1;
+    } else {
+      col++;
+    }
+  }
+  return { line, col };
+}
+
+class Scanner {
+  constructor(text) {
+    this.text = text;
+    this.pos = 0;
+  }
+  eof() {
+    return this.pos >= this.text.length;
+  }
+  peek(offset = 0) {
+    return this.text[this.pos + offset];
+  }
+  startsWith(str) {
+    return this.text.startsWith(str, this.pos);
+  }
+  startsWithCI(str) {
+    return this.text.slice(this.pos, this.pos + str.length).toLowerCase() === str.toLowerCase();
+  }
+  advance(n = 1) {
+    this.pos += n;
+  }
+  error(message) {
+    throw new ParseError(message, this.pos, this.text);
+  }
+}
+
+const isIdentStart = (ch) => ch !== undefined && /[A-Za-z_]/.test(ch);
+const isIdentPart = (ch) => ch !== undefined && /[A-Za-z0-9_]/.test(ch);
+const isSpace = (ch) => ch !== undefined && /[ \t\r\n]/.test(ch);
+const isDigit = (ch) => ch !== undefined && /[0-9]/.test(ch);
+
+function skipSpace(s) {
+  while (!s.eof() && isSpace(s.peek())) s.advance();
+}
+
+function readIdentifier(s) {
+  const start = s.pos;
+  if (!isIdentStart(s.peek())) s.error("expected identifier");
+  s.advance();
+  while (isIdentPart(s.peek())) s.advance();
+  return s.text.slice(start, s.pos);
+}
+
+// ---------------------------------------------------------------------------
+// Latte tag-head lookahead: does `{` at s.pos start a real Latte tag?
+// Mirrors real Latte's own `{...}` tag-delimiter lexer: a `{` counts as a
+// tag attempt only when immediately (no space) followed by `$`, `=`, `*`,
+// `/`+letter, or a letter. `{` followed by whitespace/digit/other punctuation
+// is literal text (this is what makes `{capture}` CSS bodies like
+// `.el{ width: ... }` safe, and matches the real compiler's own behavior
+// confirmed against `{value: x}` JS-object-literal collisions).
+// ---------------------------------------------------------------------------
+function peekLatteHead(s) {
+  if (s.peek() !== "{") return null;
+  const src = s.text;
+  let i = s.pos + 1;
+  const c = src[i];
+  if (c === "$") return { sigil: "$", bodyStart: i + 1 };
+  if (c === "=") return { sigil: "=", bodyStart: i + 1 };
+  if (c === "*") return { sigil: "*", bodyStart: i + 1 };
+  let closing = false;
+  if (c === "/") {
+    closing = true;
+    i++;
+  }
+  if (!isIdentStart(src[i])) return null;
+  const start = i;
+  while (isIdentPart(src[i])) i++;
+  const keyword = src.slice(start, i);
+  return { keyword, closing, bodyStart: i };
+}
+
+function isRealLatteStart(head) {
+  return head !== null;
+}
+
+function stopKey(head) {
+  return (head.closing ? "/" : "") + (head.keyword || head.sigil);
+}
+
+// ---------------------------------------------------------------------------
+// Latte tag-body scanning: find the matching unescaped `}` for a `{...}` tag,
+// respecting single/double-quoted string literals with backslash escapes
+// (Latte tags never nest braces outside of strings — calls/arrays use ()/[]).
+// ---------------------------------------------------------------------------
+function readTagBody(s) {
+  // s.pos is at the first char of the tag body (after the sigil/keyword head)
+  const start = s.pos;
+  while (!s.eof()) {
+    const ch = s.peek();
+    if (ch === "'" || ch === '"') {
+      s.advance();
+      while (!s.eof() && s.peek() !== ch) {
+        if (s.peek() === "\\") s.advance();
+        s.advance();
+      }
+      if (s.eof()) s.error("unterminated string literal in Latte tag");
+      s.advance();
+      continue;
+    }
+    if (ch === "}") break;
+    s.advance();
+  }
+  if (s.eof()) s.error("unterminated Latte tag, expected '}'");
+  const body = s.text.slice(start, s.pos);
+  s.advance(); // consume '}'
+  return body;
+}
+
+function readCommentBody(s) {
+  // s.pos is right after '{*'
+  const start = s.pos;
+  const idx = s.text.indexOf("*}", s.pos);
+  if (idx === -1) s.error("unterminated {* comment *}");
+  const body = s.text.slice(start, idx);
+  s.pos = idx + 2;
+  return body;
+}
+
+// ---------------------------------------------------------------------------
+// Expression grammar (small, Latte-specific subset of PHP expressions)
+// ---------------------------------------------------------------------------
+class ExprScanner {
+  constructor(text) {
+    this.text = text;
+    this.pos = 0;
+  }
+  eof() {
+    return this.pos >= this.text.length;
+  }
+  peek(o = 0) {
+    return this.text[this.pos + o];
+  }
+  advance(n = 1) {
+    this.pos += n;
+  }
+  skipSpace() {
+    while (!this.eof() && isSpace(this.peek())) this.advance();
+  }
+  error(message) {
+    throw new Error(`${message} (in expression: ${JSON.stringify(this.text)}, at offset ${this.pos})`);
+  }
+  startsWithOp(op) {
+    return this.text.startsWith(op, this.pos);
+  }
+}
+
+const BINARY_OPS_BY_PRECEDENCE = [
+  ["||", "or"],
+  ["&&", "and"],
+  ["===", "!==", "==", "!=", "<=", ">=", "<", ">"],
+  ["+", "-", "."],
+  ["*", "/", "%"],
+];
+
+function parseExprString(text) {
+  const es = new ExprScanner(text);
+  es.skipSpace();
+  const expr = parseFiltered(es);
+  es.skipSpace();
+  if (!es.eof()) es.error(`unexpected trailing content`);
+  return expr;
+}
+
+function parseFiltered(es) {
+  let expr = parseBinary(es, 0);
+  const filters = [];
+  es.skipSpace();
+  while (es.peek() === "|") {
+    es.advance();
+    es.skipSpace();
+    const name = readExprIdentifier(es);
+    let args = [];
+    es.skipSpace();
+    if (es.peek() === ":") {
+      es.advance();
+      args = parseArgExprList(es);
+    }
+    filters.push({ type: "FilterCall", name, args });
+    es.skipSpace();
+  }
+  if (filters.length === 0) return expr;
+  return { type: "Filtered", expr, filters };
+}
+
+function parseArgExprList(es) {
+  const list = [];
+  es.skipSpace();
+  list.push(parseBinary(es, 0));
+  es.skipSpace();
+  while (es.peek() === ",") {
+    es.advance();
+    es.skipSpace();
+    list.push(parseBinary(es, 0));
+    es.skipSpace();
+  }
+  return list;
+}
+
+function parseBinary(es, level) {
+  if (level >= BINARY_OPS_BY_PRECEDENCE.length) return parseUnary(es);
+  let left = parseBinary(es, level + 1);
+  es.skipSpace();
+  for (;;) {
+    const ops = BINARY_OPS_BY_PRECEDENCE[level];
+    const op = ops.find((o) => {
+      if (!es.startsWithOp(o)) return false;
+      // word operators ('or'/'and') must not be a prefix of a longer identifier
+      if (/^[A-Za-z]+$/.test(o)) {
+        const next = es.text[es.pos + o.length];
+        return !isIdentPart(next);
+      }
+      return true;
+    });
+    if (!op) break;
+    es.advance(op.length);
+    es.skipSpace();
+    const right = parseBinary(es, level + 1);
+    left = { type: "Binary", op, left, right };
+    es.skipSpace();
+  }
+  return left;
+}
+
+function parseUnary(es) {
+  es.skipSpace();
+  if (es.peek() === "!") {
+    es.advance();
+    es.skipSpace();
+    return { type: "Unary", op: "!", expr: parseUnary(es) };
+  }
+  if (es.peek() === "-" && !es.startsWithOp("--")) {
+    es.advance();
+    es.skipSpace();
+    return { type: "Unary", op: "-", expr: parseUnary(es) };
+  }
+  return parsePostfix(es);
+}
+
+function parsePostfix(es) {
+  let expr = parsePrimary(es);
+  for (;;) {
+    if (es.peek() === "-" && es.peek(1) === ">") {
+      es.advance(2);
+      es.skipSpace();
+      const name = readExprIdentifier(es);
+      es.skipSpace();
+      if (es.peek() === "(") {
+        const args = parseCallArgs(es);
+        expr = { type: "Call", callee: { type: "PropAccess", object: expr, prop: name }, args };
+      } else {
+        expr = { type: "PropAccess", object: expr, prop: name };
+      }
+      continue;
+    }
+    if (es.peek() === "[") {
+      es.advance();
+      es.skipSpace();
+      const index = parseBinary(es, 0);
+      es.skipSpace();
+      if (es.peek() !== "]") es.error("expected ']'");
+      es.advance();
+      expr = { type: "Index", object: expr, index };
+      continue;
+    }
+    if (es.peek() === "(" && expr.type === "Identifier") {
+      const args = parseCallArgs(es);
+      expr = { type: "Call", callee: expr, args };
+      continue;
+    }
+    break;
+  }
+  return expr;
+}
+
+function parseCallArgs(es) {
+  // es.peek() === '('
+  es.advance();
+  es.skipSpace();
+  const args = [];
+  if (es.peek() !== ")") {
+    args.push(parseArg(es));
+    es.skipSpace();
+    while (es.peek() === ",") {
+      es.advance();
+      es.skipSpace();
+      args.push(parseArg(es));
+      es.skipSpace();
+    }
+  }
+  if (es.peek() !== ")") es.error("expected ')'");
+  es.advance();
+  return args;
+}
+
+function parseArg(es) {
+  const savedPos = es.pos;
+  if (isIdentStart(es.peek())) {
+    const name = readExprIdentifier(es);
+    es.skipSpace();
+    if (es.peek() === ":" && es.peek(1) !== ":") {
+      es.advance();
+      es.skipSpace();
+      const value = parseFiltered(es);
+      return { type: "Arg", name, value };
+    }
+    es.pos = savedPos;
+  }
+  const value = parseFiltered(es);
+  return { type: "Arg", name: null, value };
+}
+
+function readExprIdentifier(es) {
+  if (!isIdentStart(es.peek())) es.error("expected identifier");
+  const start = es.pos;
+  es.advance();
+  while (isIdentPart(es.peek())) es.advance();
+  return es.text.slice(start, es.pos);
+}
+
+function parsePrimary(es) {
+  es.skipSpace();
+  const ch = es.peek();
+  if (ch === "$") {
+    es.advance();
+    const name = readExprIdentifier(es);
+    return { type: "Variable", name };
+  }
+  if (ch === "'" || ch === '"') {
+    const quote = ch;
+    es.advance();
+    const start = es.pos;
+    while (!es.eof() && es.peek() !== quote) {
+      if (es.peek() === "\\") es.advance();
+      es.advance();
+    }
+    const value = es.text.slice(start, es.pos);
+    if (es.peek() !== quote) es.error("unterminated string literal");
+    es.advance();
+    return { type: "StringLiteral", quote, value };
+  }
+  if (isDigit(ch)) {
+    const start = es.pos;
+    while (isDigit(es.peek())) es.advance();
+    if (es.peek() === "." && isDigit(es.peek(1))) {
+      es.advance();
+      while (isDigit(es.peek())) es.advance();
+    }
+    return { type: "NumberLiteral", value: es.text.slice(start, es.pos) };
+  }
+  if (ch === "(") {
+    es.advance();
+    es.skipSpace();
+    const expr = parseFiltered(es);
+    es.skipSpace();
+    if (es.peek() !== ")") es.error("expected ')'");
+    es.advance();
+    return { type: "Paren", expr };
+  }
+  if (isIdentStart(ch)) {
+    const name = readExprIdentifier(es);
+    return { type: "Identifier", name };
+  }
+  es.error(`unexpected character '${ch}' while parsing expression`);
+}
+
+// ---------------------------------------------------------------------------
+// Node-list parser: shared by HTML content, attribute values, and capture
+// bodies. `allowElements` gates whether `<tag>` markup is recognized (off for
+// attribute values / capture bodies, which are plain text + Latte only).
+// ---------------------------------------------------------------------------
+function parseNodeList(s, opts) {
+  const { allowElements, stopChar, stopKeywords } = opts;
+  const nodes = [];
+  for (;;) {
+    if (s.eof()) break;
+    if (stopChar && s.peek() === stopChar) break;
+    if (allowElements && s.startsWith("</")) break; // caller decides: mine, an ancestor's, or an orphan
+    const head = peekLatteHead(s);
+    if (isRealLatteStart(head)) {
+      const key = stopKey(head);
+      if (stopKeywords && stopKeywords.has(key)) break;
+      nodes.push(parseLatteNode(s, head, opts));
+      continue;
+    }
+    if (allowElements && s.peek() === "<") {
+      nodes.push(parseHtmlAngle(s));
+      continue;
+    }
+    nodes.push(consumeTextRun(s, { allowElements, stopChar }));
+  }
+  return nodes;
+}
+
+function consumeTextRun(s, { allowElements, stopChar }) {
+  const start = s.pos;
+  while (!s.eof()) {
+    const ch = s.peek();
+    if (stopChar && ch === stopChar) break;
+    if (allowElements && ch === "<") break;
+    if (ch === "{") {
+      const head = peekLatteHead(s);
+      if (isRealLatteStart(head)) break;
+    }
+    s.advance();
+  }
+  if (s.pos === start) s.error("internal error: empty text run");
+  return { type: "HtmlText", value: s.text.slice(start, s.pos), start, end: s.pos };
+}
+
+function parseHtmlAngle(s) {
+  if (s.startsWith("<!--")) return parseHtmlComment(s);
+  if (s.startsWithCI("<!doctype")) return parseDoctype(s);
+  return parseElement(s);
+}
+
+function parseHtmlComment(s) {
+  const start = s.pos;
+  const idx = s.text.indexOf("-->", s.pos + 4);
+  if (idx === -1) s.error("unterminated HTML comment");
+  s.pos = idx + 3;
+  return { type: "HtmlComment", value: s.text.slice(start, s.pos), start, end: s.pos };
+}
+
+function parseDoctype(s) {
+  const start = s.pos;
+  const idx = s.text.indexOf(">", s.pos);
+  if (idx === -1) s.error("unterminated <!DOCTYPE>");
+  s.pos = idx + 1;
+  return { type: "HtmlDoctype", value: s.text.slice(start, s.pos), start, end: s.pos };
+}
+
+// ---------------------------------------------------------------------------
+// Element + attribute-list parsing. Attribute *lists* get the same
+// leaf-vs-Latte-control-construct treatment as node lists, since real Piwigo
+// markup conditionally renders whole attributes via {if}/{else} sitting
+// directly among an element's attributes (not just inside one value).
+// ---------------------------------------------------------------------------
+function parseElement(s) {
+  const start = s.pos;
+  s.advance(); // '<'
+  const name = readIdentifier(s);
+  const attributes = parseAttributeItems(s);
+  skipSpace(s);
+  let selfClosing = false;
+  if (s.peek() === "/" && s.peek(1) === ">") {
+    selfClosing = true;
+    s.advance(2);
+  } else if (s.peek() === ">") {
+    s.advance();
+  } else {
+    s.error(`expected '>' or '/>' closing <${name}`);
+  }
+  const lower = name.toLowerCase();
+  const isVoid = VOID_ELEMENTS.has(lower);
+  let children = [];
+  let rawText = false;
+  let unclosed = false;
+  if (!selfClosing && !isVoid) {
+    if (RAW_TEXT_ELEMENTS.has(lower)) {
+      rawText = true;
+      const closeTag = `</${lower}`;
+      const idxLower = s.text.toLowerCase().indexOf(closeTag, s.pos);
+      if (idxLower === -1) s.error(`unterminated <${name}> (raw-text element)`);
+      const rawValue = s.text.slice(s.pos, idxLower);
+      children = rawValue.length ? [{ type: "HtmlText", value: rawValue, start: s.pos, end: idxLower }] : [];
+      s.pos = idxLower;
+    } else {
+      children = parseNodeList(s, { allowElements: true });
+    }
+    // A same-file document fragment (Piwigo's header/footer split) can leave
+    // elements open at EOF, or close an element opened by a sibling file's
+    // half of the same document — neither is an error here, just "unclosed".
+    if (s.eof()) {
+      unclosed = true;
+    } else {
+      const closeName = peekCloseTagName(s);
+      if (closeName !== null && closeName.toLowerCase() === lower) {
+        s.advance(2);
+        skipSpace(s);
+        readIdentifier(s);
+        skipSpace(s);
+        if (s.peek() !== ">") s.error(`expected '>' to close </${name}>`);
+        s.advance();
+      } else {
+        unclosed = true; // belongs to an ancestor (or is a top-level orphan) — don't consume
+      }
+    }
+  }
+  return {
+    type: "HtmlElement",
+    name,
+    attributes,
+    selfClosing,
+    voidElement: isVoid,
+    rawText,
+    unclosed,
+    children,
+    start,
+    end: s.pos,
+  };
+}
+
+// Lookahead only — does not mutate s.pos. Returns the tag name of a `</name`
+// sequence at the current position, or null if not positioned at one.
+function peekCloseTagName(s) {
+  if (!s.startsWith("</")) return null;
+  let i = s.pos + 2;
+  const src = s.text;
+  if (!isIdentStart(src[i])) return null;
+  const start = i;
+  while (isIdentPart(src[i])) i++;
+  return src.slice(start, i);
+}
+
+function parseOrphanCloseTag(s) {
+  const start = s.pos;
+  s.advance(2);
+  skipSpace(s);
+  const name = readIdentifier(s);
+  skipSpace(s);
+  if (s.peek() !== ">") s.error(`expected '>' to close orphan </${name}>`);
+  s.advance();
+  return { type: "HtmlOrphanCloseTag", name, start, end: s.pos };
+}
+
+function parseAttributeItems(s, stopKeywords) {
+  const items = [];
+  for (;;) {
+    skipSpace(s);
+    if (s.eof()) break;
+    if (s.peek() === "/" && s.peek(1) === ">") break;
+    if (s.peek() === ">") break;
+    const head = peekLatteHead(s);
+    if (isRealLatteStart(head)) {
+      if (stopKeywords && stopKeywords.has(stopKey(head))) break;
+      items.push(parseLatteNode(s, head, { isAttrList: true }));
+      continue;
+    }
+    items.push(parseOneAttribute(s));
+  }
+  return items;
+}
+
+function parseOneAttribute(s) {
+  const start = s.pos;
+  if (!isIdentStart(s.peek()) && s.peek() !== "-" && s.peek() !== ":") {
+    s.error(`unexpected character '${s.peek()}' in attribute list`);
+  }
+  const nameStart = s.pos;
+  while (!s.eof() && /[A-Za-z0-9_:.-]/.test(s.peek())) s.advance();
+  const name = s.text.slice(nameStart, s.pos);
+  let hasValue = false;
+  let quote = null;
+  let value = null;
+  const save = s.pos;
+  skipSpace(s);
+  if (s.peek() === "=") {
+    s.advance();
+    skipSpace(s);
+    hasValue = true;
+    const q = s.peek();
+    if (q === '"' || q === "'") {
+      quote = q;
+      s.advance();
+      value = parseNodeList(s, { allowElements: false, stopChar: q });
+      if (s.peek() !== q) s.error(`unterminated attribute value for "${name}"`);
+      s.advance();
+    } else {
+      // unquoted attribute value (not present in corpus, handled defensively)
+      const vs = s.pos;
+      while (!s.eof() && !isSpace(s.peek()) && s.peek() !== ">" && s.peek() !== "/") s.advance();
+      value = [{ type: "HtmlText", value: s.text.slice(vs, s.pos), start: vs, end: s.pos }];
+    }
+  } else {
+    s.pos = save;
+  }
+  return {
+    type: "Attribute",
+    name,
+    hasValue,
+    quote,
+    value,
+    start,
+    end: s.pos,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Latte construct dispatch
+// ---------------------------------------------------------------------------
+function parseLatteNode(s, head, listOpts) {
+  const start = s.pos;
+  s.advance(); // '{'
+  if (head.sigil === "*") {
+    s.advance(); // consume the '*' sigil itself (readCommentBody starts right after it)
+    const body = readCommentBody(s);
+    return { type: "LatteComment", value: body, start, end: s.pos };
+  }
+  if (head.sigil === "$" || head.sigil === "=") {
+    const body = readTagBody(s);
+    const expr = parseExprString(head.sigil === "=" ? body.replace(/^=/, "") : body);
+    return { type: "LatteOutput", form: head.sigil, expr, start, end: s.pos };
+  }
+  if (head.closing) {
+    s.error(`unexpected closing tag {/${head.keyword}}`);
+  }
+  switch (head.keyword) {
+    case "if":
+      return parseIf(s, start, listOpts);
+    case "foreach":
+      return parseForeach(s, start, listOpts);
+    case "var":
+      return parseVar(s, start);
+    case "do":
+      return parseDo(s, start);
+    case "spaceless":
+      return parseSpaceless(s, start, listOpts);
+    case "capture":
+      return parseCapture(s, start);
+    case "include":
+      return parseInclude(s, start);
+    default:
+      s.error(`unknown Latte tag {${head.keyword}}`);
+  }
+}
+
+function parseIf(s, start, listOpts) {
+  const condSrc = readTagBody(s).replace(/^if\s+/, "");
+  const cond = parseExprString(condSrc);
+  const isAttrList = Boolean(listOpts && listOpts.isAttrList);
+
+  const ifStops = new Set(["elseif", "else", "/if"]);
+  const branchOf = () =>
+    isAttrList
+      ? parseAttributeItems(s, ifStops)
+      : parseNodeList(s, { allowElements: Boolean(listOpts && listOpts.allowElements), stopKeywords: ifStops });
+
+  const consequent = branchOf();
+  const elseifs = [];
+  let alternate = null;
+  for (;;) {
+    const head = peekLatteHead(s);
+    if (!head) s.error("expected {elseif}, {else}, or {/if}");
+    const key = stopKey(head);
+    if (key === "elseif") {
+      s.advance(); // '{'
+      const src = readTagBody(s).replace(/^elseif\s+/, "");
+      const c = parseExprString(src);
+      const body = branchOf();
+      elseifs.push({ cond: c, body });
+      continue;
+    }
+    if (key === "else") {
+      s.advance();
+      readTagBody(s); // consume '{else}'
+      alternate = branchOf();
+      continue;
+    }
+    if (key === "/if") {
+      s.advance();
+      readTagBody(s); // consume '{/if}'
+      break;
+    }
+    s.error(`unexpected {${key}} inside {if} construct`);
+  }
+  return { type: "LatteIf", cond, consequent, elseifs, alternate, start, end: s.pos };
+}
+
+function parseForeach(s, start, listOpts) {
+  const src = readTagBody(s).replace(/^foreach\s+/, "");
+  const m = /^(.*?)\s+as\s+(.+)$/s.exec(src);
+  if (!m) s.error(`malformed {foreach ${src}}: expected "EXPR as $var" or "EXPR as $k => $v"`);
+  const iterable = parseExprString(m[1]);
+  let keyVar = null;
+  let valueVar;
+  const asPart = m[2].trim();
+  const arrowIdx = asPart.indexOf("=>");
+  if (arrowIdx !== -1) {
+    keyVar = parseExprString(asPart.slice(0, arrowIdx).trim());
+    valueVar = parseExprString(asPart.slice(arrowIdx + 2).trim());
+  } else {
+    valueVar = parseExprString(asPart);
+  }
+  const isAttrList = Boolean(listOpts && listOpts.isAttrList);
+  const foreachStops = new Set(["/foreach"]);
+  const body = isAttrList
+    ? parseAttributeItems(s, foreachStops)
+    : parseNodeList(s, { allowElements: Boolean(listOpts && listOpts.allowElements), stopKeywords: foreachStops });
+  const head = peekLatteHead(s);
+  if (!head || stopKey(head) !== "/foreach") s.error("expected {/foreach}");
+  s.advance();
+  readTagBody(s);
+  return { type: "LatteForeach", iterable, keyVar, valueVar, body, start, end: s.pos };
+}
+
+function parseVar(s, start) {
+  const src = readTagBody(s).replace(/^var\s+/, "");
+  const eq = src.indexOf("=");
+  if (eq === -1) s.error(`malformed {var ${src}}: expected "$name = expr"`);
+  const nameSrc = src.slice(0, eq).trim();
+  if (!nameSrc.startsWith("$")) s.error(`malformed {var}: expected variable name, got "${nameSrc}"`);
+  const name = nameSrc.slice(1);
+  const value = parseExprString(src.slice(eq + 1).trim());
+  return { type: "LatteVar", name, value, start, end: s.pos };
+}
+
+function parseDo(s, start) {
+  const src = readTagBody(s).replace(/^do\s+/, "");
+  const expr = parseExprString(src);
+  return { type: "LatteDo", expr, start, end: s.pos };
+}
+
+function parseSpaceless(s, start, listOpts) {
+  readTagBody(s); // consume '{spaceless}'
+  const isAttrList = Boolean(listOpts && listOpts.isAttrList);
+  const spacelessStops = new Set(["/spaceless"]);
+  const body = isAttrList
+    ? parseAttributeItems(s, spacelessStops)
+    : parseNodeList(s, { allowElements: Boolean(listOpts && listOpts.allowElements), stopKeywords: spacelessStops });
+  const head = peekLatteHead(s);
+  if (!head || stopKey(head) !== "/spaceless") s.error("expected {/spaceless}");
+  s.advance();
+  readTagBody(s);
+  return { type: "LatteSpaceless", body, start, end: s.pos };
+}
+
+function parseCapture(s, start) {
+  const src = readTagBody(s).replace(/^capture\s+/, "");
+  if (!src.startsWith("$")) s.error(`malformed {capture ${src}}: expected a variable name`);
+  const varName = src.slice(1).trim();
+  const body = parseNodeList(s, { allowElements: false, stopKeywords: new Set(["/capture"]) });
+  const head = peekLatteHead(s);
+  if (!head || stopKey(head) !== "/capture") s.error("expected {/capture}");
+  s.advance();
+  readTagBody(s);
+  return { type: "LatteCapture", varName, body, start, end: s.pos };
+}
+
+function parseInclude(s, start) {
+  const src = readTagBody(s).replace(/^include\s+/, "");
+  const parts = splitTopLevelCommas(src);
+  const target = parseExprString(parts[0]);
+  const args = parts.slice(1).map((p) => parseArg(new ExprScanner(p.trim())));
+  return { type: "LatteInclude", target, args, start, end: s.pos };
+}
+
+// Splits "a, name: b, name2: c" on top-level commas only (not inside quotes/
+// brackets/parens) — used for {include}'s "target, arg, arg" argument tail.
+function splitTopLevelCommas(src) {
+  const parts = [];
+  let depth = 0;
+  let cur = "";
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (ch === "'" || ch === '"') {
+      const quote = ch;
+      cur += ch;
+      i++;
+      while (i < src.length && src[i] !== quote) {
+        if (src[i] === "\\") {
+          cur += src[i];
+          i++;
+        }
+        cur += src[i];
+        i++;
+      }
+      cur += src[i];
+      continue;
+    }
+    if (ch === "(" || ch === "[") depth++;
+    if (ch === ")" || ch === "]") depth--;
+    if (ch === "," && depth === 0) {
+      parts.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  parts.push(cur);
+  return parts;
+}
+
+// ---------------------------------------------------------------------------
+// Entry point
+// ---------------------------------------------------------------------------
+function parse(text) {
+  const s = new Scanner(text);
+  const children = [];
+  for (;;) {
+    children.push(...parseNodeList(s, { allowElements: true }));
+    if (s.eof()) break;
+    // Only remaining reason parseNodeList stops early is a `</name>` with no
+    // open ancestor in this fragment (e.g. footer.latte closing a <div> that
+    // header.latte opened) — preserve it verbatim rather than erroring.
+    children.push(parseOrphanCloseTag(s));
+  }
+  return { type: "Document", children, start: 0, end: text.length };
+}
+
+module.exports = {
+  parse,
+  parseExprString,
+  ParseError,
+};

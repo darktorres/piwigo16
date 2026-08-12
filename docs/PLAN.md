@@ -122,7 +122,7 @@ onto the original scope.
 | P29 | Browserslist decision + legacy back-compat removal | Not started | 0 |
 | P30 | Asset-pipeline foundation (ScriptLoader/CssLoader/FileCombiner retirement + ViteManifest resolution) | Not started | 0 |
 | P31 | Smarty → Latte template migration | Done — all 139 real templates converted, Smarty engine fully removed (`smarty/smarty` dropped, `Template.php` Latte-only). Deferred asset-pipeline items (`ViteManifest`, `<picture>`, ThumbHash) out of scope, pick up under P29/P30/P43 | 80 |
-| P32 | Latte lint/format | Not started | 0 |
+| P32 | Latte lint/format | Format-half landed (`tools/latte-prettier/`, real Prettier plugin, 85/109 real templates); lint-half (`composer lint:latte` etc.) not started | 1 |
 | P33 | Latte idiomatic modernization | Not started | 0 |
 | P34 | Inline JS extraction | Not started | 0 |
 | P35 | Inline CSS extraction | Not started | 0 |
@@ -1477,7 +1477,7 @@ needed). The deferred asset-pipeline items (`ViteManifest`,
 were never part of this narrower scope — they pick up whenever
 P29/P30 (Vite adoption) actually start, tracked under P43.
 
-**P32 — Latte lint/format.** Not started. No Latte-native lint/format
+**P32 — Latte lint/format.** Format-half landed; lint-half not started. No Latte-native lint/format
 tool is installed in this repo today, but `16.x-rewrite` (136 real
 `.latte` templates, unlike `16.x-v2` which has none at all) already built
 real prior art — REPLAY this, don't design from scratch:
@@ -1536,6 +1536,26 @@ Prettier's plugin ecosystem or another tool covers Latte by the time
 this phase starts). Depends on P31 only; sequenced immediately after it
 (not at the track's tail) since it's independent of every JS/CSS/TS phase
 below.
+
+**Format-half landed**: `tools/latte-prettier/` — a real Prettier plugin
+(hand-written recursive-descent parser producing a typed AST, printed
+through Prettier's own `Doc` builders, the same architecture
+`prettier-plugin-laravel-blade` uses for Blade, not a mask-and-delegate
+tool). `bun run format:latte` / `format:latte:fix`; `!themes/**/*.latte`
+carved out of `.prettierignore`'s per-extension excludes. Verified
+correct (no-throw, idempotent, AST-semantically-equivalent to the
+original) against 4 real theme files, and currently formats 85/109 real
+`.latte` templates in the tree cleanly — the rest hit real, uncovered
+grammar (newer keywords like `{for}`/`{define}`/`{breakIf}`, PHP `??`/
+array-literal/cast syntax, an unresolved `{elseif}`/`{else}` structural
+gap) and fail loudly rather than silently mangling anything; see
+`tools/latte-prettier/README.md`. `tests/Unit/Latte/latte-prettier-plugin.test.ts`
+asserts an 85-file regression floor across the real tree plus strict
+correctness against the 4 verified files. Deliberately **not** wired into
+`lefthook` pre-commit or CI yet — that's premature before grammar
+coverage is closer to complete; extending coverage is the natural next
+step, tracked here rather than as a new phase since it's still this
+phase's "format" half.
 
 **P33 — Latte idiomatic modernization.** Not started. A content pass over
 templates once formatting is enforced — idiomatic Latte constructs,

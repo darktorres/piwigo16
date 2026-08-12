@@ -944,3 +944,47 @@ test("load's cache key needs a real separator between the file path and mtime, n
         unlink($fileB);
     }
 });
+
+/**
+ * [Mutation] A scoped `pest --mutate` rerun leaves 12 mutations
+ * "untested" -- zero real gaps, all individually hand-mutation-verified
+ * against the real source (temporary sed edit + a full rerun of this
+ * file, reverted after):
+ *
+ * 1. load()'s own `filemtime($poFile)` cache-gating pair (the `!== false`
+ *    check and the resulting `$pool?->`) can only ever diverge from
+ *    "always succeeds" via a genuine TOCTOU race -- $poFile already
+ *    passed `is_readable()` one line above, so filemtime() failing on it
+ *    would need the file to become unreadable/vanish in that exact
+ *    window. Not deterministically forceable in a single-threaded test.
+ * 2. The cache key's own exact construction (`md5($poFile . '_' .
+ *    $mtime)`) is unobservable beyond hit/miss behavior (already covered
+ *    by the existing cache-key tests above): removing md5() entirely or
+ *    swapping the concat order both still produce a working, deterministic
+ *    key against this test environment's own cache adapter -- confirmed
+ *    live, neither one broke a single test.
+ * 3. toDictionaryEntry()'s and mirror()'s own `! ($entry instanceof
+ *    Translation)` guards (2 separate loops) are structurally dead code,
+ *    not just untested: `Gettext\Translations::add()` -- the only real
+ *    way any entry ever gets into a Translations object -- is itself
+ *    type-hinted to `Translation` only, so a non-Translation entry can
+ *    never exist via any real gettext/gettext usage.
+ * 4. toDictionaryEntry()'s `array_values(array_map(...))` (Line 288) is
+ *    redundant: $forms is always built via `[$x, ...$y]`, and PHP's own
+ *    spread operator always produces a fresh, sequential 0-indexed array
+ *    regardless of $y's original keys -- array_map() over an
+ *    already-sequential array stays sequential, making the array_values()
+ *    wrapper a no-op.
+ * 5. That same array_map()'s own `is_string($f) ? $f : ''` fallback
+ *    (Line 289, both EmptyStringToNotEmpty and UnwrapArrayMap) never
+ *    actually triggers with real gettext/gettext parse output --
+ *    getTranslation()/getPluralTranslations() only ever produce real
+ *    strings for a genuinely parsed PO file, so removing the whole
+ *    array_map() wrapper changes nothing.
+ * 6. mirror()'s own `(int) $matches[1]` casts (Lines 341/343, the
+ *    piwigo_day_N/piwigo_month_N regex capture used as an array key) are
+ *    redundant for array-key purposes specifically: PHP automatically
+ *    coerces a numeric-string array key to an int key on assignment
+ *    (`$days['5']` and `$days[5]` are the same key), so the explicit
+ *    cast changes nothing observable about $days/$months' own contents.
+ */

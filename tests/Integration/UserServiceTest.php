@@ -543,9 +543,11 @@ namespace Piwigo\Tests\Integration {
 
         public function testCheckAndSaveUserInfosRejectsAnInvalidTheme(): void
         {
-            // The fixture's own themes table is empty (confirmed
-            // live), so any value at all is "invalid" here -- no need for
-            // an implausible-sounding fake theme name.
+            // getPwgThemes() always includes AppInfo::DEFAULT_TEMPLATE
+            // ('default') but nothing else, and the fixture's own themes
+            // table is otherwise empty -- 'anything' stays a genuinely
+            // invalid value without needing an implausible-sounding fake
+            // theme name.
             $result = $this->service->checkAndSaveUserInfos([
                 'user_id' => [4],
                 'theme' => 'anything',
@@ -601,11 +603,11 @@ namespace Piwigo\Tests\Integration {
 
         public function testCheckAndSaveUserInfosUpdatesEveryUserInfosFieldForASingleUser(): void
         {
-            // getPwgThemes()'s own checkThemeInstalled() call requires a
-            // real themes/<id> directory on disk, not just a DB row --
-            // 'default' is the one real theme directory this repo ships.
-            $this->conn->executeStatement("INSERT INTO themes (id, version, name) VALUES ('default', '1.0', 'Default')");
-
+            // getPwgThemes() always includes AppInfo::DEFAULT_TEMPLATE
+            // ('default', the one real theme directory this repo ships)
+            // regardless of the themes table's own content -- see that
+            // method's own docblock -- so no themes row needs seeding
+            // here for 'default' to validate.
             try {
                 $result = $this->service->checkAndSaveUserInfos([
                     'user_id' => [4],
@@ -655,7 +657,6 @@ namespace Piwigo\Tests\Integration {
                 }
                 self::assertSame($expectedInfos, $after);
             } finally {
-                $this->conn->executeStatement("DELETE FROM themes WHERE id = 'default'");
                 $boolLiterals = $this->dbDriver === 'pgsql'
                     ? [
                         'expand' => 'false',

@@ -23,49 +23,25 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * re-renders profile.php with the error message and the user_infos row
  * untouched.
  *
- * CONFIRMED REAL FIXTURE GAP (reproduced directly with raw curl,
- * independent of this file, before writing this workaround): tests/
- * Fixtures/piwigo-17.0.sql ships an entirely EMPTY `themes` table
- * (no INSERT rows at all between its own DISABLE/ENABLE KEYS markers) --
- * ThemeCatalog::getPwgThemes() reads that table directly, so profile.tpl's
- * theme <select> renders with ZERO <option>s in this environment, and
- * saveFromPost()'s own `in_array($post['theme'], array_keys(getPwgThemes()),
- * true)` guard then ALWAYS fails (empty haystack), turning EVERY profile.php
- * submission -- from any account, regardless of any other field's value --
- * into a real 500 "[Hacking attempt] incorrect theme value" fatalError().
- * This isn't specific to ProfileController's own logic (the same
- * saveFromPost() is also called from Controller\Admin\
- * ConfigurationSubController's "default" tab, which would hit the exact
- * same wall), so it reads as an install/fixture-regen seeding gap rather
- * than a bug in the class under test -- worth fixing at the source
- * (RegenerateFixtureTest.php should seed at least the 'default' theme row),
- * but out of scope for this change (BrowserTestHelpers.php/
- * RegenerateFixtureTest.php aren't in this change's target list either).
- * Repaired here, matching every other direct-DB-fixture-manipulation
- * helper already established in this suite (freezeImageHits()/
- * setCategoryPrivate()), rather than silently working around it by
- * skipping the theme field or weakening an assertion.
+ * FIXED AT THE SOURCE (previously worked around here): tests/Fixtures/
+ * piwigo-17.0.sql ships an entirely empty `themes` table by design (a
+ * real fresh install never activates AppInfo::DEFAULT_TEMPLATE --
+ * ExtensionLifecycle::performThemeAction()'s own $id === 'default' guard
+ * keeps it out permanently), but ThemeCatalog::getPwgThemes() used to
+ * read that table with no exception for it, so profile.tpl's theme
+ * <select> rendered with zero <option>s and saveFromPost()'s own
+ * `in_array($post['theme'], array_keys(getPwgThemes()), true)` guard
+ * always failed -- turning every profile.php submission into a real 500
+ * "[Hacking attempt] incorrect theme value" fatalError(), reproduced
+ * directly with raw curl independent of this file. Not specific to
+ * ProfileController (the same saveFromPost() is also reached from
+ * Controller\Admin\ConfigurationSubController's "default" tab). Fixed by
+ * making getPwgThemes() itself always include AppInfo::DEFAULT_TEMPLATE
+ * -- this file no longer needs to seed a `themes` row before each test.
  */
 const PROFILE_TEST_USER = 'regular_user';
 
 const PROFILE_TEST_PASS = 'regular_user_pass';
-
-/**
- * Idempotently registers the 'default' theme -- see this file's own docblock for why this is necessary.
- */
-function profileEnsureDefaultThemeRegistered(): void
-{
-    $db = H::connect();
-    $upsertSql = $db instanceof mysqli
-        ? "INSERT INTO themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default'"
-        : "INSERT INTO themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON CONFLICT (id) DO UPDATE SET name = 'Default'";
-    H::dbQuery($db, $upsertSql);
-    H::dbClose($db);
-}
-
-beforeEach(function (): void {
-    profileEnsureDefaultThemeRegistered();
-});
 
 // PHPStan claims only Webpage is ever returned here ("never returns
 // AwaitableWebpage/PendingAwaitablePage so it can be removed") -- empirically

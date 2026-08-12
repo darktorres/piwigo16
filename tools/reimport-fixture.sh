@@ -108,12 +108,6 @@ if [ "${PIWIGO_DB_DRIVER:-mysqli}" = "pgsql" ]; then
     sleep 0.5
   done
 
-  # tests/Fixtures/piwigo-17.0-pgsql.sql ships an entirely empty `themes`
-  # table -- same real gap as the mysql fixture below, same fix, ON
-  # CONFLICT being the real Postgres equivalent of ON DUPLICATE KEY UPDATE
-  # (themes.id is the PRIMARY KEY on both platforms).
-  psql "${psql_args[@]}" -c "INSERT INTO themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON CONFLICT (id) DO UPDATE SET name = 'Default';"
-
   psql "${psql_args[@]}" -c "UPDATE sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
 
   # categories has a real BEFORE UPDATE trigger (trg_categories_lastmodified,
@@ -136,18 +130,6 @@ else
   until mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "SELECT COUNT(*) FROM images;" > /dev/null 2>&1; do
     sleep 0.5
   done
-
-  # tests/Fixtures/piwigo-17.0.sql ships an entirely empty `themes` table (no
-  # INSERT rows at all) -- ThemeCatalog::getPwgThemes() reads this table
-  # directly, so ANY profile-save submission (ProfileController's own form, or
-  # ConfigurationSubController's "default" tab, both funnel through the same
-  # ProfileFormHandler::saveFromPost()) hits its `in_array($post['theme'],
-  # array_keys(getPwgThemes()), true)` guard against an empty haystack and
-  # 500s with "[Hacking attempt] incorrect theme value" -- confirmed live,
-  # independently, from two separate Browser test files. Seeded here (once,
-  # for the whole suite) rather than per-test, now that a second file hit the
-  # same wall.
-  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "INSERT INTO themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default';"
 
   mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
 

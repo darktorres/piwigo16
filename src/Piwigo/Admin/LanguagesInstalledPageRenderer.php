@@ -82,10 +82,6 @@ final readonly class LanguagesInstalledPageRenderer
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
-        $template->setFilenames([
-            'languages' => 'languages_installed.tpl',
-        ]);
-
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
 
         $conn = DbConnection::build();
@@ -168,6 +164,6 @@ final readonly class LanguagesInstalledPageRenderer
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'languages');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'languages_installed.latte');
     }
 }

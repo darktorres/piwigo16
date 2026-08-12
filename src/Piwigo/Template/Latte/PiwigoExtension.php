@@ -114,6 +114,7 @@ final class PiwigoExtension extends Extension
             'date_format' => self::dateFormat(...),
             'number_format' => self::numberFormat(...),
             'replace' => self::replace(...),
+            'escapeJavascript' => self::escapeJavascript(...),
 
             // Domain-specific helpers.
             'url_is_remote' => $this->urlService->urlIsRemote(...),
@@ -239,6 +240,36 @@ final class PiwigoExtension extends Extension
     public static function strIreplace(string $subject, array|string $search, array|string $replace): string
     {
         return str_ireplace($search, $replace, $subject);
+    }
+
+    /**
+     * Smarty's `|escape:'javascript'` modifier -- for a value manually
+     * embedded inside quotes the *template itself* writes (`'{$x|...}'`),
+     * unlike Latte's own automatic JS-context escaping (which only applies
+     * inside a literal `<script>` tag Latte's compiler parses directly, and
+     * adds its own quotes -- see `escapeJs()`'s docblock-adjacent
+     * discussion in docs/PLAN.md's P31 section). No Latte equivalent
+     * exists; ported verbatim from Smarty's own compiled output
+     * (`vendor/smarty/smarty/src/Compile/Modifier/EscapeModifierCompiler.php`'s
+     * `'javascript'` case) rather than approximated with `addslashes()` --
+     * escapes backslashes/quotes/newlines/`</script`-breaking sequences,
+     * does not add surrounding quotes.
+     */
+    public static function escapeJavascript(string $value): string
+    {
+        return strtr($value, [
+            '\\' => '\\\\',
+            "'" => "\\'",
+            '"' => '\\"',
+            "\r" => '\\r',
+            "\n" => '\\n',
+            '</' => '<\/',
+            '<!--' => '<\!--',
+            '<s' => '<\s',
+            '<S' => '<\S',
+            '`' => '\\`',
+            '${' => '\\$\\{',
+        ]);
     }
 
     /**

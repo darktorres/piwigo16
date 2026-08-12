@@ -82,10 +82,6 @@ final readonly class LanguagesNewPageRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
-        $template->setFilenames([
-            'languages' => 'languages_new.tpl',
-        ]);
-
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build(DbConnection::build()));
@@ -198,6 +194,6 @@ final readonly class LanguagesNewPageRenderer
             languages: $tpl_languages,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'languages');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'languages_new.latte');
     }
 }

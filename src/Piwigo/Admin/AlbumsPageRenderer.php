@@ -147,7 +147,7 @@ final class AlbumsPageRenderer
             $open_cat = $albumsRequest->rawId;
         }
 
-        // '-1' is the "nothing selected" sentinel albums.tpl's own inline
+        // '-1' is the "nothing selected" sentinel albums.latte's own inline
         // `var openCat = {$open_cat};` embeds as a raw JS numeric literal,
         // and albums.js's own `openCat == -1` check expects -- not '', which
         // renders as `var openCat = ;` (a syntax error) and wouldn't match
@@ -157,11 +157,6 @@ final class AlbumsPageRenderer
             is_int($open_cat) || is_string($open_cat) => (string) $open_cat,
             default => '-1',
         };
-
-        // +-------------------------------------------------------------------+
-        // |                       template initialization                     |
-        // +-------------------------------------------------------------------+
-        $template->setFilename('albums', 'albums.tpl');
 
         // +-------------------------------------------------------------------+
         // |                          Album display                            |
@@ -275,7 +270,7 @@ final class AlbumsPageRenderer
         // |                          sending html code                        |
         // +-------------------------------------------------------------------+
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'albums');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'albums.latte');
     }
 
     /**

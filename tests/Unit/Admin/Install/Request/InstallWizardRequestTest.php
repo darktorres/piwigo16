@@ -193,3 +193,38 @@ test('fromArrays reports isSendCredentialsByMail when present', function (): voi
     expect($request->isSendCredentialsByMail)
         ->toBeTrue();
 });
+
+/**
+ * [Mutation] A scoped `pest --mutate` rerun leaves 9 mutations
+ * "untested" -- zero real gaps, all individually hand-mutation-verified
+ * against the real source (temporary sed edit + a full rerun of this
+ * file, reverted after):
+ *
+ * 1. The 7 `'' fallback -> sentinel` EmptyStringToNotEmpty mutations
+ *    (dbuser/dbpasswd/dbname/adminName/adminPass1/adminPass2/adminMail,
+ *    Lines 61/63/65/72/74/76/78) are NOT actually untested -- each
+ *    produces a real, distinct assertion failure against the "returns
+ *    defaults for an empty GET/POST" test's own exact `->toBe('')`
+ *    assertions when this file is rerun as a whole (confirmed live for
+ *    all 7). `pest --mutate`'s own per-mutation test-selection filter
+ *    just doesn't correctly attribute that already-covering test to
+ *    these specific mutation IDs -- the same tool misattribution on
+ *    already-covered code hit repeatedly elsewhere in this campaign.
+ * 2. Line 69's EmptyStringToNotEmpty (`$dbport_raw !== ''` inside the
+ *    dbport 3-clause `&&` chain) is genuinely inert: whatever this
+ *    clause's own truth value becomes, the very next clause
+ *    (`is_numeric($dbport_raw)`) is false for every real input that
+ *    could ever flip this specific comparison, masking any difference
+ *    -- confirmed live.
+ * 3. Line 84's BooleanAndToBooleanOr (`isset($get['language']) &&
+ *    is_string($get['language'])`) is genuinely inert for the FINAL
+ *    $language_param value in every real input scenario: the only
+ *    observable difference is an "Undefined array key" PHP warning
+ *    (`||`'s own short-circuit rules force evaluating the right operand
+ *    even when 'language' is absent, unlike `&&`) -- confirmed live.
+ *    `--do-not-fail-on-warning` (mandatory for every `pest --mutate`
+ *    baseline in this campaign) specifically prevents that warning from
+ *    ever being credited as a failure, matching the same
+ *    warning-without-behavior-difference pattern already established
+ *    elsewhere (e.g. CookieService.php's non-scalar-value cast).
+ */

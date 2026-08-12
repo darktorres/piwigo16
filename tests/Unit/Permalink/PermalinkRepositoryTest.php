@@ -25,14 +25,22 @@ use Piwigo\Permalink\Projection\OldPermalink;
  *
  * Every test that writes to `categories.permalink` (as opposed to the
  * separate `old_permalinks` table, which nothing else in the Unit suite
- * touches) uses category id 2, never 1 -- composer test's own parallel
- * runner puts this file and PermalinkServiceTest.php in different
- * worker processes against the SAME real, shared DB, and
- * PermalinkServiceTest.php's own beforeEach()/afterEach() claims
- * category 1 exclusively for its own setCatPermalink() calls. Confirmed
- * live: this file's own findPermalinkMatches() test produced a real,
- * intermittent failure when its own category-1 UPDATE raced against
- * that file's concurrently-running clearCategoryPermalink(1) calls.
+ * touches) uses a disposable category inserted just for that test (see
+ * permalinkRepoTestDisposableCategory() below), never a real fixture
+ * category id -- composer test's own parallel runner puts this file and
+ * PermalinkServiceTest.php in different worker processes against the
+ * SAME real, shared DB, and this file previously hardcoded fixture
+ * category 2 for the same purpose, coordinating via a docblock note with
+ * PermalinkServiceTest.php supposedly owning category 1 exclusively.
+ * That note was itself wrong (PermalinkServiceTest.php's own docblock
+ * made the mirror-image claim about this file owning category 1), and
+ * both files ended up hardcoding category 2 -- confirmed live:
+ * PermalinkServiceTest.php's own continuous category-2 permalink churn
+ * (every single test, via its beforeEach()/afterEach()) raced against
+ * this file's own findPermalinkMatches() test under --parallel.
+ * Disposable, per-test categories sidestep this permanently -- no
+ * hardcoded id for either file to silently start colliding on again
+ * after a future refactor.
  *
  * Confirmed-equivalent mutations, not individually tested:
  * findCategoryIdByPermalink()/findOldCategoryId()'s own `is_numeric($ids[0])
@@ -66,6 +74,30 @@ function permalinkRepoTest(): PermalinkRepository
 }
 
 /**
+ * A fresh category, not a real fixture id -- see this file's own
+ * top-of-file docblock for why: a real fixture category's `permalink`
+ * column is shared, observable state across every --parallel worker.
+ */
+function permalinkRepoTestDisposableCategory(): int
+{
+    $conn = DbConnection::build();
+    $conn->insert('categories', [
+        'name' => permalinkRepoTestSlug('p17-unit-test-cat-'),
+    ]);
+
+    return (int) $conn->lastInsertId();
+}
+
+function permalinkRepoTestDeleteCategory(int $catId): void
+{
+    DbConnection::build()->createQueryBuilder()
+        ->delete('categories')
+        ->where('id = :id')
+        ->setParameter('id', $catId)
+        ->executeStatement();
+}
+
+/**
  * PermalinkRepository holds its own EntityManagerInterface directly (not
  * an EntityRepository subclass), so there's no getEntityManager()
  * accessor at all -- the em->clear() staleness tests below need direct
@@ -95,16 +127,18 @@ afterEach(function (): void {
 test('setCategoryPermalink() then findCategoryIdByPermalink() round-trips', function (): void {
     $repo = permalinkRepoTest();
     $slug = permalinkRepoTestSlug();
+    $catId = permalinkRepoTestDisposableCategory();
 
-    $repo->setCategoryPermalink(2, $slug);
+    $repo->setCategoryPermalink($catId, $slug);
 
     try {
         expect($repo->findCategoryIdByPermalink($slug))
-            ->toBe(2)
-            ->and($repo->findPermalinkByCategoryId(2))
+            ->toBe($catId)
+            ->and($repo->findPermalinkByCategoryId($catId))
             ->toBe($slug);
     } finally {
-        $repo->clearCategoryPermalink(2);
+        $repo->clearCategoryPermalink($catId);
+        permalinkRepoTestDeleteCategory($catId);
     }
 });
 
@@ -114,11 +148,16 @@ test('findCategoryIdByPermalink() returns null when unused', function (): void {
 });
 
 test('findPermalinkByCategoryId() returns null when unset', function (): void {
-    $repo = permalinkRepoTest();
-    $repo->clearCategoryPermalink(2);
+    // A freshly inserted category already starts with permalink=NULL --
+    // no pre-clear needed, unlike a real fixture category id would.
+    $catId = permalinkRepoTestDisposableCategory();
 
-    expect($repo->findPermalinkByCategoryId(2))
-        ->toBeNull();
+    try {
+        expect(permalinkRepoTest()->findPermalinkByCategoryId($catId))
+            ->toBeNull();
+    } finally {
+        permalinkRepoTestDeleteCategory($catId);
+    }
 });
 
 test('findPermalinkByCategoryId() returns null for a category that does not exist at all', function (): void {
@@ -133,14 +172,19 @@ test('findPermalinkByCategoryId() returns null for a category that does not exis
 test('clearCategoryPermalink() removes it', function (): void {
     $repo = permalinkRepoTest();
     $slug = permalinkRepoTestSlug();
-    $repo->setCategoryPermalink(2, $slug);
+    $catId = permalinkRepoTestDisposableCategory();
+    $repo->setCategoryPermalink($catId, $slug);
 
-    $repo->clearCategoryPermalink(2);
+    try {
+        $repo->clearCategoryPermalink($catId);
 
-    expect($repo->findPermalinkByCategoryId(2))
-        ->toBeNull()
-        ->and($repo->findCategoryIdByPermalink($slug))
-        ->toBeNull();
+        expect($repo->findPermalinkByCategoryId($catId))
+            ->toBeNull()
+            ->and($repo->findCategoryIdByPermalink($slug))
+            ->toBeNull();
+    } finally {
+        permalinkRepoTestDeleteCategory($catId);
+    }
 });
 
 test('insertOldPermalinkDeleted() then findOldCategoryId() round-trips', function (): void {
@@ -410,27 +454,32 @@ test('findAllOrderedBy() with a null sort field leaves the natural order untouch
 
 test('findPermalinkMatches() finds old and current permalinks', function (): void {
     // Deliberately 2 DIFFERENT categories, not the same one for both
-    // matches -- category 1 is PermalinkServiceTest.php's own exclusive
-    // id (see this file's own top-of-file docblock); using category 2
-    // here for the "current permalink" half still proves the real thing
-    // this test is about (a mixed old+current result set, each row
-    // correctly tagged via is_old), without needing the 2 permalinks to
-    // share a category.
+    // matches -- 'old-sample-album' is the fixture's own real
+    // old_permalinks row (cat_id 1); a disposable category (not a real
+    // fixture id -- see this file's own top-of-file docblock) stands in
+    // for the "current permalink" half, so this test's own transient
+    // categories.permalink write can never collide with another
+    // Unit-suite file's use of a real fixture category id. Still proves
+    // the real thing this test is about (a mixed old+current result set,
+    // each row correctly tagged via is_old), without needing the 2
+    // permalinks to share a category.
+    $catId = permalinkRepoTestDisposableCategory();
+    $slug = permalinkRepoTestSlug('p17-unit-sample-album-');
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE categories' . " SET permalink = 'p17-unit-sample-album' WHERE id = 2");
+    $conn->executeStatement('UPDATE categories SET permalink = ? WHERE id = ?', [$slug, $catId]);
 
     try {
         $matches = permalinkRepoTest()
-            ->findPermalinkMatches(['old-sample-album', 'p17-unit-sample-album']);
+            ->findPermalinkMatches(['old-sample-album', $slug]);
 
         // id/is_old come back as native int under this project's mysqli
         // driver config (unlike varchar columns like 'permalink').
         expect($matches['old-sample-album']['id'])->toBe(1)
             ->and($matches['old-sample-album']['is_old'])->toBe(1)
-            ->and($matches['p17-unit-sample-album']['id'])->toBe(2)
-            ->and($matches['p17-unit-sample-album']['is_old'])->toBe(0);
+            ->and($matches[$slug]['id'])->toBe($catId)
+            ->and($matches[$slug]['is_old'])->toBe(0);
     } finally {
-        $conn->executeStatement('UPDATE categories SET permalink = NULL WHERE id = 2');
+        permalinkRepoTestDeleteCategory($catId);
     }
 });
 
@@ -454,44 +503,55 @@ test('touchOldPermalinkHit() increments the counter', function (): void {
 });
 
 test('deleteOldPermalinksForCategories() removes only rows for the given category ids', function (): void {
+    // Disposable category ids, not real fixture ones, for the
+    // delete-by-cat_id filter itself -- deleteOldPermalinksForCategories()
+    // scans by cat_id, not by this row's own randomized permalink PK, so
+    // a shared literal cat_id here is directly exposed to any other
+    // concurrent test's own old_permalinks row for that same id (see
+    // the sibling no-op test below for the confirmed-live incident this
+    // caused).
     $repo = permalinkRepoTest();
     $keptSlug = permalinkRepoTestSlug('p17-unit-keep-');
     $deletedSlug = permalinkRepoTestSlug('p17-unit-delete-');
-    $repo->insertOldPermalinkDeleted(1, $keptSlug);
-    $repo->insertOldPermalinkDeleted(2, $deletedSlug);
+    $keptCatId = permalinkRepoTestDisposableCategory();
+    $deletedCatId = permalinkRepoTestDisposableCategory();
+    $repo->insertOldPermalinkDeleted($keptCatId, $keptSlug);
+    $repo->insertOldPermalinkDeleted($deletedCatId, $deletedSlug);
 
     try {
-        $repo->deleteOldPermalinksForCategories([2]);
+        $repo->deleteOldPermalinksForCategories([$deletedCatId]);
 
         expect($repo->findOldCategoryId($keptSlug))
-            ->toBe(1)
+            ->toBe($keptCatId)
             ->and($repo->findOldCategoryId($deletedSlug))
             ->toBeNull();
     } finally {
-        $repo->deleteOldPermalink(1, $keptSlug);
+        $repo->deleteOldPermalink($keptCatId, $keptSlug);
+        permalinkRepoTestDeleteCategory($keptCatId);
+        permalinkRepoTestDeleteCategory($deletedCatId);
     }
 });
 
 test('deleteOldPermalinksForCategories() is a no-op for no ids', function (): void {
     // A real, targeted row -- not a global COUNT(*) before/after
-    // comparison (this table's own real row count depends on what else
-    // is concurrently sharing the fixture DB under composer test's own
-    // parallel runner, matching PermalinkServiceTest.php's own
-    // insertOldPermalinkDeleted() calls elsewhere; a bare aggregate
-    // count is sensitive to ANY row appearing/disappearing anywhere in
-    // the table, regardless of how well-namespaced its own value is.
-    // Confirmed live: this exact test produced a real, intermittent
-    // "1 is identical to 2"-shaped failure from that race).
+    // comparison -- plus a disposable category id (not a real fixture
+    // one), same reason as the sibling test above. Confirmed live: this
+    // exact test previously produced a real, intermittent "1 is
+    // identical to 2"-shaped failure from PermalinkServiceTest.php's own
+    // (since-fixed) hardcoded category-2 old_permalinks rows racing
+    // against this one's literal cat_id=2.
     $repo = permalinkRepoTest();
     $slug = permalinkRepoTestSlug();
-    $repo->insertOldPermalinkDeleted(2, $slug);
+    $catId = permalinkRepoTestDisposableCategory();
+    $repo->insertOldPermalinkDeleted($catId, $slug);
 
     try {
         $repo->deleteOldPermalinksForCategories([]);
 
         expect($repo->findOldCategoryId($slug))
-            ->toBe(2);
+            ->toBe($catId);
     } finally {
-        $repo->deleteOldPermalink(2, $slug);
+        $repo->deleteOldPermalink($catId, $slug);
+        permalinkRepoTestDeleteCategory($catId);
     }
 });

@@ -202,8 +202,7 @@ final class RatingUserPageRenderer
             adminPageTitle: $lang->t('Rating'),
             orderByOptions: $order_by_options,
         ));
-        $template->setFilename('rating', 'rating_user.tpl');
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'rating');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'rating_user.latte');
     }
 
     /**

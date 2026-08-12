@@ -77,7 +77,7 @@ final class PageTailTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
 
-        // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
+        // footer.latte's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
@@ -135,7 +135,7 @@ final class PageTailTest extends IntegrationTestCase
 
             // Proves renderToString() completed the whole real render (not
             // just the update-check branch) without ever touching the
-            // network: AppInfo::URL is the footer.tpl "Powered by" link
+            // network: AppInfo::URL is the footer.latte "Powered by" link
             // href, only present once Smarty has actually compiled and
             // rendered the real theme template end to end.
             self::assertStringContainsString('href="' . AppInfo::URL . '"', $output);

@@ -17,7 +17,7 @@ use Piwigo\Core\TemplatePageContext;
  * `count($this->retrieve_list) > 0`). `$c13yDoCheck` is genuinely
  * optional -- only populated when at least one anomaly has a real,
  * callable correction function, omitted here (not present as a null
- * value) to match `check_integrity.tpl`'s own `{if isset($c13y_do_check)}`
+ * value) to match `check_integrity.latte`'s own `{if isset($c13y_do_check)}`
  * guard.
  */
 final readonly class CheckIntegrityPageContext implements TemplatePageContext

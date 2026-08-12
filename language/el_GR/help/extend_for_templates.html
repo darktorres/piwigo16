@@ -1,7 +1,7 @@
 <h2>Διαμόρφωση Επεκτάσεων προτύπων</h2>
 
 <h3>Για την επέκταση προτύπων</h3>
-<p>Η Piwigo γκαλερί σας μπορεί να διαμορφωθεί με την αντικατάσταση των υπαρχόντων αρχείων προτύπων με προσαρμοσμένες εκδόσεις.  Για παράδειγμα, οι επικεφαλίδες στα προεπιλεγμένα πρότυπα (header.tpl) μπορεί να αντικατασταθούν από άλλές επικεφαλίδες προσαρμοσμένων πρότυπων (my-header.tpl).  Μετά την υποβολή των αλλαγών στη βάση δεδομένων η γκαλερί θα εμφανίσει την προσαρμοσμένη επικεφαλίδα, αντί της αρχικής επικεφαλίδας. <br>
+<p>Η Piwigo γκαλερί σας μπορεί να διαμορφωθεί με την αντικατάσταση των υπαρχόντων αρχείων προτύπων με προσαρμοσμένες εκδόσεις.  Για παράδειγμα, οι επικεφαλίδες στα προεπιλεγμένα πρότυπα (header.latte) μπορεί να αντικατασταθούν από άλλές επικεφαλίδες προσαρμοσμένων πρότυπων (my-header.latte).  Μετά την υποβολή των αλλαγών στη βάση δεδομένων η γκαλερί θα εμφανίσει την προσαρμοσμένη επικεφαλίδα, αντί της αρχικής επικεφαλίδας. <br>
 Οι Επεκτάσεις προτύπων είναι ένας ισχυρός τρόπος να δημιουργήσετε προσαρμοσμένα θέματα τόσο για τους νέους όσο και τους προχωρημένους χρήστες.  Χρησιμοποιείται σε συνδυασμό με τον Επεξεργαστή LocalFiles μπορείτε να δημιουργήσετε τα δικά σας παιδικά θέματα.</p>
 
 <h3>Αρχικό Πρότυπο</h3>
@@ -17,24 +17,24 @@
 <p>Τα αρχικά πρότυπα είναι τα αρχεία πρότυπου που περιέχονται σε κάθε θέμα αρχικά.  Είναι αποθηκευμένα στο <em>/themes/default/template</em> (ή <em>themes/<theme name>/template</em>).  Αυτά τα αρχεία προτύπωνδεν θα πρέπει να επεξεργάζονται επί τόυ γιατι οι αλλαγές θα χαθούν όταν γίνεται αναβάθμιση θάματος. <br>
 Υποστηριζόμενα αρχικά πρότυπα περιλαμβάνονται:</p>
 <ul>
-<li><span class="filename">index.tpl</span></li>
-  <li><span class="filename">mainpage_categories.tpl</span> και / ή <span class="filename">thumbnails.tpl</span></li>
-  <li><span class="filename">menubar.tpl</span></li>
-  <li><span class="filename">header.tpl</span> και / ή <span class="filename">footer.tpl</span></li>
-  <li><span class="filename">picture_content.tpl</span> and/or <span class="filename">picture.tpl</span></li>
-  <!-- <li><span class="filename">slideshow.tpl</span></li> -->
-  <li><span class="filename">profile.tpl</span> και / ή <span class="filename">profile_content.tpl</span></li>
-  <li><span class="filename">tags.tpl</span></li>
+<li><span class="filename">index.latte</span></li>
+  <li><span class="filename">mainpage_categories.latte</span> και / ή <span class="filename">thumbnails.latte</span></li>
+  <li><span class="filename">menubar.latte</span></li>
+  <li><span class="filename">header.latte</span> και / ή <span class="filename">footer.latte</span></li>
+  <li><span class="filename">picture_content.latte</span> and/or <span class="filename">picture.latte</span></li>
+  <!-- <li><span class="filename">slideshow.latte</span></li> -->
+  <li><span class="filename">profile.latte</span> και / ή <span class="filename">profile_content.latte</span></li>
+  <li><span class="filename">tags.latte</span></li>
   <li><span class="filename">upload.tpl</span></li>
-  <li><span class="filename">about.tpl</span></li>
-  <li><span class="filename">popuphelp.tpl</span></li>
-  <li><span class="filename">search.tpl</span> και / ή <span class="filename">search_rules.tpl</span></li>
-  <li><span class="filename">nbm.tpl</span> και / ή <span class="filename">notification.tpl</span></li>
-  <li><span class="filename">identification.tpl</span> και / ή <span class="filename">register.tpl</span></li>
-  <li><span class="filename">redirect.tpl</span></li>
+  <li><span class="filename">about.latte</span></li>
+  <li><span class="filename">popuphelp.latte</span></li>
+  <li><span class="filename">search.latte</span> και / ή <span class="filename">search_rules.tpl</span></li>
+  <li><span class="filename">nbm.latte</span> και / ή <span class="filename">notification.latte</span></li>
+  <li><span class="filename">identification.latte</span> και / ή <span class="filename">register.latte</span></li>
+  <li><span class="filename">redirect.latte</span></li>
 </ul>
 <h3>Αποθηκεύοντας προσαρμοσμένα πρότυπα</h3>
-<p>Τα προσαρμοσμένα πρότυπα Θα πρέπει να αποθηκευτούν στο φάκελο πρότυπο-επέκταση ή σε υποφακέλους.  Για παράδειγμα, <em>/template-extension/my-default/header.tpl</em> (ή <em>/template-extension/<my-theme-name>/header.tpl</em>)  Τα αρχεία προτύπων μπορεί να έχουν οποιοδήποτε όνομα με .tpl επέκταση.  Τα αρχεία προτύπων στους υποφακέλους εμφανίζονται  στην οθόνη διαμόρφωσης Προτύπου ως διαθέσιμα προσαρμοσμένα πρότυπα.</p>
+<p>Τα προσαρμοσμένα πρότυπα Θα πρέπει να αποθηκευτούν στο φάκελο πρότυπο-επέκταση ή σε υποφακέλους.  Για παράδειγμα, <em>/template-extension/my-default/header.latte</em> (ή <em>/template-extension/<my-theme-name>/header.latte</em>)  Τα αρχεία προτύπων μπορεί να έχουν οποιοδήποτε όνομα με .tpl επέκταση.  Τα αρχεία προτύπων στους υποφακέλους εμφανίζονται  στην οθόνη διαμόρφωσης Προτύπου ως διαθέσιμα προσαρμοσμένα πρότυπα.</p>
 
 <h3>Ενεργοποίηση προσαρμοσμένων πρότυπων</h3>
 <p>Επιλέξτε το αρχικό πρότυπο που θέλετε να αντικαταστήσετε.  Προαιρετικά επιλέξετε μια διεύθυνση URL λέξης-κλειδί για να σιγουρευτείτε ότι το προσαρμοσμένο πρότυπο εμφανίζεται μόνο σε σελίδες με τη συγκεκριμένη λέξη.  Επιλέξτε ένα δεσμευμένο θέμα και οι αλλαγές θα ισχύσουν για το θέμα αυτό.  Υποβάλετε τις αλλαγές στη βάση δεδομένων.</p>

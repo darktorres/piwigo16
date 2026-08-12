@@ -11,7 +11,7 @@ use Piwigo\Core\TemplatePageContext;
  * The template variable set assigned by
  * {@see \Piwigo\Picture\PictureCommentRenderer::render()} once its own
  * `$nbComments > 0` branch (if any) finishes -- `comments` is always
- * included (even empty) since `comment_list.tpl`'s own
+ * included (even empty) since `comment_list.latte`'s own
  * `{foreach from=$comments}` has no guard around it.
  */
 final readonly class PictureCommentListPageContext implements TemplatePageContext

@@ -19,7 +19,7 @@ use Piwigo\Core\TemplatePageContext;
  * mutually exclusive. `$sizes` is independently nullable from the other
  * 3 (matching the original's own independent per-field `isset($post[...])`
  * loop) even though in practice `$original_fields` always includes the 3
- * hidden-input fields `configuration_sizes.tpl` reads unguarded.
+ * hidden-input fields `configuration_sizes.latte` reads unguarded.
  *
  * `$resizeQuality` is the scalar counterpart of `$sizes`/`$derivatives`/
  * `$ferrors` above -- also a raw, unvalidated POST-back echo for the

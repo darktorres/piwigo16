@@ -327,9 +327,9 @@ it("applies a valid, different lang cookie: switches CurrentUser's language, loa
     // RegisterControllerTest.php's own version of this test.
     identAddLanguage('fr_FR', 'Français');
 
-    // The default theme's own identification.tpl never references
+    // The default theme's own identification.latte never references
     // {$HELP_LINK} or {$current_language}/{$language_options} at all
-    // (confirmed by reading it) -- only standard_pages' identification.tpl
+    // (confirmed by reading it) -- only standard_pages' identification.latte
     // renders them, so swapping the guest's theme is what makes this
     // test's assertions real, visible behavior rather than inference.
     H::setGuestTheme('standard_pages');

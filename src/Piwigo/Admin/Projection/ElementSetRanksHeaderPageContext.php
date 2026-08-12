@@ -11,11 +11,11 @@ use Piwigo\Core\TemplatePageContext;
  * The template variable set assigned by
  * {@see \Piwigo\Admin\ElementSetRanksPageRenderer::render()} at
  * template init. `$thumbnails` is always included (even empty) since
- * `element_set_ranks.tpl` reads it with `{if !empty($thumbnails)}`, not
+ * `element_set_ranks.latte` reads it with `{if !empty($thumbnails)}`, not
  * `isset()`. `$imageOrder` is always exactly 3 elements (the original
  * code always runs its own fixed 3-iteration loop, unconditionally) --
- * `element_set_ranks.tpl`'s own `{foreach from=$image_order}` has no
- * guard at all, so this must always be present.
+ * `element_set_ranks.latte`'s own `{foreach $image_order as $order}` has
+ * no guard at all, so this must always be present.
  */
 final readonly class ElementSetRanksHeaderPageContext implements TemplatePageContext
 {

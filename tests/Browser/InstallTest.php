@@ -22,7 +22,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * hand -- see tests/Browser/RegenerateFixtureTest.php for the same
  * install-form flow used to build the committed fixture.
  *
- * install.tpl's `send_credentials_by_mail` checkbox is `checked="checked"`
+ * install.latte's `send_credentials_by_mail` checkbox is `checked="checked"`
  * by default, so a real browser submits it. That field makes
  * `InstallWizard::boot()` call `MailService::mail()` -> Symfony
  * Mailer's native transport (no `smtp_host` configured on a fresh
@@ -59,7 +59,7 @@ it('completes a fresh install end-to-end', function (): void {
         ->fill('admin_pass2', 'p4ssword!')
         ->fill('admin_mail', 'admin@example.test')
         ->uncheck('newsletter_subscribe')
-        // checked="checked" by default in install.tpl -- triggers a real,
+        // checked="checked" by default in install.latte -- triggers a real,
         // slow MailService::mail() send otherwise. See this file's own
         // top docblock.
         ->uncheck('send_credentials_by_mail');

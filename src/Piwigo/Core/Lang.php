@@ -163,7 +163,7 @@ final class Lang
      * Smarty-compiled-template expressions (`Template::
      * modcompilerTranslateDec()`'s generated code -- the only real
      * caller, confirmed by grep) whose runtime value can be a numeric
-     * DB-row string (e.g. menubar_categories.tpl passes one). Every
+     * DB-row string (e.g. menubar_categories.latte passes one). Every
      * hand-written .php call site instead calls its own
      * constructor-injected `Translator::plural()` directly with an
      * explicit int already in hand.

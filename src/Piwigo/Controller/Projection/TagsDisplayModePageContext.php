@@ -15,7 +15,7 @@ use Piwigo\Core\TemplatePageContext;
  * small, fully-enumerable set, not genuinely dynamic. `$letters`/`$tags`
  * are mutually exclusive (populated by the controller's own
  * `$display_mode === 'letters'` if/else) and both genuinely optional --
- * `tags.tpl` reads each with its own `isset($letters)`/`isset($tags)`
+ * `tags.latte` reads each with its own `isset($letters)`/`isset($tags)`
  * guard, and either loop can legitimately produce zero real rows even
  * on its own active branch (an empty tag list), matching the original
  * code's own "never appended, stays unset" behavior.

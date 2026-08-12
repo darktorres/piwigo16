@@ -121,7 +121,7 @@ it('renders more than one year of history summary data and a real day-level mont
         // branch: setMissingValues('year', getLast(60, 'year')) with no
         // explicit dates spans from the oldest to the newest real
         // year-only row -- both seeded years must survive verbatim into
-        // the rendered data-years JSON (stats.tpl's
+        // the rendered data-years JSON (stats.latte's
         // `data-years='{json_encode($lastYears)}'`).
         expect($body)
             ->toContain('"2019":42');

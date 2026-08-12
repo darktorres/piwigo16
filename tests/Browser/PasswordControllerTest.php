@@ -88,7 +88,7 @@ it('shows "Invalid key" and hides the form for a malformed reset key', function 
     $page = H::gotoOk($this, '/password.php?key=not-a-valid-reset-!!');
 
     $page->assertSee('Invalid key');
-    // action='none' means password.tpl's own `{if $action ne 'none'}` wraps
+    // action='none' means password.latte's own `{if $action ne 'none'}` wraps
     // the ENTIRE form -- none of its fields render at all.
     $page->assertMissing('input[name="username_or_email"]');
     $page->assertMissing('input[name="user_code"]');
@@ -269,7 +269,7 @@ function passwordCurlSession(string $cookieJar, string $path, array $fields = []
 }
 
 /**
- * Extracts password.tpl's hidden pwg_token value from a response body.
+ * Extracts password.latte's hidden pwg_token value from a response body.
  */
 function passwordExtractToken(string $html): string
 {
@@ -761,9 +761,9 @@ it('switches to a valid, different lang cookie and shows the French translation'
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Hacking attempt');
         // Not the French help_link: that's only ever assigned to
-        // themes/standard_pages/template/password.tpl's own {$HELP_LINK},
+        // themes/standard_pages/template/password.latte's own {$HELP_LINK},
         // never referenced by the fixture gallery's real "default" theme
-        // password.tpl (confirmed live by diffing the fr_FR response
+        // password.latte (confirmed live by diffing the fr_FR response
         // against a plain English one -- no help link appears in either,
         // but every real page string does switch to its po-translated
         // French wording).

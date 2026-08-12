@@ -56,7 +56,7 @@ use Piwigo\Users\UserService;
  * sys_get_temp_dir() root (not the live, git-tracked themes/ tree), with a
  * real 2nd theme written under it -- CurrentPaths itself stays pointed at
  * the real repo root throughout, so Template can still find the real
- * themes/admin/default/template/themes_installed.tpl.
+ * themes/admin/default/template/themes_installed.latte.
  */
 final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 {

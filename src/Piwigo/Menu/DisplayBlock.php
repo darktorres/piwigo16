@@ -29,14 +29,14 @@ final class DisplayBlock
      * different shape per block type (categories/tags/links/...), matching
      * the plugin-block-registration pattern. Stays null (not every
      * registered block's id is one MenubarRenderer knows how to fill in;
-     * menubar.tpl's own `empty($block->template)` check tolerates that).
+     * menubar.latte's own `empty($block->template)` check tolerates that).
      */
     public mixed $data = null;
 
     /**
      * Only ever set by MenubarRenderer for the specific block ids it knows
      * about -- stays null for any other registered (e.g. plugin) block,
-     * which is why menubar.tpl checks `empty($block->template)` rather
+     * which is why menubar.latte checks `empty($block->template)` rather
      * than reading it unconditionally.
      */
     public ?string $template = null;

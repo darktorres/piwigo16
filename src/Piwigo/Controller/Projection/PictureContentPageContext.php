@@ -15,17 +15,17 @@ use Piwigo\Core\TemplatePageContext;
  * original code only assigns `U_ORIGINAL` when `$show_original` is true
  * and `element_url` is present, omitted here (not present as a null
  * value) to match that exact original behavior. `$pdfViewerFilesizeThreshold`
- * is `picture_content.tpl`'s own real consumer (its `{if ...
- * $current.filesize < $PDF_VIEWER_FILESIZE_THRESHOLD}` guard) -- this
+ * is `picture_content.latte`'s own real consumer (its `{if ...
+ * $current['filesize'] < $PDF_VIEWER_FILESIZE_THRESHOLD}` guard) -- this
  * used to be assigned by `PicturePageContext`
  * instead, whose own `assignContext()` call in `__invoke()` runs *after*
  * this class's, so the value was never actually live when
- * `picture_content.tpl` parsed (silently evaluated the comparison
+ * `picture_content.latte` parsed (silently evaluated the comparison
  * against an undefined var, never showing the PDF `<embed>`). Computed
  * locally here from the same `$element_info['path_ext'] === 'pdf'`
  * condition the original outer computation used, since it's a pure
  * config lookup with no other per-request dependency. `$current` is
- * `picture_content.tpl`'s own `{$current.TITLE_ESC}`/etc. reads --
+ * `picture_content.latte`'s own `{$current['TITLE_ESC']}`/etc. reads --
  * `defaultPictureContent()`'s own dispatch runs before `__invoke()`'s
  * later `PicturePageContext` assign, and nothing else in the codebase
  * ever writes the `'current'` template var before this point (confirmed

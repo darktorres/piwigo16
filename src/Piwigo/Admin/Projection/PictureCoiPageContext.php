@@ -14,7 +14,7 @@ use Piwigo\Core\TemplatePageContext;
  * template key when the image row's own `coi` column is a real,
  * non-empty crop-of-interest string -- omitted here (not present as a
  * null value) to match that exact original behavior. `$croppedDerivatives`
- * is always included -- `picture_coi.tpl`'s own
+ * is always included -- `picture_coi.latte`'s own
  * `{foreach from=$cropped_derivatives}` has no guard around it.
  */
 final readonly class PictureCoiPageContext implements TemplatePageContext

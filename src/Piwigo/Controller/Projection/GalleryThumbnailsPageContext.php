@@ -23,7 +23,7 @@ use Piwigo\Core\TemplatePageContext;
  * list in the other) -- both funnel into this same field, no more
  * separate raw `Template::append()` call. `$tagSearchResults`/
  * `$imageDerivatives` are always included (even empty) since
- * `index.tpl` reads both with `{if !empty(...)}`, not `isset()`.
+ * `index.latte` reads both with `{if !empty(...)}`, not `isset()`.
  */
 final readonly class GalleryThumbnailsPageContext implements TemplatePageContext
 {

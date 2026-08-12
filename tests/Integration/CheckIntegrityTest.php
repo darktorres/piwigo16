@@ -38,7 +38,7 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * getHtlmLinksMoreInfo() directly (pure logic, no event/template
  * dependency of their own); check()/display() genuinely need a real
  * IntegrityIgnoredAnomalyRepository (updateConf()'s own persistence) and
- * a real rendered check_integrity.tpl (themes/admin/default/template/), so
+ * a real rendered check_integrity.latte (themes/admin/default/template/), so
  * this suite boots Kernel + a real admin Template directly, the same
  * shape as PictureCommentRendererTest's own gallery-theme Template
  * construction.
@@ -496,9 +496,9 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        // No 'check_integrity' filename ever gets setFilenames()'d, so
-        // parse() never runs -- getTemplateVars() for a var nothing ever
-        // assigned stays null.
+        // display()'s own no-anomalies guard means
+        // parse('check_integrity.latte', true) never runs --
+        // getTemplateVars() for a var nothing ever assigned stays null.
         self::assertNull(CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_show_submit_ignore'));
     }
 }

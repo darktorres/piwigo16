@@ -69,7 +69,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 // notification.php mints a new per-request feed subscription ID (see
 // NotificationController::findAvailableFeedId()) -- but the rendered
-// .tpl (notification.tpl) only ever puts that ID inside <a href>/
+// .tpl (notification.latte) only ever puts that ID inside <a href>/
 // <link href> attribute values, never in visible text, so the
 // rendered pixels are stable across requests despite the underlying
 // data changing every time.

@@ -48,7 +48,7 @@ it('renders one ranked thumbnail per photo, in rank order, with the legacy off-b
 
 // Edge case: an album with zero photos skips the whole "Manual order"
 // thumbnails block entirely ({if !empty($thumbnails)} in
-// element_set_ranks.tpl), a genuinely different branch from the populated
+// element_set_ranks.latte), a genuinely different branch from the populated
 // case above.
 it('renders no manual-order thumbnails block for an album with no photos', function (): void {
     $page = H::loginAsAdmin($this);

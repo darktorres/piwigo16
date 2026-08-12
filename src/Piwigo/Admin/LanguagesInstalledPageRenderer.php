@@ -42,7 +42,7 @@ use Piwigo\Validation\InputValidator;
  * Action handling requires check_pwg_token() after the existing
  * webmaster/input guards. The token is embedded in
  * $language['u_action']'s own add_url_params() call below;
- * languages_installed.tpl's 4 action links (activate/deactivate/
+ * languages_installed.latte's 4 action links (activate/deactivate/
  * set_default/delete) all append '&action=X' onto that same u_action
  * base, so this one call site covers all 4 links.
  */

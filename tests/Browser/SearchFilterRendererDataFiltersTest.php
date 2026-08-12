@@ -256,7 +256,7 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
 
         // Real gap, found via adversarial mutation testing: nothing in
         // this suite ever asserted on SearchFilterRenderer::render()'s own
-        // ratio-bucket *counts* (search_filters.inc.tpl's `{foreach
+        // ratio-bucket *counts* (search_filters.inc.latte's `{foreach
         // from=$RATIOS item=ratio key=k}` block) -- every existing test
         // only uploads ratio-varied fixture photos incidentally, as setup
         // for other criteria, so the bucket-counting loop (lines ~729-753)
@@ -953,7 +953,7 @@ it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension row
  * fallback array (line ~679-686) it feeds into when every row in scope
  * gets skipped that way -- distinguishable from a genuinely-empty gallery
  * by its exact, fixed bounds (0..15), asserted below via the slider's own
- * `data-min`/`data-max` attributes (search_filters.inc.tpl).
+ * `data-min`/`data-max` attributes (search_filters.inc.latte).
  */
 it('falls back to the arbitrary filesize bucket set when every filesize row in scope is NULL', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);

@@ -14,7 +14,7 @@ use Piwigo\Core\TemplatePageContext;
  * code only ever assigns those 3 template keys under their own runtime
  * condition, omitted here (not present as a null value) to match that
  * exact original behavior. `$headElements` is always included (even
- * empty) since `header.tpl` reads it with `{if not empty($head_elements)}`,
+ * empty) since `header.latte` reads it with `{if !empty($head_elements)}`,
  * not `isset()`.
  */
 final readonly class PageHeaderPageContext implements TemplatePageContext

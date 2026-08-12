@@ -164,7 +164,7 @@ it('populates the private-album permission_url and direct/indirect notified-user
         // from the direct/indirect user-access resolution, which now
         // resolves $indirectUserId through its group_access+user_group
         // membership) both render as <select> option labels -- but
-        // album_notification.tpl's own "who_option who_users" block is
+        // album_notification.latte's own "who_option who_users" block is
         // only shown once the "Users" radio (name="who" value="users") is
         // picked; "Group" is checked by default, so the users <select> is
         // hidden and assertSee() can't find it until that radio is
@@ -172,7 +172,7 @@ it('populates the private-album permission_url and direct/indirect notified-user
         // dropdown was visible, the users one wasn't rendered at all).
         $page->assertSee($groupName);
         // The users <select multiple> is enhanced by a JS "search term"
-        // widget (album_notification.tpl's own placeholder="Type in a
+        // widget (album_notification.latte's own placeholder="Type in a
         // search term") that replaces the live DOM once it initializes --
         // confirmed live (server-side debug logging showed user_options
         // correctly populated with this exact user every time) that

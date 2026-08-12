@@ -1196,7 +1196,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $errors = [];
         $pwatermark_post = $post['w'] ?? null;
 
-        // The form posts a flat array w[key]=value (see configuration_watermark.tpl)
+        // The form posts a flat array w[key]=value (see configuration_watermark.latte)
         // where every leaf arrives as a plain string; normalize into a concrete
         // shape so the rest of this method can rely on real types instead of
         // bare-casting raw superglobal data at each point of use.
@@ -1322,7 +1322,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // if non-empty, matching this method's original auto-vivification behavior --
         // pre-creating $errors['watermark'] unconditionally would make count($errors)
         // never 0, permanently skipping "step 3 - save data" below. (xpos/ypos come
-        // from raw user input when position=custom -- see configuration_watermark.tpl
+        // from raw user input when position=custom -- see configuration_watermark.latte
         // -- so out-of-range values are a real, reachable case, not dead code.)
         $watermark_errors = [];
         $v = intval($pwatermark['xpos']);

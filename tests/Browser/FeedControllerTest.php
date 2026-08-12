@@ -86,7 +86,7 @@ function feedRawGet(string $query = ''): array
 }
 
 /**
- * Extracts the 50-char feed id from the U_FEED href notification.tpl renders.
+ * Extracts the 50-char feed id from the U_FEED href notification.latte renders.
  */
 function feedExtractFeedId(string $html): string
 {

@@ -1,7 +1,7 @@
 <h2>Розширення конфігурації шаблону</h2>
 
 <h3>Про</h3>
-<p>Piwigo галерея може бути налаштована шляхом заміни існуючих файлів шаблону з індивідуальних версій.  Наприклад, за замовчуванням заголовок шаблон (header.tpl) можна замінити шаблон індивідуальний заголовок (my-header.tpl).  Після подання зміни до бази даних галерея буде відображати індивідуальний заголовку замість вихідного заголовка.<br>
+<p>Piwigo галерея може бути налаштована шляхом заміни існуючих файлів шаблону з індивідуальних версій.  Наприклад, за замовчуванням заголовок шаблон (header.latte) можна замінити шаблон індивідуальний заголовок (my-header.latte).  Після подання зміни до бази даних галерея буде відображати індивідуальний заголовку замість вихідного заголовка.<br>
 Шаблон розширень ефективний спосіб створювати власні теми для нових, так і старих користувачів. Використовується разом з редактором LocalFiles ви можете створювати свої власні під-теми.</p>
 
 <h3>Оригінальний шаблон</h3>
@@ -17,24 +17,24 @@
 <p>Оригінальні шаблони файлів шаблонів поставляється з кожною темою окремо.  Вони зберігаються в <em>/themes/default/template</em> (або <em>themes/<theme name>/template</em>).  Ці файли шаблонів не повинні бути змінені на місці, оскільки зміни будуть втрачені з оновленням теми.<br>
 Підтримка оригінальних шаблонів включають:</p>
 <ul>
-  <li><span class="filename">index.tpl</span></li>
-  <li><span class="filename">mainpage_categories.tpl</span> and/or <span class="filename">thumbnails.tpl</span></li>
-  <li><span class="filename">menubar.tpl</span></li>
-  <li><span class="filename">header.tpl</span> and/or <span class="filename">footer.tpl</span></li>
-  <li><span class="filename">picture_content.tpl</span> and/or <span class="filename">picture.tpl</span></li>
-  <!-- <li><span class="filename">slideshow.tpl</span></li> -->
-  <li><span class="filename">profile.tpl</span> and/or <span class="filename">profile_content.tpl</span></li>
-  <li><span class="filename">tags.tpl</span></li>
+  <li><span class="filename">index.latte</span></li>
+  <li><span class="filename">mainpage_categories.latte</span> and/or <span class="filename">thumbnails.latte</span></li>
+  <li><span class="filename">menubar.latte</span></li>
+  <li><span class="filename">header.latte</span> and/or <span class="filename">footer.latte</span></li>
+  <li><span class="filename">picture_content.latte</span> and/or <span class="filename">picture.latte</span></li>
+  <!-- <li><span class="filename">slideshow.latte</span></li> -->
+  <li><span class="filename">profile.latte</span> and/or <span class="filename">profile_content.latte</span></li>
+  <li><span class="filename">tags.latte</span></li>
   <li><span class="filename">upload.tpl</span></li>
-  <li><span class="filename">about.tpl</span></li>
-  <li><span class="filename">popuphelp.tpl</span></li>
-  <li><span class="filename">search.tpl</span> and/or <span class="filename">search_rules.tpl</span></li>
-  <li><span class="filename">nbm.tpl</span> and/or <span class="filename">notification.tpl</span></li>
-  <li><span class="filename">identification.tpl</span> and/or <span class="filename">register.tpl</span></li>
-  <li><span class="filename">redirect.tpl</span></li>
+  <li><span class="filename">about.latte</span></li>
+  <li><span class="filename">popuphelp.latte</span></li>
+  <li><span class="filename">search.latte</span> and/or <span class="filename">search_rules.tpl</span></li>
+  <li><span class="filename">nbm.latte</span> and/or <span class="filename">notification.latte</span></li>
+  <li><span class="filename">identification.latte</span> and/or <span class="filename">register.latte</span></li>
+  <li><span class="filename">redirect.latte</span></li>
 </ul>
 <h3>Збереження індивідуальних шаблонів</h3>
-<p>Індивідуальний шаблони має бути збережено в шаблоні розширення папки та вкладені папки.  Наприклад, <em>/template-extension/my-default/header.tpl</em> (або <em>/template-extension/<my-theme-name>/header.tpl</em>)  Шаблон-файли можуть мати будь-яке ім'я з розширення .tpl.  Файли шаблонів у підпапки з'являтися у вікні конфігурації шаблону та доступні як користувацькі шаблони.</p>
+<p>Індивідуальний шаблони має бути збережено в шаблоні розширення папки та вкладені папки.  Наприклад, <em>/template-extension/my-default/header.latte</em> (або <em>/template-extension/<my-theme-name>/header.latte</em>)  Шаблон-файли можуть мати будь-яке ім'я з розширення .tpl.  Файли шаблонів у підпапки з'являтися у вікні конфігурації шаблону та доступні як користувацькі шаблони.</p>
 <h3>Активація індивідуальних шаблонів</h3>
 <p>Виберіть вихідний шаблон для заміни.  Можна також вибрати ключові слова URL, щоб переконатися, що індивідуальний шаблон тільки показано на сторінках за цим ключовим словом.  Виберіть приєднані теми та зміни будуть ефективні на цій темі.  Внести зміни до бази даних.</p>
 <h3>Деактивація індивідуальних шаблонів</h3>

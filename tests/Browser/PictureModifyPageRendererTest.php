@@ -674,7 +674,7 @@ it('swaps width/height and flips the FORMAT flag for a photo with a stored 90/27
     // 1:vertical", is itself stale/inverted relative to what the
     // expression actually computes; kept verbatim, not "fixed", per this
     // codebase's own no-unrelated-changes-during-a-port precedent).
-    // picture_modify.tpl renders a different inline style for each value
+    // picture_modify.latte renders a different inline style for each value
     // on the two preview <img> tags: {if $FORMAT}width:100%;
     // max-height:100%;{else}max-width:100%; height:100%;{/if}. Unrotated,
     // this 200x150 (width >= height) image is FORMAT=1 -- only a real

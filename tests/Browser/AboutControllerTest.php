@@ -29,7 +29,7 @@ it('sets the About page title and body id', function (): void {
     $page = H::gotoOk($this, '/about.php');
 
     // Lang::t('About Piwigo') is passed straight into PageHeaderRenderer's
-    // <title> (header.tpl renders "{$PAGE_TITLE} | {$GALLERY_TITLE}" --
+    // <title> (header.latte renders "{$PAGE_TITLE} | {$GALLERY_TITLE}" --
     // assert the page-specific part only, not the configurable gallery
     // title suffix); $this->pageState->setBodyId('theAboutPage') is
     // rendered onto <body id="...">.
@@ -80,7 +80,7 @@ it('assigns THEME_ABOUT when the active theme ships its own language-specific ab
 
         $page->assertSee('CT theme-specific about content');
         // Still renders the credits body too -- THEME_ABOUT is additive,
-        // not a replacement (about.tpl's own `{if isset($THEME_ABOUT)}`
+        // not a replacement (about.latte's own `{if isset($THEME_ABOUT)}`
         // block sits below `{$ABOUT_MESSAGE}`).
         $page->assertSee('This photo gallery is based on Piwigo.');
         $page->assertNoJavaScriptErrors();

@@ -28,7 +28,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * real fresh install never activates AppInfo::DEFAULT_TEMPLATE --
  * ExtensionLifecycle::performThemeAction()'s own $id === 'default' guard
  * keeps it out permanently), but ThemeCatalog::getPwgThemes() used to
- * read that table with no exception for it, so profile.tpl's theme
+ * read that table with no exception for it, so profile.latte's theme
  * <select> rendered with zero <option>s and saveFromPost()'s own
  * `in_array($post['theme'], array_keys(getPwgThemes()), true)` guard
  * always failed -- turning every profile.php submission into a real 500
@@ -311,7 +311,7 @@ it('omits the 3 boolFields from the POST and leaves expand/show_nb_hits/show_nb_
     // `foreach ($fields as $field) { if (! isset($post[$field])) { continue; } ... }`
     // guard (~L286-289) for each of 'expand'/'show_nb_hits'/
     // 'show_nb_comments' -- a real HTML form submission always sends every
-    // one of these (profile_content.tpl renders a real <input> for each),
+    // one of these (profile_content.latte renders a real <input> for each),
     // so only a POST built by hand (not driven through the rendered form,
     // matching this file's other adminPost()-based tests) can omit them.
     // Confirms the continue really skips the column entirely -- via
@@ -578,7 +578,7 @@ it('switches the interface language via a valid, different lang cookie and persi
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Hacking attempt');
         // Confirms Lang::load() really reloaded the French catalog for
-        // THIS request's own template rendering (profile_content.tpl is
+        // THIS request's own template rendering (profile_content.latte is
         // parsed at the very end of __invoke(), after the language-switch
         // block runs) -- not just that no error occurred. $title
         // (Lang::t('Your Gallery Customization'), computed earlier in
@@ -653,7 +653,7 @@ it('previews the guest-default values in the rendered form on reset-to-default, 
 
         // No 'validate' key in this POST -- a real browser only ever sends
         // the ONE submit button that was actually clicked
-        // (profile_content.tpl's `<input type="submit" name="reset_to_default"
+        // (profile_content.latte's `<input type="submit" name="reset_to_default"
         // ...>` is a separate button from the main 'validate' one), so
         // ProfileFormSubmitRequest::isValidateSubmitted stays false and
         // ProfileFormHandler::saveFromPost() returns immediately without

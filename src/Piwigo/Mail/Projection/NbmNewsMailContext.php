@@ -17,7 +17,7 @@ use Piwigo\Core\TemplatePageContext;
  * template keys under their own runtime condition, omitted here (not
  * present as a null value) to match that exact original behavior.
  * `$recentPosts` is always included (even empty) since
- * `notification_by_mail.tpl` reads it with `{if not empty($recent_posts)}`,
+ * `notification_by_mail.latte` reads it with `{if !empty($recent_posts)}`,
  * not `isset()`.
  */
 final readonly class NbmNewsMailContext implements TemplatePageContext

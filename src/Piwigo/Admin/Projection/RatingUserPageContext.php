@@ -14,7 +14,7 @@ use Piwigo\Core\TemplatePageContext;
  * dynamic, incrementally-accumulated-across-3-mutation-points shape
  * documented on this file's own `avgCompare()`/`countCompare()`/etc.
  * comparators, not a fixed structural shape worth minting its own DTO
- * for here. `$orderByOptions` is always included -- `rating_user.tpl`
+ * for here. `$orderByOptions` is always included -- `rating_user.latte`
  * reads `order_by_options` via an unguarded `{html_options}`, matching
  * the original code's own unconditional loop.
  */

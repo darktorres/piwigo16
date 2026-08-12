@@ -99,9 +99,9 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // to persist a "don't recheck this" cache flag -- skip it the same
         // way a real request's 2nd-and-later call already does.
         CurrentConfigTestFactory::get()->dataDirChecked = '1';
-        // render()'s final assignVarFromHandle() really compiles
-        // comment_list.tpl -- root/theme='default' is what points
-        // Smarty's template_dir at the real themes/default/template/
+        // render()'s final assignVarFromTemplate() really compiles
+        // comment_list.latte -- root/theme='default' is what points
+        // Latte's template-dir chain at the real themes/default/template/
         // directory that file lives in (same root shape every real
         // Template() call site uses, e.g. RequestBootstrap.php:568).
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));

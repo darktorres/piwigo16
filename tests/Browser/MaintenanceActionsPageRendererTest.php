@@ -9,7 +9,7 @@ it('renders the global gallery actions fieldset with no webmaster warning for th
     $page = H::navigateOk($page, '/admin.php?page=maintenance');
 
     // PHP_VERSION/DB_VERSION are assigned by this class but only ever
-    // rendered by maintenance_env.tpl (confirmed live: maintenance_actions.
+    // rendered by maintenance_env.latte (confirmed live: maintenance_actions.
     // tpl never references $PHP_VERSION/$DB_VERSION at all) -- the
     // "Global Gallery Actions" fieldset (gated behind isWebmaster==1) is
     // this tab's own real, distinctive content.

@@ -13,7 +13,7 @@ use Piwigo\Core\TemplatePageContext;
  * `$extents` is genuinely optional -- the original code only ever
  * assigns the `extents` template key when its own `$tpl_extension` loop
  * runs at least once, omitted here (not present as an empty array) to
- * match that exact original behavior, since `extend_for_templates.tpl`
+ * match that exact original behavior, since `extend_for_templates.latte`
  * reads it with `{if isset($extents)}`, not `!empty()`.
  */
 final readonly class ExtendForTemplatesPageContext implements TemplatePageContext

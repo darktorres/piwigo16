@@ -25,7 +25,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Regression coverage for a fixed bug, found while writing this file
  * (reproduced directly with a bare curl request, independent of Pest/
  * Playwright entirely, before writing any assertion around it): submitting
- * the register form with `send_password_by_mail` checked -- register.tpl's
+ * the register form with `send_password_by_mail` checked -- register.latte's
  * own checkbox is `checked="checked"` UNCONDITIONALLY, so this is what
  * every real browser submission sends by default, not an edge case -- used
  * to make the request hang for minutes (observed >2 minutes before being
@@ -104,7 +104,7 @@ function registerCurl(string $cookieJar, string $path, array $fields = [], ?int 
 }
 
 /**
- * Extracts register.tpl's hidden F_KEY value from a GET /register.php response body.
+ * Extracts register.latte's hidden F_KEY value from a GET /register.php response body.
  */
 function registerExtractKey(string $html): string
 {
@@ -562,8 +562,8 @@ it("applies a valid, different lang cookie: switches CurrentUser's language, loa
     // just inferring they ran from a bare 200 status.
     registerAddLanguage('fr_FR', 'Français');
 
-    // The default theme's own register.tpl never references {$HELP_LINK}
-    // at all (confirmed by reading it) -- only standard_pages' register.tpl
+    // The default theme's own register.latte never references {$HELP_LINK}
+    // at all (confirmed by reading it) -- only standard_pages' register.latte
     // renders it (`<a href="{$HELP_LINK}">`), so swapping the guest's
     // theme is what makes this test's own French-help-link assertion a
     // real, visible behavior rather than an inference. Same rationale as
@@ -578,7 +578,7 @@ it("applies a valid, different lang cookie: switches CurrentUser's language, loa
         // The French help-link branch itself (str_starts_with(..., 'fr')).
         expect($result['body'])->toContain('https://upstream.example.invalid/help/fr/');
         // Lang::load('common.lang', ..., ['language' => 'fr_FR']) really
-        // loaded French translations -- standard_pages' own register.tpl
+        // loaded French translations -- standard_pages' own register.latte
         // heading is real, translated body content, not just metadata.
         expect($result['body'])->toContain('Créez un compte');
         // current_language template var reflects CurrentUser::updateLanguage().

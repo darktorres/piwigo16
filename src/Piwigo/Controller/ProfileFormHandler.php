@@ -275,7 +275,7 @@ final readonly class ProfileFormHandler
 
                 // expand/show_nb_hits/show_nb_comments post as the literal
                 // strings 'true'/'false' ({html_radios} in
-                // profile_content.tpl uses $radio_options's own keys as
+                // profile_content.latte uses $radio_options's own keys as
                 // the submitted value) -- these are tinyint columns, so
                 // the string form must become 1/0 before reaching
                 // massUpdate(); every other field in $fields is untouched.

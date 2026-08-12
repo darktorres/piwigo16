@@ -1,7 +1,7 @@
 <h2>Şablon Uzantı Yapılandırması</h2>
 
 <h3>Hakkında</h3>
-<p>Piwigo galeriniz var olan şablon dosyalarının kişisel uyarlamalarla değiştirilmesi ile özelleştirilebilir. Örneğin, varsayılan başlık şablonu (header.tpl) özelleştirilmiş bir başlık şablonu (my-header.tpl) ile değiştirilebilir. Değişiklik veri tabanına gönderildiğinde galeriniz varsayılan yerine yenilediğiniz şablonu görüntüleyecektir.<br>
+<p>Piwigo galeriniz var olan şablon dosyalarının kişisel uyarlamalarla değiştirilmesi ile özelleştirilebilir. Örneğin, varsayılan başlık şablonu (header.latte) özelleştirilmiş bir başlık şablonu (my-header.latte) ile değiştirilebilir. Değişiklik veri tabanına gönderildiğinde galeriniz varsayılan yerine yenilediğiniz şablonu görüntüleyecektir.<br>
 Şablon uzantıları yeni veya uzman her iki kullanıcı grubu için de tema oluşturmak için güçlü bir yol sağlar. LocalFiles düzenleyicisi ile çalışarak kendinize ait alt temalar yaratabilirsiniz.</p>
 
 <h3>Esas (Orjinal) Şablon</h3>
@@ -17,25 +17,25 @@
 <p>Orijinal şablonlar, her tema ile birlikte gelen şablon dosyalarıdır. Bunlar <em>/themes/default/template</em> (yada <em>themes/<theme name>/template</em>) alanında bulunurlar. Bu şablon dosyaları yerinde düzenleme yapılmamalıdır, tema güncellemesi sırasında değişiklikler kaybedilir.<br>
 Desteklenen esas (orjinal) şablonlar arasında bunlar vardır:</p>
 <ul>
-  <li><span class="filename">index.tpl</span></li>
-  <li><span class="filename">mainpage_categories.tpl</span> and/or <span class="filename">thumbnails.tpl</span></li>
-  <li><span class="filename">menubar.tpl</span></li>
-  <li><span class="filename">header.tpl</span> and/or <span class="filename">footer.tpl</span></li>
-  <li><span class="filename">picture_content.tpl</span> and/or <span class="filename">picture.tpl</span></li>
-  <!-- <li><span class="filename">slideshow.tpl</span></li> -->
-  <li><span class="filename">profile.tpl</span> and/or <span class="filename">profile_content.tpl</span></li>
-  <li><span class="filename">tags.tpl</span></li>
+  <li><span class="filename">index.latte</span></li>
+  <li><span class="filename">mainpage_categories.latte</span> and/or <span class="filename">thumbnails.latte</span></li>
+  <li><span class="filename">menubar.latte</span></li>
+  <li><span class="filename">header.latte</span> and/or <span class="filename">footer.latte</span></li>
+  <li><span class="filename">picture_content.latte</span> and/or <span class="filename">picture.latte</span></li>
+  <!-- <li><span class="filename">slideshow.latte</span></li> -->
+  <li><span class="filename">profile.latte</span> and/or <span class="filename">profile_content.latte</span></li>
+  <li><span class="filename">tags.latte</span></li>
   <li><span class="filename">upload.tpl</span></li>
-  <li><span class="filename">about.tpl</span></li>
-  <li><span class="filename">popuphelp.tpl</span></li>
-  <li><span class="filename">search.tpl</span> and/or <span class="filename">search_rules.tpl</span></li>
-  <li><span class="filename">nbm.tpl</span> and/or <span class="filename">notification.tpl</span></li>
-  <li><span class="filename">identification.tpl</span> and/or <span class="filename">register.tpl</span></li>
-  <li><span class="filename">redirect.tpl</span></li>
+  <li><span class="filename">about.latte</span></li>
+  <li><span class="filename">popuphelp.latte</span></li>
+  <li><span class="filename">search.latte</span> and/or <span class="filename">search_rules.tpl</span></li>
+  <li><span class="filename">nbm.latte</span> and/or <span class="filename">notification.latte</span></li>
+  <li><span class="filename">identification.latte</span> and/or <span class="filename">register.latte</span></li>
+  <li><span class="filename">redirect.latte</span></li>
 </ul>
 
 <h3>Özelleştirilmiş şablonların kaydedilmesi</h3>
-<p>Özelleştirilmiş şablonlar template-extension dizini veya alt dizinlerine kaydedilmelidir. Örneğin, <em>/template-extension/my-default/header.tpl</em> (yada <em>/template-extension/<my-theme-name>/header.tpl</em>). Şablon dosyaları uzantısı .tpl olacak şekilde her adı alabilirler. Alt dizinlerdeki şablon dosyaları Şablon yapılandırma ekranında kullanılabilir özelleştirilmiş şablonlar olarak gözükürler.</p>
+<p>Özelleştirilmiş şablonlar template-extension dizini veya alt dizinlerine kaydedilmelidir. Örneğin, <em>/template-extension/my-default/header.latte</em> (yada <em>/template-extension/<my-theme-name>/header.latte</em>). Şablon dosyaları uzantısı .tpl olacak şekilde her adı alabilirler. Alt dizinlerdeki şablon dosyaları Şablon yapılandırma ekranında kullanılabilir özelleştirilmiş şablonlar olarak gözükürler.</p>
 
 <h3>Özelleştirilmiş şablonların etkinleştirilmesi</h3>
 <p>Değiştirmek için esas (orjinal) şablonu seçin. İsteğe bağlı olarak özelleştirilmiş şablonun sadece o anahtar kelime ile sayfalarda gösterildiğinden emin olmak için bir URL anahtar kelimesi seçin. Bağlantılı temayı seçin ve değişiklikler o temada etkinleşecektir.

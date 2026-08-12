@@ -77,7 +77,7 @@ final class PiwigoExtension extends Extension
             // converter comment. Using `|urlencode` for an `|escape:'url'`
             // conversion site is a real behavior change (`+` vs `%20` for
             // spaces) -- caught live via the golden-HTML diff on
-            // `favorites` (footer.tpl's mailto subject).
+            // `favorites` (footer.latte's mailto subject).
             'rawurlencode' => rawurlencode(...),
             'intval' => intval(...),
             'json_encode' => json_encode(...),
@@ -134,7 +134,7 @@ final class PiwigoExtension extends Extension
         return [
             // Also registered as filters above -- Latte rejects filter
             // pipes inside {if} conditions (confirmed live converting
-            // header.tpl: `{if $PAGE_TITLE != 'Home'|l10n}`), so the same
+            // header.latte: `{if $PAGE_TITLE != 'Home'|l10n}`), so the same
             // translate() needs to be callable both ways: `{='x'|l10n}`
             // as a filter, `{if $x != l10n('Home')}` as a function.
             'translate' => $this->translate(...),
@@ -160,8 +160,8 @@ final class PiwigoExtension extends Extension
             'once' => $this->template->once(...),
             // Also registered as filters above, same names -- same
             // {if}-rejects-pipes reason as translate/l10n above. Real live
-            // sites: search_filters.inc.tpl's `{if ''|is_admin}` ->
-            // `{if is_admin('')}`; picture_modify.tpl's
+            // sites: search_filters.inc.latte's `{if ''|is_admin}` ->
+            // `{if is_admin('')}`; picture_modify.latte's
             // `{if !($PATH|url_is_remote)}` -> `{if !url_is_remote($PATH)}`.
             'is_admin' => $this->isAdmin(...),
             'is_classic_user' => $this->isClassicUser(...),
@@ -614,7 +614,7 @@ final class PiwigoExtension extends Extension
      * A bare `htmlspecialchars($str, ENT_QUOTES)` (PHP's `double_encode`
      * default is `true`) double-encodes any option label that already
      * contains a real HTML entity -- confirmed live converting
-     * permalinks.tpl: `CategoryAdminService`'s indentation prefix bakes in
+     * permalinks.latte: `CategoryAdminService`'s indentation prefix bakes in
      * literal `&nbsp;` sequences, which came out as `&amp;nbsp;` before
      * this fix, a real rendering regression the golden-HTML diff caught
      * (not a cosmetic ENT_QUOTES-vs-ENT_COMPAT difference).
@@ -713,7 +713,7 @@ final class PiwigoExtension extends Extension
         // Smarty's own html_radios/html_checkboxes shared implementation
         // (vendor/smarty/smarty/src/FunctionHandler/HtmlBase.php's
         // `$_output .= $extra . ' />' . $output;`), confirmed live: this
-        // is the first real caller (profile_content.tpl's "Expand all
+        // is the first real caller (profile_content.latte's "Expand all
         // albums" radios) to actually exercise this since the P31.1 port.
         $input = '<input type="radio" name="' . $name . '" value="' . $valueStr . '"' . $idAttr . $checked . $extraAttrs . ' />' . $labelStr;
         if ($labels) {

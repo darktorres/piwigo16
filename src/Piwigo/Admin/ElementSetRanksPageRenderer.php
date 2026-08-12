@@ -32,7 +32,7 @@ use Piwigo\Template\CurrentTemplate;
  * Renders the "sort_order" tab of the "album" admin page (dispatched by
  * AlbumSubController) -- changes the rank of images inside a category.
  * The POST handler is CSRF-protected: render() assigns CSRF_TOKEN and
- * element_set_ranks.tpl carries the matching hidden input.
+ * element_set_ranks.latte carries the matching hidden input.
  *
  * Access control is enforced by admin.php's dispatch gate
  * (check_status(AccessLevel::Administrator)) before this renderer runs, so

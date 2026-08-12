@@ -1,7 +1,7 @@
 <h2>Configuração de extensão de modelo</h2>
 
 <h3>Sobre</h3>
-<p>Sua galeria do Piwigo pode ser personalizada, substituindo arquivos de modelos existentes com versões personalizadas. Por exemplo, o modelo de cabeçalho padrão (header.tpl) pode ser substituído por um modelo de cabeçalho personalizado (my-header.tpl). Depois de enviar as alterações para o banco de dados a galeria vai exibir o cabeçalho personalizado em vez do cabeçalho original.<br>
+<p>Sua galeria do Piwigo pode ser personalizada, substituindo arquivos de modelos existentes com versões personalizadas. Por exemplo, o modelo de cabeçalho padrão (header.latte) pode ser substituído por um modelo de cabeçalho personalizado (my-header.latte). Depois de enviar as alterações para o banco de dados a galeria vai exibir o cabeçalho personalizado em vez do cabeçalho original.<br>
 Extensões do modelo são uma forma poderosa de criar temas personalizados para usuários novos e avançados. Usado em conjunto com o Editor LocalFiles você pode criar seus próprios temas infantis.</p>
 
 <h3>Modelo Original</h3>
@@ -17,24 +17,24 @@ Extensões do modelo são uma forma poderosa de criar temas personalizados para 
 <p>Modelos originais são os arquivos de modelo fornecidos com cada tema. Estes são salvos em <em>/themes/default/template</em> (ou <em>themes/<theme name>/template</em>). Estes arquivos de modelo não deve ser editado, pois essas alterações serão perdidas com atualizações tema.<br>
 Suportados incluem modelos originais:</p>
 <ul>
-  <li><span class="filename">index.tpl</span></li>
-  <li><span class="filename">mainpage_categories.tpl</span> e/ou <span class="filename">thumbnails.tpl</span></li>
-  <li><span class="filename">menubar.tpl</span></li>
-  <li><span class="filename">header.tpl</span> e/ou <span class="filename">footer.tpl</span></li>
-  <li><span class="filename">picture_content.tpl</span> e/ou <span class="filename">picture.tpl</span></li>
-  <!-- <li><span class="filename">slideshow.tpl</span></li> -->
-  <li><span class="filename">profile.tpl</span> e/ou <span class="filename">profile_content.tpl</span></li>
-  <li><span class="filename">tags.tpl</span></li>
+  <li><span class="filename">index.latte</span></li>
+  <li><span class="filename">mainpage_categories.latte</span> e/ou <span class="filename">thumbnails.latte</span></li>
+  <li><span class="filename">menubar.latte</span></li>
+  <li><span class="filename">header.latte</span> e/ou <span class="filename">footer.latte</span></li>
+  <li><span class="filename">picture_content.latte</span> e/ou <span class="filename">picture.latte</span></li>
+  <!-- <li><span class="filename">slideshow.latte</span></li> -->
+  <li><span class="filename">profile.latte</span> e/ou <span class="filename">profile_content.latte</span></li>
+  <li><span class="filename">tags.latte</span></li>
   <li><span class="filename">upload.tpl</span></li>
-  <li><span class="filename">about.tpl</span></li>
-  <li><span class="filename">popuphelp.tpl</span></li>
-  <li><span class="filename">search.tpl</span> e/ou <span class="filename">search_rules.tpl</span></li>
-  <li><span class="filename">nbm.tpl</span> e/ou <span class="filename">notification.tpl</span></li>
-  <li><span class="filename">identification.tpl</span> e/ou <span class="filename">register.tpl</span></li>
-  <li><span class="filename">redirect.tpl</span></li>
+  <li><span class="filename">about.latte</span></li>
+  <li><span class="filename">popuphelp.latte</span></li>
+  <li><span class="filename">search.latte</span> e/ou <span class="filename">search_rules.tpl</span></li>
+  <li><span class="filename">nbm.latte</span> e/ou <span class="filename">notification.latte</span></li>
+  <li><span class="filename">identification.latte</span> e/ou <span class="filename">register.latte</span></li>
+  <li><span class="filename">redirect.latte</span></li>
 </ul>
 <h3>Gravando modelos personalizados</h3>
-<p>Modelos personalizados devem ser salvos na pasta de modelo de extensão ou subpastas. por exemplo, <em>/template-extension/my-default/header.tpl</em> (ou <em>/template-extension/<my-theme-name>/header.tpl</em>)  Arquivos de modelo pode ter qualquer nome com uma extensão de .tpl. Os arquivos de modelo em subpastas aparecem na tela de configuração do modelo como disponíveis modelos personalizados.</p>
+<p>Modelos personalizados devem ser salvos na pasta de modelo de extensão ou subpastas. por exemplo, <em>/template-extension/my-default/header.latte</em> (ou <em>/template-extension/<my-theme-name>/header.latte</em>)  Arquivos de modelo pode ter qualquer nome com uma extensão de .tpl. Os arquivos de modelo em subpastas aparecem na tela de configuração do modelo como disponíveis modelos personalizados.</p>
 <h3>Ativando modelos personalizados</h3>
 <p>Selecione o modelo original para substituir. Opcionalmente escolher uma palavra-chave de URL para assegurar que o molde personalizado é mostrado apenas em páginas com essa palavra-chave Selecione um tema ligado e as alterações entrarão em vigor sobre esse tema Enviar as alterações para o banco de dados.</p>
 <h3>Desativando modelos personalizados</h3>

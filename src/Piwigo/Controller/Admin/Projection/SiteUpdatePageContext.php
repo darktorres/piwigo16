@@ -14,7 +14,7 @@ use Piwigo\Core\TemplatePageContext;
  * optional -- accumulated across this method's own several independently
  * -gated sync stages (dirs/files/metadata), each of which may or may not
  * run in a given request; omitted here (not present as an empty-array
- * value) to match `footer.tpl`'s own `{if isset($footer_elements)}`
+ * value) to match `footer.latte`'s own `{if isset($footer_elements)}`
  * guard exactly, same as the original code's own "never appended, stays
  * unset" behavior when zero stages ran.
  */

@@ -12,7 +12,7 @@ use Piwigo\Image\DerivativeParams;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Controller\CommentsController::__invoke()}. `$comments`
- * is always included (even empty) since `comment_list.tpl`'s own
+ * is always included (even empty) since `comment_list.latte`'s own
  * `{foreach from=$comments}` has no guard around it. `$categoriesOptions`
  * is {@see \Piwigo\Category\CategoryService}'s own
  * `categories`/`categories_selected` pair.

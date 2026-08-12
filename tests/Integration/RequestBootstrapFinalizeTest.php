@@ -70,7 +70,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
-        // footer.tpl (reached via CurrentTemplate's parse()) needs this --
+        // footer.latte (reached via CurrentTemplate's parse()) needs this --
         // same as PageTailTest/RedirectServiceTest's own identical setup.
 
         CurrentUserTestFactory::get()->set(new User(

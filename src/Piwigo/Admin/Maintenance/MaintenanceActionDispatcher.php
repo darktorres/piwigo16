@@ -39,9 +39,10 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Handles the maintenance action switch shared by the "actions" and
- * "env" admin tabs. actions.tpl links to the 16 real maintenance
- * operations, each of which is logged via activity recording; env.tpl
- * links to just `phpinfo`/`check_upgrade`, neither of which is logged.
+ * "env" admin tabs. maintenance_actions.latte links to the 16 real
+ * maintenance operations, each of which is logged via activity
+ * recording; maintenance_env.latte links to just
+ * `phpinfo`/`check_upgrade`, neither of which is logged.
  * `check_upgrade` renders an "Update to Piwigo %s" link when a new
  * version is available.
  */

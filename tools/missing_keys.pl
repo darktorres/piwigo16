@@ -81,7 +81,7 @@ foreach my $key (sort keys %registered_keys) {
 }
 
 sub used_keys {
-    if ($File::Find::name !~ m/(tpl|php)$/) {
+    if ($File::Find::name !~ m/(tpl|latte|php)$/) {
         return 0;
     }
 
@@ -90,25 +90,25 @@ sub used_keys {
     }
 
     if ('upgrade' eq $type) {
-        if ($File::Find::name !~ m{upgrade\.(tpl|php)$}) {
+        if ($File::Find::name !~ m{upgrade\.(tpl|latte|php)$}) {
             # return 0;
         }
     }
 
     if ('install' eq $type) {
-        if ($File::Find::name =~ m{upgrade\.(tpl|php)$}) {
+        if ($File::Find::name =~ m{upgrade\.(tpl|latte|php)$}) {
             return 0;
         }
-        if ($File::Find::name !~ m{/install(\.tpl|\.php|/)}) {
+        if ($File::Find::name !~ m{/install(\.tpl|\.latte|\.php|/)}) {
             return 0;
         }
     }
 
     if ('admin' eq $type) {
-        if ($File::Find::name =~ m{upgrade\.(tpl|php)$}) {
+        if ($File::Find::name =~ m{upgrade\.(tpl|latte|php)$}) {
             return 0;
         }
-        if ($File::Find::name =~ m{/install(\.tpl|\.php|/)}) {
+        if ($File::Find::name =~ m{/install(\.tpl|\.latte|\.php|/)}) {
             return 0;
         }
 
@@ -130,10 +130,10 @@ sub used_keys {
     }
 
     if ('common' eq $type) {
-        if ($File::Find::name =~ m{upgrade\.(tpl|php)$}) {
+        if ($File::Find::name =~ m{upgrade\.(tpl|latte|php)$}) {
             return 0;
         }
-        if ($File::Find::name =~ m{/install(\.tpl|\.php|/)}) {
+        if ($File::Find::name =~ m{/install(\.tpl|\.latte|\.php|/)}) {
             return 0;
         }
         if ($File::Find::name =~ m{/admin(/|\.php)} or $File::Find::name =~ m{themes/default/template/mail}) {

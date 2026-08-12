@@ -11,7 +11,7 @@ use Piwigo\Core\TemplatePageContext;
  * The template variable set assigned by
  * {@see \Piwigo\Admin\MenubarPageRenderer::render()}. `$blocks` is
  * always included -- the original code's own `foreach ($mb_conf as ...)`
- * loop that builds it runs unconditionally, and `menubar.tpl`'s own
+ * loop that builds it runs unconditionally, and `menubar.latte`'s own
  * `{foreach from=$blocks}` has no guard around it either.
  */
 final readonly class MenubarPageContext implements TemplatePageContext

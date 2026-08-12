@@ -15,7 +15,7 @@ use Piwigo\Core\TemplatePageContext;
  * (a successful PEM catalog fetch, a non-beta stable version), omitted
  * here (not present as a null value) to match that exact original
  * behavior. `$plugins` is always included (even empty) since
- * `plugins_new.tpl` reads it with `{if not empty($plugins)}`, not
+ * `plugins_new.latte` reads it with `{if !empty($plugins)}`, not
  * `isset()`.
  */
 final readonly class PluginsNewPageContext implements TemplatePageContext

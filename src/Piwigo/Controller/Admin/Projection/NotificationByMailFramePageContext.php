@@ -14,7 +14,7 @@ use Piwigo\Core\TemplatePageContext;
  * original code only ever assigns those 2 template keys under their own
  * runtime condition, omitted here (not present as a null value) to match
  * that exact original behavior. Deferred to the very end of handle()
- * (after the page-mode switch) since neither `double_select.tpl` nor
+ * (after the page-mode switch) since neither `double_select.latte` nor
  * `notification_by_mail.latte` reads any of these before that point
  * (confirmed by direct read).
  */

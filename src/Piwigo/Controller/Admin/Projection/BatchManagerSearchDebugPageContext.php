@@ -11,7 +11,7 @@ use Piwigo\Core\TemplatePageContext;
  * The 'footer_elements' template variable assigned by
  * {@see \Piwigo\Controller\Admin\BatchManagerSubController} when a
  * search filter runs, carrying the quick-search's own debug trace --
- * `footer.tpl` reads it via `{if isset($footer_elements)}`, so this is
+ * `footer.latte` reads it via `{if isset($footer_elements)}`, so this is
  * only ever constructed inside that same conditional branch, matching
  * the sibling {@see BatchManagerNoSearchResultsPageContext}.
  */

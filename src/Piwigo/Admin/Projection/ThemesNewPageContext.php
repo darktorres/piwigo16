@@ -10,7 +10,7 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Admin\ThemesNewPageRenderer::render()}. `$newThemes` is
- * always included (even empty) since `themes_new.tpl` reads it with
+ * always included (even empty) since `themes_new.latte` reads it with
  * `{if not empty($new_themes)}`, not `isset()`.
  */
 final readonly class ThemesNewPageContext implements TemplatePageContext

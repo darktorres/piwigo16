@@ -12,7 +12,7 @@ use Piwigo\Core\TemplatePageContext;
  * {@see \Piwigo\Controller\Admin\NotificationByMailSubController::handle()}'s
  * own `case 'subscribe':` display branch. Must be assigned before that
  * same branch's own `Template::assignVarFromHandle('DOUBLE_SELECT',
- * 'double_select')` call, which parses `double_select.tpl` using only
+ * 'double_select')` call, which parses `double_select.latte` using only
  * the vars assigned up to that point.
  */
 final readonly class NotificationByMailSubscribePageContext implements TemplatePageContext

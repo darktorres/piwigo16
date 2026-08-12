@@ -15,7 +15,7 @@ use Piwigo\Core\TemplatePageContext;
  * `categories_because_of_groups` template key when the user has at
  * least one group-granted category, omitted here (not present as a
  * null value) to match that exact original behavior --
- * `user_perm.tpl` reads it via `{if isset($categories_because_of_groups)}`.
+ * `user_perm.latte` reads it via `{if isset($categories_because_of_groups)}`.
  * `$categoryOptionTrue`/`$categoryOptionFalse` are
  * {@see \Piwigo\Category\CategoryService}'s own
  * `category_option_true`/`category_option_false` (+ `_selected`) pairs.

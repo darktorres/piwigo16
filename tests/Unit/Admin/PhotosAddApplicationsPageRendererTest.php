@@ -20,12 +20,13 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * PhotosAddApplicationsPageContext assignment) has no branches worth a
  * duplicate end-to-end HTTP test.
  *
- * A real Template is required (not a fake): assignVarFromHandle()
- * calls Template::parse(), which needs a real, registered .tpl file for
- * the 'photos_add' handle or it hits Template's own htmlRenderer()->
- * fatalError() branch -- same real-fs technique
- * TemplateInstanceTest.php's own "assignVarFromHandle assigns the
- * parsed handle output" test already established.
+ * A real Template is required (not a fake): assignVarFromTemplate()
+ * calls Template::parse(), which needs a real
+ * photos_add_applications.latte file on the template-dir chain or it
+ * hits Template's own htmlRenderer()->fatalError() branch -- same
+ * real-fs technique LatteEngineWiringTest.php's own
+ * "assignVarFromTemplate() renders a real .latte file" test already
+ * established.
  */
 function photosAddApplicationsTestRoot(): string
 {

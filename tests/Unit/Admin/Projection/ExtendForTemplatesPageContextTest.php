@@ -23,10 +23,10 @@ test('toArray includes extents when set', function (): void {
         helpUrl: '/admin/popuphelp.php?page=extend_for_templates',
         adminPageTitle: 'Extend for templates',
         extents: [[
-            'replacer' => 'index.tpl',
+            'replacer' => 'index.latte',
             'url_parameter' => 'foo',
-            'original_tpl' => ['index.tpl'],
-            'bound_tpl' => ['index.tpl'],
+            'original_tpl' => ['index.latte'],
+            'bound_tpl' => ['index.latte'],
             'selected_tpl' => 0,
             'selected_url' => 'N/A',
             'selected_bound' => 'N/A',
@@ -34,10 +34,10 @@ test('toArray includes extents when set', function (): void {
     );
 
     expect($context->toArray()['extents'])->toBe([[
-        'replacer' => 'index.tpl',
+        'replacer' => 'index.latte',
         'url_parameter' => 'foo',
-        'original_tpl' => ['index.tpl'],
-        'bound_tpl' => ['index.tpl'],
+        'original_tpl' => ['index.latte'],
+        'bound_tpl' => ['index.latte'],
         'selected_tpl' => 0,
         'selected_url' => 'N/A',
         'selected_bound' => 'N/A',

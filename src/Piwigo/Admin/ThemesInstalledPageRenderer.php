@@ -42,7 +42,7 @@ use Piwigo\Users\UserService;
  * ExtensionLifecycle::performAction() does no CSRF or privilege check of
  * its own, so the action-handling block below gates on isWebmaster() and
  * validates the token itself. The token is embedded into all 4
- * *_baseurl template assigns below -- themes_installed.tpl appends the
+ * *_baseurl template assigns below -- themes_installed.latte appends the
  * theme ID directly after each *_baseurl string (no add_url_params() call
  * to hook into), so the token goes before the trailing '&amp;theme=' so
  * the template's own {$theme.ID} concatenation still works.

@@ -73,7 +73,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
 
-        // footer.tpl's {get_combined_scripts load='footer'} tag reaches
+        // footer.latte's {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
 
@@ -158,7 +158,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // The early-crash branch really did build (and CurrentTemplateTestFactory::get()->set())
         // a fresh Template -- proven by isInitialized() now being true and
         // the rendered body containing content only a real compiled
-        // header.tpl/redirect.tpl/footer.tpl chain produces.
+        // header.latte/redirect.latte/footer.latte chain produces.
         self::assertTrue(CurrentTemplateTestFactory::get()->isInitialized());
         self::assertStringContainsString('A custom redirect message', $body);
         self::assertStringContainsString('href="http://example.test/target.php"', $body);
@@ -172,7 +172,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // constructing Template -- its own constructor snapshots
         // Lang::langInfo() once into Smarty's 'lang_info' var (see
         // Template::__construct()'s own body); setting it afterwards would
-        // leave header.tpl's `{$lang_info.code}`/`{$lang_info.direction}`
+        // leave header.latte's `{$lang_info['code']}`/`{$lang_info['direction']}`
         // reads pointed at an empty array (confirmed live: a real
         // "Undefined array key" warning under this suite's own
         // failOnWarning=true).

@@ -30,7 +30,7 @@ use Piwigo\Core\TemplatePageContext;
  * returns null, only `int|false`, once the pdf branch runs) -- the
  * sibling `PDF_VIEWER_FILESIZE_THRESHOLD` key moved to {@see
  * PictureContentPageContext}, the template variable set actually live
- * when `picture_content.tpl` (its one real consumer) parses. `$relatedTags`/
+ * when `picture_content.latte` (its one real consumer) parses. `$relatedTags`/
  * `$relatedCategories` are `null` when the original loop never ran at all
  * (matching its own `isset($related_tags)`/`isset($related_categories)`
  * template guards), a real, non-empty list otherwise.

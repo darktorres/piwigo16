@@ -190,7 +190,7 @@ it('skips the mobile-app-promotion computation entirely once the user has dismis
         // ?? true, true) one by rendered content alone: the fixture never
         // has 3 albums + 30 photos (see this class's own render() comment),
         // so PROMOTE_MOBILE_APPS ends up false either way and the
-        // {if $PROMOTE_MOBILE_APPS} block in photos_add_direct.tpl is
+        // {if $PROMOTE_MOBILE_APPS} block in photos_add_direct.latte is
         // absent regardless. What this test actually proves is the
         // `getPromoteMobileApps() ?? true === false` short-circuit itself
         // -- the real behavioral difference is that render() skips

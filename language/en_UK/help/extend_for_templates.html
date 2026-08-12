@@ -1,7 +1,7 @@
 <h2>Template Extension Configuration</h2>
 
 <h3>About</h3>
-<p>Your Piwigo gallery can be customised by replacing existing template files with customised versions.  For example, the default header template (header.tpl) can be replaced by a customised header template (my-header.tpl).  After submitting the changes to the database the gallery will display the customised header instead of the original header.<br>
+<p>Your Piwigo gallery can be customised by replacing existing template files with customised versions.  For example, the default header template (header.latte) can be replaced by a customised header template (my-header.latte).  After submitting the changes to the database the gallery will display the customised header instead of the original header.<br>
 Template extensions are a powerful way to create customised themes for both new and advanced users.  Used together with the LocalFiles Editor you can create your own child themes.</p>
 
 <h3>Original Template</h3>
@@ -17,24 +17,24 @@ Template extensions are a powerful way to create customised themes for both new 
 <p>Original templates are the template files shipped with each theme.  These are saved in <em>/themes/default/template</em> (or <em>themes/<theme name>/template</em>).  These template files should not be edited in place as changes will be lost with theme upgrades.<br>
 Supported original templates include:</p>
 <ul>
-  <li><span class="filename">index.tpl</span></li>
-  <li><span class="filename">mainpage_categories.tpl</span> and/or <span class="filename">thumbnails.tpl</span></li>
-  <li><span class="filename">menubar.tpl</span></li>
-  <li><span class="filename">header.tpl</span> and/or <span class="filename">footer.tpl</span></li>
-  <li><span class="filename">picture_content.tpl</span> and/or <span class="filename">picture.tpl</span></li>
-  <!-- <li><span class="filename">slideshow.tpl</span></li> -->
-  <li><span class="filename">profile.tpl</span> and/or <span class="filename">profile_content.tpl</span></li>
-  <li><span class="filename">tags.tpl</span></li>
+  <li><span class="filename">index.latte</span></li>
+  <li><span class="filename">mainpage_categories.latte</span> and/or <span class="filename">thumbnails.latte</span></li>
+  <li><span class="filename">menubar.latte</span></li>
+  <li><span class="filename">header.latte</span> and/or <span class="filename">footer.latte</span></li>
+  <li><span class="filename">picture_content.latte</span> and/or <span class="filename">picture.latte</span></li>
+  <!-- <li><span class="filename">slideshow.latte</span></li> -->
+  <li><span class="filename">profile.latte</span> and/or <span class="filename">profile_content.latte</span></li>
+  <li><span class="filename">tags.latte</span></li>
   <li><span class="filename">upload.tpl</span></li>
-  <li><span class="filename">about.tpl</span></li>
-  <li><span class="filename">popuphelp.tpl</span></li>
-  <li><span class="filename">search.tpl</span> and/or <span class="filename">search_rules.tpl</span></li>
-  <li><span class="filename">nbm.tpl</span> and/or <span class="filename">notification.tpl</span></li>
-  <li><span class="filename">identification.tpl</span> and/or <span class="filename">register.tpl</span></li>
-  <li><span class="filename">redirect.tpl</span></li>
+  <li><span class="filename">about.latte</span></li>
+  <li><span class="filename">popuphelp.latte</span></li>
+  <li><span class="filename">search.latte</span> and/or <span class="filename">search_rules.tpl</span></li>
+  <li><span class="filename">nbm.latte</span> and/or <span class="filename">notification.latte</span></li>
+  <li><span class="filename">identification.latte</span> and/or <span class="filename">register.latte</span></li>
+  <li><span class="filename">redirect.latte</span></li>
 </ul>
 <h3>Saving customised templates</h3>
-<p>Customised templates should be saved in the template-extension folder or subfolders.  For example, <em>/template-extension/my-default/header.tpl</em> (or <em>/template-extension/<my-theme-name>/header.tpl</em>)  Template files can have any name with a .tpl extension.  The template files in subfolders appear in the Template configuration screen as available custom templates.</p>
+<p>Customised templates should be saved in the template-extension folder or subfolders.  For example, <em>/template-extension/my-default/header.latte</em> (or <em>/template-extension/<my-theme-name>/header.latte</em>)  Template files can have any name with a .latte extension.  The template files in subfolders appear in the Template configuration screen as available custom templates.</p>
 <h3>Activating customised templates</h3>
 <p>Select the original template to replace.  Optionally choose a URL keyword to ensure that the customised template is only shown on pages with that keyword.  Select a bound theme and the changes will be effective on that theme.  Submit the changes to the database.</p>
 <h3>Deactivating customised templates</h3>

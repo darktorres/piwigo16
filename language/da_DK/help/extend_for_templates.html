@@ -2,7 +2,7 @@
 
 <h3>Om</h3>
 <p>Dit Piwigo-galleri kan tilpasses ved at udskifte eksisterende skabelonfiler med tilpassede udgaver.  For eksempel
-kan standardheaderskabelonen (header.tpl) erstattes med en tilpasset headerskabelon (my-header.tpl).  Efter at have gemt ændringerne i databasen, vil galleriet vise den tilpassede header i stedet for den oprindelige header.<br>
+kan standardheaderskabelonen (header.latte) erstattes med en tilpasset headerskabelon (my-header.latte).  Efter at have gemt ændringerne i databasen, vil galleriet vise den tilpassede header i stedet for den oprindelige header.<br>
 Skabelonudvidelser er en god måde at oprette tilpassede temaer på for både nye og avancerede brugere.  Anvendt sammen med LocalFiles Editor kan du oprette dine egne nedarvede temaer.</p>
 
 <h3>Oprindelig skabelon</h3>
@@ -18,25 +18,25 @@ Skabelonudvidelser er en god måde at oprette tilpassede temaer på for både ny
 <p>Oprindelige skabeloner er de skabelonfiler, som leveres med de enkelte teamer.  De er gemt i <em>/themes/default/template</em> (eller <em>themes/<temanavn>/template</em>).  Disse skabelonfiler bør ikke redigeres, hvor de befinder sig, da ændringer vil gå tabt når temaet opgraderes.<br>
 Understøttede oprindelige skabeloner er blandt andre:</p>
 <ul>
-  <li><span class="filename">index.tpl</span></li>
-  <li><span class="filename">mainpage_categories.tpl</span> og/eller <span class="filename">thumbnails.tpl</span></li>
-  <li><span class="filename">menubar.tpl</span></li>
-  <li><span class="filename">header.tpl</span> og/eller <span class="filename">footer.tpl</span></li>
-  <li><span class="filename">picture_content.tpl</span> og/eller <span class="filename">picture.tpl</span></li>
-  <!-- <li><span class="filename">slideshow.tpl</span></li> -->
-  <li><span class="filename">profile.tpl</span> og/eller <span class="filename">profile_content.tpl</span></li>
-  <li><span class="filename">tags.tpl</span></li>
+  <li><span class="filename">index.latte</span></li>
+  <li><span class="filename">mainpage_categories.latte</span> og/eller <span class="filename">thumbnails.latte</span></li>
+  <li><span class="filename">menubar.latte</span></li>
+  <li><span class="filename">header.latte</span> og/eller <span class="filename">footer.latte</span></li>
+  <li><span class="filename">picture_content.latte</span> og/eller <span class="filename">picture.latte</span></li>
+  <!-- <li><span class="filename">slideshow.latte</span></li> -->
+  <li><span class="filename">profile.latte</span> og/eller <span class="filename">profile_content.latte</span></li>
+  <li><span class="filename">tags.latte</span></li>
   <li><span class="filename">upload.tpl</span></li>
-  <li><span class="filename">about.tpl</span></li>
-  <li><span class="filename">popuphelp.tpl</span></li>
-  <li><span class="filename">search.tpl</span> og/eller <span class="filename">search_rules.tpl</span></li>
-  <li><span class="filename">nbm.tpl</span> og/eller <span class="filename">notification.tpl</span></li>
-  <li><span class="filename">identification.tpl</span> og/eller <span class="filename">register.tpl</span></li>
-  <li><span class="filename">redirect.tpl</span></li>
+  <li><span class="filename">about.latte</span></li>
+  <li><span class="filename">popuphelp.latte</span></li>
+  <li><span class="filename">search.latte</span> og/eller <span class="filename">search_rules.tpl</span></li>
+  <li><span class="filename">nbm.latte</span> og/eller <span class="filename">notification.latte</span></li>
+  <li><span class="filename">identification.latte</span> og/eller <span class="filename">register.latte</span></li>
+  <li><span class="filename">redirect.latte</span></li>
 </ul>
 
 <h3>Gemning af tilpassede skabeloner</h3>
-<p>Tilpassede skabeloner bør gemmes i mappen template-extension eller undermapper.  For eksempel <em>/template-extension/min-standard/header.tpl</em> (eller <em>/template-extension/<mit-temas-navn>/header.tpl</em>).  Skabelonfiler kan have et vilkårligt nanv, som slutter med filudvidelsen .tpl.  Skabelonfiler i undermapper viser sig på Skabelon-opsætningssiden som tilgængelige tilpassede skabeloner.</p>
+<p>Tilpassede skabeloner bør gemmes i mappen template-extension eller undermapper.  For eksempel <em>/template-extension/min-standard/header.latte</em> (eller <em>/template-extension/<mit-temas-navn>/header.latte</em>).  Skabelonfiler kan have et vilkårligt nanv, som slutter med filudvidelsen .tpl.  Skabelonfiler i undermapper viser sig på Skabelon-opsætningssiden som tilgængelige tilpassede skabeloner.</p>
 
 <h3>Aktivering af tilpassede skabeloner</h3>
 <p>Vælg den oprindelige skabelon, som skal erstattes.  Det er valgfrit om man vælger et URL-nøgleord for at sikre at den tilpassede skabelon kun vises på sider, med det nøgleord.  Vælg et bundet tema og ændringerne vil kun træde i kraft i det tema.  Gem dine ændringer i databasen.</p>

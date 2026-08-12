@@ -4,9 +4,9 @@
 <p>
  Sie können das Erscheinungsbild Ihrer Piwigo-Galerie im Einzelnen verändern, 
  indem Sie vorhandene Vorlagendateien gegen von Ihnen angepasste austauschen.
- So können Sie z.B. die vorgegebene Vorlagendatei header.tpl, die für die
+ So können Sie z.B. die vorgegebene Vorlagendatei header.latte, die für die
  Darstellung des Seitenkopfes Ihrer Galerie verantwortlich ist, durch eine
- von Ihnen angepasste Version my_header.tpl ersetzen. Wurde der Datenbank
+ von Ihnen angepasste Version my_header.latte ersetzen. Wurde der Datenbank
  der Austausch bekannt gemacht, wird Ihr Seitenkopf an Stelle 
  des originalen Seitenkopfes in Ihrer Galerie angezeigt.</p>
 <p>
@@ -43,28 +43,28 @@
  Zu den aktuell unterstützten Originalvorlagen gehören:
 </p>
 <ul>
-  <li><span class="filename">index.tpl</span></li>
-  <li><span class="filename">mainpage_categories.tpl</span> und/oder <span class="filename">thumbnails.tpl</span></li>
-  <li><span class="filename">menubar.tpl</span></li>
-  <li><span class="filename">header.tpl</span> und/oder <span class="filename">footer.tpl</span></li>
-  <li><span class="filename">picture_content.tpl</span> und/oder <span class="filename">picture.tpl</span></li>
-  <!-- <li><span class="filename">slideshow.tpl</span></li> -->
-  <li><span class="filename">profile.tpl</span> und/oder <span class="filename">profile_content.tpl</span></li>
-  <li><span class="filename">tags.tpl</span></li>
+  <li><span class="filename">index.latte</span></li>
+  <li><span class="filename">mainpage_categories.latte</span> und/oder <span class="filename">thumbnails.latte</span></li>
+  <li><span class="filename">menubar.latte</span></li>
+  <li><span class="filename">header.latte</span> und/oder <span class="filename">footer.latte</span></li>
+  <li><span class="filename">picture_content.latte</span> und/oder <span class="filename">picture.latte</span></li>
+  <!-- <li><span class="filename">slideshow.latte</span></li> -->
+  <li><span class="filename">profile.latte</span> und/oder <span class="filename">profile_content.latte</span></li>
+  <li><span class="filename">tags.latte</span></li>
   <li><span class="filename">upload.tpl</span></li>
-  <li><span class="filename">about.tpl</span></li>
-  <li><span class="filename">popuphelp.tpl</span></li>
-  <li><span class="filename">search.tpl</span> und/oder <span class="filename">search_rules.tpl</span></li>
-  <li><span class="filename">nbm.tpl</span> und/oder <span class="filename">notification.tpl</span></li>
-  <li><span class="filename">identification.tpl</span> und/oder <span class="filename">register.tpl</span></li>
-  <li><span class="filename">redirect.tpl</span></li>
+  <li><span class="filename">about.latte</span></li>
+  <li><span class="filename">popuphelp.latte</span></li>
+  <li><span class="filename">search.latte</span> und/oder <span class="filename">search_rules.tpl</span></li>
+  <li><span class="filename">nbm.latte</span> und/oder <span class="filename">notification.latte</span></li>
+  <li><span class="filename">identification.latte</span> und/oder <span class="filename">register.latte</span></li>
+  <li><span class="filename">redirect.latte</span></li>
 </ul>
 
 <h3>Angepasste Vorlagen abspeichern</h3>
 <p>
  Angepasste Vorlagen sollten im Verzeichnis template-extension oder in einem Unterverzeichnis
- dieses Verzeichnisses abgespeichert werden (z.B. <em>/template-extension/my-default/header.tpl</em>
- oder <em>/template-extension/my-theme-name/header.tpl</em>). 
+ dieses Verzeichnisses abgespeichert werden (z.B. <em>/template-extension/my-default/header.latte</em>
+ oder <em>/template-extension/my-theme-name/header.latte</em>). 
  Der Name einer Vorlagendatei ist frei wählbar, die Dateiendung .tpl muss allerdings angefügt werden.
  <!--***-->
  The template files in subfolders appear in the Template configuration screen as available custom templates.

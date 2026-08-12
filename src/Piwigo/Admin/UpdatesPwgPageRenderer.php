@@ -33,7 +33,7 @@ use Piwigo\Validation\InputValidator;
  * auto-submitting POST form from a logged-in webmaster's browser.
  * CSRF_TOKEN below feeds the hidden pwg_token field in both forms,
  * matching the convention used by
- * themes_standard_pages.tpl/plugins_installed.tpl.
+ * themes_standard_pages.latte/plugins_installed.latte.
  */
 final readonly class UpdatesPwgPageRenderer
 {

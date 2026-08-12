@@ -131,7 +131,7 @@ it('renders the param tab', function (): void {
 
 it('renders the subscribe tab', function (): void {
     $page = H::loginAsAdmin($this);
-    // Deliberately not navigateOk(): notification_by_mail.tpl's subscribe
+    // Deliberately not navigateOk(): notification_by_mail.latte's subscribe
     // tab legitimately renders the literal copy "Warning: subscribing or
     // unsubscribing will send mails to users" -- a false positive for
     // navigateOk()'s generic server-error-marker body scan, not a real

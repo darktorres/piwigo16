@@ -10,7 +10,7 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Admin\LanguagesNewPageRenderer::render()}. `$languages`
- * is always included (even empty) since `languages_new.tpl` reads it
+ * is always included (even empty) since `languages_new.latte` reads it
  * with `{if !empty($languages)}`, not `isset()`.
  */
 final readonly class LanguagesNewPageContext implements TemplatePageContext

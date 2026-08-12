@@ -692,7 +692,7 @@ final readonly class PictureController implements ControllerInterface
                 if ($id_pict_redirect !== '' and isset($picture[$id_pict_redirect])) {
                     // $refresh, $url_link and $title are required for
                     // creating an automated refresh page in
-                    // header.tpl
+                    // header.latte
                     $refresh = $slideshow_params['period'];
                     $url_link = $urlService->addUrlParams(
                         $picture[$id_pict_redirect]['url'],

@@ -11,7 +11,7 @@ use Piwigo\Core\TemplatePageContext;
  * The template variable set assigned by
  * {@see \Piwigo\Calendar\CalendarRenderer::render()}'s own
  * category-calling branch. `$chronologyNavigationBars` is
- * `month_calendar.tpl`'s own `chronology_navigation_bars` var, built by
+ * `month_calendar.latte`'s own `chronology_navigation_bars` var, built by
  * {@see \Piwigo\Calendar\CalendarBase::buildNavBar()} and buildNextPrev()
  * over the course of `generateCategoryContent()` and read back once
  * that call returns via
@@ -21,7 +21,7 @@ use Piwigo\Core\TemplatePageContext;
  * optional -- the original code's own nested style/view loop only
  * appends when at least one style/view combination passes its own
  * `view_calendar` gate, omitted here (not present as a null value) to
- * match `index.tpl`'s own `{if isset($chronology_views)}` guard exactly.
+ * match `index.latte`'s own `{if isset($chronology_views)}` guard exactly.
  */
 final readonly class CalendarChronologyPageContext implements TemplatePageContext
 {

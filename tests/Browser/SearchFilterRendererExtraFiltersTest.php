@@ -95,7 +95,7 @@ function extraFiltersInsertRawSearchRow(array $rules): string
 
 /**
  * Extracts the raw `global_params = {...};` JS statement body
- * search_filters.inc.tpl emits from `$GP` (json_encode($mySearch),
+ * search_filters.inc.latte emits from `$GP` (json_encode($mySearch),
  * SearchFilterRenderer::render()'s own final template assignment) --
  * scoping a "does the removed field's key still appear" check to just
  * this blob, rather than the whole response body, avoids a false match
@@ -349,7 +349,7 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
         expect(extraFiltersSettledContent($page))
             ->toContain('Search Ratings Disabled Photo');
 
-        // search_filters.inc.tpl emits this JS var literally from
+        // search_filters.inc.latte emits this JS var literally from
         // $SHOW_FILTER_RATINGS, and only renders the ratings checkbox / the
         // whole "filter-ratings" panel when it's true -- both are only
         // observable by reading the raw response body, not assertSee()'s

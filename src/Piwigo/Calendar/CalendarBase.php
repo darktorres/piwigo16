@@ -113,7 +113,7 @@ abstract class CalendarBase
     public string $chronology_view = '';
 
     /**
-     * `month_calendar.tpl`'s own `chronology_navigation_bars` data,
+     * `month_calendar.latte`'s own `chronology_navigation_bars` data,
      * shared between buildNavBar()/buildNextPrev() via a private
      * instance property rather than the live Smarty template variable
      * itself, avoiding an append-then-read-modify-write round trip

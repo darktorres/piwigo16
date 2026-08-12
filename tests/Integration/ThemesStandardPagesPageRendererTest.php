@@ -72,9 +72,9 @@ use RuntimeException;
  *    fallback branch is never reached.
  *
  * Integration (not Unit) tier because render()'s own tail always calls a
- * real Smarty template render (assignVarFromHandle('ADMIN_CONTENT',
- * 'themes'), which compiles and renders the real
- * themes_standard_pages.tpl) -- matching PageTailRendererTest/
+ * real Latte template render (assignVarFromTemplate('ADMIN_CONTENT',
+ * 'themes_standard_pages.latte'), which compiles and renders the real
+ * themes_standard_pages.latte) -- matching PageTailRendererTest/
  * MaintenanceActionDispatcherTest's own "construct the real renderer/
  * dispatcher directly, real Template, no fixture DB reset needed" shape.
  *
@@ -93,7 +93,7 @@ use RuntimeException;
  * `CurrentPathsTestFactory::get()->siteLocal . 'logo'`, so this alone controls
  * exactly the directory these tests need to create/chmod, while ::root
  * stays the real repo root so Template can still find the real
- * themes/admin/default/template/themes_standard_pages.tpl. Never touches
+ * themes/admin/default/template/themes_standard_pages.latte. Never touches
  * the real, shared local/logo/ directory tests/Browser's own logo-upload
  * test already writes into and cleans up.
  */
@@ -132,7 +132,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($this->configService);
 
-        // themes_standard_pages.tpl's own {combine_script}/{footer_script}
+        // themes_standard_pages.latte's own {combine_script}/{footer_script}
         // tags only *register* scripts (ScriptLoader::add()/add_inline(),
         // pure storage, confirmed by direct read) -- they never call
         // ScriptLoader's own static urlService() the way actually

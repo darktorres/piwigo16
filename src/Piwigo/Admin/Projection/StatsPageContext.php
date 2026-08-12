@@ -9,7 +9,7 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Core\TemplatePageContext;
 
 /**
- * The full, fixed 'stats.tpl' template variable set assigned by
+ * The full, fixed 'stats.latte' template variable set assigned by
  * {@see \Piwigo\Admin\StatsPageRenderer::render()} -- 11 named values,
  * fully enumerated, no dynamic/optional keys.
  */

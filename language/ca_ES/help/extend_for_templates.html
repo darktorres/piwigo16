@@ -1,7 +1,7 @@
 <h2>Configuraci&oacute; d'extensions per a les plantilles</h2>
 
 <h3>Objectiu</h3>
-<p>La seva galeria Piwigo es pot personalitzar mitjan&ccedil;ant la substituci&oacute; dels arxius existents de la plantilla amb versions personalitzades. Per exemple, la plantilla de cap&ccedil;alera per defecte (header.tpl) pot ser substitu&iuml;da per una plantilla de cap&ccedil;alera personalitzada (my-header.tpl). Despr&eacute;s d'enviar els canvis a la base de dades la galeria mostrar&agrave; la cap&ccedil;alera personalitzada en lloc de la cap&ccedil;alera original.<br>
+<p>La seva galeria Piwigo es pot personalitzar mitjan&ccedil;ant la substituci&oacute; dels arxius existents de la plantilla amb versions personalitzades. Per exemple, la plantilla de cap&ccedil;alera per defecte (header.latte) pot ser substitu&iuml;da per una plantilla de cap&ccedil;alera personalitzada (my-header.latte). Despr&eacute;s d'enviar els canvis a la base de dades la galeria mostrar&agrave; la cap&ccedil;alera personalitzada en lloc de la cap&ccedil;alera original.<br>
 Les extensions de les plantilles s&oacute;n una poderosa manera de crear temes personalitzats tant per als usuaris nous com per als usuaris avan&ccedil;ats. Si s'utilitza conjuntament amb l'editor <i>LocalFiles Editor</i> es poden fer adaptacions de temes existents.</p>
 
 <h3>Plantilla original</h3>
@@ -17,24 +17,24 @@ Les extensions de les plantilles s&oacute;n una poderosa manera de crear temes p
 <p>Le plantilles originals s&oacute;n els arxius de plantilla que conformen cada tema. Aquests es guarden en <em>/themes/default/template</em> (o <em>themes/<theme name>/template</em>).  Aquests arxius de plantilla no poden ser editats direcmennt al seu directori original. En d'editar-los directament sense canviar-los de lloc, els canvis es perdran en el moment d'actualitzar-se.<br>
 Les plantilles originals suportades actualment inclouen:</p>
 <ul>
-  <li><span class="filename">index.tpl</span></li>
-  <li><span class="filename">mainpage_categories.tpl</span> i/o <span class="filename">thumbnails.tpl</span></li>
-  <li><span class="filename">menubar.tpl</span></li>
-  <li><span class="filename">header.tpl</span> i/o <span class="filename">footer.tpl</span></li>
-  <li><span class="filename">picture_content.tpl</span> i/o <span class="filename">picture.tpl</span></li>
-  <!-- <li><span class="filename">slideshow.tpl</span></li> -->
-  <li><span class="filename">profile.tpl</span> i/o <span class="filename">profile_content.tpl</span></li>
-  <li><span class="filename">tags.tpl</span></li>
+  <li><span class="filename">index.latte</span></li>
+  <li><span class="filename">mainpage_categories.latte</span> i/o <span class="filename">thumbnails.latte</span></li>
+  <li><span class="filename">menubar.latte</span></li>
+  <li><span class="filename">header.latte</span> i/o <span class="filename">footer.latte</span></li>
+  <li><span class="filename">picture_content.latte</span> i/o <span class="filename">picture.latte</span></li>
+  <!-- <li><span class="filename">slideshow.latte</span></li> -->
+  <li><span class="filename">profile.latte</span> i/o <span class="filename">profile_content.latte</span></li>
+  <li><span class="filename">tags.latte</span></li>
   <li><span class="filename">upload.tpl</span></li>
-  <li><span class="filename">about.tpl</span></li>
-  <li><span class="filename">popuphelp.tpl</span></li>
-  <li><span class="filename">search.tpl</span> i/o <span class="filename">search_rules.tpl</span></li>
-  <li><span class="filename">nbm.tpl</span> i/o <span class="filename">notification.tpl</span></li>
-  <li><span class="filename">identification.tpl</span> i/o <span class="filename">register.tpl</span></li>
-  <li><span class="filename">redirect.tpl</span></li>
+  <li><span class="filename">about.latte</span></li>
+  <li><span class="filename">popuphelp.latte</span></li>
+  <li><span class="filename">search.latte</span> i/o <span class="filename">search_rules.tpl</span></li>
+  <li><span class="filename">nbm.latte</span> i/o <span class="filename">notification.latte</span></li>
+  <li><span class="filename">identification.latte</span> i/o <span class="filename">register.latte</span></li>
+  <li><span class="filename">redirect.latte</span></li>
 </ul>
 <h3>Guardar plantilles personalitzades</h3>
-<p>Les plantilles personalitzades s'han de guardar a la carpeta o subcarpetes template-extension. Per exemple, <em>/template-extension/my-default/header.tpl</em> (o <em>/template-extension/<my-theme-name>/header.tpl</em>)  
+<p>Les plantilles personalitzades s'han de guardar a la carpeta o subcarpetes template-extension. Per exemple, <em>/template-extension/my-default/header.latte</em> (o <em>/template-extension/<my-theme-name>/header.latte</em>)  
 
 
 Els arxius de plantilla pot tenir qualsevol nom amb l'extensi&oacute; .tpl.  Els arxius de plantilla a les subcarpetes apareixen a la pantalla Configuraci&oacute; de plantilles si es disposa de plantilles personalitzades.</p>

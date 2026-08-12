@@ -49,7 +49,7 @@ it('lists the private album as already-authorized for the group that has access 
     $page = H::navigateOk($page, '/admin.php?page=group_perm&group_id=1');
     $page->assertNoJavaScriptErrors();
 
-    // Not assertSeeIn('#content h2', ...): admin.tpl's own shared footer
+    // Not assertSeeIn('#content h2', ...): admin.latte's own shared footer
     // script (`if (jQuery('h2').length > 0) { jQuery('h1').html(jQuery('h2').html()); }`)
     // copies this exact h2 into the h1 too, so a plain page-wide assertSee()
     // (already proven unambiguous -- the string is specific enough not to

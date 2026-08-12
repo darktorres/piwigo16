@@ -6,7 +6,7 @@ use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
 
 test('toArray nests the chronology title, flattens the file view, and includes the navigation bars, omitting chronology_views when null', function (): void {
     $context = new CalendarChronologyPageContext(
-        fileChronologyView: 'month_calendar.tpl',
+        fileChronologyView: 'month_calendar.latte',
         chronologyTitle: '<a href="/index.php">2026</a>',
         chronologyNavigationBars: [[
             'items' => [[
@@ -19,7 +19,7 @@ test('toArray nests the chronology title, flattens the file view, and includes t
 
     expect($context->toArray())
         ->toBe([
-            'FILE_CHRONOLOGY_VIEW' => 'month_calendar.tpl',
+            'FILE_CHRONOLOGY_VIEW' => 'month_calendar.latte',
             'chronology' => [
                 'TITLE' => '<a href="/index.php">2026</a>',
             ],
@@ -34,7 +34,7 @@ test('toArray nests the chronology title, flattens the file view, and includes t
 
 test('toArray includes an empty chronology_navigation_bars array (not omitted)', function (): void {
     $context = new CalendarChronologyPageContext(
-        fileChronologyView: 'month_calendar.tpl',
+        fileChronologyView: 'month_calendar.latte',
         chronologyTitle: '<a href="/index.php">2026</a>',
         chronologyNavigationBars: [],
         chronologyViews: null,
@@ -45,7 +45,7 @@ test('toArray includes an empty chronology_navigation_bars array (not omitted)',
 
 test('toArray includes chronology_views when set', function (): void {
     $context = new CalendarChronologyPageContext(
-        fileChronologyView: 'month_calendar.tpl',
+        fileChronologyView: 'month_calendar.latte',
         chronologyTitle: '<a href="/index.php">2026</a>',
         chronologyNavigationBars: [],
         chronologyViews: [[

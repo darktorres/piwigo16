@@ -781,7 +781,7 @@ namespace Piwigo\Tests\Integration {
             // "skips" building a 'url' for it (not building one would
             // otherwise crash on an undefined offset further down), but the
             // category itself stays in the returned list -- confirmed live,
-            // and by design: menubar_related_categories.tpl's own {foreach}
+            // and by design: menubar_related_categories.latte's own {foreach}
             // needs the ancestor present to correctly nest category 2 under
             // it (LEVEL-based <ul> nesting), it just renders a bare link with
             // no href via its own isset($cat.url) guard.

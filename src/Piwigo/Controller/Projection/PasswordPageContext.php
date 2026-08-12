@@ -11,7 +11,7 @@ use Piwigo\Core\TemplatePageContext;
  * The template variable set assigned by
  * {@see \Piwigo\Controller\PasswordController::__invoke()}. `$key`,
  * `$usernameOrEmail`, and `$isFirstLogin` are genuinely optional --
- * `password.tpl` checks each with its own `{if isset(...)}`, and the
+ * `password.latte` checks each with its own `{if isset(...)}`, and the
  * original code only ever assigns those 3 template keys under their own
  * runtime condition, omitted here (not present as a null value) to match
  * that exact original behavior.

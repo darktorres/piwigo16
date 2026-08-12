@@ -45,9 +45,8 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
  * "type-satisfying instance" reasoning).
  *
  * Unlike every other renderer test in this campaign, this class takes a
- * real Template directly (not CurrentTemplate) and never calls
- * assignVarFromHandle()/setFilename() -- no .tpl fixture file
- * needed at all.
+ * real Template directly (not CurrentTemplate) and never renders a
+ * template of its own -- no .latte fixture file needed at all.
  */
 function filterPanelTestRoot(): string
 {

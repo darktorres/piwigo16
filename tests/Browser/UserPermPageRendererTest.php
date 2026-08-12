@@ -78,7 +78,7 @@ it('shows the album granted through group membership, with no private albums yet
     $page = H::navigateOk($page, '/admin.php?page=user_perm&user_id=4');
     $page->assertNoJavaScriptErrors();
 
-    // Not assertSeeIn('#content h2', ...): admin.tpl's own shared footer
+    // Not assertSeeIn('#content h2', ...): admin.latte's own shared footer
     // script copies the page's <h2> into its <h1> too, so a plain
     // page-wide assertSee() (this string is specific enough not to appear
     // anywhere else) avoids relying on this renderer's own <h2> being the

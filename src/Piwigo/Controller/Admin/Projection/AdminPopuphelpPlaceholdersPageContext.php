@@ -10,7 +10,7 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * Placeholder template vars assigned by
  * {@see \Piwigo\Controller\Admin\AdminPopuphelpController} to avoid an
- * "Undefined array key" warning in header.tpl -- this admin-context
+ * "Undefined array key" warning in header.latte -- this admin-context
  * popup never assigns the real values PageHeaderRenderer's normal
  * caller chain would.
  */

@@ -146,7 +146,7 @@ it('formats a multi-date info-title ("added between") when its photos span more 
 // *string* id_uppercat (the old raw-mysqli-row assumption) while
 // Category\Projection\Category::toArray() actually hands back a real ?int.
 // Category 2's own fixture parent is category 1 (id_uppercat=1) -- this
-// asserts the real parent id reaches both cat_modify.tpl JS globals that
+// asserts the real parent id reaches both cat_modify.latte JS globals that
 // read PARENT_CAT_ID (the move-album jstree widget's initial selection).
 it('assigns the real parent id to PARENT_CAT_ID for a sub-album, not 0', function (): void {
     $page = H::loginAsAdmin($this);

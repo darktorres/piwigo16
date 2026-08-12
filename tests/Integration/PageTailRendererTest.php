@@ -69,7 +69,7 @@ final class PageTailRendererTest extends IntegrationTestCase
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
-        // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
+        // footer.latte's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
@@ -145,7 +145,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         $output = $this->renderer->renderToString(microtime(true) - 2.0);
 
         self::assertStringContainsString('Page generated in', $output);
-        // "(7 SQL queries in 1.235 s)" -- footer.tpl's own literal template
+        // "(7 SQL queries in 1.235 s)" -- footer.latte's own literal template
         // text bracketing NB_QUERIES/SQL_TIME (number_format(1.234567, 3,
         // '.', ' ') . ' s'), asserted as one combined substring so a field
         // swap between the 2 values would fail this assertion.

@@ -480,7 +480,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * analyzeForm()-collected errors still present. Verified both via the
      * template's own assigned var directly (matching the config-write-
      * fallback test's own use of getTemplateVars() elsewhere in this
-     * file) and via install.tpl's real `{if isset($errors)}` HTML
+     * file) and via install.latte's real `{if isset($errors)}` HTML
      * rendering of it.
      */
     public function testRenderAssignsTheCollectedValidationErrorsToTheTemplate(): void

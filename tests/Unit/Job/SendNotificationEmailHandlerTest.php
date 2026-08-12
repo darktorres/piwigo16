@@ -97,7 +97,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
 
     CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
     CurrentConfigTestFactory::get()->mailSenderName = 'Test Sender';
-    // Skips the real theme's text/html mail templates -- header.tpl
+    // Skips the real theme's text/html mail templates -- header.latte
     // there reads lang_info['code'] directly, which needs a real
     // Lang::load() to populate; the plain-text template mail() always
     // also renders doesn't touch lang_info at all, and is sufficient to

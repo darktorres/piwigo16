@@ -103,7 +103,7 @@ it('renders successfully with the gallery locked (U_MAINT_UNLOCK_GALLERY branch)
 
         // MaintenanceEnvPageRenderer assigns U_MAINT_LOCK_GALLERY/
         // U_MAINT_UNLOCK_GALLERY depending on CurrentConfig::galleryLocked()
-        // -- but unlike the "actions" tab, maintenance_env.tpl never
+        // -- but unlike the "actions" tab, maintenance_env.latte never
         // references either variable (confirmed live: zero "gallery"
         // references anywhere in that template), so there's nothing
         // observable in the HTML beyond a clean render. This exercises the

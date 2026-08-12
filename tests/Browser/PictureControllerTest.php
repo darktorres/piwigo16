@@ -191,7 +191,7 @@ it('increments the hit counter on first view, then not on an immediate same-pict
     // ones -- confirmed independently of Pest via a standalone php -r
     // reproduction before writing this fix. The PIXEL label (must stay
     // short enough to render in full) and the DB `name` field (the
-    // descriptive, human-readable text picture.tpl actually displays,
+    // descriptive, human-readable text picture.latte actually displays,
     // asserted below) are deliberately decoupled here for exactly this
     // reason.
     $pixelLabel = uniqid();
@@ -393,7 +393,7 @@ it("edits a comment's own content via the edit_comment action, validating it as 
     // is the "change a comment's own text" flow
     // (CommentService::updateComment()), never exercised before. Its
     // ephemeral post key is only ever rendered into the page for the ONE
-    // comment currently being edited (comment_list.tpl's own
+    // comment currently being edited (comment_list.latte's own
     // {if isset($comment.IN_EDIT)} guard around the hidden `key` field),
     // so a real 2-step interaction is required: a first GET with
     // action=edit_comment&comment_to_edit=<id> (no `content` posted, so
@@ -837,7 +837,7 @@ it('renders a related tag link for a photo with a real assigned tag', function (
     ]);
     expect($updateResult['stat'] ?? null)->toBe('ok');
 
-    // picture.tpl's own {if ($display_info.tags and isset($related_tags))}
+    // picture.latte's own {if ($display_info['tags'] and isset($related_tags))}
     // gate needs the fixture's real picture_informations config to have
     // tags=true (confirmed live) -- true by default in this fixture, not
     // overridden here.
@@ -1359,11 +1359,11 @@ it('renders slideshow mode with play/repeat/period controls and a real next item
     // so viewing photo A (which has a real next item, B) with slideshow=1
     // exercises the play=true auto-advance branch, both period-step
     // links (4-1=3 and 4+1=5 both stay within [1,10]), and the
-    // repeat=true branch, all via slideshow.tpl + picture_nav_buttons.tpl.
+    // repeat=true branch, all via slideshow.latte + picture_nav_buttons.latte.
     $page = H::navigateOk($page, '/picture.php?/' . $idA . '/category/' . $albumId . '&slideshow=1');
 
     $page->assertSee('stop the slideshow');
-    // picture_nav_buttons.tpl's own control labels (pwg-button-text spans)
+    // picture_nav_buttons.latte's own control labels (pwg-button-text spans)
     // are icon-only, CSS-hidden text -- confirmed live via screenshot, so
     // assertSee() (visible text only) never finds them; a raw-content
     // check is the right tool, same precedent as BatchManagerUnitPageRenderer
@@ -2220,7 +2220,7 @@ it('short-circuits the default element-content renderer when an earlier render_e
 
         expect($body)
             ->toContain($marker);
-        // picture_content.tpl's own <img id="theMainImage" ...> wrapper
+        // picture_content.latte's own <img id="theMainImage" ...> wrapper
         // (built entirely from $current.selected_derivative/
         // $current.unique_derivatives, which defaultPictureContent() never
         // reaches once it short-circuits) is genuinely absent -- proving

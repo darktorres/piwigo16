@@ -41,7 +41,7 @@ function ctFloatFromMixed(mixed $value, float $default): float
  * ImageStdParams::getDefaultSizes()'s own w/h values, in ImageStdParams::
  * getAllTypes() order -- strictly ascending in both w and h, which
  * processSizes()'s step-2 validation (each type's w/h must exceed the
- * previous enabled type's) requires. Mirrors the real configuration_sizes.tpl
+ * previous enabled type's) requires. Mirrors the real configuration_sizes.latte
  * form, which always posts a full d[type][...] row per type (one row per
  * ImageStdParams::getAllTypes() entry, unconditionally rendered).
  *
@@ -606,7 +606,7 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
     // recent_period are both required by saveFromPost's own validation
     // once AdminContext::isActive() (always true under admin.php).
     // `expand` is NOT unset/defaulted for the special user, though --
-    // profile_content.tpl's real {html_radios name='expand' ...} always
+    // profile_content.latte's real {html_radios name='expand' ...} always
     // submits it from a real browser (a radio group, never absent like a
     // checkbox), and massUpdate()'s own generated UPDATE always includes
     // every column in $fields regardless of whether $data has the key --
@@ -1998,7 +1998,7 @@ it('default tab: reaches the no-op massaging branch when submitted via the gener
     // ConfigurationRequest::isSubmitted (isset($_POST['submit'])) is true
     // -- the "saves the default tab" test above submits via 'validate'
     // (ProfileFormHandler::saveFromPost()'s own field), never 'submit', so
-    // it never enters this switch at all. The real profile_content.tpl
+    // it never enters this switch at all. The real profile_content.latte
     // form for this tab never posts 'submit' either (there's no generic
     // config value for the "default"/guest-profile tab to massage), but
     // this is a public HTTP endpoint keyed only on $_GET['section'] and
@@ -2356,7 +2356,7 @@ it('sizes tab: renders age labels for existing custom derivatives without error'
         // One inside the "<= 24h" window (renders via Lang::t('today'))
         // and one well outside it (renders via DateHelper::timeSince()) --
         // both branches of handle()'s own 'custom_derivatives' ternary.
-        // configuration_sizes.tpl assigns 'custom_derivatives' but never
+        // configuration_sizes.latte assigns 'custom_derivatives' but never
         // actually reads it in the current admin theme, so this test can
         // only assert the render completes cleanly with real
         // custom-derivative fixture rows present (both ages), not the

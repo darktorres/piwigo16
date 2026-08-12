@@ -229,7 +229,7 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
         expect($result['status'])->toBe(200);
         // The `data` template var (every tag, including 'alt_names' when
         // set) is JSON-encoded verbatim into .tag-container's own
-        // data-tags="..." HTML attribute -- see tags.tpl. implode(', ', ...)
+        // data-tags="..." HTML attribute -- see tags.latte. implode(', ', ...)
         // joins both real hook-returned names.
         expect($result['body'])->toContain('Alt Name One, Alt Name Two');
     } finally {

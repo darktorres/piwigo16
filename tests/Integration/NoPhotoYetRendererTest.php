@@ -49,7 +49,7 @@ namespace Piwigo\Tests\Integration {
      * RedirectServiceInterface::redirect() before reaching real terminal
      * behavior. The nb_photos===0 branch's remaining "neither browse nor
      * deactivate" sub-branch (NoPhotoYetRenderer.php's own real body, roughly
-     * lines 76-111: the header()/setFilenames() calls, both isAdmin()
+     * lines 76-111: the header() call, both isAdmin()
      * template->assign() arms, the loc_end_no_photo_yet EventDispatcher
      * notify, and finally $template->pparse() + a bare exit()) stays
      * genuinely untested from here, for 2 independent reasons:
@@ -57,7 +57,7 @@ namespace Piwigo\Tests\Integration {
      *  1. That exit() is a real, uncatchable process termination -- unlike
      *     redirect(), it isn't routed through anything interceptable (see
      *     NoPhotoYetRenderer's own class docblock), and $template->pparse()
-     *     against the real themes/default/template/no_photo_yet.tpl (which
+     *     against the real themes/default/template/no_photo_yet.latte (which
      *     does exist in this repo) has no reason to throw first, so calling
      *     render() this way from this shared PHPUnit/Pest CLI process would
      *     kill the whole process mid-suite -- same "don't stub/exercise what

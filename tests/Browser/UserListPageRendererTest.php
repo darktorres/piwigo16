@@ -48,7 +48,7 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
         // plain "admin"-status session -- fixture_admin itself is
         // "webmaster", which every other test in this file uses.
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=user_list');
-        // AdminShell::run() shows the "what's new" popin (footer.tpl's
+        // AdminShell::run() shows the "what's new" popin (footer.latte's
         // #whats_new_popin) whenever a user has no show_whats_new_<major>
         // preference yet, which defaults getParam(..., true) -- true for
         // this session's brand-new user, unlike fixture_admin (already

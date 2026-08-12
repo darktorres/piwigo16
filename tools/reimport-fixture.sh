@@ -51,39 +51,12 @@
 # EPIPE-on-unread-stdout gotcha documented there doesn't apply — this
 # script lets psql's own preamble SELECT print straight to the terminal).
 #
-
-# `sites` id=1's own `galleries_url` is committed in the fixture as
-# an absolute filesystem path (Piwigo\Core\Paths::$root . 'galleries/',
-# matching exactly what Admin\Install\InstallWizard seeds it with on a real
-# install) -- inherently tied to wherever *that* install's checkout lived,
-# not portable data. Every checkout of this repo lives at a different path,
-# so this is corrected here, at fixture-load time, the same way PIWIGO_TEST_NOW
-# is environment-injected rather than baked into the fixture -- not a
-# one-off patch. IntegrationTestCase::loadFixture() applies the identical
-# correction for its own separate (non-shell-script) import path, since
-# PHPUnit's Integration/Contract suites never invoke this script.
-#
-# `categories.lastmodified` is `TIMESTAMP ... ON UPDATE
-# CURRENT_TIMESTAMP` -- a MySQL-server-enforced column, invisible to and
-# unfixable by any PHP-level Env::now()/PIWIGO_TEST_NOW freeze, since MySQL
-# stamps it with the real server clock the instant *any* real INSERT (a
-# real fixture regen re-runs the full install flow) creates the row.
-# Confirmed live (VR suite regression, 2026-08-04): every real
-# `composer test:fixture-regen` bakes in whatever real wall-clock moment
-# that regen happened to run at, so admin-album's own committed VR
-# baseline (its page displays this column raw, via
-# CatModifyPageRenderer's own INFO_LAST_MODIFIED) silently drifts by
-# however many real days have passed since the fixture was last
-# regenerated -- the exact same class of drift the "CREATED" card
-# (activity.occured_on, a real INSERT column) was already fixed
-# for by routing pwg_activity() through pwg_now() instead. lastmodified
-# has no PHP-level equivalent (MySQL applies it after any statement
-# completes, with no INSERT-time override available for a fresh row),
-# so it's normalized here instead, the same "correct known-nondeterministic
-# fixture state at import time" pattern as galleries_url above -- matches
-# whatever value admin-album's own current .snap baseline was captured
-# against, so this needs to change in lockstep with that baseline, not
-# independently.
+# The galleries_url/categories.lastmodified corrections every fresh
+# reimport needs live in tests/Support/FixtureNormalizer.php, run below
+# via tools/normalize-fixture.php -- the same shared implementation
+# IntegrationTestCase::loadFixture() uses for its own separate,
+# non-shell-script import path, so both stay in lockstep. See that
+# class's own docblock for why each correction is needed.
 
 set -euo pipefail
 
@@ -107,18 +80,6 @@ if [ "${PIWIGO_DB_DRIVER:-mysqli}" = "pgsql" ]; then
   until psql "${psql_args[@]}" -c "SELECT COUNT(*) FROM images;" > /dev/null 2>&1; do
     sleep 0.5
   done
-
-  psql "${psql_args[@]}" -c "UPDATE sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
-
-  # categories has a real BEFORE UPDATE trigger (trg_categories_lastmodified,
-  # Phase B's port of MySQL's `ON UPDATE CURRENT_TIMESTAMP`) that
-  # unconditionally sets NEW.lastmodified = now() on every UPDATE,
-  # silently clobbering this literal value -- confirmed live. session_replication_role
-  # = replica (already used the same way, for FK checks, elsewhere in this
-  # codebase) suppresses user-defined triggers for the duration of this one
-  # statement, the same way MySQL's own ON UPDATE CURRENT_TIMESTAMP has no
-  # such guard to bypass in the first place.
-  psql "${psql_args[@]}" -c "BEGIN; SET session_replication_role = replica; UPDATE categories SET lastmodified = '2026-08-02 00:00:00'; SET session_replication_role = DEFAULT; COMMIT;"
 else
   mysql_args=(-h"${PIWIGO_DB_HOST}" -u"${PIWIGO_DB_USER}")
   if [ -n "${PIWIGO_DB_PASSWORD:-}" ]; then
@@ -130,11 +91,9 @@ else
   until mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "SELECT COUNT(*) FROM images;" > /dev/null 2>&1; do
     sleep 0.5
   done
-
-  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
-
-  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE categories SET lastmodified = '2026-08-02 00:00:00';"
 fi
+
+php tools/normalize-fixture.php "${real_root}"
 
 sudo rm -rf _data/cache/piwigo.*/
 sudo rm -rf _data/combined/*

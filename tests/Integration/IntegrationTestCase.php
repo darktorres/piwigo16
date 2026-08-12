@@ -29,6 +29,7 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\FixtureNormalizer;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -432,17 +433,12 @@ abstract class IntegrationTestCase extends TestCase
         // replaced them.
         CachePools::config()->clear();
 
-        // `sites` id=1's own `galleries_url` is committed in the
-        // fixture as an absolute filesystem path (Piwigo\Core\Paths::$root
-        // . 'galleries/', matching exactly what Admin\Install\InstallWizard
-        // seeds it with on a real install) -- inherently tied to wherever
-        // *that* install's checkout lived, not portable data. Every
-        // checkout of this repo lives at a different path, so this is
-        // corrected here, at fixture-load time (same "environment-injected,
-        // never fixture-baked" treatment as PIWIGO_TEST_NOW), rather than
-        // left for whichever test happens to read it first to discover it's
-        // stale. tools/reimport-fixture.sh applies the identical correction
-        // for its own separate (shell, not PHPUnit) import path.
+        // FixtureNormalizer::apply() is the one shared implementation of
+        // "what does a fresh reimport need corrected" -- also used by
+        // tools/reimport-fixture.sh (via tools/normalize-fixture.php) for
+        // the Browser/Visual suites' own separate, non-PHPUnit import
+        // path, so both stay in lockstep instead of drifting apart as 2
+        // independently-written implementations.
         //
         // dirname(__DIR__, 2) rather than a real, container-bound Paths->root:
         // ContractTestCase (a real loadFixture() caller) never calls
@@ -454,10 +450,7 @@ abstract class IntegrationTestCase extends TestCase
         // tests/Browser/CatModifyPageRendererTest.php both already use for
         // the identical "this checkout's real root" value -- self-contained,
         // no initialization-order dependency.
-        DbConnection::build()->executeStatement(
-            'UPDATE sites SET galleries_url = ? WHERE id = 1',
-            [dirname(__DIR__, 2) . '/galleries/']
-        );
+        FixtureNormalizer::apply(DbConnection::build(), $this->dbDriver, dirname(__DIR__, 2) . '/');
 
         $this->settleDatabase();
     }
@@ -727,8 +720,6 @@ abstract class IntegrationTestCase extends TestCase
      * Requires PIWIGO_BASE_URL, same as every other real-HTTP-request helper
      * on this class.
      */
-    // Not yet adopted by any subclass.
-    // @phpstan-ignore shipmonk.deadMethod
     protected function assertNoPhpErrors(): void
     {
         $this->requireBaseUrl();

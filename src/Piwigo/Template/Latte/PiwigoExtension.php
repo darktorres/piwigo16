@@ -649,7 +649,13 @@ final class PiwigoExtension extends Extension
         if ($labelIds) {
             $idAttr = ' id="' . $name . '_' . preg_replace('/\W/', '_', $valueStr) . '"';
         }
-        $input = '<input type="radio" name="' . $name . '" value="' . $valueStr . '"' . $idAttr . $checked . $extraAttrs . '>' . $labelStr;
+        // Self-closing ' />' (XHTML style), not a plain '>' -- matches
+        // Smarty's own html_radios/html_checkboxes shared implementation
+        // (vendor/smarty/smarty/src/FunctionHandler/HtmlBase.php's
+        // `$_output .= $extra . ' />' . $output;`), confirmed live: this
+        // is the first real caller (profile_content.tpl's "Expand all
+        // albums" radios) to actually exercise this since the P31.1 port.
+        $input = '<input type="radio" name="' . $name . '" value="' . $valueStr . '"' . $idAttr . $checked . $extraAttrs . ' />' . $labelStr;
         if ($labels) {
             return '<label' . ($labelIds ? ' for="' . $name . '_' . preg_replace('/\W/', '_', $valueStr) . '"' : '') . '>' . $input . '</label>';
         }

@@ -520,10 +520,15 @@ and got its own type fix (`summary_id` AUTO_INCREMENT PK) separately.
 migration, ICU MessageFormat pluralization. A 2026-07-13 audit found
 `src/Piwigo/Template/` (8 classes with real logic — `Template`,
 `ScriptLoader`, `CssLoader`, `FileCombiner`, `Combinable`, `Css`,
-`Script`, `PwgTemplateAdapter`) had zero dedicated Unit test coverage,
-only indirect exercise via the Browser suite. Fixed in the pre-P23
-remediation pass — all 8 classes have real `tests/Unit/Template/`
-coverage now.
+`Script`, `PwgTemplateAdapter` — the last renamed `TemplateAdapter` on
+2026-08-11, `d2d5b72398`, part of a broader same-day sweep dropping
+leftover `Pwg`-prefixed legacy names repo-wide, alongside the separate
+WS-layer rename noted in Epoch F below) had zero dedicated Unit test
+coverage, only indirect exercise via the Browser suite. Fixed in the
+pre-P23 remediation pass — all 8 classes have real `tests/Unit/Template/`
+coverage now. (`Template/` has grown since — `CurrentTemplate.php`,
+`LatteEngine.php` — neither part of this specific 8-class/coverage
+finding.)
 
 ### Epoch E — Service layer (P17–P23)
 
@@ -1153,11 +1158,22 @@ accessor over raw offset access" discipline SEC-40 already established:
    real `Session\FlashBag` class — write during request N via `add()`,
    consume-once on N+1 via `consume()`, peek without consuming via
    `peek()`. Worth porting directly rather than redesigning.
-3. **WS method `$params` arrays** — 97 methods across 11 `Ws/Pwg*.php`
-   files take a raw `array $params` indexed by string key, with zero
-   typed accessors; each already has a full param-type schema at its
-   `addMethod()` registration site in `WsDefaultMethods.php`, a
-   ready-made scaffold for one `{Method}Params` DTO per method. The
+3. **WS method `$params` arrays** — stale filenames: the `Ws/Pwg*.php`
+   naming this item cites doesn't exist anymore — the `Pwg` prefix was
+   dropped repo-wide from the WS layer on 2026-08-11 (`89054d2b8d`
+   and 3 sibling commits: `PwgTags.php`→`Tags.php`,
+   `PwgUsers.php`→`Users.php`, `PwgCore`→`Core`, `PwgError`→`WsErrorResponse`,
+   etc.) — real files today are `Ws/{Categories,Comments,Core,Extensions,
+   Groups,Images,Permissions,Tags,Users}.php` plus supporting classes
+   (`WsDefaultMethods`, `WsErrorResponse`, `WsHelper`, `WsInitializer`,
+   `RequestHandler`, `Server`, `NamedArray`, `NamedStruct` — 17 files
+   total in `Ws/`, matching this item's original file-count order of
+   magnitude). The method count also drifted: `WsDefaultMethods.php` has
+   95 `addMethod()` registrations today, not 97. Substance of the finding
+   is unaffected — still a raw `array $params` indexed by string key,
+   zero typed accessors, each with a full param-type schema at its
+   registration site, a ready-made scaffold for one `{Method}Params` DTO
+   per method. The
    reference implementation has already built this, for real, for 95 of
    its WS methods: a `{Method}Params implements WsParams` DTO (`fromArray()`
    factory) paired with a `{Method}Handler implements WsAction`
@@ -1173,8 +1189,9 @@ accessor over raw offset access" discipline SEC-40 already established:
    longer be checked against source; needs a fresh count before scoping.
    A second, previously-uncounted sub-population exists beyond the
    repository layer: roughly two-thirds of the files doing this are Page
-   Renderers/Controllers/`Ws/Pwg*.php` classes running raw SQL inline,
-   not repositories at all.
+   Renderers/Controllers/`Ws/*.php` classes (the `Pwg`-prefixed names —
+   see item 3 above — were dropped repo-wide 2026-08-11) running raw SQL
+   inline, not repositories at all.
 
 Full per-item detail, exact reader-file lists, and the deptrac constraint
 on where new `Session`-exposed VOs may legally live all live in the
@@ -1295,8 +1312,8 @@ class — the events themselves don't need inventing, only a real
 plugin/theme registration surface wired onto dispatch machinery that
 already exists. `ws_add_methods` (the WS extensibility hook) turns out
 to already be just another typed event (`Ws/Event/WsAddMethods.php`,
-carrying a live `PwgServer`) — no separate WS plugin API needs
-designing. The 7 "bundled extensions" the original plan named
+carrying a live `Piwigo\Ws\Server` — `PwgServer` before the 2026-08-11 WS
+rename) — no separate WS plugin API needs designing. The 7 "bundled extensions" the original plan named
 (AdminTools, LocalFilesEditor, TakeATour, language_switch, elegant,
 modus, smartpocket) are all confirmed to exist in the sibling catalogs,
 version-pinned in lockstep with a specific core release.
@@ -1695,7 +1712,7 @@ which means directly verified in code.
 | SEC-04 | P4 | Ship `robots.txt` | Done |
 | SEC-05 | P4 | Brotli compression | Done |
 | SEC-06 | P4 | `Cache-Control: immutable` for hashed assets | Done |
-| SEC-07 | P5 | Replace `mt_rand()` with `random_int()` | Done for security-sensitive uses — 7 `mt_rand()` calls remain project-wide, but each is non-security-sensitive (temp-filename uniqueness, cache-busting query params, probabilistic log-sampling gates, or picking a *length* parameter for a value that itself comes from `random_bytes()`/`generateKey()`, e.g. `Ws\PwgUsers.php`'s auto-generated password). None are the actual entropy source for a security-relevant token |
+| SEC-07 | P5 | Replace `mt_rand()` with `random_int()` | Done for security-sensitive uses — 7 `mt_rand()` calls remain project-wide, but each is non-security-sensitive (temp-filename uniqueness, cache-busting query params, probabilistic log-sampling gates, or picking a *length* parameter for a value that itself comes from `random_bytes()`/`generateKey()`, e.g. `Ws\Users.php`'s auto-generated password — `PwgUsers.php` before the 2026-08-11 WS rename, confirmed still `mt_rand(15, 20)` at line 444 today). None are the actual entropy source for a security-relevant token |
 | SEC-08 | P5/P17–P23 | Replace loose `==` with `===` (manual, per-domain) | Done |
 | SEC-09 | P5 | `#[\SensitiveParameter]` on secret-carrying params | Partial: only `Users\UserService.php` and `Auth\PasswordService.php` use the attribute anywhere in `src/Piwigo/`. Real gaps found: `Auth\AuthService::tryLogUser()`/`::pwgLogin()` — the actual login entry points — take `?string $password` unguarded; `Db\DbCredentials`'s constructor holds the real DB password unguarded; 4 Request DTOs (`IdentificationSubmitRequest`/`RegisterSubmitRequest`/`PasswordRequest`/`UserBootstrapRequest`) hold raw passwords in unguarded constructor-promoted properties. Any exception thrown during login or DB-connection setup would currently leak the plaintext password into that exception's stack-trace args (visible to logs/Sentry) |
 | SEC-10 | P9→P17–P23 | Remove `addslashes()` superglobal sanitization | Done |

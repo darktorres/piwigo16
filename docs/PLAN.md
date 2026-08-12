@@ -232,37 +232,48 @@ exists — so "gating is moot" still holds, but "dropped as a dependency"
 no longer does; see `docs/REFERENCE.md`'s Psalm entry, which needs the
 same correction.
 
-**`mdetect.php`'s removal left device detection entirely unimplemented,
-not just library-free.** `Core\DeviceHelper::getDevice()` has a single
-writer and it unconditionally sets `'desktop'` on every new session — no
-User-Agent parsing exists anywhere in this codebase, so `'mobile'`/
-`'tablet'` are never produced automatically; the only path to the mobile
-theme is an explicit `?mobile=1` query param a visitor has to already
-know to use. The reference implementation (`../piwigo16-rewrite`) kept
-`mobiledetect/mobiledetectlib` and built a real `Http\DeviceDetectionService`
-on top of it (`MobileDetect::isTablet()`/`isMobile()`, cached in the
-session same as this fork's design). Fix: reintroduce
-`mobiledetect/mobiledetectlib` (or an equivalent native-platform check)
-and give `DeviceHelper::getDevice()` a real classification path instead
-of the static default.
+**This finding's own "Fix" contradicts the code's own documented
+rationale — flagging the contradiction, not resolving it.**
+`Core\DeviceHelper::getDevice()`'s facts are still accurate: it has a
+single writer, unconditionally sets `'desktop'` on every new session, no
+User-Agent parsing exists anywhere in this codebase, and the only path to
+the mobile theme is an explicit `?mobile=1` query param. But the method's
+own inline comment states this is deliberate, not unimplemented: "No
+UA-sniffing library (removed, no replacement...): the v17 responsive CSS
+removes the need for a separate mobile theme via device detection.
+`mobileTheme()` still honors an explicit `?mobile=1/0` override
+independent of this default." That comment predates this finding (traced
+to `915c6fec43`, a `docs(reference)` audit commit). The reference
+implementation (`../piwigo16-rewrite`) kept `mobiledetect/mobiledetectlib`
+and built a real `Http\DeviceDetectionService` on it, which this
+finding's "Fix" recommends reintroducing — but nothing in this repo's own
+history explains whether that reference approach was deliberately
+rejected in favor of the responsive-CSS design the code now documents, or
+whether the comment is itself just unvalidated rationale nobody reversed.
+Same shape as the `LocalConfigOverrides` finding elsewhere in this doc:
+flagging precisely rather than guessing which one is the real intent.
 
-**Rector's rule set is still a P0 placeholder, despite P5 being "Done."**
-`rector.php`'s own header comment says "Rule selection below is
-deliberately provisional; P5 designs the real strategy from scratch," but
-`withPhpSets()`/`withPreparedSets()` are commented out and exactly one
-trivial rule (`RemoveUselessAliasInUseStatementRector`) is live — Rector
-was applied once during P5 (`chore(p5): apply Rector instanceOf set`)
-but the config was never left enforcing anything ongoing. The reference
-implementation runs a real, continuously-enforced set: `withPhpSets(php85:
-true)`, `withComposerBased(doctrine: true, phpunit: true, symfony: true)`,
-`SetList::TYPE_DECLARATION`, plus explicit strict-types/dead-tag-removal
-rules. Separately, this fork's `phpstan.neon` has no
-`phpstan/phpstan-deprecation-rules` include — the reference's does, giving
-it automatic, project-wide detection of any call to a `@deprecated`-tagged
-method (vendor or first-party), something this fork's singleton/DI
-campaign instead had to track by hand via a shrinking arch-test
-allow-list. Fix: design the real Rector rule set P5's own comment
-promised, and add `phpstan/phpstan-deprecation-rules` to `phpstan.neon`.
+**Both halves of this finding are resolved, not a P0 placeholder
+anymore.** `rector.php` no longer carries the "deliberately provisional"
+header at all — live config has `withPhpSets(php85: true)` and
+`withPreparedSets(typeDeclarations: true, instanceOf: true)` both active
+(not commented out), plus `withImportNames()` and `withParallel()`,
+neither part of the original finding. Landed in two real commits
+(`c49a00014d` "Apply Rector's PHP 8.5 rule set across the codebase",
+`0bfc324f59` "Apply Rector's typeDeclarations and instanceOf prepared
+sets" — both ran the rules and applied their fixes tree-wide, not just
+flipped a config flag) with one real regression along the way: an
+intermediate commit (`6cf68f157b`) briefly commented both back out again
+while doing an unrelated FQCN-import sweep, before the two commits above
+re-enabled them for good. Still narrower than the reference
+implementation's set (no `withComposerBased(doctrine: true, phpunit:
+true, symfony: true)`, no explicit `SetList::TYPE_DECLARATION` or
+strict-types/dead-tag-removal rules) and the `rector` CI job stays
+`continue-on-error: true` (non-blocking) regardless of rule-set
+richness — so there's still real headroom, just not "essentially
+unconfigured" anymore. Separately, `phpstan/phpstan-deprecation-rules`
+**is** in `composer.json` today (`^2.0`) — the doc's second claim ("no
+`phpstan/phpstan-deprecation-rules` include") no longer holds either.
 
 **Direct consequence of the Rector gap above: every PHP 7.1/8.3/8.4/8.5
 language feature with a real candidate site is still unadopted.** A full
@@ -289,17 +300,20 @@ found:
 - **`json_validate()` (PHP 8.3)** — not yet audited for real candidates:
   any `json_decode($x) !== null`-only-for-validity check (never using the
   decoded value) is a direct replacement.
-- **Property hooks + asymmetric visibility (PHP 8.4)** —
-  `Config\CurrentConfig`'s 294 properties are each a private property +
-  named getter + named setter (5225 lines total) purely because callers
-  use method-call syntax (`$config->activateComments()`) everywhere, not
-  property access. Adopting either feature needs two things resolved
-  first, not just a mechanical rewrite: (1) the call-site convention
-  changes project-wide to `$config->activateComments`, and (2)
-  `ConfigService::confUpdateParam()`'s external `ReflectionMethod`-based
-  write path (`CurrentConfig::set{Property}()`) needs retargeting at
-  hooks instead of methods (PHP 8.4's reflection API supports this, just
-  a different call than what's used today).
+- **Property hooks + asymmetric visibility (PHP 8.4) — done, not a
+  candidate anymore.** Both prerequisites this entry named are resolved:
+  `Config\CurrentConfig` now declares every property `public
+  private(set) TYPE $name` directly (confirmed: 0 remaining `public
+  function get`/`public function set` methods in the file, down from
+  5225 lines to 2626 — real getter/setter boilerplate removed, not just
+  reformatted); the class's own docblock states this outright ("Every
+  real config key is a real typed property (PHP 8.4 property hooks +
+  asymmetric visibility)"). Call sites converted project-wide
+  (`e6bdedf369`, "call-site sweep for CurrentConfig property syntax");
+  `ConfigService::confUpdateParam()`'s external write path now uses
+  `ReflectionProperty`+`setValue()` directly against the asymmetric-visibility
+  property, not a `ReflectionMethod` call to a setter — exactly the
+  retarget this entry said was still needed.
 - **`array_find`/`array_any`/`array_all`/`array_find_key` (PHP 8.4)** —
   not yet audited for real candidates: likely `foreach`+`break` and
   `array_filter()`+count-check patterns across the domain services would
@@ -526,30 +540,24 @@ renderers, Menu, PluginConfig, Section, Job. Each domain's legacy
 `include/` file was deleted immediately after its migration, not batched
 to the end.
 
-**A gap in P19's own scope, not previously documented**: `Common` (the
-last item in Tier 3's own list above) was never built on this branch, at
-all, under any name — `src/Piwigo/Common/` doesn't exist. This isn't the
-inert placeholder `docs/REFERENCE.md`'s Architecture section describes as
-"reserved, no classes yet" — the original plan's `Common` scope was a
-real typed-primitives layer: path/id/email value objects (`AbsPath`,
-`RelPath`, `CategoryId`, `CommentId`, `Email`, `Md5Sum`), domain enums
-(`Privacy`, `Section`, `SortOrder`, `UserStatus`), and generic DTOs
-(`PaginatedResult<T>`, `UserGroupPair`) — confirmed real and substantial
-by checking `16.x-rewrite` (the reference branch, present in this same
-repo's git history), which did build all of it. None of it exists on
-`17.x-rewrite`, under `Common` or any other namespace: only 3 scattered,
-domain-specific enums exist anywhere (`Admin\Extensions\ExtensionType`,
-`Routing\RouteMatchStatus`, `Users\UserStatus` — the last one is a real,
-if partial, analog for one `Common\Enum` case, placed in its own domain
-rather than centralized), no path/id/email value-object layer at all, and
-no generic paginated-result DTO (repositories return plain arrays/counts
-for pagination instead — see the "Typed DTO/Projection pattern" note
-below, which undersold how much of this is actually missing since it
-only checked for at-least-one typed accessor per repository, not a
-systematic VO layer). **Open, not closed**: whether this was a deliberate
-scope cut (no decision record exists for it) or simply never circled
-back to, same shape as the `LocalConfigOverrides` finding below —
-flagging precisely rather than guessing. No gaps otherwise found in
+**Largely closed since 2026-07-27 — this section describing it as an
+open, undocumented gap is itself now stale.** `Common` (the last item in
+Tier 3's own list above) is real today: `src/Piwigo/Common/` exists with
+`ValueObject/` (19 files — `CategoryId`, `CommentId`, `Email`, `GroupId`,
+`ImageId`, `IpAddress`, `LangCode`, `Md5Sum`, `NumericId`, `Permalink`,
+`PluginId`, `SqlDate`, `SqlDateTime`, `SqlTime`, `StringVo`, `TagId`,
+`ThemeId`, `UserId`, `Username`), `Enum/` (`Section`, `SortOrder`), and
+`Dto/` (`PaginatedResult`, `UserGroupPair`) — built starting with
+`063fd2ae30` ("build the typed-primitives VO/enum/DTO layer",
+2026-07-27) and extended by at least two follow-up commits
+(`7442956d34` adding `IpAddress`, `9bee81a071` adding `SqlTime`). **Not
+fully closed**, though: two of the originally-named items are still
+genuinely missing — no `AbsPath`/`RelPath` path-value-object layer exists
+anywhere in `src/Piwigo` (checked), and no centralized `Privacy` enum
+exists either (only `Users\UserStatus` stays domain-local, as already
+noted). So the real state is "mostly built, two specific gaps remain,"
+not "never built at all" — this section needs a rewrite reflecting that,
+not a full retraction. No gaps otherwise found in
 P17–P19; P20 had one (below).
 
 **P21 — Admin controller migration.** "62 admin pages" was never a

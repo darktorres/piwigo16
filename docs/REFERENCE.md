@@ -573,13 +573,16 @@ P5's completion status; the CI file itself hasn't been revisited to make
 either job blocking since. Psalm has no CI job at all (gating was never
 reconsidered, and would be moot regardless — see "Psalm gating is moot,
 not just paused" under Key design decisions), even though the dependency
-itself is installed again. Rector's own rule set is narrower than
-"non-blocking" implies: `rector.php` has `withPhpSets()`/
-`withPreparedSets()` commented out, leaving exactly one trivial rule
-live (`RemoveUselessAliasInUseStatementRector`) — the `rector` job runs
-and reports, but checks almost nothing. `phpstan.neon` also has no
-`phpstan/phpstan-deprecation-rules` include, so PHPStan doesn't flag
-calls to `@deprecated`-tagged methods anywhere in the codebase.
+itself is installed again. Rector's rule set is real again too, not the
+placeholder it once was: `rector.php` has `withPhpSets(php85: true)` and
+`withPreparedSets(typeDeclarations: true, instanceOf: true)` both active
+(`c49a00014d`/`0bfc324f59`, both applied tree-wide, not just enabled) —
+still narrower than the reference implementation's set (no
+`withComposerBased`, no explicit `SetList::TYPE_DECLARATION`), and the
+`rector` job stays non-blocking regardless, but it checks real rules now,
+not almost nothing. `phpstan/phpstan-deprecation-rules` is in
+`composer.json` (`^2.0`) too, so PHPStan does flag calls to
+`@deprecated`-tagged methods project-wide.
 
 Every DB-backed job gets a real ephemeral `mysql:9.7` service container,
 fixture imported fresh via `mysql < tests/Fixtures/piwigo-17.0.sql`.

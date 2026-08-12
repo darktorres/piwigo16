@@ -198,12 +198,6 @@ final readonly class BatchManagerUnitPageRenderer
             $collection = $batchManagerUnitRequest->selection;
         }
 
-        $template->setFilenames(
-            [
-                'batch_manager_unit' => 'batch_manager_unit.tpl',
-            ]
-        );
-
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
         // $catElementsId is a list of scalar image ids; narrowed once here
@@ -496,6 +490,6 @@ final readonly class BatchManagerUnitPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocEndElementSetUnit());
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_unit');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_unit.latte');
     }
 }

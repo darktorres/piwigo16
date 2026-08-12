@@ -544,8 +544,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             }
         }
 
-        // Real, live case: search_filters.inc.tpl's own {include
-        // file='themes/admin/default/template/include/album_selector.inc.tpl'}
+        // Real, live case: search_filters.inc.latte's own {include
+        // $ROOT_PATH . 'themes/admin/default/template/include/album_selector.inc.latte'}
         // -- a full, project-root-relative path reaching across into a
         // different theme entirely, not resolvable against this instance's
         // own (single-theme) $templateDirs chain. Smarty resolves this the
@@ -974,7 +974,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->assign('ROOT_URL', self::urlService()->getRootUrl());
         // ROOT_PATH is the .tpl-side equivalent of PHPWG_ROOT_PATH for
         // the handful of templates that need a real filesystem existence
-        // check (datepicker.inc.tpl/photos_add_direct.tpl's own
+        // check (datepicker.inc.tpl's own
         // `{if $ROOT_PATH|@cat:...|@file_exists}`), not a URL -- ROOT_URL
         // above is request-relative and wrong for file_exists().
         $this->smarty->assign('ROOT_PATH', $this->paths->root);

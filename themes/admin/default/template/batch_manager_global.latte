@@ -1,44 +1,44 @@
-{include file='include/datepicker.inc.tpl' load_mode='async'}
-{include file='include/colorbox.inc.tpl' load_mode='footer'}
-{include file='include/add_album.inc.tpl' load_mode='async'}
+{include 'include/datepicker.inc.latte', load_mode: 'async'}
+{include 'include/colorbox.inc.latte', load_mode: 'footer'}
+{include 'include/add_album.inc.latte', load_mode: 'async'}
 
-{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 
-{combine_script id='jquery.progressBar' load='async' path='themes/default/js/plugins/jquery.progressbar.min.js'}
-{combine_script id='jquery.ajaxmanager' load='async' path='themes/default/js/plugins/jquery.ajaxmanager.js'}
+{do combineScript(id: 'jquery.progressBar', load: 'async', path: 'themes/default/js/plugins/jquery.progressbar.min.js')}
+{do combineScript(id: 'jquery.ajaxmanager', load: 'async', path: 'themes/default/js/plugins/jquery.ajaxmanager.js')}
 
-{combine_script id='batchManagerGlobal' load='async' require='jquery,datepicker,jquery.colorbox,addAlbum,doubleSlider' path='themes/admin/default/js/batchManagerGlobal.js'}
+{do combineScript(id: 'batchManagerGlobal', load: 'async', require: 'jquery,datepicker,jquery.colorbox,addAlbum,doubleSlider', path: 'themes/admin/default/js/batchManagerGlobal.js')}
 
-{footer_script}
+{capture $tmpFooterScript}
 var lang = {
-	Cancel: '{'Cancel'|translate|escape:'javascript'}',
-	deleteProgressMessage: "{'Deletion in progress'|translate|escape:'javascript'}",
-	syncProgressMessage: "{'Synchronization in progress'|translate|escape:'javascript'}",
-	AreYouSure: "{'Are you sure?'|translate|escape:'javascript'}",
-  generateMsg: "{'Generate multiple size images'|@translate}"
+	Cancel: '{='Cancel'|translate|escapeJavascript|noescape}',
+	deleteProgressMessage: "{='Deletion in progress'|translate|escapeJavascript|noescape}",
+	syncProgressMessage: "{='Synchronization in progress'|translate|escapeJavascript|noescape}",
+	AreYouSure: "{='Are you sure?'|translate|escapeJavascript|noescape}",
+  generateMsg: "{='Generate multiple size images'|translate|noescape}"
 };
 
 jQuery(document).ready(function() {
 
   {* <!-- TAGS --> *}
   var tagsCache = new TagsCache({
-    serverKey: '{$CACHE_KEYS.tags}',
-    serverId: '{$CACHE_KEYS._hash}',
+    serverKey: '{$CACHE_KEYS['tags']}',
+    serverId: '{$CACHE_KEYS['_hash']}',
     rootUrl: '{$ROOT_URL}'
   });
 
   tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
-    'Add': '{'Create'|translate}'
+    'Add': '{='Create'|translate|noescape}'
   }});
 
   {* <!-- CATEGORIES --> *}
   window.categoriesCache = new CategoriesCache({
-    serverKey: '{$CACHE_KEYS.categories}',
-    serverId: '{$CACHE_KEYS._hash}',
+    serverKey: '{$CACHE_KEYS['categories']}',
+    serverId: '{$CACHE_KEYS['_hash']}',
     rootUrl: '{$ROOT_URL}'
   });
-  
-  var associated_categories = {$associated_categories|@json_encode};
+
+  var associated_categories = {$associated_categories|json_encode|noescape};
 
   categoriesCache.selectize(jQuery('[data-selectize=categories]'), {
     filter: function(categories, options) {
@@ -63,14 +63,14 @@ jQuery(document).ready(function() {
 
 var nb_thumbs_page = {$nb_thumbs_page};
 var nb_thumbs_set = {$nb_thumbs_set};
-var applyOnDetails_pattern = "{'on the %d selected photos'|@translate}";
+var applyOnDetails_pattern = "{='on the %d selected photos'|translate|noescape}";
 var all_elements = [{if !empty($all_elements)}{$all_elements|join:","}{/if}];
 
-var selectedMessage_pattern = "{'%d of %d photos selected'|@translate}";
-var selectedMessage_none = "{'No photo selected, %d photos in current set'|@translate}";
-var selectedMessage_all = "{'All %d photos are selected'|@translate}";
-const str_add_alb_associate = "{"Add Album"|@translate}";
-const str_select_alb_associate = "{"Select an album"|@translate}";
+var selectedMessage_pattern = "{='%d of %d photos selected'|translate|noescape}";
+var selectedMessage_none = "{='No photo selected, %d photos in current set'|translate|noescape}";
+var selectedMessage_all = "{='All %d photos are selected'|translate|noescape}";
+const str_add_alb_associate = "{="Add Album"|translate|noescape}";
+const str_select_alb_associate = "{="Select an album"|translate|noescape}";
 
 $(document).ready(function() {
   function checkPermitAction() {
@@ -149,7 +149,7 @@ $(document).ready(function() {
     if ($(this).val() == "delete" || $(this).val() == "delete_derivatives") {
       $("#confirmDel").css("visibility", "visible");
     } else {
-      $("#confirmDel").css("visibility", "hidden");  
+      $("#confirmDel").css("visibility", "hidden");
     }
   });
 
@@ -302,34 +302,34 @@ $(document).ready(function() {
     jQuery("#sync_md5sum").toggle(jQuery(this).val() == "no_sync_md5sum");
   });
 });
-{/footer_script}
+{/capture}
+{do footerScript($tmpFooterScript)}
 
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
-{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
+{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
+{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 
 <div id="batchManagerGlobal">
-  <form action="{$F_ACTION}" method="post">
+  <form action="{$F_ACTION|noescape}" method="post">
   <input type="hidden" name="start" value="{$START}">
   <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
-  {include file='include/batch_manager_filter.inc.tpl' 
-  title={'Batch Manager Filter'|@translate}
-  searchPlaceholder={'Filters'|@translate}
-  }
+  {var $filterTitle = ('Batch Manager Filter'|translate)}
+  {var $filterSearchPlaceholder = ('Filters'|translate)}
+  {include 'include/batch_manager_filter.inc.latte', title: $filterTitle, searchPlaceholder: $filterSearchPlaceholder}
   <fieldset>
 
-    <legend><span class='icon-check icon-blue '></span>{'Selection'|@translate}</legend>
+    <legend><span class='icon-check icon-blue '></span>{='Selection'|translate}</legend>
 
   {if !empty($thumbnails)}
   <p id="checkActions">
 {if $nb_thumbs_set > $nb_thumbs_page}
-    <a href="#" id="selectAll">{'The whole page'|@translate}</a>
-    <a href="#" id="selectSet">{'The whole set'|@translate}</a>
+    <a href="#" id="selectAll">{='The whole page'|translate}</a>
+    <a href="#" id="selectSet">{='The whole set'|translate}</a>
 {else}
-    <a href="#" id="selectAll">{'All'|@translate}</a>
+    <a href="#" id="selectAll">{='All'|translate}</a>
 {/if}
-    <a href="#" id="selectNone">{'None'|@translate}</a>
-    <a href="#" id="selectInvert">{'Invert'|@translate}</a>
+    <a href="#" id="selectNone">{='None'|translate}</a>
+    <a href="#" id="selectInvert">{='Invert'|translate}</a>
 
     <span id="selectedMessage"></span>
 
@@ -338,29 +338,30 @@ $(document).ready(function() {
   </p>
 
 	<ul class="thumbnails">
-		{html_style}
-UL.thumbnails SPAN.wrap2{ldelim}
+		{capture $tmpHtmlStyle}
+UL.thumbnails SPAN.wrap2{
   width: {$thumb_params->maxWidth()+2}px;
 }
-UL.thumbnails SPAN.wrap2 {ldelim}
+UL.thumbnails SPAN.wrap2 {
   height: {$thumb_params->maxHeight()+25}px;
 }
-		{/html_style}
-		{foreach from=$thumbnails item=thumbnail}
-		{assign var='isSelected' value=$thumbnail.id|@in_array:$selection}
+		{/capture}
+		{do htmlStyle($tmpHtmlStyle)}
+		{foreach $thumbnails as $thumbnail}
+		{var $isSelected = ($thumbnail['id']|in_array:$selection)}
 		<li{if $isSelected} class="thumbSelected"{/if}>
 			<span class="wrap1">
 				<label class="font-checkbox">
-					<span class="icon-check"></span><input type="checkbox" name="selection[]" value="{$thumbnail.id}" {if $isSelected}checked="checked"{/if}>
+					<span class="icon-check"></span><input type="checkbox" name="selection[]" value="{$thumbnail['id']}" {if $isSelected}checked="checked"{/if}>
 					<span class="wrap2">
 					<div class="actions">
-            <a href="{$thumbnail.U_EDIT}" target="_blank" class="icon-pencil" title="{'Edit photo'|@translate}"></a>
-            <a href="{$thumbnail.FILE_SRC}" class="preview-box icon-zoom-square" title="{'Zoom'|@translate}"></a>
+            <a href="{$thumbnail['U_EDIT']}" target="_blank" class="icon-pencil" title="{='Edit photo'|translate}"></a>
+            <a href="{$thumbnail['FILE_SRC']|noescape}" class="preview-box icon-zoom-square" title="{='Zoom'|translate}"></a>
           </div>
-						{if $thumbnail.level > 0}
-						<em class="levelIndicatorF" title="{'Who can see these photos?'|@translate} : ">{'Level %d'|@sprintf:$thumbnail.level|@translate}</em>
+						{if $thumbnail['level'] > 0}
+						<em class="levelIndicatorF" title="{='Who can see these photos?'|translate} : ">{='Level %d'|sprintf:$thumbnail['level']|translate}</em>
 						{/if}
-						<img src="{$thumbnail.thumb->getUrl()}" alt="{$thumbnail.file}" title="{$thumbnail.TITLE|@escape:'html'}" {$thumbnail.thumb->getSizeHtm()}>
+						<img src="{$thumbnail['thumb']->getUrl()}" alt="{$thumbnail['file']}" title="{$thumbnail['TITLE']}" {$thumbnail['thumb']->getSizeHtm()|noescape}>
 					</span>
 				</label>
 			</span>
@@ -371,58 +372,58 @@ UL.thumbnails SPAN.wrap2 {ldelim}
   {if !empty($navbar) }
   <div class="batchManager-pagination">
     <div class="pagination-per-page">
-      <span>{'display'|@translate}</span>
-      <a href="{$U_DISPLAY}&amp;display=20">20</a>
-      <a href="{$U_DISPLAY}&amp;display=50">50</a>
-      <a href="{$U_DISPLAY}&amp;display=100">100</a>
-      <a href="{$U_DISPLAY}&amp;display=all">{'all'|@translate}</a>
+      <span>{='display'|translate}</span>
+      <a href="{$U_DISPLAY|noescape}&amp;display=20">20</a>
+      <a href="{$U_DISPLAY|noescape}&amp;display=50">50</a>
+      <a href="{$U_DISPLAY|noescape}&amp;display=100">100</a>
+      <a href="{$U_DISPLAY|noescape}&amp;display=all">{='all'|translate}</a>
     </div>
 
-    {include file='navigation_bar.tpl'|@get_extent:'navbar'}
+    {include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}
   </div>
   {/if}
 
   {else}
-  <div class="selectionEmptyBlock">{'No photo in the current set.'|@translate}</div>
+  <div class="selectionEmptyBlock">{='No photo in the current set.'|translate}</div>
   {/if}
   </fieldset>
 
   <fieldset id="action">
 
-    <legend><span class='icon-cog icon-red'></span>{'Action'|@translate}</legend>
-      <div id="forbidAction"{if count($selection) != 0} style="display:none"{/if}>{'No photos selected, no actions possible.'|@translate}</div>
+    <legend><span class='icon-cog icon-red'></span>{='Action'|translate}</legend>
+      <div id="forbidAction"{if count($selection) != 0} style="display:none"{/if}>{='No photos selected, no actions possible.'|translate}</div>
       <div id="permitAction"{if count($selection) == 0} style="display:none"{/if}>
-    
+
     <div class="permitActionListButton">
       <div>
         <select name="selectAction">
-          <option value="-1">{'Choose an action'|@translate}</option>
+          <option value="-1">{='Choose an action'|translate}</option>
           <option disabled="disabled">------------------</option>
-          <option value="delete" class="icon-trash">{'Delete selected photos'|@translate}</option>
-          <option value="associate">{'Associate to album'|@translate}</option>
-          <option value="move">{'Move to album'|@translate}</option>
+          <option value="delete" class="icon-trash">{='Delete selected photos'|translate}</option>
+          <option value="associate">{='Associate to album'|translate}</option>
+          <option value="move">{='Move to album'|translate}</option>
       {if !empty($associated_categories)}
-          <option value="dissociate">{'Dissociate from album'|@translate}</option>
+          <option value="dissociate">{='Dissociate from album'|translate}</option>
       {/if}
-          <option value="add_tags">{'Add tags'|@translate}</option>
+          <option value="add_tags">{='Add tags'|translate}</option>
       {if !empty($associated_tags)}
-          <option value="del_tags">{'remove tags'|@translate}</option>
+          <option value="del_tags">{='remove tags'|translate}</option>
       {/if}
-          <option value="author">{'Set author'|@translate}</option>
-          <option value="title">{'Set title'|@translate}</option>
-          <option value="date_creation">{'Set creation date'|@translate}</option>
-          <option value="level" class="icon-lock">{'Who can see these photos?'|@translate} ({'Privacy level'|translate})</option>
-          <option value="metadata">{'Synchronize metadata'|@translate}</option>
-      {if ($IN_CADDIE)}
-          <option value="remove_from_caddie">{'Remove from caddie'|@translate}</option>
+          <option value="author">{='Set author'|translate}</option>
+          <option value="title">{='Set title'|translate}</option>
+          <option value="date_creation">{='Set creation date'|translate}</option>
+          <option value="level" class="icon-lock">{='Who can see these photos?'|translate} ({='Privacy level'|translate})</option>
+          <option value="metadata">{='Synchronize metadata'|translate}</option>
+      {if $IN_CADDIE}
+          <option value="remove_from_caddie">{='Remove from caddie'|translate}</option>
       {else}
-          <option value="add_to_caddie">{'Add to caddie'|@translate}</option>
+          <option value="add_to_caddie">{='Add to caddie'|translate}</option>
       {/if}
-    		<option value="delete_derivatives">{'Delete multiple size images'|@translate}</option>
-    		<option value="generate_derivatives">{'Generate multiple size images'|@translate}</option>
+    		<option value="delete_derivatives">{='Delete multiple size images'|translate}</option>
+    		<option value="generate_derivatives">{='Generate multiple size images'|translate}</option>
       {if !empty($element_set_global_plugins_actions)}
-        {foreach from=$element_set_global_plugins_actions item=action}
-          <option value="{$action.ID}">{$action.NAME}</option>
+        {foreach $element_set_global_plugins_actions as $action}
+          <option value="{$action['ID']}">{$action['NAME']}</option>
         {/foreach}
       {/if}
         </select>
@@ -430,13 +431,13 @@ UL.thumbnails SPAN.wrap2 {ldelim}
       <p id="confirmDel" style="visibility:hidden">
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="confirm_deletion" value="1"> {'Are you sure?'|@translate}</input>
+          <input type="checkbox" name="confirm_deletion" value="1"> {='Are you sure?'|translate}</input>
         </label><br/><br/>
-        <span class="errors" style="visibility:hidden;margin:0;">{"You need to confirm deletion"|translate}</span>
+        <span class="errors" style="visibility:hidden;margin:0;">{="You need to confirm deletion"|translate}</span>
       </p>
       <p id="applyActionBlock" style="display:none;margin:1em 0 0 0;" class="actionButtons">
         <button id="applyAction" name="submit" type="submit" class="buttonLike">
-          <i class="icon-cog-alt"></i> {'Apply action'|translate}
+          <i class="icon-cog-alt"></i> {='Apply action'|translate}
         </button>
 
         <span id="applyOnDetails"></span>
@@ -450,7 +451,7 @@ UL.thumbnails SPAN.wrap2 {ldelim}
       <!-- associate -->
       <div id="action_associate" class="bulkAction">
         <div class="head-button-2 icon-plus-circled" id="associate_as">
-          <p>{"Select an album"|translate}</p>
+          <p>{="Select an album"|translate}</p>
         </div>
         <div class="selected-associate-action">
         </div>
@@ -458,20 +459,20 @@ UL.thumbnails SPAN.wrap2 {ldelim}
 
       <!-- move -->
       <div id="action_move" class="bulkAction">
-        <select data-selectize="categories" data-default="" name="move" style="width:600px" placeholder="{'Select an album... or type it!'|@translate}"></select>
-        <a href="#" data-add-album="move" title="{'create a new album'|@translate}" class="icon-plus"></a>
+        <select data-selectize="categories" data-default="" name="move" style="width:600px" placeholder="{='Select an album... or type it!'|translate}"></select>
+        <a href="#" data-add-album="move" title="{='create a new album'|translate}" class="icon-plus"></a>
       </div>
 
       <!-- dissociate -->
       <div id="action_dissociate" class="bulkAction">
-        <select data-selectize="categories" placeholder="{'Type in a search term'|translate}"
+        <select data-selectize="categories" placeholder="{='Type in a search term'|translate}"
           name="dissociate" style="width:600px"></select>
       </div>
 
 
       <!-- add_tags -->
       <div id="action_add_tags" class="bulkAction">
-        <select data-selectize="tags" data-create="true" placeholder="{'Type in a search term'|translate}"
+        <select data-selectize="tags" data-create="true" placeholder="{='Type in a search term'|translate}"
           name="add_tags[]" multiple style="width:400px;"></select>
       </div>
 
@@ -479,9 +480,9 @@ UL.thumbnails SPAN.wrap2 {ldelim}
       <div id="action_del_tags" class="bulkAction">
   {if !empty($associated_tags)}
         <select data-selectize="tags" name="del_tags[]" multiple style="width:400px;"
-          placeholder="{'Type in a search term'|translate}">
-        {foreach from=$associated_tags item=tag}
-          <option value="{$tag.id}">{$tag.name}</option>
+          placeholder="{='Type in a search term'|translate}">
+        {foreach $associated_tags as $tag}
+          <option value="{$tag['id']}">{$tag['name']}</option>
         {/foreach}
         </select>
   {/if}
@@ -489,19 +490,19 @@ UL.thumbnails SPAN.wrap2 {ldelim}
 
       <!-- author -->
       <div id="action_author" class="bulkAction">
-      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_author"> {'remove author'|@translate}</label>
-      <input type="text" class="large" name="author" placeholder="{'Type here the author name'|@translate}">
+      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_author"> {='remove author'|translate}</label>
+      <input type="text" class="large" name="author" placeholder="{='Type here the author name'|translate}">
       </div>
 
       <!-- title -->
       <div id="action_title" class="bulkAction">
-      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_title"> {'remove title'|@translate}</label>
-      <input type="text" class="large" name="title" placeholder="{'Type here the title'|@translate}">
+      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_title"> {='remove title'|translate}</label>
+      <input type="text" class="large" name="title" placeholder="{='Type here the title'|translate}">
       </div>
 
       <!-- date_creation -->
       <div id="action_date_creation" class="bulkAction">
-        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_date_creation"> {'remove creation date'|@translate}</label><br>
+        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_date_creation"> {='remove creation date'|translate}</label><br>
         <div id="set_date_creation">
           <input type="hidden" name="date_creation" value="{$DATE_CREATION}">
           <label>
@@ -514,7 +515,7 @@ UL.thumbnails SPAN.wrap2 {ldelim}
       <!-- level -->
       <div id="action_level" class="bulkAction">
           <select name="level" size="1">
-            {html_options options=$level_options selected=$level_options_selected}
+            {=htmlOptions(options: $level_options, selected: $level_options_selected)}
           </select>
       </div>
 
@@ -525,11 +526,11 @@ UL.thumbnails SPAN.wrap2 {ldelim}
       <!-- generate derivatives -->
       <div id="action_generate_derivatives" class="bulkAction">
         <div class="deleteDerivButtons">
-          <a href="javascript:selectGenerateDerivAll()">{'All'|@translate}</a>
-          <a href="javascript:selectGenerateDerivNone()">{'None'|@translate}</a>
+          <a href="javascript:selectGenerateDerivAll()">{='All'|translate}</a>
+          <a href="javascript:selectGenerateDerivNone()">{='None'|translate}</a>
         </div>
         <br>
-        {foreach from=$generate_derivatives_types key=type item=disp}
+        {foreach $generate_derivatives_types as $type => $disp}
           <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="generate_derivatives_type[]" value="{$type}"> {$disp}</label>
         {/foreach}
       </div>
@@ -537,20 +538,20 @@ UL.thumbnails SPAN.wrap2 {ldelim}
       <!-- delete derivatives -->
       <div id="action_delete_derivatives" class="bulkAction">
         <div class="deleteDerivButtons">
-          <a href="javascript:selectDelDerivAll()">{'All'|@translate}</a>
-          <a href="javascript:selectDelDerivNone()">{'None'|@translate}</a>
+          <a href="javascript:selectDelDerivAll()">{='All'|translate}</a>
+          <a href="javascript:selectDelDerivNone()">{='None'|translate}</a>
         </div>
         <br>
-        {foreach from=$del_derivatives_types key=type item=disp}
+        {foreach $del_derivatives_types as $type => $disp}
           <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="{$type}"> {$disp}</label>
         {/foreach}
       </div>
 
       <!-- plugins -->
   {if !empty($element_set_global_plugins_actions)}
-    {foreach from=$element_set_global_plugins_actions item=action}
-      <div id="action_{$action.ID}" class="bulkAction">
-      {if !empty($action.CONTENT)}{$action.CONTENT}{/if}
+    {foreach $element_set_global_plugins_actions as $action}
+      <div id="action_{$action['ID']}" class="bulkAction">
+      {if !empty($action['CONTENT'])}{$action['CONTENT']|noescape}{/if}
       </div>
     {/foreach}
   {/if}
@@ -558,7 +559,7 @@ UL.thumbnails SPAN.wrap2 {ldelim}
     </div> <!-- #permitAction -->
     <div id="regenerationMsg" class="bulkAction" style="display:none;margin-left:0;">
         <div id="regenerationStatus" style="margin-bottom:10px;">
-          <span id="regenerationText">{'Generate multiple size images'|@translate}</span>
+          <span id="regenerationText">{='Generate multiple size images'|translate}</span>
           <span class="badge-number" style="font-size:12.8px"></span>
         </div>
         <input type="hidden" name="regenerateSuccess" value="0">
@@ -575,7 +576,7 @@ UL.thumbnails SPAN.wrap2 {ldelim}
   </form>
 
 </div> <!-- #batchManagerGlobal -->
-{include file='include/album_selector.inc.tpl'}
+{include 'include/album_selector.inc.latte'}
 
 <style>
 #action_move .selectize-input {
@@ -599,7 +600,7 @@ UL.thumbnails SPAN.wrap2 {ldelim}
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
   color: black;
-  
+
   border-left: 1px solid transparent;
 
 }

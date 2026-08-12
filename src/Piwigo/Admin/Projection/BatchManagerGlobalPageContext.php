@@ -16,7 +16,7 @@ use Piwigo\Image\DerivativeParams;
  * inside its own `count($cat_elements_id) > 0` branch, omitted here (not
  * present as a null value) to match that exact original behavior.
  * `$thumbnails` is always included (even empty) since
- * `batch_manager_global.tpl` reads it with `{if !empty($thumbnails)}`,
+ * `batch_manager_global.latte` reads it with `{if !empty($thumbnails)}`,
  * not `isset()`.
  */
 final readonly class BatchManagerGlobalPageContext implements TemplatePageContext

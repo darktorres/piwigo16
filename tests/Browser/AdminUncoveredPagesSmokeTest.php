@@ -239,7 +239,7 @@ it('batch manager unit mode shows the caddie prefilter active by default with an
     // add one" text is genuinely CSS `display:none` by default
     // (themes/admin/default/theme.css) and is only ever toggled visible
     // by JS after the user removes every filter client-side, a state a
-    // plain GET request can never reach. batch_manager_filter.inc.tpl's
+    // plain GET request can never reach. batch_manager_filter.inc.latte's
     // own "Empty caddie" link, by contrast, is server-rendered WITHOUT
     // any display:none precisely when $filter.prefilter === 'caddie' (the
     // real default here), so it's the correct, deterministic signal for

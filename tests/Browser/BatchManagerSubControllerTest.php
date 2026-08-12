@@ -1257,7 +1257,7 @@ it('aggregates portrait/square/panorama ratio buckets from real distinct image d
     $page = H::navigateOk($page, '/admin.php?page=batch_manager');
     $html = H::settledContent($page);
 
-    // batch_manager_filter.inc.tpl only ever renders these `<a
+    // batch_manager_filter.inc.latte only ever renders these `<a
     // class="slider-choice" ...>` ratio-bucket links inside their own
     // `{if isset($dimensions.ratio_*)}` guard -- their mere presence
     // proves the portrait/square/panorama keys got set. The template's

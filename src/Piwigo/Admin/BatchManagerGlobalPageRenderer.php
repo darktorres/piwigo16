@@ -456,10 +456,6 @@ final readonly class BatchManagerGlobalPageRenderer
             }
         }
 
-        $template->setFilenames([
-            'batch_manager_global' => 'batch_manager_global.tpl',
-        ]);
-
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
         // $catElementsId is a list of scalar image ids; narrowed once here
@@ -601,6 +597,6 @@ final readonly class BatchManagerGlobalPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocEndElementSetGlobal());
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_global');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_global.latte');
     }
 }

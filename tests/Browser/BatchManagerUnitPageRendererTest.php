@@ -268,7 +268,7 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
     try {
         $page = H::loginAsAdmin($this);
 
-        // batch_manager_unit.tpl only renders the per-page pagination
+        // batch_manager_unit.latte only renders the per-page pagination
         // links at all inside a `{if !empty($elements)}` guard -- with
         // the default, unfiltered (empty caddie) filter this file's own
         // top docblock documents, $elements is empty and the whole block
@@ -301,7 +301,7 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
         $page->assertNoJavaScriptErrors();
         H::assertNoServerErrors($page, 'batch_manager unit-mode per-page fallback-to-5');
 
-        // per_page drives batch_manager_unit.tpl's own pagination-size
+        // per_page drives batch_manager_unit.latte's own pagination-size
         // links -- the "5" link only gets the selected-pagination class
         // when $per_page === 5, a real behavioral signal that the
         // fallback (not the unconfigured config value 7, and not a

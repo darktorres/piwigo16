@@ -108,10 +108,10 @@ final readonly class ProfileController implements ControllerInterface
         // Load language if cookie is set from login/register/password pages.
         // This block
         // used to run much later in this method, *after*
-        // assignVarFromHandle('PROFILE_CONTENT', 'profile_content')
-        // below -- Smarty's assignVarFromHandle() renders the referenced
+        // assignVarFromTemplate('PROFILE_CONTENT', 'profile_content.latte')
+        // below -- assignVarFromTemplate() renders the referenced
         // template immediately (not lazily deferred to the final page
-        // render), so profile_content.tpl was always rendered with
+        // render), so profile_content.latte was always rendered with
         // whatever language was active BEFORE this switch, and the
         // Lang::load() call had no effect on anything the response actually
         // showed. Moved to run first, before $userdata/any template
@@ -159,7 +159,7 @@ final readonly class ProfileController implements ControllerInterface
         $default_user = $this->userService->getDefaultUserInfo();
         $default_user = $default_user instanceof DefaultUserInfo ? array_intersect_key($default_user->toArray(), array_flip($fields)) : [];
 
-        // profile.tpl's inline JS (preferencesDefaultValues) interpolates
+        // profile.latte's inline JS (preferencesDefaultValues) interpolates
         // these bare/unquoted, relying on the *old* enum('true','false')
         // string rendering as the literal JS tokens true/false -- a real
         // bool would render as PHP's own `1`/`` instead, so render the
@@ -186,15 +186,12 @@ final readonly class ProfileController implements ControllerInterface
         $this->pageState->errors = array_values($page_errors);
 
         $this->pageState->setBodyId('theProfilePage');
-        $template->setFilename('profile', 'profile.tpl');
-        $template->setFilename('profile_content', 'profile_content.tpl');
-
         $profileFormHandler->loadIntoTemplate(
             $this->urlService->getRootUrl() . 'profile.php', // action
             $this->urlService->makeIndexUrl(), // for redirect
             $userdata
         );
-        $template->assignVarFromHandle('PROFILE_CONTENT', 'profile_content');
+        $template->assignVarFromTemplate('PROFILE_CONTENT', 'profile_content.latte');
 
         $urlService = $this->urlService;
 
@@ -241,7 +238,7 @@ final readonly class ProfileController implements ControllerInterface
         $this->eventDispatcher->dispatchNotify(new LocEndProfile());
         $this->htmlService
             ->flushPageMessages();
-        $template->parse('profile', false);
+        $template->parse('profile.latte', false);
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

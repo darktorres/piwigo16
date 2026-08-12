@@ -91,7 +91,7 @@ final class PasswordController implements ControllerInterface
 
     /**
      * Field-keyed, controller-local -- read by specific key
-     * ('password_page_error'/'password_form_error') in password.tpl, a
+     * ('password_page_error'/'password_form_error') in password.latte, a
      * different shape than PageState::$errors' plain list<string>. Shared
      * across the private handler methods below via this property since
      * they're all called from the same __invoke(). The lockout branch of
@@ -203,7 +203,7 @@ final class PasswordController implements ControllerInterface
         // *inline* error branches (expired code, valid code with no
         // resolvable user_id, valid code but reset-not-allowed-for-user) --
         // each already queues a password_form_error message meant to render
-        // right here on password.tpl, not to be silently discarded by this
+        // right here on password.latte, not to be silently discarded by this
         // "you never had a pending code at all" guard. Provably safe: this
         // guard is only ever reached with action==='lost_code' after a
         // submission when processPasswordRequest() returned false while the
@@ -246,10 +246,6 @@ final class PasswordController implements ControllerInterface
         }
 
         $this->pageState->setBodyId('thePasswordPage');
-
-        $template->setFilenames([
-            'password' => 'password.tpl',
-        ]);
 
         $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
@@ -309,7 +305,7 @@ final class PasswordController implements ControllerInterface
             ->flushPageMessages();
         $this->htmlService
             ->flushKeyedErrors($formErrors);
-        $template->parse('password', false);
+        $template->parse('password.latte', false);
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

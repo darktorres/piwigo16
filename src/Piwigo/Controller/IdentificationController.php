@@ -82,7 +82,7 @@ final readonly class IdentificationController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         // Field-keyed, controller-local -- read by specific key
-        // ('login_page_error'/'login_form_error') in identification.tpl, a
+        // ('login_page_error'/'login_form_error') in identification.latte, a
         // different shape than PageState::$errors' plain list<string>.
         $errors = [];
 
@@ -171,10 +171,6 @@ final readonly class IdentificationController implements ControllerInterface
         $title = $this->lang->t('Identification');
         $this->pageState->setBodyId('theIdentificationPage');
 
-        $template->setFilenames([
-            'identification' => 'identification.tpl',
-        ]);
-
         $register = null;
         if (! $this->currentConfig->galleryLocked && $this->currentConfig->allowUserRegistration) {
             $register = $urlService->getRootUrl() . 'register.php';
@@ -242,7 +238,7 @@ final readonly class IdentificationController implements ControllerInterface
             ->flushPageMessages();
         $this->htmlService
             ->flushKeyedErrors($errors);
-        $template->parse('identification', false);
+        $template->parse('identification.latte', false);
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

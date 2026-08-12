@@ -83,7 +83,7 @@ final readonly class RegisterController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         // Field-keyed, controller-local -- read by specific key
-        // ('register_page_error'/'register_form_error') in register.tpl, a
+        // ('register_page_error'/'register_form_error') in register.latte, a
         // different shape than PageState::$errors' plain list<string>.
         $errors = [];
 
@@ -239,9 +239,6 @@ final readonly class RegisterController implements ControllerInterface
         $title = $this->lang->t('Registration');
         $this->pageState->setBodyId('theRegisterPage');
 
-        $template->setFilenames([
-            'register' => 'register.tpl',
-        ]);
         $themeconf = $template->getTemplateVars('themeconf');
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
         if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
@@ -299,7 +296,7 @@ final readonly class RegisterController implements ControllerInterface
             ->flushPageMessages();
         $this->htmlService
             ->flushKeyedErrors($errors);
-        $template->parse('register');
+        $template->parse('register.latte');
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body, $status);

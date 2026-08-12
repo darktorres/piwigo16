@@ -167,7 +167,16 @@ test('findIdsByClause() returns a list of ints', function (): void {
 });
 
 test('findIdsByClause() returns empty for no match', function (): void {
-    expect(searchTestRepo()->findIdsByClause('id', 'images i', 'id > ?', [99999]))->toBe([]);
+    // Structurally impossible (id > 10 and id < 10 can never both hold),
+    // not a bare high threshold like 'id > 99999' -- several OTHER
+    // Unit-suite files deliberately use ids well above that (e.g.
+    // ImageServiceTest.php's 760001/750001) specifically to stay clear
+    // of the fixture's own low ids, which an unbounded-above condition
+    // here could catch mid-test under --parallel (confirmed live: this
+    // exact test raced against ImageServiceTest.php this way). This
+    // condition matches nothing regardless of what any row's real id
+    // ever is, so no threshold can ever need raising again.
+    expect(searchTestRepo()->findIdsByClause('id', 'images i', 'id > ? AND id < ?', [10, 10]))->toBe([]);
 });
 
 test('findRowsByClause() returns full rows', function (): void {

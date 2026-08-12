@@ -303,167 +303,197 @@ test('findImageIdsForTagIds() matches the fixture', function (): void {
 });
 
 test('deleteImageTagByTagIds() is a no-op for no ids', function (): void {
+    // A disposable tag, not one of the fixture's own shared 1/2/3 --
+    // those are the exact terms other Unit-suite files search for by
+    // name (SearchServiceTest.php's 'nature'/'travel'/'family'
+    // assertions), so temporarily linking a real fixture tag here is
+    // directly observable by those tests under --parallel (confirmed
+    // live: this exact test raced against SearchServiceTest.php's
+    // 'family' search this way -- linking tag 3 to image 4 mid-test
+    // made a concurrent 'family' search return image 4 as a spurious
+    // extra match).
+    $repo = tagTestRepo();
+    $tagId = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
     $conn->insert('image_tag', [
         'image_id' => 4,
-        'tag_id' => 3,
+        'tag_id' => $tagId->value,
+    ]);
+    $conn->insert('image_tag', [
+        'image_id' => 5,
+        'tag_id' => $tagId->value,
     ]);
 
     try {
-        tagTestRepo()->deleteImageTagByTagIds([]);
+        $repo->deleteImageTagByTagIds([]);
 
-        // tag 3 (family) is also linked to image 1 in the fixture --
         // both links survive this no-op call. findImageIdsForTagIds()
         // carries no ORDER BY (order is not part of its contract -- both
         // real callers in TagService just treat the result as a set), so
         // sort before comparing, same idiom as the sibling test above.
-        $imageIds = tagTestRepo()
-            ->findImageIdsForTagIds([TagId::from(3)]);
+        $imageIds = $repo->findImageIdsForTagIds([$tagId]);
         sort($imageIds);
         expect($imageIds)
-            ->toBe([1, 4]);
+            ->toBe([4, 5]);
     } finally {
-        $conn->delete('image_tag', [
-            'image_id' => 4,
-            'tag_id' => 3,
-        ]);
+        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
+        $repo->deleteByIds([$tagId]);
     }
 });
 
 test('deleteImageTagByTagIds() removes every link to that tag', function (): void {
+    // Disposable tag -- see the sibling no-op test above for why a real
+    // fixture tag id isn't safe to borrow here.
+    $repo = tagTestRepo();
+    $tagId = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
     $conn->insert('image_tag', [
         'image_id' => 4,
-        'tag_id' => 3,
+        'tag_id' => $tagId->value,
     ]);
     $conn->insert('image_tag', [
         'image_id' => 5,
-        'tag_id' => 3,
+        'tag_id' => $tagId->value,
     ]);
 
     try {
-        tagTestRepo()->deleteImageTagByTagIds([TagId::from(3)]);
+        $repo->deleteImageTagByTagIds([$tagId]);
 
-        // family (tag 3) was also linked to image 1 in the fixture --
-        // that link must be gone too, not just the 2 disposable ones
-        // just added.
-        expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]))->toBe([]);
+        expect($repo->findImageIdsForTagIds([$tagId]))->toBe([]);
     } finally {
-        // restore the fixture's own image1<->tag3 link for later tests
-        $conn->insert('image_tag', [
-            'image_id' => 1,
-            'tag_id' => 3,
-        ]);
+        $repo->deleteByIds([$tagId]);
     }
 });
 
 test('deleteImageTagByImageIds() is a no-op for no ids', function (): void {
+    // Disposable tag -- see deleteImageTagByTagIds()'s no-op test above
+    // for why a real fixture tag id isn't safe to borrow here.
+    $repo = tagTestRepo();
+    $tagId = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
     $conn->insert('image_tag', [
+        'image_id' => 4,
+        'tag_id' => $tagId->value,
+    ]);
+    $conn->insert('image_tag', [
         'image_id' => 5,
-        'tag_id' => 2,
+        'tag_id' => $tagId->value,
     ]);
 
     try {
-        tagTestRepo()->deleteImageTagByImageIds([]);
+        $repo->deleteImageTagByImageIds([]);
 
-        // tag 2 is also linked to image 1 in the fixture -- both links
-        // survive this no-op call.
-        expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(2)]))->toBe([1, 5]);
+        // both links survive this no-op call.
+        $imageIds = $repo->findImageIdsForTagIds([$tagId]);
+        sort($imageIds);
+        expect($imageIds)
+            ->toBe([4, 5]);
     } finally {
-        $conn->delete('image_tag', [
-            'image_id' => 5,
-            'tag_id' => 2,
-        ]);
+        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
+        $repo->deleteByIds([$tagId]);
     }
 });
 
 test('deleteImageTagByImageIds() removes every link from that image', function (): void {
+    // 2 disposable tags, both linked to image 5, so the assertion below
+    // proves every link from that image is gone, not just one -- see
+    // deleteImageTagByTagIds()'s no-op test above for why real fixture
+    // tag ids aren't safe to borrow here.
+    $repo = tagTestRepo();
+    $tagIdA = $repo->insert(tagTestName(), tagTestName());
+    $tagIdB = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
     $conn->insert('image_tag', [
         'image_id' => 5,
-        'tag_id' => 2,
+        'tag_id' => $tagIdA->value,
     ]);
     $conn->insert('image_tag', [
         'image_id' => 5,
-        'tag_id' => 3,
-    ]);
-
-    tagTestRepo()
-        ->deleteImageTagByImageIds([5]);
-
-    expect(tagTestRepo()->findTagIdsByImageIds([5]))->toBe([]);
-});
-
-test('deleteImageTagByImageAndTagIds() is a no-op for empty image ids', function (): void {
-    $conn = DbConnection::build();
-    $conn->insert('image_tag', [
-        'image_id' => 4,
-        'tag_id' => 3,
+        'tag_id' => $tagIdB->value,
     ]);
 
     try {
-        tagTestRepo()->deleteImageTagByImageAndTagIds([], [TagId::from(3)]);
+        $repo->deleteImageTagByImageIds([5]);
 
-        expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]))->toBe([1, 4]);
+        expect($repo->findTagIdsByImageIds([5]))->toBe([]);
     } finally {
-        $conn->delete('image_tag', [
-            'image_id' => 4,
-            'tag_id' => 3,
-        ]);
+        $repo->deleteByIds([$tagIdA, $tagIdB]);
+    }
+});
+
+test('deleteImageTagByImageAndTagIds() is a no-op for empty image ids', function (): void {
+    // Disposable tag -- see deleteImageTagByTagIds()'s no-op test above
+    // for why a real fixture tag id isn't safe to borrow here.
+    $repo = tagTestRepo();
+    $tagId = $repo->insert(tagTestName(), tagTestName());
+    $conn = DbConnection::build();
+    $conn->insert('image_tag', [
+        'image_id' => 4,
+        'tag_id' => $tagId->value,
+    ]);
+
+    try {
+        $repo->deleteImageTagByImageAndTagIds([], [$tagId]);
+
+        expect($repo->findImageIdsForTagIds([$tagId]))->toBe([4]);
+    } finally {
+        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
+        $repo->deleteByIds([$tagId]);
     }
 });
 
 test('deleteImageTagByImageAndTagIds() is a no-op for empty tag ids', function (): void {
+    // Disposable tag -- see deleteImageTagByTagIds()'s no-op test above
+    // for why a real fixture tag id isn't safe to borrow here.
+    $repo = tagTestRepo();
+    $tagId = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
     $conn->insert('image_tag', [
         'image_id' => 4,
-        'tag_id' => 3,
+        'tag_id' => $tagId->value,
     ]);
 
     try {
-        tagTestRepo()->deleteImageTagByImageAndTagIds([4], []);
+        $repo->deleteImageTagByImageAndTagIds([4], []);
 
-        expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]))->toBe([1, 4]);
+        expect($repo->findImageIdsForTagIds([$tagId]))->toBe([4]);
     } finally {
-        $conn->delete('image_tag', [
-            'image_id' => 4,
-            'tag_id' => 3,
-        ]);
+        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
+        $repo->deleteByIds([$tagId]);
     }
 });
 
 test('deleteImageTagByImageAndTagIds() removes only the intersection', function (): void {
-    // image 4 linked to both tag 2 and tag 3, but only (image 4, tag 3)
-    // (the requested image/tag intersection) should be removed -- the
-    // (image 4, tag 2) link must survive untouched.
+    // image 4 linked to 2 disposable tags, but only the (image 4, tagB)
+    // pair (the requested image/tag intersection) should be removed --
+    // the (image 4, tagA) link must survive untouched. See
+    // deleteImageTagByTagIds()'s no-op test above for why real fixture
+    // tag ids aren't safe to borrow here.
+    $repo = tagTestRepo();
+    $tagIdA = $repo->insert(tagTestName(), tagTestName());
+    $tagIdB = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
     $conn->insert('image_tag', [
         'image_id' => 4,
-        'tag_id' => 2,
+        'tag_id' => $tagIdA->value,
     ]);
     $conn->insert('image_tag', [
         'image_id' => 4,
-        'tag_id' => 3,
+        'tag_id' => $tagIdB->value,
     ]);
 
     try {
-        tagTestRepo()->deleteImageTagByImageAndTagIds([4], [TagId::from(3)]);
+        $repo->deleteImageTagByImageAndTagIds([4], [$tagIdB]);
 
-        // tag 2 is also linked to image 1 in the fixture -- that link
-        // survives alongside the (image 4, tag 2) one this test added.
-        expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(2)]))->toBe([1, 4]);
+        expect($repo->findImageIdsForTagIds([$tagIdA]))->toBe([4]);
 
-        $remaining = tagTestRepo()
-            ->findTagIdsByImageIds([4]);
+        $remaining = $repo->findTagIdsByImageIds([4]);
         expect($remaining)
             ->toHaveCount(1)
-            ->and($remaining[0]->tagId->value)->toBe(2);
+            ->and($remaining[0]->tagId->value)->toBe($tagIdA->value);
     } finally {
-        $conn->delete('image_tag', [
-            'image_id' => 4,
-            'tag_id' => 2,
-        ]);
+        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagIdA->value]);
+        $repo->deleteByIds([$tagIdA, $tagIdB]);
     }
 });
 
@@ -945,11 +975,17 @@ test('countAll() reflects a freshly inserted tag', function (): void {
 test('countAllImageTagLinks() reflects a freshly inserted link', function (): void {
     // Same same-connection, same-snapshot technique as countAll()'s own
     // sibling test above, for the identical reason -- see its comment.
+    // Uses a disposable tag, not a real fixture one (2/'travel') -- see
+    // deleteImageTagByTagIds()'s no-op test far above for why: the
+    // snapshot comparison itself is race-proof, but a real fixture tag's
+    // transient link is still observable by a concurrent search test
+    // during the window before this test's own cleanup runs.
     $conn = DbConnection::build();
     $repo = tagTestRepoFor($conn);
+    $tagId = $repo->insert(tagTestName(), tagTestName());
     $conn->insert('image_tag', [
         'image_id' => 5,
-        'tag_id' => 2,
+        'tag_id' => $tagId->value,
     ]);
 
     try {
@@ -968,7 +1004,8 @@ test('countAllImageTagLinks() reflects a freshly inserted link', function (): vo
     } finally {
         $conn->delete('image_tag', [
             'image_id' => 5,
-            'tag_id' => 2,
+            'tag_id' => $tagId->value,
         ]);
+        $repo->deleteByIds([$tagId]);
     }
 });

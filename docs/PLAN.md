@@ -122,7 +122,7 @@ onto the original scope.
 | P29 | Browserslist decision + legacy back-compat removal | Not started | 0 |
 | P30 | Asset-pipeline foundation (ScriptLoader/CssLoader/FileCombiner retirement + ViteManifest resolution) | Not started | 0 |
 | P31 | Smarty → Latte template migration | Done — all 139 real templates converted, Smarty engine fully removed (`smarty/smarty` dropped, `Template.php` Latte-only). Deferred asset-pipeline items (`ViteManifest`, `<picture>`, ThumbHash) out of scope, pick up under P29/P30/P43 | 80 |
-| P32 | Latte lint/format | Format-half landed (`tools/latte-prettier/`, real Prettier plugin, full 135/135 real-tree coverage); lint-half (`composer lint:latte` etc.) not started | 4 |
+| P32 | Latte lint/format | Format-half landed (`tools/latte-prettier/`, real Prettier plugin, full 135/135 real-tree coverage) and every one of the 126 reformatted templates manually reviewed line-by-line — 3 more real parser/printer bugs found this way, none caught by the automated checks; lint-half (`composer lint:latte` etc.) not started | 11 |
 | P33 | Latte idiomatic modernization | Not started | 0 |
 | P34 | Inline JS extraction | Not started | 0 |
 | P35 | Inline CSS extraction | Not started | 0 |
@@ -1566,6 +1566,79 @@ wired into `lefthook` pre-commit or CI — full coverage of *today's* tree
 doesn't cover templates P31 hasn't converted yet, and wiring in
 enforcement is a separate decision for whoever wants it next, not
 assumed here.
+
+**Format-half then manually reviewed, every file, line by line** — ran
+`format:latte:fix` across the whole tree and read all 126 changed files'
+diffs directly (not sampled: the automated checks above compare
+old-parse vs. new-parse with the *same* parser, so a systematic parser
+bug is invisible to them by construction). Found 3 more real bugs this
+way, all fixed and covered by the existing test/deep-review scripts
+after; full detail in `tools/latte-prettier/README.md`:
+- **The void-element fix above was too narrow.** `install.latte` had
+  `<td>...</options>` (a typo — `<options>` is never opened anywhere in
+  the tree), which isn't void, so it re-triggered the same
+  cascading-unclosed-ancestor flattening (td→tr→table→fieldset→form)
+  the void-element fix was supposed to have closed off. Real browsers
+  discard *any* closing tag whose name isn't in the current stack of
+  open elements, not just void ones — fixed by tracking a real
+  open-element-name stack and checking it before ever propagating a
+  mismatched closer upward (this subsumes the void-element case
+  entirely). Same bug, previously undetected, also found in
+  `batch_manager_unit.latte`, `photos_add_direct.latte`,
+  `picture_modify.latte`, `search_filters.inc.latte` — all four share an
+  `<a>`/`<div>` opened independently per `{if}`/`{else}` branch with one
+  closing tag after `{/if}`. First draft of this fix got "what to do
+  with a stray tag" backwards and started silently deleting
+  `footer.latte`'s real cross-file closing tags (the ones
+  `header.latte` opens) — caught by diffing the whole tree before/after
+  the fix rather than trusting the one file it was written against.
+- **Pure-CSS files** (`mail-css-clear.latte`, `mail-css-dark.latte`,
+  `global-mail-css.latte` — raw CSS embedded into a sibling template's
+  `<style>` block via `{$GLOBAL_MAIL_CSS|noescape}`, no HTML or Latte
+  tags anywhere) went through the normal prose-reflow path and got
+  their 100+ hand-formatted lines collapsed onto one unreadable line.
+  Harmless to rendering (CSS is whitespace-insensitive between tokens)
+  but destroyed readability/diffability — fixed by printing a `Document`
+  with no HTML/Latte content at all byte-verbatim instead.
+- **`{contentType text}` templates** (`mail/text/plain/*.latte` — output
+  *is* the literal email body, not markup) lost meaningful leading
+  whitespace on lines nested inside `{if}`/`{foreach}` bodies, because
+  indentation there was being re-derived from nesting depth like
+  everywhere else. Verified against the real Latte compiler (installed
+  in this repo, used directly rather than assumed) that this is a
+  genuine rendering difference: a line that's purely whitespace plus a
+  control tag is auto-trimmed by Latte regardless of indentation, but a
+  line carrying an output tag or literal text renders its leading
+  whitespace verbatim. Fixed by printing gaps byte-verbatim throughout a
+  `{contentType text}` document's body instead of recomputing them from
+  indent depth.
+
+Also verified, concretely rather than by inspection alone, that every
+genuinely cross-file-split template still composes correctly: the mail
+templates (`header.latte` + one of 3 possible content templates +
+`footer.latte`, for both `text/html` and `text/plain`, joined by raw
+PHP string concatenation in `MailService.php`) were rendered through the
+real Latte engine for all 3 content-template combinations and the
+concatenated output validated with a real HTML parser — content lands
+correctly inside `<body>`, zero structural errors.
+`check_integrity.latte`'s own unclosed `<dl>` (concatenated after
+`intro.latte`'s dashboard via `Template::concat()`) was confirmed
+pre-existing in the original source, not a formatter regression and not
+actually a cross-file structural dependency — just a standalone
+forgotten `</dl>` real browsers tolerate. A cross-check of the review
+log against the full changed-file list also caught a real gap — 10
+files (4 in `template-extension/`, 6 in `themes/admin/`) had been
+carried over as "already reviewed" from an earlier context without
+actually having been read; closed before calling the review done.
+
+End state: of the 135-file tree, 122 files remain modified pending
+commit (the other 4 — the three CSS files plus the one `{contentType
+text}` fix — came out byte-identical to their already well-formatted
+source once the bugs above were fixed, so they no longer show as
+changed). The 126 reformatted `.latte` files are deliberately **left
+uncommitted** — this pass was format-and-review only, not "commit the
+reformat"; only the `tools/latte-prettier/` source fixes themselves are
+committed, one per bug found.
 
 **P33 — Latte idiomatic modernization.** Not started. A content pass over
 templates once formatting is enforced — idiomatic Latte constructs,

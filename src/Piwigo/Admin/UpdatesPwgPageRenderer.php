@@ -182,7 +182,6 @@ final readonly class UpdatesPwgPageRenderer
             majorVersionPwg: $major_version_pwg,
             adminPageTitle: $this->lang->t('Updates'),
         ));
-        $template->setFilename('plugin_admin_content', 'updates_pwg.tpl');
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'plugin_admin_content');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'updates_pwg.latte');
     }
 }

@@ -66,9 +66,40 @@ function profileFormHandlerTestRrmdir(string $dir): void
             continue;
         }
         $path = $dir . '/' . $node;
-        is_dir($path) ? profileFormHandlerTestRrmdir($path) : unlink($path);
+        // is_link() checked first, not just is_dir() -- a symlink to a
+        // real directory (see profileFormHandlerTestRootWithRealThemesAndLanguage()
+        // below) also satisfies is_dir(), so recursing into it instead of
+        // unlinking the link itself would walk into and delete whatever
+        // real directory it points at.
+        if (is_link($path)) {
+            unlink($path);
+        } elseif (is_dir($path)) {
+            profileFormHandlerTestRrmdir($path);
+        } else {
+            unlink($path);
+        }
     }
     rmdir($dir);
+}
+
+/**
+ * Same throwaway-temp-root shape as profileFormHandlerTestRoot(), but
+ * symlinks `themes/`/`language/` to this checkout's own real directories
+ * instead of leaving them absent. checkThemeInstalled()/LangService::
+ * getLanguages() both do a genuine file_exists()/is_dir() check against
+ * Paths::root -- using the real project root directly for that (instead
+ * of symlinking into a temp one) would also redirect dataLocation's own
+ * templates_c compile-cache into the real checkout, confirmed live (a
+ * stray data/templates_c/ appeared in the repo root the one time this
+ * was tried directly).
+ */
+function profileFormHandlerTestRootWithRealThemesAndLanguage(): string
+{
+    $root = profileFormHandlerTestRoot();
+    symlink(dirname(__DIR__, 3) . '/themes', $root . 'themes');
+    symlink(dirname(__DIR__, 3) . '/language', $root . 'language');
+
+    return $root;
 }
 
 test('saveFromPost returns false immediately when the form was never submitted', function (): void {
@@ -130,6 +161,124 @@ test('loadIntoTemplate populates the real profile form template context', functi
             ->toBe('fixture_user')
             ->and($template->getTemplateVars('F_ACTION'))
             ->toBe('admin.php?page=user_list');
+    } finally {
+        CurrentTemplate::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
+        CurrentUserTestFactory::get()->reset();
+        Kernel::reset();
+        profileFormHandlerTestRrmdir($root);
+    }
+});
+
+/**
+ * [Mutation] Real gap, found via mutation testing: saveFromPost()'s own
+ * theme-validation guard (`in_array($post['theme'], array_keys(
+ * ThemeCatalog::getPwgThemes(...)), true)`) had zero direct Unit
+ * coverage before this test -- both tests above only reach the
+ * cheap-early-return / loadIntoTemplate() paths. AppInfo::DEFAULT_TEMPLATE
+ * ('default') is a real production account's only ever theme value
+ * today (see ThemeCatalog::getPwgThemes()'s own docblock) -- uses
+ * profileFormHandlerTestRootWithRealThemesAndLanguage() (not the plain
+ * empty-root helper the sibling tests use) specifically because
+ * checkThemeInstalled()/LangService::getLanguages() both need real
+ * `themes/default/`/`language/en_UK/` directories on disk to resolve
+ * 'default'/'en_UK' as valid at all, and because getPwgThemes()'s own
+ * synthesized entry for 'default' still passes through that same real
+ * filesystem check. Submits user 1's own real, current field values
+ * (fixture-confirmed via a direct query) so the resulting user_infos
+ * UPDATE is a genuine no-op, not a real state change needing its own
+ * before/after restore.
+ */
+test('saveFromPost accepts the default theme even though it has no themes-table row', function (): void {
+    $root = profileFormHandlerTestRootWithRealThemesAndLanguage();
+    unset($_POST['submit'], $_POST['mail_address'], $_POST['redirect']);
+    $_POST['validate'] = '1';
+    $_POST['theme'] = 'default';
+    $_POST['language'] = 'en_UK';
+    $_POST['nb_image_page'] = '15';
+    $_POST['recent_period'] = '7';
+    $_POST['expand'] = 'false';
+    $_POST['show_nb_hits'] = 'false';
+    $_POST['show_nb_comments'] = 'false';
+
+    try {
+        $handler = profileFormHandlerTestSubject();
+        $errors = [];
+
+        $result = $handler->saveFromPost([
+            'id' => 1,
+            'username' => 'fixture_admin',
+            'email' => null,
+            'language' => 'en_UK',
+        ], $errors);
+
+        expect($result)
+            ->toBeTrue()
+            ->and($errors)
+            ->toBe([]);
+    } finally {
+        unset(
+            $_POST['validate'],
+            $_POST['theme'],
+            $_POST['language'],
+            $_POST['nb_image_page'],
+            $_POST['recent_period'],
+            $_POST['expand'],
+            $_POST['show_nb_hits'],
+            $_POST['show_nb_comments'],
+        );
+        CurrentConfigTestFactory::get()->reset();
+        Kernel::reset();
+        profileFormHandlerTestRrmdir($root);
+    }
+});
+
+/**
+ * [Mutation] Render-side counterpart to the test above -- closes the
+ * same gap for loadIntoTemplate()'s own `template_options` (the theme
+ * <select>'s real option list, see ProfileFormPageContext::toArray()),
+ * not just the submit-time guard. Reuses
+ * profileFormHandlerTestRootWithRealThemesAndLanguage() rather than the
+ * sibling `loadIntoTemplate` test's own plain-empty-root helper, since
+ * that emptiness is exactly what would make checkThemeInstalled() filter
+ * the synthesized 'default' entry back out again.
+ */
+test('loadIntoTemplate includes the default theme as a real, selectable dropdown option', function (): void {
+    $root = profileFormHandlerTestRootWithRealThemesAndLanguage();
+    unset($_POST['submit']);
+
+    try {
+        $template = TemplateTestFactory::build();
+        CurrentTemplate::current()->set($template);
+        CurrentUserTestFactory::get()->set(new User(
+            id: UserId::from(1),
+            username: null,
+            email: null,
+            language: LangCode::from('en_UK'),
+            theme: ThemeId::from('default'),
+            status: UserStatus::Normal,
+            enabledHigh: false,
+        ));
+
+        $handler = profileFormHandlerTestSubject();
+
+        $handler->loadIntoTemplate('admin.php?page=user_list', 'admin.php?page=user_list', [
+            'id' => 1,
+            'username' => 'fixture_user',
+            'email' => null,
+            'theme' => 'default',
+            'language' => 'en_UK',
+            'nb_image_page' => 15,
+            'recent_period' => 7,
+            'expand' => false,
+            'show_nb_comments' => false,
+            'show_nb_hits' => false,
+        ]);
+
+        expect($template->getTemplateVars('template_options'))
+            ->toBe([
+                'default' => 'Default',
+            ]);
     } finally {
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();

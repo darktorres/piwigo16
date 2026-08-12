@@ -1541,8 +1541,13 @@ Still the governing process for whoever picks up P24+:
 
 **Risk register** (highest blast-radius remaining phases): P31 (Smarty →
 Latte across ~140 templates) risks visual regressions — mitigated by the
-committed VR baselines + a11y gate + per-template review, same mechanism
-already in daily use. P27 (plugin/theme contracts, god-class decomposition)
+committed VR baselines + per-template review, both a real, already-daily
+mechanism. **The "a11y gate" this line used to claim alongside them isn't
+one** — no automated accessibility tooling (`axe-core`, `pa11y`, or a
+Lighthouse `assert` block scoped to the a11y category) exists anywhere in
+this repo; `lighthouserc.json` is collect-only (see P45 below). What
+actually runs today is the VR baseline plus manual per-template review,
+nothing more. P27 (plugin/theme contracts, god-class decomposition)
 breaks external extensions by design — an accepted product decision, not
 an oversight; in-tree callers migrate in the same phase. Cross-cutting:
 MySQL 9.x is a non-LTS line — pin the exact server version, hedge via the

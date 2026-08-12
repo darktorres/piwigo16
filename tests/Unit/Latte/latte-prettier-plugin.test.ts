@@ -6,16 +6,26 @@ import { describe, expect, it } from "vitest";
 import plugin from "../../../tools/latte-prettier/plugin.cjs";
 import { parse } from "../../../tools/latte-prettier/parser.cjs";
 
-const THEMES_DIR = join(import.meta.dirname, "../../../themes");
+const REPO_ROOT = join(import.meta.dirname, "../../..");
+const THEMES_DIR = join(REPO_ROOT, "themes");
+// Matches format:latte/format:latte:fix's glob (package.json): every real
+// .latte file in the tree, not just themes/.
+const LATTE_ROOTS = ["themes", "template-extension"].map((d) =>
+  join(REPO_ROOT, d),
+);
 
-function findLatteFiles(dir: string): string[] {
+function findLatteFilesIn(dir: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...findLatteFiles(full));
+    if (entry.isDirectory()) out.push(...findLatteFilesIn(full));
     else if (entry.name.endsWith(".latte")) out.push(full);
   }
   return out;
+}
+
+function findLatteFiles(): string[] {
+  return LATTE_ROOTS.flatMap(findLatteFilesIn);
 }
 
 function format(src: string): Promise<string> {
@@ -43,7 +53,8 @@ function normalizeAst(node: unknown): unknown {
       k === "end" ||
       k === "quote" ||
       k === "selfClosing" ||
-      k === "unclosed"
+      k === "unclosed" ||
+      k === "unclosedAtEof"
     )
       continue;
     if (k === "value" && rec.type === "HtmlText") {
@@ -87,16 +98,17 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
 
   // Grammar coverage started at the 4 corpus files above and was extended,
   // one real root-caused construct at a time, until it reached full
-  // coverage of the tree (109/109 as of this writing). That's a hard
-  // requirement now, not a floor: P31 (Smarty -> Latte migration) is still
-  // in progress, so new templates keep landing. If one hits an unsupported
-  // construct, that's real signal — extend the grammar (see
-  // tools/latte-prettier/README.md's Architecture section for how the
-  // existing constructs were each added from real source, not guessed) or,
-  // if it's a deliberate carve-out, adjust this test with a clear reason at
-  // that time. Silent regression is what this guards against.
+  // coverage of the tree (135/135 across themes/ + template-extension/ as
+  // of this writing). That's a hard requirement now, not a floor: P31
+  // (Smarty -> Latte migration) is still in progress, so new templates keep
+  // landing. If one hits an unsupported construct, that's real signal —
+  // extend the grammar (see tools/latte-prettier/README.md's Architecture
+  // section for how the existing constructs were each added from real
+  // source, not guessed) or, if it's a deliberate carve-out, adjust this
+  // test with a clear reason at that time. Silent regression is what this
+  // guards against.
   it("formats every real .latte file in the tree without throwing", async () => {
-    const files = findLatteFiles(THEMES_DIR);
+    const files = findLatteFiles();
     const failures: string[] = [];
     for (const file of files) {
       try {
@@ -116,7 +128,7 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
   // equivalent to its original — a file that parses but silently mangles
   // content or never converges is a real bug, not a known gap.
   it("every real .latte file is idempotent and semantically unchanged", async () => {
-    const files = findLatteFiles(THEMES_DIR);
+    const files = findLatteFiles();
     const idempotencyFailures: string[] = [];
     const equivalenceFailures: string[] = [];
     for (const file of files) {

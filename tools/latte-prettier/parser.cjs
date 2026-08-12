@@ -598,6 +598,7 @@ function parseElement(s, inheritedStopKeywords) {
   let children = [];
   let rawText = false;
   let unclosed = false;
+  let unclosedAtEof = false;
   if (!selfClosing && !isVoid) {
     if (RAW_TEXT_ELEMENTS.has(lower)) {
       rawText = true;
@@ -620,6 +621,7 @@ function parseElement(s, inheritedStopKeywords) {
     // half of the same document — neither is an error here, just "unclosed".
     if (s.eof()) {
       unclosed = true;
+      unclosedAtEof = true;
     } else {
       const closeName = peekCloseTagName(s);
       if (closeName !== null && closeName.toLowerCase() === lower) {
@@ -642,6 +644,7 @@ function parseElement(s, inheritedStopKeywords) {
     voidElement: isVoid,
     rawText,
     unclosed,
+    unclosedAtEof,
     children,
     start,
     end: s.pos,
@@ -795,6 +798,8 @@ function parseLatteNode(s, head, listOpts) {
       return parseDo(s, start);
     case "breakIf":
       return parseBreakIf(s, start);
+    case "contentType":
+      return parseContentType(s, start);
     case "spaceless":
       return parseSpaceless(s, start, listOpts);
     case "capture":
@@ -960,6 +965,15 @@ function parseBreakIf(s, start) {
   const src = readTagBody(s).replace(/^breakIf\s+/, "");
   const cond = parseExprString(src);
   return { type: "LatteBreakIf", cond, start, end: s.pos };
+}
+
+// `{contentType text}` — a template-header pragma declaring the output
+// content type (real Piwigo markup: mail/text/plain/*.latte's plain-text
+// email templates). Always a bare identifier, not a general expression.
+function parseContentType(s, start) {
+  const src = readTagBody(s).replace(/^contentType\s+/, "");
+  const value = src.trim();
+  return { type: "LatteContentType", value, start, end: s.pos };
 }
 
 function parseDo(s, start) {

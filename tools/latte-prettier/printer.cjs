@@ -234,6 +234,10 @@ function printNode(node, options, mode = "block") {
         if (i > 0) parts.push(gapDoc(items[i].gapBefore));
         parts.push(items[i].kind === "text" ? textFillDoc(items[i].core) : printNode(items[i].node, options, "block"));
       }
+      // The one place responsible for "the file ends in exactly one
+      // newline" — deliberately not delegated to a descendant's own
+      // trailing-gap logic (see the unclosedAtEof note below), so it can't
+      // double-count with one.
       parts.push(hardline);
       return parts;
     }
@@ -248,7 +252,20 @@ function printNode(node, options, mode = "block") {
       }
       const b = computeBlock(node.children, options);
       if (!b) return [openTag, closeTag];
-      return [openTag, indent([b.leadBreak, ...b.inner]), b.trailBreak, closeTag];
+      // An element left open because parsing simply ran out of file (the
+      // header.latte/footer.latte split-fragment case, or this file's own
+      // deliberately-unclosed mail template) has no real closing tag for
+      // its trailing whitespace to precede — that whitespace is just
+      // incidental EOF fill, not meaningful formatting. Keeping it would
+      // double-count against the Document-level trailing hardline above on
+      // a second format pass (its "did the file already end in a newline"
+      // input keeps changing each time). An element left open because it's
+      // yielding to an *ancestor's* closing tag or Latte branch keyword
+      // (e.g. a <td> implicitly closing before {else}) is different: that
+      // trailing gap is real, meaningful spacing before whatever comes
+      // next, so it's preserved.
+      const trailBreak = node.unclosedAtEof ? "" : b.trailBreak;
+      return [openTag, indent([b.leadBreak, ...b.inner]), trailBreak, closeTag];
     }
 
     case "HtmlComment":
@@ -272,6 +289,9 @@ function printNode(node, options, mode = "block") {
 
     case "LatteBreakIf":
       return ["{breakIf ", exprToDoc(node.cond), "}"];
+
+    case "LatteContentType":
+      return ["{contentType ", node.value, "}"];
 
     case "LatteInclude": {
       const parts = ["{include ", exprToDoc(node.target)];

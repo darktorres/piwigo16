@@ -924,10 +924,17 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     // Kills line 211's ContinueToBreak. findPathsForFileDeletion() has
     // no ORDER BY, but a real WHERE id IN (a, b) lookup on an InnoDB
     // PRIMARY KEY is confirmed (live-probed) to walk the clustered index
-    // in ascending id order in practice -- explicit ids are chosen here
-    // (remote < local) specifically so the remote row is genuinely
-    // visited FIRST, making `continue` vs `break` observable via
-    // whether the local row after it still gets processed.
+    // in ascending id order in practice -- an adjacent, ascending pair
+    // (remote < local) so the remote row is genuinely visited FIRST,
+    // making `continue` vs `break` observable via whether the local row
+    // after it still gets processed. Randomized, not a hardcoded
+    // literal pair -- confirmed live: a fixed literal here previously
+    // hit a real Duplicate entry collision, and this test's own setup
+    // ran outside its try/finally, so the failure orphaned the row for
+    // the rest of that run, cascading into unrelated tests' own
+    // unbounded "every image" assertions elsewhere in the suite. The
+    // whole arrange-and-insert step now lives inside try/finally too,
+    // so any failure (setup or assertion alike) still cleans up.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -936,21 +943,23 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/afterremote.jpg', 'x');
 
-    $conn->executeStatement('DELETE FROM images WHERE id IN (760001, 760002)');
-    $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (760001, ?, ?)', ['remote.jpg', 'https://remote.example.test/remote.jpg']);
-    $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (760002, ?, ?)', ['afterremote.jpg', 'upload/2026/07/afterremote.jpg']);
+    $remoteId = random_int(600000, 649998);
+    $localId = $remoteId + 1;
 
     try {
+        $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (?, ?, ?)', [$remoteId, 'remote.jpg', 'https://remote.example.test/remote.jpg']);
+        $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (?, ?, ?)', [$localId, 'afterremote.jpg', 'upload/2026/07/afterremote.jpg']);
+
         $service = imageServiceTestNewService($repo, $conn, Paths::fromRoot($root));
         $urlService = new ImageServiceTestFakeUrlService();
 
-        $result = $service->deleteElementFiles([760001, 760002], $urlService);
+        $result = $service->deleteElementFiles([$remoteId, $localId], $urlService);
 
         expect($result)
-            ->toBe([760002]);
+            ->toBe([$localId]);
         expect(file_exists($root . '/upload/2026/07/afterremote.jpg'))->toBeFalse();
     } finally {
-        $conn->executeStatement('DELETE FROM images WHERE id IN (760001, 760002)');
+        $conn->executeStatement('DELETE FROM images WHERE id IN (?, ?)', [$remoteId, $localId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1533,30 +1542,37 @@ test('addMd5sum() computes and persists a real md5sum for a readable file, prefi
 });
 
 test('addMd5sum() does not stop at the first unhashable id -- a later id in the same call is still processed', function (): void {
-    // Kills line 530's ContinueToBreak. Explicit ids (unreadable <
-    // readable) so findPathsForMd5sum()'s real WHERE id IN (...) lookup
-    // -- confirmed live to walk an InnoDB PRIMARY KEY in ascending id
-    // order -- visits the unhashable row first.
+    // Kills line 530's ContinueToBreak. An adjacent, ascending pair
+    // (unreadable < readable) so findPathsForMd5sum()'s real WHERE id
+    // IN (...) lookup -- confirmed live to walk an InnoDB PRIMARY KEY in
+    // ascending id order -- visits the unhashable row first. Randomized,
+    // not a hardcoded literal pair -- see the sibling deleteElementFiles()
+    // test above for why: a fixed literal here previously hit a real
+    // Duplicate entry collision, with setup outside try/finally letting
+    // the failure orphan the row and cascade into unrelated tests
+    // elsewhere in the suite.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/readable.jpg', 'hashable content');
 
-    $conn->executeStatement('DELETE FROM images WHERE id IN (750001, 750002)');
-    $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (750001, ?, ?)', ['unreadable.jpg', 'upload/2026/07/does-not-exist-on-disk.jpg']);
-    $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (750002, ?, ?)', ['readable.jpg', 'upload/2026/07/readable.jpg']);
+    $unreadableId = random_int(650000, 699998);
+    $readableId = $unreadableId + 1;
 
     try {
+        $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (?, ?, ?)', [$unreadableId, 'unreadable.jpg', 'upload/2026/07/does-not-exist-on-disk.jpg']);
+        $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (?, ?, ?)', [$readableId, 'readable.jpg', 'upload/2026/07/readable.jpg']);
+
         $service = imageServiceTestNewService($repo, $conn, Paths::fromRoot($root));
 
-        $service->addMd5sum([750001, 750002]);
+        $service->addMd5sum([$unreadableId, $readableId]);
 
-        $md5sum = $conn->fetchOne('SELECT md5sum FROM images WHERE id = 750002');
+        $md5sum = $conn->fetchOne('SELECT md5sum FROM images WHERE id = ?', [$readableId]);
         expect($md5sum)
             ->toBe(md5_file($root . '/upload/2026/07/readable.jpg'));
     } finally {
-        $conn->executeStatement('DELETE FROM images WHERE id IN (750001, 750002)');
+        $conn->executeStatement('DELETE FROM images WHERE id IN (?, ?)', [$unreadableId, $readableId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
     }

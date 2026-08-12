@@ -72,7 +72,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * below; every downstream block re-checks that same condition but never
  * re-derives $_POST independently, so the one early check covers the whole
  * flow. The template's own `<form>` also carries a hidden pwg_token field
- * (see themes/admin/default/template/site_update.tpl).
+ * (see themes/admin/default/template/site_update.latte).
  *
  * `define('CURRENT_DATE', ...)` is not used here: src/Piwigo/ is
  * arch-tested to contain no `define()` calls (tests/Arch/StructuralTest.php),
@@ -931,9 +931,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             ));
         }
 
-        $template->setFilenames([
-            'update' => 'site_update.tpl',
-        ]);
         $result_title = '';
         if ($simulate) {
             $result_title .= '[' . $this->lang->t('Simulation') . '] ';
@@ -1048,6 +1045,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             syncInfos: $sync_infos,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'update');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'site_update.latte');
     }
 }

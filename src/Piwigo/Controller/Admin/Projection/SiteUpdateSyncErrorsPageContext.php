@@ -13,7 +13,7 @@ use Piwigo\Core\TemplatePageContext;
  * once every sync stage above has run. `$syncErrors`/`$syncErrorCaptions`
  * are always built together (the same `count($errors) > 0` branch);
  * `$syncInfos` is a separate, independently-gated branch. All 3 are
- * always included (even empty) since `site_update.tpl` reads each with
+ * always included (even empty) since `site_update.latte` reads each with
  * `{if not empty(...)}`, not `isset()`.
  */
 final readonly class SiteUpdateSyncErrorsPageContext implements TemplatePageContext

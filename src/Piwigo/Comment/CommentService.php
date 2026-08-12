@@ -380,7 +380,7 @@ final readonly class CommentService
         // EventDispatcher/emailAdmin() are cross-boundary sinks (plugin
         // events, a generic untyped $comment array) -- unwrap ->value
         // explicitly rather than rely on Stringable, same rule as every
-        // other Smarty/JSON/plugin-event boundary in this codebase.
+        // other Latte/JSON/plugin-event boundary in this codebase.
         $rawCommentId = is_array($commentId)
             ? array_map(static fn (CommentId $id): int => $id->value, $commentId)
             : $commentId->value;

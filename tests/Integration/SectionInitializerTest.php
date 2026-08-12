@@ -101,8 +101,8 @@ namespace Piwigo\Tests\Integration {
          * a real booted Kernel/ConfigService/Template/Lang, same shape as
          * RedirectServiceTest.php's own "already-initialised template" setup.
          * LangTestFactory::get()->setLangInfo() must run BEFORE constructing Template -- its
-         * constructor snapshots Lang::langInfo() once into Smarty's own
-         * 'lang_info' var (confirmed live: a real "Undefined array key"
+         * constructor snapshots Lang::langInfo() once into the 'lang_info'
+         * template var (confirmed live: a real "Undefined array key"
          * warning under this suite's failOnWarning=true otherwise).
          */
         private function userService(): UserService

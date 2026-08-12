@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Admin\Projection\CatOptionsPageContext;
 use Piwigo\Category\Projection\CategorySelectOptions;
 
-test('toArray flattens every property to its real Smarty template variable name', function (): void {
+test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new CatOptionsPageContext(
         helpUrl: '/admin/popuphelp.php?page=cat_options',
         formAction: '/admin.php?page=cat_options&section=comments',

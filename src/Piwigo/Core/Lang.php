@@ -160,8 +160,8 @@ final class Lang
     /**
      * Thin `$this->translator->plural()` delegate: `Translator::plural()`
      * requires a strict native `int`, but this boundary's real caller is
-     * Smarty-compiled-template expressions (`Template::
-     * modcompilerTranslateDec()`'s generated code -- the only real
+     * `Piwigo\Template\Latte\PiwigoExtension::translateDec()` (the
+     * Latte-facing `translate_dec` filter/function -- the only real
      * caller, confirmed by grep) whose runtime value can be a numeric
      * DB-row string (e.g. menubar_categories.latte passes one). Every
      * hand-written .php call site instead calls its own
@@ -560,7 +560,7 @@ final class Lang
      * load()'s PO path uses this so callers that still read
      * $lang_info['language_name']/['country']/['direction']/['code']/
      * ['zero_plural']/['parent']/['jquery_code']/['plupload_code'] (admin
-     * Smarty templates, getParentLanguage()) keep working unchanged after
+     * Latte templates, getParentLanguage()) keep working unchanged after
      * the .lang.php source files are gone -- see php-to-po-fn.php's own
      * X-Piwigo-* header list for what's preserved and why.
      *

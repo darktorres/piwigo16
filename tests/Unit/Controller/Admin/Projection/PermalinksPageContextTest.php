@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Controller\Admin\Projection\PermalinksPageContext;
 
-test('toArray flattens every property to its real Smarty template variable name', function (): void {
+test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new PermalinksPageContext(
         nbCats: 5,
         sortId: '<a href="?psf=id">↓</a>',

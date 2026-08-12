@@ -1,5 +1,5 @@
 {
-    "_hash": "d2116bbfd00fe1a55bbc397fa163bad832ec70517bdde18e8bdf227015333b6a",
+    "_hash": "5e7b374efeb0c726b42cbf0e75f47ae96a55c8ce4a5e8ee7070f3e1fcc89ff01",
     "patches": {
         "pestphp/pest-plugin-browser": [
             {
@@ -59,38 +59,6 @@
                 "description": "Fix MutationTestRunner::run() building $coveredLines directly from lineCoverage()'s raw per-line array, which since phpunit/php-code-coverage 14 is keyed by an interned test index (int) with the hit count as the value, not a list of test id strings -- MutationTest::start() then fed a hit-count int straight into preg_match(), fatalling with 'Argument #2 ($subject) must be of type string, int given' on the very first covered mutation. Resolves each surviving index back to its real test id via testIds() before handing $coveredLines off",
                 "url": "patches/pest-plugin-mutate-5.0.1-resolve-interned-test-index.patch",
                 "sha256": "f76880213ec1b603c0887dc354cdcbf810370ee2b4966c31addf6a7eb09414b5",
-                "depth": 1,
-                "extra": {
-                    "provenance": "root"
-                }
-            }
-        ],
-        "smarty/smarty": [
-            {
-                "package": "smarty/smarty",
-                "description": "Fix TemplateBase::$compile_id's @var docblock (string) contradicting its own `= null` default and setCompileId()'s real usage -- confirmed by reading the class itself; no native property type declared, so PHPStan trusts the wrong docblock",
-                "url": "patches/smarty-smarty-5.8.4-compile-id-nullable-docblock.patch",
-                "sha256": "34bd4509a77d52a7f1f18055b89f0d078e5262112ba45e478776a982724a7cc2",
-                "depth": 1,
-                "extra": {
-                    "provenance": "root"
-                }
-            },
-            {
-                "package": "smarty/smarty",
-                "description": "Fix Smarty::unregisterFilter()'s @param docblock typo `callback|string` (not a real PHP/PHPStan type -- resolves to the unrelated class Smarty\\callback) to the real accepted type `callable|string`, matching its own _getFilterName() implementation",
-                "url": "patches/smarty-smarty-5.8.4-unregisterfilter-callable-docblock.patch",
-                "sha256": "e66da71b52acf578048c05c54bcedbcdf75bd84c6827a64dd23fa395cd1983ba",
-                "depth": 1,
-                "extra": {
-                    "provenance": "root"
-                }
-            },
-            {
-                "package": "smarty/smarty",
-                "description": "Fix Smarty::$error_reporting's @var docblock (int) contradicting its own `= null` default -- only ever set to an int by the constructor when template debugging is off, so it genuinely stays null when debugging is on (confirmed by reading the constructor + TemplateInstanceTest.php's own already-passing coverage of both branches); same class of bug as $compile_id above",
-                "url": "patches/smarty-smarty-5.8.4-error-reporting-nullable-docblock.patch",
-                "sha256": "dc88e4822dd2459afda20ead0cfedaaba6218f5ff1adcb977833629779e92c11",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

@@ -11,7 +11,7 @@ namespace Piwigo\Activity\Projection;
  * `Admin\PiwigoInfosSender`'s telemetry payload.
  *
  * `toArray()` preserves the exact original snake_case shape:
- * `UserActivityPageRenderer` builds a Smarty-bound array from it with an
+ * `UserActivityPageRenderer` builds a Latte-bound array from it with an
  * extra derived `value` key this DTO doesn't carry, so that caller
  * `toArray()`s each row before splicing it in.
  */

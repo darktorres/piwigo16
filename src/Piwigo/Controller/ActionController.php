@@ -43,7 +43,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * doError() and the 304 early-return both just return a ResponseInterface
  * (never exit()); every call site returns it in turn. There's no
- * Smarty rendering in this controller, so the whole method is flat,
+ * Template rendering in this controller, so the whole method is flat,
  * always ending in a single ResponseFactory call on every path.
  *
  * The response body is read fully into a string via file_get_contents()

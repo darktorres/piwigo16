@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\CommentsPageContext;
 
-test('toArray flattens every property to its real Smarty template variable name', function (): void {
+test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new CommentsPageContext(
         formAction: '/admin.php?page=comments',
         pwgToken: 'token123',

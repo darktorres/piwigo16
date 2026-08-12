@@ -37,7 +37,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * satisfied the same way check_status()'s `never` exit paths are:
  * $service->run() is the last statement, and PHP's own request lifecycle
  * ends the script right after -- no LegacyRenderCapture/ResponseFactory
- * involved, since there's no Smarty/Template rendering here at all.
+ * involved, since there's no Template rendering here at all.
  */
 final readonly class WsController implements ControllerInterface
 {

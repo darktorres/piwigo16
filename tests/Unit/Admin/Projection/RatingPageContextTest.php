@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\RatingPageContext;
 
-test('toArray flattens every property to its real Smarty template variable name', function (): void {
+test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new RatingPageContext(
         navbar: [
             'NB_PAGE' => 3,

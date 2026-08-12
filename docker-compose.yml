@@ -15,7 +15,7 @@ services:
       PIWIGO_DB_PASSWORD: piwigo
       PIWIGO_DB_BASE: piwigo
     # _data/ is a persistent volume, not tmpfs: alongside the truly-ephemeral
-    # Smarty/combined-JS-CSS cache, it also holds i.php's derivative-image
+    # Latte/combined-JS-CSS cache, it also holds i.php's derivative-image
     # cache (_data/i/) and logs (_data/logs/) — losing those on every
     # container restart would force expensive image reprocessing and drop
     # operational history, not just "rebuild a cache".

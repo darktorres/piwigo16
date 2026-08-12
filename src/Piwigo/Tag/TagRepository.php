@@ -215,7 +215,7 @@ final class TagRepository extends EntityRepository
      * shape (`SearchFilterRenderer::render()`'s own "force missing tags
      * into the list" fallback) -- two independently-built, mutated,
      * merged row streams feeding one combined list across 6 real call
-     * sites (WS responses and Smarty template assignments both). A safe
+     * sites (WS responses and template assignments both). A safe
      * conversion to a typed DTO needs `getAvailableTags()`'s own
      * row-building/caching converted too -- a Tag-domain-wide, not
      * single-method, change.

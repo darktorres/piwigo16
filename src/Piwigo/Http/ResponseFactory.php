@@ -49,8 +49,8 @@ final class ResponseFactory
     }
 
     /**
-     * Legacy Smarty rendering accumulates into Template's own internal
-     * buffer (Template::parse($handle, false), not pparse()'s echo)
+     * Legacy Template rendering accumulates into Template's own internal
+     * buffer (Template::parse('file.latte', false), not pparse()'s echo)
      * instead of retrofitting every renderer to return a string
      * directly, drained via Piwigo\Bootstrap\PageTail::renderToString()
      * into this Response body.

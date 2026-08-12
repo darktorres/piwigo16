@@ -78,8 +78,6 @@
     "PclErrorString",
     "QRbitrtream",
     "QRstr",
-    "Smarty\\Lexer\\Exception",
-    "Smarty_Internal_Debug",
 
     "PHPWG_INSTALLED",
     "DB_CHARSET",

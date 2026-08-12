@@ -986,7 +986,7 @@ final readonly class ImageService
      * Returns a plain array, not the repository's typed Image projection --
      * every real caller (PictureModifyPageRenderer, PhotoSubController,
      * photos_add_direct, BatchManagerUnitPageRenderer) stores this straight
-     * into a growing Smarty template-variable bag (`$page['image']` or
+     * into a growing Latte template-variable bag (`$page['image']` or
      * `$media['image']`), including reassigning individual keys on it after
      * the fact, which a readonly projection can't support. The narrowing
      * win still applies: {@see

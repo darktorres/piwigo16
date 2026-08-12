@@ -47,9 +47,9 @@ use ReflectionProperty;
  *    the real repo root or the shared dev box's real local/.installed(.test)
  *    sentinel. install/, themes/, plugins/, language/ are symlinked in
  *    read-only from the real repo (InstallWizard needs the real admin
- *    theme's Smarty templates + the real install/config.sql file + the
+ *    theme's Latte templates + the real install/config.sql file + the
  *    real bundled languages to behave authentically), but every WRITE
- *    path (.env(.test), the install stamp, _data/, Smarty's compile dir)
+ *    path (.env(.test), the install stamp, _data/, Latte's compile dir)
  *    lands only inside this throwaway root.
  *    Piwigo\Db\MigrationDependencyFactory::build() deliberately resolves
  *    config/migrations.php relative to its own source file, not through

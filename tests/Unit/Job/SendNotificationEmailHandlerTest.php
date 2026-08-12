@@ -80,10 +80,10 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     // config means letting it proceed further would attempt a genuine
     // delivery, not a test double.
     // The real project root, not a throwaway temp dir -- getMailTemplate()
-    // needs the real themes/default/template/mail/text/plain/*.tpl files
-    // to actually parse (Smarty throws "Unable to load" otherwise), and
-    // fabricating stub templates would test Smarty's own file-loading
-    // rather than this handler's delegation. Same real-root pattern
+    // needs the real themes/default/template/mail/text/plain/*.latte files
+    // to actually render (Latte fatal-errors otherwise), and fabricating
+    // stub templates would test Latte's own file-loading rather than this
+    // handler's delegation. Same real-root pattern
     // already used by ErrorCollectorTest/ShutdownHandlerTest/
     // MessengerFactoryTest/ContainerDetectorTest. Booted BEFORE the
     // CurrentConfig writes below so they land on the real container-shared

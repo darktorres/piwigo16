@@ -137,9 +137,9 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * Narrows through a chain of array offsets on a Smarty template var --
+         * Narrows through a chain of array offsets on a Latte template var --
          * TemplateInterface::getTemplateVars() is declared `mixed` by design
-         * (mirrors Smarty's own arbitrary-value assign() contract, see that
+         * (mirrors Template's own arbitrary-value assign() contract, see that
          * interface's own docblock), so every hop needs an explicit is_array()
          * check for PHPStan (level 10, project-wide, tests included) rather
          * than trusting the chain.

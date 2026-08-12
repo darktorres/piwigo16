@@ -136,8 +136,8 @@ final class PageTailTest extends IntegrationTestCase
             // Proves renderToString() completed the whole real render (not
             // just the update-check branch) without ever touching the
             // network: AppInfo::URL is the footer.latte "Powered by" link
-            // href, only present once Smarty has actually compiled and
-            // rendered the real theme template end to end.
+            // href, only present once Latte has actually rendered the real
+            // theme template end to end.
             self::assertStringContainsString('href="' . AppInfo::URL . '"', $output);
             self::assertStringContainsString(AppInfo::VERSION, $output);
 

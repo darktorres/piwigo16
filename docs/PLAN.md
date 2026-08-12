@@ -933,19 +933,23 @@ before that session's own pcov work) — combined line coverage raised from
 files read in full, not sampled) found several items — most already
 resolved by later work above — but 3 items are still genuinely open:
 
-- **Two real bugs found here, both now fixed** (`48f01836b8`, 2026-07-30,
-  the coverage-gap-closing workflow below — not cross-referenced from that
-  section's own summary, but confirmed by its diff): `Template::p()`
+- **Two real bugs found here, both now fixed, first one since superseded
+  entirely** (`48f01836b8`, 2026-07-30, the coverage-gap-closing workflow
+  below — not cross-referenced from that section's own summary, but
+  confirmed by its diff): `Template::p()`
   (`src/Piwigo/Template/Template.php`) called
   `\Smarty_Internal_Debug::display_debug($this->smarty)` when
   `CurrentConfig::debugTemplate()` is enabled — that class doesn't exist
   in the installed Smarty 5.x package, so this would fatal the instant
-  anyone enabled `debugTemplate`. Live code now uses `Smarty\Debug`
-  correctly, plus a documented fix for a second, deeper bug the original
-  finding didn't catch (`Smarty\Debug::display_debug()` unconditionally
-  calls `getSource()`, which the bare `Smarty` engine object doesn't
-  implement — worked around with a throwaway `'string:'` resource
-  template). Separately, `MailService::generateResetPasswordMail()` used
+  anyone enabled `debugTemplate`. Live code used `Smarty\Debug`
+  correctly at the time, plus a documented fix for a second, deeper bug
+  the original finding didn't catch (`Smarty\Debug::display_debug()`
+  unconditionally calls `getSource()`, which the bare `Smarty` engine
+  object doesn't implement — worked around with a throwaway `'string:'`
+  resource template) — moot now: P31.7 deleted `p()`'s entire debug-console
+  branch (and `p()` itself) outright once the Smarty engine was fully
+  removed, so there's no `Smarty\Debug` call left to have this bug at
+  all. Separately, `MailService::generateResetPasswordMail()` used
   `$message = Lang::t(...) . '</p>';` instead of `.=`, silently discarding
   the opening `<p>` tag set the line above; live code now uses `.=`
   consistently throughout, matching the sibling

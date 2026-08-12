@@ -26,7 +26,7 @@ use Piwigo\Core\Paths;
  * current `AppInfo::VERSION` -- calling any of them here risks wiping
  * real ignored-anomaly state with no owned-fixture snapshot/restore in
  * place, too destructive for this pass and not attempted. `display()`
- * needs a real Smarty template file and is not attempted either.
+ * needs a real Latte template file and is not attempted either.
  */
 function checkIntegrityTestSubject(): CheckIntegrity
 {

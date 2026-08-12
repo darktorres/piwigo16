@@ -219,7 +219,7 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
         // this asserts the actual DOM attribute instead (same pattern as
         // CommentsControllerTest's own mailto: href check). CSS attribute
         // selectors match against the already-entity-decoded DOM value, so
-        // this exact string is correct regardless of whether Smarty
+        // this exact string is correct regardless of whether Latte
         // HTML-encoded the "&" in the raw source.
         $page->assertPresent('a[href="admin.php?page=plugin-pwgtest-plugins-installed-hooks"]');
         $page->assertPresent('a[href="index.php?section=pwgtest-plugins-installed-target&foo=bar"]');

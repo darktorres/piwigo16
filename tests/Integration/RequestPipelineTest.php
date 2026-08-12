@@ -19,7 +19,7 @@ use Psr\Http\Message\ResponseInterface;
  * RouteDefinitions has real routes, and every root frontend file actually
  * calls this for live traffic -- an unmatched path (used throughout this
  * file) still correctly 404s. A real registered route (/about.php) is
- * deliberately *not* exercised here: its controller renders a real Smarty
+ * deliberately *not* exercised here: its controller renders a real Latte
  * template against a real DB connection, heavier than this class's own
  * fast/cheap coverage aims for -- tests/Browser/AboutControllerTest.php is
  * the real end-to-end proof for that, driving the actual route through a

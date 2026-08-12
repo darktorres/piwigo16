@@ -74,7 +74,7 @@ final readonly class GroupListPageRenderer
             $tpl_groups[] = [
                 'NAME' => $row->name,
                 // Explicit ->value, not relying on GroupId's Stringable
-                // -- Smarty templates elsewhere in this page do real
+                // -- Latte templates elsewhere in this page do real
                 // arithmetic on ID (group_list.latte's `$group['ID']%5`),
                 // which would TypeError against a bare VO object.
                 'ID' => $row->id->value,

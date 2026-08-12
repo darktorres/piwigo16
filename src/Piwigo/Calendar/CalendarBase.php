@@ -115,7 +115,7 @@ abstract class CalendarBase
     /**
      * `month_calendar.latte`'s own `chronology_navigation_bars` data,
      * shared between buildNavBar()/buildNextPrev() via a private
-     * instance property rather than the live Smarty template variable
+     * instance property rather than the live Latte template variable
      * itself, avoiding an append-then-read-modify-write round trip
      * through Template::append()/getTemplateVars()/assign(): both
      * methods are declared on this same class, so no subclass access is

@@ -52,15 +52,19 @@ future" instead. Same idea as bumping a baseline alongside the file it protects.
 ## `GoldenHtml/`
 
 Raw HTML response bodies for every route in `Helpers/VisualRegressionRoutes.php`,
-captured while the app is still 100% Smarty-rendered — the P31 (Smarty → Latte)
-migration's baseline. Written by `tests/Browser/GoldenHtmlSnapshotTest.php`
+originally captured while the app was still 100% Smarty-rendered — the P31
+(Smarty → Latte) migration's baseline, back before any template had converted.
+P31 is now done (every template is `.latte`, the Smarty engine itself is fully
+removed), so this fixture no longer represents "current Smarty output" — it's the
+frozen pre-migration snapshot every template's own conversion diff was checked
+against. Written by `tests/Browser/GoldenHtmlSnapshotTest.php`
 (`composer test:golden-html`), one file per route name.
 
-Not a byte-identical assertion target: Latte's auto-escaping is deliberately enabled
-during the migration (see `docs/PLAN.md`'s P31 section), so a converted template's
-output is *expected* to differ here wherever escaping now applies where Smarty ran raw.
-Each template's own conversion sub-item diffs its new output against its file here and
-a human classifies every changed line — an escaping-related change or a real
-regression. Only re-run `composer test:golden-html` once a template's diff against the
-existing file has been fully accounted for; regenerating unconditionally would silently
-erase the parity baseline the diff exists to check against.
+Not a byte-identical assertion target: Latte's auto-escaping was deliberately
+enabled during the migration (see `docs/PLAN.md`'s P31 section), so a converted
+template's output was *expected* to differ here wherever escaping applied where
+Smarty ran raw. Each template's own conversion sub-item diffed its new output
+against its file here and a human classified every changed line — an
+escaping-related change or a real regression. Kept as a historical record now
+that P31 is done; a future phase (P32+) touching these same routes' markup
+again would need a fresh baseline capture, not a diff against this one.

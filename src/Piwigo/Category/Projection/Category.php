@@ -17,7 +17,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * default` narrowing every {@see \Piwigo\Category\CategoryRepository}
  * caller used to duplicate for itself; `toArray()` hands that
  * already-narrowed data back out as a precisely-shaped array for consumers
- * that genuinely need array semantics (a growing Smarty template-variable
+ * that genuinely need array semantics (a growing Latte template-variable
  * bag, or an `array_merge()`-based row-building step) rather than a real
  * accessor object.
  *

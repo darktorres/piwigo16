@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\PictureFormatsPageContext;
 
-test('toArray flattens every property to its real Smarty template variable name', function (): void {
+test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new PictureFormatsPageContext(
         addFormatsUrl: '/admin.php?page=photos_add&formats=1',
         imgSquareSrc: '/i.php?/photo1-sq.jpg',

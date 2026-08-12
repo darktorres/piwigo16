@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\ThemesInstalledPageContext;
 
-test('toArray flattens every property to its real Smarty template variable name, casting isWebmaster to an int', function (): void {
+test('toArray flattens every property to its real Latte template variable name, casting isWebmaster to an int', function (): void {
     $context = new ThemesInstalledPageContext(
         activateBaseUrl: '/admin.php?page=themes&action=activate&theme=',
         deactivateBaseUrl: '/admin.php?page=themes&action=deactivate&theme=',

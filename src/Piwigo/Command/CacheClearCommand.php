@@ -15,15 +15,17 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Clears what the NEW cache infrastructure owns: the Latte compiled-template
  * cache dir and the CacheFactory-created PSR-6 pool. Deliberately does NOT
- * touch the legacy Smarty _data/templates_c/*.tpl.php compiled files or the
- * legacy _data/cache/*.cache PersistentCache files -- those are owned by
- * MaintenanceActionDispatcher's 'compiled-templates' case
- * (CurrentTemplate::get()->deleteCompiledTemplates()), reachable from the
- * admin web UI only. Originally deferred here because that whole path
- * needed the legacy include/common.inc.php bootstrap chain -- that
- * constraint is gone (the legacy bootstrap chain doesn't exist anymore,
- * CurrentTemplate::get() is a plain static facade), so this command could
- * cover it too now; nobody has circled back to wire it in.
+ * touch FileCombiner's own combined-files cache or the legacy
+ * _data/cache/*.cache PersistentCache files -- those are owned by
+ * MaintenanceActionDispatcher's 'compiled-templates' case (which also calls
+ * CurrentTemplate::get()->deleteCompiledTemplates() -- the SAME Latte cache
+ * dir this command clears, not a separate mechanism now that Smarty is
+ * gone), reachable from the admin web UI only. Originally deferred here
+ * because that whole path needed the legacy include/common.inc.php
+ * bootstrap chain -- that constraint is gone (the legacy bootstrap chain
+ * doesn't exist anymore, CurrentTemplate::get() is a plain static facade),
+ * so this command could cover it too now; nobody has circled back to wire
+ * it in.
  *
  * $latteCacheDir is injectable (defaulting to the real, hardcoded path)
  * so tests can point removeDir()'s real recursive delete at an isolated

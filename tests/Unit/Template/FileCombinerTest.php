@@ -26,7 +26,7 @@ use Piwigo\Users\UserStatus;
 
 // combine()'s multi-item merge path (mkgetdir()+file_put_contents() under
 // PHPWG_ROOT_PATH) -- the full cascade through legacy free functions/
-// is_admin() etc. -- is Smarty-rendering/file-I/O integration, covered
+// is_admin() etc. -- is Latte-rendering/file-I/O integration, covered
 // indirectly by the Browser suite, not re-tested here. What's under test
 // at this level: combine()'s behavior for 0-1 non-template items and
 // remote items, which never touch the filesystem (confirmed by reading

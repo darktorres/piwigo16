@@ -62,7 +62,7 @@ final class ServerInfoService
     /**
      * Renders the curated info as a minimal standalone HTML page, matching
      * the legacy phpinfo() call sites' own "direct output, not through
-     * Smarty" shape (both callers do `phpinfo(); exit();`, never touching
+     * Template" shape (both callers do `phpinfo(); exit();`, never touching
      * $template).
      */
     public function renderHtml(): string

@@ -583,19 +583,22 @@ test('getStrictEmailList deduplicates identical addresses after stripping names'
 });
 
 test('getMailTemplate resolves the real, absolute theme root and the given email-format subdirectory', function (): void {
-    // templateExists() alone isn't reliable here: Smarty's own compiled-
-    // template disk cache (_data/templates_c/) can satisfy it from an
-    // EARLIER test's correctly-resolved compile even after this specific
-    // concatenation is broken. getTemplateDir() alone isn't reliable
-    // either if the live, container-bound Paths->root happens to equal the real
-    // process cwd (it does whenever `vendor/bin/pest` itself runs from
-    // the project root): Smarty's addTemplateDir() resolves a RELATIVE
-    // path against cwd, which then coincidentally reconstructs the exact
-    // same absolute string the real concatenation would have produced --
-    // confirmed live (both technique failures reproduced by direct
-    // sed-mutate-and-rerun). Pointing CurrentPaths at a deliberately
-    // fake, cwd-mismatched root removes that coincidence: only the real
-    // concatenation can make the resolved dir start with it.
+    // Historical note (from the old Smarty engine, no longer a live
+    // concern now that Template::getTemplateDir() is a plain
+    // `$this->templateDirs[0] ?? ''` passthrough, no cache/realpath
+    // involved): templateExists() alone wasn't reliable here, since
+    // Smarty's own compiled-template disk cache (_data/templates_c/)
+    // could satisfy it from an EARLIER test's correctly-resolved compile
+    // even after this specific concatenation was broken, and
+    // getTemplateDir() alone wasn't reliable either if the live,
+    // container-bound Paths->root happened to equal the real process cwd
+    // (it does whenever `vendor/bin/pest` itself runs from the project
+    // root), since Smarty's own addTemplateDir() resolved a RELATIVE path
+    // against cwd, which then coincidentally reconstructed the exact same
+    // absolute string the real concatenation would have produced.
+    // Pointing CurrentPaths at a deliberately fake, cwd-mismatched root
+    // still removes any such coincidence, so the technique is kept even
+    // though the original failure modes it defended against are gone.
     $fakeRoot = Paths::fromRoot('/tmp/piwigo-mailservice-test-fake-root-' . getmypid() . '/');
     Kernel::boot($fakeRoot);
     CurrentConfigTestFactory::get()->dataDirChecked = '1';

@@ -15,9 +15,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * middleware-chain handler, since a frontend controller is always the
  * pipeline's terminal step, never itself passed a next handler to
  * delegate to, returning a real ResponseInterface instead of mutating
- * $template/$page. Controllers whose render body is still Smarty call
- * Template::parse($handle, false) (accumulates into Template's own
- * internal buffer instead of echoing) and drain it via
+ * $template/$page. A controller whose render body still goes through
+ * Template calls Template::parse('file.latte', false) (accumulates into
+ * Template's own internal buffer instead of echoing) and drains it via
  * Piwigo\Bootstrap\PageTail::renderToString() into a real Response body,
  * rather than leaving rendering as a side effect for something else to
  * emit.

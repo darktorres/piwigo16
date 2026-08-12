@@ -20,19 +20,21 @@ namespace Piwigo\Core;
  * parameters, so the binding can't be a plain autowired singleton).
  *
  * Only `Template` methods with a real L1/L2a/L2b caller are included here
- * -- the 30+ other `Template` methods (Smarty-plugin registration, filter
- * wiring, theme-conf loading, ...) have no L1/L2a/L2b caller and stay
- * untouched, concrete-class-only.
+ * -- the other `Template` methods (Latte filter/function wiring --
+ * `combineScript()`/`getCombinedScripts()`/`defineDerivative()`/etc. --
+ * theme-conf loading, ...) have no L1/L2a/L2b caller and stay untouched,
+ * concrete-class-only.
  */
 interface TemplateInterface
 {
     /**
      * Assigns every variable a typed `TemplatePageContext` carries in one
      * call -- the one, sole way any L1/L2a/L2b/L3 caller ever writes into
-     * the current request's template (`assign()`/`append()` were removed
-     * entirely once the last real caller of either was converted to this;
-     * see `tests/Arch/StructuralTest.php` for the guard against a bare
-     * `$template->smarty->assign()`/`append()` reach-around).
+     * the current request's template. `Template::assign()`/`append()` are
+     * private methods on the concrete class (no Smarty engine left to
+     * reach through), so a bare `$template->assign()`/`append()`
+     * reach-around is a compile-time error, not something an arch test
+     * needs to guard against.
      */
     public function assignContext(TemplatePageContext $context): void;
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Page\Projection\NoPhotoYetAdminPageContext;
 
-test('toArray flattens every property to its real Smarty template variable name', function (): void {
+test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new NoPhotoYetAdminPageContext(
         step: 2,
         intro: 'Hello admin, your Piwigo photo gallery is empty!',

@@ -19,7 +19,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 
 /**
- * Piwigo\Template\TemplateAdapter -- the Smarty-registered object behind
+ * Piwigo\Template\TemplateAdapter -- the `pwg`-assigned object behind
  * `derivative`/`derivativeUrl` template calls; had zero dedicated coverage.
  * Both need the same real DB-backed ImageStdParams/DerivativeImage::
  * setUrlService() wiring (see

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\HistoryPageContext;
 
-test('toArray flattens every property to its real Smarty template variable name', function (): void {
+test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new HistoryPageContext(
         fAction: '/admin.php?page=history',
         apiMethod: 'ws.php?format=json&method=pwg.history.search',

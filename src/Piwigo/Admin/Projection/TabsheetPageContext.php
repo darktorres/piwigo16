@@ -18,7 +18,7 @@ use Piwigo\Core\TemplatePageContext;
  * dynamic key is preserved here (inside this one documented `toArray()`)
  * rather than dropped -- the campaign goal is zero raw
  * `Template::assign()`/`append()` calls scattered through business logic,
- * not the elimination of every dynamic Smarty key regardless of caller
+ * not the elimination of every dynamic template key regardless of caller
  * behavior.
  */
 final readonly class TabsheetPageContext implements TemplatePageContext

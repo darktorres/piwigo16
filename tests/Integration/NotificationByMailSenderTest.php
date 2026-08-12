@@ -336,7 +336,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     {
         // No fatal/exception is the real assertion here: this exercises the
         // full UrlService full-url toggling + MailService::getMailTemplate()
-        // chain end to end. The built Smarty template is a throwaway local
+        // chain end to end. The built Template instance is a throwaway local
         // inside the method (never written back to $this->mailTemplate for
         // a single isolated call), so there's no further state to inspect
         // from outside without changing production code.

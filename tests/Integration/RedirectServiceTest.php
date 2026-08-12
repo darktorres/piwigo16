@@ -170,7 +170,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // info already initialised, exactly like every other real request
         // reaching this class. Lang::setLangInfo() must run BEFORE
         // constructing Template -- its own constructor snapshots
-        // Lang::langInfo() once into Smarty's 'lang_info' var (see
+        // Lang::langInfo() once into the 'lang_info' template var (see
         // Template::__construct()'s own body); setting it afterwards would
         // leave header.latte's `{$lang_info['code']}`/`{$lang_info['direction']}`
         // reads pointed at an empty array (confirmed live: a real

@@ -44,10 +44,9 @@ final class LatteEngine
     /**
      * `_data/templates_c/latte` -- the directory `Piwigo\Command\
      * CacheClearCommand` already assumes exists and purges (it predates
-     * this class, written in anticipation of it). Caller (`Template`'s own
-     * constructor) is responsible for `FilesystemHelper::mkgetdir()`-ing
-     * this before constructing a `LatteEngine`, same as it already does for
-     * Smarty's own compile dir.
+     * this class, written in anticipation of it). Caller (`Template::
+     * latteEngine()`) is responsible for `FilesystemHelper::mkgetdir()`-ing
+     * this before constructing a `LatteEngine`.
      */
     public static function defaultCacheDir(string $root, string $dataLocation): string
     {

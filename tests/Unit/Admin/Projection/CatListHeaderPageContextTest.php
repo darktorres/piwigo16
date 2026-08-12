@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\CatListHeaderPageContext;
 
-test('toArray flattens every property to its real Smarty template variable name', function (): void {
+test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new CatListHeaderPageContext(
         adminPageTitle: 'Album list management',
         categoriesNav: '<a href="/admin.php">Home</a>',

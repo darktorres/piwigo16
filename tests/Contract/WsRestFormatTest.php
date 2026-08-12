@@ -88,7 +88,7 @@ final class WsRestFormatTest extends ContractTestCase
         // tree this suite's own compiled templates actually live under, so
         // tsizes was always null here. Now that it's prefixed with
         // the live, container-bound Paths->root, `du` finds this suite's own real
-        // compiled Smarty templates under _data/templates_c/ and tsizes is
+        // compiled Latte templates under _data/templates_c/latte/ and tsizes is
         // a real, present, non-null byte count -- same "item/name/value"
         // shape as the msizes assertions above, not the previous
         // no-sibling-<value> shape.

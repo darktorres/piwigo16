@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Admin\Projection\StatsPageContext;
 use Piwigo\Common\ValueObject\LangCode;
 
-test('toArray flattens every property to its real Smarty template variable name', function (): void {
+test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new StatsPageContext(
         helpUrl: 'https://example.test/admin/popuphelp.php?page=history',
         formAction: 'https://example.test/admin.php?page=history',

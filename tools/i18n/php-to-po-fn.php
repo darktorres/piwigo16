@@ -55,8 +55,8 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
     $zeroPlural = ! in_array($lang_info['zero_plural'] ?? null, [null, false, 0, '0', '', []], true) ? 'true' : 'false';
     // parent: real fallback-chain data (5 locales, e.g. en_GB -> en_UK),
     // read by get_parent_language()/load_language(). jquery_code/
-    // plupload_code: real, actively read by admin Smarty templates
-    // (datepicker.inc.tpl, photos_add_direct.tpl) to pick the right
+    // plupload_code: real, actively read by admin Latte templates
+    // (datepicker.inc.latte, photos_add_direct.latte) to pick the right
     // jQuery UI/plupload locale JS file -- losing these would silently
     // break admin-panel JS localization for every non-English-code
     // locale that has one. 'charset' is NOT preserved: no real consumers

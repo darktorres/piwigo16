@@ -17,7 +17,7 @@ use Piwigo\Image\ImageEntity;
  * default` narrowing every {@see \Piwigo\Image\ImageRepository} caller used
  * to duplicate for itself; `toArray()` hands that already-narrowed data
  * back out as a precisely-shaped array for the handful of consumers that
- * genuinely need array semantics (a growing Smarty template-variable bag,
+ * genuinely need array semantics (a growing Latte template-variable bag,
  * or a legacy `array<string, mixed>|SrcImage` signature not itself in
  * scope here) rather than a real accessor object.
  *

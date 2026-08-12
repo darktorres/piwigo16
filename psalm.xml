@@ -22,7 +22,7 @@
                  (e.g. flatted's PHP port) that aren't part of this project. -->
             <directory name="node_modules"/>
             <directory name="language"/>
-            <!-- Runtime-compiled Smarty templates + combined JS/CSS cache, not source. -->
+            <!-- Runtime-compiled Latte templates + combined JS/CSS cache, not source. -->
             <directory name="_data"/>
             <!-- Standalone maintenance script; its own header comment
                  documents that knplabs/github-api must be `composer
@@ -790,14 +790,6 @@
                 <file name="src/Piwigo/Users/UserService.php"/>
             </errorLevel>
         </PossiblyNullArgument>
-        <!-- Smarty\Smarty::unregisterFilter()'s own docblock types its 2nd
-             param as `callback|string` — `callback` (no trailing e) isn't a
-             recognized pseudo-type, so it resolves to the unrelated class
-             Smarty\callback instead of PHP's native `callable`. The real
-             implementation accepts any callable; this is a vendor docblock
-             typo, not a bug in our code (see the matching inline
-             @phpstan-ignore comment at the same call site).
-             composer analyse:phpstan is clean here with zero changes. -->
         <!-- filter_var()'s FILTER_VALIDATE_INT/FLOAT options-array stub
              requires its "numeric" pseudo-type on min_range but doesn't
              accept Psalm's own literal int(0)/int(1) (or float(0)/float(1))
@@ -806,7 +798,6 @@
              is clean here with zero changes. -->
         <InvalidArgument>
             <errorLevel type="suppress">
-                <file name="src/Piwigo/Template/Template.php"/>
                 <file name="src/Piwigo/Ws/Server.php"/>
             </errorLevel>
         </InvalidArgument>
@@ -821,16 +812,6 @@
         <PossiblyNullPropertyAssignmentValue>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Template/FileCombiner.php"/>
-                <!-- Template::delete_compiled_templates(): $this->smarty->
-                     compile_id = null is a deliberate temporary reset (the
-                     original value is restored 2 lines later), needed to
-                     make Smarty's own clearCompiledTemplate() operate
-                     compile_id-agnostic. Smarty's own @var string
-                     contradicts its own `= null` default — vendor code,
-                     not ours to fix. Already carries a matching
-                     @phpstan-ignore assign.propertyType immediately above
-                     it. -->
-                <file name="src/Piwigo/Template/Template.php"/>
             </errorLevel>
         </PossiblyNullPropertyAssignmentValue>
         <!-- ProfileFormHandler.php: (string) $nb_image_page / (string)
@@ -962,24 +943,10 @@
                      cheprasov/php-relay in composer.json). Real code, real
                      vendor stub; the classes are simply not installed. -->
                 <file name="src/Piwigo/Cache/CacheFactory.php"/>
-                <!-- Template.php's Smarty_Internal_Debug::display_debug()
-                     call is a pre-existing, already-documented bug (see the
-                     inline comment + @phpstan-ignore class.notFound right
-                     above it): the class genuinely doesn't exist and this
-                     call fatals whenever debugTemplate() is enabled.
-                     Preserved verbatim, not fixed here — matches PHPStan's
-                     own suppression of the identical finding. -->
-                <file name="src/Piwigo/Template/Template.php"/>
             </errorLevel>
         </UndefinedClass>
         <DocblockTypeContradiction>
             <errorLevel type="suppress">
-                <!-- Template.php::set_template_dir()'s isset() check on
-                     Smarty's own $compile_id contradicts Smarty's own @var
-                     string docblock vs its `= null` default (vendor code,
-                     not ours) — already carries a matching
-                     @phpstan-ignore isset.property immediately above it. -->
-                <file name="src/Piwigo/Template/Template.php"/>
                 <!-- PwgCore.php: $added_size's is_int() re-guard is the
                      real runtime safety net for an @-suppressed possibly-
                      undefined array offset read; PHPStan's
@@ -1377,14 +1344,6 @@
                 <directory name="tests"/>
             </errorLevel>
         </MissingClosureReturnType>
-        <MissingParamType>
-            <errorLevel type="suppress">
-                <!-- TemplateInstanceTest.php: a test double deliberately
-                     matching Smarty's own untyped legacy append() signature
-                     verbatim. -->
-                <file name="tests/Unit/Template/TemplateInstanceTest.php"/>
-            </errorLevel>
-        </MissingParamType>
         <MissingTemplateParam>
             <errorLevel type="suppress">
                 <!-- An anonymous ArrayAccess test fixture that doesn't need

@@ -755,7 +755,7 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function testMailSetsACustomTemplateDirThenFallsBackToRawContentWhenTheFilenameDoesNotExist(): void
     {
-        // 'dirname' set (any value -- Smarty's addTemplateDir() appends
+        // 'dirname' set (any value -- Template::setTemplateDir() appends
         // rather than validates/replaces, so this alone can't hide the
         // real theme's own templates) exercises setTemplateDir() being
         // called at all; the genuinely nonexistent 'filename' is what

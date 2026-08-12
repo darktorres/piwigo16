@@ -458,7 +458,7 @@ final class PiwigoExtension extends Extension
             if (! is_scalar($val)) {
                 continue;
             }
-            $extraAttrs .= ' ' . $key . '="' . htmlspecialchars((string) $val, ENT_QUOTES) . '"';
+            $extraAttrs .= ' ' . $key . '="' . self::escapeHtmlOption((string) $val) . '"';
         }
 
         return new Html('<select name="' . $name . '"' . $extraAttrs . '>' . "\n" . $body . '</select>' . "\n");
@@ -499,7 +499,7 @@ final class PiwigoExtension extends Extension
             if (! is_scalar($val)) {
                 continue;
             }
-            $extraAttrs .= ' ' . $key . '="' . htmlspecialchars((string) $val, ENT_QUOTES) . '"';
+            $extraAttrs .= ' ' . $key . '="' . self::escapeHtmlOption((string) $val) . '"';
         }
         $rows = [];
         if ($options !== null) {
@@ -603,6 +603,26 @@ final class PiwigoExtension extends Extension
     }
 
     /**
+     * `html_options`/`html_radios`' shared escaping -- Smarty's own
+     * `smarty_function_escape_special_chars()` (vendor/smarty/smarty/src/
+     * functions.php) calls `htmlspecialchars($string, ENT_COMPAT,
+     * Smarty::$_CHARSET, false)`: `ENT_COMPAT` (double quotes only, not
+     * single -- every call site here only ever lands inside a
+     * double-quoted attribute) and, critically, `$double_encode = false`.
+     * A bare `htmlspecialchars($str, ENT_QUOTES)` (PHP's `double_encode`
+     * default is `true`) double-encodes any option label that already
+     * contains a real HTML entity -- confirmed live converting
+     * permalinks.tpl: `CategoryAdminService`'s indentation prefix bakes in
+     * literal `&nbsp;` sequences, which came out as `&amp;nbsp;` before
+     * this fix, a real rendering regression the golden-HTML diff caught
+     * (not a cosmetic ENT_QUOTES-vs-ENT_COMPAT difference).
+     */
+    private static function escapeHtmlOption(string $value): string
+    {
+        return htmlspecialchars($value, ENT_COMPAT, 'UTF-8', false);
+    }
+
+    /**
      * @param array<int|string, mixed>|string|int|float|bool|null $selected
      * @return array<string, true>|string|null
      */
@@ -615,14 +635,14 @@ final class PiwigoExtension extends Extension
             $map = [];
             foreach ($selected as $val) {
                 if (is_scalar($val)) {
-                    $map[htmlspecialchars((string) $val, ENT_QUOTES)] = true;
+                    $map[self::escapeHtmlOption((string) $val)] = true;
                 }
             }
 
             return $map;
         }
 
-        return htmlspecialchars((string) $selected, ENT_QUOTES);
+        return self::escapeHtmlOption((string) $selected);
     }
 
     /**
@@ -638,7 +658,7 @@ final class PiwigoExtension extends Extension
     ): string {
         if (is_array($optVal)) {
             $inner = 0;
-            $body = '<optgroup label="' . htmlspecialchars((string) $optKey, ENT_QUOTES) . '">' . "\n";
+            $body = '<optgroup label="' . self::escapeHtmlOption((string) $optKey) . '">' . "\n";
             foreach ($optVal as $k => $v) {
                 $body .= self::htmlOption($k, $v, $selected, $id !== null ? $id . '-' . $idx : null, $class, $inner);
             }
@@ -646,7 +666,7 @@ final class PiwigoExtension extends Extension
 
             return $body . "</optgroup>\n";
         }
-        $key = htmlspecialchars((string) $optKey, ENT_QUOTES);
+        $key = self::escapeHtmlOption((string) $optKey);
         $line = '<option value="' . $key . '"';
         if (is_array($selected)) {
             if (isset($selected[$key])) {
@@ -662,7 +682,7 @@ final class PiwigoExtension extends Extension
             $line .= ' id="' . $id . '-' . $idx . '"';
         }
         $idx++;
-        $label = is_scalar($optVal) ? htmlspecialchars((string) $optVal, ENT_QUOTES) : '';
+        $label = is_scalar($optVal) ? self::escapeHtmlOption((string) $optVal) : '';
 
         return $line . '>' . $label . '</option>' . "\n";
     }
@@ -677,11 +697,11 @@ final class PiwigoExtension extends Extension
         bool $labelIds,
         bool $escape,
     ): string {
-        $valueStr = htmlspecialchars((string) $value, ENT_QUOTES);
+        $valueStr = self::escapeHtmlOption((string) $value);
         $checked = ($selected !== null && $valueStr === $selected) ? ' checked="checked"' : '';
         $labelStr = is_scalar($label) ? (string) $label : '';
         if ($escape) {
-            $labelStr = htmlspecialchars($labelStr, ENT_QUOTES);
+            $labelStr = self::escapeHtmlOption($labelStr);
         }
         $idAttr = '';
         if ($labelIds) {

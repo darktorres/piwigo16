@@ -73,8 +73,6 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
                 ->deleteOldPermalinkByValue($permalinksRequest->deletePermanent);
         }
 
-        $template->setFilename('permalinks', 'permalinks.tpl');
-
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
@@ -160,7 +158,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
             categoriesOptions: $categories_options,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'permalinks');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'permalinks.latte');
     }
 
     /**

@@ -156,6 +156,13 @@ final class PiwigoExtension extends Extension
             'htmlOptions' => self::htmlOptions(...),
             'htmlRadios' => self::htmlRadios(...),
             'math' => self::math(...),
+            'once' => $this->template->once(...),
+            // Also registered as filters above, same names -- same
+            // {if}-rejects-pipes reason as translate/l10n above. Real live
+            // sites: search_filters.inc.tpl's `{if ''|is_admin}` ->
+            // `{if is_admin('')}`.
+            'is_admin' => $this->isAdmin(...),
+            'is_classic_user' => $this->isClassicUser(...),
         ];
     }
 

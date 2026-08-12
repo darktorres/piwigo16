@@ -265,7 +265,7 @@ final readonly class CalendarRenderer
                 . $fields[$chronologyField]['label'] . '</a>';
             $calendar_title .= $calendar->getDisplayName();
             $template->assignContext(new CalendarChronologyPageContext(
-                fileChronologyView: 'month_calendar.tpl',
+                fileChronologyView: 'month_calendar.latte',
                 chronologyTitle: $calendar_title,
                 chronologyNavigationBars: $calendar->getChronologyNavigationBars(),
                 chronologyViews: $chronology_views,

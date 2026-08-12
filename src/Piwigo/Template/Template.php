@@ -136,6 +136,24 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     private ?LatteEngine $latteEngineInstance = null;
 
+    /**
+     * Backs `once()` -- a real, per-request cross-`{include}` dedup guard.
+     * Smarty's own equivalent (`{if !$smarty.capture.NAME}...{capture
+     * name=NAME}1{/capture}...{/if}`, e.g. `album_selector.inc.tpl`'s guard
+     * against rendering twice when included from more than one place in
+     * the same page) has no Latte equivalent: a bare `{capture $var}`
+     * inside an `{include}`d template is local to that one render call and
+     * does not persist back to the caller for a *second*, separate
+     * `{include}` of the same partial to observe -- confirmed empirically
+     * (a two-include test renders the guarded body twice), including
+     * against the reference's own `{if empty($var)}{capture $var}1{/capture}`
+     * port, which has the same gap. This is real `Template`-instance state
+     * instead, which every `{include}` call shares regardless of nesting.
+     *
+     * @var array<string, true>
+     */
+    private array $onceGuards = [];
+
     public function __construct(
         private readonly CurrentConfig $currentConfig,
         private readonly Lang $lang,
@@ -526,6 +544,20 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             }
         }
 
+        // Real, live case: search_filters.inc.tpl's own {include
+        // file='themes/admin/default/template/include/album_selector.inc.tpl'}
+        // -- a full, project-root-relative path reaching across into a
+        // different theme entirely, not resolvable against this instance's
+        // own (single-theme) $templateDirs chain. Smarty resolves this the
+        // same way: a file= path not found via any registered
+        // template_dir falls back to being treated as relative to the
+        // current working directory, which for every real entry point in
+        // this app is $this->paths->root.
+        $rootCandidate = rtrim($this->paths->root, '/') . '/' . $file;
+        if (file_exists($rootCandidate)) {
+            return $rootCandidate;
+        }
+
         $this->htmlRenderer()
             ->fatalError("Template->parse(): Couldn't load Latte template file: {$file}");
     }
@@ -844,6 +876,24 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         return false;
+    }
+
+    /**
+     * Real cross-`{include}` dedup guard -- see `$onceGuards`'s own
+     * docblock. Returns `true` (render now) only the first time a given
+     * `$key` is passed during this request; every later call with the same
+     * key returns `false`, regardless of how many different templates or
+     * `{include}` sites reach it.
+     */
+    public function once(string $key): bool
+    {
+        if (isset($this->onceGuards[$key])) {
+            return false;
+        }
+
+        $this->onceGuards[$key] = true;
+
+        return true;
     }
 
     /**

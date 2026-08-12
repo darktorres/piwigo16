@@ -22,7 +22,7 @@ final class AdminUiHelper
 {
     /**
      * Returns a list of templates currently available in
-     * template-extension. Each .tpl file is extracted from
+     * template-extension. Each .latte file is extracted from
      * template-extension.
      *
      * @param string $start (internal use)
@@ -65,7 +65,7 @@ final class AdminUiHelper
             if (is_dir($path)) {
                 $extents = array_merge($extents, self::collectExtents($path, $prefixLen));
             } elseif (! is_link($path) and file_exists($path)
-                    and StringHelper::getExtension($path) === 'tpl') {
+                    and StringHelper::getExtension($path) === 'latte') {
                 // $prefixLen is always the length of the ORIGINAL top-level
                 // $start (+1 for its trailing slash), not this recursion
                 // level's own (longer) $start -- every $path is built by

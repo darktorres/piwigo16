@@ -31,7 +31,7 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-test('getExtents finds every .tpl file under the real template-extension directory, stripping the resolved root prefix', function (): void {
+test('getExtents finds every .latte file under the real template-extension directory, stripping the resolved root prefix', function (): void {
     // No args -> real default anchored to the live, container-bound Paths->root (the
     // repo root, same as every other test process in this suite) -- a
     // real, committed asset, not a throwaway fixture, so this asserts its
@@ -41,10 +41,10 @@ test('getExtents finds every .tpl file under the real template-extension directo
     sort($result);
     expect($result)
         ->toBe([
-            'distributed/samples/my-picture.tpl',
-            'distributed/samples/my-thumbnails.tpl',
-            'distributed/samples/my-thumbnails2.tpl',
-            'distributed/samples/titling_categories.tpl',
+            'distributed/samples/my-picture.latte',
+            'distributed/samples/my-thumbnails.latte',
+            'distributed/samples/my-thumbnails2.latte',
+            'distributed/samples/titling_categories.latte',
         ]);
 });
 
@@ -65,31 +65,31 @@ test('getExtents returns an empty array when the directory does not exist', func
     }
 });
 
-test('getExtents skips symlinked .tpl files and non-.tpl files', function (): void {
+test('getExtents skips symlinked .latte files and non-.latte files', function (): void {
     $dir = sys_get_temp_dir() . '/piwigo-admin-ui-helper-test-' . bin2hex(random_bytes(8));
     mkdir($dir, 0o777, true);
 
     try {
-        file_put_contents($dir . '/real.tpl', 'real template');
+        file_put_contents($dir . '/real.latte', 'real template');
         file_put_contents($dir . '/ignored.css', 'not a template');
-        file_put_contents($dir . '/link-target.tpl', 'linked template');
-        symlink($dir . '/link-target.tpl', $dir . '/symlinked.tpl');
+        file_put_contents($dir . '/link-target.latte', 'linked template');
+        symlink($dir . '/link-target.latte', $dir . '/symlinked.latte');
 
         // The prefix strip is relative to whatever $start was actually
-        // passed (not a hardcoded length) -- real.tpl and link-target.tpl
+        // passed (not a hardcoded length) -- real.latte and link-target.latte
         // (a genuine file, not itself a symlink) both survive as bare
-        // filenames; only the symlink itself (symlinked.tpl) and the
-        // non-.tpl file are excluded.
+        // filenames; only the symlink itself (symlinked.latte) and the
+        // non-.latte file are excluded.
         $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)), $dir);
         sort($result);
 
         expect($result)
-            ->toBe(['link-target.tpl', 'real.tpl']);
+            ->toBe(['link-target.latte', 'real.latte']);
     } finally {
-        unlink($dir . '/symlinked.tpl');
-        unlink($dir . '/link-target.tpl');
+        unlink($dir . '/symlinked.latte');
+        unlink($dir . '/link-target.latte');
         unlink($dir . '/ignored.css');
-        unlink($dir . '/real.tpl');
+        unlink($dir . '/real.latte');
         rmdir($dir);
     }
 });
@@ -99,18 +99,18 @@ test('getExtents recurses into subdirectories', function (): void {
     mkdir($dir . '/nested/deeper', 0o777, true);
 
     try {
-        file_put_contents($dir . '/top.tpl', 'top');
-        file_put_contents($dir . '/nested/mid.tpl', 'mid');
-        file_put_contents($dir . '/nested/deeper/bottom.tpl', 'bottom');
+        file_put_contents($dir . '/top.latte', 'top');
+        file_put_contents($dir . '/nested/mid.latte', 'mid');
+        file_put_contents($dir . '/nested/deeper/bottom.latte', 'bottom');
 
         $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)), $dir);
 
         expect($result)
             ->toHaveCount(3);
     } finally {
-        unlink($dir . '/nested/deeper/bottom.tpl');
-        unlink($dir . '/nested/mid.tpl');
-        unlink($dir . '/top.tpl');
+        unlink($dir . '/nested/deeper/bottom.latte');
+        unlink($dir . '/nested/mid.latte');
+        unlink($dir . '/top.latte');
         rmdir($dir . '/nested/deeper');
         rmdir($dir . '/nested');
         rmdir($dir);

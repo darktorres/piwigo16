@@ -191,12 +191,6 @@ final readonly class NotificationByMailSubController implements AdminSubControll
 
         }
 
-        $template->setFilenames(
-            [
-                'notification_by_mail' => 'notification_by_mail.tpl',
-            ]
-        );
-
         if ($this->accessControl->isAuthorizeStatus(AccessLevel::Webmaster)) {
             // TabSheet
             $tabsheet = new Tabsheet();
@@ -333,7 +327,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
             adminPageTitle: $this->lang->t('Send mail to users'),
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'notification_by_mail');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'notification_by_mail.latte');
     }
 
     /**

@@ -167,3 +167,34 @@ test('encode/decode round-trips without padding too', function (): void {
         expect(Base32::decode(Base32::encode($plaintext, false)))->toBe($plaintext);
     }
 });
+
+/**
+ * [Mutation] A scoped `pest --mutate` rerun leaves 8 mutations
+ * "untested" -- zero real gaps, all individually hand-mutation-verified
+ * against the real source (temporary sed edit + a full rerun of this
+ * file, reverted after):
+ *
+ * 1. encode()'s own empty-input guard (Line 72's EmptyStringToNotEmpty,
+ *    Line 73's RemoveEarlyReturn) is genuinely redundant: bypassing it
+ *    entirely still produces '' for '' input, because str_split('') and
+ *    the loop machinery that follows it degrade gracefully to the same
+ *    empty result on this PHP version.
+ * 2. Line 84's RemoveIntegerCast (the `(int)` on a base_convert() result
+ *    used as a $map array index) is the same PHP numeric-string-array-
+ *    key auto-coercion redundancy already established elsewhere in this
+ *    campaign (Translator.php's own mirror() cast findings).
+ * 3. Line 141's IncrementInteger (`min(255, ...)` -> `min(256, ...)`) is
+ *    genuinely inert: the value being clamped always comes from an
+ *    8-bit binary chunk, which can never exceed 255 in the first place
+ *    -- raising an already-sufficient cap changes nothing reachable.
+ * 4. The remaining 4 (Line 87's DecrementInteger/IncrementInteger on the
+ *    `% 40` padding-boundary check, Line 111's DecrementInteger on the
+ *    validation loop's `< 4` bound, Line 141's own DecrementInteger on
+ *    `min(255, ...)`) are NOT actually untested -- each one produces a
+ *    real, distinct assertion failure when hand-applied and this file
+ *    rerun as a whole (confirmed live for all 4). `pest --mutate`'s own
+ *    per-mutation test-selection filter just doesn't correctly attribute
+ *    the already-covering test to these specific mutation IDs -- a tool
+ *    misattribution on already-covered code, not a gap needing a new
+ *    test.
+ */

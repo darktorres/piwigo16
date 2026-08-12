@@ -65,6 +65,20 @@ real, root-caused construct at a time — never a guessed fix. Along the way:
   `{else}`, where that trailing gap is real, meaningful spacing and must
   stay) — only the former defers to the Document level instead of also
   contributing its own trailing break.
+- **A real structural bug**, found during a full manual review of every
+  formatted file, not just the automated checks: `configuration_watermark
+.latte`'s `<img id="wImg"></img>` — a void element given an explicit,
+  invalid closing tag. Real browsers just discard an end tag for an element
+  that isn't in the stack of open elements (a parse error with no DOM
+  effect); this parser instead treated the mismatched `</img>` as "maybe
+  belongs to an ancestor", which unwound _every_ real ancestor's own
+  unclosed-propagation logic (span → li → ul → fieldset → div → form) all
+  the way to the document root — flattening everything after that point out
+  of its real nesting. Isolated to this one file (confirmed by grepping the
+  whole tree for any void element with an explicit closing tag). Fixed by
+  recognizing a closing tag that names a known void element as always-stray
+  and discarding it on the spot, matching real HTML5 parser behavior,
+  instead of letting it propagate.
 
 None of this is wired into `lefthook` pre-commit or CI — that's a deliberate,
 separate decision left for whoever wants it, not assumed here.

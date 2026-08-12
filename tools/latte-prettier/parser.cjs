@@ -491,7 +491,23 @@ function parseNodeList(s, opts) {
   for (;;) {
     if (s.eof()) break;
     if (stopChar && s.peek() === stopChar) break;
-    if (allowElements && s.startsWith("</")) break; // caller decides: mine, an ancestor's, or an orphan
+    if (allowElements && s.startsWith("</")) {
+      // A closing tag for a void element (e.g. stray `<img ...></img>`, real
+      // markup found in configuration_watermark.latte) can never legitimately
+      // match anything real — void elements never have a matching open/close
+      // pair to begin with. Real browsers just discard an end tag for an
+      // element that isn't in the stack of open elements (a parse error with
+      // no DOM effect); treating it here as "maybe belongs to an ancestor"
+      // instead unwinds every real ancestor's own unclosed-propagation logic
+      // ALL the way to the document root, flattening the rest of the
+      // document's structure. Silently consume and discard it instead.
+      const strayName = peekCloseTagName(s);
+      if (strayName !== null && VOID_ELEMENTS.has(strayName.toLowerCase())) {
+        parseOrphanCloseTag(s); // consumes `</name>`, return value intentionally discarded
+        continue;
+      }
+      break; // caller decides: mine, an ancestor's, or an orphan
+    }
     const head = peekLatteHead(s);
     if (isRealLatteStart(head)) {
       const key = stopKey(head);

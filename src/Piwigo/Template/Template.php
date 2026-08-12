@@ -893,13 +893,24 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     /**
      * Performs a string concatenation.
+     *
+     * `$tpl_var` can hold a `Latte\Runtime\Html` value, not just a plain
+     * string, when a caller assigned it via `assignVarFromTemplate()`
+     * (e.g. `ADMIN_CONTENT`, once its own producer -- like intro.latte --
+     * is a converted Latte template) -- cast to string rather than the
+     * previous `is_string($current) ? $current : ''` check, which
+     * silently discarded the entire existing value instead of
+     * concatenating onto it. Caught live once `intro.tpl`'s own
+     * conversion made this a real code path: CheckIntegrity.php's
+     * `concat('ADMIN_CONTENT', ...)` call would have dropped the whole
+     * dashboard, keeping only the check_integrity widget.
      */
     public function concat(string $tpl_var, string $value): void
     {
         $current = $this->smarty->getTemplateVars($tpl_var);
         $this->smarty->assign(
             $tpl_var,
-            (is_string($current) ? $current : '') . $value
+            (is_string($current) || $current instanceof Html ? (string) $current : '') . $value
         );
     }
 

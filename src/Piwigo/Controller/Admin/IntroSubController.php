@@ -173,10 +173,6 @@ final readonly class IntroSubController implements AdminSubControllerInterface
 
         $this->filesystemIntegrityChecker->fsQuickCheck();
 
-        $template->setFilenames([
-            'intro' => 'intro.tpl',
-        ]);
-
         $newsletter_email = null;
         $newsletter_subscribe_base_url = null;
         $newsletter_old_newsletters_url = null;
@@ -527,7 +523,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             storageChartData: $data_storage,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'intro');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'intro.latte');
 
         // Check integrity
         $integrityRepo = EntityManagerFactory::build($conn)->getRepository(IntegrityIgnoredAnomalyEntity::class);

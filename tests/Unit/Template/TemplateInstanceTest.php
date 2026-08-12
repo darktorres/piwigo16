@@ -1555,6 +1555,21 @@ test('concat treats a non-string existing value as an empty prefix', function ()
         ->toBe('suffix');
 });
 
+test('concat casts an existing Latte\Runtime\Html value to string instead of dropping it', function (): void {
+    // Real regression: ADMIN_CONTENT is Html-wrapped once its own
+    // producer (e.g. intro.latte) uses assignVarFromTemplate() --
+    // CheckIntegrity.php's own concat('ADMIN_CONTENT', ...) call would
+    // have silently discarded the whole existing value under the old
+    // is_string()-only check, keeping only the newly concatenated
+    // suffix.
+    $t = TemplateTestFactory::build();
+    $t->smarty->assign('greeting', new Latte\Runtime\Html('Hello '));
+    $t->concat('greeting', 'World');
+
+    expect($t->getTemplateVars('greeting'))
+        ->toBe('Hello World');
+});
+
 // --- picture/index buttons ------------------------------------------------
 
 test('parsePictureButtons assigns registered buttons sorted by rank', function (): void {

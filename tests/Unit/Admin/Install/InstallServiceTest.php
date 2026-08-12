@@ -310,10 +310,20 @@ test('activateCoreThemes() does not activate the non-selectable default placehol
     file_put_contents($themesDir . $themeId . '/screenshot.png', 'not a real png -- only its existence is checked');
     CurrentConfigTestFactory::get()->themesDir = $themesDir;
 
+    // Owns the `themes` row space for $themeId rather than assuming the
+    // shared DB's ambient state -- performThemeAction()'s own activate
+    // guard is `$dbRow !== null || $id === 'default'`, and this test's
+    // whole point is proving the *second* clause fires (the placeholder
+    // is exempted even with a real matching fs entry found). With a
+    // pre-existing themes row both clauses are simultaneously true, so
+    // the test could pass even if the $id === 'default' exemption were
+    // deleted from the source entirely -- the delete below isolates it.
+    $conn = DbConnection::build();
+    $conn->executeStatement('DELETE FROM themes WHERE id = ' . $conn->quote($themeId));
+
     try {
         InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
-        $conn = DbConnection::build();
         expect($conn->fetchAssociative('SELECT id FROM themes WHERE id = ' . $conn->quote($themeId)))->toBeFalse();
     } finally {
         FilesystemHelper::deltree($themesDir);
@@ -326,10 +336,14 @@ test('activateCoreThemes() activates nothing when no default template theme dire
     $emptyThemesDir = installServiceTestFixtureRoot('themes-empty');
     CurrentConfigTestFactory::get()->themesDir = $emptyThemesDir;
 
+    // See the sibling test above: owns the `themes` row space rather
+    // than assuming the shared DB's ambient state.
+    $conn = DbConnection::build();
+    $conn->executeStatement('DELETE FROM themes WHERE id = ' . $conn->quote(AppInfo::DEFAULT_TEMPLATE));
+
     try {
         InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
-        $conn = DbConnection::build();
         expect($conn->fetchAssociative('SELECT id FROM themes WHERE id = ' . $conn->quote(AppInfo::DEFAULT_TEMPLATE)))->toBeFalse();
     } finally {
         FilesystemHelper::deltree($emptyThemesDir);

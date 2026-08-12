@@ -44,6 +44,11 @@ class Scanner {
   constructor(text) {
     this.text = text;
     this.pos = 0;
+    // Stack of lowercase names for HTML elements currently being parsed
+    // (pushed before an element's children are parsed, popped right after) —
+    // lets an unmatched closing tag be told apart from a real ancestor's
+    // closer. See parseNodeList's stray-closing-tag handling.
+    this.openTags = [];
   }
   eof() {
     return this.pos >= this.text.length;
@@ -492,18 +497,30 @@ function parseNodeList(s, opts) {
     if (s.eof()) break;
     if (stopChar && s.peek() === stopChar) break;
     if (allowElements && s.startsWith("</")) {
-      // A closing tag for a void element (e.g. stray `<img ...></img>`, real
-      // markup found in configuration_watermark.latte) can never legitimately
-      // match anything real — void elements never have a matching open/close
-      // pair to begin with. Real browsers just discard an end tag for an
-      // element that isn't in the stack of open elements (a parse error with
-      // no DOM effect); treating it here as "maybe belongs to an ancestor"
-      // instead unwinds every real ancestor's own unclosed-propagation logic
-      // ALL the way to the document root, flattening the rest of the
-      // document's structure. Silently consume and discard it instead.
+      // A closing tag whose name isn't anywhere in the current stack of open
+      // elements can't belong to any ancestor *in this file*. Treating it
+      // as "maybe belongs to an ancestor" (the default `break`, below)
+      // unwinds every real ancestor's own unclosed-propagation logic one
+      // level at a time until it reaches a body-loop boundary, flattening
+      // everything in between out of its real nesting (found in
+      // install.latte: a typo'd `</options>` — `<options>` is never opened
+      // anywhere in the document — cascaded through td/tr/table/fieldset/
+      // form). So: absorb it here instead, without propagating. What to do
+      // with it once absorbed still depends on what it names, same as
+      // before:
+      //  - a void element (stray `<img ...></img>`, configuration_
+      //    watermark.latte) never has a matching open/close pair to begin
+      //    with, in any file — always safe garbage, drop it entirely.
+      //  - anything else *might* be a real closing tag for an element
+      //    opened in a *different* file, as part of a deliberate cross-file
+      //    split (header.latte/footer.latte's `<div id="the_page">`) — this
+      //    single-file parse can't tell "genuine typo" from "the other half
+      //    is elsewhere", so preserve it as literal passthrough rather than
+      //    guess it's garbage and silently delete a real closing tag.
       const strayName = peekCloseTagName(s);
-      if (strayName !== null && VOID_ELEMENTS.has(strayName.toLowerCase())) {
-        parseOrphanCloseTag(s); // consumes `</name>`, return value intentionally discarded
+      if (strayName !== null && !s.openTags.includes(strayName.toLowerCase())) {
+        const orphan = parseOrphanCloseTag(s);
+        if (!VOID_ELEMENTS.has(strayName.toLowerCase())) nodes.push(orphan);
         continue;
       }
       break; // caller decides: mine, an ancestor's, or an orphan
@@ -630,7 +647,9 @@ function parseElement(s, inheritedStopKeywords) {
       // (legacy HTML relying on implicit closing, e.g. a <td> never closed
       // before the next {else}) recognize that keyword as its own implicit
       // close instead of trying to parse it as a fresh, unrecognized tag.
+      s.openTags.push(lower);
       children = parseNodeList(s, { allowElements: true, stopKeywords: inheritedStopKeywords });
+      s.openTags.pop();
     }
     // A same-file document fragment (Piwigo's header/footer split) can leave
     // elements open at EOF, or close an element opened by a sibling file's

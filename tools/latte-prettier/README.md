@@ -79,6 +79,50 @@ real, root-caused construct at a time — never a guessed fix. Along the way:
   recognizing a closing tag that names a known void element as always-stray
   and discarding it on the spot, matching real HTML5 parser behavior,
   instead of letting it propagate.
+- **The same class of bug, broader**, found the same way (manual review),
+  in `install.latte`: `<td>{='Options'|translate}</options>` — a typo (every
+  other cell in the same table is `<td>...</td>`; `<options>` isn't even a
+  real HTML tag and is never opened anywhere in the tree). The
+  void-element-only fix above didn't catch this, since `options` isn't
+  void, so the same cascading-unclosed-ancestor flattening recurred
+  (td → tr → table → fieldset → form). The real, general rule real
+  browsers use isn't "void elements are always stray" — it's "any closing
+  tag whose name isn't anywhere in the current stack of open elements is
+  stray, no matter what it's named." Fixed by threading an explicit stack
+  of open element names through the parser (`Scanner#openTags`, pushed/
+  popped around an element's own children-parsing) and checking it before
+  ever propagating a mismatched closing tag upward; this subsumes the
+  void-element case entirely (void elements are never pushed, so they
+  always fail the stack check too). What to do once a tag is recognized as
+  stray still depends on what it names: a void element never has a
+  legitimate open/close pair in *any* file, so it's dropped outright; any
+  other name is preserved as literal passthrough, because a single-file
+  parse can't tell "genuine typo" from "the other half of this element is
+  in a sibling file" (`header.latte`/`footer.latte`'s own split — first
+  draft of this fix got this backwards and started silently deleting
+  `footer.latte`'s real `</div>`/`</body>`/`</html>`, caught by re-running
+  the fix across the whole tree and diffing before/after rather than
+  trusting the one file it was written against). Also fixed the *same*
+  bug, previously undetected, in `batch_manager_unit.latte`,
+  `photos_add_direct.latte`, `picture_modify.latte`, and
+  `search_filters.inc.latte` — all four have a legitimate `<a>`/`<div>`
+  opened independently in each branch of an `{if}`/`{else}` with a single
+  shared closing tag after `{/if}`, which the same propagation bug quietly
+  mis-indented the same way without fully flattening it, so earlier manual
+  review passed over it as an acceptable case of the already-known "orphan
+  tag indentation isn't perfectly matched" limitation instead of the
+  distinct bug it actually was. One cosmetic loose end remains, deliberately
+  not chased further: because this parser doesn't implement HTML5's
+  "starting a new same-context element implicitly closes the previous one"
+  rule (e.g. a second `<td>` auto-closing the first), a stray tag sitting
+  between two such elements makes the second parse as a *nested child* of
+  the first instead of a sibling — `install.latte`'s fixed output nests
+  `<td colspan="2">` one level inside the unclosed `<td>` rather than next
+  to it, and the immediately-enclosing `<tr>`'s own closing tag ends up one
+  indent level deeper than its opening tag. Confirmed cosmetic only: real
+  browsers apply that same auto-closing rule when *they* parse the output,
+  so the rendered DOM is unaffected either way — same class of caveat as
+  the existing orphan-tag-indentation note.
 
 None of this is wired into `lefthook` pre-commit or CI — that's a deliberate,
 separate decision left for whoever wants it, not assumed here.

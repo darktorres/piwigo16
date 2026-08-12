@@ -79,10 +79,6 @@ final readonly class PluginsNewPageRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
-        $template->setFilenames([
-            'plugins' => 'plugins_new.tpl',
-        ]);
-
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths, $this->currentConfig);
@@ -288,6 +284,6 @@ final readonly class PluginsNewPageRenderer
             plugins: $tpl_plugins,
         ));
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'plugins');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'plugins_new.latte');
     }
 }

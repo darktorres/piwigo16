@@ -93,10 +93,9 @@ final readonly class PopuphelpController implements ControllerInterface
         $help_content = $this->eventDispatcher->dispatchChange(new GetPopupHelpContent($help_content, $rawPage))
             ->content;
 
-        $template->setFilename('popuphelp', 'popuphelp.tpl');
         $template->assignContext(new PopuphelpPageContext(helpContent: $help_content));
 
-        $template->parse('popuphelp', false);
+        $template->parse('popuphelp.latte', false);
 
         $body = PageTail::renderToString();
 

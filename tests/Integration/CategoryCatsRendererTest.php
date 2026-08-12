@@ -184,8 +184,8 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
 
         $htmlService = HtmlServiceTestFactory::build();
-        // mainpage_categories.tpl's own {assign var=derivative
-        // value=$pwg->derivative(...)} constructs a real DerivativeImage per
+        // mainpage_categories.latte's own {var $derivative =
+        // $pwg->derivative(...)} constructs a real DerivativeImage per
         // category thumbnail, whose getUrl() resolves UrlServiceInterface
         // live from the container -- $urlService below must share the same
         // container-shared RootPathOverride, see that class's own docblock.
@@ -256,9 +256,11 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
     private function renderedCategoriesHtml(): string
     {
+        // assignVarFromTemplate() wraps CATEGORIES in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
         $vars = $this->template->getTemplateVars('CATEGORIES');
 
-        return is_string($vars) ? $vars : '';
+        return $vars instanceof \Latte\Runtime\Html ? (string) $vars : '';
     }
 
     public function testRenderRendersTheRootCategoriesWithTheirOwnRepresentativePicture(): void

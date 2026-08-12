@@ -33,7 +33,7 @@ use Piwigo\Users\UserStatus;
  * the real happy path -- composed entirely from building blocks this
  * campaign already proved tractable individually: `MenubarRenderer`'s own
  * `guestAccess(false)` cheap-skip trick (see its own test), a stub
- * `header.tpl` (see `PageHeaderRendererTest.php`), and `PageTail`'s own
+ * `header.latte` (see `PageHeaderRendererTest.php`), and `PageTail`'s own
  * update-check/telemetry no-op config guards + real `ConfigService`/
  * `CurrentLogger` setup (see `PageTailTest.php`). Resolved via
  * `Kernel::container()->get()` -- 15 constructor deps, none hand-built.
@@ -95,10 +95,10 @@ test('invoke renders the real about page for a guest visitor, with menubar/updat
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'about.tpl', 'about_rendered=yes');
-        file_put_contents($tplDir . 'header.tpl', 'title={$PAGE_TITLE}');
-        file_put_contents($tplDir . 'menubar.tpl', 'menubar_rendered=yes');
-        file_put_contents($tplDir . 'footer.tpl', 'version={$VERSION}');
+        file_put_contents($tplDir . 'about.latte', 'about_rendered=yes');
+        file_put_contents($tplDir . 'header.latte', 'title={$PAGE_TITLE}');
+        file_put_contents($tplDir . 'menubar.latte', 'menubar_rendered=yes');
+        file_put_contents($tplDir . 'footer.latte', 'version={$VERSION}');
         $template->setTemplateDir($tplDir);
 
         $controller = Kernel::container()->get(AboutController::class);

@@ -402,10 +402,6 @@ final readonly class CommentsController implements ControllerInterface
         $title = $this->lang->t('User comments');
         $this->pageState->setBodyId('theCommentsPage');
 
-        $template->setFilenames([
-            'comments' => 'comments.tpl',
-            'comment_list' => 'comment_list.tpl',
-        ]);
         $keyword_param = $commentsRequest->keywordDisplay;
         $author_param = $commentsRequest->authorDisplay;
 
@@ -639,9 +635,9 @@ final readonly class CommentsController implements ControllerInterface
         $this->htmlService
             ->flushPageMessages();
         if (count($comments) > 0) {
-            $template->assignVarFromHandle('COMMENT_LIST', 'comment_list');
+            $template->assignVarFromTemplate('COMMENT_LIST', 'comment_list.latte');
         }
-        $template->parse('comments', false);
+        $template->parse('comments.latte', false);
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

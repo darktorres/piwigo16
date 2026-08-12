@@ -512,25 +512,19 @@ final class MailService implements MailerInterface
 
     /**
      * Resolves a mail template base name (no extension) to whichever real
-     * file actually exists in $template's current directory chain --
-     * $template->smarty->templateExists() (Smarty's own method, used
-     * directly by every real caller of this helper) has no Latte
-     * awareness at all, unlike setFilename()'s own preferLatteSibling()
-     * fallback, so a bare '$baseName.tpl' check would go permanently
-     * false, and silently skip that mail section, the moment
-     * $baseName.tpl becomes $baseName.latte. Prefers .latte, matching
-     * the migration's own end-state; still checks .tpl so a
-     * not-yet-converted plugin-provided runtime template (the
-     * $tpl['filename'] mechanism in mail()/mailAdmins()/mailGroup()) keeps
-     * working unchanged.
+     * file actually exists in $template's current directory chain.
+     * Prefers .latte, matching the migration's own end-state; still
+     * checks .tpl so a not-yet-converted plugin-provided runtime template
+     * (the $tpl['filename'] mechanism in mail()/mailAdmins()/mailGroup())
+     * keeps working unchanged.
      */
     private function resolveMailTemplateFilename(Template $template, string $baseName): ?string
     {
-        if ($template->smarty->templateExists($baseName . '.latte')) {
+        if ($template->templateExists($baseName . '.latte')) {
             return $baseName . '.latte';
         }
 
-        if ($template->smarty->templateExists($baseName . '.tpl')) {
+        if ($template->templateExists($baseName . '.tpl')) {
             return $baseName . '.tpl';
         }
 
@@ -964,9 +958,6 @@ final class MailService implements MailerInterface
                 ];
                 $this->eventDispatcher->dispatchNotify(new BeforeParseMailTemplate($cacheKey, $contentType));
 
-                $template->setFilename('mail_header', 'header.tpl');
-                $template->setFilename('mail_footer', 'footer.tpl');
-
                 $addUrlParams = [];
                 if (isset($args['auth_key']) && ! self::emptyValue($args['auth_key'])) {
                     $addUrlParams['auth'] = $args['auth_key'];
@@ -988,14 +979,12 @@ final class MailService implements MailerInterface
                 if ($contentType === 'text/html') {
                     $globalMailCssFilename = $this->resolveMailTemplateFilename($template, 'global-mail-css');
                     if ($globalMailCssFilename !== null) {
-                        $template->setFilename('global-css', $globalMailCssFilename);
-                        $template->assignVarFromHandle('GLOBAL_MAIL_CSS', 'global-css');
+                        $template->assignVarFromTemplate('GLOBAL_MAIL_CSS', $globalMailCssFilename);
                     }
 
                     $themeMailCssFilename = $this->resolveMailTemplateFilename($template, 'mail-css-' . $args['theme']);
                     if ($themeMailCssFilename !== null) {
-                        $template->setFilename('css', $themeMailCssFilename);
-                        $template->assignVarFromHandle('MAIL_CSS', 'css');
+                        $template->assignVarFromTemplate('MAIL_CSS', $themeMailCssFilename);
                     }
                 }
             }
@@ -1007,7 +996,7 @@ final class MailService implements MailerInterface
             ));
 
             // Header.
-            $contents[$contentType] = $template->parse('mail_header', true);
+            $contents[$contentType] = $template->parse('header.latte', true);
 
             // Content -- stored in a temp variable; if a content template is
             // used it's assigned to CONTENT, otherwise appended to the mail.
@@ -1039,12 +1028,11 @@ final class MailService implements MailerInterface
                 }
                 $runtimeTemplateFilename = $this->resolveMailTemplateFilename($template, $tpl['filename']);
                 if ($runtimeTemplateFilename !== null) {
-                    $template->setFilename($tpl['filename'], $runtimeTemplateFilename);
                     $template->assignContext(new MailRuntimeTemplatePageContext(
                         extra: (isset($tpl['assign']) && ! self::emptyValue($tpl['assign'])) ? $tpl['assign'] : [],
                         content: $mailContent,
                     ));
-                    $contents[$contentType] .= $template->parse($tpl['filename'], true);
+                    $contents[$contentType] .= $template->parse($runtimeTemplateFilename, true);
                 } else {
                     $contents[$contentType] .= $mailContent;
                 }
@@ -1053,7 +1041,7 @@ final class MailService implements MailerInterface
             }
 
             // Footer.
-            $contents[$contentType] .= $template->parse('mail_footer', true);
+            $contents[$contentType] .= $template->parse('footer.latte', true);
         }
 
         // Undo compute-root_path.

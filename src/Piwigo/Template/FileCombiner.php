@@ -206,17 +206,15 @@ final class FileCombiner
             }
 
             $template = $this->currentTemplate->get();
-            $handle = $this->type . '.' . $combinable->id;
             $real_path = realpath($this->paths->root . $combinable->path);
             if ($real_path === false) {
                 throw new Exception("processCombinable(): file not found for {$combinable->path}");
             }
-            $template->setFilename($handle, $real_path);
             $this->eventDispatcher->dispatchNotify(new CombinablePreparse($template, $combinable, $this)); // allow themes and plugins to set their own vars to template ...
-            // parse($handle, true) is always string (never null) since we
+            // parse($real_path, true) is always string (never null) since we
             // always pass true here (see Template::parse()'s conditional
             // return type).
-            $content = $template->parse($handle, true);
+            $content = $template->parse($real_path, true);
 
             if ($this->is_css) {
                 $content = self::processCss($content, $combinable->path, $header, $this->urlService, $this->paths, $this->eventDispatcher);

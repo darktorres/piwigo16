@@ -79,10 +79,6 @@ final readonly class TagsController implements ControllerInterface
         $title = $this->lang->t('Tags');
         $this->pageState->setBodyId('theTagsPage');
 
-        $template->setFilenames([
-            'tags' => 'tags.tpl',
-        ]);
-
         $default_display_mode = $this->currentConfig->tagsDefaultDisplayMode;
 
         $display_mode = $default_display_mode;
@@ -215,7 +211,7 @@ final readonly class TagsController implements ControllerInterface
         $this->eventDispatcher->dispatchNotify(new LocEndTags());
         $this->htmlService
             ->flushPageMessages();
-        $template->parse('tags', false);
+        $template->parse('tags.latte', false);
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

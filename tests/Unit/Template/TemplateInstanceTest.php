@@ -1097,29 +1097,7 @@ test('themeConf narrows a non-string themeconf value down to an empty string', f
         ->toBe('');
 });
 
-// --- setFilename / setExtent / setExtents / getExtent --------------
-
-test('setFilename delegates to setFilenames for a single handle', function (): void {
-    $t = TemplateTestFactory::build();
-
-    expect($t->setFilename('tail', 'footer.tpl'))
-        ->toBeTrue();
-    expect($t->files['tail'])->toBe('footer.tpl');
-});
-
-test('setFilenames unsets an already-registered handle when its mapped filename is explicitly null', function (): void {
-    $t = TemplateTestFactory::build();
-    $t->setFilename('tail', 'footer.tpl');
-
-    $result = $t->setFilenames([
-        'tail' => null,
-    ]);
-
-    expect($result)
-        ->toBeTrue()
-        ->and($t->files)
-        ->not->toHaveKey('tail');
-});
+// --- setExtent / setExtents / getExtent -------------------------------
 
 test('setExtents returns false for a non-array argument', function (): void {
     $t = TemplateTestFactory::build();
@@ -1355,28 +1333,7 @@ test('setExtents does not register a handle when realpath fails despite file_exi
         ->toBe('orig.tpl');
 });
 
-// --- assignVarFromHandle / clearAssign --------------------------------
-
-test('assignVarFromHandle assigns the parsed handle output (returned, not echoed) and returns true', function (): void {
-    $t = TemplateTestFactory::build();
-    $tplDir = CurrentPathsTestFactory::get()->root . '/tpl/';
-    mkdir($tplDir, 0o777, true);
-    file_put_contents($tplDir . 'partial.tpl', 'Hello {$name}');
-    $t->setTemplateDir($tplDir);
-    $t->setFilename('partial', 'partial.tpl');
-    $t->smarty->assign('name', 'World');
-
-    $result = $t->assignVarFromHandle('greeting', 'partial');
-
-    // assignVarFromHandle()'s only return statement is a hardcoded
-    // `return true;`, so PHPStan can already prove this -- but the return
-    // value is part of this test's own stated contract (see its name).
-    // @phpstan-ignore pest.expectation.redundant
-    expect($result)
-        ->toBeTrue()
-        ->and($t->getTemplateVars('greeting'))
-        ->toBe('Hello World');
-});
+// --- clearAssign -----------------------------------------------------
 
 test('clearAssign removes a previously assigned template variable', function (): void {
     $t = TemplateTestFactory::build();
@@ -1455,7 +1412,12 @@ test('parse assigns ROOT_URL and ROOT_PATH before compiling', function (): void 
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'x');
     $t->setTemplateDir($tplDir);
-    $t->setFilename('x', 'x.tpl');
+    // setFilename() itself is gone (no real caller left) -- $files stays
+    // a public property read directly by parse()'s still-present (until
+    // the next commit's full Smarty-engine removal) Smarty-dispatch branch,
+    // so writing it directly is the real, still-live way to exercise that
+    // branch's own behavior.
+    $t->files['x'] = 'x.tpl';
 
     $t->parse('x', true);
 
@@ -1471,7 +1433,12 @@ test('parse registers external filters before compiling (so they run) and unregi
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'hello');
     $t->setTemplateDir($tplDir);
-    $t->setFilename('x', 'x.tpl');
+    // setFilename() itself is gone (no real caller left) -- $files stays
+    // a public property read directly by parse()'s still-present (until
+    // the next commit's full Smarty-engine removal) Smarty-dispatch branch,
+    // so writing it directly is the real, still-live way to exercise that
+    // branch's own behavior.
+    $t->files['x'] = 'x.tpl';
     $t->setPrefilter('x', 'template_instance_test_uppercase_prefilter');
 
     $result = $t->parse('x', true);
@@ -1492,7 +1459,12 @@ test('parse salts compile_id with the current lang code during compilation when 
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'x');
     $t->setTemplateDir($tplDir);
-    $t->setFilename('x', 'x.tpl');
+    // setFilename() itself is gone (no real caller left) -- $files stays
+    // a public property read directly by parse()'s still-present (until
+    // the next commit's full Smarty-engine removal) Smarty-dispatch branch,
+    // so writing it directly is the real, still-live way to exercise that
+    // branch's own behavior.
+    $t->files['x'] = 'x.tpl';
     $before = $t->smarty->compile_id;
     $captured = null;
     // Registered directly on Smarty (bypassing setPrefilter()'s own
@@ -1522,7 +1494,12 @@ test('parse does not salt compile_id with a lang code when cache-by-language is 
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'x');
     $t->setTemplateDir($tplDir);
-    $t->setFilename('x', 'x.tpl');
+    // setFilename() itself is gone (no real caller left) -- $files stays
+    // a public property read directly by parse()'s still-present (until
+    // the next commit's full Smarty-engine removal) Smarty-dispatch branch,
+    // so writing it directly is the real, still-live way to exercise that
+    // branch's own behavior.
+    $t->files['x'] = 'x.tpl';
     $captured = null;
     $t->setPrefilter('x', function (string $source, \Smarty\Template $template) use (&$captured): string {
         $captured = $template->compile_id;

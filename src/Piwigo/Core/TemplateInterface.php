@@ -36,15 +36,7 @@ interface TemplateInterface
      */
     public function assignContext(TemplatePageContext $context): void;
 
-    public function assignVarFromHandle(string $varname, string $handle): bool;
-
-    /**
-     * Direct-filename sibling of `assignVarFromHandle()` above -- see
-     * `Template::assignVarFromTemplate()`'s own docblock.
-     */
     public function assignVarFromTemplate(string $varname, string $file): void;
-
-    public function setFilename(string $handle, string $filename): bool;
 
     public function clearAssign(string $tpl_var): void;
 }

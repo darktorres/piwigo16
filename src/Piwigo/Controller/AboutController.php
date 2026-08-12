@@ -36,8 +36,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * Renders the about page: no POST handling, no redirects.
  *
  * Nothing in this render chain echoes -- PageHeaderRenderer/MenubarRenderer
- * only ever call $template->assignContext()/parse($handle, true) internally,
- * $template->parse('about', false) accumulates into Template's own
+ * only ever call $template->assignContext()/parse($file, true) internally,
+ * $template->parse('about.latte', false) accumulates into Template's own
  * $output buffer, and PageTail::renderToString() drains that whole buffer
  * (header + about content + tail) as one string. See
  * Template::fetchOutput()'s own docblock for the accumulator mechanics
@@ -84,8 +84,6 @@ final readonly class AboutController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginAbout());
 
-        $template->setFilename('about', 'about.tpl');
-
         $about_message_raw = $this->lang->load('about.html', '', [
             'return' => true,
         ]);
@@ -113,7 +111,7 @@ final readonly class AboutController implements ControllerInterface
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->htmlService
             ->flushPageMessages();
-        $template->parse('about', false);
+        $template->parse('about.latte', false);
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

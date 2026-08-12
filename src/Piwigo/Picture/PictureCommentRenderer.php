@@ -315,9 +315,6 @@ final class PictureCommentRenderer
             }
             $template->assignContext(new PictureCommentAddPageContext($tplVar));
         }
-        $template->setFilenames([
-            'comment_list' => 'comment_list.tpl',
-        ]);
-        $template->assignVarFromHandle('COMMENT_LIST', 'comment_list');
+        $template->assignVarFromTemplate('COMMENT_LIST', 'comment_list.latte');
     }
 }

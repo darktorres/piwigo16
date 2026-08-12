@@ -226,7 +226,6 @@ final class NotificationByMailSender
             $mailTemplate = $this->mailer
                 ->getMailTemplate($emailFormat);
             $this->mailTemplate = $mailTemplate;
-            $mailTemplate->setFilename('notification_by_mail', 'notification_by_mail.tpl');
         }
     }
 
@@ -387,7 +386,7 @@ final class NotificationByMailSender
                                 'from' => $sendAsMailFormatted,
                                 'subject' => $subject,
                                 'email_format' => $emailFormat,
-                                'content' => $mailTemplate->parse('notification_by_mail', true),
+                                'content' => $mailTemplate->parse('notification_by_mail.latte', true),
                                 'content_format' => $emailFormat,
                             ]
                         );
@@ -619,7 +618,7 @@ final class NotificationByMailSender
                                     'from' => $this->sendAsMailFormatted ?? '',
                                     'subject' => $subject,
                                     'email_format' => $mailEmailFormat,
-                                    'content' => $mailTemplate->parse('notification_by_mail', true),
+                                    'content' => $mailTemplate->parse('notification_by_mail.latte', true),
                                     'content_format' => $mailEmailFormat,
                                 ];
                                 if (is_string($auth)) {

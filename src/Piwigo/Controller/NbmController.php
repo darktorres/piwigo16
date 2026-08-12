@@ -101,10 +101,6 @@ final readonly class NbmController implements ControllerInterface
         $title = $this->lang->t('Notification');
         $this->pageState->setBodyId('theNBMPage');
 
-        $template->setFilenames([
-            'nbm' => 'nbm.tpl',
-        ]);
-
         $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
@@ -117,7 +113,7 @@ final readonly class NbmController implements ControllerInterface
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->htmlService
             ->flushPageMessages();
-        $template->parse('nbm');
+        $template->parse('nbm.latte');
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

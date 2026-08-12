@@ -101,10 +101,6 @@ final readonly class NotificationController implements ControllerInterface
             'nofollow' => 1,
         ]);
 
-        $template->setFilenames([
-            'notification' => 'notification.tpl',
-        ]);
-
         $template->assignContext(new NotificationPageContext(
             feedUrl: $feed_url,
             feedImageOnlyUrl: $feed_image_only_url,
@@ -122,7 +118,7 @@ final readonly class NotificationController implements ControllerInterface
         $this->eventDispatcher->dispatchNotify(new LocEndNotification());
         $this->htmlService
             ->flushPageMessages();
-        $template->parse('notification', false);
+        $template->parse('notification.latte', false);
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

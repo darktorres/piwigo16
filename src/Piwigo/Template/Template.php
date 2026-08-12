@@ -139,7 +139,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Backs `once()` -- a real, per-request cross-`{include}` dedup guard.
      * Smarty's own equivalent (`{if !$smarty.capture.NAME}...{capture
-     * name=NAME}1{/capture}...{/if}`, e.g. `album_selector.inc.tpl`'s guard
+     * name=NAME}1{/capture}...{/if}`, e.g. `album_selector.inc.latte`'s guard
      * against rendering twice when included from more than one place in
      * the same page) has no Latte equivalent: a bare `{capture $var}`
      * inside an `{include}`d template is local to that one render call and
@@ -532,6 +532,17 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     private function resolveLatteTemplatePath(string $file): string
     {
+        // Already a real, absolute filesystem path -- FileCombiner's own
+        // "template=true" combinable rendering (CSS/JS files rendered
+        // through the template engine before being combined) resolves
+        // $combinable->path to a real path via realpath() itself, before
+        // ever reaching here; walking $this->templateDirs against an
+        // already-absolute path below would double-prefix it into a
+        // nonexistent candidate.
+        if (str_starts_with($file, '/') && file_exists($file)) {
+            return $file;
+        }
+
         $baseName = basename($file);
         if (isset($this->extents[$baseName])) {
             return $this->extents[$baseName];
@@ -684,68 +695,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Sets the template filename for handle.
-     */
-    #[Override]
-    public function setFilename(string $handle, string $filename): bool
-    {
-        return $this->setFilenames([
-            $handle => $filename,
-        ]);
-    }
-
-    /**
-     * Sets the template filenames for handles.
-     *
-     * @param array<string, string|null> $filename_array hashmap of
-     *   handle=>filename; a null value unsets that handle (no current
-     *   first-party caller exercises this, but the API supports it)
-     */
-    public function setFilenames(array $filename_array): bool
-    {
-        reset($filename_array);
-        foreach ($filename_array as $handle => $filename) {
-            if ($filename === null) {
-                unset($this->files[$handle]);
-            } else {
-                $this->files[$handle] = $this->preferLatteSibling($this->getExtent($filename, $handle));
-            }
-        }
-        return true;
-    }
-
-    /**
-     * If `$filename` (e.g. `'header.tpl'`) has a `.latte` sibling
-     * somewhere in the current theme's directory chain, prefer it.
-     *
-     * Needed for callers shared across themes that haven't converted at
-     * the same time -- confirmed live converting `header.tpl`:
-     * `PageHeaderRenderer` renders through the same `setFilename('header',
-     * 'header.tpl')` + `parse('header')` handle-based call for *every*
-     * theme, admin included. Without this check, `parse()`'s dispatch
-     * (see below) would see the handle is registered and always take the
-     * Smarty path, even for a theme whose `header.tpl` has since become
-     * `header.latte` -- Smarty would then fail to find a file that no
-     * longer exists. This lets that one shared call site keep working
-     * unmodified while each theme converts on its own schedule; no
-     * per-caller theme-awareness needed.
-     */
-    private function preferLatteSibling(string $filename): string
-    {
-        if (! str_ends_with($filename, '.tpl')) {
-            return $filename;
-        }
-        $latteName = substr($filename, 0, -4) . '.latte';
-        foreach ($this->templateDirs as $dir) {
-            if (file_exists(rtrim($dir, '/') . '/' . $latteName)) {
-                return $latteName;
-            }
-        }
-
-        return $filename;
-    }
-
-    /**
      * Sets template extention filename for handles.
      */
     public function setExtent(string $filename, mixed $param, string $dir = '', bool $overwrite = true, string $theme = 'N/A'): bool
@@ -818,28 +767,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Defines _$varname_ as the compiled result of _$handle_.
-     * This can be used to effectively include a template in another template.
-     * This is equivalent to $this->smarty->assign($varname, $this->parse($handle, true)).
-     *
-     * @return true
-     */
-    #[Override]
-    public function assignVarFromHandle(string $varname, string $handle): bool
-    {
-        $this->smarty->assign($varname, $this->parse($handle, true));
-        return true;
-    }
-
-    /**
-     * Renders `$file` (a real filename, e.g. `'popuphelp.latte'` --
-     * resolved the same way `parse()` resolves one) and assigns the result
-     * to `$varname`, wrapped in `Latte\Runtime\Html` so it propagates
-     * through Latte's auto-escape unmolested at every `{$var}` print site
-     * downstream -- the direct-filename sibling of `assignVarFromHandle()`
-     * above, added for already-converted callers. Both coexist until every
-     * caller has migrated (docs/PLAN.md's P31 section) and
-     * `assignVarFromHandle()` is removed.
+     * Renders `$file` (a real filename, e.g. `'popuphelp.latte'`) and
+     * assigns the result to `$varname`, wrapped in `Latte\Runtime\Html` so
+     * it propagates through Latte's auto-escape unmolested at every
+     * `{$var}` print site downstream.
      */
     #[Override]
     public function assignVarFromTemplate(string $varname, string $file): void
@@ -900,7 +831,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * is a converted Latte template) -- cast to string rather than the
      * previous `is_string($current) ? $current : ''` check, which
      * silently discarded the entire existing value instead of
-     * concatenating onto it. Caught live once `intro.tpl`'s own
+     * concatenating onto it. Caught live once `intro.latte`'s own
      * conversion made this a real code path: CheckIntegrity.php's
      * `concat('ADMIN_CONTENT', ...)` call would have dropped the whole
      * dashboard, keeping only the check_integrity widget.
@@ -934,22 +865,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Renders `$handle` and appends the result to the output (or returns it
-     * if `$return` is true).
+     * Renders `$file` (a real filename, e.g. `'header.latte'`) and appends
+     * the result to the output (or returns it if `$return` is true).
      *
-     * Dispatches on the *resolved* file's real extension, not merely on
-     * whether `$handle` happens to be a registered handle -- a handle
-     * registered via `setFilename()`/`setFilenames()` may have already
-     * been resolved to a `.latte` sibling by `preferLatteSibling()`
-     * (see that method's own docblock for why this matters: a caller
-     * shared across themes, like `PageHeaderRenderer`, must pick up a
-     * per-theme conversion automatically). If `$handle` isn't a
-     * registered handle at all, it's treated as a real filename directly
-     * (the calling convention added for P31 -- see docs/PLAN.md's P31
-     * section, "Transition strategy"). Both calling conventions coexist
-     * until every caller has migrated; `setFilename()`/`setFilenames()`
-     * and the handle-lookup branch are removed together once they are
-     * (P31.7).
+     * `$this->files`/`parseSmarty()` below are unreachable dead weight at
+     * this point -- `setFilename()`/`setFilenames()` (the only writers of
+     * `$this->files`) were removed once every real caller migrated to
+     * this direct-filename convention -- kept structurally in place only
+     * until the P31.7 Smarty-engine removal itself, so this stays a
+     * separately-verifiable, narrowly-scoped diff rather than folding the
+     * two together.
      *
      * @phpstan-return ($return is true ? string : null)
      */
@@ -972,10 +897,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     private function parseSmarty(string $handle, bool $return): ?string
     {
         $this->smarty->assign('ROOT_URL', self::urlService()->getRootUrl());
-        // ROOT_PATH is the .tpl-side equivalent of PHPWG_ROOT_PATH for
+        // ROOT_PATH is the template-side equivalent of PHPWG_ROOT_PATH for
         // the handful of templates that need a real filesystem existence
-        // check (datepicker.inc.tpl's own
-        // `{if $ROOT_PATH|@cat:...|@file_exists}`), not a URL -- ROOT_URL
+        // check (datepicker.inc.latte's own
+        // `{if ($ROOT_PATH|cat:...|file_exists)}`), not a URL -- ROOT_URL
         // above is request-relative and wrong for file_exists().
         $this->smarty->assign('ROOT_PATH', $this->paths->root);
 

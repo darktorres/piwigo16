@@ -95,7 +95,7 @@ test('render skips every real DB-backed block when no listener has registered an
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'menubar.tpl', 'menubar_rendered=yes');
+        file_put_contents($tplDir . 'menubar.latte', 'menubar_rendered=yes');
         $template->setTemplateDir($tplDir);
 
         $renderer = menubarRendererTestSubject();
@@ -147,9 +147,18 @@ test('render skips every real DB-backed block when no listener has registered an
             $currentLogger,
         );
 
+        // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in
+        // Latte\Runtime\Html, not a plain string.
+        $menubar = $template->getTemplateVars('MENUBAR');
+        expect($menubar)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $menubar instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
         expect($countCategories)
             ->toBeNull()
-            ->and($template->getTemplateVars('MENUBAR'))
+            ->and((string) $menubar)
             ->toContain('menubar_rendered=yes');
     } finally {
         CurrentTemplateTestFactory::get()->reset();

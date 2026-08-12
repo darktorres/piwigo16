@@ -94,7 +94,7 @@ test('__invoke returns a 400 "Hacking attempt!" response for a page value with d
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'header.tpl', 'header');
+        file_put_contents($tplDir . 'header.latte', 'header');
         $template->setTemplateDir($tplDir);
 
         $controller = new PopuphelpController(

@@ -29,7 +29,7 @@ it('saves a real template replacement and echoes it back on the next render', fu
             'pwg_token' => H::pwgToken($page),
             'submit' => '1',
             'reptpl' => ['distributed/samples/my-picture.latte'],
-            'original' => ['about.tpl'],
+            'original' => ['about.latte'],
             'url' => ['category'],
             'bound' => ['----------'],
         ]);
@@ -58,8 +58,8 @@ it('normalizes a "----------" url keyword to N/A in the persisted replacement', 
         $result = H::adminPost($page, '/admin.php?page=extend_for_templates', [
             'pwg_token' => H::pwgToken($page),
             'submit' => '1',
-            'reptpl' => ['distributed/samples/my-header.tpl'],
-            'original' => ['about.tpl'],
+            'reptpl' => ['distributed/samples/my-header.latte'],
+            'original' => ['about.latte'],
             'url' => ['----------'],
             'bound' => ['----------'],
         ]);
@@ -71,11 +71,11 @@ it('normalizes a "----------" url keyword to N/A in the persisted replacement', 
         expect($raw)
             ->not->toBeNull();
         $decoded = json_decode((string) $raw, true);
-        if (! is_array($decoded) || ! is_array($decoded['distributed/samples/my-header.tpl'] ?? null)) {
+        if (! is_array($decoded) || ! is_array($decoded['distributed/samples/my-header.latte'] ?? null)) {
             throw new RuntimeException('expected a real replacement entry, got: ' . var_export($decoded, true));
         }
         // [handle, url_keyword, bound_tpl] -- index 1 is url_keyword.
-        expect($decoded['distributed/samples/my-header.tpl'][1])->toBe('N/A');
+        expect($decoded['distributed/samples/my-header.latte'][1])->toBe('N/A');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -106,7 +106,7 @@ it('skips a malformed replacement row (non-string field) without erroring', func
 it('drops a stale replacement whose replacer file no longer exists on disk', function (): void {
     $snapshot = H::snapshotConfig(['extents_for_templates']);
     $extents = json_encode([
-        '/no-longer-on-disk.tpl' => ['about', 'category', 'N/A'],
+        '/no-longer-on-disk.latte' => ['about.latte', 'category', 'N/A'],
     ]);
     if ($extents === false) {
         throw new RuntimeException('json_encode failed for the extents_for_templates config value');
@@ -117,7 +117,7 @@ it('drops a stale replacement whose replacer file no longer exists on disk', fun
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=extend_for_templates');
 
-        $page->assertDontSee('/no-longer-on-disk.tpl');
+        $page->assertDontSee('/no-longer-on-disk.latte');
         $page->assertNoJavaScriptErrors();
     } finally {
         H::restoreConfig($snapshot);

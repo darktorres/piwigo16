@@ -207,20 +207,13 @@ final readonly class RedirectService implements RedirectServiceInterface
         $url_link = $url;
         $title = 'redirection';
 
-        $template->setFilenames([
-            'redirect' => 'redirect.tpl',
-        ]);
-
         $refresh_str = (string) $refresh_time;
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
 
-        $template->setFilenames([
-            'redirect' => 'redirect.tpl',
-        ]);
         $template->assignContext(new RedirectHtmlPageContext(redirectMsg: $msg));
 
-        $template->parse('redirect');
+        $template->parse('redirect.latte');
 
         $body = PageTail::renderToString();
         throw new ResponseReadyException(ResponseFactory::html($body, $status));

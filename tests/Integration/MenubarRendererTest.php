@@ -38,7 +38,7 @@ use Piwigo\Users\User;
  * every other reader of it is a Browser-suite full-page load (see
  * AboutControllerTest's own docblock), which doesn't feed PHPUnit code
  * coverage. Real Template compiling the actual themes/default/template/
- * menubar*.tpl set, same shape as CategoryDefaultRendererTest/
+ * menubar*.latte set, same shape as CategoryDefaultRendererTest/
  * CalendarRendererTest -- and the real blockmanager_register_blocks event
  * handler (HtmlService::registerDefaultMenubarBlocks()) wired by hand
  * since this test never boots RequestBootstrap.
@@ -243,10 +243,13 @@ final class MenubarRendererTest extends IntegrationTestCase
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger());
 
+        // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in
+        // Latte\Runtime\Html, not a plain string.
         $menubar = $this->template->getTemplateVars('MENUBAR');
-        self::assertIsString($menubar);
-        self::assertStringContainsString('Related albums', $menubar);
-        self::assertStringContainsString('Nested Sub Album', $menubar);
+        self::assertInstanceOf(\Latte\Runtime\Html::class, $menubar);
+        $menubarHtml = (string) $menubar;
+        self::assertStringContainsString('Related albums', $menubarHtml);
+        self::assertStringContainsString('Nested Sub Album', $menubarHtml);
     }
 
     /**
@@ -255,7 +258,7 @@ final class MenubarRendererTest extends IntegrationTestCase
      * (MenubarRenderer::render()'s own lines building $exclude_cat_ids
      * from $combined_categories) folds its id into the exclusion set too,
      * leaving zero related categories and hiding the whole block (a
-     * hidden DisplayBlock contributes nothing to the compiled menubar.tpl
+     * hidden DisplayBlock contributes nothing to the compiled menubar.latte
      * output at all, not just an empty list).
      */
     public function testRenderRelatedCategoriesExcludesIdsFromCombinedCategories(): void
@@ -277,8 +280,10 @@ final class MenubarRendererTest extends IntegrationTestCase
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger());
 
+        // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in
+        // Latte\Runtime\Html, not a plain string.
         $menubar = $this->template->getTemplateVars('MENUBAR');
-        self::assertIsString($menubar);
-        self::assertStringNotContainsString('Related albums', $menubar);
+        self::assertInstanceOf(\Latte\Runtime\Html::class, $menubar);
+        self::assertStringNotContainsString('Related albums', (string) $menubar);
     }
 }

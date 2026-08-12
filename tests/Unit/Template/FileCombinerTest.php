@@ -835,10 +835,10 @@ test('processCombinable builds and writes a new combined JS file on a cache miss
 test('processCombinable builds and writes a new combined CSS file on a cache miss, dispatching to processCss', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-miss-css-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
-    // Smarty's default delimiters are the same braces CSS rule blocks use
-    // -- {literal} is the real-world way a CSS *template* (combine_css
-    // template=true) must escape its own rule bodies.
-    file_put_contents($root . '/themes/default/css/foo.css', "{literal}body{color:red;}{/literal}\n");
+    // Latte's default delimiters are the same braces CSS rule blocks use
+    // -- {syntax off}...{/syntax} is the real-world way a CSS *template*
+    // (combine_css template=true) must escape its own rule bodies.
+    file_put_contents($root . '/themes/default/css/foo.css', "{syntax off}body{color:red;}{/syntax}\n");
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfigTestFactory::get()->dataLocation = '_data/';
@@ -861,8 +861,9 @@ test('processCombinable builds and writes a new combined CSS file on a cache mis
             ->and($combinable->path)
             ->toEndWith('.css')
             ->and(file_exists($root . '/' . $combinable->path))->toBeTrue()
-            // The {literal} markers are gone and no minification/trimming
-            // happened -- processCss() (not processJs()) ran.
+            // The {syntax off}/{/syntax} markers are gone and no
+            // minification/trimming happened -- processCss() (not
+            // processJs()) ran.
             ->and(file_get_contents($root . '/' . $combinable->path))->toBe("body{color:red;}\n");
     } finally {
         CurrentTemplateTestFactory::get()->reset();
@@ -1289,35 +1290,6 @@ test('processCombinable dispatches a non-template combinable to processJs when r
             ->toBe("var a = 1;\n");
     } finally {
         file_combiner_test_rrmdir($root);
-    }
-});
-
-test('processCombinable registers the template file under a handle combining the loader type and combinable id', function (): void {
-    $root = sys_get_temp_dir() . '/piwigo-file-combiner-handle-' . bin2hex(random_bytes(8));
-    mkdir($root . '/themes/default/js', 0o777, true);
-    file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
-    Kernel::boot(Paths::fromRoot($root));
-    CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->dataLocation = '_data/';
-    CurrentConfigTestFactory::get()->dataDirChecked = '1';
-
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
-    $template = TemplateTestFactory::build();
-
-    try {
-        CurrentTemplateTestFactory::get()->set($template);
-        $combinable = new Combinable('my-handle-id', 'themes/default/js/foo.js');
-        $combinable->is_template = true;
-        $header = '';
-
-        invokeProcessCombinable($combiner, $combinable, false, false, $header);
-
-        expect($template->files)
-            ->toHaveKey('js.my-handle-id');
-    } finally {
-        CurrentTemplateTestFactory::get()->reset();
-        file_combiner_test_rrmdir($root);
-        Kernel::reset();
     }
 });
 

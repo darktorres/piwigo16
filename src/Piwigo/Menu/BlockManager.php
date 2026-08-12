@@ -159,7 +159,6 @@ final class BlockManager
     {
         $template = $this->currentTemplate->get();
 
-        $template->setFilename('menubar', $file);
         $this->eventDispatcher->dispatchNotify(new BlockManagerApply($this));
 
         foreach ($this->display_blocks as $id => $block) {
@@ -169,6 +168,6 @@ final class BlockManager
         }
         $this->sortBlocks();
         $template->assignContext(new MenubarBlocksPageContext($this->display_blocks));
-        $template->assignVarFromHandle($var, 'menubar');
+        $template->assignVarFromTemplate($var, $file);
     }
 }

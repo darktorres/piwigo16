@@ -41,7 +41,7 @@ use ReflectionProperty;
  * `RedirectService::redirectHtml()` -- the SAME expensive-looking
  * "wall" U3 originally deferred `PictureCoiSubController` for, now
  * composed from pieces this session already proved tractable
- * individually: `PageHeaderRenderer` (stub `header.tpl`, this time
+ * individually: `PageHeaderRenderer` (stub `header.latte`, this time
  * exercising its own refresh-meta branch too) and `PageTail::
  * renderToString()` (update-check/telemetry no-op guards + real
  * `ConfigService`/`CurrentLogger`). `Lang::setLangInfo()` is called
@@ -121,9 +121,9 @@ test('invoke returns a real 403 forbidden page when web services are disabled', 
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'header.tpl', 'title={$PAGE_TITLE}');
-        file_put_contents($tplDir . 'redirect.tpl', 'redirect_rendered=yes');
-        file_put_contents($tplDir . 'footer.tpl', 'version={$VERSION}');
+        file_put_contents($tplDir . 'header.latte', 'title={$PAGE_TITLE}');
+        file_put_contents($tplDir . 'redirect.latte', 'redirect_rendered=yes');
+        file_put_contents($tplDir . 'footer.latte', 'version={$VERSION}');
         $template->setTemplateDir($tplDir);
 
         $controller = Kernel::container()->get(WsController::class);

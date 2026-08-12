@@ -393,7 +393,7 @@ final class MenubarRenderer
             uAdmin: $u_admin,
         ));
 
-        $menu->apply('MENUBAR', 'menubar.tpl');
+        $menu->apply('MENUBAR', 'menubar.latte');
 
         return $categoryCountCategories;
     }

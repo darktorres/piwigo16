@@ -82,10 +82,6 @@ final readonly class PageTailRenderer
     {
         $template = $this->currentTemplate->get();
 
-        $template->setFilenames([
-            'tail' => 'footer.tpl',
-        ]);
-
         $this->eventDispatcher->dispatchNotify(new LocBeginPageTail());
 
         $contactMail = null;
@@ -146,7 +142,7 @@ final readonly class PageTailRenderer
         //
         // Generate the page
         //
-        $template->parse('tail');
+        $template->parse('footer.latte');
     }
 
     /**

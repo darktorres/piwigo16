@@ -343,19 +343,19 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // unconditionally reaches countForImage() -- a real, but read-only
     // (COUNT(*), 0 rows for this nonexistent image id, no write) DB call.
     // Rather than stop short, this test lets the whole render() call
-    // complete: it seeds a real (trivial, static-content) comment_list.tpl
-    // into this test's own throwaway template root (same temp root
-    // beforeEach already points CurrentPaths at) so the final
-    // assignVarFromHandle('COMMENT_LIST', ...) resolves cleanly too,
-    // and asserts on the fully-rendered result -- stronger evidence than
-    // merely "didn't throw".
+    // complete: it seeds a real (trivial, static-content)
+    // comment_list.latte into this test's own throwaway template root
+    // (same temp root beforeEach already points CurrentPaths at) so the
+    // final assignVarFromTemplate('COMMENT_LIST', ...) resolves cleanly
+    // too, and asserts on the fully-rendered result -- stronger evidence
+    // than merely "didn't throw".
     //
     // Live-verified: mutating line 97's `and` to `or` makes this exact
     // scenario throw ResponseReadyException("Session expired") instead of
     // completing, confirming this test distinguishes the two operators.
     CurrentConfigTestFactory::get()->commentsForall = false;
     $_POST['content'] = 'nice photo!';
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/comment_list.tpl', 'STATIC-COMMENT-LIST-CONTENT');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/comment_list.latte', 'STATIC-COMMENT-LIST-CONTENT');
     CurrentTemplateTestFactory::get()->get()->setTemplateDir(CurrentPathsTestFactory::get()->root);
 
     $renderer = new PictureCommentRenderer();
@@ -369,6 +369,16 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
         ],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
-    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')
+    // assignVarFromTemplate() wraps COMMENT_LIST in Latte\Runtime\Html
+    // (see that method's own docblock), not a plain string.
+    $commentList = CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENT_LIST');
+    expect($commentList)
+        ->toBeInstanceOf(Latte\Runtime\Html::class);
+    if (! $commentList instanceof Latte\Runtime\Html) {
+        throw new LogicException('unreachable -- asserted above');
+    }
+
+    expect((string) $commentList)
+        ->toBe('STATIC-COMMENT-LIST-CONTENT')
         ->and(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comments'))->toBe([]);
 });

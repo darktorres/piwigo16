@@ -76,41 +76,59 @@ final class ExtendForTemplatesPageRenderer
         $permalinks = $categoryService->getActivePermalinks();
         $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
-        /* Link all supported templates to their respective handle */
+        /* Link all supported templates to their respective handle.
+         *
+         * Keys are always the current real .latte basename (shown in the
+         * admin dropdown). Values are what Template::$extents actually
+         * gets keyed by, and that keying isn't uniform: most templates are
+         * reached only via a direct parse('x.latte') call, resolved by
+         * Template::resolveLatteTemplatePath()'s own basename-keyed
+         * lookup -- for those, value == key. A handful of partials are
+         * instead reached via a real, live {include getExtent(file,
+         * handle)} call inside an already-converted .latte template
+         * (menubar.latte's per-block {include getExtent($block->template,
+         * $id)}, and the several navigation_bar.latte/picture_nav_buttons.latte
+         * {include getExtent('x.latte', 'handle')} sites) -- those pass a
+         * short opaque handle string as Template::getExtent()'s own
+         * $handle arg, literally hardcoded in the template source, so
+         * $this->extents has to stay keyed by that exact string for an
+         * override to actually be found. Verified against every real
+         * getExtent() call site in themes/ and template-extension/, not
+         * assumed. */
         $eligible_templates = [
             '----------' => 'N/A',
-            'about.tpl' => 'about',
-            'comments.tpl' => 'comments',
-            'comment_list.tpl' => 'comment_list',
-            'footer.tpl' => 'tail',
-            'header.tpl' => 'header',
-            'identification.tpl' => 'identification',
-            'index.tpl' => 'index',
-            'mainpage_categories.tpl' => 'index_category_thumbnails',
-            'menubar.tpl' => 'menubar',
-            'menubar_categories.tpl' => 'mbCategories',
-            'menubar_identification.tpl' => 'mbIdentification',
-            'menubar_links.tpl' => 'mbLinks',
-            'menubar_menu.tpl' => 'mbMenu',
-            'menubar_specials.tpl' => 'mbSpecials',
-            'menubar_tags.tpl' => 'mbTags',
-            'month_calendar.tpl' => 'month_calendar',
-            'navigation_bar.tpl' => 'navbar',
-            'nbm.tpl' => 'nbm',
-            'notification.tpl' => 'notification',
-            'password.tpl' => 'password',
-            'picture.tpl' => 'picture',
-            'picture_content.tpl' => 'default_content',
-            'picture_nav_buttons.tpl' => 'picture_nav_buttons',
-            'popuphelp.tpl' => 'popuphelp',
-            'profile.tpl' => 'profile',
-            'profile_content.tpl' => 'profile_content',
-            'redirect.tpl' => 'redirect',
-            'register.tpl' => 'register',
-            'search.tpl' => 'search',
-            'slideshow.tpl' => 'slideshow',
-            'tags.tpl' => 'tags',
-            'thumbnails.tpl' => 'index_thumbnails',
+            'about.latte' => 'about.latte',
+            'comments.latte' => 'comments.latte',
+            'comment_list.latte' => 'comment_list.latte',
+            'footer.latte' => 'footer.latte',
+            'header.latte' => 'header.latte',
+            'identification.latte' => 'identification.latte',
+            'index.latte' => 'index.latte',
+            'mainpage_categories.latte' => 'mainpage_categories.latte',
+            'menubar.latte' => 'menubar.latte',
+            'menubar_categories.latte' => 'mbCategories',
+            'menubar_identification.latte' => 'mbIdentification',
+            'menubar_links.latte' => 'mbLinks',
+            'menubar_menu.latte' => 'mbMenu',
+            'menubar_specials.latte' => 'mbSpecials',
+            'menubar_tags.latte' => 'mbTags',
+            'month_calendar.latte' => 'month_calendar.latte',
+            'navigation_bar.latte' => 'navbar',
+            'nbm.latte' => 'nbm.latte',
+            'notification.latte' => 'notification.latte',
+            'password.latte' => 'password.latte',
+            'picture.latte' => 'picture.latte',
+            'picture_content.latte' => 'picture_content.latte',
+            'picture_nav_buttons.latte' => 'picture_nav_buttons',
+            'popuphelp.latte' => 'popuphelp.latte',
+            'profile.latte' => 'profile.latte',
+            'profile_content.latte' => 'profile_content.latte',
+            'redirect.latte' => 'redirect.latte',
+            'register.latte' => 'register.latte',
+            'search.latte' => 'search.latte',
+            'slideshow.latte' => 'slideshow.latte',
+            'tags.latte' => 'tags.latte',
+            'thumbnails.latte' => 'thumbnails.latte',
         ];
 
         $flip_templates = array_flip($eligible_templates);

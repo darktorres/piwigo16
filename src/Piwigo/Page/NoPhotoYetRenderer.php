@@ -106,9 +106,6 @@ final readonly class NoPhotoYetRenderer
                 }
 
                 header('Content-Type: text/html; charset=utf-8');
-                $template->setFilenames([
-                    'no_photo_yet' => 'no_photo_yet.tpl',
-                ]);
 
                 if ($this->accessLevelChecker->isAdmin()) {
                     $url = $this->currentConfig->noPhotoYetUrl;
@@ -136,7 +133,7 @@ final readonly class NoPhotoYetRenderer
 
                 $this->eventDispatcher->dispatchNotify(new LocEndNoPhotoYet());
 
-                $template->pparse('no_photo_yet');
+                $template->pparse('no_photo_yet.latte');
                 exit();
             } else {
                 $this->configService->confUpdateParam('no_photo_yet', 'false');

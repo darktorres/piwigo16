@@ -126,64 +126,49 @@ test('assignVarFromTemplate() renders a real .latte file and assigns the result 
     latte_engine_wiring_test_rrmdir($tplDir);
 });
 
-test('a handle registered via setFilename() still renders through Smarty -- the old and new calling conventions coexist', function (): void {
+test('resolveLatteTemplatePath() honors a basename-keyed extents override, matching how a direct parse(\'x.latte\') call resolves', function (): void {
+    // Real shape confirmed against ExtendForTemplatesPageRenderer's own
+    // $eligible_templates docblock: a template only ever reached via a
+    // direct parse('x.latte') call gets overridden by keying
+    // Template::$extents under that same real basename.
     $t = TemplateTestFactory::build();
     $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));
     mkdir($tplDir, 0o777, true);
-    file_put_contents($tplDir . '/legacy.tpl', 'Hi {$name} (smarty)');
+    file_put_contents($tplDir . '/original.latte', 'original');
     $t->setTemplateDir($tplDir);
-    $t->setFilename('legacy', 'legacy.tpl');
-    $t->smarty->assign('name', 'Smarty');
 
-    $output = $t->parse('legacy', true);
+    $extDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-ext-' . bin2hex(random_bytes(8)) . '/';
+    mkdir($extDir, 0o777, true);
+    file_put_contents($extDir . 'replacer.latte', 'replaced');
+    $t->setExtent('replacer.latte', 'original.latte', $extDir);
+
+    $output = $t->parse('original.latte', true);
 
     expect($output)
-        ->toBe('Hi Smarty (smarty)');
+        ->toBe('replaced');
 
     latte_engine_wiring_test_rrmdir($tplDir);
+    latte_engine_wiring_test_rrmdir($extDir);
 });
 
-test('a handle registered via setFilename() picks up a converted .latte sibling automatically -- a caller shared across themes, like PageHeaderRenderer, needs no theme-awareness of its own', function (): void {
+test('getExtent() honors a handle-keyed extents override, matching how a real {include getExtent(...)} template call resolves', function (): void {
+    // Real shape confirmed against every live getExtent() call site under
+    // themes/ and template-extension/ (navigation_bar.latte/
+    // picture_nav_buttons.latte's {include getExtent('x.latte', 'handle')}
+    // sites, menubar.latte's {include getExtent($block->template, $id)})
+    // -- each hardcodes a short opaque handle string as getExtent()'s own
+    // second argument, so Template::$extents has to stay keyed by that
+    // exact string for these specific partials, not by basename.
     $t = TemplateTestFactory::build();
-    $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));
-    mkdir($tplDir, 0o777, true);
-    // Both files exist -- exactly the mid-migration state for a theme
-    // whose header.tpl was just converted to header.latte, but the
-    // shared PHP caller still does setFilename('header', 'header.tpl').
-    file_put_contents($tplDir . '/shared.tpl', 'Hi {$name} (smarty, should not run)');
-    file_put_contents($tplDir . '/shared.latte', 'Hi {$name} (latte)');
-    $t->setTemplateDir($tplDir);
-    $t->setFilename('shared', 'shared.tpl');
-    $t->smarty->assign('name', 'World');
+    $extDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-ext-' . bin2hex(random_bytes(8)) . '/';
+    mkdir($extDir, 0o777, true);
+    file_put_contents($extDir . 'replacer_navbar.latte', 'replaced');
+    $t->setExtent('replacer_navbar.latte', 'navbar', $extDir);
 
-    $output = $t->parse('shared', true);
+    expect($t->getExtent('navigation_bar.latte', 'navbar'))
+        ->toBe(realpath($extDir . 'replacer_navbar.latte'));
 
-    expect($output)
-        ->toBe('Hi World (latte)');
-
-    latte_engine_wiring_test_rrmdir($tplDir);
-});
-
-test('a handle registered via setFilename() renders through Smarty when only the .tpl exists, even when other themes have a .latte sibling elsewhere', function (): void {
-    // Two theme dirs on the SAME Template instance's chain, mirroring
-    // setTheme()'s own parent-theme fallback -- confirms
-    // preferLatteSibling() only matches a real sibling in ITS OWN
-    // resolution chain, not a same-named file that happens to exist in
-    // an unrelated directory outside this instance's chain.
-    $t = TemplateTestFactory::build();
-    $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));
-    mkdir($tplDir, 0o777, true);
-    file_put_contents($tplDir . '/admin_only.tpl', 'Hi {$name} (smarty admin)');
-    $t->setTemplateDir($tplDir);
-    $t->setFilename('admin_only', 'admin_only.tpl');
-    $t->smarty->assign('name', 'Admin');
-
-    $output = $t->parse('admin_only', true);
-
-    expect($output)
-        ->toBe('Hi Admin (smarty admin)');
-
-    latte_engine_wiring_test_rrmdir($tplDir);
+    latte_engine_wiring_test_rrmdir($extDir);
 });
 
 test('CurrentTemplate resolves independently of PiwigoExtension holding its owning Template directly, not via the registry', function (): void {

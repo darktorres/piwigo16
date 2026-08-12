@@ -69,10 +69,6 @@ final class PageHeaderRenderer
     {
         $template = $currentTemplate->get();
 
-        $template->setFilenames([
-            'header' => 'header.tpl',
-        ]);
-
         $eventDispatcher->dispatchNotify(new LocBeginPageHeader());
 
         $show_mobile_app_banner = $currentConfig->showMobileAppBannerInGallery;
@@ -141,7 +137,7 @@ final class PageHeaderRenderer
         $eventDispatcher->dispatchNotify(new LocEndPageHeader());
 
         header('Content-Type: text/html; charset=utf-8');
-        $template->parse('header');
+        $template->parse('header.latte');
 
         $eventDispatcher->dispatchNotify(new LocAfterPageHeader());
     }

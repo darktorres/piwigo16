@@ -60,7 +60,7 @@ test('render() assigns the page title and gallery chrome with no refresh meta an
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'header.tpl', 'title={$PAGE_TITLE}');
+        file_put_contents($tplDir . 'header.latte', 'title={$PAGE_TITLE}');
         $template->setTemplateDir($tplDir);
 
         $pageState = new PageState();

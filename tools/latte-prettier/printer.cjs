@@ -23,6 +23,10 @@ function exprToDoc(e) {
       return ["(", exprToDoc(e.expr), ")"];
     case "Unary":
       return [e.op, exprToDoc(e.expr)];
+    case "Cast":
+      return ["(", e.to, ") ", exprToDoc(e.expr)];
+    case "ArrayLiteral":
+      return ["[", join(", ", e.items.map(exprToDoc)), "]"];
     case "Binary":
       return [exprToDoc(e.left), " ", e.op, " ", exprToDoc(e.right)];
     case "PropAccess":

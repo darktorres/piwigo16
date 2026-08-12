@@ -187,12 +187,15 @@ class ExprScanner {
 }
 
 const BINARY_OPS_BY_PRECEDENCE = [
+  ["??"],
   ["||", "or"],
   ["&&", "and"],
   ["===", "!==", "==", "!=", "<=", ">=", "<", ">"],
   ["+", "-", "."],
   ["*", "/", "%"],
 ];
+
+const CAST_TYPES = new Set(["string", "int", "integer", "float", "double", "bool", "boolean", "array", "object"]);
 
 function parseExprString(text) {
   const es = new ExprScanner(text);
@@ -274,6 +277,23 @@ function parseUnary(es) {
     es.advance();
     es.skipSpace();
     return { type: "Unary", op: "-", expr: parseUnary(es) };
+  }
+  if (es.peek() === "(") {
+    // Try a PHP-style cast — `(string) $x`, `(int) $y` — before falling
+    // back to a plain parenthesized expression, since both start with '('.
+    const save = es.pos;
+    es.advance();
+    es.skipSpace();
+    if (isIdentStart(es.peek())) {
+      const typeName = readExprIdentifier(es);
+      es.skipSpace();
+      if (es.peek() === ")" && CAST_TYPES.has(typeName.toLowerCase())) {
+        es.advance();
+        es.skipSpace();
+        return { type: "Cast", to: typeName, expr: parseUnary(es) };
+      }
+    }
+    es.pos = save;
   }
   return parsePostfix(es);
 }
@@ -398,9 +418,37 @@ function parsePrimary(es) {
     es.advance();
     return { type: "Paren", expr };
   }
-  if (isIdentStart(ch)) {
-    const name = readExprIdentifier(es);
-    return { type: "Identifier", name };
+  if (ch === "[") {
+    es.advance();
+    es.skipSpace();
+    const items = [];
+    if (es.peek() !== "]") {
+      items.push(parseBinary(es, 0));
+      es.skipSpace();
+      while (es.peek() === ",") {
+        es.advance();
+        es.skipSpace();
+        if (es.peek() === "]") break; // trailing comma
+        items.push(parseBinary(es, 0));
+        es.skipSpace();
+      }
+    }
+    if (es.peek() !== "]") es.error("expected ']'");
+    es.advance();
+    return { type: "ArrayLiteral", items };
+  }
+  if (isIdentStart(ch) || ch === "\\") {
+    // Bare identifier, or a backslash-qualified global-namespace reference
+    // like `\JSON_UNESCAPED_UNICODE` (real PHP, real Piwigo markup) — not
+    // full PHP namespace resolution, just enough to round-trip this shape.
+    const start = es.pos;
+    if (ch === "\\") es.advance();
+    readExprIdentifier(es);
+    while (es.peek() === "\\") {
+      es.advance();
+      readExprIdentifier(es);
+    }
+    return { type: "Identifier", name: es.text.slice(start, es.pos) };
   }
   es.error(`unexpected character '${ch}' while parsing expression`);
 }

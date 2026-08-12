@@ -23,9 +23,12 @@ formats, round-trips idempotently, and is AST-semantically-equivalent to the
 original (see `tests/Unit/Latte/latte-prettier-plugin.test.ts`).
 
 Run against the full real tree (109 `.latte` files under `themes/` as of this
-writing), it currently formats **85/109** cleanly. It fails loudly (a real
-parse/print error naming the exact construct) rather than silently mangling
-anything it doesn't understand yet. The remaining ~24 files hit one of:
+writing), it currently formats **85/109** cleanly — and, checked with the same
+rigor as the 4-file corpus (not just "didn't throw"), all 85 are idempotent
+and AST-semantically-equivalent to their source. No silent corruption found
+anywhere in the grammar it currently covers. On the rest, it fails loudly (a
+real parse/print error naming the exact construct) rather than guessing. The
+remaining ~24 files hit one of:
 
 - **Unrecognized keywords**: `{for}`, `{define}`, `{breakIf}` — real Latte
   constructs never encountered in the original 4-file corpus, not yet in the
@@ -39,12 +42,16 @@ anything it doesn't understand yet. The remaining ~24 files hit one of:
   desyncing the parser's position before it reaches the branch tag), not a
   guessed fix.
 
-None of this is silent corruption risk — this is why `format:latte`/
-`format:latte:fix` aren't wired into `lefthook` pre-commit or CI yet.
-`tests/Unit/Latte/latte-prettier-plugin.test.ts` asserts a 85-file floor
-across the real tree as a regression guard (must only go up, never down) plus
-strict correctness (no-throw, idempotency, AST-equivalence) against the 4
-verified corpus files.
+This is still why `format:latte`/`format:latte:fix` aren't wired into
+`lefthook` pre-commit or CI yet — 24 files still fail outright, even though
+none of the 85 that succeed show any corruption risk.
+`tests/Unit/Latte/latte-prettier-plugin.test.ts` asserts: strict correctness
+(no-throw, idempotency, AST-equivalence) against the 4 verified corpus files;
+an 85-file no-throw floor across the real tree (regression guard, must only
+go up); and — across *every* real file the plugin currently accepts, no
+hardcoded list — idempotency and AST-equivalence, so a newly-converted
+template or a newly-closed grammar gap that silently corrupts content fails
+the suite immediately rather than needing a hand-picked fixture to catch it.
 
 ## Architecture
 

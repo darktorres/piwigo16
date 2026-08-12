@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import * as prettier from "prettier";
 import { describe, expect, it } from "vitest";
 import plugin from "../../../tools/latte-prettier/plugin.cjs";
@@ -107,5 +108,43 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
       passCount,
       `only ${passCount}/${files.length} real .latte files format cleanly (floor is 85); failures:\n${failures.join("\n")}`,
     ).toBeGreaterThanOrEqual(85);
+  });
+
+  // Stronger than the floor above: "doesn't throw" alone doesn't rule out
+  // silent corruption. For every real file the plugin *does* currently
+  // accept — whichever those are, no hardcoded list, so this automatically
+  // covers newly-converted templates and newly-closed grammar gaps alike —
+  // it must also be idempotent and produce an AST equivalent to the
+  // original. A file failing to parse at all is out of scope here (that's
+  // the floor test's job); a file that parses but silently mangles content
+  // or never converges is a real bug, not a known gap.
+  it("every file it accepts is idempotent and semantically unchanged", async () => {
+    const files = findLatteFiles(THEMES_DIR);
+    const idempotencyFailures: string[] = [];
+    const equivalenceFailures: string[] = [];
+    for (const file of files) {
+      const src = readFileSync(file, "utf8");
+      let once: string;
+      try {
+        once = await format(src);
+      } catch {
+        continue; // not accepted yet — covered by the floor test above
+      }
+      const twice = await format(once);
+      if (twice !== once) idempotencyFailures.push(file);
+      if (
+        !isDeepStrictEqual(normalizeAst(parse(once)), normalizeAst(parse(src)))
+      ) {
+        equivalenceFailures.push(file);
+      }
+    }
+    expect(
+      idempotencyFailures,
+      "formatting twice should converge for every accepted file",
+    ).toEqual([]);
+    expect(
+      equivalenceFailures,
+      "formatted output should be AST-equivalent to its source for every accepted file",
+    ).toEqual([]);
   });
 });

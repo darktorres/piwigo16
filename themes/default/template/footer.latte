@@ -1,0 +1,44 @@
+<div id="copyright">
+  {if isset($debug['TIME'])}
+    {='Page generated in'|translate} {$debug['TIME']} ({$debug['NB_QUERIES']} {='SQL queries in'|translate} {$debug['SQL_TIME']}) -
+  {/if}
+
+{*
+    Please, do not remove this copyright. If you really want to,
+    contact us on http://piwigo.org to find a solution on how
+    to show the origin of the script...
+*}
+
+  {='Powered by'|translate}	<a href="{$APP_URL}" class="Piwigo">Piwigo</a>
+  {$VERSION}
+  {if isset($CONTACT_MAIL)}
+  - <a href="mailto:{$CONTACT_MAIL}?subject={='A comment on your site'|translate|urlencode}">{='Contact webmaster'|translate}</a>
+  {/if}
+  {if isset($TOGGLE_MOBILE_THEME_URL)}
+  - {='View in'|translate} : <a href="{$TOGGLE_MOBILE_THEME_URL|noescape}">{='Mobile'|translate}</a> | <b>{='Desktop'|translate}</b>
+  {/if}
+
+  {if isset($footer_elements)}
+  {foreach $footer_elements as $elt}
+    {$elt|noescape}
+  {/foreach}
+  {/if}
+</div>{* <!-- copyright --> *}
+
+{if isset($debug['QUERIES_LIST'])}
+<div id="debug">
+  {$debug['QUERIES_LIST']|noescape}
+</div>
+{/if}
+</div>{* <!-- the_page --> *}
+
+<!-- BEGIN get_combined -->
+{=getCombinedScripts('footer')}
+<!-- END get_combined -->
+
+{if isset($VITALS_SCRIPT_URL)}
+<script type="module" src="{$VITALS_SCRIPT_URL}"></script>
+{/if}
+
+</body>
+</html>

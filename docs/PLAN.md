@@ -122,7 +122,7 @@ onto the original scope.
 | P29 | Browserslist decision + legacy back-compat removal | Not started | 0 |
 | P30 | Asset-pipeline foundation (ScriptLoader/CssLoader/FileCombiner retirement + ViteManifest resolution) | Not started | 0 |
 | P31 | Smarty → Latte template migration | Done — all 139 real templates converted, Smarty engine fully removed (`smarty/smarty` dropped, `Template.php` Latte-only). Deferred asset-pipeline items (`ViteManifest`, `<picture>`, ThumbHash) out of scope, pick up under P29/P30/P43 | 80 |
-| P32 | Latte lint/format | Format-half landed (`tools/latte-prettier/`, real Prettier plugin, full 109/109 real-tree coverage); lint-half (`composer lint:latte` etc.) not started | 3 |
+| P32 | Latte lint/format | Format-half landed (`tools/latte-prettier/`, real Prettier plugin, full 135/135 real-tree coverage); lint-half (`composer lint:latte` etc.) not started | 4 |
 | P33 | Latte idiomatic modernization | Not started | 0 |
 | P34 | Inline JS extraction | Not started | 0 |
 | P35 | Inline CSS extraction | Not started | 0 |
@@ -1541,18 +1541,24 @@ below.
 (hand-written recursive-descent parser producing a typed AST, printed
 through Prettier's own `Doc` builders, the same architecture
 `prettier-plugin-laravel-blade` uses for Blade, not a mask-and-delegate
-tool). `bun run format:latte` / `format:latte:fix`; `!themes/**/*.latte`
-carved out of `.prettierignore`'s per-extension excludes. Full real-tree
-coverage as of this writing: **109/109** `.latte` files under `themes/`
-parse, format, are idempotent, and are AST-semantically-equivalent to
-their source — reached incrementally from the original 4-file corpus by
-root-causing each real gap against actual source (elseif/else/spaceless
-structural mismatches from HTML left deliberately unclosed or scopes
-that overlap rather than nest; a real silent-corruption bug in unquoted
-attribute values, caught only by the AST-equivalence check; `??`/array
-literals/casts/`\CONST`/ternary in the expression grammar; `{for}`/
-`{define}`/`{breakIf}`/bare-call-output tags), never a guessed fix; see
-`tools/latte-prettier/README.md`.
+tool). `bun run format:latte` / `format:latte:fix` cover both `themes/`
+and `template-extension/`; `.prettierignore`'s blanket directory
+excludes for both were replaced with precise per-extension excludes
+(CSS/JSON/MD still excluded per P33's staging, `.latte` now reachable —
+a bare `!themes/**/*.latte`-style negation doesn't work, gitignore
+semantics can't re-include a path whose parent directory is already
+fully excluded). Full real-tree coverage as of this writing: **135/135**
+`.latte` files parse, format, are idempotent, and are
+AST-semantically-equivalent to their source — reached incrementally
+from the original 4-file corpus by root-causing each real gap against
+actual source (elseif/else/spaceless structural mismatches from HTML
+left deliberately unclosed or scopes that overlap rather than nest; a
+real silent-corruption bug in unquoted attribute values, caught only by
+the AST-equivalence check; `??`/array literals/casts/`\CONST`/ternary in
+the expression grammar; `{for}`/`{define}`/`{breakIf}`/`{contentType}`/
+bare-call-output tags; a real non-idempotency bug in trailing-newline
+handling for documents that end via a genuinely-unclosed element),
+never a guessed fix; see `tools/latte-prettier/README.md`.
 `tests/Unit/Latte/latte-prettier-plugin.test.ts` asserts full-tree
 coverage as a hard requirement (not a floor) plus strict correctness
 against the 4 originally-verified files. Deliberately **still not**

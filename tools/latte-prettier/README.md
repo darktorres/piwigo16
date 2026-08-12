@@ -17,10 +17,11 @@ bun run format:latte:fix    # write
 
 ## Status
 
-**Full real-tree coverage: 109/109.** Every `.latte` file under `themes/` as
-of this writing parses, formats, converges on a second pass (idempotent), and
-is AST-semantically-equivalent to its source — verified across the whole
-tree, not sampled (see `tests/Unit/Latte/latte-prettier-plugin.test.ts`).
+**Full real-tree coverage: 135/135.** Every `.latte` file under `themes/` and
+`template-extension/` as of this writing parses, formats, converges on a
+second pass (idempotent), and is AST-semantically-equivalent to its source —
+verified across the whole tree, not sampled (see
+`tests/Unit/Latte/latte-prettier-plugin.test.ts`).
 
 Coverage started at 4 real theme files (`header.latte`, `footer.latte`,
 `comment_list.latte`, `register.latte`) and was extended to the full tree one
@@ -50,6 +51,20 @@ real, root-caused construct at a time — never a guessed fix. Along the way:
 - **Bare output**: `{funcName(...)}` and `{(...)...}` with no leading `$`/`=`
   are real, valid Latte for an implicit output expression (e.g.
   `{count($x)}`), not unrecognized tags.
+- **`{contentType text}`**: a template-header pragma (`mail/text/plain/
+*.latte`'s plain-text email templates) declaring the output content type.
+- **A real non-idempotency bug**, surfaced by rebasing onto a branch with 22
+  more real templates: a document ending via a genuinely-unclosed element
+  (`mail/text/html/header.latte` never closes any of its tags) whose source
+  has zero trailing whitespace grew one extra trailing newline on every
+  reformat, because the Document-level "ensure the file ends in a newline"
+  and a nested unclosed element's own trailing-whitespace handling could
+  both fire for the same gap. Fixed by distinguishing "unclosed because
+  parsing hit real EOF" from "unclosed because it's yielding to an
+  ancestor's closing tag or Latte branch keyword" (e.g. a `<td>` before
+  `{else}`, where that trailing gap is real, meaningful spacing and must
+  stay) — only the former defers to the Document level instead of also
+  contributing its own trailing break.
 
 None of this is wired into `lefthook` pre-commit or CI — that's a deliberate,
 separate decision left for whoever wants it, not assumed here.

@@ -100,8 +100,8 @@ test('render() shows the English documentation message for an en_ user and defau
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'help.tpl', 'content={$HELP_CONTENT}|title={$HELP_SECTION_TITLE}');
-        file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
+        file_put_contents($tplDir . 'help.latte', 'content={$HELP_CONTENT}|title={$HELP_SECTION_TITLE}');
+        file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
         $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());
@@ -122,11 +122,20 @@ test('render() shows the English documentation message for an en_ user and defau
         new HelpPageRenderer()
             ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplateTestFactory::get());
 
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
         expect($template->getTemplateVars('HELP_CONTENT'))
             ->toBe('')
             ->and($template->getTemplateVars('HELP_SECTION_TITLE'))
             ->toBe('Add Photos')
-            ->and($template->getTemplateVars('ADMIN_CONTENT'))
+            ->and((string) $adminContent)
             ->toBe('content=|title=Add Photos')
             ->and($pageState->messages)
             ->toHaveCount(1)

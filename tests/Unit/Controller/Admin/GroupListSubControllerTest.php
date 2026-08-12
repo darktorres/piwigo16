@@ -75,7 +75,7 @@ test('handle() denies access with a 401 for a logged-in non-admin user', functio
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
+        file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
         CurrentUserTestFactory::get()->set(new User(

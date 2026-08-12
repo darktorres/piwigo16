@@ -98,7 +98,7 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'history.tpl', 'start={$START}');
-        file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
+        file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
         $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());

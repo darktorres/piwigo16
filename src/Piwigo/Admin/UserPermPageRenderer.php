@@ -86,7 +86,6 @@ final readonly class UserPermPageRenderer
         $template->setFilenames(
             [
                 'user_perm' => 'user_perm.tpl',
-                'double_select' => 'double_select.tpl',
             ]
         );
 
@@ -138,7 +137,7 @@ final readonly class UserPermPageRenderer
             categoryOptionFalse: $categoryOptionFalse,
         ));
 
-        $template->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
+        $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
         $template->assignVarFromHandle('ADMIN_CONTENT', 'user_perm');
     }
 }

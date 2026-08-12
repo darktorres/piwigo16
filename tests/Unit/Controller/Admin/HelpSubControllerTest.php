@@ -103,8 +103,8 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'help.tpl', 'title={$HELP_SECTION_TITLE}');
-        file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
+        file_put_contents($tplDir . 'help.latte', 'title={$HELP_SECTION_TITLE}');
+        file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
         $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());
@@ -124,9 +124,18 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
+        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
+        // (see that method's own docblock), not a plain string.
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        expect($adminContent)
+            ->toBeInstanceOf(Latte\Runtime\Html::class);
+        if (! $adminContent instanceof Latte\Runtime\Html) {
+            throw new LogicException('unreachable -- asserted above');
+        }
+
         expect($template->getTemplateVars('HELP_SECTION_TITLE'))
             ->toBe('Add Photos')
-            ->and($template->getTemplateVars('ADMIN_CONTENT'))
+            ->and((string) $adminContent)
             ->toBe('title=Add Photos');
     } finally {
         CurrentTemplateTestFactory::get()->reset();

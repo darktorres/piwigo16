@@ -1,0 +1,14 @@
+{if !$ENABLE_SYNCHRONIZATION}
+{capture $tmpHtmlStyle}
+#helpSynchro { display:none; }
+{/capture}
+{do htmlStyle($tmpHtmlStyle)}
+{/if}
+
+<h2>{='Help'|translate} &raquo; {$HELP_SECTION_TITLE|noescape}</h2>
+
+<div id="helpContent">
+
+{$HELP_CONTENT|noescape}
+
+</div>

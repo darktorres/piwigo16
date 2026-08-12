@@ -96,7 +96,7 @@ test('render() assigns the comments page context and tabsheet without any real t
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'comments.tpl', 'title={$ADMIN_PAGE_TITLE}');
-        file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
+        file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
         $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());

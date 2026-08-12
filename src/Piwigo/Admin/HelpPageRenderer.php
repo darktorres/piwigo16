@@ -39,10 +39,6 @@ final class HelpPageRenderer
 
         $eventDispatcher->dispatchNotify(new LocEndHelp());
 
-        $template->setFilenames([
-            'help' => 'help.tpl',
-        ]);
-
         $help_content_raw = $lang->load(
             'help/help_' . $tabsheet->selected . '.html',
             '',
@@ -71,6 +67,6 @@ final class HelpPageRenderer
             ));
         }
 
-        $template->assignVarFromHandle('ADMIN_CONTENT', 'help');
+        $template->assignVarFromTemplate('ADMIN_CONTENT', 'help.latte');
     }
 }

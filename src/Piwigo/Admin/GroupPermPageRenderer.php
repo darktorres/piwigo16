@@ -122,7 +122,6 @@ final readonly class GroupPermPageRenderer
         $template->setFilenames(
             [
                 'group_perm' => 'group_perm.tpl',
-                'double_select' => 'double_select.tpl',
             ]
         );
 
@@ -150,7 +149,7 @@ final readonly class GroupPermPageRenderer
             categoryOptionFalse: $categoryOptionFalse,
         ));
 
-        $template->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
+        $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
         $template->assignVarFromHandle('ADMIN_CONTENT', 'group_perm');
     }
 }

@@ -84,7 +84,7 @@ test('handle dispatches ?tab=standard_pages to the real standard-pages renderer'
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
+        file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         file_put_contents($tplDir . 'themes_standard_pages.tpl', 'themes_standard_pages_rendered=yes');
         $template->setTemplateDir($tplDir);
 

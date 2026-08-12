@@ -34,7 +34,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `IN_ADMIN` is read elsewhere (Piwigo\Page\PageHeaderRenderer), set by
  * the bootstrap file the same way admin.php itself sets it.
  *
- * $template->parse('popuphelp', false) accumulates into Template's own
+ * $template->parse('popuphelp.latte', false) accumulates into Template's own
  * buffer; PageTail::renderToString() drains it as one string. The
  * `?page=` validation throws ResponseReadyException rather than dying
  * mid-render. The `output=content_only` branch returns $help_content
@@ -100,14 +100,13 @@ final readonly class AdminPopuphelpController implements ControllerInterface
         $help_content = $this->eventDispatcher->dispatchChange(new GetPopupHelpContent($help_content, $rawPage))
             ->content;
 
-        $template->setFilename('popuphelp', 'popuphelp.tpl');
         $template->assignContext(new PopuphelpPageContext(helpContent: $help_content));
 
         if ($output === 'content_only') {
             return ResponseFactory::html($help_content);
         }
 
-        $template->parse('popuphelp', false);
+        $template->parse('popuphelp.latte', false);
 
         $body = PageTail::renderToString();
 

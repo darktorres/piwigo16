@@ -193,7 +193,6 @@ final readonly class NotificationByMailSubController implements AdminSubControll
 
         $template->setFilenames(
             [
-                'double_select' => 'double_select.tpl',
                 'notification_by_mail' => 'notification_by_mail.tpl',
             ]
         );
@@ -262,7 +261,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                     categoryOptionFalse: $opt_false,
                     categoryOptionFalseSelected: $opt_false_selected,
                 ));
-                $template->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
+                $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
                 break;
 
             case 'send':

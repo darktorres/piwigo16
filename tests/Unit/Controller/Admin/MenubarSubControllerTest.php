@@ -73,7 +73,7 @@ test('handle renders the real menubar-order admin screen with no registered bloc
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
+        file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         file_put_contents($tplDir . 'menubar.tpl', 'menubar_admin_rendered=yes');
         $template->setTemplateDir($tplDir);
 

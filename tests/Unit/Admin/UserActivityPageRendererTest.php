@@ -288,7 +288,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
         file_put_contents($tplDir . 'user_activity.tpl', 'users={$nb_users}');
-        file_put_contents($tplDir . 'tabsheet.tpl', 'tabsheet');
+        file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
         $activityService = userActivityTestActivityService();

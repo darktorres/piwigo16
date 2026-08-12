@@ -72,7 +72,6 @@ final readonly class CatOptionsPageRenderer
         $template->setFilenames(
             [
                 'cat_options' => 'cat_options.tpl',
-                'double_select' => 'double_select.tpl',
             ]
         );
 
@@ -152,7 +151,7 @@ final readonly class CatOptionsPageRenderer
             categoryOptionFalse: $categoryOptionFalse,
         ));
 
-        $template->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
+        $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
         $template->assignVarFromHandle('ADMIN_CONTENT', 'cat_options');
     }
 }

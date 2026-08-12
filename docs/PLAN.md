@@ -440,17 +440,28 @@ invokes `CurrentConfig::set{Property}()` via `ReflectionMethod`). The
 underlying fix (DB writes reaching the live config object, not just the
 legacy global) holds under the new names.
 
-**`#[Required]`/`#[Sensitive]` on `CurrentConfig` properties are markers
-only, not enforced.** Both are empty attribute classes with zero real
-reflection-based consumers anywhere in the codebase — nothing currently
-validates a `#[Required]` property is non-empty at boot, and nothing
-redacts a `#[Sensitive]` property from logs/dumps/admin views. `secretKey`
-carries both; `smtpPassword` carries `#[Sensitive]` alone. Fix: give
-`Sensitive` a real consumer (log/dump
-redaction, and audit which other properties should carry it — mail/API
-credentials are the obvious candidates) and `Required` a real one (a
-boot-time or `SchemaIntegrityTest`-style check that every `#[Required]`
-property is non-empty after `ConfigLoader` runs).
+**`#[Required]`/`#[Sensitive]` on `CurrentConfig` properties: real
+consumers now exist for both, but neither is actually wired up yet —
+"markers only" is no longer accurate, "not enforced" still is, for a
+different reason.** `Required`/`Sensitive` are still empty attribute
+classes themselves (confirmed), but each now has a genuine reflection-based
+reader: `ConfigLoader::validateRequired()` — exactly the "boot-time...
+check that every `#[Required]` property is non-empty" this section's own
+"Fix" asked for — throws `MissingRequiredConfigException` for a missing
+`#[Required]` property; `CurrentConfig::dumpForLog()` — exactly the
+"log/dump redaction" this section's "Fix" asked for — returns every
+property with `#[Sensitive]`-tagged ones replaced by `str_repeat('*', 8)`,
+its own docblock stating "Intended for safe use in error-handler logs and
+diagnostic output." **Neither is actually called from anywhere** —
+confirmed via a repo-wide grep, both are real, correct, unreferenced
+methods, not wired into boot or the error-handler pipeline. So today's
+real state is "built but dead code," not "doesn't exist" — a materially
+different, more specific problem than this section currently describes,
+and a smaller remaining task (wire the two calls) than "give X a real
+consumer" implied. `secretKey` still carries both, `smtpPassword` still
+carries `#[Sensitive]` alone (unchanged) — auditing which other
+properties should carry `#[Sensitive]` (mail/API credentials) is still
+open.
 
 **P14 — DB layer + Doctrine ORM.** Two real corrections, both since
 resolved:

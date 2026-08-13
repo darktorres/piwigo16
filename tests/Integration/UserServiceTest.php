@@ -55,14 +55,16 @@ namespace Piwigo\Tests\Integration {
      * short-circuits before ever calling MailerInterface::mail() -- this
      * harness shouldn't attempt a real mail send). registerUser()'s full SUCCESS
      * path calls ActivityLoggerInterface::record() and
-     * EventDispatcher::triggerNotify() -- both fully DBAL/in-memory, with
-     * no $mysqli dependency; test_register_user_adds_the_new_user_to_default_groups()
-     * below exercises it (see that test's own docblock for the
-     * addMembers() argument-order invariant it guards) -- the success
-     * path's OTHER effects (admin/user notification emails,
-     * EventDispatcher::triggerNotify(), ActivityLoggerInterface::record())
-     * still aren't independently asserted here; live-verified separately,
-     * same limitation as GroupService (see its own test class docblock).
+     * EventDispatcher::dispatchNotify(new RegisterUser(...)) -- both fully
+     * DBAL/in-memory, with no $mysqli dependency;
+     * test_register_user_adds_the_new_user_to_default_groups() below
+     * exercises it (see that test's own docblock for the addMembers()
+     * argument-order invariant it guards) -- the success path's OTHER
+     * effects (admin/user notification emails,
+     * EventDispatcher::dispatchNotify(new RegisterUser(...)),
+     * ActivityLoggerInterface::record()) still aren't independently
+     * asserted here; live-verified separately, same limitation as
+     * GroupService (see its own test class docblock).
      */
     final class UserServiceTest extends IntegrationTestCase
     {

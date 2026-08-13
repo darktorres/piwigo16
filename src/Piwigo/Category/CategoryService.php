@@ -1056,7 +1056,7 @@ final readonly class CategoryService
      * $category/$combinedCategories are SectionContext::$category-shaped
      * (only used wholesale as UrlService params here, never read by key);
      * the return rows inherit getRelatedCategoriesMenu()'s own 'name'
-     * field, mixed via EventDispatcher::triggerChange().
+     * field, run through dispatchChange(new RenderCategoryName(...)).
      *
      * @param  array<int, int|string>  $items
      * @param  array<int, int|string>  $excludedCatIds

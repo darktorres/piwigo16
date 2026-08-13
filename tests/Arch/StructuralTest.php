@@ -779,7 +779,8 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
     // The free-function bridge (src/Piwigo/PluginConfig/functions.php) is
     // deleted -- every real call site takes EventDispatcher via
     // constructor injection and calls
-    // {addEventHandler,triggerChange,triggerNotify}() directly. deptrac.yaml
+    // {addEventHandler,addTypedHandler,dispatchChange,dispatchNotify}()
+    // directly. deptrac.yaml
     // places EventDispatcher in L1Infrastructure (split from its
     // namespace-mate PluginRepository) since real callers live in
     // L1Infrastructure/L2aCoreDomain. Zero-tolerance, no allowlist needed.
@@ -805,17 +806,19 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
  * per-file *count*, not by which event name a call site names, so it
  * can't distinguish an allowlisted WS call from a missed conversion
  * sharing the same file. Token-aware instead: walk tokens for a
- * T_STRING matching one of the three legacy dispatch method names,
- * preceded by T_OBJECT_OPERATOR (`->`), then inspect its first argument
- * token. A converted call site's first argument is `SomeEvent::class`
- * -- a T_STRING/T_CLASS pair after T_DOUBLE_COLON, an entirely different
- * token shape -- and never matches the T_CONSTANT_ENCAPSED_STRING check
- * below, so it's never flagged regardless of the class name chosen.
+ * T_STRING matching addEventHandler (the one remaining string-keyed
+ * registration method -- triggerChange()/triggerNotify() were deleted
+ * outright, Finding 3 of the post-DI-campaign shim/facade audit, not
+ * just retargeted), preceded by T_OBJECT_OPERATOR (`->`), then inspect
+ * its first argument token. A converted call site's first argument is
+ * `SomeEvent::class` -- a T_STRING/T_CLASS pair after T_DOUBLE_COLON, an
+ * entirely different token shape -- and never matches the
+ * T_CONSTANT_ENCAPSED_STRING check below, so it's never flagged
+ * regardless of the class name chosen.
  *
- * @param list<string> $allowlist
  * @return list<array{path: string, line: int}>
  */
-function findStringKeyedDispatchCallSites(string $dir, array $allowlist): array
+function findStringKeyedDispatchCallSites(string $dir): array
 {
     $hits = [];
     if (! is_dir($dir)) {
@@ -823,7 +826,7 @@ function findStringKeyedDispatchCallSites(string $dir, array $allowlist): array
     }
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
 
-    $methodNames = ['addEventHandler', 'triggerChange', 'triggerNotify'];
+    $methodNames = ['addEventHandler'];
 
     foreach ($iterator as $file) {
         /** @var SplFileInfo $file RecursiveIteratorIterator loses this over RecursiveDirectoryIterator */
@@ -874,11 +877,6 @@ function findStringKeyedDispatchCallSites(string $dir, array $allowlist): array
                 continue; // SomeEvent::class or any other non-string-literal shape -- already converted
             }
 
-            $literal = stripcslashes(substr($arg[1], 1, -1));
-            if (in_array($literal, $allowlist, true)) {
-                continue;
-            }
-
             $hits[] = [
                 'path' => $file->getPathname(),
                 'line' => $tok[2],
@@ -889,25 +887,23 @@ function findStringKeyedDispatchCallSites(string $dir, array $allowlist): array
     return $hits;
 }
 
-test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls outside the meta allowlist', function (): void {
+test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls', function (): void {
     // Every real event dispatches through typed SomeEvent::class objects
     // via addTypedHandler()/dispatchChange()/dispatchNotify() --
     // including the 7 WS-protocol-lifecycle events (get_history,
     // ws_users_getList, ws_invoke_allowed, ws_add_methods,
     // ws_images_uploadCompleted, sendResponse, merge_tags).
     //
-    // 'trigger' is the one permanent exception: EventDispatcher's own
-    // internal meta-notification channel (its dispatchChange()/
-    // dispatchNotify()/triggerChange()/triggerNotify() all self-notify via
-    // $this->triggerNotify('trigger', ...)), never a batch event, stays
-    // string-keyed permanently. This is the only reason EventDispatcher.php
-    // itself has any hits to allowlist -- every other real call site in
-    // src/Piwigo/ converted.
+    // 'trigger' (EventDispatcher's own internal meta-notification channel,
+    // previously allowlisted here as a "permanent" exception) is gone too
+    // (Finding 3, post-DI-campaign shim/facade audit): nothing ever
+    // registered a handler against it, so triggerChange()/triggerNotify()
+    // and all 4 'trigger'-self-notify call sites were deleted along with
+    // it -- findStringKeyedDispatchCallSites() no longer takes an
+    // allowlist param at all, not just an empty one.
     $repoRoot = __DIR__ . '/../..';
 
-    $allowlist = ['trigger'];
-
-    $hits = findStringKeyedDispatchCallSites($repoRoot . '/src/Piwigo', $allowlist);
+    $hits = findStringKeyedDispatchCallSites($repoRoot . '/src/Piwigo');
 
     expect(describeCallSites($hits))
         ->toBe([]);

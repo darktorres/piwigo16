@@ -42,7 +42,7 @@ final class QResults
     public array $tag_iids = [];
 
     /**
-     * Same EventDispatcher::triggerChange()-poisons-'name' rationale as
+     * Same EventDispatcher::dispatchChange()-poisons-'name' rationale as
      * $all_tags above.
      *
      * @var array<int, array<string, mixed>>

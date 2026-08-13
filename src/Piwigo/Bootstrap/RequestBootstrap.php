@@ -433,8 +433,9 @@ final class RequestBootstrap
         // reaches AuthService::tryLogUser() directly on its own
         // pwg.images.uploadAsync username/password credential path (see
         // that method's own docblock), before finalize() ever runs.
-        // EventDispatcher::triggerChange() with no matching handler
-        // returns its own $default (false) unmodified, so that credential
+        // EventDispatcher::dispatchChange() with no matching handler
+        // returns the event object unchanged, so TryLogUser's own
+        // constructor-set $success (false) stays false; that credential
         // path needs the handler registered this early; every other real
         // caller of tryLogUser() (the normal pwg.session.login WS
         // dispatch, which runs during RequestPipeline::handle() -- after

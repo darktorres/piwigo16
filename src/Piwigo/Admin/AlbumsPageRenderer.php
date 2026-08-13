@@ -333,8 +333,9 @@ final class AlbumsPageRenderer
             $orderedCat['rank'] = is_int($cat_row_rank) || is_string($cat_row_rank) ? $cat_row_rank : null;
             // 'name'/'status' are NOT NULL string columns; 'name' may also
             // have been rewritten above by the render_category_name filter
-            // (EventDispatcher::triggerChange()'s genuinely arbitrary-by-design
-            // return), already narrowed there to string-or-original.
+            // (dispatchChange(new RenderCategoryName(...))'s own $categoryName
+            // is typed string, but this array's own value stays mixed
+            // structurally regardless).
             $orderedCat['name'] = is_scalar($cat_row_name) ? (string) $cat_row_name : '';
             $orderedCat['status'] = is_scalar($cat_row_status) ? (string) $cat_row_status : '';
             // themes/admin/default/js/albums.js embeds this tree as JSON and

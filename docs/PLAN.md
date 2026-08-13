@@ -853,11 +853,17 @@ typed event objects (`SomeEvent` classes, `dispatchNotify()`/
 `dispatchChange()`) replacing the bare-string-keyed dispatch — then
 shipped across 12 domain batches (156 real events today, including the
 7-event WS-protocol-lifecycle group originally deferred behind P25).
-`EventDispatcher.php` now exposes `addTypedHandler()`/`dispatchChange()`/
-`dispatchNotify()` alongside the original string-keyed methods (kept only
-for `'trigger'`, its own permanent internal meta-notification channel). A
-token-aware door-lock Arch test enforces zero remaining string-keyed call
-sites outside that one name. Delivered in 14 commits
+`EventDispatcher.php`'s public API is now `addEventHandler()`/
+`addTypedHandler()`/`removeEventHandler()`/`reset()` for registration and
+`dispatchChange()`/`dispatchNotify()` for firing -- `triggerChange()`/
+`triggerNotify()` themselves, originally kept as "permanent" for
+`'trigger'`, their own internal meta-notification channel, were deleted
+outright in a later pass (Finding 3, post-DI-campaign shim/facade audit)
+once it turned out nothing had ever registered a handler against
+`'trigger'` in the first place -- a real, present-day gap, not a stale
+citation about historical intent. A token-aware door-lock Arch test
+enforces zero remaining string-keyed dispatch call sites at all, not just
+outside a `'trigger'` exception. Track B itself delivered in 14 commits
 (`25d8709bc0`..`6dd1034422`, Foundation + 12 domain batches + wrap-up);
 full commit-level history is in `git log`, the plan doc itself was
 deleted once the work landed.

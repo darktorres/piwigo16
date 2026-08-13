@@ -292,15 +292,12 @@ return [
     // PSR-16 wraps the same PSR-6 pool instance (container-shared by
     // default) rather than building a second one -- symfony/cache adapters
     // implement Symfony's own Contracts\Cache\CacheInterface, not PSR-16
-    // directly; Psr16Cache is the real adapter for that.
-    CacheInterface::class => factory(static function (ContainerInterface $c): CacheInterface {
-        $pool = $c->get(CacheItemPoolInterface::class);
-        if (! $pool instanceof CacheItemPoolInterface) {
-            throw new LogicException('Container returned an unexpected type for ' . CacheItemPoolInterface::class);
-        }
-
-        return new Psr16Cache($pool);
-    }),
+    // directly; Psr16Cache is the real adapter for that. Plain interface
+    // binding -- Psr16Cache's own constructor takes one required, typed
+    // CacheItemPoolInterface param (already bound above), so autowiring
+    // resolves the rest; same shape as MailerInterface::class => get(
+    // MailService::class) two entries above.
+    CacheInterface::class => get(Psr16Cache::class),
 
     // Pure factory, no Kernel-awareness -- see DbConnection's own docblock
     // for the server-session-mode deviation from the reference

@@ -924,8 +924,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
      * $keyedErrors' own keys exist so each controller can overwrite its
      * own named error slot (e.g. re-assigning 'login_page_error' rather
      * than accumulating duplicates) -- no template anywhere reads
-     * `$errors` by specific key (a full-repo
-     * grep of every theme template found none); every real consumer
+     * `$errors` by specific key; every real consumer
      * (`infos_errors.latte`'s own `{foreach $errors as $error}`)
      * reads values only, so the keys never actually reach the rendered
      * page. Every real value across every real call site

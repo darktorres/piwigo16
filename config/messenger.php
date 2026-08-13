@@ -10,8 +10,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\BatchUploadJob;
@@ -72,7 +70,7 @@ return [
                 Paths::fromRoot(dirname(__DIR__)),
                 new InstallationFlag(),
             ),
-            new MetadataRepository(EntityManagerFactory::build(DbConnection::build())),
+            new MetadataRepository(InfrastructureAccessor::entityManager()),
             InfrastructureAccessor::currentLogger(),
             RequestBootstrap::eventDispatcher(),
             RequestBootstrap::currentConfig(),

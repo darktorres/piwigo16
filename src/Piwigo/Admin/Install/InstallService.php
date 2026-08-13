@@ -85,7 +85,7 @@ final class InstallService
         $lifecycle = new ExtensionLifecycle(
             $lang,
             new ExtensionRepository(EntityManagerFactory::build($conn)),
-            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $currentUser, $paths, $currentConfig),
+            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $paths, $currentConfig),
             $urlService,
             $currentConfigService->get(),
             EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),

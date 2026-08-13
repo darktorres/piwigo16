@@ -26,7 +26,7 @@ use Piwigo\Users\User;
 // (unlike themes/plugins, bundled language directories are stable source
 // content, not environment-dependent) -- covers the real
 // common.po-vs-common.lang.php marker-file bug (see
-// ExtensionType::markerFilename()'s own docblock). Plugin/theme scanning
+// ExtensionType::markerFilenames()'s own docblock). Plugin/theme scanning
 // is exercised end-to-end by the Browser admin smoke suite against
 // whatever's actually installed, not re-duplicated here. CurrentPaths is
 // seeded against this repo's own real root (not a disposable temp dir) so

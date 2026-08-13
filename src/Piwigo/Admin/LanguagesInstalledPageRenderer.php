@@ -88,7 +88,7 @@ final readonly class LanguagesInstalledPageRenderer
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build($conn));
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths, $this->currentConfig);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
         $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);

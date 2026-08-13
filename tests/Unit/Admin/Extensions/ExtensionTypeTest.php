@@ -52,13 +52,15 @@ test('scanDirectory returns each type\'s own filesystem root', function (): void
         ->and(ExtensionType::Language->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentPathsTestFactory::get()->root . 'language/');
 });
 
-test('markerFilename returns each type\'s own extension marker file', function (): void {
+test('markerFilenames returns each type\'s own legacy and new-contract extension marker files', function (): void {
     // Language uses common.po, not common.lang.php -- this rewrite migrated
     // every locale to gettext .po format (see this enum's own docblock for
-    // the real bug this fixed).
-    expect(ExtensionType::Plugin->markerFilename())->toBe('main.inc.php')
-        ->and(ExtensionType::Theme->markerFilename())->toBe('themeconf.inc.php')
-        ->and(ExtensionType::Language->markerFilename())->toBe('common.po');
+    // the real bug this fixed). Plugin/Theme carry both their legacy
+    // header-comment marker and the new ExtensionInterface manifest
+    // filename (P27.9), Language stays single-element.
+    expect(ExtensionType::Plugin->markerFilenames())->toBe(['main.inc.php', 'plugin.json'])
+        ->and(ExtensionType::Theme->markerFilenames())->toBe(['themeconf.inc.php', 'theme.json'])
+        ->and(ExtensionType::Language->markerFilenames())->toBe(['common.po']);
 });
 
 test('defaultIds lists the bundled extensions for plugin and theme, and is empty for language', function (): void {

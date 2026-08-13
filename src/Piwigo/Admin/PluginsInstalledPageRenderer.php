@@ -69,7 +69,7 @@ final class PluginsInstalledPageRenderer
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build($conn));
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser, $paths, $currentConfig);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $currentLogger, $paths, $currentConfig);
         // ExtensionScanner::scan()'s own declared return type is a generic
         // array<string, array<string, mixed>> dispatch shape by design (see
         // that method's own docblock) -- every $fs_plugin read below

@@ -14,106 +14,62 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Http\HttpClientService;
-use Piwigo\Users\CurrentUser;
 
 /**
- * PEM (piwigo extension market) remote-server communication: shared by the
- * plugins/themes/languages god-classes' get_versions_to_check()/
- * get_server_plugins()/get_server_themes()/get_server_languages()/
- * get_incompatible_plugins()/extension_*_compare() methods, which were
- * ~95% identical across the 3 legacy classes -- only the PEM category
- * conf key and a couple of URL-path nouns differ, all of which
- * ExtensionType now exposes.
+ * Extension-catalog communication, generalized across plugins/themes: a
+ * self-hosted replacement for the real PEM (piwigo extension market)
+ * protocol, not a client of it (P27.9). Each sibling repo
+ * (../piwigo16-plugins/../piwigo16-themes) already serves its own
+ * manifest.json -- a plain static JSON file, no server-side PHP -- and
+ * already-present .zip archives, directly over HTTP (RequestBootstrap::
+ * pemUrl($type)). This class fetches that manifest and does every bit of
+ * compatibility filtering/version-matching itself, in plain PHP, rather
+ * than mimicking the real upstream protocol's serialize()-encoded,
+ * multi-endpoint wire format (this fork never talks to the real
+ * piwigo.org again -- v17 is a clean break from the external catalog,
+ * see project_version_17_breaks_extensions).
  *
- * Archive download + extraction (extract_plugin_files()/extract_theme_files()/
- * extract_language_files() in the legacy classes) lives here too, since
- * it's fundamentally the same "talk to PEM, then handle what comes back"
- * concern, just followed by a local ZipExtractor call.
+ * Archive download + extraction (extract_plugin_files()/extract_theme_files()
+ * in the legacy classes) lives here too, since it's fundamentally the same
+ * "resolve the archive, then handle what comes back" concern, just
+ * followed by a local ZipExtractor call.
  *
  * `array<string, mixed>` rows throughout this class are genuinely arbitrary
- * by design -- they're `unserialize()` output from a remote PEM server
- * response we don't control the shape of (same residual category as
- * ConfigService's own json_decode()/unserialize() params, see the
- * mixed-elimination plan). The compare*() methods below read only the 1-2
- * keys they need from that row, defensively (`?? null` + `is_scalar()`),
- * the same "cross-domain generic-row-reader" pattern used for comparators
- * elsewhere in the codebase.
+ * by design -- they're a `json_decode(..., true)`d manifest.json entry
+ * (same residual category as ConfigService's own json_decode()/
+ * unserialize() params, see the mixed-elimination plan). The compare*()
+ * methods below read only the 1-2 keys they need from that row,
+ * defensively (`?? null` + `is_scalar()`), the same "cross-domain
+ * generic-row-reader" pattern used for comparators elsewhere in the
+ * codebase.
  */
 final readonly class PemCatalog
 {
     public function __construct(
         private ZipExtractor $zipExtractor,
         private CurrentLogger $currentLogger,
-        private CurrentUser $currentUser,
         private Paths $paths,
         private CurrentConfig $currentConfig,
     ) {}
 
     /**
-     * Beta test: return the last PEM version if the current version isn't
-     * known, otherwise the current version's PEM id (plus the next one
-     * when $betaTest).
+     * P27.9: no longer a real HTTP round trip. The real PEM protocol asked
+     * the server which of its own opaque "PEM version" ids matches the
+     * caller's branch, since extension compatibility was checked against
+     * that id. The local manifest.json mirror has no such catalog --
+     * only each extension's own `piwigo_compat` array, checked directly
+     * against $version in getServerExtensions()/getIncompatibleExtensions()
+     * via isCompatible() -- so this collapses to a 1-element list carrying
+     * $version itself. $type/$betaTest are kept as real parameters purely
+     * so the existing call sites' signatures don't need touching -- there
+     * is no "next version" concept in a flat local manifest for $betaTest
+     * to fall back to.
      *
      * @return list<string>
      */
     public function getVersionsToCheck(ExtensionType $type, bool $betaTest = false, string $version = AppInfo::VERSION): array
     {
-
-        $pemBaseUrl = RequestBootstrap::pemUrl();
-        $versionsToCheck = [];
-        $url = $pemBaseUrl . '/api/get_version_list.php';
-        $getData = [
-            'category_id' => $type->pemCategoryId($this->currentConfig),
-            'format' => 'php',
-        ];
-
-        if (is_string($result = HttpClientService::fetch($url, $this->currentConfig, $getData)) and (bool) ($pemVersions = @unserialize($result))) {
-            if (! is_array($pemVersions)) {
-                return $versionsToCheck;
-            }
-
-            $i = 0;
-            while ($i < count($pemVersions) && count($versionsToCheck) === 0) {
-                $pemVersion = $pemVersions[$i] ?? null;
-                if (is_array($pemVersion)) {
-                    $pemVersionName = $pemVersion['name'] ?? null;
-                    if (is_string($pemVersionName) and VersionHelper::getBranchFromVersion($pemVersionName) === VersionHelper::getBranchFromVersion($version)) {
-                        $pemVersionId = $pemVersion['id'] ?? null;
-                        if (is_scalar($pemVersionId)) {
-                            $versionsToCheck[] = (string) $pemVersionId;
-                        }
-                    }
-                }
-                $i++;
-            }
-
-            if ($betaTest) {
-                if (count($versionsToCheck) === 0) {
-                    $firstPemVersion = $pemVersions[0] ?? null;
-                    if (is_array($firstPemVersion)) {
-                        $firstPemVersionId = $firstPemVersion['id'] ?? null;
-                        if (is_scalar($firstPemVersionId)) {
-                            $versionsToCheck[] = (string) $firstPemVersionId;
-                        }
-                    }
-                } else {
-                    $hasFoundPreviousVersion = false;
-                    while ($i < count($pemVersions) && ! $hasFoundPreviousVersion) {
-                        $pemVersion = $pemVersions[$i] ?? null;
-                        if (is_array($pemVersion)) {
-                            $pemVersionId = $pemVersion['id'] ?? null;
-                            if (is_scalar($pemVersionId) and (string) $pemVersionId !== $versionsToCheck[0]) {
-                                $versionsToCheck[] = (string) $pemVersionId;
-                                $hasFoundPreviousVersion = true;
-                            }
-                        }
-                        $i++;
-                    }
-                }
-            }
-        }
-
-        return $versionsToCheck;
+        return [$version];
     }
 
     /**
@@ -128,44 +84,18 @@ final readonly class PemCatalog
      */
     public function getServerExtensions(ExtensionType $type, array $fsExtensionIds, bool $new = false, bool $betaTest = false, string $version = AppInfo::VERSION): ?array
     {
-
         $versionsToCheck = $this->getVersionsToCheck($type, $betaTest, $version);
         if ($versionsToCheck === []) {
             return null;
         }
 
-        $pemBaseUrl = RequestBootstrap::pemUrl();
-        $url = $pemBaseUrl . '/api/get_revision_list-next.php';
-        $userLanguage = $this->currentUser->get()
-            ->language->value;
-        $getData = [
-            'category_id' => $type->pemCategoryId($this->currentConfig),
-            'format' => 'php',
-            'last_revision_only' => 'true',
-            'version' => implode(',', $versionsToCheck),
-            'lang' => substr($userLanguage, 0, 2),
-            'get_nb_downloads' => 'true',
-        ];
-
-        if ($fsExtensionIds !== []) {
-            if ($new) {
-                $getData['extension_exclude'] = implode(',', $fsExtensionIds);
-            } else {
-                $getData['extension_include'] = implode(',', $fsExtensionIds);
-            }
-        }
-
-        if (! is_string($result = HttpClientService::fetch($url, $this->currentConfig, $getData))) {
-            return null;
-        }
-
-        $pemExtensions = @unserialize($result);
-        if (! is_array($pemExtensions)) {
+        $manifestExtensions = $this->fetchManifest($type);
+        if ($manifestExtensions === null) {
             return null;
         }
 
         $byExtensionId = [];
-        foreach ($pemExtensions as $extension) {
+        foreach ($manifestExtensions as $extension) {
             if (! is_array($extension) || ! isset($extension['extension_id'])) {
                 continue;
             }
@@ -174,7 +104,16 @@ final readonly class PemCatalog
             if (! is_string($extensionId) && ! is_int($extensionId)) {
                 continue;
             }
-            $byExtensionId[$extensionId] = $extension;
+            if (! $this->isCompatible($extension, $versionsToCheck)) {
+                continue;
+            }
+            if ($fsExtensionIds !== []) {
+                $onDisk = in_array((string) $extensionId, $fsExtensionIds, true);
+                if ($new ? $onDisk : ! $onDisk) {
+                    continue;
+                }
+            }
+            $byExtensionId[$extensionId] = $this->normalizeExtensionRecord($extension);
         }
 
         return $byExtensionId;
@@ -228,32 +167,25 @@ final readonly class PemCatalog
             }
         }
 
-        $pemBaseUrl = RequestBootstrap::pemUrl();
-        $url = $pemBaseUrl . '/api/get_revision_list.php';
-        $getData = [
-            'category_id' => $type->pemCategoryId($this->currentConfig),
-            'format' => 'php',
-            'version' => implode(',', $versionsToCheck),
-            'extension_include' => implode(',', $extensionIds),
-        ];
-
-        if (! is_string($result = HttpClientService::fetch($url, $this->currentConfig, $getData))) {
-            return false;
-        }
-
-        $pemExtensions = @unserialize($result);
-        if (! is_array($pemExtensions)) {
+        $manifestExtensions = $this->fetchManifest($type);
+        if ($manifestExtensions === null) {
             return false;
         }
 
         $serverExtensions = [];
-        foreach ($pemExtensions as $extension) {
+        foreach ($manifestExtensions as $extension) {
             if (! is_array($extension) || ! isset($extension['extension_id'])) {
                 continue;
             }
             /** @var array<string, mixed> $extension */
             $extensionId = $extension['extension_id'];
             if (! is_string($extensionId) && ! is_int($extensionId)) {
+                continue;
+            }
+            if (! in_array((string) $extensionId, $extensionIds, true)) {
+                continue;
+            }
+            if (! $this->isCompatible($extension, $versionsToCheck)) {
                 continue;
             }
             if (! isset($serverExtensions[$extensionId])) {
@@ -281,8 +213,8 @@ final readonly class PemCatalog
 
     /**
      * Downloads a PEM archive by revision id and extracts it under
-     * $scanDirectory, locating the extension root by searching for
-     * $type->markerFilename() inside the archive (mirrors extract_plugin_files()/
+     * $scanDirectory, locating the extension root by searching for any of
+     * $type->markerFilenames() inside the archive (mirrors extract_plugin_files()/
      * extract_theme_files()/extract_language_files()'s identical shape).
      */
     public function extractArchive(ExtensionType $type, string $action, string $revision, string $dest): ExtractionResult
@@ -295,27 +227,24 @@ final readonly class PemCatalog
             return new ExtractionResult('temp_path_error', null);
         }
 
-        $pemBaseUrl = RequestBootstrap::pemUrl();
-        $url = $pemBaseUrl . '/download.php';
-        $getData = [
-            'rid' => $revision,
-            'origin' => 'piwigo_' . $action,
-        ];
-
         $status = 'dl_archive_error';
         $extensionId = null;
 
-        $handle = @fopen($archive, 'wb');
-        if ($handle !== false && HttpClientService::fetchToFile($handle, $url, $this->currentConfig, $getData)) {
+        // P27.9: no download.php?rid= indirection -- resolve the revision
+        // to its manifest entry's own real filename and fetch the
+        // already-present sibling-repo .zip directly.
+        $archiveFilename = $this->resolveRevisionFilename($type, $revision);
+        $handle = $archiveFilename !== null ? @fopen($archive, 'wb') : false;
+        if ($archiveFilename !== null && $handle !== false && HttpClientService::fetchToFile($handle, RequestBootstrap::pemUrl($type) . '/' . $archiveFilename, $this->currentConfig)) {
             fclose($handle);
 
             $status = 'archive_error';
             $list = $this->zipExtractor->listFilenames($archive);
             if ($list !== null) {
-                $markerFilename = $type->markerFilename();
+                $markerFilenames = $type->markerFilenames();
                 $mainFilepath = null;
                 foreach ($list as $filename) {
-                    if (basename($filename) === $markerFilename
+                    if (in_array(basename($filename), $markerFilenames, true)
                         and ($mainFilepath === null or strlen($filename) < strlen($mainFilepath))) {
                         $mainFilepath = $filename;
                     }
@@ -365,6 +294,112 @@ final readonly class PemCatalog
         @unlink($archive);
 
         return new ExtractionResult($status, $extensionId);
+    }
+
+    /**
+     * Fetches and decodes this type's sibling-repo manifest.json (P27.9's
+     * local extension-catalog mirror -- a plain static file, not a
+     * serialize()-encoded PEM endpoint), returning its `extensions` map,
+     * or null on a fetch/decode failure -- the same "can't connect to
+     * server" failure contract every real caller already branches on.
+     *
+     * @return array<int|string, mixed>|null
+     */
+    private function fetchManifest(ExtensionType $type): ?array
+    {
+        $url = RequestBootstrap::pemUrl($type) . '/manifest.json';
+        $result = HttpClientService::fetch($url, $this->currentConfig);
+        if (! is_string($result)) {
+            return null;
+        }
+
+        $decoded = json_decode($result, true);
+        if (! is_array($decoded)) {
+            return null;
+        }
+
+        $extensions = $decoded['extensions'] ?? null;
+
+        return is_array($extensions) ? $extensions : null;
+    }
+
+    /**
+     * True when any of $extension's own `piwigo_compat` entries branch-
+     * matches any of $versionsToCheck -- the local-manifest equivalent of
+     * the real PEM server's own server-side `version` GET-param filter.
+     *
+     * @param array<string, mixed> $extension
+     * @param list<string> $versionsToCheck
+     */
+    private function isCompatible(array $extension, array $versionsToCheck): bool
+    {
+        $piwigoCompat = $extension['piwigo_compat'] ?? null;
+        if (! is_array($piwigoCompat)) {
+            return false;
+        }
+
+        foreach ($piwigoCompat as $compatVersion) {
+            if (! is_string($compatVersion)) {
+                continue;
+            }
+            foreach ($versionsToCheck as $version) {
+                if (VersionHelper::getBranchFromVersion($compatVersion) === VersionHelper::getBranchFromVersion($version)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Backfills the fields the real PEM server used to supply that a
+     * scraped local manifest doesn't (extension_nb_downloads/rating_score/
+     * nb_ratings/tags -- PluginsNewPageRenderer/ThemesNewPageRenderer read
+     * these as bare, unguarded array keys), and aliases `piwigo_compat` to
+     * `compatible_with_versions`, the one field name those renderers still
+     * read under that name.
+     *
+     * @param array<string, mixed> $extension
+     * @return array<string, mixed>
+     */
+    private function normalizeExtensionRecord(array $extension): array
+    {
+        $extension['extension_nb_downloads'] ??= 0;
+        $extension['rating_score'] ??= null;
+        $extension['nb_ratings'] ??= 0;
+        $extension['tags'] ??= [];
+        $extension['compatible_with_versions'] = $extension['piwigo_compat'] ?? [];
+
+        return $extension;
+    }
+
+    /**
+     * Resolves a revision_id to its manifest entry's own real `filename`
+     * -- P27.9's local mirror serves the already-present sibling-repo
+     * .zip directly, no download.php?rid= indirection.
+     */
+    private function resolveRevisionFilename(ExtensionType $type, string $revision): ?string
+    {
+        $manifestExtensions = $this->fetchManifest($type);
+        if ($manifestExtensions === null) {
+            return null;
+        }
+
+        foreach ($manifestExtensions as $extension) {
+            if (! is_array($extension)) {
+                continue;
+            }
+            $revisionId = $extension['revision_id'] ?? null;
+            if (! is_scalar($revisionId) || (string) $revisionId !== $revision) {
+                continue;
+            }
+            $filename = $extension['filename'] ?? null;
+
+            return is_string($filename) ? $filename : null;
+        }
+
+        return null;
     }
 
     private function deleteObsoleteFiles(ExtensionType $type, string $extractPath, Logger $logger): void

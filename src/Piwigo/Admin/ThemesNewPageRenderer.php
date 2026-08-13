@@ -74,7 +74,7 @@ final readonly class ThemesNewPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths, $this->currentConfig);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
 
         $themes_dir = $this->paths->themes;

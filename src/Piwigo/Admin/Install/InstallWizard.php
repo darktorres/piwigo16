@@ -561,7 +561,7 @@ final class InstallWizard
         new ExtensionLifecycle(
             $this->lang,
             new ExtensionRepository(EntityManagerFactory::build($languageActivationConn)),
-            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $this->currentUser, $this->paths, $this->currentConfig),
+            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $this->paths, $this->currentConfig),
             $urlService,
             $configService,
             EntityManagerFactory::build($languageActivationConn)->getRepository(PluginMigrationEntity::class),

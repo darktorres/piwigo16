@@ -212,7 +212,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     return new ExtensionUpdateChecker(
         LangTestFactory::get(),
         new ExtensionScanner(),
-        new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), CurrentPathsTestFactory::get(), new CurrentConfig()),
+        new PemCatalog(new ZipExtractor(), new CurrentLogger(), CurrentPathsTestFactory::get(), new CurrentConfig()),
         UrlServiceTestFactory::build(),
         $repo,
         CurrentPathsTestFactory::get(),

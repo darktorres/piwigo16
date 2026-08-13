@@ -302,7 +302,7 @@ final class ExtensionScanner
 
     /**
      * Header parsing targets this rewrite's real common.po format (see
-     * ExtensionType::Language::markerFilename()'s docblock for how this
+     * ExtensionType::Language::markerFilenames()'s docblock for how this
      * differs from the legacy common.lang.php format it replaces): the PO
      * header block's "X-Piwigo-Language-Name" field, not the old
      * "Language Name:" comment convention -- confirmed via direct read of

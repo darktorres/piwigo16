@@ -87,7 +87,7 @@ final readonly class LanguagesNewPageRenderer
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build(DbConnection::build()));
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths, $this->currentConfig);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = EntityManagerFactory::build(DbConnection::build())->getRepository(PluginMigrationEntity::class);
         $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);

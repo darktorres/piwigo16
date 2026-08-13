@@ -75,15 +75,23 @@ enum ExtensionType: string
     }
 
     /**
-     * The file whose presence in a scanned directory marks it as a real
-     * extension of this type (also the file searched for by basename
-     * inside a downloaded archive to locate the extension's root).
+     * The file(s) whose presence in a scanned directory marks it as a real
+     * extension of this type (also the files searched for by basename
+     * inside a downloaded archive to locate the extension's root -- any one
+     * match is enough). Plugin/Theme carry both their legacy header-comment
+     * marker and the new PluginConfig\ExtensionInterface manifest filename,
+     * so a single archive can be located by either scan mechanism (P27.9,
+     * needed once a sibling-repo extension gets migrated to the new
+     * contract but its archive is still fetched through this same PEM-style
+     * download path).
+     *
+     * @return list<string>
      */
-    public function markerFilename(): string
+    public function markerFilenames(): array
     {
         return match ($this) {
-            self::Plugin => 'main.inc.php',
-            self::Theme => 'themeconf.inc.php',
+            self::Plugin => ['main.inc.php', 'plugin.json'],
+            self::Theme => ['themeconf.inc.php', 'theme.json'],
             // languages.class.php (and its own extract_language_files())
             // both still check for 'common.lang.php', but this rewrite's
             // language/ tree already migrated every locale to gettext .po
@@ -95,7 +103,7 @@ enum ExtensionType: string
             // why languages_installed.php/languages_new.php render an empty
             // list against a live fixture -- languages.class.php itself is
             // untouched (a pre-existing bug).
-            self::Language => 'common.po',
+            self::Language => ['common.po'],
         };
     }
 

@@ -10,38 +10,33 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
-use Piwigo\Users\CurrentUser;
 
-// PemCatalog's own methods that actually talk to the remote PEM server
-// (getVersionsToCheck()/getServerExtensions()/getIncompatibleExtensions()/
-// extractArchive(), all through the static HttpClientService::fetch()) have
-// no test seam to fake that HTTP call through -- this suite covers this
-// class's remaining, genuinely pure/file-based surface instead: the 4
-// sort comparators and the 2 local-filesystem helpers
-// (getLocallyMergedExtensions()/deleteObsoleteFiles()). Both read
-// Piwigo\Core\CurrentPaths directly (getLocallyMergedExtensions() for
-// install/obsolete_extensions.list, removed entirely -- always [] against
-// the real repo root now; deleteObsoleteFiles() via
-// ExtensionType::scanDirectory() for its own trash-path string), so this
-// suite seeds it against this repo's real root, same convention as every
-// other Unit test touching CurrentPaths (e.g. ExtensionTypeTest).
+// P27.9 revised this class's whole relationship with HTTP: getVersionsToCheck()
+// is now a pure, zero-network function (covered directly below, no fixture
+// server needed). getServerExtensions()/getIncompatibleExtensions()/
+// extractArchive() still call HttpClientService::fetch()/fetchToFile(), but
+// against a plain static manifest.json + zip, not a real external PEM
+// server -- which makes them genuinely testable now, unlike before this
+// phase (see ExtensionUpdateCheckerTest's own docblock for why *that*
+// class's PEM-touching methods stay untestable: they still hit the real,
+// deliberately-unreachable AppInfo::URL). guardedFetch()'s own self-request
+// exemption (HttpClientService's docblock) legitimately allows a plain
+// http:// loopback request when $_SERVER['HTTP_HOST'] matches the target
+// host[:port] -- the same real `php -S 127.0.0.1:<port>` + matching
+// HTTP_HOST technique HttpClientServiceTest.php's own docblock established,
+// reused here via pem_catalog_start_local_server()/..._stop_local_server()
+// below, with PIWIGO_ALT_PLUGINS_PEM_URL/PIWIGO_ALT_THEMES_PEM_URL (P27.9)
+// pointed at the disposable server's own docroot.
 //
-// [Mutation] The above architectural gap -- the same conclusion
-// ExtensionUpdateCheckerTest's own docblock independently reaches --
-// means getVersionsToCheck()'s own URL/$getData construction (Lines
-// 64/66/67), its `(bool) $pemVersions = @unserialize(...)` cast (Line
-// 70), and its final `return $versionsToCheck;` (Line 116,
-// AlwaysReturnEmptyArray) all show up as untested mutations with no fix
-// possible here: HttpClientService::fetch() always fails in this
-// environment (AppInfo::DOMAIN is deliberately an RFC 2606
-// never-resolves domain, see ExtensionUpdateCheckerTest), so
-// $versionsToCheck can never actually become non-empty in ANY Unit test
-// in this codebase -- Line 116's "always return []" mutation is
-// therefore genuinely, provably inert here (not just hard to reach), and
-// Lines 64/66/67/70 are covered (the code runs) but structurally
-// unobservable (the function's own return value is identical regardless
-// of what URL/getData get built, since the outer HTTP call fails either
-// way).
+// The 4 sort comparators and the 2 local-filesystem helpers
+// (getLocallyMergedExtensions()/deleteObsoleteFiles()) below stay covered
+// exactly as before -- both read Piwigo\Core\CurrentPaths directly
+// (getLocallyMergedExtensions() for install/obsolete_extensions.list,
+// removed entirely -- always [] against the real repo root now;
+// deleteObsoleteFiles() via ExtensionType::scanDirectory() for its own
+// trash-path string), so this suite seeds it against this repo's real
+// root, same convention as every other Unit test touching CurrentPaths
+// (e.g. ExtensionTypeTest).
 //
 // Line 383's `$extractPathRealpath === false` guard is a genuine
 // TOCTOU-only defensive check: file_exists($extractPath . '/obsolete.list')
@@ -267,7 +262,7 @@ test('getLocallyMergedExtensions returns an empty array against the real repo ro
     // asset left to parse, so this now always returns [] for the real
     // repo root. The other 2 tests below cover the real parsing/error
     // paths against their own throwaway fixture files.
-    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
+    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
 
     expect($catalog->getLocallyMergedExtensions())
         ->toBe([]);
@@ -285,7 +280,7 @@ test('getLocallyMergedExtensions reads the paths->root-prefixed file, not a bare
     mkdir($root . '/install', 0o777, true);
     file_put_contents($root . '/install/obsolete_extensions.list', "999:fixture_only_extension\n");
 
-    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot($root), new CurrentConfig());
+    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot($root), new CurrentConfig());
 
     expect($catalog->getLocallyMergedExtensions())
         ->toBe([
@@ -306,7 +301,7 @@ test('getLocallyMergedExtensions returns an empty array, not a crash, when the l
     file_put_contents($listFile, "999:fixture_only_extension\n");
     chmod($listFile, 0o000);
 
-    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot($root), new CurrentConfig());
+    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot($root), new CurrentConfig());
 
     set_error_handler(static fn (): bool => true, E_WARNING);
     try {
@@ -322,7 +317,7 @@ test('getLocallyMergedExtensions returns an empty array, not a crash, when the l
 
 function pem_catalog_delete_obsolete_files(ExtensionType $type, string $extractPath): void
 {
-    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
+    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
     $method = new ReflectionMethod($catalog, 'deleteObsoleteFiles');
     $method->invoke($catalog, $type, $extractPath, new Logger([
         'severity' => Logger::OFF,
@@ -367,7 +362,7 @@ test('deleteObsoleteFiles logs the real function name and old-files list, not ju
         file_put_contents($extractPath . '/old-file.php', 'stale code');
         file_put_contents($extractPath . '/obsolete.list', "old-file.php\n");
 
-        $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
+        $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
         $method = new ReflectionMethod($catalog, 'deleteObsoleteFiles');
         $method->invoke($catalog, ExtensionType::Plugin, $extractPath, new Logger([
             'severity' => Logger::DEBUG,
@@ -399,7 +394,7 @@ test('deleteObsoleteFiles logs the real function name and full path before delet
         file_put_contents($extractPath . '/old-file.php', 'stale code');
         file_put_contents($extractPath . '/obsolete.list', "old-file.php\n");
 
-        $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
+        $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
         $method = new ReflectionMethod($catalog, 'deleteObsoleteFiles');
         $method->invoke($catalog, ExtensionType::Plugin, $extractPath, new Logger([
             'severity' => Logger::DEBUG,
@@ -550,4 +545,391 @@ test('deleteObsoleteFiles does nothing, not a crash, when obsolete.list exists b
     expect(file_exists($extractPath . '/keep-me.php'))->toBeTrue()
         ->and(file_exists($listFile))
         ->toBeTrue();
+});
+
+// ---------------------------------------------------------------- P27.9
+
+/**
+ * Same real `php -S 127.0.0.1:<port>` technique HttpClientServiceTest.php's
+ * own docblock establishes -- guardedFetch()'s self-request exemption
+ * (matching $_SERVER['HTTP_HOST']) is what legitimately allows the plain
+ * http:// loopback request the tests below make, not a test-only bypass.
+ *
+ * @return array{0: resource, 1: int}
+ */
+function pem_catalog_start_local_server(string $docRoot): array
+{
+    $descriptors = [
+        0 => ['pipe', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+
+    for ($attempt = 0; $attempt < 5; $attempt++) {
+        $port = random_int(20_000, 60_000);
+        $proc = proc_open(['php', '-S', '127.0.0.1:' . $port, '-t', $docRoot], $descriptors, $pipes);
+        if (! is_resource($proc)) {
+            throw new RuntimeException('failed to start local test server');
+        }
+
+        set_error_handler(static fn (): bool => true);
+        try {
+            for ($i = 0; $i < 100; $i++) {
+                $sock = fsockopen('127.0.0.1', $port, $errno, $errstr, 0.1);
+                if (is_resource($sock)) {
+                    fclose($sock);
+
+                    return [$proc, $port];
+                }
+                usleep(20_000);
+            }
+        } finally {
+            restore_error_handler();
+        }
+
+        proc_terminate($proc);
+        proc_close($proc);
+    }
+
+    throw new RuntimeException('local test server never became reachable after 5 attempts');
+}
+
+/**
+ * @param resource $proc
+ */
+function pem_catalog_stop_local_server($proc): void
+{
+    proc_terminate($proc);
+    proc_close($proc);
+}
+
+/**
+ * Writes a manifest.json matching P27.9's real sibling-repo shape
+ * (top-level {generated, source, category_id, count, extensions}). Each
+ * $entries value is a manifest record plus an optional 'zipEntries'
+ * (stored-name => contents) instruction -- stripped from the written
+ * manifest, used to build the real .zip its own 'filename' field names.
+ *
+ * @param array<string, array<string, mixed>> $entries
+ */
+function pem_catalog_write_manifest_fixture(string $docRoot, array $entries): void
+{
+    $extensions = [];
+    foreach ($entries as $key => $entry) {
+        $zipEntries = $entry['zipEntries'] ?? null;
+        unset($entry['zipEntries']);
+        $extensions[$key] = $entry;
+
+        $filename = $entry['filename'] ?? null;
+        if (is_array($zipEntries) && is_string($filename)) {
+            $zip = new ZipArchive();
+            $zip->open($docRoot . '/' . $filename, ZipArchive::CREATE);
+            foreach ($zipEntries as $storedName => $contents) {
+                if (! is_string($storedName) || ! is_string($contents)) {
+                    continue;
+                }
+                $zip->addFromString($storedName, $contents);
+            }
+            $zip->close();
+        }
+    }
+
+    file_put_contents($docRoot . '/manifest.json', (string) json_encode([
+        'generated' => '2026-08-13',
+        'source' => 'fixture',
+        'category_id' => 12,
+        'count' => count($extensions),
+        'extensions' => $extensions,
+    ]));
+}
+
+/**
+ * extractArchive() reads $this->currentLogger->get() internally -- unlike
+ * this file's other tests, which either never touch the logger or invoke
+ * deleteObsoleteFiles() directly with an explicit Logger instance, a bare
+ * `new CurrentLogger()` here would throw "CurrentLogger not initialised"
+ * the moment extractArchive() itself calls ->get().
+ */
+function pem_catalog_ready_logger(): CurrentLogger
+{
+    $currentLogger = new CurrentLogger();
+    $currentLogger->set(new Logger([
+        'severity' => Logger::OFF,
+    ]));
+
+    return $currentLogger;
+}
+
+/**
+ * Save+restore, never a bare clear -- see feedback_putenv_unset_must_restore.
+ */
+function pem_catalog_set_env(string $var, ?string $value): ?string
+{
+    $original = getenv($var);
+    putenv($value === null ? $var : $var . '=' . $value);
+
+    return $original === false ? null : $original;
+}
+
+function pem_catalog_restore_env(string $var, ?string $original): void
+{
+    putenv($original === null ? $var : $var . '=' . $original);
+}
+
+test('getVersionsToCheck returns [$version] with zero HTTP calls', function (): void {
+    // No local server started at all, and PIWIGO_ALT_PLUGINS_PEM_URL left
+    // unset -- if this reached HttpClientService::fetch() at all, it would
+    // hit the real, deliberately-unreachable AppInfo::URL default and hang
+    // past this test's own runtime rather than return instantly. Returning
+    // the exact literal, fast, is itself the proof the round-trip is gone.
+    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
+
+    expect($catalog->getVersionsToCheck(ExtensionType::Plugin, false, '17.0.0'))
+        ->toBe(['17.0.0'])
+        ->and($catalog->getVersionsToCheck(ExtensionType::Theme, true, '9.9.9'))
+        ->toBe(['9.9.9']);
+});
+
+test('getServerExtensions filters by piwigo_compat branch match, then by on-disk fs ids, and normalizes the returned record', function (): void {
+    $docRoot = pem_catalog_test_marker() . '/mirror_server_extensions';
+    mkdir($docRoot, 0o777, true);
+    pem_catalog_write_manifest_fixture($docRoot, [
+        'compat_new_1.0' => [
+            'filename' => 'compat_new_1.0.zip',
+            'extension_id' => '100',
+            'extension_name' => 'Compat New',
+            'revision_id' => 'r100',
+            'revision_name' => '1.0',
+            'revision_date' => '2026-01-01 00:00:00',
+            'author_name' => 'Alice',
+            'extension_description' => 'a compatible, not-yet-installed extension',
+            'piwigo_compat' => ['17.0.0'],
+        ],
+        'incompat_1.0' => [
+            'filename' => 'incompat_1.0.zip',
+            'extension_id' => '101',
+            'extension_name' => 'Incompat',
+            'revision_id' => 'r101',
+            'revision_name' => '1.0',
+            'revision_date' => '2026-01-01 00:00:00',
+            'author_name' => 'Bob',
+            'extension_description' => 'incompatible -- only tagged for a legacy branch',
+            'piwigo_compat' => ['1.6'],
+        ],
+        'compat_onfs_1.0' => [
+            'filename' => 'compat_onfs_1.0.zip',
+            'extension_id' => '102',
+            'extension_name' => 'Compat OnFs',
+            'revision_id' => 'r102',
+            'revision_name' => '1.0',
+            'revision_date' => '2026-01-01 00:00:00',
+            'author_name' => 'Carol',
+            'extension_description' => 'compatible, but already installed',
+            'piwigo_compat' => ['17.0.0'],
+        ],
+    ]);
+
+    [$proc, $port] = pem_catalog_start_local_server($docRoot);
+    $originalHost = $_SERVER['HTTP_HOST'] ?? null;
+    $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
+    $originalEnv = pem_catalog_set_env('PIWIGO_ALT_PLUGINS_PEM_URL', 'http://127.0.0.1:' . $port);
+
+    try {
+        $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
+
+        $new = $catalog->getServerExtensions(ExtensionType::Plugin, ['102'], true, false, '17.0.0');
+        if ($new === null) {
+            throw new RuntimeException('getServerExtensions() unexpectedly returned null.');
+        }
+        expect(array_keys($new))
+            // PHP auto-casts a numeric-string array key to int -- same
+            // behavior the pre-P27.9 code already had ($byExtensionId[$extensionId] = ...).
+            ->toBe([100])
+            ->and($new['100']['extension_name'])->toBe('Compat New')
+            ->and($new['100']['extension_nb_downloads'])->toBe(0)
+            ->and($new['100']['rating_score'])->toBeNull()
+            ->and($new['100']['nb_ratings'])->toBe(0)
+            ->and($new['100']['tags'])->toBe([])
+            ->and($new['100']['compatible_with_versions'])->toBe(['17.0.0']);
+
+        $installed = $catalog->getServerExtensions(ExtensionType::Plugin, ['102'], false, false, '17.0.0');
+        if ($installed === null) {
+            throw new RuntimeException('getServerExtensions() unexpectedly returned null.');
+        }
+        expect(array_keys($installed))
+            ->toBe([102]);
+    } finally {
+        pem_catalog_stop_local_server($proc);
+        if ($originalHost === null) {
+            unset($_SERVER['HTTP_HOST']);
+        } else {
+            $_SERVER['HTTP_HOST'] = $originalHost;
+        }
+        pem_catalog_restore_env('PIWIGO_ALT_PLUGINS_PEM_URL', $originalEnv);
+    }
+});
+
+test('getServerExtensions returns null when the manifest.json fetch fails', function (): void {
+    $originalHost = $_SERVER['HTTP_HOST'] ?? null;
+    $_SERVER['HTTP_HOST'] = 'this-host-does-not-participate';
+    // No server started, no env override set -- pemUrl() falls through to
+    // the real AppInfo::URL default, a deliberately non-resolving .invalid
+    // domain, so the fetch itself fails fast.
+    $originalEnv = pem_catalog_set_env('PIWIGO_ALT_PLUGINS_PEM_URL', null);
+
+    try {
+        $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
+
+        expect($catalog->getServerExtensions(ExtensionType::Plugin, [], true, false, '17.0.0'))
+            ->toBeNull();
+    } finally {
+        if ($originalHost === null) {
+            unset($_SERVER['HTTP_HOST']);
+        } else {
+            $_SERVER['HTTP_HOST'] = $originalHost;
+        }
+        pem_catalog_restore_env('PIWIGO_ALT_PLUGINS_PEM_URL', $originalEnv);
+    }
+});
+
+test('getIncompatibleExtensions flags an fs extension whose installed version has no matching compatible manifest revision', function (): void {
+    $docRoot = pem_catalog_test_marker() . '/mirror_incompatible';
+    mkdir($docRoot, 0o777, true);
+    pem_catalog_write_manifest_fixture($docRoot, [
+        'known_good_2.0' => [
+            'filename' => 'known_good_2.0.zip',
+            'extension_id' => '200',
+            'extension_name' => 'Known Good',
+            'revision_id' => 'r200',
+            'revision_name' => '2.0',
+            'revision_date' => '2026-01-01 00:00:00',
+            'author_name' => 'Dora',
+            'extension_description' => 'the only compatible revision on record',
+            'piwigo_compat' => ['17.0.0'],
+        ],
+    ]);
+
+    [$proc, $port] = pem_catalog_start_local_server($docRoot);
+    $originalHost = $_SERVER['HTTP_HOST'] ?? null;
+    $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
+    $originalEnv = pem_catalog_set_env('PIWIGO_ALT_PLUGINS_PEM_URL', 'http://127.0.0.1:' . $port);
+
+    try {
+        $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
+
+        $fsExtensions = [
+            'stale_local_plugin' => [
+                'extension' => '200',
+                'version' => '1.0',
+            ],
+            'current_local_plugin' => [
+                'extension' => '200',
+                'version' => '2.0',
+            ],
+        ];
+
+        $incompatible = $catalog->getIncompatibleExtensions(ExtensionType::Plugin, $fsExtensions, [], true);
+        if ($incompatible === false) {
+            throw new RuntimeException('getIncompatibleExtensions() unexpectedly returned false.');
+        }
+
+        expect($incompatible)
+            ->toHaveKey('stale_local_plugin')
+            ->and($incompatible['stale_local_plugin'])->toBe('1.0')
+            ->and($incompatible)
+            ->not->toHaveKey('current_local_plugin');
+    } finally {
+        pem_catalog_stop_local_server($proc);
+        if ($originalHost === null) {
+            unset($_SERVER['HTTP_HOST']);
+        } else {
+            $_SERVER['HTTP_HOST'] = $originalHost;
+        }
+        pem_catalog_restore_env('PIWIGO_ALT_PLUGINS_PEM_URL', $originalEnv);
+        unset($_SESSION['incompatible_plugins']);
+    }
+});
+
+test('extractArchive resolves a revision_id to its manifest filename, downloads it directly (no download.php), and locates the new-contract plugin.json marker', function (): void {
+    $root = pem_catalog_test_marker() . '/extract_new_contract';
+    mkdir($root . '/plugins', 0o777, true);
+
+    $docRoot = pem_catalog_test_marker() . '/mirror_extract';
+    mkdir($docRoot, 0o777, true);
+    pem_catalog_write_manifest_fixture($docRoot, [
+        'fixture_plugin_1.0' => [
+            'filename' => 'fixture_plugin_1.0.zip',
+            'extension_id' => '300',
+            'extension_name' => 'Fixture Plugin',
+            'revision_id' => 'r300',
+            'revision_name' => '1.0',
+            'revision_date' => '2026-01-01 00:00:00',
+            'author_name' => 'Eve',
+            'extension_description' => 'a migrated, plugin.json-only extension',
+            'piwigo_compat' => ['17.0.0'],
+            'zipEntries' => [
+                'fixture_plugin/plugin.json' => '{"id":"fixture_plugin"}',
+                'fixture_plugin/src/Plugin.php' => '<?php',
+            ],
+        ],
+    ]);
+
+    [$proc, $port] = pem_catalog_start_local_server($docRoot);
+    $originalHost = $_SERVER['HTTP_HOST'] ?? null;
+    $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
+    $originalEnv = pem_catalog_set_env('PIWIGO_ALT_PLUGINS_PEM_URL', 'http://127.0.0.1:' . $port);
+
+    try {
+        $catalog = new PemCatalog(new ZipExtractor(), pem_catalog_ready_logger(), Paths::fromRoot($root), new CurrentConfig());
+
+        $result = $catalog->extractArchive(ExtensionType::Plugin, 'install', 'r300', 'fixture_plugin');
+
+        expect($result->status)
+            ->toBe('ok')
+            ->and($result->id)
+            ->toBe('fixture_plugin')
+            ->and(file_exists($root . '/plugins/fixture_plugin/plugin.json'))->toBeTrue()
+            ->and(file_exists($root . '/plugins/fixture_plugin/src/Plugin.php'))->toBeTrue();
+    } finally {
+        pem_catalog_stop_local_server($proc);
+        if ($originalHost === null) {
+            unset($_SERVER['HTTP_HOST']);
+        } else {
+            $_SERVER['HTTP_HOST'] = $originalHost;
+        }
+        pem_catalog_restore_env('PIWIGO_ALT_PLUGINS_PEM_URL', $originalEnv);
+    }
+});
+
+test('extractArchive fails with dl_archive_error when the revision id has no matching manifest entry', function (): void {
+    $root = pem_catalog_test_marker() . '/extract_missing_revision';
+    mkdir($root . '/plugins', 0o777, true);
+
+    $docRoot = pem_catalog_test_marker() . '/mirror_missing_revision';
+    mkdir($docRoot, 0o777, true);
+    pem_catalog_write_manifest_fixture($docRoot, []);
+
+    [$proc, $port] = pem_catalog_start_local_server($docRoot);
+    $originalHost = $_SERVER['HTTP_HOST'] ?? null;
+    $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
+    $originalEnv = pem_catalog_set_env('PIWIGO_ALT_PLUGINS_PEM_URL', 'http://127.0.0.1:' . $port);
+
+    try {
+        $catalog = new PemCatalog(new ZipExtractor(), pem_catalog_ready_logger(), Paths::fromRoot($root), new CurrentConfig());
+
+        $result = $catalog->extractArchive(ExtensionType::Plugin, 'install', 'no-such-revision', 'whatever');
+
+        expect($result->status)
+            ->toBe('dl_archive_error')
+            ->and($result->id)
+            ->toBeNull();
+    } finally {
+        pem_catalog_stop_local_server($proc);
+        if ($originalHost === null) {
+            unset($_SERVER['HTTP_HOST']);
+        } else {
+            $_SERVER['HTTP_HOST'] = $originalHost;
+        }
+        pem_catalog_restore_env('PIWIGO_ALT_PLUGINS_PEM_URL', $originalEnv);
+    }
 });

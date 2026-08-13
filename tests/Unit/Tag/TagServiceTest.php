@@ -614,6 +614,9 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
     $imageId = tagServiceTestDisposableImageId($conn);
     $suffix = bin2hex(random_bytes(4));
     $extraId = null;
+    // Pre-initialized (matching $extraId above) -- finally must stay safe
+    // to reach even if an exception fires before the assignment below.
+    $bulkIds = [];
 
     try {
         [$service] = tagServiceTestServiceConn($conn);
@@ -655,7 +658,25 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
         $conn->executeStatement('DELETE FROM image_tag WHERE image_id = ?', [$imageId]);
         $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
         $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
-        $conn->executeStatement("DELETE FROM tags WHERE name LIKE 'p18-test-bulk-{$suffix}-%'");
+        // Exact ids (already collected above as $bulkIds), not a LIKE
+        // pattern -- `tags` carries no plain B-tree index on `name` (only
+        // url_name, lastmodified, and a FULLTEXT index, which the
+        // optimizer can't use for LIKE), so a name-pattern DELETE forces
+        // a full clustered-index scan that next-key-locks its way across
+        // the ENTIRE table for the whole 1000-row deletion -- including
+        // rows that don't even match the pattern. Under --parallel this
+        // reliably deadlocked against other workers' own single-row tags/
+        // image_tag writes (reproduced live via SHOW ENGINE INNODB STATUS:
+        // this DELETE holding a shared lock on image_tag's own index
+        // while waiting on a `tags` row a concurrent single-row INSERT
+        // INTO image_tag already held a shared lock on, and vice versa --
+        // a textbook two-table lock-order-inversion deadlock, 100%
+        // reproducible across 3 separate captures). An exact `id IN (...)`
+        // delete confines locking to precisely these 1000 rows via direct
+        // primary-key point lookups instead.
+        if ($bulkIds !== []) {
+            $conn->executeStatement('DELETE FROM tags WHERE id IN (' . implode(',', $bulkIds) . ')');
+        }
         if ($extraId !== null) {
             $conn->executeStatement('DELETE FROM tags WHERE id = ?', [$extraId]);
         }

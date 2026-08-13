@@ -17,7 +17,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Validation\InputValidator;
@@ -49,7 +48,6 @@ final readonly class CatOptionsPageRenderer
 
     public function render(): void
     {
-        $conn = DbConnection::build();
         $template = $this->currentTemplate->get();
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);

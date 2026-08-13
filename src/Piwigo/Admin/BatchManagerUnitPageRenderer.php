@@ -23,7 +23,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
 use Piwigo\Event\Location\LocBeginElementSetUnit;
 use Piwigo\Event\Location\LocEndElementSetUnit;
 use Piwigo\Html\HtmlService;
@@ -85,7 +84,6 @@ final readonly class BatchManagerUnitPageRenderer
         $template = $this->currentTemplate->get();
 
         $htmlRenderer = $this->htmlRenderer;
-        $conn = DbConnection::build();
 
         $this->eventDispatcher->dispatchNotify(new LocBeginElementSetUnit());
 

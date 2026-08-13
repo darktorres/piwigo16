@@ -28,8 +28,8 @@ it('renders the env tab with real server/DB info when the gallery is unlocked', 
 it('shows the time-since-last-calculation when a real cache_sizes config value is present', function (): void {
     $snapshot = H::snapshotConfig(['cache_sizes']);
     // cache_sizes is a `[{name, value}, ...]` list persisted by
-    // Ws\Core's cache-size calculation (confirmed via direct read) --
-    // index 3's own 'value' (a date string) is what MaintenanceEnvPageRenderer
+    // Ws\Core's cache-size calculation -- index 3's own 'value' (a date
+    // string) is what MaintenanceEnvPageRenderer
     // reads for its "time since last calculation" display. Hand-crafted
     // here rather than triggering a real calculation, since only that one
     // index/key matters to this branch.
@@ -104,8 +104,8 @@ it('renders successfully with the gallery locked (U_MAINT_UNLOCK_GALLERY branch)
         // MaintenanceEnvPageRenderer assigns U_MAINT_LOCK_GALLERY/
         // U_MAINT_UNLOCK_GALLERY depending on CurrentConfig::galleryLocked()
         // -- but unlike the "actions" tab, maintenance_env.latte never
-        // references either variable (confirmed live: zero "gallery"
-        // references anywhere in that template), so there's nothing
+        // references either variable (zero "gallery" references anywhere
+        // in that template), so there's nothing
         // observable in the HTML beyond a clean render. This exercises the
         // locked branch for coverage; the sibling test above already
         // exercises the unlocked branch.

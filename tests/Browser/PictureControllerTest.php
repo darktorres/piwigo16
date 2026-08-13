@@ -18,8 +18,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Every real navigation below uses the pretty-URL form
  * `picture.php?/{imageId}/category/{albumId}` (the exact form
  * pwg.images.addSimple's own WS response returns as the new photo's URL),
- * not a bare `picture.php?image_id={imageId}`. Confirmed live (reproduced
- * directly with curl, independent of this file) that the bare form makes
+ * not a bare `picture.php?image_id={imageId}`, since the bare form makes
  * SectionPopulator default to the flat "categories" section with no
  * specific category selected -- whether a freshly uploaded photo's id
  * lands inside that default (unfiltered, sorted, paginated) items list is
@@ -34,8 +33,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * instanceof SectionContext) { throw new \RuntimeException(...); }` guard,
  * right after `SectionPopulator::populate()`. That method's own real
  * implementation unconditionally calls `SectionContextRegistry::set()` as
- * the very last thing it does (confirmed via source read, see this
- * controller's own docblock on that exact point) -- there is no real HTTP
+ * the very last thing it does -- there is no real HTTP
  * request shape that reaches this line with a null registry short of
  * swapping in a fake SectionPopulator, which would be testing a mock of
  * this controller's own collaborator, not real behavior. A pure
@@ -70,7 +68,7 @@ function pictureFavoriteExists(int $imageId, int $userId): bool
  * comments.validated is a genuine boolean column on Postgres -- a bare
  * 0/1 literal is valid MySQL tinyint(1) input but Postgres rejects it
  * outright ("column is of type boolean but expression is of type
- * integer"), confirmed live. Matches RegenerateFixtureTest's own
+ * integer"). Matches RegenerateFixtureTest's own
  * $sqlTrue/$sqlFalse convention for the identical column.
  */
 function pictureInsertComment(int $imageId, string $author, string $content, bool $validated, ?int $authorId = null): int
@@ -169,7 +167,7 @@ it('increments the hit counter on first view, then not on an immediate same-pict
     $albumId = (int) $albumResult['id'];
     // Piwigo\Admin\Upload\UploadService::addUploadedFile() de-duplicates by
     // md5sum whenever CurrentConfig::uploadDetectDuplicate() is enabled
-    // (confirmed live: this fixture's own config ships
+    // (this fixture's own config ships
     // upload_detect_duplicate=true), so a fixed image label -- H::
     // makeTestImage() draws it straight onto the pixel data -- produces
     // byte-IDENTICAL file content across repeated runs against this
@@ -184,13 +182,9 @@ it('increments the hit counter on first view, then not on an immediate same-pict
     // the ~170 visible px -- leaving only the uniqid() suffix's first ~2
     // hex digits actually rendered, which are themselves the slow-moving,
     // effectively-constant leading digits of the current Unix timestamp
-    // (uniqid()'s own encoding). Reproduced live: two DIFFERENT
-    // 'Hit Count Photo ' . uniqid() labels, run back-to-back, produced
-    // byte-IDENTICAL JPEGs (same md5), while two bare uniqid() labels
-    // (short enough to render in full) produced genuinely different
-    // ones -- confirmed independently of Pest via a standalone php -r
-    // reproduction before writing this fix. The PIXEL label (must stay
-    // short enough to render in full) and the DB `name` field (the
+    // (uniqid()'s own encoding), so two different-but-similarly-prefixed
+    // labels can render to byte-identical JPEGs. The PIXEL label (must
+    // stay short enough to render in full) and the DB `name` field (the
     // descriptive, human-readable text picture.latte actually displays,
     // asserted below) are deliberately decoupled here for exactly this
     // reason.
@@ -307,9 +301,8 @@ it('delete_comment succeeds for an anonymous (NULL author_id) comment', function
     // AccessControl::canManageComment(string $action, int|string
     // $commentAuthorId), whose 2nd parameter's declared type did NOT
     // include bool, and under this project's `declare(strict_types=1)`
-    // triggered a real, uncaught TypeError -- reproduced via a raw
-    // authenticated curl request (independent of Playwright) before the
-    // fix. getCommentAuthorId() now returns `null` for this case (see
+    // triggers a real, uncaught TypeError. getCommentAuthorId() now
+    // returns `null` for this case (see
     // CommentRepository::findAuthorId()'s 3-state contract) and
     // canManageComment() now accepts `int|string|null`, treating a null
     // author as "no owner to compare against" (admins can still manage it,
@@ -485,7 +478,7 @@ it("edits a comment's own content via the edit_comment action, validating it as 
     // EphemeralKeyService::generate(2, ...) (PictureCommentRenderer's own
     // edit-mode key) requires >=2 real wall-clock seconds between issuing
     // and verifying the key -- a deliberate "the form couldn't have been
-    // submitted this fast" anti-bot check, confirmed live: verify()
+    // submitted this fast" anti-bot check: verify()
     // rejects (silently falls through to $commentAction = 'reject', a
     // 200 with the comment left unchanged, no error) when posted
     // immediately after the GET.
@@ -589,7 +582,7 @@ it('sets a photo as the album representative via the set_as_representative actio
     }
     $albumId = (int) $albumResult['id'];
     // A freshly created album auto-assigns its first-ever uploaded photo
-    // as representative (confirmed live) -- upload a second photo and
+    // as representative -- upload a second photo and
     // explicitly re-target it, so this test proves the action itself
     // changes the representative rather than observing an already-set
     // default.
@@ -634,7 +627,7 @@ it('rates a photo via the rate action', function (): void {
     // RateService::rate() silently no-ops (returns false, never inserts a
     // row) unless CurrentConfig::rateEnabled() is true -- and this
     // fixture's own `rate` config param (not `rate_enabled`: the DB
-    // param/property mapping is `'rate' => 'rateEnabled'`, confirmed live)
+    // param/property mapping is `'rate' => 'rateEnabled'`)
     // is explicitly seeded 'false', so rating is genuinely disabled by
     // default in this environment.
     $snapshot = H::snapshotConfig(['rate']);
@@ -749,7 +742,7 @@ it('rejects an edit_comment submission whose key is used before its 2-second min
     // test above -- EphemeralKeyService::verify() requires >=2 real
     // wall-clock seconds since the key was issued, so posting immediately
     // deterministically hits CommentService::updateComment()'s own
-    // $commentAction = 'reject' branch (confirmed live): a 200 response
+    // $commentAction = 'reject' branch: a 200 response
     // (the switch's own 'reject' case never sets $perform_redirect), and
     // the comment's content column left untouched.
     $newContent = 'Rejected content ' . uniqid();
@@ -767,7 +760,7 @@ it('rejects an edit_comment submission whose key is used before its 2-second min
     // $_SESSION['page_errors'][] does have a real reader: HtmlService::
     // flushMessageMode() reads `$_SESSION['page_' . $mode]` generically
     // (not the literal string 'page_errors'), which a plain repo-wide grep
-    // for that literal string misses -- confirmed live, and the same
+    // for that literal string misses -- the same
     // mechanism PasswordController's own fix (a873f5ca7d)
     // relies on for its own page_errors flash. Since 'reject' never
     // redirects, this same response (not a follow-up one) is what
@@ -798,8 +791,8 @@ it('toggles the show_metadata session flag on repeated ?metadata visits without 
     $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&metadata');
     $page->assertNoJavaScriptErrors();
     // Second visit, same session: no longer null -> unsets it. Neither
-    // branch has any template-visible effect of its own (confirmed live:
-    // $url_metadata is a plain "current URL + metadata param" link, not
+    // branch has any template-visible effect of its own ($url_metadata
+    // is a plain "current URL + metadata param" link, not
     // conditioned on the session var's value) -- exercising both real
     // branches without erroring is the correct assertion here.
     $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&metadata');
@@ -839,7 +832,7 @@ it('renders a related tag link for a photo with a real assigned tag', function (
 
     // picture.latte's own {if ($display_info['tags'] and isset($related_tags))}
     // gate needs the fixture's real picture_informations config to have
-    // tags=true (confirmed live) -- true by default in this fixture, not
+    // tags=true -- true by default in this fixture, not
     // overridden here.
     $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
     $page->assertSee($tagName);
@@ -966,7 +959,7 @@ function pictureCookieJarSessionId(string $cookieJar): string
  * IPv6 or no-IP requests -- NOT a fixed value, and NOT safe to hardcode:
  * whether the test runner's `localhost` base URL resolves to an IPv4 or
  * IPv6 loopback address depends on this machine's own resolver
- * configuration (confirmed live: `getent hosts localhost` on this
+ * configuration (`getent hosts localhost` on this
  * environment returns `::1`, IPv6, giving an empty hash), which this
  * test has no business depending on. A suffix match on the raw cookie
  * value sidesteps the hash entirely -- PHP's session id is already a
@@ -1086,9 +1079,9 @@ it('shows "requested image is filtered" for a backdated photo excluded by an act
     pictureSetImageDateAvailable($oldImageId, date('Y-m-d H:i:s', strtotime('-30 days')));
 
     // Activates FilterService::initializeFromRequest()'s session-persisted
-    // recent-content filter (start-recent-1 -> a real 1-day window),
-    // confirmed live via source read: CurrentConfig::filterPages()'s
-    // 'default' entry has used=true, so this runs on every subsequent
+    // recent-content filter (start-recent-1 -> a real 1-day window):
+    // CurrentConfig::filterPages()'s 'default' entry has used=true, so
+    // this runs on every subsequent
     // request in this same cookie-jar session, including picture.php.
     $curl($baseUrl . '/index.php?filter=start-recent-1');
 
@@ -1208,12 +1201,11 @@ it('remembers a picture_deriv cookie choice in the session across a follow-up re
     //
     // The picture_deriv cookie must be appended to the cookie *jar file*
     // itself, not passed as a manual 'Cookie:' header alongside
-    // CURLOPT_COOKIEFILE -- confirmed live via CURLOPT_VERBOSE that doing
-    // the latter sends TWO separate `Cookie:` header lines on the wire
+    // CURLOPT_COOKIEFILE -- doing the latter sends TWO separate
+    // `Cookie:` header lines on the wire
     // (one from the jar's real pwg_id, one from the manual header), which
-    // Apache/PHP only honors one of (whichever it picks -- confirmed by a
-    // brand-new pwg_id being issued back, meaning it silently dropped the
-    // real session cookie), losing the logged-in admin session entirely.
+    // Apache/PHP only honors one of (whichever it picks), losing the
+    // logged-in admin session entirely.
     // Writing both cookies into the same jar file lets curl's own loader
     // merge them into one real `Cookie: picture_deriv=large; pwg_id=...`
     // header, which is what a real browser sending both cookies would
@@ -1355,7 +1347,7 @@ it('renders slideshow mode with play/repeat/period controls and a real next item
 
     // light_slideshow defaults true (CurrentConfig::$lightSlideshow),
     // slideshow_period/min/max/step default 4/1/10/1 and slideshow_repeat
-    // defaults true -- confirmed live, none overridden by this fixture --
+    // defaults true, none overridden by this fixture --
     // so viewing photo A (which has a real next item, B) with slideshow=1
     // exercises the play=true auto-advance branch, both period-step
     // links (4-1=3 and 4+1=5 both stay within [1,10]), and the
@@ -1364,12 +1356,12 @@ it('renders slideshow mode with play/repeat/period controls and a real next item
 
     $page->assertSee('stop the slideshow');
     // picture_nav_buttons.latte's own control labels (pwg-button-text spans)
-    // are icon-only, CSS-hidden text -- confirmed live via screenshot, so
+    // are icon-only, CSS-hidden text, so
     // assertSee() (visible text only) never finds them; a raw-content
     // check is the right tool, same precedent as BatchManagerUnitPageRenderer
     // Test's own title-attribute case. The loaded en_UK catalog also
     // rephrases these from their literal PHP source msgids (e.g. "Reduce
-    // diaporama speed" -> "Reduce slideshow speed") -- confirmed live.
+    // diaporama speed" -> "Reduce slideshow speed").
     $body = H::rawWebpage($page)->content();
     expect($body)
         ->toContain('Reduce slideshow speed');
@@ -1394,7 +1386,7 @@ it('shows access-denied via the flat "all items" view when the photo\'s only alb
     // request -- see this file's own top-of-file comment on exactly that
     // fragility). The bare `/{imageId}` URL form (no `/category/`) is
     // what UrlService::parseSectionUrl() turns into `page['flat'] = true`
-    // with no category -- confirmed live via source read
+    // with no category
     // (SectionPopulator.php's own "access a picture only by id, file or
     // id-file without given section" comment).
     $adminSession = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
@@ -1830,7 +1822,7 @@ it('builds a download-format list with the URL fallback, strtoupper() label fall
         @unlink($image);
 
         // A real image_format row with no lang catalog entry for
-        // 'format WEBP' (confirmed live: no core language file, en_UK or
+        // 'format WEBP' (no core language file, en_UK or
         // otherwise, in this repo or the 16.x reference tree defines any
         // 'format <EXT>' msgid -- Lang::has()'s own true branch is
         // realistically unreachable with the shipped catalogs, so this
@@ -1838,8 +1830,6 @@ it('builds a download-format list with the URL fallback, strtoupper() label fall
         // path). 2048 KB -> exactly 2.0MB (2048/1024) once
         // sprintf('%.1fMB', ...) formats it.
         //
-        // Re-confirmed during a later coverage-gap pass (`grep -rn '"format
-        // ' language/*/*.po` across every shipped catalog, zero hits):
         // PictureController.php's own `Lang::t($lang_key)` call inside that
         // true branch is left genuinely uncovered by this suite on purpose
         // -- reaching it for real would need a fake plugin-installed
@@ -1950,8 +1940,7 @@ it('assigns PDF_VIEWER_FILESIZE_THRESHOLD/PDF_NB_PAGES and renders the inline PD
         expect($body)
             ->toContain('<dt>Pages</dt>');
         // countPdfPages()'s own preg_match_all('/\/Page\W/', ...) on a
-        // real single-page ImageMagick-converted PDF is always exactly 1
-        // -- confirmed live.
+        // real single-page ImageMagick-converted PDF is always exactly 1.
         expect($body)
             ->toMatch('/<dt>Pages<\/dt>\s*<dd>1<\/dd>/');
         $page->assertNoJavaScriptErrors();
@@ -1998,10 +1987,10 @@ it('renders the legend/author/creation-date info block for a photo with a real c
     ]);
     expect($updateResult['stat'] ?? null)->toBe('ok');
 
-    // picture_informations defaults author=true/created_on=true (confirmed
-    // live against the fixture's own config row) -- not overridden
-    // here, same as this file's own "format list" test relies on for its
-    // own tags=true default.
+    // picture_informations defaults author=true/created_on=true (per the
+    // fixture's own config row) -- not overridden here, same as this
+    // file's own "format list" test relies on for its own tags=true
+    // default.
     $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
     $body = H::rawWebpage($page)->content();
 
@@ -2019,7 +2008,7 @@ it('renders the legend/author/creation-date info block for a photo with a real c
     // and PictureController's own chronology link is built from
     // explode('-', substr($date_creation, 0, 10)) fed into
     // UrlService::makeIndexUrl()'s own chronology segment
-    // (`{field}-{style}-{view}-{y}-{m}-{d}`, confirmed via source read of
+    // (`{field}-{style}-{view}-{y}-{m}-{d}`, per
     // UrlService::addChronologyAndStartToUrl()).
     expect($body)
         ->toContain('2020');

@@ -5,10 +5,11 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P31 (Smarty -> Latte migration) baseline capture: renders every route in
- * VisualRegressionTest.php's shared route list (Helpers/VisualRegressionRoutes.php)
- * through the still-100%-Smarty engine and writes the raw HTML response body
- * to tests/Fixtures/GoldenHtml/{route}.html.
+ * Raw-HTML baseline capture: renders every route in VisualRegressionTest.php's
+ * shared route list (Helpers/VisualRegressionRoutes.php) and writes the raw
+ * HTML response body to tests/Fixtures/GoldenHtml/{route}.html, as a diffable
+ * baseline for reviewing template changes -- a finer-grained, markup-level
+ * check than VisualRegressionTest.php's screenshot comparison can catch.
  *
  * MUST run in isolation, same reason as VisualRegressionTest.php: bundling
  * with the CRUD-mutating Browser tests drifts sidebar counts and other live
@@ -17,21 +18,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Driven with plain curl, not Pest's Playwright-driven $page API -- this
  * captures the raw HTTP response body (what Template::fetchOutput() actually
  * produced), not Playwright's post-DOM-parse page.content(), which can
- * silently normalize markup (self-closing tags, attribute reordering) in
- * ways that would show up as noise unrelated to the real Smarty->Latte diff
- * this fixture exists to support.
+ * silently normalize markup (self-closing tags, attribute reordering) into
+ * noise unrelated to a real template diff.
  *
- * Every later P31 sub-item's own verification diffs its converted template's
- * newly-Latte-rendered output against its route's file here -- not a
- * byte-identical assertion (auto-escaping is deliberately enabled during the
- * migration, so some diffs are expected and reviewed, see docs/PLAN.md's P31
- * section) but the real "did anything besides escaping change" check VR's
- * own screenshot comparison is too coarse to catch.
- *
- * To (re)capture: `composer test:golden-html`. Only re-run this once a
- * template's own conversion sub-item has confirmed its diff against the
- * existing golden file is fully accounted for -- regenerating unconditionally
- * would silently erase the parity baseline the diff exists to check against.
+ * To (re)capture: `composer test:golden-html`. Only re-run once a diff
+ * against the existing golden file is fully reviewed and accounted for --
+ * regenerating unconditionally would silently erase the baseline the diff
+ * exists to check against.
  */
 
 /**

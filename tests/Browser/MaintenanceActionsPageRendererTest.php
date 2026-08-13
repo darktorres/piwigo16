@@ -9,8 +9,8 @@ it('renders the global gallery actions fieldset with no webmaster warning for th
     $page = H::navigateOk($page, '/admin.php?page=maintenance');
 
     // PHP_VERSION/DB_VERSION are assigned by this class but only ever
-    // rendered by maintenance_env.latte (confirmed live: maintenance_actions.
-    // tpl never references $PHP_VERSION/$DB_VERSION at all) -- the
+    // rendered by maintenance_env.latte (maintenance_actions.latte never
+    // references $PHP_VERSION/$DB_VERSION at all) -- the
     // "Global Gallery Actions" fieldset (gated behind isWebmaster==1) is
     // this tab's own real, distinctive content.
     $page->assertSee('Global Gallery Actions');
@@ -87,7 +87,7 @@ it('renders successfully forced onto the "imagick" graphics library branch', fun
     $snapshot = H::snapshotConfig(['graphics_library']);
     // Default 'auto' resolves to 'ext_imagick' in this test env (both the
     // imagick PHP extension and the `convert`/`identify` CLI binaries are
-    // present, confirmed live) -- forcing 'imagick' here exercises the
+    // present) -- forcing 'imagick' here exercises the
     // sibling PHP-extension-only branch instead.
     H::setConfigValue('graphics_library', '"imagick"');
 

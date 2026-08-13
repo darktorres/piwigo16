@@ -126,9 +126,8 @@ it('renders more than one year of history summary data and a real day-level mont
         //
         // Asserted against the &quot;-encoded form, not a literal '"' --
         // Latte's HtmlHelpers::escapeQuotes() unconditionally HTML-escapes
-        // quotes printed inside an attribute-value context (confirmed live
-        // in commit 4b6cd2f448's own investigation; |noescape does not
-        // suppress it there). This is not a functional bug: browsers
+        // quotes printed inside an attribute-value context, even with
+        // |noescape. This is not a functional bug: browsers
         // HTML-entity-decode attribute values before any JS reads them
         // (stats.js's own $("#data").data("years") call sees the
         // already-decoded string), so the literal-quote form this test

@@ -49,9 +49,7 @@ it('sends an album notification email to selected users and reports how many wer
     expect($result['status'])->toBe(200);
     // The en_UK PO translation for this plural key reads "has been sent",
     // not a literal echo of the '%d mail was sent.' source string used as
-    // the translation lookup key -- confirmed live via a direct debug
-    // dump of the computed $message before assuming the source string's
-    // own wording.
+    // the translation lookup key.
     expect($result['body'])->toContain('1 mail has been sent.');
     expect($result['body'])->toContain('fixture_admin');
 });
@@ -71,8 +69,8 @@ it('resolves the representative-photo image query and injects an auth_key URL pa
     $imageId = H::uploadPhotoViaApi($imagePath, $albumId, 'Notification Repr Photo ' . uniqid());
     @unlink($imagePath);
 
-    // 'normal' status (pwg.users.add's own default -- confirmed via direct
-    // read of UserService::addUser()) is required for createUserAuthKey()
+    // 'normal' status (pwg.users.add's own default, per
+    // UserService::addUser()) is required for createUserAuthKey()
     // to return a real key instead of `false` -- 'admin'/'webmaster'/'guest'
     // are all excluded by its own in_array() gate.
     $username = 'album_notif_normal_' . uniqid();
@@ -168,14 +166,11 @@ it('populates the private-album permission_url and direct/indirect notified-user
         // only shown once the "Users" radio (name="who" value="users") is
         // picked; "Group" is checked by default, so the users <select> is
         // hidden and assertSee() can't find it until that radio is
-        // clicked (confirmed live via the failure screenshot: the group
-        // dropdown was visible, the users one wasn't rendered at all).
+        // clicked.
         $page->assertSee($groupName);
         // The users <select multiple> is enhanced by a JS "search term"
         // widget (album_notification.latte's own placeholder="Type in a
         // search term") that replaces the live DOM once it initializes --
-        // confirmed live (server-side debug logging showed user_options
-        // correctly populated with this exact user every time) that
         // H::rawWebpage($page)->content() reads the browser's *current*
         // DOM, i.e. post-widget-init, not the original server response,
         // so the <option> this asserts on is already gone from it by the
@@ -204,8 +199,8 @@ it('sends an album notification email to a group and reports the group name', fu
     $albumId = (int) $albumResult['id'];
 
     // pwg.groups.add's own response nests the created group under
-    // result.groups[0], not a bare result.id (confirmed live -- unlike
-    // pwg.categories.add's flat result.id shape).
+    // result.groups[0], not a bare result.id, unlike
+    // pwg.categories.add's flat result.id shape.
     $group = H::wsCall($page, 'pwg.groups.add', [
         'name' => 'Notification Test Group ' . uniqid(),
     ]);

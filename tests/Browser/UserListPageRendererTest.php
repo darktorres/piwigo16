@@ -62,8 +62,7 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
         // first) -- the users table is shared, ever-growing state across
         // this whole Browser suite run, so fixture_admin (seeded with the
         // oldest registration_date of anyone) isn't guaranteed to land on
-        // the default first page (confirmed live via screenshot: 7 real
-        // users, fixture_admin on page 2). Switch to the "50 per page"
+        // the default first page. Switch to the "50 per page"
         // real UI control instead of asserting against an unstable
         // pagination default.
         $adminPage = $adminPage->click('pagination-per-page-50');
@@ -129,11 +128,8 @@ it('shows the local-webmaster_id deprecation warning when config.inc.php really 
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=user_list');
 
-        // Not 'is deprecated' -- confirmed live (directly verified
-        // PageState::warnings is actually populated on this request, so
-        // the earlier failure was a pure string mismatch, not a real
-        // bug): UserListPageRenderer's own warning text is a faithful,
-        // byte-for-byte port of piwigo16's admin/user_list.php, which
+        // Not 'is deprecated': UserListPageRenderer's own warning text
+        // is a faithful, byte-for-byte port of piwigo16's admin/user_list.php, which
         // has always had this exact grammar typo ("this parameter *in*
         // deprecated", not "is deprecated") -- "mechanical port doesn't
         // fold in unrelated fixes" precedent, so it stays as-is.

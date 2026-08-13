@@ -95,9 +95,7 @@ it('shows the album granted through group membership, with no private albums yet
     // this whole Browser suite run -- other test files' own leftover
     // private albums (never category 2, which this test doesn't touch)
     // can genuinely populate it, so only category 2's own absence is this
-    // test's real claim (confirmed live: with 10+ accumulated private
-    // albums from earlier tests, exact-array equality broke here even
-    // though category 2 itself behaved correctly).
+    // test's real claim.
     $html = H::rawWebpage($page)->content();
     expect(userPermSelectOptions($html, 'cat_true[]'))
         ->not->toHaveKey(2);

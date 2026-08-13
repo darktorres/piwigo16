@@ -21,7 +21,7 @@ it('saves a real template replacement and echoes it back on the next render', fu
         // files (see AdminUiHelperTest's own exact-listing test) -- a real
         // filesystem-discovered extension, not a fixture. AdminUiHelper::
         // getExtents() strips the leading directory prefix entirely (no
-        // leading slash, confirmed live) -- a leading-slash value doesn't
+        // leading slash) -- a leading-slash value doesn't
         // strict-match the real discovered path, so the renderer's own
         // "Clearing" step immediately unsets it again even though it did
         // get persisted to config.

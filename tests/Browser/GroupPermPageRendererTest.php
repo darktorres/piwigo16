@@ -62,9 +62,7 @@ it('lists the private album as already-authorized for the group that has access 
     // this whole Browser suite run -- other test files' own leftover
     // private albums (never category 2, which this test doesn't touch)
     // can genuinely populate it, so only category 2's own classification
-    // is this test's real claim (confirmed live: with 10+ accumulated
-    // private albums from earlier tests, exact-array equality broke here
-    // even though category 2 itself behaved correctly).
+    // is this test's real claim.
     $html = H::rawWebpage($page)->content();
     expect(groupPermSelectOptions($html, 'cat_true[]'))
         ->toHaveKey(2, 'Sample Album / Nested Sub Album');

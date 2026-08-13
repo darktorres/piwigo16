@@ -51,9 +51,9 @@ it('sets the About page title and body id', function (): void {
  * Closes the "THEME_ABOUT" assignment (~line 73): gated on
  * Lang::load('about.html', CurrentConfig::themesPath() . $user_theme .
  * '/', ...) returning something other than false -- no bundled theme
- * ships its own language/<lang>/about.html (confirmed via a real
- * filesystem search, same absence this file's own top docblock already
- * notes for the credits fallback), so this writes one directly under the
+ * ships its own language/<lang>/about.html (same absence this file's own
+ * top docblock already notes for the credits fallback), so this writes
+ * one directly under the
  * live, Apache-shared themes/default/ root for the duration of this one
  * test (same throwaway-fixture-under-a-live-root technique
  * PluginsInstalledPageRendererTest.php's own docblock establishes for

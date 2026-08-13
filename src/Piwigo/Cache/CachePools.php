@@ -101,16 +101,6 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- same reasoning as permissions() above. Holds
-     * Section\SectionPopulator's per-user visible image-id list for a
-     * section.
-     */
-    public static function sectionImageIds(): CacheItemPoolInterface
-    {
-        return CacheFactory::create(namespace: 'piwigo.section_image_ids', defaultLifetime: 30);
-    }
-
-    /**
      * 30s TTL -- same reasoning as permissions() above. Used by
      * Search\SearchFilterRenderer's several filter-row/count caches and
      * Search\SearchService::getQuickSearchResults(): a uniform 30s TTL,

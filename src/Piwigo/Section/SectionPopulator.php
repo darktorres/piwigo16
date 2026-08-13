@@ -7,7 +7,7 @@ namespace Piwigo\Section;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\SectionImageIdsCachePool;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Enum\Section;
@@ -80,6 +80,7 @@ final readonly class SectionPopulator
         private Translator $translator,
         private ImageStdParams $imageStdParams,
         private EntityManagerInterface $entityManager,
+        private SectionImageIdsCachePool $sectionImageIdsCachePool,
     ) {}
 
     public function populate(): void
@@ -354,7 +355,7 @@ final readonly class SectionPopulator
                     } else {
                         $user = $this->currentUser->get();
                         $user_id_for_cache = $user->id->value;
-                        $cache_item = CachePools::sectionImageIds()
+                        $cache_item = $this->sectionImageIdsCachePool
                             ->getItem('all_iids_' . $user_id_for_cache . '_' . md5($order_by));
                         unset($page['is_homepage']);
                         $where_sql = '1=1';
@@ -395,7 +396,7 @@ final readonly class SectionPopulator
 
                     if ($cache_item instanceof CacheItemInterface) {
                         $cache_item->set($page['items']);
-                        CachePools::sectionImageIds()->save($cache_item);
+                        $this->sectionImageIdsCachePool->save($cache_item);
                     }
                 }
             }

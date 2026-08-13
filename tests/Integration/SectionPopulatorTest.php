@@ -14,6 +14,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Cache\SectionImageIdsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Enum\Section;
@@ -207,6 +208,11 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     private function makePopulator(): SectionPopulator
     {
+        $sectionImageIdsCachePool = Kernel::container()->get(SectionImageIdsCachePool::class);
+        if (! $sectionImageIdsCachePool instanceof SectionImageIdsCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . SectionImageIdsCachePool::class);
+        }
+
         return new SectionPopulator(
             LangTestFactory::get(),
             new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
@@ -232,6 +238,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             TranslatorTestFactory::get(),
             ImageStdParamsTestFactory::get(),
             $this->entityManager,
+            $sectionImageIdsCachePool,
         );
     }
 

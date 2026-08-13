@@ -162,7 +162,7 @@ final class Lang
      * requires a strict native `int`, but this boundary's real caller is
      * `Piwigo\Template\Latte\PiwigoExtension::translateDec()` (the
      * Latte-facing `translate_dec` filter/function -- the only real
-     * caller, confirmed by grep) whose runtime value can be a numeric
+     * caller) whose runtime value can be a numeric
      * DB-row string (e.g. menubar_categories.latte passes one). Every
      * hand-written .php call site instead calls its own
      * constructor-injected `Translator::plural()` directly with an

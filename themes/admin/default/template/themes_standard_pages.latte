@@ -3,12 +3,12 @@
 <section class="std_pgs">
   {* NOTE: $F_ACTION is never actually assigned by
      ThemesStandardPagesPageRenderer/ThemesStandardPagesSubController --
-     a real, pre-existing gap (confirmed by grep, not assumed). Under
-     Smarty this silently printed empty (action="", a valid submit-to-
-     self form), so the ?? '' here reproduces that exact behavior
-     without Latte's stricter direct-PHP variable access surfacing a new
-     "undefined variable" warning on every render -- same reasoning as
-     cat_list.latte's CAT_ADMIN_ACCESS fix. *}
+     a real, pre-existing gap. Under Smarty this silently printed empty
+     (action="", a valid submit-to-self form), so the ?? '' here
+     reproduces that exact behavior without Latte's stricter direct-PHP
+     variable access surfacing a new "undefined variable" warning on
+     every render -- same reasoning as cat_list.latte's CAT_ADMIN_ACCESS
+     fix. *}
   <form method="post" action="{$F_ACTION ?? ''}" class="properties" enctype="multipart/form-data">
 
     <fieldset class="std_pgs_conf">

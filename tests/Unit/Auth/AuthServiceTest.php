@@ -153,6 +153,18 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
+    // logUser()/autoLogin()/pwgLogin() (for a successful login) all call
+    // session_start() for real -- session_write_close() genuinely resets
+    // session_status() to PHP_SESSION_NONE (confirmed live, matching
+    // SessionMiddlewareTest.php's own established pattern), so a session
+    // left active here never leaks into whatever test runs next in this
+    // same --parallel worker process. Without this, a later test's own
+    // session_id($freshValue) call warns ("Session ID cannot be changed
+    // when a session is active"), confirmed live.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
     Kernel::reset();
     CurrentConfigTestFactory::get()->reset();
     CurrentUserTestFactory::get()->reset();

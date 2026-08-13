@@ -72,12 +72,11 @@ final class PiwigoExtension extends Extension
             // Smarty's `|escape:'url'` (as opposed to its `|urlencode`
             // modifier, a straight `urlencode()` passthrough registered in
             // Template.php) compiles to `rawurlencode()`, not `urlencode()`
-            // -- confirmed against vendor/smarty/smarty's own
-            // EscapeModifierCompiler.php, not assumed from the reference's
-            // converter comment. Using `|urlencode` for an `|escape:'url'`
+            // -- see vendor/smarty/smarty's own
+            // EscapeModifierCompiler.php, not the reference's converter
+            // comment. Using `|urlencode` for an `|escape:'url'`
             // conversion site is a real behavior change (`+` vs `%20` for
-            // spaces) -- caught live via the golden-HTML diff on
-            // `favorites` (footer.latte's mailto subject).
+            // spaces), e.g. footer.latte's mailto subject.
             'rawurlencode' => rawurlencode(...),
             'intval' => intval(...),
             'json_encode' => json_encode(...),
@@ -133,7 +132,7 @@ final class PiwigoExtension extends Extension
     {
         return [
             // Also registered as filters above -- Latte rejects filter
-            // pipes inside {if} conditions (confirmed live converting
+            // pipes inside {if} conditions (e.g.
             // header.latte: `{if $PAGE_TITLE != 'Home'|l10n}`), so the same
             // translate() needs to be callable both ways: `{='x'|l10n}`
             // as a filter, `{if $x != l10n('Home')}` as a function.
@@ -189,10 +188,10 @@ final class PiwigoExtension extends Extension
      * signature -- a template like `menubar_categories.latte` can genuinely
      * pipe a `null` count through here (`nb_total_images` is a real,
      * legitimate `?? null` fallback, not a bug), and `Lang::plural()`
-     * already treats non-numeric input as 0 rather than rejecting it.
-     * Confirmed live: a strict `int|float` parameter type here throws a
-     * real `TypeError` on `gallery-home` the moment a fresh user has no
-     * `nb_total_images` yet.
+     * already treats non-numeric input as 0 rather than rejecting it. A
+     * strict `int|float` parameter type here would throw a real `TypeError`
+     * on `gallery-home` the moment a fresh user has no `nb_total_images`
+     * yet.
      */
     public function translateDec(mixed $count, string $singular, string $plural): string
     {
@@ -613,10 +612,10 @@ final class PiwigoExtension extends Extension
      * double-quoted attribute) and, critically, `$double_encode = false`.
      * A bare `htmlspecialchars($str, ENT_QUOTES)` (PHP's `double_encode`
      * default is `true`) double-encodes any option label that already
-     * contains a real HTML entity -- confirmed live converting
+     * contains a real HTML entity -- e.g.
      * permalinks.latte: `CategoryAdminService`'s indentation prefix bakes in
      * literal `&nbsp;` sequences, which came out as `&amp;nbsp;` before
-     * this fix, a real rendering regression the golden-HTML diff caught
+     * this fix, a real rendering regression
      * (not a cosmetic ENT_QUOTES-vs-ENT_COMPAT difference).
      */
     private static function escapeHtmlOption(string $value): string
@@ -712,9 +711,9 @@ final class PiwigoExtension extends Extension
         // Self-closing ' />' (XHTML style), not a plain '>' -- matches
         // Smarty's own html_radios/html_checkboxes shared implementation
         // (vendor/smarty/smarty/src/FunctionHandler/HtmlBase.php's
-        // `$_output .= $extra . ' />' . $output;`), confirmed live: this
-        // is the first real caller (profile_content.latte's "Expand all
-        // albums" radios) to actually exercise this since the P31.1 port.
+        // `$_output .= $extra . ' />' . $output;`). profile_content.latte's
+        // "Expand all albums" radios is the first real caller to actually
+        // exercise this.
         $input = '<input type="radio" name="' . $name . '" value="' . $valueStr . '"' . $idAttr . $checked . $extraAttrs . ' />' . $labelStr;
         if ($labels) {
             return '<label' . ($labelIds ? ' for="' . $name . '_' . preg_replace('/\W/', '_', $valueStr) . '"' : '') . '>' . $input . '</label>';

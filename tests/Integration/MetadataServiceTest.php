@@ -1070,7 +1070,7 @@ namespace Piwigo\Tests\Integration {
             $imageId = (int) $this->conn->lastInsertId();
 
             try {
-                $this->service->syncMetadata([$imageId], $this->permissionService());
+                $this->service->syncMetadata([$imageId], $this->permissionService(), EntityManagerFactory::build($this->conn));
 
                 $tagNames = $this->conn->fetchFirstColumn(
                     'SELECT t.name FROM tags' . ' t
@@ -1104,7 +1104,7 @@ namespace Piwigo\Tests\Integration {
                 // Must not throw/fatal -- getSyncMetadata() returns false for
                 // this row (is_readable() fails), hitting the `continue` guard;
                 // the row is never added to $datas/$tagsOf or written back.
-                $this->service->syncMetadata([$imageId], $this->permissionService());
+                $this->service->syncMetadata([$imageId], $this->permissionService(), EntityManagerFactory::build($this->conn));
 
                 $updatedDate = $this->conn->fetchOne(
                     'SELECT date_metadata_update FROM images WHERE id = ?',

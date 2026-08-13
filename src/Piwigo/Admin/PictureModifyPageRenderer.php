@@ -145,7 +145,7 @@ final readonly class PictureModifyPageRenderer
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->metadataService
-                ->syncMetadata([$image_id], $this->permissionService);
+                ->syncMetadata([$image_id], $this->permissionService, $this->entityManager);
             $this->pageState->addInfo($this->lang->t('Metadata synchronized from file'));
         }
 

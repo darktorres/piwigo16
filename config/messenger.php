@@ -86,7 +86,7 @@ return [
             RequestBootstrap::currentUser(),
             RequestBootstrap::filterState(),
             new AccessLevelChecker(RequestBootstrap::currentUser(), RequestBootstrap::currentConfig()),
-        )),
+        ), InfrastructureAccessor::entityManager()),
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(PresentationAccessor::mailService()),
     ],
 ];

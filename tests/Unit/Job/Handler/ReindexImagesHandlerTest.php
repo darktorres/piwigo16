@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Job\Handler\ReindexImagesHandler;
@@ -36,8 +37,12 @@ test('__invoke delegates to MetadataService::syncMetadata with the job\'s image 
         if (! $permissionService instanceof PermissionService) {
             throw new LogicException('Container returned an unexpected type for ' . PermissionService::class);
         }
+        $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+        if (! $entityManager instanceof EntityManagerInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+        }
 
-        $handler = new ReindexImagesHandler($metadataService, $permissionService);
+        $handler = new ReindexImagesHandler($metadataService, $permissionService, $entityManager);
 
         $handler(new ReindexImagesJob([]));
     } finally {

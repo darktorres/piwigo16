@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Metadata;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
@@ -15,8 +16,6 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Picture\CleanIptcValue;
 use Piwigo\Event\Picture\FormatExifData;
 use Piwigo\Image\ImageEntity;
@@ -545,7 +544,7 @@ final readonly class MetadataService
      *
      * @param  list<int>  $ids
      */
-    public function syncMetadata(array $ids, PermissionService $permissionService): void
+    public function syncMetadata(array $ids, PermissionService $permissionService, EntityManagerInterface $entityManager): void
     {
         // Reuse the DB-consistent CURRENT_DATE when a real top-level definer
         // (install.php/upgrade.php -- not src/Piwigo/, which itself never
@@ -563,10 +562,9 @@ final readonly class MetadataService
         // SearchService::getElements()'s own established precedent for a
         // one-method-only TagService dependency, avoiding touching every
         // existing `new MetadataService(...)` call site for zero benefit.
-        $tagConn = DbConnection::build();
-        $tagServiceCategoryService = new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig), new AccessLevelChecker($this->currentUser, $this->currentConfig), new UserRepository(EntityManagerFactory::build($tagConn), $this->eventDispatcher, $this->currentConfig));
-        $tagServiceImageService = new ImageService(EntityManagerFactory::build($tagConn)->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $tagServiceCategoryService);
-        $tagService = new TagService($this->lang, EntityManagerFactory::build($tagConn)->getRepository(TagEntity::class), $permissionService, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $tagServiceImageService);
+        $tagServiceCategoryService = new CategoryService($this->lang, new CategoryRepository($entityManager, $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig), new AccessLevelChecker($this->currentUser, $this->currentConfig), new UserRepository($entityManager, $this->eventDispatcher, $this->currentConfig));
+        $tagServiceImageService = new ImageService($entityManager->getRepository(ImageEntity::class), new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $tagServiceCategoryService);
+        $tagService = new TagService($this->lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $tagServiceImageService);
 
         foreach ($this->repo->findImagesByIds($ids) as $row) {
             $data = $this->getSyncMetadata($row->toArray());

@@ -91,6 +91,7 @@ final class ReindexImagesHandlerTest extends IntegrationTestCase
                 new FilterState(),
                 new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
             ),
+            EntityManagerFactory::build($this->conn),
         );
 
         // no exception/fatal is the real assertion here -- see the class

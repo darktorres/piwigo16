@@ -618,7 +618,7 @@ final class UploadService
             $this->currentConfig->useExif = false;
         }
         $this->metadataService
-            ->syncMetadata([$image_id], $this->permissionService);
+            ->syncMetadata([$image_id], $this->permissionService, $this->entityManager);
 
         // cache a derivative
         //

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Override;
 use Piwigo\Admin\Image\ImageBackend;
@@ -16,8 +16,6 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -44,8 +42,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * from the session cookie (see checkDerivativePermission()'s own
  * docblock).
  *
- * All DB work here (image and permission lookups alike) goes through one
- * shared DBAL Connection. Config, the logger, and the table prefix are
+ * All DB work here goes through the constructor-injected, container-shared
+ * EntityManagerInterface. Config, the logger, and the table prefix are
  * all read through their normal injected accessors rather than raw
  * globals.
  *
@@ -102,6 +100,7 @@ final class ImageDerivativeController implements ControllerInterface
         private readonly ImageVisibilityChecker $imageVisibilityChecker,
         private readonly UrlServiceInterface $urlService,
         private readonly CurrentConfig $currentConfig,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -122,8 +121,7 @@ final class ImageDerivativeController implements ControllerInterface
             $timing[$k] = '';
         }
 
-        $conn = DbConnection::build();
-        $imageRepo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class);
+        $imageRepo = $this->entityManager->getRepository(ImageEntity::class);
 
         // parseRequest() fills these by mutating $this's own properties;
         // returning its result directly (rather than re-reading
@@ -159,7 +157,7 @@ final class ImageDerivativeController implements ControllerInterface
                 }
 
                 $image_id = $row->id;
-                $this->checkDerivativePermission($conn, $image_id);
+                $this->checkDerivativePermission($image_id);
 
                 if ($row->width !== null) {
                     $this->originalSize = [$row->width, $row->height];
@@ -424,7 +422,7 @@ final class ImageDerivativeController implements ControllerInterface
      * guest id when none apply) before this controller ever runs -- no
      * separate session-cookie lookup needed here any more.
      */
-    private function checkDerivativePermission(Connection $conn, ImageId $imageId): void
+    private function checkDerivativePermission(ImageId $imageId): void
     {
         if (! $this->imageVisibilityChecker->isVisibleToUser($imageId)) {
             $this->ierror('Forbidden', 403);

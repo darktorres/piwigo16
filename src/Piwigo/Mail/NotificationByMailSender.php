@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AuthService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
@@ -12,8 +13,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
@@ -103,6 +102,7 @@ final class NotificationByMailSender
         private readonly CurrentUser $currentUser,
         private readonly MailService $mailer,
         private readonly CurrentConfig $currentConfig,
+        private readonly EntityManagerInterface $entityManager,
     ) {
         $nbmMaxTreatmentTimeoutPercent = $this->currentConfig->nbmMaxTreatmentTimeoutPercent;
 
@@ -174,7 +174,8 @@ final class NotificationByMailSender
                     ->getMailSenderName();
             $this->sendAsName = $sendAsName;
 
-            $sendAsMailAddress = new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig)->getWebmasterMailAddress();
+            $sendAsMailAddress = new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
+                ->getWebmasterMailAddress();
             $this->sendAsMailAddress = $sendAsMailAddress;
 
             $this->sendAsMailFormatted = $this->mailer

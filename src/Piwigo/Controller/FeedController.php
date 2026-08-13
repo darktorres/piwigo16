@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use DateTimeImmutable;
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\UserId;
@@ -19,8 +20,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedHelper;
 use Piwigo\Http\ControllerInterface;
@@ -59,6 +58,7 @@ final readonly class FeedController implements ControllerInterface
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private Paths $paths,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -67,8 +67,7 @@ final readonly class FeedController implements ControllerInterface
         $htmlRenderer = $this->htmlRenderer;
 
         $feed_helper = new FeedHelper();
-        $conn = DbConnection::build();
-        $feed_repo = EntityManagerFactory::build($conn)->getRepository(FeedEntity::class);
+        $feed_repo = $this->entityManager->getRepository(FeedEntity::class);
         $notificationService = $this->notificationService;
 
         $feedRequest = FeedRequest::fromGlobals($this->inputValidator);

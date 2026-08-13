@@ -27,19 +27,19 @@ final class ScriptLoader
     /**
      * @var array<string, Script>
      */
-    private array $registered_scripts;
+    private array $registeredScripts;
 
     /**
      * @var string[]
      */
-    public array $inline_scripts;
+    public array $inlineScripts;
 
-    private bool $did_head;
+    private bool $didHead;
 
     /**
      * @var array<string, Script>
      */
-    private array $head_done_scripts;
+    private array $headDoneScripts;
 
     private ?bool $did_footer = null;
 
@@ -177,15 +177,15 @@ final class ScriptLoader
 
     final public function clear(): void
     {
-        $this->registered_scripts = [];
-        $this->inline_scripts = [];
-        $this->head_done_scripts = [];
-        $this->did_head = $this->did_footer = false;
+        $this->registeredScripts = [];
+        $this->inlineScripts = [];
+        $this->headDoneScripts = [];
+        $this->didHead = $this->did_footer = false;
     }
 
     public function didHead(): bool
     {
-        return $this->did_head;
+        return $this->didHead;
     }
 
     /**
@@ -193,7 +193,7 @@ final class ScriptLoader
      */
     public function getAll(): array
     {
-        return $this->registered_scripts;
+        return $this->registeredScripts;
     }
 
     /**
@@ -204,17 +204,17 @@ final class ScriptLoader
         ! (bool) $this->did_footer || trigger_error('Attempt to add inline script but the footer has been written', E_USER_WARNING);
         if ($require !== []) {
             foreach ($require as $id) {
-                if (! isset($this->registered_scripts[$id])) {
+                if (! isset($this->registeredScripts[$id])) {
                     $this->loadKnownRequiredScript($id, 1) or $this->htmlRenderer()
                         ->fatalError("inline script not found require {$id}");
                 }
-                $s = $this->registered_scripts[$id];
-                if ($s->load_mode === 2) {
-                    $s->load_mode = 1;
+                $s = $this->registeredScripts[$id];
+                if ($s->loadMode === 2) {
+                    $s->loadMode = 1;
                 } // until now the implementation does not allow executing inline script depending on another async script
             }
         }
-        $this->inline_scripts[] = $code;
+        $this->inlineScripts[] = $code;
     }
 
     /**
@@ -228,16 +228,16 @@ final class ScriptLoader
      */
     public function add(string $id, int $load_mode, array $require, ?string $path, string|false $version = '0', bool $is_template = false): void
     {
-        if ($this->did_head && $load_mode === 0) {
+        if ($this->didHead && $load_mode === 0) {
             trigger_error("Attempt to add script {$id} but the head has been written", E_USER_WARNING);
         } elseif ((bool) $this->did_footer) {
             trigger_error("Attempt to add script {$id} but the footer has been written", E_USER_WARNING);
         }
-        if (! isset($this->registered_scripts[$id])) {
+        if (! isset($this->registeredScripts[$id])) {
             $script = new Script($load_mode, $id, $path, $version, $require);
             $script->is_template = $is_template;
             self::fillWellKnown($id, $script);
-            $this->registered_scripts[$id] = $script;
+            $this->registeredScripts[$id] = $script;
 
             // Load or modify all UI core files
             if ($id === 'jquery.ui' and $script->path === self::$known_paths['jquery.ui']) {
@@ -248,12 +248,12 @@ final class ScriptLoader
 
             // Try to load undefined required script
             foreach ($script->precedents as $script_id) {
-                if (! isset($this->registered_scripts[$script_id])) {
+                if (! isset($this->registeredScripts[$script_id])) {
                     $this->loadKnownRequiredScript($script_id, $load_mode);
                 }
             }
         } else {
-            $script = $this->registered_scripts[$id];
+            $script = $this->registeredScripts[$id];
             if ((bool) count($require)) {
                 $script->precedents = array_unique(array_merge($script->precedents, $require));
             }
@@ -261,8 +261,8 @@ final class ScriptLoader
             if ((bool) $version && $script->version !== false && version_compare($script->version, $version) < 0) {
                 $script->version = $version;
             }
-            if ($load_mode < $script->load_mode) {
-                $script->load_mode = $load_mode;
+            if ($load_mode < $script->loadMode) {
+                $script->loadMode = $load_mode;
             }
         }
     }
@@ -274,25 +274,25 @@ final class ScriptLoader
      */
     public function getHeadScripts(AccessLevelChecker $accessLevelChecker): array
     {
-        self::checkLoadDep($this->registered_scripts);
-        foreach (array_keys($this->registered_scripts) as $id) {
+        self::checkLoadDep($this->registeredScripts);
+        foreach (array_keys($this->registeredScripts) as $id) {
             $this->computeScriptTopologicalOrder($id);
         }
 
-        uasort($this->registered_scripts, self::cmpByModeAndOrder(...));
+        uasort($this->registeredScripts, self::cmpByModeAndOrder(...));
 
-        foreach ($this->registered_scripts as $id => $script) {
-            if ($script->load_mode > 0) {
+        foreach ($this->registeredScripts as $id => $script) {
+            if ($script->loadMode > 0) {
                 break;
             }
             if (! in_array($script->path, [null, ''], true)) {
-                $this->head_done_scripts[$id] = $script;
+                $this->headDoneScripts[$id] = $script;
             } else {
                 trigger_error("Script {$id} has an undefined path", E_USER_WARNING);
             }
         }
-        $this->did_head = true;
-        return $this->doCombine($this->head_done_scripts, 0, $accessLevelChecker);
+        $this->didHead = true;
+        return $this->doCombine($this->headDoneScripts, 0, $accessLevelChecker);
     }
 
     /**
@@ -300,13 +300,13 @@ final class ScriptLoader
      */
     public function getFooterScripts(AccessLevelChecker $accessLevelChecker): FooterScripts
     {
-        if (! $this->did_head) {
-            self::checkLoadDep($this->registered_scripts);
+        if (! $this->didHead) {
+            self::checkLoadDep($this->registeredScripts);
         }
         $this->did_footer = true;
         $todo = [];
-        foreach ($this->registered_scripts as $id => $script) {
-            if (! isset($this->head_done_scripts[$id])) {
+        foreach ($this->registeredScripts as $id => $script) {
+            if (! isset($this->headDoneScripts[$id])) {
                 $todo[$id] = $script;
             }
         }
@@ -321,8 +321,8 @@ final class ScriptLoader
         foreach ($todo as $id => $script) {
             // load_mode 0 (head) scripts are handled by getHeadScripts();
             // only 1 (footer-sync) and 2 (footer-async) belong here.
-            if ($script->load_mode > 0) {
-                $result[$script->load_mode - 1][$id] = $script;
+            if ($script->loadMode > 0) {
+                $result[$script->loadMode - 1][$id] = $script;
             }
         }
         return new FooterScripts($this->doCombine($result[0], 1, $accessLevelChecker), $this->doCombine($result[1], 2, $accessLevelChecker));
@@ -340,7 +340,7 @@ final class ScriptLoader
 
     /**
      * Checks dependencies among Scripts.
-     * Checks that if B depends on A, then B->load_mode >= A->load_mode in order to respect execution order.
+     * Checks that if B depends on A, then B->loadMode >= A->loadMode in order to respect execution order.
      *
      * @param Script[] $scripts
      */
@@ -349,17 +349,17 @@ final class ScriptLoader
         do {
             $changed = false;
             foreach ($scripts as $id => $script) {
-                $load = $script->load_mode;
+                $load = $script->loadMode;
                 foreach ($script->precedents as $precedent) {
                     if (! isset($scripts[$precedent])) {
                         continue;
                     }
-                    if ($scripts[$precedent]->load_mode > $load) {
-                        $scripts[$precedent]->load_mode = $load;
+                    if ($scripts[$precedent]->loadMode > $load) {
+                        $scripts[$precedent]->loadMode = $load;
                         $changed = true;
                     }
-                    if ($load === 2 && $scripts[$precedent]->load_mode === 2 && ($scripts[$precedent]->isRemote(self::urlService()) or ! self::currentConfig()->templateCombineFiles)) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
-                        $scripts[$precedent]->load_mode = 1;
+                    if ($load === 2 && $scripts[$precedent]->loadMode === 2 && ($scripts[$precedent]->isRemote(self::urlService()) or ! self::currentConfig()->templateCombineFiles)) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
+                        $scripts[$precedent]->loadMode = 1;
                         $changed = true;
                     }
                 }
@@ -424,13 +424,13 @@ final class ScriptLoader
      */
     private function computeScriptTopologicalOrder(string $script_id, int $recursion_limiter = 0): int
     {
-        if (! isset($this->registered_scripts[$script_id])) {
+        if (! isset($this->registeredScripts[$script_id])) {
             trigger_error("Undefined script {$script_id} is required by someone", E_USER_WARNING);
             return 0;
         }
         $recursion_limiter < 5 or $this->htmlRenderer()
             ->fatalError('combined script circular dependency');
-        $script = $this->registered_scripts[$script_id];
+        $script = $this->registeredScripts[$script_id];
         if (isset($script->extra['order'])) {
             return $script->extra['order'];
         }
@@ -456,7 +456,7 @@ final class ScriptLoader
         // sets extra['order'] before returning
         assert(isset($s1->extra['order']) && isset($s2->extra['order']));
 
-        $ret = intval($s1->load_mode) - intval($s2->load_mode);
+        $ret = intval($s1->loadMode) - intval($s2->loadMode);
         if ((bool) $ret) {
             return $ret;
         }

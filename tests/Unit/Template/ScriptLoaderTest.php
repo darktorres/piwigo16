@@ -21,7 +21,7 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 
 // Most of this file inspects/invokes ScriptLoader's private state and
 // methods via reflection for precise control over dependency graphs and
-// load_mode combinations that would be awkward to construct purely
+// loadMode combinations that would be awkward to construct purely
 // through the public add()/addInline() API. getHeadScripts()/
 // getFooterScripts()/doCombine() -> FileCombiner::combine() do not
 // depend on legacy free-function side effects (is_admin(),
@@ -42,7 +42,7 @@ afterEach(function (): void {
  */
 function scriptLoaderRegistered(ScriptLoader $loader): array
 {
-    $property = new ReflectionProperty($loader, 'registered_scripts');
+    $property = new ReflectionProperty($loader, 'registeredScripts');
 
     /** @var array<string, Script> */
     return $property->getValue($loader);
@@ -100,25 +100,25 @@ function file_combiner_test_rrmdir_scriptloader(string $dir): void
 //    FileCombiner's constructor) -- passing 999/888/777 instead of the
 //    real 0/1/2 values simultaneously leaves the full suite green.
 //
-// 3. SmallerToSmallerOrEqual (Line 267, `$load_mode < $script->load_mode`
+// 3. SmallerToSmallerOrEqual (Line 267, `$load_mode < $script->loadMode`
 //    -> `<=`): when the two values are exactly equal, entering the
-//    branch (mutant) assigns `$script->load_mode = $load_mode` back onto
+//    branch (mutant) assigns `$script->loadMode = $load_mode` back onto
 //    itself -- an observable no-op identical to not entering it (real
 //    code).
 //
 // 4. BreakToContinue (Line 289, getHeadScripts()'s own
-//    `if ($script->load_mode > 0) { break; }`): reachable only after
-//    `uasort($this->registered_scripts, self::cmpByModeAndOrder(...))`
-//    sorts by load_mode ascending -- once one entry's load_mode > 0 is
+//    `if ($script->loadMode > 0) { break; }`): reachable only after
+//    `uasort($this->registeredScripts, self::cmpByModeAndOrder(...))`
+//    sorts by loadMode ascending -- once one entry's loadMode > 0 is
 //    seen, every remaining entry is guaranteed >= it (stable ascending
 //    sort), so `continue`-ing past each individually converges to the
-//    identical final `head_done_scripts` set as `break`-ing out
+//    identical final `headDoneScripts` set as `break`-ing out
 //    immediately.
 //
 // 5. GreaterToGreaterOrEqual/DecrementInteger (Line 327, `$script->
-//    load_mode > 0`, 2 mutations): mutating to `>= 0`/`> -1` lets a
-//    load_mode=0 script wrongly pass the guard, but it then gets stored
-//    at `$result[$script->load_mode - 1]` = `$result[-1]` -- a real,
+//    loadMode > 0`, 2 mutations): mutating to `>= 0`/`> -1` lets a
+//    loadMode=0 script wrongly pass the guard, but it then gets stored
+//    at `$result[$script->loadMode - 1]` = `$result[-1]` -- a real,
 //    valid PHP array key, but one the very next line's `return new
 //    FooterScripts($this->doCombine($result[0], ...), $this->doCombine(
 //    $result[1], ...))` never reads, so it's silently discarded either
@@ -144,7 +144,7 @@ function file_combiner_test_rrmdir_scriptloader(string $dir): void
 //    `$max+1 >= 1`) -- so `max($max, recursive_result >= 0)` is
 //    identical whether $max starts at 0 or -1.
 
-test('add registers a new script with its load_mode and precedents', function (): void {
+test('add registers a new script with its loadMode and precedents', function (): void {
     $loader = new ScriptLoader();
     $loader->add('my-script', 1, ['jquery'], 'themes/default/js/foo.js');
 
@@ -152,7 +152,7 @@ test('add registers a new script with its load_mode and precedents', function ()
 
     expect($registered)
         ->toHaveKey('my-script')
-        ->and($registered['my-script']->load_mode)->toBe(1)
+        ->and($registered['my-script']->loadMode)->toBe(1)
         ->and($registered['my-script']->precedents)->toBe(['jquery']);
 });
 
@@ -166,24 +166,24 @@ test('adding the same id twice merges precedents', function (): void {
     expect($registered['my-script']->precedents)->toBe(['jquery', 'jquery.ui']);
 });
 
-test('adding the same id twice with a lower load_mode escalates it (lower wins)', function (): void {
+test('adding the same id twice with a lower loadMode escalates it (lower wins)', function (): void {
     $loader = new ScriptLoader();
     $loader->add('my-script', 2, [], 'themes/default/js/foo.js');
     $loader->add('my-script', 0, [], null);
 
     $registered = scriptLoaderRegistered($loader);
 
-    expect($registered['my-script']->load_mode)->toBe(0);
+    expect($registered['my-script']->loadMode)->toBe(0);
 });
 
-test('adding the same id twice with a higher load_mode does not downgrade it', function (): void {
+test('adding the same id twice with a higher loadMode does not downgrade it', function (): void {
     $loader = new ScriptLoader();
     $loader->add('my-script', 0, [], 'themes/default/js/foo.js');
     $loader->add('my-script', 2, [], null);
 
     $registered = scriptLoaderRegistered($loader);
 
-    expect($registered['my-script']->load_mode)->toBe(0);
+    expect($registered['my-script']->loadMode)->toBe(0);
 });
 
 test('adding the same id twice with a higher version bumps the recorded version', function (): void {
@@ -257,7 +257,7 @@ test('clear resets registered scripts and inline scripts', function (): void {
 
     expect(scriptLoaderRegistered($loader))
         ->toBe([])
-        ->and($loader->inline_scripts)
+        ->and($loader->inlineScripts)
         ->toBe([]);
 });
 
@@ -266,7 +266,7 @@ test('addInline records the code verbatim', function (): void {
 
     $loader->addInline('console.log("hello");', []);
 
-    expect($loader->inline_scripts)
+    expect($loader->inlineScripts)
         ->toBe(['console.log("hello");']);
 });
 
@@ -350,22 +350,22 @@ test('paths() throws when the container returns an unexpected type', function ()
     ))->toThrow(RuntimeException::class, 'ScriptLoader: no Paths set (RequestBootstrap not run yet?)');
 });
 
-test('addInline downgrades a load_mode=2 dependency to load_mode=1', function (): void {
+test('addInline downgrades a loadMode=2 dependency to loadMode=1', function (): void {
     $loader = new ScriptLoader();
     $loader->add('async-dep', 2, [], 'themes/default/js/dep.js');
 
     $loader->addInline('console.log(1);', ['async-dep']);
 
-    expect(scriptLoaderRegistered($loader)['async-dep']->load_mode)->toBe(1);
+    expect(scriptLoaderRegistered($loader)['async-dep']->loadMode)->toBe(1);
 });
 
-test('addInline leaves a non-async dependency\'s load_mode untouched', function (): void {
+test('addInline leaves a non-async dependency\'s loadMode untouched', function (): void {
     $loader = new ScriptLoader();
     $loader->add('sync-dep', 1, [], 'themes/default/js/dep.js');
 
     $loader->addInline('console.log(1);', ['sync-dep']);
 
-    expect(scriptLoaderRegistered($loader)['sync-dep']->load_mode)->toBe(1);
+    expect(scriptLoaderRegistered($loader)['sync-dep']->loadMode)->toBe(1);
 });
 
 test('addInline auto-loads an undefined but known required script', function (): void {
@@ -379,7 +379,7 @@ test('addInline auto-loads an undefined but known required script', function ():
 
 test('add() warns when adding a head script after the head has already been written', function (): void {
     $loader = new ScriptLoader();
-    new ReflectionProperty($loader, 'did_head')
+    new ReflectionProperty($loader, 'didHead')
         ->setValue($loader, true);
 
     $caught = null;
@@ -400,7 +400,7 @@ test('add() warns when adding a head script after the head has already been writ
 
 test('add() does not warn for a footer-mode script even after the head has been written', function (): void {
     $loader = new ScriptLoader();
-    new ReflectionProperty($loader, 'did_head')
+    new ReflectionProperty($loader, 'didHead')
         ->setValue($loader, true);
 
     $caught = null;
@@ -419,8 +419,8 @@ test('add() does not warn for a footer-mode script even after the head has been 
         ->toBeNull();
 });
 
-test('add() warns when adding a script (any load_mode) after the footer has already been written', function (): void {
-    // Distinct from the two tests above: those exercise did_head's own
+test('add() warns when adding a script (any loadMode) after the footer has already been written', function (): void {
+    // Distinct from the two tests above: those exercise didHead's own
     // warning (and footer-mode's exemption from it) -- this is add()'s
     // OTHER warning arm, the `elseif ((bool) $this->did_footer)` branch,
     // never reached by any existing test calling add() directly (only
@@ -588,20 +588,20 @@ test('getHeadScripts warns and excludes a script whose path was explicitly set t
         ->toBe([]);
 });
 
-test('add() does not downgrade load_mode when the new load_mode is exactly equal, not strictly lower', function (): void {
+test('add() does not downgrade loadMode when the new loadMode is exactly equal, not strictly lower', function (): void {
     $loader = new ScriptLoader();
     $loader->add('my-script', 1, [], 'themes/default/js/foo.js');
 
     $loader->add('my-script', 1, [], null);
 
-    expect(scriptLoaderRegistered($loader)['my-script']->load_mode)->toBe(1);
+    expect(scriptLoaderRegistered($loader)['my-script']->loadMode)->toBe(1);
 });
 
 test('getFooterScripts runs checkLoadDep when the head has not been written yet', function (): void {
-    // A load_mode=2 (async) script whose precedent is also load_mode=2 --
+    // A loadMode=2 (async) script whose precedent is also loadMode=2 --
     // checkLoadDep() downgrades the precedent to 1 so execution order
     // stays guaranteed; this only ever runs from getHeadScripts() or
-    // getFooterScripts() itself (when !did_head).
+    // getFooterScripts() itself (when !didHead).
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-footer-checkdep-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/a.js', 'var a=1;');
@@ -619,7 +619,7 @@ test('getFooterScripts runs checkLoadDep when the head has not been written yet'
     try {
         $loader->getFooterScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
 
-        expect(scriptLoaderRegistered($loader)['precedent']->load_mode)->toBe(1);
+        expect(scriptLoaderRegistered($loader)['precedent']->loadMode)->toBe(1);
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
         CurrentConfigTestFactory::get()->reset();
@@ -640,16 +640,16 @@ test('getFooterScripts skips checkLoadDep when the head was already written (get
     $loader = new ScriptLoader();
     $loader->add('precedent', 2, [], 'themes/default/js/a.js');
     $loader->add('dependent', 2, ['precedent'], 'themes/default/js/b.js');
-    // Force did_head=true WITHOUT actually running checkLoadDep (unlike
+    // Force didHead=true WITHOUT actually running checkLoadDep (unlike
     // a real getHeadScripts() call) -- if getFooterScripts() ran it
-    // anyway (ignoring did_head), 'precedent' would still get downgraded.
-    new ReflectionProperty($loader, 'did_head')
+    // anyway (ignoring didHead), 'precedent' would still get downgraded.
+    new ReflectionProperty($loader, 'didHead')
         ->setValue($loader, true);
 
     try {
         $loader->getFooterScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
 
-        expect(scriptLoaderRegistered($loader)['precedent']->load_mode)->toBe(2);
+        expect(scriptLoaderRegistered($loader)['precedent']->loadMode)->toBe(2);
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
         CurrentConfigTestFactory::get()->reset();
@@ -690,7 +690,7 @@ test('getFooterScripts marks did_footer, which then makes addInline warn', funct
     }
 });
 
-test('getFooterScripts separates sync (load_mode=1) and async (load_mode=2) scripts into their own combined outputs', function (): void {
+test('getFooterScripts separates sync (loadMode=1) and async (loadMode=2) scripts into their own combined outputs', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-footer-split-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/sync.js', 'var s=1;');
@@ -751,7 +751,7 @@ test('getFooterScripts excludes scripts already claimed by getHeadScripts', func
 });
 
 test('getHeadScripts runs checkLoadDep before sorting, downgrading an async precedent of an async script', function (): void {
-    // Both scripts are load_mode=2, so head_done_scripts stays empty --
+    // Both scripts are loadMode=2, so headDoneScripts stays empty --
     // doCombine([]) still needs a valid CurrentPaths regardless.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     // Must run after Kernel::boot() -- CurrentConfigTestFactory::get() resolves the
@@ -768,13 +768,13 @@ test('getHeadScripts runs checkLoadDep before sorting, downgrading an async prec
     try {
         $loader->getHeadScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
 
-        expect(scriptLoaderRegistered($loader)['precedent']->load_mode)->toBe(1);
+        expect(scriptLoaderRegistered($loader)['precedent']->loadMode)->toBe(1);
     } finally {
         CurrentConfigTestFactory::get()->reset();
     }
 });
 
-test('getHeadScripts computes and uses each script\'s topological order to sort within the same load_mode', function (): void {
+test('getHeadScripts computes and uses each script\'s topological order to sort within the same loadMode', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-head-toposort-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/base.js', 'var base=1;');
@@ -811,7 +811,7 @@ test('getHeadScripts computes and uses each script\'s topological order to sort 
 });
 
 test('cmpByModeAndOrder sorts a remote script before a same-mode, same-order local one, regardless of registration order', function (): void {
-    // Both scripts have load_mode=0 and topological order=0 (no
+    // Both scripts have loadMode=0 and topological order=0 (no
     // precedents) -- cmpByModeAndOrder()'s own mode/order tiebreaks
     // both resolve equal, reaching its final `$s1->extra['order'] === 0
     // and (...) xor (...)` remote/local tiebreak. Registered in two
@@ -905,7 +905,7 @@ test('getHeadScripts warns and excludes a head-mode script whose path was never 
         ->toBe([]);
 });
 
-test('getHeadScripts marks did_head, which then makes a subsequent head-mode add() warn', function (): void {
+test('getHeadScripts marks didHead, which then makes a subsequent head-mode add() warn', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentUserTestFactory::get()->attachGlobals();
 
@@ -929,7 +929,7 @@ test('getHeadScripts marks did_head, which then makes a subsequent head-mode add
         ->toBe('Attempt to add script late-script but the head has been written');
 });
 
-test('getFooterScripts sorts within the same load_mode by topological order too', function (): void {
+test('getFooterScripts sorts within the same loadMode by topological order too', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-footer-toposort-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/base.js', 'var base=1;');
@@ -973,9 +973,9 @@ test('getFooterScripts excludes mode=0 scripts even when getHeadScripts was neve
     $loader->add('footer-script', 1, [], 'themes/default/js/footer.js');
 
     try {
-        // getHeadScripts() is never called -- head_done_scripts stays
+        // getHeadScripts() is never called -- headDoneScripts stays
         // empty, so $todo would include the mode=0 script too if it
-        // weren't filtered back out by its own load_mode>0 check.
+        // weren't filtered back out by its own loadMode>0 check.
         $sync = $loader->getFooterScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()))->sync;
 
         expect($sync)
@@ -990,7 +990,7 @@ test('getFooterScripts excludes mode=0 scripts even when getHeadScripts was neve
 test('getFooterScripts computes topological order itself when getHeadScripts never ran, with names that disagree with alphabetical order', function (): void {
     // Real gap: a ForeachEmptyIterable/RemoveMethodCall mutation on this
     // method's own computeScriptTopologicalOrder() loop is invisible to
-    // the sibling "sorts within the same load_mode by topological order
+    // the sibling "sorts within the same loadMode by topological order
     // too" test above -- that test's own script ids ('base'/'dependent')
     // happen to ALSO sort correctly alphabetically, so even with
     // extra['order'] left entirely unset (only an "Undefined array key"
@@ -1042,7 +1042,7 @@ test('checkLoadDep converges over multiple passes for a 3-level async dependency
 
     try {
         // checkLoadDep() reaches self::urlService() for this graph (both
-        // 'a'/'b' and 'b'/'c' are load_mode=2 on both sides) -- needs a
+        // 'a'/'b' and 'b'/'c' are loadMode=2 on both sides) -- needs a
         // booted Kernel, unlike the plain-local-precedent checkLoadDep
         // tests elsewhere in this file.
         KernelContainerOverride::with([
@@ -1058,11 +1058,11 @@ test('checkLoadDep converges over multiple passes for a 3-level async dependency
         });
 
         // checkLoadDep() receives the array by value but Script objects
-        // by reference -- their own load_mode mutations are visible on
+        // by reference -- their own loadMode mutations are visible on
         // the loader's own registered copies.
         $registered = scriptLoaderRegistered($loader);
-        expect($registered['b']->load_mode)->toBe(1)
-            ->and($registered['c']->load_mode)->toBe(1);
+        expect($registered['b']->loadMode)->toBe(1)
+            ->and($registered['c']->loadMode)->toBe(1);
     } finally {
         CurrentConfigTestFactory::get()->reset();
     }
@@ -1084,9 +1084,9 @@ test('checkLoadDep skips a precedent id that was never registered, instead of er
     $method->invoke(null, $registered);
 
     // Reaching here (no PHP warning about an undefined array key, no
-    // exception) is itself the assertion -- the script's own load_mode is
+    // exception) is itself the assertion -- the script's own loadMode is
     // untouched since it has no real precedent to downgrade against.
-    expect(scriptLoaderRegistered($loader)['has-unknown-precedent']->load_mode)->toBe(1);
+    expect(scriptLoaderRegistered($loader)['has-unknown-precedent']->loadMode)->toBe(1);
 });
 
 test('fillWellKnown adds jquery as a precedent for any jquery.* script', function (): void {
@@ -1323,10 +1323,10 @@ test('computeScriptTopologicalOrder does not recompute an already-memoized order
         ->toBe(999);
 });
 
-test('addInline auto-loads a required script\'s own transitive sub-dependencies at load_mode=1 (footer-sync)', function (): void {
+test('addInline auto-loads a required script\'s own transitive sub-dependencies at loadMode=1 (footer-sync)', function (): void {
     // loadKnownRequiredScript() is called with a hardcoded `1` here --
     // distinct from addInline()'s OWN separate downgrade-if-already-async
-    // step right below it (`if ($s->load_mode === 2) { $s->load_mode = 1;
+    // step right below it (`if ($s->loadMode === 2) { $s->loadMode = 1;
     // }`), which only re-corrects the id literally named in $require
     // ('jquery.ui.dialog' itself) back down to 1 if it lands on 2 -- NOT
     // its own transitively-pulled-in precedents (fillWellKnown() adds
@@ -1336,25 +1336,25 @@ test('addInline auto-loads a required script\'s own transitive sub-dependencies 
     // Asserting on 'jquery' (a sub-dependency, not the directly-required
     // id) is what actually distinguishes the hardcoded `1` from a
     // mutated 0 or 2 -- asserting on 'jquery.ui.dialog' itself wouldn't,
-    // since a load_mode=2 there gets silently self-corrected regardless.
+    // since a loadMode=2 there gets silently self-corrected regardless.
     $loader = new ScriptLoader();
 
     $loader->addInline('console.log(1);', ['jquery.ui.dialog']);
 
-    expect(scriptLoaderRegistered($loader)['jquery']->load_mode)->toBe(1);
+    expect(scriptLoaderRegistered($loader)['jquery']->loadMode)->toBe(1);
 });
 
 test('checkLoadDep needs a second pass to cascade an unconditional downgrade through an intermediate node', function (): void {
     // top(load=0) requires mid(load=2) requires bottom(load=2), registered
     // in the order mid, bottom, top -- so mid's own scan of its precedent
     // ('bottom') happens BEFORE top gets a chance to downgrade mid, using
-    // mid's STALE load_mode=2 (2 > 2 is false, no downgrade yet). Only
+    // mid's STALE loadMode=2 (2 > 2 is false, no downgrade yet). Only
     // once top downgrades mid (later in pass 1) does pass 2 get to use
     // mid's new load=0 to finally cascade the downgrade down to bottom.
     // templateCombineFiles=true (the default) plus purely local (non-
     // remote) paths keep the async-specific downgrade branch inert, so
     // this isolates the do-while's own repeat -- a single pass leaves
-    // bottom at its stale load_mode=2 instead of the converged 0.
+    // bottom at its stale loadMode=2 instead of the converged 0.
     CurrentConfigTestFactory::get()->templateCombineFiles = true;
 
     $loader = new ScriptLoader();
@@ -1363,7 +1363,7 @@ test('checkLoadDep needs a second pass to cascade an unconditional downgrade thr
     $loader->add('top', 0, ['mid'], 'themes/default/js/top.js');
 
     try {
-        // 'mid'/'bottom' are both load_mode=2 -- checkLoadDep() reaches
+        // 'mid'/'bottom' are both loadMode=2 -- checkLoadDep() reaches
         // self::urlService() for that pair, needing a booted Kernel.
         KernelContainerOverride::with([
             Paths::class => Paths::fromRoot(sys_get_temp_dir()),
@@ -1372,7 +1372,7 @@ test('checkLoadDep needs a second pass to cascade an unconditional downgrade thr
             $method->invoke(null, scriptLoaderRegistered($loader));
         });
 
-        expect(scriptLoaderRegistered($loader)['bottom']->load_mode)->toBe(0);
+        expect(scriptLoaderRegistered($loader)['bottom']->loadMode)->toBe(0);
     } finally {
         CurrentConfigTestFactory::get()->reset();
     }
@@ -1406,7 +1406,7 @@ test('checkLoadDep converges over a multi-pass cascade mixing unconditional and 
     $loader->add('n0', 2, ['n3', 'n1'], 'themes/default/js/n0.js');
 
     try {
-        // Several node pairs here are load_mode=2 on both sides --
+        // Several node pairs here are loadMode=2 on both sides --
         // checkLoadDep() reaches self::urlService(), needing a booted
         // Kernel.
         KernelContainerOverride::with([
@@ -1416,7 +1416,7 @@ test('checkLoadDep converges over a multi-pass cascade mixing unconditional and 
             $method->invoke(null, scriptLoaderRegistered($loader));
         });
 
-        expect(scriptLoaderRegistered($loader)['n1']->load_mode)->toBe(0);
+        expect(scriptLoaderRegistered($loader)['n1']->loadMode)->toBe(0);
     } finally {
         CurrentConfigTestFactory::get()->reset();
     }
@@ -1427,7 +1427,7 @@ test('checkLoadDep continues past an unregistered precedent instead of abandonin
     // registered precedent -- `continue` (real code) skips only the ghost
     // and still checks 'real-precedent' afterwards; `continue`-mutated-to-
     // `break` would abandon the whole inner loop right there, leaving
-    // 'real-precedent' at its original load_mode.
+    // 'real-precedent' at its original loadMode.
     $loader = new ScriptLoader();
     $loader->add('dependent', 0, ['totally-unregistered-ghost', 'real-precedent'], 'themes/default/js/dep.js');
     $loader->add('real-precedent', 2, [], 'themes/default/js/real.js');
@@ -1435,7 +1435,7 @@ test('checkLoadDep continues past an unregistered precedent instead of abandonin
     $method = new ReflectionMethod(ScriptLoader::class, 'checkLoadDep');
     $method->invoke(null, scriptLoaderRegistered($loader));
 
-    expect(scriptLoaderRegistered($loader)['real-precedent']->load_mode)->toBe(0);
+    expect(scriptLoaderRegistered($loader)['real-precedent']->loadMode)->toBe(0);
 });
 
 test('cmpByModeAndOrder returns the raw topological-order difference, without falling through to id comparison', function (): void {
@@ -1455,7 +1455,7 @@ test('cmpByModeAndOrder returns the raw topological-order difference, without fa
 });
 
 test('cmpByModeAndOrder falls through to strcmp when orders match but are non-zero, even if one script is remote', function (): void {
-    // Both scripts share load_mode=0 and topological order=5 (non-zero) --
+    // Both scripts share loadMode=0 and topological order=5 (non-zero) --
     // the remote/local tiebreak is only supposed to apply when order===0
     // (LogicalAndToLogicalOr on the `and` would wrongly let a non-zero
     // order fall into the remote/local ±1 branch just because the xor

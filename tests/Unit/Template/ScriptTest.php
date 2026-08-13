@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Piwigo\Template\Script;
 
-test('constructor sets load_mode, precedents, and initializes extra empty', function (): void {
+test('constructor sets loadMode, precedents, and initializes extra empty', function (): void {
     $script = new Script(1, 'my-script', 'themes/default/js/foo.js', '1.0', ['jquery']);
 
-    expect($script->load_mode)
+    expect($script->loadMode)
         ->toBe(1)
         ->and($script->precedents)
         ->toBe(['jquery'])

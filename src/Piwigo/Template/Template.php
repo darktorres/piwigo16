@@ -89,12 +89,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * @var string[] - Content to add before </head> tag
      */
-    public array $html_head_elements = [];
+    public array $htmlHeadElements = [];
 
     /**
      * @var string - Runtime CSS rules
      */
-    private string $html_style = '';
+    private string $htmlStyle = '';
 
     public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
 
@@ -107,12 +107,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * @var array<int, string[]> - Runtime buttons on picture page
      */
-    public array $picture_buttons = [];
+    public array $pictureButtons = [];
 
     /**
      * @var array<int, string[]> - Runtime buttons on index page
      */
-    public array $index_buttons = [];
+    public array $indexButtons = [];
 
     /**
      * The theme/template-extension directory chain, in resolution order --
@@ -907,18 +907,18 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         );
         $this->cssLoader->clear();
 
-        if ((bool) count($this->html_head_elements) || (bool) strlen($this->html_style)) {
+        if ((bool) count($this->htmlHeadElements) || (bool) strlen($this->htmlStyle)) {
             $search = "\n</head>";
             $pos = strpos($this->output, $search);
             if ($pos !== false) {
-                $rep = "\n" . implode("\n", $this->html_head_elements);
-                if ((bool) strlen($this->html_style)) {
-                    $rep .= '<style type="text/css">' . $this->html_style . '</style>';
+                $rep = "\n" . implode("\n", $this->htmlHeadElements);
+                if ((bool) strlen($this->htmlStyle)) {
+                    $rep .= '<style type="text/css">' . $this->htmlStyle . '</style>';
                 }
                 $this->output = substr_replace($this->output, $rep, $pos, 0);
             } // else maybe error or warning ?
-            $this->html_head_elements = [];
-            $this->html_style = '';
+            $this->htmlHeadElements = [];
+            $this->htmlStyle = '';
         }
 
         $output = $this->output;
@@ -1015,10 +1015,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
               . $this->makeScriptSrc($script)
               . '"></script>';
         }
-        if ($this->scriptLoader->inline_scripts !== []) {
+        if ($this->scriptLoader->inlineScripts !== []) {
             $content[] = '<script type="text/javascript">//<![CDATA[
 ';
-            $content = array_merge($content, $this->scriptLoader->inline_scripts);
+            $content = array_merge($content, $this->scriptLoader->inlineScripts);
             $content[] = '//]]></script>';
         }
 
@@ -1113,7 +1113,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     {
         $trimmed = trim((string) $content);
         if ($trimmed !== '') {
-            $this->html_head_elements[] = $trimmed;
+            $this->htmlHeadElements[] = $trimmed;
         }
     }
 
@@ -1124,7 +1124,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     {
         $trimmed = trim((string) $content);
         if ($trimmed !== '') {
-            $this->html_style .= "\n" . $trimmed;
+            $this->htmlStyle .= "\n" . $trimmed;
         }
     }
 
@@ -1225,7 +1225,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function addPictureButton(string $content, int $rank = 50): void
     {
-        $this->picture_buttons[$rank][] = $content;
+        $this->pictureButtons[$rank][] = $content;
     }
 
     /**
@@ -1233,7 +1233,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function addIndexButton(string $content, int $rank = 50): void
     {
-        $this->index_buttons[$rank][] = $content;
+        $this->indexButtons[$rank][] = $content;
     }
 
     /**
@@ -1241,21 +1241,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function parsePictureButtons(): void
     {
-        if ($this->picture_buttons !== []) {
-            ksort($this->picture_buttons);
+        if ($this->pictureButtons !== []) {
+            ksort($this->pictureButtons);
             $buttons = [];
-            foreach ($this->picture_buttons as $k => $row) {
+            foreach ($this->pictureButtons as $k => $row) {
                 $buttons = array_merge($buttons, $row);
             }
             $this->assign('PLUGIN_PICTURE_BUTTONS', $buttons);
-
-            // only for PHP 5.3
-            // $this->assign('PLUGIN_PICTURE_BUTTONS',
-            // array_reduce(
-            // $this->picture_buttons,
-            // create_function('$v,$w', 'return array_merge($v, $w);'),
-            // array()
-            // ));
         }
     }
 
@@ -1264,21 +1256,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function parseIndexButtons(): void
     {
-        if ($this->index_buttons !== []) {
-            ksort($this->index_buttons);
+        if ($this->indexButtons !== []) {
+            ksort($this->indexButtons);
             $buttons = [];
-            foreach ($this->index_buttons as $k => $row) {
+            foreach ($this->indexButtons as $k => $row) {
                 $buttons = array_merge($buttons, $row);
             }
             $this->assign('PLUGIN_INDEX_BUTTONS', $buttons);
-
-            // only for PHP 5.3
-            // $this->assign('PLUGIN_INDEX_BUTTONS',
-            // array_reduce(
-            // $this->index_buttons,
-            // create_function('$v,$w', 'return array_merge($v, $w);'),
-            // array()
-            // ));
         }
     }
 }

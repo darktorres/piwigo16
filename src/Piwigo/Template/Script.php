@@ -19,14 +19,14 @@ final class Script extends Combinable
     public array $extra;
 
     /**
-     * @param int $load_mode 0,1,2
+     * @param int $loadMode 0,1,2
      * @param string|null $path see Combinable::__construct()
      * @param string|false $version false disables version-based cache
      *   busting, mirroring Combinable::$version's own contract
      * @param string[] $precedents
      */
     public function __construct(
-        public int $load_mode,
+        public int $loadMode,
         string $id,
         ?string $path,
         string|false $version = '0',

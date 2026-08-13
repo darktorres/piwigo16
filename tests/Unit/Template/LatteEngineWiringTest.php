@@ -81,7 +81,7 @@ test('parse() renders a real .latte file through Latte, exercising a filter, the
     expect($output)
         ->toContain('<p>World</p>')
         ->toContain('<p>hello world</p>')
-        ->and($t->html_head_elements)
+        ->and($t->htmlHeadElements)
         ->toBe(['<meta name="test" content="1">']);
 
     latte_engine_wiring_test_rrmdir($tplDir);
@@ -199,7 +199,7 @@ test('CurrentTemplate resolves independently of PiwigoExtension holding its owni
 
     expect($output)
         ->toBe('rendered')
-        ->and($t->html_head_elements)
+        ->and($t->htmlHeadElements)
         ->toBe(['x']);
 
     latte_engine_wiring_test_rrmdir($tplDir);

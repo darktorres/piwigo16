@@ -1138,28 +1138,28 @@ test('combineScript records a fatal error for an invalid load value', function (
         ->toBe(["[ERROR] combineScript: invalid 'load' parameter"]);
 });
 
-test('combineScript maps load="footer" to load_mode 1', function (): void {
+test('combineScript maps load="footer" to loadMode 1', function (): void {
     $t = TemplateTestFactory::build();
 
     $t->combineScript('x', load: 'footer', path: 'x.js');
 
-    expect($t->scriptLoader->getAll()['x']->load_mode)->toBe(1);
+    expect($t->scriptLoader->getAll()['x']->loadMode)->toBe(1);
 });
 
-test('combineScript maps load="async" to load_mode 2', function (): void {
+test('combineScript maps load="async" to loadMode 2', function (): void {
     $t = TemplateTestFactory::build();
 
     $t->combineScript('x', load: 'async', path: 'x.js');
 
-    expect($t->scriptLoader->getAll()['x']->load_mode)->toBe(2);
+    expect($t->scriptLoader->getAll()['x']->loadMode)->toBe(2);
 });
 
-test('combineScript defaults load_mode to 0 when load is not given', function (): void {
+test('combineScript defaults loadMode to 0 when load is not given', function (): void {
     $t = TemplateTestFactory::build();
 
     $t->combineScript('x', path: 'x.js');
 
-    expect($t->scriptLoader->getAll()['x']->load_mode)->toBe(0);
+    expect($t->scriptLoader->getAll()['x']->loadMode)->toBe(0);
 });
 
 test('combineScript explodes a comma-separated require string', function (): void {
@@ -1335,7 +1335,7 @@ test('footerScript registers an inline script once its own required script is al
 
     $t->footerScript('console.log(1);', require: 'foo');
 
-    expect($t->scriptLoader->inline_scripts)
+    expect($t->scriptLoader->inlineScripts)
         ->toBe(['console.log(1);']);
 });
 
@@ -1345,7 +1345,7 @@ test('footerScript is a no-op for empty or whitespace-only content', function ()
     $t->footerScript('');
     $t->footerScript("   \n");
 
-    expect($t->scriptLoader->inline_scripts)
+    expect($t->scriptLoader->inlineScripts)
         ->toBe([]);
 });
 
@@ -1354,7 +1354,7 @@ test('footerScript treats a null require as no requirements', function (): void 
 
     $t->footerScript('console.log(1);');
 
-    expect($t->scriptLoader->inline_scripts)
+    expect($t->scriptLoader->inlineScripts)
         ->toBe(['console.log(1);']);
 });
 
@@ -1365,7 +1365,7 @@ test('footerScript explodes a comma-separated require string', function (): void
 
     $t->footerScript('console.log(1);', require: 'a,b');
 
-    expect($t->scriptLoader->inline_scripts)
+    expect($t->scriptLoader->inlineScripts)
         ->toBe(['console.log(1);']);
 });
 
@@ -1504,7 +1504,7 @@ test('finalizeOutput clears the CSS loader so a second call does not re-emit alr
         ->not->toContain('style.css');
 });
 
-test('finalizeOutput does not reprocess the combined-scripts tag once did_head is already true', function (): void {
+test('finalizeOutput does not reprocess the combined-scripts tag once didHead is already true', function (): void {
     $t = TemplateTestFactory::build();
     $t->scriptLoader->getHeadScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
     $t->output = Template::COMBINED_SCRIPTS_TAG;
@@ -1526,7 +1526,7 @@ test('finalizeOutput injects head elements before </head> when the source contai
         ->toBe("<head>\n<meta a>\n</head>\nbody");
 });
 
-test('finalizeOutput injects the accumulated html_style before </head> even with no head elements registered', function (): void {
+test('finalizeOutput injects the accumulated htmlStyle before </head> even with no head elements registered', function (): void {
     $t = TemplateTestFactory::build();
     $t->htmlStyle('body{color:red}');
     $t->output = "<head>\n</head>\nbody";
@@ -1537,7 +1537,7 @@ test('finalizeOutput injects the accumulated html_style before </head> even with
         ->toBe("<head>\n<style type=\"text/css\">\nbody{color:red}</style>\n</head>\nbody");
 });
 
-test('finalizeOutput does not touch </head> when no head elements or html_style were registered', function (): void {
+test('finalizeOutput does not touch </head> when no head elements or htmlStyle were registered', function (): void {
     $t = TemplateTestFactory::build();
     $t->output = "<head>\n</head>\nbody";
 
@@ -1558,7 +1558,7 @@ test('finalizeOutput does not inject head elements when the source has no </head
         ->toBe('no head tag here');
 });
 
-test('finalizeOutput resets html_style after injecting it, so a second call does not reapply it', function (): void {
+test('finalizeOutput resets htmlStyle after injecting it, so a second call does not reapply it', function (): void {
     $t = TemplateTestFactory::build();
     $t->htmlStyle('body{color:red}');
     $t->output = "<head>\n</head>\nfirst";
@@ -1568,7 +1568,7 @@ test('finalizeOutput resets html_style after injecting it, so a second call does
     $second = $t->fetchOutput();
 
     // Exact match on $second (not just "doesn't contain the old value") --
-    // an EmptyStringToNotEmpty mutation of the reset would leave html_style
+    // an EmptyStringToNotEmpty mutation of the reset would leave htmlStyle
     // as some OTHER non-empty sentinel, which would still re-trigger the
     // injection gate and inject a (different, but still present) <style>
     // tag into $second; a bare "not->toContain('color:red')" check
@@ -1597,7 +1597,7 @@ test('htmlHead is a no-op for empty or whitespace-only content', function (): vo
     $t->htmlHead('');
     $t->htmlHead("   \n");
 
-    expect($t->html_head_elements)
+    expect($t->htmlHeadElements)
         ->toBe([]);
 });
 

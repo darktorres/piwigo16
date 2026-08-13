@@ -24,7 +24,7 @@ final readonly class CatPermPageContext implements TemplatePageContext
     /**
      * @param array<int, string> $groups
      * @param list<int> $groupsSelected
-     * @param array<int|string, mixed> $users
+     * @param array<int, string> $users
      * @param list<int> $usersSelected
      * @param array<array-key, string> $cacheKeys
      * @param list<array{group_name: string, group_users: string}>|null $userGrantedIndirectGroups

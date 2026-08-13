@@ -154,9 +154,7 @@ final readonly class CatPermPageRenderer
             foreach ($granted_groups as $group_id => $group_users) {
                 $group_usernames = [];
                 foreach ($group_users as $user_id) {
-                    // $users is array_column(..., 'username', 'id')'s result,
-                    // value type mixed; narrow to the real username string
-                    if (in_array($user_id, $user_granted_indirect_ids, true) && isset($users[$user_id]) && is_string($users[$user_id])) {
+                    if (in_array($user_id, $user_granted_indirect_ids, true) && isset($users[$user_id])) {
                         $group_usernames[] = $users[$user_id];
                     }
                 }

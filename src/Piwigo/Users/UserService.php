@@ -892,7 +892,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
-     * @return array<int|string, mixed> keyed by id
+     * @return array<int, string> keyed by id
      */
     public function getAllUsernamesById(): array
     {

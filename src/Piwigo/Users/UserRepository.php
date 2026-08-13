@@ -344,8 +344,9 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      *
      * `users` is mapped ({@see UserEntity}); see this class's own
      * docblock for why its columns are fixed, not caller-supplied.
+     * UserEntity::$username is a non-nullable Username column.
      *
-     * @return array<int|string, mixed> keyed by id
+     * @return array<int, string> keyed by id
      */
     public function findAllUsernamesById(): array
     {
@@ -363,12 +364,12 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             }
 
             $id = $row['id'] ?? null;
-            if (! $id instanceof UserId) {
+            $username = $row['username'] ?? null;
+            if (! $id instanceof UserId || ! $username instanceof Username) {
                 continue;
             }
 
-            $username = $row['username'] ?? null;
-            $byId[$id->value] = $username instanceof Username ? $username->value : null;
+            $byId[$id->value] = $username->value;
         }
 
         return $byId;

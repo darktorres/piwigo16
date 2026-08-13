@@ -33,7 +33,7 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
 /**
- * Piwigo\Calendar\CalendarRenderer -- 11 real constructor deps, no
+ * Piwigo\Calendar\CalendarRenderer -- 12 real constructor deps, no
  * dedicated Integration/Browser spec of its own (reached only via
  * GalleryController). Covers CalendarService::buildInnerSql()'s own
  * real, documented "nothing to do" early return -- an empty $items list
@@ -115,6 +115,7 @@ test('render() returns a no-op result for a non-categories section with no items
                 new FilterState(),
                 new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
             ),
+            EntityManagerFactory::build($conn),
         );
 
         $result = $renderer->render(Section::Tags, null, [], 'posted', null, null, [], false);

@@ -67,7 +67,7 @@ test('count returns the memoized value directly, without recomputing it', functi
     ));
     $counter = availableCommentsCounterTestSubject($currentUser, $currentConfig);
 
-    $result = $counter->count(availableCommentsCounterTestPermissionService($currentUser, $currentConfig));
+    $result = $counter->count(availableCommentsCounterTestPermissionService($currentUser, $currentConfig), EntityManagerFactory::build(DbConnection::build()));
 
     expect($result)
         ->toBe(987654);
@@ -87,7 +87,7 @@ test('count computes a real value on a cache miss and memoizes it back onto the 
     ));
     $counter = availableCommentsCounterTestSubject($currentUser, $currentConfig);
 
-    $result = $counter->count(availableCommentsCounterTestPermissionService($currentUser, $currentConfig));
+    $result = $counter->count(availableCommentsCounterTestPermissionService($currentUser, $currentConfig), EntityManagerFactory::build(DbConnection::build()));
 
     expect($result)
         ->toBeGreaterThanOrEqual(0)

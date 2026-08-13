@@ -332,7 +332,7 @@ final class MenubarRenderer
                       'NAME' => $lang->t('Comments'),
                       'URL' => $urlService->getRootUrl() . 'comments.php',
                       'COUNTER' => new AvailableCommentsCounter($currentUser, $accessLevelChecker)
-                          ->count($permissionService),
+                          ->count($permissionService, $entityManager),
                   ];
             }
 

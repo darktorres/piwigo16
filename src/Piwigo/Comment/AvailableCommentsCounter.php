@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\CurrentUser;
@@ -30,7 +29,7 @@ final readonly class AvailableCommentsCounter
         private AccessLevelChecker $accessLevelChecker,
     ) {}
 
-    public function count(PermissionService $permissionService): int
+    public function count(PermissionService $permissionService, EntityManagerInterface $entityManager): int
     {
         $currentUser = $this->currentUser->get();
 
@@ -49,7 +48,7 @@ final readonly class AvailableCommentsCounter
             $where[] = $permissionCriteria->forbiddenCategoriesCondition('ic.categoryId');
             $where[] = $permissionCriteria->imageAccessCondition('ic.imageId');
 
-            $nbAvailableComments = EntityManagerFactory::build(DbConnection::build())->getRepository(CommentEntity::class)->countAvailableWithConditions($where);
+            $nbAvailableComments = $entityManager->getRepository(CommentEntity::class)->countAvailableWithConditions($where);
             $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);
             $this->currentUser->set($currentUser);
         }

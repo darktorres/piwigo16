@@ -1271,7 +1271,7 @@ namespace Piwigo\Tests\Integration {
             // repository mechanism, but never through this exact caller.
             $repo = EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class);
             $counter = new AvailableCommentsCounter(CurrentUserTestFactory::get(), $this->accessLevelChecker());
-            $baseline = $counter->count($this->permissionService());
+            $baseline = $counter->count($this->permissionService(), EntityManagerFactory::build($this->conn));
 
             $validatedId = $repo->insert([
                 'author' => 'nbc-test',
@@ -1300,7 +1300,7 @@ namespace Piwigo\Tests\Integration {
                 // the second call genuinely recomputes.
                 CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withRawAttribute('nb_available_comments', null));
 
-                $afterInsert = $counter->count($this->permissionService());
+                $afterInsert = $counter->count($this->permissionService(), EntityManagerFactory::build($this->conn));
 
                 self::assertSame($baseline + 1, $afterInsert, 'only the validated comment should count');
             } finally {

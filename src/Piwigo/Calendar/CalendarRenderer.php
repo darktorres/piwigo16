@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
@@ -25,8 +26,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
@@ -64,6 +63,7 @@ final readonly class CalendarRenderer
         private ImageStdParams $imageStdParams,
         private PageState $pageState,
         private PermissionService $permissionService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -86,11 +86,10 @@ final readonly class CalendarRenderer
     ): CalendarRenderResult {
         $template = $this->template;
 
-        $conn = DbConnection::build();
         $accessLevelChecker = new AccessLevelChecker($this->currentUser, $this->currentConfig);
         $calendarService = new CalendarService(
             $this->permissionService,
-            new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator, $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
+            new CategoryService($this->lang, new CategoryRepository($this->entityManager, $this->currentConfig), $this->permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator, $accessLevelChecker, new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig))
         );
 
         if ($section === Section::Categories) { // we will regenerate the items by including subcats elements
@@ -155,7 +154,7 @@ final readonly class CalendarRenderer
         $cal_style = $chronology_style;
         $classname = $styles[$cal_style]['classname'];
 
-        $calendar = new $classname($this->lang, new CalendarRepository(EntityManagerFactory::build($conn)), $this->urlService, $this->currentConfig, $this->imageStdParams);
+        $calendar = new $classname($this->lang, new CalendarRepository($this->entityManager), $this->urlService, $this->currentConfig, $this->imageStdParams);
         $calendar->chronology_field = $chronologyField;
 
         // Retrieve view
@@ -304,7 +303,7 @@ final readonly class CalendarRenderer
                 /** @var list<int> $cached_items */
                 $items = $cached_items;
             } else {
-                $items = new CalendarRepository(EntityManagerFactory::build($conn))
+                $items = new CalendarRepository($this->entityManager)
                     ->findImageIds(
                         $calendar->scope->rawSqlFromWhere,
                         $calendar->getDateWhere(),

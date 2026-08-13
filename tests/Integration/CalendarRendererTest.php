@@ -149,7 +149,7 @@ namespace Piwigo\Tests\Integration {
 
         private function makeRenderer(): CalendarRenderer
         {
-            return new CalendarRenderer(LangTestFactory::get(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService());
+            return new CalendarRenderer(LangTestFactory::get(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn));
         }
 
         /**
@@ -281,7 +281,7 @@ namespace Piwigo\Tests\Integration {
         public function testRenderGroupsMultipleYearsAndMonthsForTheDefaultMonthlyCalendarView(): void
         {
             $template = TemplateTestFactory::build();
-            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService());
+            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn));
 
             $result = $renderer->render(
                 section: Section::ListView,
@@ -327,7 +327,7 @@ namespace Piwigo\Tests\Integration {
         public function testRenderNormalizesChronologyDateToIntsAndNextPrevNavigationStillWorks(): void
         {
             $template = TemplateTestFactory::build();
-            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService());
+            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn));
 
             $result = $renderer->render(
                 section: Section::ListView,

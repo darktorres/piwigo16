@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityEntity;
@@ -122,6 +123,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     private SessionService $sessionService;
 
+    private EntityManagerInterface $entityManager;
+
     #[Override]
     protected function setUp(): void
     {
@@ -148,6 +151,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
+        $this->entityManager = $em;
         $categoryRepo = new CategoryRepository($em, CurrentConfigTestFactory::get());
         $this->filterState = new FilterState();
         $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
@@ -227,6 +231,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
             TranslatorTestFactory::get(),
             ImageStdParamsTestFactory::get(),
+            $this->entityManager,
         );
     }
 

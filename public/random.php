@@ -61,7 +61,7 @@ SELECT id
   FROM images
     INNER JOIN image_category AS ic ON id = ic.image_id
 ' . ($condition->isEmpty() ? '' : 'WHERE ' . $condition->sql) . '
-  ORDER BY ' . SqlDialect::randomFunction() . '()
+  ORDER BY ' . SqlDialect::randomFunction() . '
   LIMIT :limit
 ;';
 

@@ -11,6 +11,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
+use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -231,9 +232,7 @@ final readonly class AlbumNotificationPageRenderer
         $auth_key_duration_num = $auth_key_duration;
         $auth_key_duration_value = null;
         if ($auth_key_duration_num > 0) {
-            $auth_key_since = strtotime('now -' . $auth_key_duration_num . ' second');
-            // the relative time expression above is always syntactically valid
-            assert($auth_key_since !== false);
+            $auth_key_since = Env::now()->getTimestamp() - $auth_key_duration_num;
             $auth_key_duration_value = DateHelper::timeSince($auth_key_since, 'second', null, false);
         }
 

@@ -1145,7 +1145,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      */
     private static function normalizeOrderBySql(string $orderBySql): string
     {
-        return str_ireplace('RAND()', SqlDialect::randomFunction() . '()', $orderBySql);
+        return str_ireplace('RAND()', SqlDialect::randomFunction(), $orderBySql);
     }
 
     /**

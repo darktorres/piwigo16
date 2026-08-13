@@ -17,6 +17,7 @@ use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Env;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -477,7 +478,7 @@ final readonly class BatchManagerGlobalPageRenderer
 
         // creation date
         $post_date_creation = $post['date_creation'] ?? '';
-        $date_creation = $post_date_creation === '' ? date('Y-m-d') . ' 00:00:00' : (is_string($post_date_creation) ? $post_date_creation : '');
+        $date_creation = $post_date_creation === '' ? Env::now()->format('Y-m-d') . ' 00:00:00' : (is_string($post_date_creation) ? $post_date_creation : '');
 
         // image level options
         $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);

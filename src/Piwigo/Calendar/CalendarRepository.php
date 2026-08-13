@@ -115,7 +115,7 @@ final readonly class CalendarRepository
         // gap already fixed for CategoryRepository's own raw-DBAL fallback
         // ("function rand() does not exist" against a real Postgres server
         // otherwise).
-        $orderBySql = str_ireplace('RAND()', SqlDialect::randomFunction() . '()', $orderBySql);
+        $orderBySql = str_ireplace('RAND()', SqlDialect::randomFunction(), $orderBySql);
 
         $ids = $this->em->getConnection()
             ->executeQuery(

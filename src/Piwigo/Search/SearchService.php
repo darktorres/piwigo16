@@ -1743,7 +1743,7 @@ final readonly class SearchService
 
     public function getAvailableSearchUuid(): string
     {
-        $candidate = 'psk-' . date('Ymd') . '-' . $this->sessionService->generateKey(10);
+        $candidate = 'psk-' . Env::now()->format('Ymd') . '-' . $this->sessionService->generateKey(10);
 
         if ($this->repo->countSavedSearchByUuid($candidate) === 0) {
             return $candidate;

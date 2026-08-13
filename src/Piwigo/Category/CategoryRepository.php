@@ -498,7 +498,7 @@ final readonly class CategoryRepository
         // rand() does not exist" against a real Postgres server.
         $qb->orderBy(str_ireplace(
             'RAND()',
-            SqlDialect::randomFunction() . '()',
+            SqlDialect::randomFunction(),
             str_replace('ORDER BY ', '', $this->currentConfig->orderBy)
         ));
 

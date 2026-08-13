@@ -37,24 +37,46 @@ final class SqlDialect
     public const string REQUIRED_POSTGRES_VERSION = '18.4';
 
     /**
-     * Callers building a raw
-     * SQL fragment from this (not DQL, which already has its own portable
-     * {@see \Piwigo\Db\DqlFunction\RandFunction}) always got the literal
-     * MySQL name, so a real WS "sort by random" request (via
-     * Ws\WsHelper::stdImageSqlOrder() -> Image\PhotoSortField::column())
-     * and CategoryRepository::findImageIdsForCategories()'s own raw-DBAL
-     * fallback for a `RAND()`-valued `order_by`/`order_by_custom` config
-     * both failed against a real Postgres server with "function rand()
-     * does not exist" -- Postgres's own random-ordering function is
-     * `RANDOM()`, a different name entirely, not just a dialect quirk of
-     * the same function. Was a bare `const string` (no way to branch);
-     * converted to a method, matching this class's own
-     * established `DbCredentials::fromEnv()->driver`-branch pattern
+     * Returns the *complete* random-ordering expression (including its own
+     * parens/arguments), not just the bare function name -- every real
+     * caller (`Ws\WsHelper::stdImageSqlOrder()` -> `Image\PhotoSortField::column()`,
+     * `CategoryRepository::findImageIdsForCategories()`'s raw-DBAL
+     * fallback for a `RAND()`-valued `order_by`/`order_by_custom` config,
+     * `ImageRepository`, `UserRepository`, `CalendarRepository`,
+     * `public/random.php`) previously appended `'()'` itself; they now
+     * splice this return value directly.
+     *
+     * MySQL's own `RAND(seed)` accepts an inline seed argument, so test
+     * mode is routed through `Env::now()` the same way
+     * {@see getRecentPeriodExpression()} already does for `CURRENT_DATE}`
+     * -- `public/random.php`'s own golden-HTML capture is otherwise
+     * non-deterministic by nature (a fresh shuffle every request),
+     * confirmed live via 3 different orderings across 3 consecutive runs
+     * before this fix.
+     *
+     * Postgres has no equivalent inline-seed syntax -- `RANDOM()` only
+     * becomes deterministic after a *separate*, preceding
+     * `SELECT setseed(...)` statement, which this bare string builder (no
+     * `Connection` of its own, see this class's own docblock) can't issue.
+     * `.env.test`'s only configured driver is `mysqli`; Postgres staying
+     * unseeded here is a known, undone gap, not a silent one.
+     *
+     * Was a bare `const string` (no way to branch at all); converted to a
+     * method, matching this class's own established
+     * `DbCredentials::fromEnv()->driver`-branch pattern
      * ({@see getRecentPeriodExpression()}/{@see getHour()}/{@see dateToTs()}).
      */
     public static function randomFunction(): string
     {
-        return DbCredentials::fromEnv()->driver === 'pgsql' ? 'RANDOM' : 'RAND';
+        if (self::isPostgres()) {
+            return 'RANDOM()';
+        }
+
+        if (Env::testModeIsActive()) {
+            return 'RAND(' . Env::now()->getTimestamp() . ')';
+        }
+
+        return 'RAND()';
     }
 
     /**

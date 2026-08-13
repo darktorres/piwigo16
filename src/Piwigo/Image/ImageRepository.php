@@ -3290,7 +3290,7 @@ final class ImageRepository extends EntityRepository
         // no `RAND()` function.
         $orderBySql = $orderBySql === '' ? 'ORDER BY id' : str_ireplace(
             'RAND()',
-            SqlDialect::randomFunction() . '()',
+            SqlDialect::randomFunction(),
             $orderBySql
         );
 

@@ -88,6 +88,14 @@ final class LatteTemplateCompiler
 
     private function rewriteInvocations(string $code, string $templateRealPath): string
     {
+        // Known textual-transform limitation: a template whose *text
+        // content* contains a verbatim `($this->filters->x)(` sequence
+        // would have it rewritten inside the echo'd string literal. Zero
+        // real occurrences across the 135-template tree (every match is a
+        // genuine compiled call), and the output is analysis-only -- noted
+        // rather than solved because the alternative (AST parse-and-
+        // reprint) would destroy the byte-exact pos-comment fidelity the
+        // error mapper depends on.
         $code = preg_replace(
             '/\(\$this->filters->([a-zA-Z_][a-zA-Z0-9_]*)\)\(/',
             self::SHIMS . '::$1(',
@@ -150,10 +158,19 @@ final class LatteTemplateCompiler
         $out = [];
         foreach (explode("\n", $code) as $line) {
             $out[] = $line;
-            if (preg_match('/^(\s*)extract\(/', $line, $m) === 1) {
+            // Exactly the two anchor forms Latte's compiler emits
+            // (verified against all 135 real compiled templates: 131x
+            // $ʟ_args + 99x $this->params, nothing else) -- an exact match
+            // both keeps a template that *echoes* text resembling an
+            // extract() call from corrupting the injection and surfaces a
+            // future new Latte codegen shape as a notice instead of
+            // silently skipping its variables.
+            if (preg_match('/^(\s*)extract\(\$(?:ʟ_args|this->params)\);$/u', $line, $m) === 1) {
                 foreach ($docLines as $docLine) {
                     $out[] = $m[1] . $docLine;
                 }
+            } elseif (preg_match('/^\s*extract\(/', $line) === 1) {
+                $notices[] = "unrecognized extract() shape in compiled {$templateRealPath}: '" . trim($line) . "' -- variables not injected at this anchor";
             }
         }
 

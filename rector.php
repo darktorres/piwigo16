@@ -9,6 +9,10 @@ return RectorConfig::configure()
         __DIR__,
     ])
     ->withSkip([
+        // Generated PHPStan Latte analysis files (bin/piwigo
+        // phpstan-latte:compile) -- Latte's own compiled-output style,
+        // regenerated wholesale; not code to modernize.
+        __DIR__ . '/_analysis',
         __DIR__ . '/_data',
         __DIR__ . '/galleries',
         __DIR__ . '/install/db',

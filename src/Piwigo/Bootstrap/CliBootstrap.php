@@ -60,23 +60,19 @@ final class CliBootstrap
     }
 
     /**
-     * The boot-and-configure half of the CLI bootstrap sequence, split out
-     * so `tools/phpstan-latte-engine.php` (PHPStan's own `engineBootstrap`
-     * contract requires a bare file returning an `Engine`, not a
-     * dispatchable Command -- the one CLI-adjacent tool that structurally
-     * can't go through a real Command) can still reach a fully-configured
-     * container through `src/Piwigo/Bootstrap/` instead of hand-rolling a
-     * second, parallel `Kernel::boot()`/`Kernel::container()` sequence
-     * outside it. Every other CLI-facing need should go through a real
-     * `Command` (resolved via `buildApplication()` below), not this method
-     * directly.
+     * The boot-and-configure half of the CLI bootstrap sequence. Every
+     * CLI-facing need goes through a real `Command` (resolved via
+     * `buildApplication()` below); this stays private -- its one former
+     * external consumer (the efabrica engineBootstrap file) was retired
+     * with the native phpstan-latte pipeline, whose compile step is a
+     * real Command like everything else.
      *
      * Both `ConfigLoader` calls are genuine no-ops today (see its own
      * docblocks) -- kept as real, callable steps in the standard boot
      * sequence for when either gains a real body, but there is nothing for
      * a test to observe either removed today.
      */
-    public static function bootContainer(?Paths $paths = null): ContainerInterface
+    private static function bootContainer(?Paths $paths = null): ContainerInterface
     {
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();

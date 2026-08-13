@@ -1511,8 +1511,12 @@ don't assume presence means proven):
   `engineBootstrap`) letting PHPStan type-check variables used inside
   `.latte` templates against their real PHP types. **Confirmed run in
   CI** (`vendor/bin/phpstan analyse` runs there, phpstan-latte included)
-  — also directly portable once this fork's own PHPStan setup is ready
-  to take it.
+  — **outcome: NOT ported.** A deep upstream review (dead Nette-only
+  machinery, maintainer-confirmed performance overhead, three real
+  crashes in its hand-rolled analysis loop) led to a Piwigo-native
+  replacement instead: `tools/phpstan/Latte/` + `bin/piwigo
+  phpstan-latte:compile`, chained inside `composer analyse:phpstan` —
+  see the P32 status row.
 - **CSP-aligned inline-script guard**: `composer lint:no-inline-scripts`
   → `tools/check-no-executable-inline-scripts.php` — scans `.latte`
   (and `.php`) for `<script>` tags missing `type=` or carrying one
@@ -1858,7 +1862,7 @@ vendor/bin/pest                             # unit, integration, browser, arch
 vendor/bin/pest --mutate --min=60           # mutation score — not run in CI yet
 vendor/bin/pest --type-coverage --min=95    # type coverage
 vendor/bin/ecs --no-progress-bar            # style — still non-blocking, see REFERENCE.md
-vendor/bin/phpstan analyse                  # level 10, 0 errors — blocking today
+composer analyse:phpstan                    # level 10, 0 errors — blocking today; chains bin/piwigo phpstan-latte:compile ahead of phpstan (bare `vendor/bin/phpstan analyse` skips template checking)
 vendor/bin/rector --dry-run                 # still non-blocking, see REFERENCE.md
 vendor/bin/deptrac --no-progress            # 0 violations — blocking today
 vendor/bin/composer-require-checker check

@@ -412,8 +412,10 @@ final class WsUsersTest extends ContractTestCase
         $result = $limited['result'];
         self::assertIsArray($result);
         self::assertCount(1, $this->extractUsers($limited));
-        self::assertArrayHasKey('total_count', $result);
-        $totalCount = $result['total_count'];
+        $paging = $result['paging'] ?? null;
+        self::assertIsArray($paging);
+        self::assertArrayHasKey('total_count', $paging);
+        $totalCount = $paging['total_count'];
         self::assertIsInt($totalCount);
         self::assertGreaterThanOrEqual(4, $totalCount, 'the 4 fixture users must all be counted regardless of per_page');
     }

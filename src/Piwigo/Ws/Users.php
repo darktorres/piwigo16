@@ -403,10 +403,6 @@ final readonly class Users
                 'users' => new NamedArray(array_values($users), 'user'),
             ];
         }
-        // deprecated: kept for retrocompatibility
-        if (isset($display_flags['total_count'])) {
-            $method_result['total_count'] = $total_count;
-        }
         return $method_result;
     }
 

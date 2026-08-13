@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Request\AlbumNotificationSubmitRequest;
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Validation\InputValidator;
 
 test('fromArray reports not submitted and empty defaults for an empty POST', function (): void {
@@ -58,14 +59,16 @@ test('fromArray skips users validation when who is not users', function (): void
         ->toBe([]);
 });
 
-test('fromArray passes group through when who is group', function (): void {
+test('fromArray parses group to a GroupId when who is group', function (): void {
     $request = AlbumNotificationSubmitRequest::fromArray([
         'who' => 'group',
         'group' => '7',
     ], new InputValidator());
 
     expect($request->group)
-        ->toBe('7');
+        ->toBeInstanceOf(GroupId::class)
+        ->and($request->group?->value)
+        ->toBe(7);
 });
 
 test('fromArray rejects a non-digit group when who is group and group is not empty', function (): void {
@@ -82,7 +85,7 @@ test('fromArray skips group validation when group is an empty sentinel value', f
     ], new InputValidator());
 
     expect($request->group)
-        ->toBe('');
+        ->toBeNull();
 });
 
 test('fromArray normalizes a non-string mail_content to an empty string', function (): void {
@@ -106,12 +109,14 @@ test('fromArray passes a real string mail_content through unchanged', function (
 test('fromArray never validates group when who is not group, even for an invalid group value', function (): void {
     // `who === 'group'` is the only real gate on group validation (see the
     // source comment on line 63) -- an invalid group value must be
-    // completely ignored whenever who isn't 'group'.
+    // completely ignored whenever who isn't 'group'. Only the stored
+    // representation changes here (raw garbage string -> null);
+    // GroupId::tryFrom('not-a-number') fails either way.
     $request = AlbumNotificationSubmitRequest::fromArray([
         'who' => 'users',
         'group' => 'not-a-number',
     ], new InputValidator());
 
     expect($request->group)
-        ->toBe('not-a-number');
+        ->toBeNull();
 });

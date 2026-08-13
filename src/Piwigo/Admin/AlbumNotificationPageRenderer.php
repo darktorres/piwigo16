@@ -9,7 +9,6 @@ use Piwigo\Admin\Request\AlbumNotificationSubmitRequest;
 use Piwigo\Auth\AuthService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
-use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
@@ -198,18 +197,13 @@ final readonly class AlbumNotificationPageRenderer
                 $message .= ' (' . implode(', ', $usernames) . ')';
 
                 $save_success = $message;
-            } elseif ($albumNotificationSubmit->who === 'group' and ! in_array($albumNotificationSubmit->group, [null, false, 0, '0', '', []], true)) {
-                // AlbumNotificationSubmitRequest::fromArray() already validated
-                // (fatal_errors, never returns) that group matches
-                // ValidationPattern::ID (digits only) when this branch is
-                // reachable; the is_numeric() check here only narrows the type
-                // for what follows.
-                $group_id = is_numeric($albumNotificationSubmit->group) ? (int) $albumNotificationSubmit->group : 0;
+            } elseif ($albumNotificationSubmit->who === 'group' and $albumNotificationSubmit->group !== null) {
+                $groupId = $albumNotificationSubmit->group;
 
                 $this->mailService
-                    ->mailGroup($group_id, $args, $tpl);
+                    ->mailGroup($groupId->value, $args, $tpl);
 
-                $group_name = $this->groupService->getName(GroupId::from($group_id));
+                $group_name = $this->groupService->getName($groupId);
 
                 $save_success = $this->lang->t('An information email was sent to group "%s"', $group_name);
             }

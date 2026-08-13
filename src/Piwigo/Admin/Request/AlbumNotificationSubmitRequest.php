@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Request;
 
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Validation\InputValidator;
 
@@ -14,9 +15,10 @@ use Piwigo\Validation\InputValidator;
  * `who === 'users'` and `users` is a non-empty array, matching the
  * original exactly; same for `group`'s validation, gated on
  * `who === 'group'` and `group` not being one of the original's
- * "empty" sentinel values. `group` stays `mixed` -- its own
- * `is_numeric(...) ? (int) ... : 0` narrowing stays at the call site,
- * since it's only ever read inside that same `who === 'group'` branch.
+ * "empty" sentinel values -- that gate is unchanged (a hard-rejection
+ * side effect, separate from parsing). `GroupId::tryFrom(...)` itself
+ * runs unconditionally though: `group` has to be a real `?GroupId` on
+ * every return path, not just the `who === 'group'` one.
  */
 final readonly class AlbumNotificationSubmitRequest
 {
@@ -28,7 +30,7 @@ final readonly class AlbumNotificationSubmitRequest
         public string $mailContent,
         public ?string $who,
         public array $users,
-        public mixed $group,
+        public ?GroupId $group,
     ) {}
 
     public static function fromGlobals(InputValidator $inputValidator): self
@@ -86,7 +88,7 @@ final readonly class AlbumNotificationSubmitRequest
             $mail_content,
             $who,
             $users,
-            $group,
+            GroupId::tryFrom($group),
         );
     }
 }

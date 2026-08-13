@@ -1912,6 +1912,15 @@ test('qsearchGetTags() narrows 2 adjacent short, non-wildcarded, non-quoted term
     // adjacent 'znb' token's own match set to agree narrows it down to
     // just the shared 'zna znb' tag. 'zna'/'znb' alone are each tagged
     // to image 5 (noise); 'zna znb' alone is tagged to image 4.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction: `tags`
+    // carries a FULLTEXT index (tags_ft_name), and InnoDB's FULLTEXT
+    // auxiliary-index maintenance on INSERT can deadlock against another
+    // --parallel worker's own concurrent tags INSERT when held open for
+    // a whole test's duration -- same mechanism, same fix, as
+    // TagServiceTest.php's own 'getTagIds() creates a new tag for a
+    // plain name when allowed' (reproduced live there: DeadlockException).
+    DbTransactionTestOverride::rollback();
     $conn = searchServiceTestConn();
     $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('zna', 'zna', NOW())");
     $tagA = (int) $conn->lastInsertId();
@@ -1950,6 +1959,11 @@ test('getQuickSearchResultsNoCache() excludes a matched tag from the display lis
     // a 2-token search satisfies none of the 4 conditions, so it must
     // be found (a real, valid tag match) yet excluded from the display
     // list -- unlike 'family', long enough to qualify on its own.
+    //
+    // Exempt from the blanket per-test transaction -- same
+    // FULLTEXT-deadlock reason as qsearchGetTags()'s own sibling test
+    // above.
+    DbTransactionTestOverride::rollback();
     $conn = searchServiceTestConn();
     $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('ab', 'ab', NOW())");
     $tagId = (int) $conn->lastInsertId();
@@ -1976,6 +1990,11 @@ test('getQuickSearchResultsNoCache() narrows two adjacent short terms to a share
     // "dog" (<=3 chars) is too short for a real fixture tag -- insert a
     // temporary one so 2 adjacent short terms genuinely share a match,
     // exercising qsearchGetTags()'s own short-token intersection.
+    //
+    // Exempt from the blanket per-test transaction -- same
+    // FULLTEXT-deadlock reason as qsearchGetTags()'s own sibling test
+    // far above.
+    DbTransactionTestOverride::rollback();
     $conn = searchServiceTestConn();
     $conn->executeStatement(
         "INSERT INTO tags (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
@@ -2005,6 +2024,15 @@ test('qsearchGetCategories() narrows 2 adjacent short, non-wildcarded, non-quote
     // narrow anything, since the top-level AND across sibling tokens
     // would otherwise coincidentally reach the same final image set
     // regardless of whether this sub-intersection ran.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction:
+    // `categories` carries a FULLTEXT index (categories_ft_name_comment),
+    // and InnoDB's FULLTEXT auxiliary-index maintenance on INSERT can
+    // deadlock against another --parallel worker's own concurrent
+    // categories INSERT when held open for a whole test's duration --
+    // same mechanism, same fix, as qsearchGetTags()'s own analogous test
+    // far above.
+    DbTransactionTestOverride::rollback();
     $conn = searchServiceTestConn();
     $conn->executeStatement("INSERT INTO categories (name) VALUES ('zca')");
     $catA = (int) $conn->lastInsertId();
@@ -2038,6 +2066,11 @@ test('getQuickSearchResultsNoCache() excludes a matched category from the displa
     // (narrowing $qsr->all_cats / $results['qs']['matching_cats']) has
     // the identical 4-term OR gate. A 2-char exact category name ('ab')
     // in a 2-token search satisfies none of the 4 conditions.
+    //
+    // Exempt from the blanket per-test transaction -- same
+    // FULLTEXT-deadlock reason as qsearchGetCategories()'s own sibling
+    // test above.
+    DbTransactionTestOverride::rollback();
     $conn = searchServiceTestConn();
     $conn->executeStatement("INSERT INTO categories (name) VALUES ('ab')");
     $catId = (int) $conn->lastInsertId();

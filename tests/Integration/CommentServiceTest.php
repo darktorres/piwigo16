@@ -633,18 +633,17 @@ namespace Piwigo\Tests\Integration {
             // guests, an IP prefix) -- it does NOT scope by image_id at
             // all -- so ANY existing comment for an author counts as
             // "recent" against a 3600s window, including the real fixture
-            // comment already seeded for author_id 3 (id 2). Confirmed
-            // live: an author_id-only DELETE to clear that row broke an
+            // comment already seeded for author_id 3 (id 2). An
+            // author_id-only DELETE to clear that row would break an
             // unrelated later test that depends on it
             // (test_update_comment_moderates_when_validation_required),
-            // and narrowing the DELETE to this test's own image_id didn't
+            // and narrowing the DELETE to this test's own image_id doesn't
             // help since the fixture row's image_id differs but still
             // counts. Id 2 is a real, FK-valid users row (needed --
             // insertComment()'s own INSERT fails fk_comments_author_id
             // otherwise) that starts with zero comments in the fixture and
             // is never reused as a comment author anywhere else in this
-            // file -- confirmed via `id' => 2` appearing nowhere else as a
-            // CurrentUser override. (It happens to be this file's own
+            // file. (It happens to be this file's own
             // configured guestId(), but insertComment() only ever *writes*
             // guestId() into $comm['author_id'] for a real guest poster,
             // never *compares* against it, so status: 'normal' here takes

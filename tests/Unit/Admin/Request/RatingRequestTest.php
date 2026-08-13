@@ -112,3 +112,21 @@ test('fromArray reports neither flag for an unrecognized users value', function 
         ->and($request->usersRaw)
         ->toBe('all');
 });
+
+test('fromArray keeps a malformed array cat/users value verbatim', function (): void {
+    $request = RatingRequest::fromArray([
+        'cat' => ['12'],
+        'users' => ['user'],
+    ], new InputValidator());
+
+    expect($request->catRaw)
+        ->toBe(['12'])
+        ->and($request->catId)
+        ->toBeNull()
+        ->and($request->usersRaw)
+        ->toBe(['user'])
+        ->and($request->isUsersUser)
+        ->toBeFalse()
+        ->and($request->isUsersGuest)
+        ->toBeFalse();
+});

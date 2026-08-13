@@ -42,15 +42,15 @@ it('redirects to a real generated search URL for a plain keyword search', functi
 // is_string() check, the value has necessarily already survived
 // is_scalar() while originating from $_GET -- meaning it's necessarily a
 // string. The two tests below (array cat_id / array tag_id) still return
-// a real 500 with the identical "[Hacking attempt]... is not valid"
-// message SearchController's own fatalError would produce, but that 500
+// a real 500 with the identical "Invalid request parameter ..." message
+// SearchController's own fatalError would produce, but that 500
 // is actually emitted by InputValidator::validate()'s own fatalError
 // call, one frame earlier -- SearchController's own duplicate guard
 // never runs. This can only be exercised directly (bypassing
 // fromGlobals()'s $_GET read) via a Unit test invoking the DTO/method
 // with a hand-constructed non-string scalar, which doesn't fit this
 // file's real-HTTP-request Browser-suite convention.
-it('fatal-errors on a hacking-attempt array cat_id', function (): void {
+it('fatal-errors on an invalid array cat_id', function (): void {
     $result = H::httpStatus('/search.php?cat_id[]=1&cat_id[]=2');
 
     expect($result)
@@ -92,7 +92,7 @@ it('accepts a real, visible cat_id and redirects to a real search URL', function
     }
 });
 
-it('fatal-errors on a hacking-attempt array tag_id when tags exist', function (): void {
+it('fatal-errors on an invalid array tag_id when tags exist', function (): void {
     $page = H::loginAsAdmin($this);
     $tagResult = H::wsCall($page, 'pwg.tags.add', [
         'name' => 'ct-search-tag-' . uniqid(),

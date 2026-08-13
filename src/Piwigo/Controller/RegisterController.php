@@ -256,7 +256,7 @@ final readonly class RegisterController implements ControllerInterface
             }
             if (! array_key_exists($lang_cookie, LangService::getLanguages($this->paths))) {
                 $this->htmlService
-                    ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
+                    ->fatalError('Unrecognized value for parameter "lang"');
             }
 
             $this->currentUser->updateLanguage(LangCode::from($lang_cookie));

@@ -159,7 +159,7 @@ final readonly class AuthService
                 $this->htmlRenderer->fatalError('Invalid request parameter "lang"');
             }
             if (! array_key_exists($lang_cookie, LangService::getLanguages($this->paths))) {
-                $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
+                $this->htmlRenderer->fatalError('Unrecognized value for parameter "lang"');
             }
 
             $this->repo->updateLanguage(UserId::from((int) $userId), $lang_cookie);

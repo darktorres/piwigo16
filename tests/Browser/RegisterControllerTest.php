@@ -518,7 +518,7 @@ it("surfaces registerUser()'s own validation errors (invalid email format) and d
     @unlink($jar);
 });
 
-it('treats a non-string lang cookie (PHP array syntax) as a hacking attempt and returns a fatal 500', function (): void {
+it('treats a non-string lang cookie (PHP array syntax) as an invalid request parameter and returns a fatal 500', function (): void {
     // `Cookie: lang[]=x` parses into $_COOKIE['lang'] as a genuine PHP
     // array (PHP applies the same bracket-name parsing to cookies as it
     // does to GET/POST params). HtmlService::fatalError() always responds 500 regardless
@@ -529,18 +529,17 @@ it('treats a non-string lang cookie (PHP array syntax) as a hacking attempt and 
     $result = registerCurlWithRawCookie('/register.php', 'lang[]=fr_FR');
 
     expect($result['status'])->toBe(500);
-    expect($result['body'])->toContain('[Hacking attempt] the input parameter "lang" is not valid');
+    expect($result['body'])->toContain('Invalid request parameter "lang"');
 });
 
-it('treats an unregistered lang cookie value as a hacking attempt and returns a fatal 500', function (): void {
+it('treats an unregistered lang cookie value as an unrecognized value and returns a fatal 500', function (): void {
     // A syntactically fine string, but not a language LangService::
     // getLanguages() recognizes (the fixture only ships `en_UK`) -- a
-    // different fatalError() call than the array case above, with the
-    // attempted value interpolated into the message.
+    // different fatalError() call than the array case above.
     $result = registerCurlWithRawCookie('/register.php', 'lang=zz_ZZ');
 
     expect($result['status'])->toBe(500);
-    expect($result['body'])->toContain('[Hacking attempt] the input parameter "zz_ZZ" is not valid');
+    expect($result['body'])->toContain('Unrecognized value for parameter "lang"');
 });
 
 it("applies a valid, different lang cookie: switches CurrentUser's language, loads its translations, and swaps in the French help link", function (): void {
@@ -567,7 +566,8 @@ it("applies a valid, different lang cookie: switches CurrentUser's language, loa
         $result = registerCurlWithRawCookie('/register.php', 'lang=fr_FR');
 
         expect($result['status'])->toBe(200);
-        expect($result['body'])->not->toContain('[Hacking attempt]');
+        expect($result['body'])->not->toContain('Invalid request parameter');
+        expect($result['body'])->not->toContain('Unrecognized value for parameter');
         // The French help-link branch itself (str_starts_with(..., 'fr')).
         expect($result['body'])->toContain('https://upstream.example.invalid/help/fr/');
         // Lang::load('common.lang', ..., ['language' => 'fr_FR']) really

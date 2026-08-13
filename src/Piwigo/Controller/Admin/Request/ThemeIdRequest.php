@@ -19,9 +19,9 @@ use Piwigo\Validation\InputValidator;
  * hole.
  *
  * Deliberate, in-scope behavior change: rejection now goes through
- * `InputValidator`'s standard "[Hacking attempt] ..." wording instead of
- * the original bespoke "Invalid theme URL" message -- no existing test
- * asserts on the old wording (confirmed via grep).
+ * `InputValidator`'s standard "Invalid request parameter ..." wording
+ * instead of the original bespoke "Invalid theme URL" message -- no
+ * existing test asserts on the old wording (confirmed via grep).
  */
 final readonly class ThemeIdRequest
 {

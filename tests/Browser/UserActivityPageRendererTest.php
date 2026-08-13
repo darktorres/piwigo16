@@ -17,8 +17,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * categories/groups) and is unaffected by how many logins have
  * accumulated.
  *
- * The `! is_string($filter_value)` "[Hacking attempt]" guard inside the
- * additional-filters loop (render()'s own ~L141-144) is NOT exercised by
+ * The `! is_string($filter_value)` "Invalid request parameter" guard
+ * inside the additional-filters loop (render()'s own ~L141-144) is NOT exercised by
  * any test here, deliberately: $filter_value comes from
  * UserActivityRequest::filterValue(), which only ever returns null or a
  * value that already passed InputValidator::validate(..., $isArray: false,

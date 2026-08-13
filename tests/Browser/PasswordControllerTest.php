@@ -739,11 +739,11 @@ it('shows "Invalid key" for a well-formed reset key matching no real activation 
     $page->assertMissing('input[name="use_new_pwd"]');
 });
 
-it('fatal-errors on a hacking-attempt invalid lang cookie', function (): void {
+it('fatal-errors on an unrecognized lang cookie value', function (): void {
     $result = passwordCurlGet('/password.php', ['Cookie: lang=not_a_real_lang_' . uniqid()]);
 
     expect($result['status'])->toBe(500);
-    expect($result['body'])->toContain('Hacking attempt');
+    expect($result['body'])->toContain('Unrecognized value for parameter "lang"');
 });
 
 it('switches to a valid, different lang cookie and shows the French translation', function (): void {
@@ -758,7 +758,7 @@ it('switches to a valid, different lang cookie and shows the French translation'
         $result = passwordCurlGet('/password.php', ['Cookie: lang=fr_FR']);
 
         expect($result['status'])->toBe(200);
-        expect($result['body'])->not->toContain('Hacking attempt');
+        expect($result['body'])->not->toContain('Unrecognized value for parameter');
         // Not the French help_link: that's only ever assigned to
         // themes/standard_pages/template/password.latte's own {$HELP_LINK},
         // never referenced by the fixture gallery's real "default" theme

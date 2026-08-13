@@ -32,7 +32,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * <select> rendered with zero <option>s and saveFromPost()'s own
  * `in_array($post['theme'], array_keys(getPwgThemes()), true)` guard
  * always failed -- turning every profile.php submission into a real 500
- * "[Hacking attempt] incorrect theme value" fatalError(). Not specific to
+ * "Unrecognized value for parameter \"theme\"" fatalError(), reproduced
+ * directly with raw curl independent of this file. Not specific to
  * ProfileController (the same saveFromPost() is also reached from
  * Controller\Admin\ConfigurationSubController's "default" tab). Fixed by
  * making getPwgThemes() itself always include AppInfo::DEFAULT_TEMPLATE
@@ -213,7 +214,7 @@ function profileBaselineFields(array $overrides = []): array
     ], $overrides);
 }
 
-it('fatal-errors on a hacking-attempt invalid language value', function (): void {
+it('fatal-errors on an unrecognized language value', function (): void {
     $page = profileLogin($this);
     H::navigateOk($page, '/profile.php');
 
@@ -223,10 +224,10 @@ it('fatal-errors on a hacking-attempt invalid language value', function (): void
     ]));
 
     expect($result['status'])->toBe(500);
-    expect($result['body'])->toContain('Hacking attempt, incorrect language value');
+    expect($result['body'])->toContain('Unrecognized value for parameter "language"');
 });
 
-it('fatal-errors on a hacking-attempt invalid theme value', function (): void {
+it('fatal-errors on an unrecognized theme value', function (): void {
     $page = profileLogin($this);
     H::navigateOk($page, '/profile.php');
 
@@ -236,7 +237,7 @@ it('fatal-errors on a hacking-attempt invalid theme value', function (): void {
     ]));
 
     expect($result['status'])->toBe(500);
-    expect($result['body'])->toContain('Hacking attempt, incorrect theme value');
+    expect($result['body'])->toContain('Unrecognized value for parameter "theme"');
 });
 
 it('rejects a new-password submission whose confirmation does not match', function (): void {
@@ -490,7 +491,7 @@ function profileCurlLoginSession(string $username, string $password): array
     ];
 }
 
-it('fatal-errors on an array-valued lang cookie (hacking attempt)', function (): void {
+it('fatal-errors on an array-valued lang cookie (invalid request parameter)', function (): void {
     $session = profileCurlLoginSession(PROFILE_TEST_USER, PROFILE_TEST_PASS);
     $curl = $session['curl'];
 
@@ -500,12 +501,12 @@ it('fatal-errors on an array-valued lang cookie (hacking attempt)', function ():
     $result = $curl($session['baseUrl'] . '/profile.php', [], 'lang[]=x; lang[]=y');
 
     expect($result['status'])->toBe(500);
-    expect($result['body'])->toContain('[Hacking attempt] the input parameter "lang" is not valid');
+    expect($result['body'])->toContain('Invalid request parameter "lang"');
 
     @unlink($session['cookieJar']);
 });
 
-it('fatal-errors on an unrecognized lang cookie value (hacking attempt)', function (): void {
+it('fatal-errors on an unrecognized lang cookie value', function (): void {
     $session = profileCurlLoginSession(PROFILE_TEST_USER, PROFILE_TEST_PASS);
     $curl = $session['curl'];
 
@@ -513,7 +514,7 @@ it('fatal-errors on an unrecognized lang cookie value (hacking attempt)', functi
     $result = $curl($session['baseUrl'] . '/profile.php', [], 'lang=' . $bogusLang);
 
     expect($result['status'])->toBe(500);
-    expect($result['body'])->toContain('[Hacking attempt] the input parameter "' . $bogusLang . '" is not valid');
+    expect($result['body'])->toContain('Unrecognized value for parameter "lang"');
 
     @unlink($session['cookieJar']);
 });
@@ -572,7 +573,8 @@ it('switches the interface language via a valid, different lang cookie and persi
         $result = $curl($session['baseUrl'] . '/profile.php', [], 'lang=fr_FR');
 
         expect($result['status'])->toBe(200);
-        expect($result['body'])->not->toContain('Hacking attempt');
+        expect($result['body'])->not->toContain('Invalid request parameter');
+        expect($result['body'])->not->toContain('Unrecognized value for parameter');
         // Confirms Lang::load() really reloaded the French catalog for
         // THIS request's own template rendering (profile_content.latte is
         // parsed at the very end of __invoke(), after the language-switch

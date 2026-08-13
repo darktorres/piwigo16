@@ -261,7 +261,7 @@ final class PasswordController implements ControllerInterface
         if (is_string($cookie_lang) and $this->currentUser->get()->language->value !== $cookie_lang) {
             if (! array_key_exists($cookie_lang, LangService::getLanguages($this->paths))) {
                 $this->htmlService
-                    ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
+                    ->fatalError('Unrecognized value for parameter "lang"');
             }
 
             $this->currentUser->updateLanguage(LangCode::from($cookie_lang));

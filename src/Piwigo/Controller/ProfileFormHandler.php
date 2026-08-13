@@ -141,12 +141,12 @@ final readonly class ProfileFormHandler
 
             if (! in_array($post['language'] ?? null, array_keys(LangService::getLanguages($this->paths)), true)) {
                 $this->htmlRenderer
-                    ->fatalError('Hacking attempt, incorrect language value');
+                    ->fatalError('Unrecognized value for parameter "language"');
             }
 
             if (! in_array($post['theme'] ?? null, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang)), true)) {
                 $this->htmlRenderer
-                    ->fatalError('Hacking attempt, incorrect theme value');
+                    ->fatalError('Unrecognized value for parameter "theme"');
             }
         }
 

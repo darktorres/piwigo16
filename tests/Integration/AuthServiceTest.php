@@ -56,7 +56,7 @@ namespace Piwigo\Tests\Integration {
      * registered in this harness, so EventDispatcher::dispatchChange()
      * returns the same event object unchanged); also authKeyLogin()'s
      * every reject-before-logUser() branch, pwgLogin()'s early-success and
-     * finalize_login-denial branches, logUser()'s 2 "hacking attempt"
+     * finalize_login-denial branches, logUser()'s 2 invalid-lang-cookie
      * branches (both throw via HtmlRenderingInterface::fatalError() before
      * any session/cookie code runs), createUserAuthKey()'s
      * duration-disabled branch, and generatePasswordLink()'s
@@ -232,7 +232,7 @@ namespace Piwigo\Tests\Integration {
             self::assertTrue($this->service->hasAlreadyLoggedIn(4, EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)));
         }
 
-        public function testLogUserTreatsANonStringLangCookieAsAHackingAttempt(): void
+        public function testLogUserTreatsANonStringLangCookieAsAnInvalidRequestParameter(): void
         {
             // A real request can never send a scalar $_COOKIE['lang'] as
             // an array (only a crafted 'lang[]=x&lang[]=y' request could),
@@ -267,7 +267,7 @@ namespace Piwigo\Tests\Integration {
             } catch (ResponseReadyException $e) {
                 self::assertSame(500, $e->response()->getStatusCode());
                 self::assertStringContainsString(
-                    '[Hacking attempt] the input parameter "lang" is not valid',
+                    'Invalid request parameter "lang"',
                     (string) $e->response()
                         ->getBody()
                 );
@@ -277,7 +277,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function testLogUserTreatsAnUnrecognisedLanguageCodeAsAHackingAttempt(): void
+        public function testLogUserTreatsAnUnrecognisedLanguageCodeAsAnUnrecognizedValue(): void
         {
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(1),
@@ -298,7 +298,7 @@ namespace Piwigo\Tests\Integration {
             } catch (ResponseReadyException $e) {
                 self::assertSame(500, $e->response()->getStatusCode());
                 self::assertStringContainsString(
-                    '[Hacking attempt] the input parameter "zz_NOT_A_REAL_LANGUAGE" is not valid',
+                    'Unrecognized value for parameter "lang"',
                     (string) $e->response()
                         ->getBody()
                 );

@@ -92,17 +92,15 @@ function nbmSetUserMailAddress(int $userId, ?string $mailAddress): void
 /**
  * Forces NotificationByMailSender::checkSendmailTimeout() to report a
  * timeout on its very first real call in the request that follows,
- * deterministically -- see this file's own top docblock for the full
- * reasoning (neither config key has an existing row, so the 'param' tab
- * itself can't be used to set them; H::setConfigValue() writes the
- * `config` table directly, properly JSON-typed, instead).
+ * deterministically (neither config key has an existing row, so the
+ * 'param' tab itself can't be used to set them; H::setConfigValue()
+ * writes the `config` table directly, properly JSON-typed, instead).
  *
  * nbm_treatment_timeout_default is forced to -1, not 0: checkSendmailTimeout()
  * compares `(microtime(true) - $startTime) > $this->sendmailTimeout`, and a
  * 0 threshold requires strictly positive elapsed wall-clock time between
  * construction and the check with no margin -- a real, if rare, race under
- * full-suite load (found live: 2 of 5 full composer test:browser runs hit
- * it, always this same self-heal timeout scenario). -1 guarantees the
+ * full-suite load. -1 guarantees the
  * comparison holds regardless of clock resolution or scheduling, since
  * elapsed time can never be negative.
  *
@@ -308,8 +306,7 @@ it('keeps a user enabled and pre-selected on redisplay when the real unsubscribe
         // message (msgError, 'falsify' => unsubscribe wording) --
         // NotificationByMailSender.php's own source msgid says "was not
         // removed", but en_UK/admin.po's real msgstr for it drops "was"
-        // ("User %s [%s] not removed from the subscription list."),
-        // confirmed live in the actual rendered response body.
+        // ("User %s [%s] not removed from the subscription list.").
         expect($result['body'])->toContain('not removed from the subscription list');
 
         // Real DB state: the failed send means $doUpdate stayed false, so
@@ -324,7 +321,6 @@ it('keeps a user enabled and pre-selected on redisplay when the real unsubscribe
         // still listed under "Subscribed" (opt_true) AND rendered
         // pre-selected (opt_true_selected), since $post['cat_true'] was
         // never touched by doTimeoutTreatment() (no timeout occurred).
-        file_put_contents(dirname(__DIR__, 2) . '/_data/debug_nbm2.txt', $result['body']);
         expect($result['body'])->toContain('value="ct00mailfail285" selected="selected"');
     } finally {
         nbmSetUserMailNotificationRow(4, null);

@@ -1959,7 +1959,7 @@ which means directly verified in code.
 | SEC-46 | P26 | Cross-Origin Isolation (COOP/COEP) | Not started (P26) |
 | SEC-47 | P26 | `Vary: Cookie` on permission-dependent responses | Not started (P26) |
 | SEC-48 | P31 | Default `allow_html_descriptions` to `false` | Not started (P31) |
-| SEC-49 | P27 | Remove `eval_visible` (plugin-facing half of SEC-15) | Not started (P27) |
+| SEC-49 | P27 | Remove `eval_visible` (plugin-facing half of SEC-15) | Done |
 | SEC-50 | P3 | CycloneDX SBOM generated as a CI artifact | Done (confirmed — `sbom` job in current CI list) |
 | SEC-51 | P3 | Pin GitHub Actions to commit SHAs | Done |
 | SEC-52 | P3 | OSV-Scanner over lockfiles in CI | Done |

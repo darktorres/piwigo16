@@ -24,6 +24,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
+use Piwigo\Menu\Event\CheckMenuLinkVisibility;
 use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -48,11 +49,13 @@ use Piwigo\Users\CurrentUser;
  * constructor deps; render() takes UrlServiceInterface as a method
  * parameter for the same reason.
  *
- * The `eval($url_data['eval_visible'])` call for the external-links block
- * is preserved unmodified -- the reference doc's own fix for this
- * (replacing the plugin `eval_visible` contract with a Closure-based
- * visibility API) targets `PluginInterface`, which doesn't exist yet
- * (SEC-49). Not yet built.
+ * SEC-49: the old `eval($url_data['eval_visible'])` call for the
+ * external-links block is gone -- Config\MenuLink::$visibilityLinkId
+ * (a plain, safely-storable identifier, not raw PHP source) drives a
+ * typed Menu\Event\CheckMenuLinkVisibility dispatch instead, reusing the
+ * exact dispatchChange()/subscribedEvents() machinery every
+ * PluginConfig\ExtensionInterface plugin already has (P27.0/P27.1) --
+ * no separate mechanism needed.
  */
 final class MenubarRenderer
 {
@@ -97,7 +100,7 @@ final class MenubarRenderer
         if ((bool) ($block = $menu->getBlock('mbLinks')) and ! self::emptyValue($currentConfig->links)) {
             $block->data = [];
             foreach ($currentConfig->links as $url => $link) {
-                if ($link->evalVisible === null or eval($link->evalVisible)) {
+                if ($link->visibilityLinkId === null or $eventDispatcher->dispatchChange(new CheckMenuLinkVisibility($link->visibilityLinkId))->visible) {
                     $tpl_var = [
                         'URL' => $url,
                         'LABEL' => $link->label,

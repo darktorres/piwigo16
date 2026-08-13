@@ -16,6 +16,7 @@ use Piwigo\Tag\ImageTagEntity;
 use Piwigo\Tag\Projection\ImageTagLink;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Tag\TagRepository -- has its own dedicated
@@ -504,6 +505,15 @@ test('deleteImageTagByImageAndTagIds() removes only the intersection', function 
     // the (image 4, tagA) link must survive untouched. See
     // deleteImageTagByTagIds()'s no-op test above for why real fixture
     // tag ids aren't safe to borrow here.
+    //
+    // findTagIdsByImageIds([4]) below isn't scoped to just this test's
+    // own 2 disposable tags -- it returns every tag linked to real
+    // fixture image 4 -- so the assertion checks tagA/tagB membership
+    // rather than an exact count, tolerant of another --parallel
+    // worker's own real image-4 tag link existing at the same instant
+    // (pre-existing, not introduced by this session's own blanket
+    // per-test transaction work; confirmed live via a 15-run --parallel
+    // verification loop).
     $repo = tagTestRepo();
     $tagIdA = $repo->insert(tagTestName(), tagTestName());
     $tagIdB = $repo->insert(tagTestName(), tagTestName());
@@ -522,10 +532,13 @@ test('deleteImageTagByImageAndTagIds() removes only the intersection', function 
 
         expect($repo->findImageIdsForTagIds([$tagIdA]))->toBe([4]);
 
-        $remaining = $repo->findTagIdsByImageIds([4]);
-        expect($remaining)
-            ->toHaveCount(1)
-            ->and($remaining[0]->tagId->value)->toBe($tagIdA->value);
+        $remainingTagIds = array_map(
+            static fn (ImageTagLink $row): int => $row->tagId->value,
+            $repo->findTagIdsByImageIds([4])
+        );
+        expect($remainingTagIds)
+            ->toContain($tagIdA->value)
+            ->not->toContain($tagIdB->value);
     } finally {
         $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagIdA->value]);
         $repo->deleteByIds([$tagIdA, $tagIdB]);
@@ -681,6 +694,16 @@ test('massInsertImageTags() with ignore=true silently skips a duplicate, unlike 
     // own docblock (Ws\Tags::merge()'s real "already tagged" collision
     // case), not just that the default (no 'ignore' key at all) still
     // throws.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction:
+    // BatchWriter::massInsert()'s own $conn->transactional() wraps the
+    // first call in a nested transaction, and the UniqueConstraintViolationException
+    // it deliberately triggers makes that nested transactional() call its
+    // own rollBack() -- nested inside the wrapper's already-open outer
+    // transaction, DBAL's savepoint bookkeeping for that rollback breaks
+    // ("SAVEPOINT DOCTRINE_2 does not exist", reproduced live under
+    // --parallel). A plain, unnested connection doesn't hit this.
+    DbTransactionTestOverride::rollback();
     expect(fn () => tagTestRepo()->massInsertImageTags([[
         'image_id' => 1,
         'tag_id' => 1,

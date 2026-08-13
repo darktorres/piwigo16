@@ -274,12 +274,18 @@ test('tagsCounterCompare() breaks ties by id', function (): void {
  * call, then showing a 2nd no-filter call still returns the stale
  * result while an explicitly-filtered call (which always bypasses this
  * cache) reflects the change. Uses a disposable tag rather than the
- * real tag 1 ("nature") -- see file docblock. Transaction-wrapped --
- * even a disposable tag transiently attached to fixture image 1 would
- * break TagRepositoryTest.php's own findTagsForImage(1) exact-list
- * assertion (['family', 'nature', 'travel']) under --parallel.
+ * real tag 1 ("nature") -- see file docblock.
+ *
+ * Exempt from tests/Pest.php's blanket per-test transaction: `tags`
+ * carries a FULLTEXT index (tags_ft_name), and InnoDB's FULLTEXT
+ * auxiliary-index maintenance on INSERT holds internal locks that, under
+ * the wrapper's whole-test-duration transaction, can deadlock against
+ * another --parallel worker's own concurrent tags INSERT -- same
+ * mechanism, same fix, as 'getTagIds() creates a new tag for a plain
+ * name when allowed' above (reproduced live there: DeadlockException).
  */
 test('getAvailableTags() with no filter caches the result via CachePools::tagCloud()', function (): void {
+    DbTransactionTestOverride::rollback();
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(2),
         username: Username::from('fixture_guest'),
@@ -291,7 +297,7 @@ test('getAvailableTags() with no filter caches the result via CachePools::tagClo
     ));
 
     $conn = DbConnection::build();
-    $conn->beginTransaction();
+    $tagId = null;
 
     try {
         [$service] = tagServiceTestServiceConn($conn);
@@ -327,7 +333,10 @@ test('getAvailableTags() with no filter caches the result via CachePools::tagClo
         expect($bypassed)
             ->toContain($tagId);
     } finally {
-        $conn->rollBack();
+        if ($tagId !== null) {
+            $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId]);
+            $conn->executeStatement('DELETE FROM tags WHERE id = ?', [$tagId]);
+        }
     }
 });
 
@@ -549,15 +558,23 @@ test('getAvailableTags() returns empty when the filter matches no images', funct
  * tag instead, letting the caller filter down by its own id set -- this
  * is that filter-down, reached via 1000 disposable tags all linked to
  * the same fixture image, plus one more disposable tag with zero image
- * links at all. Transaction-wrapped -- TagRepositoryTest.php's own
- * disposable-tag tests use images 1, 4 and 5 for their own "known
- * fixture image" needs (findTagsForImage()/findTagIdsByImageIds()
- * exact-count assertions among them), so linking 1000 extra tags onto
- * ANY real fixture image non-transactionally collides with one of them;
- * confirmed live via a 30-run --parallel verification loop (a
- * findTagIdsByImageIds([4]) assertion saw 1001 rows instead of 1).
+ * links at all. A disposable image, not real fixture image 4 --
+ * TagRepositoryTest.php's own disposable-tag tests also treat image 4
+ * as a "known real image" fixture. image_category is required too --
+ * countImagesPerTag() INNER JOINs it, so an image with no category row
+ * is never counted regardless of its image_tag links.
+ *
+ * Exempt from tests/Pest.php's blanket per-test transaction: `tags`
+ * carries a FULLTEXT index (tags_ft_name), and InnoDB's FULLTEXT
+ * auxiliary-index maintenance on INSERT holds internal locks that, under
+ * the wrapper's whole-test-duration transaction, can deadlock against
+ * another --parallel worker's own concurrent tags INSERT -- same
+ * mechanism, same fix, as 'getTagIds() creates a new tag for a plain
+ * name when allowed' above (reproduced live there: DeadlockException),
+ * and this test's own 1000-row INSERT holds that lock even longer.
  */
 test('getAvailableTags() skips a tag absent from the counters once past the 1000 id threshold', function (): void {
+    DbTransactionTestOverride::rollback();
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(2),
         username: Username::from('fixture_guest'),
@@ -569,23 +586,14 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
     ));
 
     $conn = DbConnection::build();
-    $conn->beginTransaction();
+    $imageId = tagServiceTestDisposableImageId($conn);
+    $suffix = bin2hex(random_bytes(4));
+    $extraId = null;
 
     try {
         [$service] = tagServiceTestServiceConn($conn);
 
-        // A disposable image, not real fixture image 4 -- TagRepositoryTest.php's
-        // own disposable-tag tests also treat image 4 as a "known real
-        // image" fixture, and even a properly transaction-wrapped insert
-        // here was still observed disturbing it under --parallel
-        // (confirmed live: findImageIdsForTagIds() lost image 4's own
-        // link mid-test). image_category is required too -- countImagesPerTag()
-        // INNER JOINs it, so an image with no category row is never
-        // counted regardless of its image_tag links.
-        $imageId = tagServiceTestDisposableImageId($conn);
         $conn->executeStatement('INSERT INTO image_category (image_id, category_id) VALUES (?, 1)', [$imageId]);
-
-        $suffix = bin2hex(random_bytes(4));
 
         $tagValues = [];
         for ($i = 0; $i < 1000; $i++) {
@@ -619,7 +627,13 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
             ->and($ids)
             ->toContain($bulkIds[999]);
     } finally {
-        $conn->rollBack();
+        $conn->executeStatement('DELETE FROM image_tag WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
+        $conn->executeStatement("DELETE FROM tags WHERE name LIKE 'p18-test-bulk-{$suffix}-%'");
+        if ($extraId !== null) {
+            $conn->executeStatement('DELETE FROM tags WHERE id = ?', [$extraId]);
+        }
     }
 });
 

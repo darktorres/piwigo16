@@ -398,23 +398,6 @@ test('pwgLogin() returns true immediately when success is already true', functio
         ->toBeTrue();
 });
 
-/**
- * Every test below that triggers a real recordFailure() call is
- * transaction-wrapped -- AuthService doesn't open any secondary
- * connection internally (unlike TagService::setTagsOf()'s own
- * updateImagesLastmodified() call), so this is safe here. Plain,
- * non-transactional writes to user_failed_logins (as this file
- * originally had, scoped only by `ip = ''`) are still genuinely,
- * immediately visible to any other connection for the row's entire
- * lifetime -- UserFailedLoginRepositoryTest.php's own
- * countRecentByUserId() test has no ip scoping at all (it's the
- * user-scoped lockout check) and was observed picking up these rows
- * under --parallel even after transaction-wrapping *that* test's own
- * reads, since a REPEATABLE READ snapshot still includes whatever's
- * already committed elsewhere at the moment the snapshot is taken.
- * Confirmed live via a 5-run full composer test loop, each with a
- * fresh fixture reimport.
- */
 test('pwgLogin() denies the login when a FinalizeLogin handler blocks it', function (): void {
     // fixture_admin / fixture_admin -- a real username+password that
     // passes pwgLogin()'s own password_verify() check, so execution
@@ -430,37 +413,28 @@ test('pwgLogin() denies the login when a FinalizeLogin handler blocks it', funct
         $event->rememberMe,
     );
     EventDispatcherTestFactory::get()->addTypedHandler(FinalizeLogin::class, $handler);
-    $conn = DbConnection::build();
-    $conn->beginTransaction();
 
     try {
-        expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false, $conn))
+        expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false))
             ->toBeFalse();
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(FinalizeLogin::class, $handler);
-        $conn->rollBack();
     }
 });
 
 test('pwgLogin() records a failed login row for a wrong password', function (): void {
     $conn = DbConnection::build();
-    $conn->beginTransaction();
     $countFailedLoginsForFixtureAdmin = static fn (): int => (int) $conn->fetchOne(
         "SELECT COUNT(*) FROM user_failed_logins WHERE user_id = 1 AND ip = ''"
     );
+    $before = $countFailedLoginsForFixtureAdmin();
 
-    try {
-        $before = $countFailedLoginsForFixtureAdmin();
+    $result = authServiceTestPwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false, $conn);
 
-        $result = authServiceTestPwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false, $conn);
-
-        expect($result)
-            ->toBeFalse()
-            ->and($countFailedLoginsForFixtureAdmin())
-            ->toBe($before + 1);
-    } finally {
-        $conn->rollBack();
-    }
+    expect($result)
+        ->toBeFalse()
+        ->and($countFailedLoginsForFixtureAdmin())
+        ->toBe($before + 1);
 });
 
 test('pwgLogin() locks out the username after max attempts even with the correct password', function (): void {
@@ -468,12 +442,10 @@ test('pwgLogin() locks out the username after max attempts even with the correct
     // pwgLogin()'s ip-scoped check never fires, so this exercises the
     // username-scoped lockout alone.
     CurrentConfigTestFactory::get()->loginLockoutMaxAttempts = 3;
-    $conn = DbConnection::build();
-    $conn->beginTransaction();
 
     try {
         for ($i = 0; $i < 3; $i++) {
-            expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false, $conn))
+            expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false))
                 ->toBeFalse();
         }
 
@@ -482,7 +454,7 @@ test('pwgLogin() locks out the username after max attempts even with the correct
         // pwgLogin() reached it on this specific call.
         unset($_SESSION['fake_user_cache']);
 
-        $result = authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false, $conn);
+        $result = authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false);
 
         expect($result)
             ->toBeFalse();
@@ -490,7 +462,6 @@ test('pwgLogin() locks out the username after max attempts even with the correct
             ->not->toHaveKey('fake_user_cache');
     } finally {
         unset($_SESSION['fake_user_cache']);
-        $conn->rollBack();
     }
 });
 
@@ -510,7 +481,6 @@ test('pwgLogin() fast-rejects a locked-out username via the user-scoped lockout 
     $originalRemoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
     $_SERVER['REMOTE_ADDR'] = '';
     $conn = DbConnection::build();
-    $conn->beginTransaction();
     CurrentConfigTestFactory::get()->loginLockoutMaxAttempts = 1;
 
     $countFailedLoginsForFixtureAdmin = static fn (): int => (int) $conn->fetchOne(
@@ -535,7 +505,6 @@ test('pwgLogin() fast-rejects a locked-out username via the user-scoped lockout 
             ->toBe($afterFirstFailure + 1);
     } finally {
         unset($_SESSION['fake_user_cache']);
-        $conn->rollBack();
         $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
     }
 });

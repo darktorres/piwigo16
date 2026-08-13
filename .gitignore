@@ -21,10 +21,11 @@
 # pest-plugin-browser auto-captures a screenshot here on assertion failure
 /tests/Browser/Screenshots
 
-# GoldenHtmlSnapshotTest.php writes a real `diff -u` here on a mismatch,
-# for review without re-running the suite -- generated on failure, not
-# committed state.
+# GoldenHtmlSnapshotTest.php/MailGoldenHtmlSnapshotTest.php write a real
+# `diff -u` here on a mismatch, for review without re-running the suite --
+# generated on failure, not committed state.
 /tests/Fixtures/GoldenHtml/.diffs
+/tests/Fixtures/GoldenHtml/mail/.diffs
 
 # deptrac's incremental-analysis cache (P6+)
 /.deptrac.cache

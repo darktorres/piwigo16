@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta name="apple-itunes-app" content="app-id=472225196">
+<meta charset="utf-8">
+<title>Fixture Gallery :: Piwigo Administration</title>
+<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
+<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+
+  
+
+<!-- BEGIN get_combined -->
+<link rel="stylesheet" type="text/css" href="_data/combined/12duurm.css">
+
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<!-- END get_combined -->
+
+</head>
+
+<body id="theAdminPage">
+
+<div id="the_page">
+
+
+<div id="pwgHead">
+  <a href="/piwigo17-4/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
+  <div class="pwgHead-gallery-title">Fixture Gallery</div>
+
+  <div id="headActions">
+    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+
+<a href="admin.php?page=user_activity&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
+
+    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
+    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
+  </div>
+</div>
+
+<div style="clear:both;"></div>
+
+
+<div id="pwgMain">
+
+<div id="menubar">
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+
+	<dl>
+		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+			<ul>
+				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
+        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
+				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
+				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
+				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
+			</ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
+				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
+				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
+				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
+				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
+          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
+        </a></li>
+        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
+        				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+      </ul>
+    </dd>
+  </dl>
+</div> <!-- menubar -->
+
+<div id="content" class="content">
+
+  <h1>Users<span class="admin-object-id"></span></h1>
+
+  <div id="tabsheet">
+<ul class="tabsheet">
+  <li class="normal_tab">
+    <a href="admin.php?page=user_list"><span><span class="icon-menu"></span>List</span></a>
+  </li>
+  <li class="selected_tab">
+    <a href="admin.php?page=user_activity"><span><span class="icon-pulse"></span>Activity</span></a>
+  </li>
+</ul>
+</div>
+
+<div class="eiw">
+</div> 
+  
+
+
+
+
+
+
+
+ 
+
+<div class="container"> 
+    <div>
+        <div class="activity-header">
+            <div class="user_activity_end_options">
+                <a class="download_csv tiptip" title="Download all activities" href="admin.php?page=user_activity&type=download_logs"> 
+                    <i class="icon-download"> </i>
+                </a>
+                <div id="activityMoreFilters" class="activity-more-filters">
+                    <span class="icon-filter"></span>Filters
+                </div>
+            </div>
+        </div>
+        <div id="activityMoreFiltersContent" class="activity-more-filters-content">
+            <div class="activity-select">
+                <span class="activity-select"> User </span>
+            
+                <select class="user-selecter" placeholder="---" single>
+                    <option value="none">
+                        <span class='username_filter'>---</span>
+                    </option>
+                        <option value="1">
+                            <span class='username_filter'>fixture_admin</span>
+                            <span class='nb_lines_str'>
+                                (17)
+                            </span>
+                        </option>
+                        <option value="2">
+                            <span class='username_filter'>guest</span>
+                            <span class='nb_lines_str'>
+                                (23)
+                            </span>
+                        </option>
+                </select>
+            </div>
+
+            <div class="activity-select">
+                <span class="activity-select"> Action </span>
+            
+                <select class="action-selecter" placeholder="---" single>
+                    <option value="none">
+                        <span class='action_filter'>---</span>
+                    </option>
+                        <option value="album/add">
+                            <span class='action_filter'>
+                                Album
+                                /
+                                    add
+                                 (2)
+                            </span>
+                        </option>
+                        <option value="group/add">
+                            <span class='action_filter'>
+                                Group
+                                /
+                                    add
+                                 (3)
+                            </span>
+                        </option>
+                        <option value="photo/add">
+                            <span class='action_filter'>
+                                Photo
+                                /
+                                    add
+                                 (5)
+                            </span>
+                        </option>
+                        <option value="tag/add">
+                            <span class='action_filter'>
+                                Tag
+                                /
+                                    add
+                                 (3)
+                            </span>
+                        </option>
+                        <option value="user/login">
+                            <span class='action_filter'>
+                                User
+                                /
+                                    login
+                                 (25)
+                            </span>
+                        </option>
+                        <option value="user/add">
+                            <span class='action_filter'>
+                                User
+                                /
+                                    add
+                                 (2)
+                            </span>
+                        </option>
+                </select>
+            </div>
+            
+            <div class="activity-select">
+                <span class="activity-select">Start date</span>
+                <input 
+                    class="activity-date-selecter"
+                    type="date"
+                    id="date_min_activity"
+                    value="2026-08-01"
+                    min="2026-08-01"
+                    max="2026-08-01"
+                />
+            </div>
+
+            <div class="activity-select">
+                <span class="activity-select">End date</span>
+                <input 
+                    class="activity-date-selecter"
+                    type="date"
+                    id="date_max_activity"
+                    value="2026-08-01"
+                    min="2026-08-01"
+                    max="2026-08-01"
+                />
+            </div>
+
+        </div>
+    </div>
+
+  <div class="pagination-container">
+      <div class="pagination-arrow left">
+        <span class="icon-left-open"></span>
+      </div>
+      <div class="pagination-item-container">
+      </div>
+      <div class="user-update-spinner icon-spin6 animate-spin"></div>
+      <div class="pagination-arrow rigth">
+        <span class="icon-left-open"></span>
+      </div>
+    </div>
+
+    <div class="activity-noresult">
+        No results
+    </div>
+
+    
+
+    <div class="tab-title">
+        <div class="action-title">
+            Action
+        </div>
+
+        <div class="date-title">
+            Date
+        </div>
+
+        <div class="user-title">
+            User
+        </div>
+
+        <div class="detail-title">
+            Details
+        </div>
+    </div>
+
+
+    <div class="tab">
+    <div class="loading"> 
+        <span class="icon-spin6 animate-spin"> </span>
+    </div>
+        <div class="line hide" id="-1">
+            <div class="action-section">
+                <div class="action-type">
+                    <span class="action-icon"></span>
+                    <span class="action-name"> Edit </span>
+                </div>
+                <div class="action-infos">
+                    <span class="action-infos-test"> T </span>
+                </div>
+            </div>
+
+            <div class="date-section">
+                <span class="icon-clock"> </span>
+                <span class="date-day">1 Janvier 1970</span>
+                <span class="date-hour">a 00:00</span>
+            </div> 
+
+            <div class="user-section">
+                <div class="user-pic">
+                </div>
+                <div class="user-name">
+                    Username
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-item detail-item-1">
+                    detail 1
+                </div>
+                <div class=" detail-item detail-item-2">
+                    detail 2
+                </div>
+                <div class="detail-item detail-item-3">
+                    detail 3
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+
+.container {
+    padding: 0 30px;
+}
+
+.container,
+.tab {
+    display: flex;
+    flex-direction: column;
+}
+
+.tab-title {
+    display: flex;
+    flex-direction: row;
+}
+
+.hide {
+    display: none !important;
+}
+
+.tab-title div {
+    text-align: left;
+    font-size: 1.1em;
+    font-weight: bold;
+
+    margin: 0 20px 10px 0px;
+
+    color: #9e9e9e;
+
+    padding-bottom: 5px;
+}
+
+.tab-title div:first-child {
+    margin: 0 0 10px 35px;
+}
+
+.tab-title .action-title, 
+.line .action-section {
+    min-width: 320px;
+    max-width: 340px;
+}
+.tab-title .action-title {
+    min-width: 298px !important;
+}
+
+.tab-title .date-title, 
+.line .date-section {
+    min-width: 280px;
+    max-width: 300px;
+}
+
+.tab-title .user-title, 
+.line .user-section {
+    min-width: 200px;
+    max-width: 250px;
+}
+
+
+.line .action-section,
+.line .date-section,
+.line .user-section,
+.tab-title .action-title,
+.tab-title .date-title,
+.tab-title .user-title {
+    text-align: left;
+    }
+
+.line .action-section,
+.line .date-section,
+.line .user-section {
+    margin: 0 20px 0 0;
+}
+
+.line .detail-section,
+.tab-title .detail-title {
+    display: flex;
+    flex-grow: 1;
+    margin-right: 0;
+}
+
+.action-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.action-type {
+    margin: 0 10px 0 15px;
+    padding: 3px 10px;
+    border-radius: 20px;
+
+    white-space: nowrap;
+}
+
+.action-infos {
+    display: flex;
+    flex-direction: row;
+}
+
+.action-infos span {
+    margin-right: 5px;
+}
+
+.date-section .date-day {
+    font-weight: bold;
+}
+
+.user-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.user-section .user-pic {
+    width: 30px;
+    height: 30px;
+
+    min-width: 30px;
+
+    border-radius: 50%;
+
+    margin-right: 10px;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    font-weight: 600;
+    font-size: 17px;
+}
+
+.user-section .user-name {
+    font-weight: bold;
+}
+
+/* Activity Header */
+
+.activity-header {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+div:has(> .activity-header) {
+    margin-bottom: 38px;
+}
+
+.activity-select span {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.user-selecter, .action-selecter {
+    width: 230px;
+    margin-top: 10px;
+}
+
+.actions-filters{
+    margin-left: 25%;
+}
+
+.user_activity_end_options{
+    margin-left: auto;
+    display: flex;
+}
+
+.activity-noresult{
+    opacity: 0.3;
+    text-align: center;
+    font-weight: bold;
+    font-size: 32px;
+    display: none;
+}
+
+.activity-more-filters{
+    margin-left: 14px;
+    justify-content: center;
+    cursor: pointer;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    width:70px;
+}
+
+.activity-more-filters.extend-padding{
+    padding-bottom: 10px;
+}
+
+.activity-more-filters, .activity-more-filters-content{
+    background-color: #F3F3F3;
+}
+
+.activity-more-filters-content{
+    display: flex;
+    position: relative;
+    flex-direction: row;
+    font-weight: normal;
+    padding : 23px 0px 22px 24px;
+    width: auto;
+}
+
+.activity-period-info{
+    margin-bottom : 30px;
+    font-weight: bold;
+}
+
+.additional-filters-section{
+    margin-left: 5%;
+}
+
+.additional-filters-info{
+    margin-bottom : 18px;
+    font-weight: bold;
+}
+
+.additional-filters{
+    display: flex;
+}
+
+.activity-filter-container span::before{
+    margin-right: 6px;
+}
+
+.activity-filter-container .icon-cancel{
+    margin-left: 5px;
+}
+
+.activity-date-selecter{
+    display: block;
+    height: 25.5px;
+    width: 130px;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Selectize */
+.selectize-control.single.user-selecter, .selectize-control.single.action-selecter {
+    height: 30px;
+}
+
+.selectize-control.single .selectize-input {
+    height: 30px;
+    padding: 0 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: left;
+}
+
+.selectize-input {
+    text-align: left;
+}
+
+.selectize-control.single .selectize-input input{
+    height: 30px;
+}
+
+.selectize-dropdown {
+    text-align: left;
+}
+
+.cancel-icon {
+    margin: 0 0 0 10px !important;
+
+    cursor: pointer;
+}
+
+.loading {
+    font-size: 25px;
+}
+
+.action-section::before {
+    margin: 0 -5px 0 10px;
+    opacity: 0.6;
+}
+</style>
+</div>
+</div>
+
+
+<div id="footer">
+  <div>
+    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What's new in version 16?">
+      <i class="icon-bell"></i>
+    </span>
+  </div>
+  <div id="pageInfos">
+    Contact
+    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+  </div>
+</div></div>
+<div id="whats_new">
+    <div id="whats_new_popin">
+      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <h3>What's new in version 16?</h3>
+      <div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-blue whats_new_block_w_60">
+            <h4>Brand new login & preferences with Standard pages!</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
+          </div>
+          <div class="whats_new_block icon-purple whats_new_block_w_40">
+            <h4>Two factor authentication is here</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
+          </div>
+        </div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-green whats_new_block_w_100">
+            <h4>UI redesigns that make a difference</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
+          </div>
+                </div>
+      <div class="whats_new_buttons">
+        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
+        <a class="buttonLike" href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+      </div>
+    </div>
+</div>
+
+<style>
+
+
+</style>
+
+
+
+
+<!-- BEGIN get_combined -->
+<script type="text/javascript" src="_data/combined/96dvw8.js"></script>
+<script type="text/javascript">//<![CDATA[
+
+var usersCache = new UsersCache({
+  serverKey: '1786382439_4',
+  serverId: 'dda54766ec207d793317d8d6ae40a754',
+  rootUrl: ''
+});
+const nb_users = 4;
+
+const additional_filt_type = '';
+const additional_filt_value =  null ;
+
+const color_icons = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
+var activity_page = 1;
+let current_page_offset = 0;
+let page_offsets = [0];
+let actual_page = 1;
+let end_page = false;
+let uid_filter;
+let action_filter;
+let object_filter;
+let date_min_filter = '2026-08-01';
+let date_max_filter = '2026-08-01';
+
+const date_min = '2026-08-01';
+const date_max = '2026-08-01';
+
+const page_ellipsis = '<span>...</span>'
+const page_item = '<a data-page="%d">%d</a>';
+var create_selecter = true;
+const users_key = "Users";
+
+const line_key = "%s line";
+const lines_key = "%s lines";
+
+
+var actionType_add = "add";
+var actionType_delete = "deletion";
+var actionType_move = "move";
+var actionType_edit = "edit";
+var actionType_login = "login";
+var actionType_logout = "logout";
+
+
+var actionInfos_album_added = "%d album added";
+var actionInfos_album_deleted = "%d album deleted";
+var actionInfos_album_edited = "%d album edited";
+var actionInfos_album_moved = "%d album moved";
+
+var actionInfos_albums_added = "%d albums added";
+var actionInfos_albums_deleted = "%d albums deleted";
+var actionInfos_albums_edited = "%d albums edited";
+var actionInfos_albums_moved = "%d albums moved";
+
+
+var actionInfos_user_added = "%d user added";
+var actionInfos_user_deleted = "%d user deleted";
+var actionInfos_user_edited = "%d user edited";
+var actionInfos_user_logged_in = "%d user logged in";
+var actionInfos_user_logged_out = "%d user logged out";
+
+var actionInfos_users_added = "%d users added";
+var actionInfos_users_deleted = "%d users deleted";
+var actionInfos_users_edited = "%d users edited";
+var actionInfos_users_logged_in = "%d users logged in";
+var actionInfos_users_logged_out = "%d users logged out";
+
+
+var actionInfos_photo_added = "%d photo added";
+var actionInfos_photo_deleted = "%d photo deleted";
+var actionInfos_photo_edited = "%d photo edited";
+var actionInfos_photo_moved = "%d photo moved";
+
+var actionInfos_photos_added = "%d photos added";
+var actionInfos_photos_deleted = "%d photos deleted";
+var actionInfos_photos_edited = "%d photos edited";
+var actionInfos_photos_moved = "%d photos moved";
+
+
+var actionInfos_group_added = "%d group added";
+var actionInfos_group_deleted = "%d group deleted";
+var actionInfos_group_edited = "%d group edited";
+var actionInfos_group_moved = "%d group moved";
+
+var actionInfos_groups_added = "%d groups added";
+var actionInfos_groups_deleted = "%d groups deleted";
+var actionInfos_groups_edited = "%d groups edited";
+var actionInfos_groups_moved = "%d groups moved";
+
+
+var actionInfos_tag_added = "%d tag added";
+var actionInfos_tag_deleted = "%d tag deleted";
+var actionInfos_tag_edited = "%d tag edited";
+var actionInfos_tag_moved = "%d tag moved";
+
+var actionInfos_tags_added = "%d tags added";
+var actionInfos_tags_deleted = "%d tags deleted";
+var actionInfos_tags_edited = "%d tags edited";
+var actionInfos_tags_moved = "%d tags moved";
+jQuery.fn.lightAccordion = function(options) {
+  var settings = $.extend({
+    header: 'dt',
+    content: 'dd',
+    active: 0
+  }, options);
+  
+  return this.each(function() {
+    var self = jQuery(this);
+    
+    var contents = self.find(settings.content),
+        headers = self.find(settings.header);
+    
+    contents.not(contents[settings.active]).hide();
+  
+    self.on('click', settings.header, function() {
+        var content = jQuery(this).next(settings.content);
+        content.slideDown();
+        contents.not(content).slideUp();
+    });
+  });
+};
+
+$('#menubar').lightAccordion({
+  active: 2
+});
+
+/* in case we have several infos/errors/warnings display bullets */
+jQuery(document).ready(function() {
+  var eiw = ["infos","erros","warnings", "messages"];
+
+  for (var i = 0; i < eiw.length; i++) {
+    var boxType = eiw[i];
+
+    if (jQuery("."+boxType+" ul li").length > 1) {
+      jQuery("."+boxType+" ul li").css("list-style-type", "square");
+      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
+    }
+  }
+
+  if (jQuery('h2').length > 0) {
+    jQuery('h1').html(jQuery('h2').html());
+  }
+});
+jQuery('.tiptip').tipTip({
+  delay: 0,
+  fadeIn: 200,
+  fadeOut: 200
+});
+
+jQuery('a.externalLink').click(function() {
+  window.open(jQuery(this).attr("href"));
+  return false;
+});
+
+function hide_user_whats_new() {
+  $.ajax({
+    url: "ws.php?format=json&method=pwg.users.preferences.set",
+    type: "POST",
+    dataType: "JSON",
+    data: {
+      param: 'show_whats_new_16',
+      value: false,
+    }
+  })
+  $('#whats_new').hide();
+}
+
+function show_user_whats_new() {
+  $('#whats_new').show();
+}
+//]]></script>
+<script type="text/javascript">
+(function() {
+var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
+s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='themes/admin/default/js/user_activity.js?v16.3.0';
+after = after.parentNode.insertBefore(s, after);
+})();
+</script>
+<!-- END get_combined -->
+
+<script type="module" src="dist/vitals.js"></script>
+
+</body>
+</html>

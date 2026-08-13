@@ -59,6 +59,39 @@ function goldenHtmlCurl(string $cookieJar, string $path): array
 }
 
 /**
+ * Same shape as goldenHtmlCurl(), but a form POST -- for routes whose
+ * interesting output only renders in response to a submitted form
+ * (identification.php's bad-credentials error banner, specifically).
+ *
+ * @param array<string, string> $fields
+ * @return array{status: int, body: string}
+ */
+function goldenHtmlCurlPost(string $cookieJar, string $path, array $fields): array
+{
+    $ch = curl_init(H::baseUrl() . $path);
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    if ($cookieJar !== '') {
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+    }
+    $body = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    unset($ch);
+
+    return [
+        'status' => $status,
+        'body' => is_string($body) ? $body : '',
+    ];
+}
+
+/**
  * Logs in as the fixture admin via the WS API (the same code path Piwigo
  * uses internally) rather than a raw form POST -- matches
  * RegenerateFixtureTest.php's own established preference: avoids flaky
@@ -348,4 +381,49 @@ it("captures admin-photo-editor's golden HTML", function (): void {
     expect($result['status'])->toBe(200, "admin-photo-editor returned HTTP {$result['status']}, expected 200");
 
     goldenHtmlAssertOrWrite('admin-photo-editor', $result['body']);
+})->group('golden-html-snapshot');
+
+it("captures slideshow's golden HTML", function (): void {
+    // Same hit-counter freeze as picture-1 -- slideshow=1/category/1 is a
+    // real single-picture view through picture.php, so it increments
+    // images.hit just like picture-1 does. Kept out of
+    // VisualRegressionRoutes.php's shared loop for the same reason
+    // picture-1/admin-photo-editor are: a route that mutates state on
+    // every visit can't share an unordered array with routes whose
+    // baselines assume that state stays untouched.
+    H::freezeImageHits(1, 5);
+
+    $result = goldenHtmlCurl('', '/picture.php?/1/category/1&slideshow=');
+
+    expect($result['status'])->toBe(200, "slideshow returned HTTP {$result['status']}, expected 200");
+
+    goldenHtmlAssertOrWrite('slideshow', $result['body']);
+})->group('golden-html-snapshot');
+
+it("captures infos-errors's golden HTML", function (): void {
+    // infos_errors.latte only renders when HtmlService::flushKeyedErrors()
+    // has something to show it -- IdentificationController's bad-credentials
+    // branch ($errors['login_form_error'], no redirect) is the simplest real
+    // trigger. IdentificationSubmitRequest::fromArrays() needs no CSRF/
+    // anti-bot token, but does require an existing session cookie (line
+    // ~113's `$has_session_cookie` check) or a different error
+    // ('Cookies are blocked...') renders instead -- a plain GET first
+    // establishes one, same cookie jar reused for the POST.
+    $cookieJar = tempnam(sys_get_temp_dir(), 'piwigo-golden-html-');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+
+    goldenHtmlCurl($cookieJar, '/identification.php');
+
+    $result = goldenHtmlCurlPost($cookieJar, '/identification.php', [
+        'login' => '1',
+        'username' => 'golden-html-nonexistent-user',
+        'password' => 'wrong-password',
+    ]);
+    unlink($cookieJar);
+
+    expect($result['status'])->toBe(200, "infos-errors returned HTTP {$result['status']}, expected 200");
+
+    goldenHtmlAssertOrWrite('infos-errors', $result['body']);
 })->group('golden-html-snapshot');

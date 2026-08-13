@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta name="apple-itunes-app" content="app-id=472225196">
+<meta charset="utf-8">
+<title>Fixture Gallery :: Piwigo Administration</title>
+<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
+<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+
+  
+
+<!-- BEGIN get_combined -->
+<link rel="stylesheet" type="text/css" href="_data/combined/6jb2ze.css">
+
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<!-- END get_combined -->
+
+</head>
+
+<body id="theAdminPage">
+
+<div id="the_page">
+
+
+<div id="pwgHead">
+  <a href="/piwigo17-4/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
+  <div class="pwgHead-gallery-title">Fixture Gallery</div>
+
+  <div id="headActions">
+    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+
+<a href="admin.php?page=configuration&amp;section=search&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
+
+    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
+    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
+  </div>
+</div>
+
+<div style="clear:both;"></div>
+
+
+<div id="pwgMain">
+
+<div id="menubar">
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+
+	<dl>
+		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+			<ul>
+				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
+        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
+				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
+				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
+				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
+			</ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
+				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
+				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
+				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
+				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
+          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
+        </a></li>
+        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+      </ul>
+		</dd>
+  </dl>
+  <dl>
+		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+		<dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
+        				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+      </ul>
+    </dd>
+  </dl>
+</div> <!-- menubar -->
+
+<div id="content" class="content">
+
+  <h1>Configuration<span class="admin-object-id"></span></h1>
+
+  <div id="tabsheet">
+<ul class="tabsheet">
+  <li class="normal_tab">
+    <a href="admin.php?page=configuration&amp;section=main"><span><span class="icon-cog"></span>General</span></a>
+  </li>
+  <li class="normal_tab">
+    <a href="admin.php?page=configuration&amp;section=sizes"><span><span class="icon-zoom-square"></span>Photo sizes</span></a>
+  </li>
+  <li class="normal_tab">
+    <a href="admin.php?page=configuration&amp;section=watermark"><span><span class="icon-file-image"></span>Watermark</span></a>
+  </li>
+  <li class="normal_tab">
+    <a href="admin.php?page=configuration&amp;section=display"><span><span class="icon-television"></span>Display</span></a>
+  </li>
+  <li class="normal_tab">
+    <a href="admin.php?page=configuration&amp;section=comments"><span><span class="icon-chat"></span>Comments</span></a>
+  </li>
+  <li class="selected_tab">
+    <a href="admin.php?page=configuration&amp;section=search"><span><span class="icon-search"></span>Search</span></a>
+  </li>
+</ul>
+</div>
+
+
+
+  <ul class="HelpActions">
+    <li><a href="admin/popuphelp.php?page=configuration&amp;output=content_only" title="Help" class="help-popin"><span class="icon-help-circled"></span></a></li>
+  </ul>
+<div class="eiw">
+</div> 
+  
+
+
+
+
+<form method="post" action="admin.php?page=configuration&amp;section=search" class="properties">
+
+<div id="configContent">
+
+  <fieldset class="searchConf">
+    <legend><span class="icon-equalizer icon-blue rotate-element"></span>Filters</legend>
+    <ul>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[tags]" id="tagsFilters" 
+            checked="checked"
+          >
+            Tags
+        </label>
+        <div class='select-views-arrow icon-down-open' id="tagsArrow"> </div>
+        <select name="filters_views[tags][access]" id="ftagsSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="tagsAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="tagsAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[album]" id="albumFilters" 
+            checked="checked"
+          >
+            Album
+        </label>
+        <div class='select-views-arrow icon-down-open' id="albumArrow"> </div>
+        <select name="filters_views[album][access]" id="falbumSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="albumAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="albumAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[ratio]" id="ratioFilters" 
+            checked="checked"
+          >
+            Ratio
+        </label>
+        <div class='select-views-arrow icon-down-open' id="ratioArrow"> </div>
+        <select name="filters_views[ratio][access]" id="fratioSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="ratioAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="ratioAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[width]" id="widthFilters" 
+            checked="checked"
+          >
+            Width
+        </label>
+        <div class='select-views-arrow icon-down-open' id="widthArrow"> </div>
+        <select name="filters_views[width][access]" id="fwidthSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="widthAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="widthAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[words]" id="wordsFilters" 
+            checked="checked"
+          >
+            Search for words
+        </label>
+        <div class='select-views-arrow icon-down-open' id="wordsArrow"> </div>
+        <select name="filters_views[words][access]" id="fwordsSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="wordsAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="wordsAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[author]" id="authorFilters" 
+            checked="checked"
+          >
+            Author
+        </label>
+        <div class='select-views-arrow icon-down-open' id="authorArrow"> </div>
+        <select name="filters_views[author][access]" id="fauthorSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="authorAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="authorAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[expert]" id="expertFilters" 
+            checked="checked"
+          >
+            Expert mode
+        </label>
+        <div class='select-views-arrow icon-down-open' id="expertArrow"> </div>
+        <select name="filters_views[expert][access]" id="fexpertSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="expertAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="expertAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[height]" id="heightFilters" 
+            checked="checked"
+          >
+            Height
+        </label>
+        <div class='select-views-arrow icon-down-open' id="heightArrow"> </div>
+        <select name="filters_views[height][access]" id="fheightSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="heightAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="heightAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[rating]" id="ratingFilters" 
+            checked="checked"
+          >
+            Rating
+        </label>
+        <div class='select-views-arrow icon-down-open' id="ratingArrow"> </div>
+        <select name="filters_views[rating][access]" id="fratingSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="ratingAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="ratingAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[added_by]" id="added_byFilters" 
+            checked="checked"
+          >
+            Added by
+        </label>
+        <div class='select-views-arrow icon-down-open' id="added_byArrow"> </div>
+        <select name="filters_views[added_by][access]" id="fadded_bySelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="added_byAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="added_byAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[file_size]" id="file_sizeFilters" 
+            checked="checked"
+          >
+            Filesize
+        </label>
+        <div class='select-views-arrow icon-down-open' id="file_sizeArrow"> </div>
+        <select name="filters_views[file_size][access]" id="ffile_sizeSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="file_sizeAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="file_sizeAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[file_type]" id="file_typeFilters" 
+            checked="checked"
+          >
+            File type
+        </label>
+        <div class='select-views-arrow icon-down-open' id="file_typeArrow"> </div>
+        <select name="filters_views[file_type][access]" id="ffile_typeSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="file_typeAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="file_typeAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[post_date]" id="post_dateFilters" 
+            checked="checked"
+          >
+            Post date
+        </label>
+        <div class='select-views-arrow icon-down-open' id="post_dateArrow"> </div>
+        <select name="filters_views[post_date][access]" id="fpost_dateSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="post_dateAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="post_dateAdminIcon"> </div>
+      </li>
+      <li class="filters-grid">
+        <label class="font-checkbox">
+          <span class="icon-check"></span>
+          <input type="checkbox" class="filters-icon-check" name="filters_views_box[creation_date]" id="creation_dateFilters" 
+            checked="checked"
+          >
+            Creation date
+        </label>
+        <div class='select-views-arrow icon-down-open' id="creation_dateArrow"> </div>
+        <select name="filters_views[creation_date][access]" id="fcreation_dateSelect" class="select-views">
+          <option value="everybody" selected>Everybody</option>
+          <option value="registered-users" >Registered users</option>
+          <option value="admins-only" id="creation_dateAdmin" >Admins only</option>
+        </select>
+        <div class='icon-users select-views-admin' id="creation_dateAdminIcon"> </div>
+      </li>
+    </ul>
+  </fieldset>
+
+  <fieldset class="searchConf">
+    <legend><span class="icon-equalizer icon-green rotate-element"></span>Default filters</legend>
+
+    <div class="last-filters">
+      <label class="font-checkbox">
+        <span class="icon-check"></span>
+        <input type="checkbox" class="filters-icon-check" name="filters_views[last_filters_conf]" id="lastFilters" >
+        Set last used filters as default for each users
+      </label>
+      <span class="icon-help-circled tiptip" title="This will be different for each user. Won't be applied for unregistered visitors" style="cursor:help"></span>
+    </div>
+
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options gallery-icon-search">Search for words</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[words][default]" id="default_words" 
+        checked="checked"
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options gallery-icon-tag">Tags</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[tags][default]" id="default_tags" 
+        hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options gallery-icon-calendar-plus">Post date</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[post_date][default]" id="default_post_date" 
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options gallery-icon-calendar">Creation date</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[creation_date][default]" id="default_creation_date" 
+        checked="checked"
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options gallery-icon-album">Album</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[album][default]" id="default_album" 
+        checked="checked"
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options gallery-icon-user-edit">Author</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[author][default]" id="default_author" 
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options icon-user-1">Added by</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[added_by][default]" id="default_added_by" 
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options icon-file-image">File type</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[file_type][default]" id="default_file_type" 
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options icon-crop">Ratio</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[ratio][default]" id="default_ratio" 
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options icon-star">Rating</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[rating][default]" id="default_rating" 
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options icon-hdd">Filesize</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[file_size][default]" id="default_file_size" 
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options gallery-icon-height">Height</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[height][default]" id="default_height" 
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options gallery-icon-width">Width</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[width][default]" id="default_width" 
+      hidden/>
+    </label>
+    <label class="filter-manager-options-container">
+      <span class="mcs-icon-options gallery-icon-chemistry">Expert mode</span>
+      <input type="checkbox" class="filter-manager-options-check" name="filters_views[expert][default]" id="default_expert" 
+      hidden/>
+    </label>
+  </fieldset>
+
+</div>
+
+<div class="savebar-footer">
+  <div class="savebar-footer-start">
+  </div>
+  <div class="savebar-footer-end">
+    <div class="savebar-footer-block">
+      <button class="buttonLike"  type="submit" name="submit" ><i class="icon-floppy"></i> Save Settings</button>
+    </div>
+  </div>
+  <input type="hidden" name="pwg_token" value="aca20e71bbc8cfb4fb506146f732f0d69cb27ca22c7441d9597327b69392591a">
+</div>
+
+</form>
+</div>
+</div>
+
+
+<div id="footer">
+  <div>
+    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What's new in version 16?">
+      <i class="icon-bell"></i>
+    </span>
+  </div>
+  <div id="pageInfos">
+    Contact
+    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+  </div>
+</div></div>
+<div id="whats_new">
+    <div id="whats_new_popin">
+      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <h3>What's new in version 16?</h3>
+      <div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-blue whats_new_block_w_60">
+            <h4>Brand new login & preferences with Standard pages!</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
+          </div>
+          <div class="whats_new_block icon-purple whats_new_block_w_40">
+            <h4>Two factor authentication is here</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
+          </div>
+        </div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-green whats_new_block_w_100">
+            <h4>UI redesigns that make a difference</h4>
+            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
+          </div>
+                </div>
+      <div class="whats_new_buttons">
+        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
+        <a class="buttonLike" href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+      </div>
+    </div>
+</div>
+
+<style>
+
+
+</style>
+
+
+
+
+<!-- BEGIN get_combined -->
+<script type="text/javascript" src="_data/combined/1drm5dn.js"></script>
+<script type="text/javascript">//<![CDATA[
+
+const filters_names = ["tags","album","ratio","width","words","author","expert","height","rating","added_by","file_size","file_type","post_date","creation_date"];
+
+for(const filter_name of filters_names){
+  if(!$("input#"+filter_name+"Filters").is(':checked')){
+      $("#f"+filter_name+"Select, #"+filter_name+"Arrow").hide();
+      $("#default_"+filter_name).parent().hide();
+  }
+
+  if($("#f"+filter_name+"Select").val()!="admins-only"){
+    $("#"+filter_name+"AdminIcon").hide();
+  }
+
+  if($("#default_"+filter_name).is(':checked')){
+    $("#default_"+filter_name).parent().addClass("selected-filter-container");
+  }
+
+  $("#"+filter_name+"Filters").on("click", function(){
+    if($("input#"+filter_name+"Filters").is(':checked')){
+      $("#f"+filter_name+"Select, #"+filter_name+"Arrow").show();
+      $("#default_"+filter_name).parent().show();
+      if($("#f"+filter_name+"Select").val()=="admins-only"){
+        $("#"+filter_name+"AdminIcon").show();
+      }
+    }
+    else{
+      $("#f"+filter_name+"Select, #"+filter_name+"Arrow, #"+filter_name+"AdminIcon").hide();
+      $("#default_"+filter_name).parent().hide();
+    }
+  })
+
+  $("#f"+filter_name+"Select").on("click", function(){
+    if($("#f"+filter_name+"Select").val()=="admins-only"){
+      $("#"+filter_name+"AdminIcon").show();
+    }
+    else{
+      $("#"+filter_name+"AdminIcon").hide();
+    }
+  })
+
+  $("#default_"+filter_name).on("click", function(){
+    if($("#default_"+filter_name).is(':checked')){
+      $("#default_"+filter_name).parent().addClass("selected-filter-container");
+    }
+    else{
+      $("#default_"+filter_name).parent().removeClass("selected-filter-container");
+    }
+  })
+}
+jQuery.fn.lightAccordion = function(options) {
+  var settings = $.extend({
+    header: 'dt',
+    content: 'dd',
+    active: 0
+  }, options);
+  
+  return this.each(function() {
+    var self = jQuery(this);
+    
+    var contents = self.find(settings.content),
+        headers = self.find(settings.header);
+    
+    contents.not(contents[settings.active]).hide();
+  
+    self.on('click', settings.header, function() {
+        var content = jQuery(this).next(settings.content);
+        content.slideDown();
+        contents.not(content).slideUp();
+    });
+  });
+};
+
+$('#menubar').lightAccordion({
+  active: 4
+});
+
+/* in case we have several infos/errors/warnings display bullets */
+jQuery(document).ready(function() {
+  var eiw = ["infos","erros","warnings", "messages"];
+
+  for (var i = 0; i < eiw.length; i++) {
+    var boxType = eiw[i];
+
+    if (jQuery("."+boxType+" ul li").length > 1) {
+      jQuery("."+boxType+" ul li").css("list-style-type", "square");
+      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
+    }
+  }
+
+  if (jQuery('h2').length > 0) {
+    jQuery('h1').html(jQuery('h2').html());
+  }
+});
+jQuery('.help-popin').colorbox({ width:"500px" });
+jQuery('.tiptip').tipTip({
+  delay: 0,
+  fadeIn: 200,
+  fadeOut: 200
+});
+
+jQuery('a.externalLink').click(function() {
+  window.open(jQuery(this).attr("href"));
+  return false;
+});
+
+function hide_user_whats_new() {
+  $.ajax({
+    url: "ws.php?format=json&method=pwg.users.preferences.set",
+    type: "POST",
+    dataType: "JSON",
+    data: {
+      param: 'show_whats_new_16',
+      value: false,
+    }
+  })
+  $('#whats_new').hide();
+}
+
+function show_user_whats_new() {
+  $('#whats_new').show();
+}
+//]]></script>
+<!-- END get_combined -->
+
+<script type="module" src="dist/vitals.js"></script>
+
+</body>
+</html>

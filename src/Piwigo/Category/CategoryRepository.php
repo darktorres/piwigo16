@@ -2277,14 +2277,15 @@ final readonly class CategoryRepository
     public function massUpdateRanks(array $datas): void
     {
         $em = $this->em;
+        $now = Env::now()->format('Y-m-d H:i:s');
         new BatchWriter($em->getConnection())
             ->massUpdate(
                 'categories',
                 [
                     'primary' => ['id'],
-                    'update' => ['rank'],
+                    'update' => ['rank', 'lastmodified'],
                 ],
-                $datas
+                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas)
             );
         $em->clear();
     }
@@ -2297,14 +2298,15 @@ final readonly class CategoryRepository
     public function massUpdateRanksAndGlobalRank(array $datas): void
     {
         $em = $this->em;
+        $now = Env::now()->format('Y-m-d H:i:s');
         new BatchWriter($em->getConnection())
             ->massUpdate(
                 'categories',
                 [
                     'primary' => ['id'],
-                    'update' => ['rank', 'global_rank'],
+                    'update' => ['rank', 'global_rank', 'lastmodified'],
                 ],
-                $datas
+                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas)
             );
         $em->clear();
     }
@@ -2317,14 +2319,15 @@ final readonly class CategoryRepository
     public function massUpdateRepresentativePictures(array $datas): void
     {
         $em = $this->em;
+        $now = Env::now()->format('Y-m-d H:i:s');
         new BatchWriter($em->getConnection())
             ->massUpdate(
                 'categories',
                 [
                     'primary' => ['id'],
-                    'update' => ['representative_picture_id'],
+                    'update' => ['representative_picture_id', 'lastmodified'],
                 ],
-                $datas
+                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas)
             );
         $em->clear();
     }
@@ -2337,14 +2340,15 @@ final readonly class CategoryRepository
     public function massUpdateUppercats(array $datas): void
     {
         $em = $this->em;
+        $now = Env::now()->format('Y-m-d H:i:s');
         new BatchWriter($em->getConnection())
             ->massUpdate(
                 'categories',
                 [
                     'primary' => ['id'],
-                    'update' => ['uppercats'],
+                    'update' => ['uppercats', 'lastmodified'],
                 ],
-                $datas
+                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas)
             );
         $em->clear();
     }
@@ -2404,6 +2408,7 @@ final readonly class CategoryRepository
     public function updateCategoryAfterInsert(int|string $id, array $data): void
     {
         $em = $this->em;
+        $data['lastmodified'] = Env::now()->format('Y-m-d H:i:s');
         new BatchWriter($em->getConnection())
             ->singleUpdate('categories', $data, [
                 'id' => $id,
@@ -2428,6 +2433,7 @@ final readonly class CategoryRepository
         }
 
         $em = $this->em;
+        $data['lastmodified'] = Env::now()->format('Y-m-d H:i:s');
         new BatchWriter($em->getConnection())
             ->singleUpdate('categories', $data, [
                 'id' => $id->value,

@@ -7,6 +7,7 @@ namespace Piwigo\Metadata;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Metadata\Projection\MetadataImage;
@@ -128,14 +129,15 @@ final readonly class MetadataRepository
      */
     public function massUpdateImages(array $updateFields, array $datas): void
     {
+        $now = Env::now()->format('Y-m-d H:i:s');
         new BatchWriter($this->em->getConnection())
             ->massUpdate(
                 'images',
                 [
                     'primary' => ['id'],
-                    'update' => $updateFields,
+                    'update' => [...$updateFields, 'lastmodified'],
                 ],
-                $datas,
+                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas),
                 BatchWriter::SKIP_EMPTY
             );
 

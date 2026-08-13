@@ -531,8 +531,10 @@ final class ImageRepository extends EntityRepository
             return;
         }
 
+        $now = Env::now()->format('Y-m-d H:i:s');
+        $dbfields['update'][] = 'lastmodified';
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->massUpdate('images', $dbfields, $datas, $flags);
+            ->massUpdate('images', $dbfields, array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas), $flags);
     }
 
     /**
@@ -556,6 +558,7 @@ final class ImageRepository extends EntityRepository
             return;
         }
 
+        $updates['lastmodified'] = Env::now()->format('Y-m-d H:i:s');
         new BatchWriter($this->getEntityManager()->getConnection())
             ->singleUpdate('images', $updates, [
                 'id' => $imageId->value,
@@ -1652,14 +1655,15 @@ final class ImageRepository extends EntityRepository
      */
     public function massUpdateMd5sums(array $updates): void
     {
+        $now = Env::now()->format('Y-m-d H:i:s');
         new BatchWriter($this->getEntityManager()->getConnection())
             ->massUpdate(
                 'images',
                 [
                     'primary' => ['id'],
-                    'update' => ['md5sum'],
+                    'update' => ['md5sum', 'lastmodified'],
                 ],
-                $updates
+                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $updates)
             );
         $this->getEntityManager()
             ->clear();

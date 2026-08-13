@@ -25,12 +25,15 @@ use Piwigo\Validation\InputValidator;
  */
 final readonly class SearchQueryRequest
 {
+    /**
+     * @param array<array-key, mixed>|bool|int|float|string|null $tagId
+     */
     private function __construct(
         public string $q,
         public bool $hasCatId,
         public ?CategoryId $catId,
         public bool $hasTagId,
-        public mixed $tagId,
+        public array|bool|int|float|string|null $tagId,
     ) {}
 
     public static function fromGlobals(InputValidator $inputValidator): self
@@ -58,6 +61,15 @@ final readonly class SearchQueryRequest
                 ->validate('tag_id', $source, false, '/^\d+(,\d+)*$/');
         }
 
-        return new self($q, $hasCatId, CategoryId::tryFrom($source['cat_id'] ?? null), $hasTagId, $source['tag_id'] ?? null);
+        // The validate() call above already fatal-errored on anything that
+        // isn't scalar-or-array (its own is_scalar()/emptyValue() guards --
+        // emptyValue() short-circuits for `[]` too), so this is-scalar-or-
+        // array check can never actually fall through to null when
+        // $hasTagId is true -- it exists to give PHPStan a real, provable
+        // type instead of `mixed`, not to reject anything.
+        $raw_tag_id = $source['tag_id'] ?? null;
+        $tagId = is_scalar($raw_tag_id) || is_array($raw_tag_id) ? $raw_tag_id : null;
+
+        return new self($q, $hasCatId, CategoryId::tryFrom($source['cat_id'] ?? null), $hasTagId, $tagId);
     }
 }

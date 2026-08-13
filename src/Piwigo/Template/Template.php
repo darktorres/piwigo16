@@ -71,9 +71,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Plain-array replacement for Smarty's own `Data::$tpl_vars` --
      * `assign()`/`append()`/`getTemplateVars()`/`clearAssign()` below
-     * replicate Smarty's own semantics exactly (confirmed against
-     * `vendor/smarty/smarty/src/Data.php` before removing the real
-     * `Smarty\Smarty` engine this class used to delegate to), since
+     * replicate Smarty's own semantics exactly (matching
+     * `vendor/smarty/smarty/src/Data.php`), since
      * `setTheme()`'s parent/child theme accumulation (a plain-list
      * `append()` for `themes`, a key-merging `append(..., true)` for
      * `themeconf`) depends on getting that precisely right.
@@ -134,9 +133,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * the same page) has no Latte equivalent: a bare `{capture $var}`
      * inside an `{include}`d template is local to that one render call and
      * does not persist back to the caller for a *second*, separate
-     * `{include}` of the same partial to observe -- confirmed empirically
-     * (a two-include test renders the guarded body twice), including
-     * against the reference's own `{if empty($var)}{capture $var}1{/capture}`
+     * `{include}` of the same partial to observe -- a two-include test
+     * renders the guarded body twice, including against the reference's
+     * own `{if empty($var)}{capture $var}1{/capture}`
      * port, which has the same gap. This is real `Template`-instance state
      * instead, which every `{include}` call shares regardless of nesting.
      *
@@ -667,8 +666,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Assigns one or more template variables -- mirrors Smarty's own
      * `Data::assign()` polymorphic shape (a single key+value, or a bulk
      * `array<string, mixed>` when `$var` is an array and `$value` is
-     * `null`), confirmed against `vendor/smarty/smarty/src/Data.php`
-     * before this class stopped delegating to the real Smarty engine.
+     * `null`), matching `vendor/smarty/smarty/src/Data.php`.
      *
      * @param array<string, mixed>|string $var
      */
@@ -766,8 +764,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * is a converted Latte template) -- cast to string rather than the
      * previous `is_string($current) ? $current : ''` check, which
      * silently discarded the entire existing value instead of
-     * concatenating onto it. Caught live once `intro.latte`'s own
-     * conversion made this a real code path: CheckIntegrity.php's
+     * concatenating onto it. Real regression: once `intro.latte`'s own
+     * conversion made this a real code path, CheckIntegrity.php's
      * `concat('ADMIN_CONTENT', ...)` call would have dropped the whole
      * dashboard, keeping only the check_integrity widget.
      */
@@ -811,8 +809,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function parse(string $file, bool $return = false): ?string
     {
         // Resolve first, before touching urlService()/Lang/etc. below --
-        // confirmed live: a genuinely unresolvable $file has to fail here
-        // (TemplateTest.php's own "htmlRenderer resolver throws" case).
+        // a genuinely unresolvable $file has to fail here (TemplateTest.php's
+        // own "htmlRenderer resolver throws" case).
         $path = $this->resolveLatteTemplatePath($file);
 
         $this->assign('ROOT_URL', self::urlService()->getRootUrl());
@@ -1054,7 +1052,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * `{var $x = defineDerivative(...)}` -- Latte has no scope-mutation
      * hook for a called function to assign a variable into the caller's
      * own template scope, so this returns the value directly, bound at the
-     * call site (confirmed real usage in
+     * call site (matching the reference's real usage,
      * `piwigo16-rewrite/tools/smarty-to-latte/Converter.php:602-632`).
      * `$crop` folds Smarty's own dual bool/numeric-percentage semantics
      * into one parameter: `bool` for a whole 0/1 crop ratio, `float|int`

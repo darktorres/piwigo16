@@ -171,8 +171,8 @@ function mail_service_capture_send(MailService $service, string|array $to, array
  * server only ever accepts ONE connection, so a throwaway probe connection
  * would consume it and starve the real client. Unlike that sibling helper,
  * this one used to give up after a single 2s poll window (100 x 20ms) with
- * no outer retry -- confirmed live (2026-08-11, under real system load from
- * several concurrent processes) that 2s isn't always enough for a fresh
+ * no outer retry -- under real system load from
+ * several concurrent processes, 2s isn't always enough for a fresh
  * `php` subprocess to boot and bind a socket, causing a real, reproducible
  * "fake SMTP test server never became ready" failure though the technique
  * itself was sound. Fixed to match ResponseEmitterTestStartServer's real
@@ -273,19 +273,18 @@ afterEach(function (): void {
     }
     CurrentUserTestFactory::get()->reset();
     // The switchLangTo() tests below genuinely load real .po translations
-    // (e.g. de_DE's real admin.po) into the Translator singleton -- a real
-    // bug found while investigating a cross-file leak: without this, e.g.
-    // German "Administratoren"/"Jeder" strings leaked into
+    // (e.g. de_DE's real admin.po) into the Translator singleton --
+    // without this, e.g.
+    // German "Administratoren"/"Jeder" strings leak into
     // PermissionServiceTest's own English-fallback assertions whenever it
-    // ran later in the same process (composer test's own default,
+    // runs later in the same process (composer test's own default,
     // non---parallel mode).
     TranslatorTestFactory::get()->reset();
     // Every Kernel::boot() call in this file (mail_service_capture_send()'s
     // own, plus several tests' direct calls) was never matched by a reset
     // -- Kernel stayed booted (with whichever root the last call used) for
-    // every later test in this shared process. Real cross-file leak found
-    // via composer test's own full-suite run (e.g. TemplateInstanceTest's
-    // func_get_combined_scripts tests picking up this file's root url).
+    // every later test in this shared process, e.g. TemplateInstanceTest's
+    // func_get_combined_scripts tests picking up this file's root url.
     Kernel::reset();
 });
 
@@ -324,7 +323,7 @@ test('formatEmail returns the name concatenated as-is when the email already con
 // parameters, and preg_replace() with a string $subject and this simple,
 // non-/u pattern can only return a real string (never null) for any
 // reachable input -- there's no way to make the cast's absence produce a
-// TypeError or a different value. Live-verified (both call sites): mutated,
+// TypeError or a different value. Verified at both call sites: mutated,
 // full suite still passed, restored byte-identical.
 test('formatEmail trims surrounding whitespace from both name and email', function (): void {
     $service = mail_service_test_build();
@@ -925,9 +924,9 @@ test('generateSuccessResetPasswordMail includes the API-key-revocation notice at
 // unlike generateSuccessResetPasswordMail's own $profileUrl below, which
 // genuinely needs the full-url mode active while computing it). Removing
 // either call only affects global url-mode state AFTER the method has
-// already returned its value, never the value itself. Live-verified
-// (generateResetPasswordMail's own setMakeFullUrl call, representative of
-// all 3 methods' identical shape): mutated, both of that method's tests
+// already returned its value, never the value itself. Verified
+// against generateResetPasswordMail's own setMakeFullUrl call, representative of
+// all 3 methods' identical shape: mutated, both of that method's tests
 // still passed, restored byte-identical.
 test('generateSuccessResetPasswordMail assembles the exact HTML content, in order, including the API-key notice and real profile URL when there are some', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
@@ -1355,7 +1354,7 @@ test('mail converts a text/plain content into HTML: paragraph-wrapped, escaped, 
     // exact link text -- any one of those breaking would corrupt this
     // fragment. Doesn't anchor on '<p>...</p>' itself: moveCssToBody()'s
     // own Emogrifier DOM pass downstream inlines the theme's own CSS onto
-    // the <p> tag (a real "style=...\" attribute, confirmed live) and
+    // the <p> tag (a real "style=...\" attribute) and
     // rewrites nl2br()'s XHTML "<br />" down to the bare HTML5 "<br>" --
     // neither is this concatenation's own concern.
     expect($result['email']->getHtmlBody())->toContain(
@@ -1505,8 +1504,8 @@ test('mail keys its per-request template cache by auth_key too, not reusing one 
 // internal, never-externally-observed string -- only its UNIQUENESS per
 // distinct (contentType, langCode, theme, auth_key) combination is
 // observable (via which cached Template gets reused), never its exact
-// characters. Live-verified representatively (ConcatSwitchSides
-// reordering the trailing `. $args['theme']` concat to the front): all 4
+// characters. Verified representatively: with ConcatSwitchSides
+// reordering the trailing `. $args['theme']` concat to the front, all 4
 // cache-differentiation tests above still passed unchanged, since the
 // swap still produces a distinct string per distinct input combination.
 test('mail keeps the html and plain-text cache entries of the SAME call separate, even with the same auth_key/lang/theme', function (): void {
@@ -1567,7 +1566,7 @@ test('mail keys its per-request template cache by lang_info[code] too, not reusi
 });
 
 test('mail keys its per-request template cache by theme too, not reusing one theme\'s CSS for another', function (): void {
-    // Confirmed-real bug found while writing this test: the cache key
+    // Real bug: the cache key
     // never included $args['theme'] even
     // though the cached entry's own CSS file selection depends on it --
     // present identically in the legacy procedural functions_mail.inc.php
@@ -1987,7 +1986,7 @@ test('buildMailer wraps native://default in the bounded sendmail transport, but 
 
 // moveCssToBody's own early `$content === ''` return (line 1027-1029) is
 // confirmed-equivalent for BOTH its own mutations (EmptyStringToNotEmpty,
-// RemoveEarlyReturn): live sed-mutate-and-rerun showed the existing "empty
+// RemoveEarlyReturn): the existing "empty
 // string unchanged" test above still passes unchanged either way, because
 // Pelago\Emogrifier\CssInliner::fromHtml('') itself throws
 // InvalidArgumentException("The provided HTML must not be empty.") for a

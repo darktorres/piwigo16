@@ -221,9 +221,9 @@ final class MailServiceTest extends IntegrationTestCase
 
     /**
      * A plain @ does NOT stop PHPUnit's ErrorHandler from surfacing the
-     * expected "Mailer Error" trigger_error() below regardless (confirmed:
-     * @ only affects error_reporting(), not whether the handler chain
-     * runs) -- a real no-op error handler for the duration of the one
+     * expected "Mailer Error" trigger_error() below regardless -- @ only
+     * affects error_reporting(), not whether the handler chain runs -- a
+     * real no-op error handler for the duration of the one
      * expected-to-warn call is the only reliable way to swallow it,
      * matching ImageGdTest's own established pattern.
      */
@@ -588,9 +588,9 @@ final class MailServiceTest extends IntegrationTestCase
         //
         // Not expectNotToPerformAssertions(): this file's own setUp()
         // already performs a real assertInstanceOf() guard, which PHPUnit
-        // counts against every test in the class -- confirmed live, that
-        // combination is what PHPUnit's risky-test detector flags ("not
-        // expected to perform assertions but performed N").
+        // counts against every test in the class -- that combination is
+        // what PHPUnit's risky-test detector flags ("not expected to
+        // perform assertions but performed N").
         $this->mailer->switchLangBack();
     }
 
@@ -834,7 +834,7 @@ final class MailServiceTest extends IntegrationTestCase
     {
         // "Access type" is translated in language/fr_FR/admin.po ("Type
         // d'accès") but never appears anywhere in language/fr_FR/
-        // common.po (confirmed via grep) -- only actually calling
+        // common.po -- only actually calling
         // $this->lang->load('admin.lang', ...) for the real 'fr_FR'
         // language (not just common.lang, and not some other language
         // reached via a corrupted dirname/options array) makes it
@@ -1040,9 +1040,9 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function testMailBuildsAStillParseableSmtpDsnWhenBothSmtpUserAndHostAreConfigured(): void
     {
-        // Confirmed via a direct parse_url() check: reordering dsnAuth
-        // ('user:pass@') BEFORE the 'smtp://' scheme instead of after it
-        // (as a concatenation bug would) makes parse_url() find no
+        // Reordering dsnAuth ('user:pass@') BEFORE the 'smtp://' scheme
+        // instead of after it (as a concatenation bug would) makes
+        // parse_url() find no
         // 'scheme'/'host' key at all, so Symfony\Component\Mailer\
         // Transport\Dsn::fromString() throws InvalidArgumentException
         // ('The mailer DSN must contain a scheme.') the moment

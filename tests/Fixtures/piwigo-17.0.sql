@@ -1123,7 +1123,7 @@ CREATE TABLE `user_infos` (
 
 LOCK TABLES `user_infos` WRITE;
 /*!40000 ALTER TABLE `user_infos` DISABLE KEYS */;
-INSERT INTO `user_infos` VALUES (1,15,'webmaster','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,8,NULL,NULL,NULL,0,'2026-08-10 17:20:39','{\"show_whats_new_16\": false}'),(2,15,'guest','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(3,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(4,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL);
+INSERT INTO `user_infos` VALUES (1,15,'webmaster','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,8,NULL,NULL,NULL,0,'2026-08-01 03:00:00','{\"show_whats_new_16\": false}'),(2,15,'guest','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(3,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(4,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL);
 /*!40000 ALTER TABLE `user_infos` ENABLE KEYS */;
 UNLOCK TABLES;
 

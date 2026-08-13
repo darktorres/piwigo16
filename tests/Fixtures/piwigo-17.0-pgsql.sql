@@ -3319,7 +3319,7 @@ COPY public.user_group (user_id, group_id) FROM stdin;
 
 COPY public.user_infos (user_id, nb_image_page, status, language, expand, show_nb_comments, show_nb_hits, recent_period, theme, registration_date, enabled_high, level, activation_key, activation_key_expire, last_visit, last_visit_from_history, lastmodified, preferences) FROM stdin;
 2	15	guest	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	0	\N	\N	\N	f	2026-08-01 00:00:00	\N
-1	15	webmaster	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	8	\N	\N	\N	f	2026-08-10 14:13:11	{"show_whats_new_16": false}
+1	15	webmaster	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	8	\N	\N	\N	f	2026-08-01 00:00:00	{"show_whats_new_16": false}
 3	15	normal	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	0	\N	\N	\N	f	2026-08-01 00:00:00	\N
 4	15	normal	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	0	\N	\N	\N	f	2026-08-01 00:00:00	\N
 \.

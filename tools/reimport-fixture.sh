@@ -38,6 +38,17 @@
 # the cache-pool/combined-bundle clears above already do for their own
 # stale-state class.
 #
+# Also clears _data/templates_c/latte/ (Latte's own compiled-template
+# cache, see src/Piwigo/Template/LatteEngine.php). Latte's own autoRefresh
+# (on by default) already recompiles a template whose *own* source content
+# changed, but a stale compiled file from a *different* checkout/commit
+# can still survive a plain DB reimport untouched -- confirmed live: a
+# golden-HTML capture rendered stale attribute-quoting behavior
+# (LR\HtmlHelpers::formatDataAttribute()'s double-quote output) that a
+# fresh compile of the exact same template source, on the exact same
+# Latte version, could never actually produce. Same
+# ownership-mismatch/sudo reasoning as the other 3 clears above.
+#
 # Reads DB credentials from .env.test, same variables IntegrationTestCase.php
 # uses (PIWIGO_DB_HOST/USER/PASSWORD/BASE) — no PIWIGO_DB_PORT support,
 # matching that class, which doesn't read one either.
@@ -98,5 +109,6 @@ php tools/normalize-fixture.php "${real_root}"
 sudo rm -rf _data/cache/piwigo.*/
 sudo rm -rf _data/combined/*
 sudo rm -rf _data/i/*
+sudo rm -rf _data/templates_c/latte/*
 
 php tools/regenerate-fixture-photos.php

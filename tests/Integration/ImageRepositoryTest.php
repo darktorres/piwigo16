@@ -729,6 +729,61 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findHistoryDisplayInfoByIds([]));
     }
 
+    public function testFindHistoryDisplayInfoByIdsReturnsTheRealRowKeyedById(): void
+    {
+        $rows = $this->repo->findHistoryDisplayInfoByIds([1]);
+
+        self::assertSame([
+            1 => [
+                'id' => 1,
+                'label' => 'Photo 1',
+                'filesize' => 1,
+                'file' => 'fixture-photo-1.jpg',
+                'path' => 'upload/2026/08/01/20260801000000-2e7e6c90.jpg',
+                'representative_ext' => null,
+            ],
+        ], $rows);
+    }
+
+    public function testFindDistinctDimensionsReturnsTheRealDistinctPairs(): void
+    {
+        // Every fixture image shares width=200/height=150 -- exactly one
+        // distinct pair, proving the query + the int/int narrowing.
+        self::assertSame([
+            [
+                'width' => 200,
+                'height' => 150,
+            ],
+        ], $this->repo->findDistinctDimensions());
+    }
+
+    public function testFindDistinctFilesizesReturnsTheRealDistinctValues(): void
+    {
+        // Every fixture image shares filesize=1 -- exactly one distinct
+        // value, proving the query + the int narrowing.
+        self::assertSame([
+            [
+                'filesize' => 1,
+            ],
+        ], $this->repo->findDistinctFilesizes());
+    }
+
+    public function testFindIdsAndDatesForBatchUnitSaveReturnsTheRealRows(): void
+    {
+        $rows = $this->repo->findIdsAndDatesForBatchUnitSave([1, 2]);
+
+        self::assertSame([
+            [
+                'id' => 1,
+                'date_creation' => null,
+            ],
+            [
+                'id' => 2,
+                'date_creation' => null,
+            ],
+        ], $rows);
+    }
+
     public function testFindMostRecentImageCategoryInfoReturnsNullWhenNoImageIsLinkedToACategory(): void
     {
         $this->conn->beginTransaction();

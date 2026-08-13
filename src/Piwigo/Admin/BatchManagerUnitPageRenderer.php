@@ -111,14 +111,8 @@ final readonly class BatchManagerUnitPageRenderer
             $tagService = $this->tagService;
 
             foreach ($this->imageService->getIdsAndDatesForBatchUnitSave($collection) as $row) {
-                // 'images'.id is a NOT NULL auto_increment primary key; this
-                // guard only defends against the generic mixed element type a
-                // fetched row carries for every column.
-                if ($row['id'] === null || ! is_scalar($row['id'])) {
-                    continue;
-                }
                 $row_id_str = (string) $row['id'];
-                $image_id = (int) $row['id'];
+                $image_id = $row['id'];
 
                 $data = [];
 
@@ -331,21 +325,7 @@ final readonly class BatchManagerUnitPageRenderer
                 assert($media['image'] !== null);
 
                 foreach ($imageService->getCategoryLinksForImage(ImageId::from((int) $row_id)) as $item) {
-                    // 'image_category'/'categories'.category_id/uppercats are
-                    // NOT NULL; this guard only defends against the generic mixed
-                    // element type a fetched row carries for every column.
-                    if ($item['category_id'] === null || $item['uppercats'] === null
-                        || (! is_int($item['category_id']) && ! is_string($item['category_id']))
-                        || ! is_string($item['uppercats'])) {
-                        continue;
-                    }
                     $item_category_id = $item['category_id'];
-                    // Real category ids are always numeric, whether the driver
-                    // handed back this int|string column as a native int or a
-                    // numeric string -- normalized once here so the comparison
-                    // against $storage_category_id (a real int) below is a
-                    // reliable ===, not a driver-dependent type mismatch.
-                    $item_category_id_int = (int) $item_category_id;
 
                     $name =
                       $htmlRenderer->getCatDisplayNameCache(
@@ -353,13 +333,13 @@ final readonly class BatchManagerUnitPageRenderer
                           $this->urlService->getRootUrl() . 'admin.php?page=album-'
                       );
 
-                    if ($item_category_id_int === $storage_category_id) {
+                    if ($item_category_id === $storage_category_id) {
                         $storage_category = $name;
                     }
 
                     $related_categories[$item_category_id] = [
                         'name' => $name,
-                        'unlinkable' => $item_category_id_int !== $storage_category_id,
+                        'unlinkable' => $item_category_id !== $storage_category_id,
                     ];
                     $related_category_ids[] = $item_category_id;
                 }

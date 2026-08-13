@@ -696,10 +696,10 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
 
         // get all width, height and ratios
         foreach ($this->imageService->getDistinctDimensions() as $row) {
-            if (is_numeric($row['width']) && is_numeric($row['height']) && $row['width'] > 0 && $row['height'] > 0) {
+            if ($row['width'] > 0 && $row['height'] > 0) {
                 $widths[] = $row['width'];
                 $heights[] = $row['height'];
-                $ratios[] = floor((float) $row['width'] / (float) $row['height'] * 100.0) / 100.0;
+                $ratios[] = floor($row['width'] / $row['height'] * 100.0) / 100.0;
             }
         }
         if ($widths === []) { // arbitrary values, only used when no photos on the gallery
@@ -780,9 +780,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         $filesize = [];
 
         foreach ($this->imageService->getDistinctFilesizes() as $row) {
-            if (is_numeric($row['filesize'])) {
-                $filesizes[] = sprintf('%.1f', (float) $row['filesize'] / 1024.0);
-            }
+            $filesizes[] = sprintf('%.1f', $row['filesize'] / 1024.0);
         }
 
         if ($filesizes === []) { // arbitrary values, only used when no photos on the gallery

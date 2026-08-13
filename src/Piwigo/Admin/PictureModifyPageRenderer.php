@@ -366,9 +366,8 @@ final readonly class PictureModifyPageRenderer
         $storage_category = null;
 
         foreach ($imageService->getCategoryLinksForImage(ImageId::from($image_id)) as $cat_row) {
-            $raw_row_category_id = $cat_row['category_id'];
-            $row_category_id = (is_int($raw_row_category_id) || is_string($raw_row_category_id)) ? (string) $raw_row_category_id : '';
-            $row_uppercats = is_string($cat_row['uppercats']) ? $cat_row['uppercats'] : '';
+            $row_category_id = (string) $cat_row['category_id'];
+            $row_uppercats = $cat_row['uppercats'];
 
             $name =
               $htmlRenderer->getCatDisplayNameCache(

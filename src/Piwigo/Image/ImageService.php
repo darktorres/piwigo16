@@ -713,7 +713,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{width: int, height: int}>
      */
     public function getDistinctDimensions(): array
     {
@@ -721,7 +721,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{filesize: int}>
      */
     public function getDistinctFilesizes(): array
     {
@@ -839,7 +839,7 @@ final readonly class ImageService
 
     /**
      * @param array<array-key, int|string> $imageIds
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, date_creation: ?string}>
      */
     public function getIdsAndDatesForBatchUnitSave(array $imageIds): array
     {
@@ -856,7 +856,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{category_id: int, uppercats: string, dir: ?string}>
      */
     public function getCategoryLinksForImage(ImageId $imageId): array
     {
@@ -1196,7 +1196,7 @@ final readonly class ImageService
 
     /**
      * @param  list<int|string>  $imageIds
-     * @return array<int|string, array<string, mixed>>
+     * @return array<int, array{id: int, label: string, filesize: ?int, file: string, path: string, representative_ext: ?string}>
      */
     public function getHistoryDisplayInfoByIds(array $imageIds): array
     {

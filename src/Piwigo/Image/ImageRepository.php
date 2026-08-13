@@ -1445,10 +1445,13 @@ final class ImageRepository extends EntityRepository
     /**
      * id/label(computed)/filesize/file/path/representative_ext for
      * $imageIds -- Ws\Core::historySearch()'s own thumbnail/label
-     * enrichment step, keyed by id.
+     * enrichment step, keyed by id. `label` is never null: COALESCE()
+     * only falls back to `file`, itself a non-nullable column.
+     * `filesize`/`representative_ext` are nullable; `file`/`path` are not
+     * (see ImageEntity's own property types).
      *
      * @param  list<int|string>  $imageIds
-     * @return array<int|string, array<string, mixed>>
+     * @return array<int, array{id: int, label: string, filesize: ?int, file: string, path: string, representative_ext: ?string}>
      */
     public function findHistoryDisplayInfoByIds(array $imageIds): array
     {
@@ -1465,17 +1468,24 @@ final class ImageRepository extends EntityRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! ($row['id'] ?? null) instanceof ImageId) {
+            $id = is_array($row) ? ($row['id'] ?? null) : null;
+            $label = is_array($row) ? ($row['label'] ?? null) : null;
+            $file = is_array($row) ? ($row['file'] ?? null) : null;
+            $path = is_array($row) ? ($row['path'] ?? null) : null;
+            if (! $id instanceof ImageId || ! is_string($label) || ! is_string($file) || ! is_string($path)) {
                 continue;
             }
 
-            $byId[$row['id']->value] = [
-                'id' => $row['id']->value,
-                'label' => $row['label'] ?? null,
-                'filesize' => $row['filesize'] ?? null,
-                'file' => $row['file'] ?? null,
-                'path' => $row['path'] ?? null,
-                'representative_ext' => $row['representative_ext'] ?? null,
+            $filesize = $row['filesize'] ?? null;
+            $representativeExt = $row['representative_ext'] ?? null;
+
+            $byId[$id->value] = [
+                'id' => $id->value,
+                'label' => $label,
+                'filesize' => is_int($filesize) ? $filesize : null,
+                'file' => $file,
+                'path' => $path,
+                'representative_ext' => is_string($representativeExt) ? $representativeExt : null,
             ];
         }
 
@@ -1922,7 +1932,9 @@ final class ImageRepository extends EntityRepository
      * -- Controller\Admin\BatchManagerSubController's own dimension-filter
      * option aggregation.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{width: int, height: int}> -- the WHERE clause
+     *   below guarantees both are non-null (ImageEntity::$width/$height are
+     *   otherwise nullable columns)
      */
     public function findDistinctDimensions(): array
     {
@@ -1933,10 +1945,10 @@ final class ImageRepository extends EntityRepository
             ->andWhere('i.height IS NOT NULL')
             ->getQuery()
             ->getArrayResult() as $row) {
-            if (is_array($row)) {
+            if (is_array($row) && is_int($row['width'] ?? null) && is_int($row['height'] ?? null)) {
                 $result[] = [
-                    'width' => $row['width'] ?? null,
-                    'height' => $row['height'] ?? null,
+                    'width' => $row['width'],
+                    'height' => $row['height'],
                 ];
             }
         }
@@ -1949,7 +1961,9 @@ final class ImageRepository extends EntityRepository
      * Controller\Admin\BatchManagerSubController's own filesize-filter
      * option aggregation.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{filesize: int}> -- the WHERE clause below
+     *   guarantees non-null (ImageEntity::$filesize is otherwise a
+     *   nullable column)
      */
     public function findDistinctFilesizes(): array
     {
@@ -1960,9 +1974,9 @@ final class ImageRepository extends EntityRepository
             ->groupBy('i.filesize')
             ->getQuery()
             ->getArrayResult() as $row) {
-            if (is_array($row)) {
+            if (is_array($row) && is_int($row['filesize'] ?? null)) {
                 $result[] = [
-                    'filesize' => $row['filesize'] ?? null,
+                    'filesize' => $row['filesize'],
                 ];
             }
         }
@@ -2043,7 +2057,7 @@ final class ImageRepository extends EntityRepository
      * own per-image form-submission save loop.
      *
      * @param array<array-key, int|string> $imageIds
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, date_creation: ?string}>
      */
     public function findIdsAndDatesForBatchUnitSave(array $imageIds): array
     {
@@ -2054,10 +2068,12 @@ final class ImageRepository extends EntityRepository
             ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
             ->getQuery()
             ->getArrayResult() as $row) {
-            if (is_array($row)) {
+            $id = is_array($row) ? ($row['id'] ?? null) : null;
+            if ($id instanceof ImageId) {
+                $dateCreation = $row['date_creation'] ?? null;
                 $result[] = [
-                    'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : ($row['id'] ?? null),
-                    'date_creation' => ($row['date_creation'] ?? null) instanceof SqlDateTime ? $row['date_creation']->value : null,
+                    'id' => $id->value,
+                    'date_creation' => $dateCreation instanceof SqlDateTime ? $dateCreation->value : null,
                 ];
             }
         }
@@ -2136,10 +2152,10 @@ final class ImageRepository extends EntityRepository
      *
      * The aliased `ic.categoryId AS category_id` still hydrates as a real
      * {@see CategoryId} under array hydration despite the alias, so it's
-     * unwrapped explicitly to preserve this method's own `int|string`
-     * array-shape contract.
+     * unwrapped explicitly below. `uppercats` is a non-nullable column;
+     * `dir` is nullable (see CategoryEntity's own property types).
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{category_id: int, uppercats: string, dir: ?string}>
      */
     public function findCategoryLinksForImage(ImageId $imageId): array
     {
@@ -2160,10 +2176,16 @@ final class ImageRepository extends EntityRepository
             }
 
             $categoryId = $row['category_id'];
+            $uppercats = $row['uppercats'] ?? null;
+            $dir = $row['dir'] ?? null;
+            if (! $categoryId instanceof CategoryId || ! is_string($uppercats)) {
+                continue;
+            }
+
             $result[] = [
-                'category_id' => $categoryId instanceof CategoryId ? $categoryId->value : $categoryId,
-                'uppercats' => $row['uppercats'] ?? null,
-                'dir' => $row['dir'] ?? null,
+                'category_id' => $categoryId->value,
+                'uppercats' => $uppercats,
+                'dir' => is_string($dir) ? $dir : null,
             ];
         }
 

@@ -1166,7 +1166,7 @@ final readonly class Core
                 // (initialized to 0 above, then always int + int below).
                 $running_total_filesize = $summary['total_filesize'];
                 $filesize_row = $image_infos[$line_image_id] ?? null;
-                $filesize_value = is_array($filesize_row) ? ($filesize_row['filesize'] ?? null) : null;
+                $filesize_value = is_array($filesize_row) ? $filesize_row['filesize'] : null;
                 $summary['total_filesize'] = $running_total_filesize + (is_scalar($filesize_value) ? intval($filesize_value) : 0);
             }
 
@@ -1259,7 +1259,7 @@ final readonly class Core
 
                 if (isset($image_infos[$line_image_id]['label'])) {
                     $label = $image_infos[$line_image_id]['label'];
-                    $labelEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($label) ? $label : ''));
+                    $labelEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription($label));
                     $image_title .= ' ' . $labelEvent->elementDescription;
                 } else {
                     $image_edit_string = '';

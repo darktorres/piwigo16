@@ -17,8 +17,9 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
-use Piwigo\Core\WsContext;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\PluginRegistry;
+use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -118,15 +119,19 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         if (! $userService instanceof UserService) {
             throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
-        $wsContext = Kernel::container()->get(WsContext::class);
-        if (! $wsContext instanceof WsContext) {
-            throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
-        }
         $accessControl = Kernel::container()->get(AccessControl::class);
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), $wsContext, CurrentUserTestFactory::get(), CurrentPathsTestFactory::get());
+        $pluginRegistry = Kernel::container()->get(PluginRegistry::class);
+        if (! $pluginRegistry instanceof PluginRegistry) {
+            throw new LogicException('Container returned an unexpected type for ' . PluginRegistry::class);
+        }
+        $themeRegistry = Kernel::container()->get(ThemeRegistry::class);
+        if (! $themeRegistry instanceof ThemeRegistry) {
+            throw new LogicException('Container returned an unexpected type for ' . ThemeRegistry::class);
+        }
+        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get(), $pluginRegistry, $themeRegistry);
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);

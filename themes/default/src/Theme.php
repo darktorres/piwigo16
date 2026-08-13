@@ -1,0 +1,43 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Theme\DefaultTheme;
+
+use Closure;
+use Piwigo\PluginConfig\ExtensionContext;
+use Piwigo\PluginConfig\ExtensionInterface;
+
+/**
+ * ExtensionInterface implementation for Piwigo's own built-in default
+ * theme (themes/default/) -- distinct from the 3 externally-sourced
+ * bundled themes P27.6 ports (elegant/modus/smartpocket). Needed so
+ * Admin\Install\InstallService::activateCoreThemes() (runs on every
+ * fresh install) keeps working post-P27.5: ExtensionLifecycle::
+ * performThemeAction()'s 'activate' case now retargets onto
+ * ThemeRegistry::activate(), which requires a real, schema-valid
+ * theme.json for every theme it activates -- a bare themeconf.inc.php
+ * header alone is no longer enough.
+ */
+final class Theme implements ExtensionInterface
+{
+    public function boot(ExtensionContext $context): void {}
+
+    public function install(): void {}
+
+    public function activate(): void {}
+
+    public function deactivate(): void {}
+
+    public function uninstall(): void {}
+
+    public function update(string $oldVersion, string $newVersion): void {}
+
+    /**
+     * @return array<class-string, Closure|list<Closure>>
+     */
+    public function subscribedEvents(): array
+    {
+        return [];
+    }
+}

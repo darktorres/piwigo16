@@ -7,9 +7,6 @@ namespace Piwigo\Admin\Extensions;
 use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PluginLoader;
-use Piwigo\Admin\PluginMaintain;
-use Piwigo\Admin\ThemeMaintain;
-use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -20,12 +17,14 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginMigrationRepository;
+use Piwigo\PluginConfig\PluginRegistry;
+use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use RuntimeException;
 
 /**
  * Install/activate/deactivate/uninstall/delete state machine, replacing
@@ -59,6 +58,24 @@ use Piwigo\Users\UserService;
  * via an upsert (see PluginMigrationRepository::record()) because
  * 'restore' (uninstall then re-activate) can legitimately re-run 'install'
  * at the same version the plugin was already at.
+ *
+ * The business-rule layer (existence checks, last-theme/mobile-theme/
+ * parent-theme guards, default-theme reassignment, activity logging)
+ * stays here; only the innermost mechanical step retargets onto
+ * PluginConfig\PluginRegistry/ThemeRegistry (P27.5, replacing the old
+ * buildPluginMaintain()/buildThemeMaintain() dynamic include/`new
+ * $classname(...)` dispatch). Every registry call is wrapped in a
+ * `catch (RuntimeException)`, since PluginValidationException/
+ * PluginDependencyException/ThemeValidationException/
+ * ThemeDependencyException are how the registries report failure --
+ * `$errors`/`activityDetails['result']` is this class's own contract,
+ * the registries know nothing about either. A caught
+ * *ValidationException ("no validated manifest") is the expected,
+ * common outcome for a legacy (main.inc.php/themeconf.inc.php-only)
+ * target: nothing has booted it since P27.4, so this class making its
+ * own admin actions fail loudly instead of quietly no-op'ing via a
+ * PluginMaintain/ThemeMaintain base-class stub is the intentional,
+ * accepted consequence, not a bug to route around.
  */
 /**
  * `$fsEntry` throughout this class is `array<string, mixed>|null` even
@@ -86,11 +103,11 @@ final readonly class ExtensionLifecycle
         private UserService $userService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
-        private WsContext $wsContext,
-        private AccessControl $accessControl,
         private Paths $paths,
         private CurrentUser $currentUser,
         private EventDispatcher $eventDispatcher,
+        private PluginRegistry $pluginRegistry,
+        private ThemeRegistry $themeRegistry,
     ) {}
 
     /**
@@ -138,21 +155,20 @@ final readonly class ExtensionLifecycle
 
         switch ($action) {
             case 'install':
-                if ($dbRow !== null || $fsEntry === null) {
+                if ($dbRow !== null || ! $this->pluginExistsOnDisk($id, $fsEntry)) {
                     break;
                 }
 
-                $maintain = $this->buildPluginMaintain($id);
-                $fsVersion = $this->stringOrDefault($fsEntry['version'] ?? null, '0');
-                $maintain->install($fsVersion, $errors);
-                $activityDetails['version'] = $fsVersion;
-
-                if ($errors === []) {
-                    $this->repo->insertPlugin($id, $fsVersion);
-                    $this->pluginMigrationRepo->record(PluginId::from($id), $fsVersion, Env::now()->format('Y-m-d H:i:s'));
-                } else {
+                try {
+                    $this->pluginRegistry->install($id);
+                } catch (RuntimeException $e) {
+                    $errors[] = $e->getMessage();
                     $activityDetails['result'] = 'error';
+                    break;
                 }
+
+                $installedManifest = $this->pluginRegistry->getManifest($id);
+                $activityDetails['version'] = $installedManifest !== null ? $installedManifest->version : '0';
                 break;
 
             case 'update':
@@ -178,15 +194,34 @@ final readonly class ExtensionLifecycle
                 if ($errors[0] === 'ok') {
                     $newFsEntry = new ExtensionScanner()
                         ->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$id] ?? null;
-                    $newVersion = $this->stringOrDefault($newFsEntry['version'] ?? null, '0');
-                    $activityDetails['to_version'] = $newVersion;
 
-                    $maintain = $this->buildPluginMaintain($id);
-                    $maintain->update($previousVersion, $newVersion, $errors);
+                    if ($newFsEntry !== null) {
+                        // Legacy path: ExtensionScanner's own main.inc.php
+                        // header scan sees the freshly-extracted files --
+                        // no plugin.json exists for this id at all, so
+                        // PluginRegistry has nothing to update against.
+                        $newVersion = $this->stringOrDefault($newFsEntry['version'] ?? null, '0');
+                        $activityDetails['to_version'] = $newVersion;
 
-                    if ($newVersion !== 'auto') {
-                        $this->repo->updateVersion(ExtensionType::Plugin, $id, $newVersion);
-                        $this->pluginMigrationRepo->record(PluginId::from($id), $newVersion, Env::now()->format('Y-m-d H:i:s'));
+                        if ($newVersion !== 'auto') {
+                            $this->repo->updateVersion(ExtensionType::Plugin, $id, $newVersion);
+                            $this->pluginMigrationRepo->record(PluginId::from($id), $newVersion, Env::now()->format('Y-m-d H:i:s'));
+                        }
+                    } else {
+                        // New-contract path: force a fresh manifest scan
+                        // (PluginRegistry::load() is memoized per-request,
+                        // so without reload() it would still see whatever
+                        // it scanned before this extraction ever ran) then
+                        // let PluginRegistry derive + persist its own
+                        // version bump from the just-extracted plugin.json.
+                        $this->pluginRegistry->reload();
+                        try {
+                            $this->pluginRegistry->update($id);
+                            $activityDetails['to_version'] = $this->pluginRegistry->getManifest($id)?->version;
+                        } catch (RuntimeException $e) {
+                            $errors[] = $e->getMessage();
+                            $activityDetails['result'] = 'error';
+                        }
                     }
                 } else {
                     $activityDetails['result'] = 'error';
@@ -202,15 +237,16 @@ final readonly class ExtensionLifecycle
                 }
 
                 if ($errors === []) {
-                    $maintain = $this->buildPluginMaintain($id);
-                    $crtVersion = $this->stringOrDefault($dbRow['version'] ?? null, '0');
-                    $maintain->activate($crtVersion, $errors);
-                    $activityDetails['version'] = $crtVersion;
+                    try {
+                        $this->pluginRegistry->activate($id);
+                        $activatedManifest = $this->pluginRegistry->getManifest($id);
+                        $activityDetails['version'] = $activatedManifest !== null ? $activatedManifest->version : '0';
+                    } catch (RuntimeException $e) {
+                        $errors[] = $e->getMessage();
+                    }
                 }
 
-                if ($errors === []) {
-                    $this->repo->updatePluginState($id, 'active');
-                } else {
+                if ($errors !== []) {
                     $activityDetails['result'] = 'error';
                 }
                 break;
@@ -221,10 +257,13 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                $this->repo->updatePluginState($id, 'inactive');
-
-                $maintain = $this->buildPluginMaintain($id);
-                $maintain->deactivate();
+                try {
+                    $this->pluginRegistry->deactivate($id);
+                } catch (RuntimeException $e) {
+                    $errors[] = $e->getMessage();
+                    $activityDetails['result'] = 'error';
+                    break;
+                }
 
                 if (isset($dbRow['version'])) {
                     $activityDetails['version'] = $dbRow['version'];
@@ -246,10 +285,12 @@ final readonly class ExtensionLifecycle
                     $this->performPluginAction('deactivate', $id, $fsEntry, $options);
                 }
 
-                $this->repo->delete(ExtensionType::Plugin, $id);
-
-                $maintain = $this->buildPluginMaintain($id);
-                $maintain->uninstall();
+                try {
+                    $this->pluginRegistry->uninstall($id);
+                } catch (RuntimeException $e) {
+                    $errors[] = $e->getMessage();
+                    $activityDetails['result'] = 'error';
+                }
                 break;
 
             case 'restore':
@@ -264,10 +305,10 @@ final readonly class ExtensionLifecycle
                     }
                     $this->performPluginAction('uninstall', $id, $fsEntry, $options);
                 }
-                if ($fsEntry === null) {
+                if (! $this->pluginExistsOnDisk($id, $fsEntry)) {
                     break;
                 }
-                $activityDetails['fs_version'] = $fsEntry['version'] ?? null;
+                $activityDetails['fs_version'] = $fsEntry['version'] ?? $this->pluginRegistry->getManifest($id)?->version;
 
                 FilesystemHelper::deltree(PluginLoader::pluginsPath($this->paths) . $id, PluginLoader::pluginsPath($this->paths) . 'trash');
                 break;
@@ -275,7 +316,7 @@ final readonly class ExtensionLifecycle
 
         $this->activityService->record('system', ActivitySystem::Plugin, $action, $activityDetails);
 
-        return array_values($errors);
+        return $errors;
     }
 
     /**
@@ -313,18 +354,18 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                $maintain = $this->buildThemeMaintain($id);
-                $fsVersion = $this->stringOrDefault($fsEntry['version'] ?? null, '0');
-                $maintain->activate($fsVersion, $errors);
+                try {
+                    $this->themeRegistry->activate($id);
+                } catch (RuntimeException $e) {
+                    $errors[] = $e->getMessage();
+                    break;
+                }
 
-                if ($errors === []) {
-                    $fsName = $this->stringOrDefault($fsEntry['name'] ?? null, $id);
-                    $this->repo->insertNamed(ExtensionType::Theme, $id, $fsVersion, $fsName);
-                    $activityDetails['version'] = $fsVersion;
+                $activatedThemeManifest = $this->themeRegistry->getManifest($id);
+                $activityDetails['version'] = $activatedThemeManifest !== null ? $activatedThemeManifest->version : '0';
 
-                    if ($isMobile) {
-                        $this->configService->confUpdateParam('mobile_theme', $id);
-                    }
+                if ($isMobile) {
+                    $this->configService->confUpdateParam('mobile_theme', $id);
                 }
                 break;
 
@@ -338,15 +379,28 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                if ($id === $this->userService->getDefaultTheme()) {
-                    $newTheme = $this->pickReplacementDefaultTheme($id);
-                    $this->setDefaultTheme($newTheme);
+                // Computed before the real deactivate() call below (a pure
+                // read, safe to run early), but only actually applied
+                // after it succeeds -- ThemeRegistry::deactivate() can
+                // genuinely throw (a legacy theme with no theme.json at
+                // all), unlike the old buildThemeMaintain()'s always-safe
+                // fallback, so reassigning the site's default theme first
+                // would otherwise leave a real partial-state bug: the
+                // default silently changed even though the old theme was
+                // never actually removed.
+                $wasDefault = $id === $this->userService->getDefaultTheme();
+                $replacementTheme = $wasDefault ? $this->pickReplacementDefaultTheme($id) : null;
+
+                try {
+                    $this->themeRegistry->deactivate($id);
+                } catch (RuntimeException $e) {
+                    $errors[] = $e->getMessage();
+                    break;
                 }
 
-                $maintain = $this->buildThemeMaintain($id);
-                $maintain->deactivate();
-
-                $this->repo->delete(ExtensionType::Theme, $id);
+                if ($replacementTheme !== null) {
+                    $this->setDefaultTheme($replacementTheme);
+                }
 
                 if ((bool) ($fsEntry['mobile'] ?? false)) {
                     $this->configService->confUpdateParam('mobile_theme', '');
@@ -368,8 +422,16 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                $maintain = $this->buildThemeMaintain($id);
-                $maintain->delete();
+                try {
+                    $this->themeRegistry->uninstall($id);
+                } catch (RuntimeException) {
+                    // No real theme.json manifest for this id (every real
+                    // legacy/PEM-catalog theme today) -- nothing for the
+                    // new contract to uninstall; the filesystem cleanup
+                    // below still always runs regardless, same as today's
+                    // buildThemeMaintain()-fallback behavior for a theme
+                    // with no admin/maintain.inc.php.
+                }
 
                 FilesystemHelper::deltree($this->currentConfig->themesPath . $id, $this->currentConfig->themesPath . 'trash');
                 break;
@@ -381,7 +443,7 @@ final readonly class ExtensionLifecycle
 
         $this->activityService->record('system', ActivitySystem::Theme, $action, $activityDetails);
 
-        return array_values($errors);
+        return $errors;
     }
 
     /**
@@ -510,56 +572,20 @@ final readonly class ExtensionLifecycle
         $this->repo->setThemeForUsers($themeId, $userIds);
     }
 
-    private function buildPluginMaintain(string $pluginId): PluginMaintain
+    /**
+     * "Does this plugin exist on disk at all" -- widened, this phase, to
+     * accept EITHER scan mechanism: ExtensionScanner's legacy
+     * main.inc.php header scan ($fsEntry) OR PluginRegistry's plugin.json
+     * manifest scan. A bare $fsEntry === null check alone would silently
+     * no-op every lifecycle action on a real, installable new-contract
+     * plugin (the 7 bundled extensions, P27.6), since none of them ship
+     * a main.inc.php at all.
+     *
+     * @param array<string, mixed>|null $fsEntry
+     */
+    private function pluginExistsOnDisk(string $id, ?array $fsEntry): bool
     {
-        $fileToInclude = PluginLoader::pluginsPath($this->paths) . $pluginId . '/maintain';
-        // piwigo-videojs and piwigo-openstreetmap have a "-" in their
-        // folder name (=plugin_id); a class name can't have a "-".
-        $classname = str_replace('-', '_', $pluginId . '_maintain');
-
-        if (file_exists($fileToInclude . '.class.php')) {
-            include_once $fileToInclude . '.class.php';
-            $maintain = new $classname($pluginId, $this->wsContext, $this->accessControl);
-            if (! $maintain instanceof PluginMaintain) {
-                throw new LogicException("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
-            }
-
-            return $maintain;
-        }
-
-        if (file_exists($fileToInclude . '.inc.php')) {
-            include_once $fileToInclude . '.inc.php';
-            if (class_exists($classname)) {
-                $maintain = new $classname($pluginId, $this->wsContext, $this->accessControl);
-                if (! $maintain instanceof PluginMaintain) {
-                    throw new LogicException("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
-                }
-
-                return $maintain;
-            }
-        }
-
-        return new PluginMaintain($pluginId, $this->wsContext, $this->accessControl);
-    }
-
-    private function buildThemeMaintain(string $themeId): ThemeMaintain
-    {
-        $fileToInclude = $this->currentConfig->themesPath . '/' . $themeId . '/admin/maintain.inc.php';
-        $classname = $themeId . '_maintain';
-
-        if (file_exists($fileToInclude)) {
-            include_once $fileToInclude;
-            if (class_exists($classname)) {
-                $maintain = new $classname($themeId);
-                if (! $maintain instanceof ThemeMaintain) {
-                    throw new LogicException("buildThemeMaintain(): {$classname} does not extend ThemeMaintain");
-                }
-
-                return $maintain;
-            }
-        }
-
-        return new ThemeMaintain($themeId);
+        return $fsEntry !== null || $this->pluginRegistry->getManifest($id) !== null;
     }
 
     private function stringOrDefault(mixed $value, string $default): string

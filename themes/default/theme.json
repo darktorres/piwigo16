@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/darktorres/piwigo17/17.x-rewrite/docs/schemas/theme.schema.json",
+  "id": "default",
+  "name": "default",
+  "version": "16.3.0",
+  "description": "Piwigo's built-in default theme.",
+  "license": "GPL-2.0-or-later",
+  "minPiwigo": "16.3.0",
+  "main": "Piwigo\\Theme\\DefaultTheme\\Theme",
+  "autoload": {
+    "psr-4": {
+      "Piwigo\\Theme\\DefaultTheme\\": "src/"
+    }
+  },
+  "localHead": "local_head.latte"
+}

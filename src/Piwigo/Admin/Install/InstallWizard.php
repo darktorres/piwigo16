@@ -34,7 +34,6 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\CoreDomainAccessor;
 use Piwigo\Bootstrap\ExtendedDomainAccessor;
-use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -570,11 +569,11 @@ final class InstallWizard
             CoreDomainAccessor::userService(),
             PresentationAccessor::htmlService(),
             $this->currentConfig,
-            InfrastructureAccessor::wsContext(),
-            CoreDomainAccessor::accessControl(),
             $this->paths,
             $this->currentUser,
             $this->eventDispatcher,
+            PresentationAccessor::pluginRegistry(),
+            PresentationAccessor::themeRegistry(),
         )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
         // fill CurrentConfig::$data from the freshly-seeded config table

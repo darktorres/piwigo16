@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use LogicException;
-use Piwigo\Auth\AccessControl;
 use Piwigo\Core\Kernel;
 use Piwigo\Image\ImageService;
 use Piwigo\Users\UserService;
@@ -46,15 +45,6 @@ final class CoreDomainAccessor
         $service = Kernel::container()->get(ImageService::class);
         if (! $service instanceof ImageService) {
             throw new LogicException('Container returned an unexpected type for ' . ImageService::class);
-        }
-        return $service;
-    }
-
-    public static function accessControl(): AccessControl
-    {
-        $service = Kernel::container()->get(AccessControl::class);
-        if (! $service instanceof AccessControl) {
-            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
         return $service;
     }

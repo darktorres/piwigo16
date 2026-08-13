@@ -15,16 +15,12 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Admin\Extensions\PemCatalog;
     use Piwigo\Admin\Extensions\ZipExtractor;
     use Piwigo\Admin\PluginLoader;
-    use Piwigo\Admin\PluginMaintain;
-    use Piwigo\Admin\ThemeMaintain;
-    use Piwigo\Auth\AccessControl;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\ConfigService;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Core\CurrentLogger;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\Logger;
-    use Piwigo\Core\WsContext;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Html\HtmlService;
@@ -32,6 +28,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\PluginConfig\PluginMigrationEntity;
     use Piwigo\PluginConfig\PluginMigrationRepository;
+    use Piwigo\PluginConfig\PluginRegistry;
+    use Piwigo\PluginConfig\ThemeRegistry;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -45,13 +43,20 @@ namespace Piwigo\Tests\Integration {
     /**
      * Adversarial coverage for ExtensionLifecycle's real state-machine
      * divergence across the 3 extension types -- see
-     * ExtensionLifecycle's own docblock. Every test id
-     * used for plugin/theme actions is a synthetic, never-installed-on-disk
-     * id with no 'parent' key set, so buildPluginMaintain()/
-     * buildThemeMaintain() always fall back to the PluginMaintain/
-     * ThemeMaintain base no-op classes and deltree() always receives a
-     * non-existent path, a real safe no-op -- this suite
-     * never touches the real plugins/themes/language directories.
+     * ExtensionLifecycle's own docblock.
+     *
+     * Plugin/theme actions that need to actually SUCCEED through
+     * PluginRegistry/ThemeRegistry (P27.5) use pluginId()/themeId(),
+     * which write a real, minimal, schema-valid plugin.json/theme.json +
+     * PSR-4 ExtensionInterface class fixture under the real project
+     * plugins//themes/ directory (both registries require a real
+     * manifest for install/activate/deactivate/uninstall/update to do
+     * anything at all -- there is no maintain-class-style always-safe
+     * fallback anymore). rawPluginId()/rawThemeId() stay bare id
+     * generators with no filesystem side effect, for tests whose own
+     * point is that nothing exists for that id in any sense (a
+     * genuinely-missing target, or a guard that must fire before ever
+     * reaching the registry).
      */
     final class ExtensionLifecycleTest extends IntegrationTestCase
     {
@@ -63,7 +68,21 @@ namespace Piwigo\Tests\Integration {
 
         private ExtensionLifecycle $lifecycle;
 
+        private PluginRegistry $pluginRegistry;
+
+        private ThemeRegistry $themeRegistry;
+
         private Connection $conn;
+
+        /**
+         * @var list<string>
+         */
+        private array $createdPluginIds = [];
+
+        /**
+         * @var list<string>
+         */
+        private array $createdThemeIds = [];
 
         #[Override]
         protected function setUp(): void
@@ -105,13 +124,17 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(UserService::class, $userService);
             $htmlService = Kernel::container()->get(HtmlService::class);
             self::assertInstanceOf(HtmlService::class, $htmlService);
-            $wsContext = Kernel::container()->get(WsContext::class);
-            self::assertInstanceOf(WsContext::class, $wsContext);
-            $accessControl = Kernel::container()->get(AccessControl::class);
-            self::assertInstanceOf(AccessControl::class, $accessControl);
             $currentUser = Kernel::container()->get(CurrentUser::class);
             self::assertInstanceOf(CurrentUser::class, $currentUser);
-            $this->lifecycle = new ExtensionLifecycle(LangTestFactory::get(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser, CurrentPathsTestFactory::get(), $currentConfig), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl, CurrentPathsTestFactory::get(), $currentUser, new EventDispatcher());
+            $pluginRegistry = Kernel::container()->get(PluginRegistry::class);
+            self::assertInstanceOf(PluginRegistry::class, $pluginRegistry);
+            $themeRegistry = Kernel::container()->get(ThemeRegistry::class);
+            self::assertInstanceOf(ThemeRegistry::class, $themeRegistry);
+            $this->pluginRegistry = $pluginRegistry;
+            $this->themeRegistry = $themeRegistry;
+            $this->createdPluginIds = [];
+            $this->createdThemeIds = [];
+            $this->lifecycle = new ExtensionLifecycle(LangTestFactory::get(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser, CurrentPathsTestFactory::get(), $currentConfig), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, CurrentPathsTestFactory::get(), $currentUser, new EventDispatcher(), $pluginRegistry, $themeRegistry);
 
             $currentConfig->enableExtensionsInstall = true;
             $currentConfig->phpExtensionInUrls = false;
@@ -137,6 +160,12 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement("UPDATE user_infos SET theme = 'default' WHERE user_id IN (1, 2)");
             $this->conn->executeStatement('DELETE FROM activity');
             $this->conn->executeStatement('DELETE FROM plugin_migrations');
+            foreach ($this->createdPluginIds as $id) {
+                $this->removePluginManifest($id);
+            }
+            foreach ($this->createdThemeIds as $id) {
+                $this->removeThemeManifest($id);
+            }
             Kernel::reset();
             parent::tearDown();
         }
@@ -243,7 +272,7 @@ namespace Piwigo\Tests\Integration {
             // the 'deactivate' case never pushes to $errors itself (only
             // activity_details['result']='error'), so a "failed" deactivate
             // still returns an empty list.
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $this->pluginId(), null);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $this->rawPluginId(), null);
 
             self::assertSame([], $errors);
         }
@@ -265,7 +294,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testPluginUninstallWhenNotInstalledReturnsNoErrors(): void
         {
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'uninstall', $this->pluginId(), null);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'uninstall', $this->rawPluginId(), null);
 
             self::assertSame([], $errors);
         }
@@ -348,7 +377,7 @@ namespace Piwigo\Tests\Integration {
 
             set_error_handler(static fn (): bool => true);
             try {
-                $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $this->pluginId(), null);
+                $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $this->rawPluginId(), null);
                 self::fail('Expected ExtensionLifecycle::performAction() to throw ResponseReadyException');
             } catch (ResponseReadyException) {
             } finally {
@@ -593,9 +622,102 @@ namespace Piwigo\Tests\Integration {
             return is_numeric($value) ? (int) $value : 0;
         }
 
-        private function pluginId(): string
+        private function rawPluginId(): string
         {
             return 'p17-test-plugin-' . bin2hex(random_bytes(4));
+        }
+
+        /**
+         * A synthetic plugin id with a real, minimal, schema-valid
+         * plugin.json + PSR-4 ExtensionInterface class already written
+         * under the real plugins/ directory (P27.5: PluginRegistry
+         * requires a real manifest for install/activate/deactivate/
+         * uninstall/update to do anything at all, unlike the old
+         * buildPluginMaintain()'s always-safe base-class fallback for a
+         * synthetic, never-on-disk id). Tracked for automatic
+         * tearDown() cleanup.
+         */
+        private function pluginId(string $version = '1.0'): string
+        {
+            $id = $this->rawPluginId();
+            $this->writePluginManifest($id, $version);
+            $this->createdPluginIds[] = $id;
+
+            return $id;
+        }
+
+        /**
+         * @param string|null $mainClass overrides the manifest's own
+         *   `main` field -- used to force a real PluginValidationException
+         *   (deliberately a non-`class-string`, never-declared class
+         *   name) in place of the old maintain-class failure-injection
+         *   technique, which no longer has an equivalent
+         *   (buildPluginMaintain() is gone).
+         */
+        private function writePluginManifest(string $id, string $version = '1.0', ?string $mainClass = null): void
+        {
+            $dir = PluginLoader::pluginsPath(CurrentPathsTestFactory::get()) . $id;
+            if (! is_dir($dir . '/src')) {
+                mkdir($dir . '/src', 0o777, true);
+            }
+
+            $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+            $main = $mainClass ?? $namespace . '\\Plugin';
+
+            file_put_contents($dir . '/plugin.json', json_encode([
+                'id' => $id,
+                'name' => $id,
+                'version' => $version,
+                'description' => 'Test-only fixture plugin (tests/Integration/ExtensionLifecycleTest.php).',
+                'license' => 'MIT',
+                'minPiwigo' => '16.3.0',
+                'main' => $main,
+                'autoload' => [
+                    'psr-4' => [
+                        $namespace . '\\' => 'src/',
+                    ],
+                ],
+            ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+            file_put_contents($dir . '/src/Plugin.php', <<<PHP
+                <?php
+
+                declare(strict_types=1);
+
+                namespace {$namespace};
+
+                use Piwigo\\PluginConfig\\ExtensionContext;
+                use Piwigo\\PluginConfig\\ExtensionInterface;
+
+                final class Plugin implements ExtensionInterface
+                {
+                    public function boot(ExtensionContext \$context): void {}
+
+                    public function install(): void {}
+
+                    public function activate(): void {}
+
+                    public function deactivate(): void {}
+
+                    public function uninstall(): void {}
+
+                    public function update(string \$oldVersion, string \$newVersion): void {}
+
+                    public function subscribedEvents(): array
+                    {
+                        return [];
+                    }
+                }
+
+                PHP);
+
+            $this->pluginRegistry->reload();
+        }
+
+        private function removePluginManifest(string $id): void
+        {
+            $dir = PluginLoader::pluginsPath(CurrentPathsTestFactory::get()) . $id;
+            $this->rrmdir($dir);
         }
 
         /**
@@ -611,9 +733,90 @@ namespace Piwigo\Tests\Integration {
             return array_column($rows, 'version');
         }
 
-        private function themeId(): string
+        private function rawThemeId(): string
         {
             return 'p17-test-theme-' . bin2hex(random_bytes(4));
+        }
+
+        /**
+         * A synthetic theme id with a real, minimal, schema-valid
+         * theme.json + PSR-4 ExtensionInterface class already written
+         * under the real themes/ directory -- same rationale as
+         * pluginId() above, for ThemeRegistry. Tracked for automatic
+         * tearDown() cleanup.
+         */
+        private function themeId(string $version = '1.0'): string
+        {
+            $id = $this->rawThemeId();
+            $this->writeThemeManifest($id, $version);
+            $this->createdThemeIds[] = $id;
+
+            return $id;
+        }
+
+        private function writeThemeManifest(string $id, string $version = '1.0'): void
+        {
+            $dir = CurrentPathsTestFactory::get()->root . 'themes/' . $id;
+            if (! is_dir($dir . '/src')) {
+                mkdir($dir . '/src', 0o777, true);
+            }
+
+            $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+            file_put_contents($dir . '/theme.json', json_encode([
+                'id' => $id,
+                'name' => $id,
+                'version' => $version,
+                'description' => 'Test-only fixture theme (tests/Integration/ExtensionLifecycleTest.php).',
+                'license' => 'MIT',
+                'minPiwigo' => '16.3.0',
+                'main' => $namespace . '\\Theme',
+                'autoload' => [
+                    'psr-4' => [
+                        $namespace . '\\' => 'src/',
+                    ],
+                ],
+            ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+            file_put_contents($dir . '/src/Theme.php', <<<PHP
+                <?php
+
+                declare(strict_types=1);
+
+                namespace {$namespace};
+
+                use Piwigo\\PluginConfig\\ExtensionContext;
+                use Piwigo\\PluginConfig\\ExtensionInterface;
+
+                final class Theme implements ExtensionInterface
+                {
+                    public function boot(ExtensionContext \$context): void {}
+
+                    public function install(): void {}
+
+                    public function activate(): void {}
+
+                    public function deactivate(): void {}
+
+                    public function uninstall(): void {}
+
+                    public function update(string \$oldVersion, string \$newVersion): void {}
+
+                    public function subscribedEvents(): array
+                    {
+                        return [];
+                    }
+                }
+
+                PHP);
+
+            $this->themeRegistry->reload();
+        }
+
+        private function removeThemeManifest(string $id): void
+        {
+            $dir = CurrentPathsTestFactory::get()->root . 'themes/' . $id;
+            $this->rrmdir($dir);
         }
 
         /**
@@ -657,47 +860,6 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * Writes a real plugins/<id>/maintain.<ext> file declaring a
-         * global-namespace `<id>_maintain` class (hyphens folded to '_',
-         * matching buildPluginMaintain()'s own str_replace) -- $body is
-         * spliced in verbatim as the class's method overrides.
-         */
-        private function writePluginMaintainFile(string $id, string $ext, bool $extendsBase, string $body = ''): void
-        {
-            $dir = PluginLoader::pluginsPath(CurrentPathsTestFactory::get()) . $id;
-            mkdir($dir, 0o777, true);
-            $classname = str_replace('-', '_', $id . '_maintain');
-            $extends = $extendsBase ? ' extends \\Piwigo\\Admin\\PluginMaintain' : '';
-            file_put_contents(
-                $dir . '/maintain.' . $ext,
-                "<?php\nclass {$classname}{$extends}\n{\n{$body}\n}\n"
-            );
-        }
-
-        private function removePluginDir(string $id): void
-        {
-            $this->rrmdir(PluginLoader::pluginsPath(CurrentPathsTestFactory::get()) . $id);
-        }
-
-        /**
-         * Writes a real themes/<id>/admin/maintain.inc.php file declaring a
-         * global-namespace `<id>_maintain` class -- buildThemeMaintain()'s
-         * classname is the bare theme id with NO hyphen folding, so callers
-         * must pass a themeIdNoHyphens()-shaped id.
-         */
-        private function writeThemeMaintainFile(string $id, bool $extendsBase, string $body = ''): void
-        {
-            $dir = CurrentPathsTestFactory::get()->root . 'themes/' . $id . '/admin';
-            mkdir($dir, 0o777, true);
-            $classname = $id . '_maintain';
-            $extends = $extendsBase ? ' extends \\Piwigo\\Admin\\ThemeMaintain' : '';
-            file_put_contents(
-                $dir . '/maintain.inc.php',
-                "<?php\nclass {$classname}{$extends}\n{\n{$body}\n}\n"
-            );
-        }
-
-        /**
          * Writes a real themes/<id>/themeconf.inc.php -- the file
          * ExtensionScanner::scanTheme()/ThemeCatalog::checkThemeInstalled()
          * both genuinely check for on disk, no fake-able seam.
@@ -707,7 +869,12 @@ namespace Piwigo\Tests\Integration {
         private function writeThemeConf(string $id, array $conf = []): void
         {
             $dir = CurrentPathsTestFactory::get()->root . 'themes/' . $id;
-            mkdir($dir, 0o777, true);
+            // is_dir() guard: some callers (e.g. testThemeDeactivateOfTheRealDefaultThemeReassignsAReplacementDefault)
+            // pair this with themeId()'s own theme.json fixture for the
+            // SAME id, whose directory already exists by this point.
+            if (! is_dir($dir)) {
+                mkdir($dir, 0o777, true);
+            }
             $name = $conf['name'] ?? $id;
             $lines = "<?php\n/*\nTheme Name: {$name}\nVersion: 1.0\n*/\n";
             if (isset($conf['parent'])) {
@@ -799,157 +966,60 @@ namespace Piwigo\Tests\Integration {
 
         public function testPluginInstallFailureMarksActivityAsErrorAndDoesNotInsertARow(): void
         {
-            $id = $this->pluginId();
-            $this->writePluginMaintainFile($id, 'class.php', extendsBase: true, body: <<<'PHP'
-    public function install($plugin_version, &$errors = [])
-    {
-        $errors[] = 'forced install failure';
-    }
-PHP);
+            // The old maintain-class failure-injection technique (a real
+            // maintain.class.php overriding install($version, &$errors)
+            // to push a forced error) has no equivalent anymore --
+            // buildPluginMaintain() is gone. A real PluginValidationException
+            // (the manifest's own declared main class doesn't exist) is
+            // the new, real way install() can fail -- see
+            // PluginRegistry::install()'s own docblock for why this must
+            // NOT leave a DB row behind (a real ordering bug, found and
+            // fixed while writing this exact test).
+            $id = $this->rawPluginId();
+            $this->writePluginManifest($id, '1.0', mainClass: 'PiwigoTestFixture\\ExtensionLifecycleTest\\DoesNotExist');
+            $this->createdPluginIds[] = $id;
 
             try {
                 $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, [
                     'version' => '1.0',
                 ]);
 
-                self::assertSame(['forced install failure'], $errors);
+                self::assertCount(1, $errors);
+                self::assertStringContainsString('does not exist', $errors[0]);
                 self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
+                self::assertSame([], $this->findMigrationVersions($id), 'a failed install must not record a plugin_migrations row either');
             } finally {
-                $this->removePluginDir($id);
+                $this->removePluginManifest($id);
             }
         }
 
-        public function testPluginActivateFailureMarksActivityAsErrorAfterASuccessfulImplicitInstall(): void
+        public function testPluginActivateFailureLeavesTheRowInactive(): void
         {
-            $id = $this->pluginId();
-            $this->writePluginMaintainFile($id, 'class.php', extendsBase: true, body: <<<'PHP'
-    public function install($plugin_version, &$errors = [])
-    {
-    }
-
-    public function activate($plugin_version, &$errors = [])
-    {
-        $errors[] = 'forced activate failure';
-    }
-PHP);
+            // Same real trigger as the install-failure test above
+            // (a broken main class), but reached through 'activate' on a
+            // plugin that's ALREADY installed (the DB row seeded
+            // directly, bypassing performAction() entirely) -- 'activate'
+            // never calls the implicit-install path in this case
+            // ($dbRow !== null), so this exercises PluginRegistry::
+            // activate()'s own validate/hook-before-persist ordering
+            // specifically, independent of install()'s.
+            $id = $this->rawPluginId();
+            $this->writePluginManifest($id, '1.0', mainClass: 'PiwigoTestFixture\\ExtensionLifecycleTest\\DoesNotExist');
+            $this->createdPluginIds[] = $id;
+            $this->repo->insertPlugin($id, '1.0');
 
             try {
                 $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
                     'version' => '1.0',
                 ]);
 
-                self::assertSame(['forced activate failure'], $errors);
-                // The implicit install() (called first, no errors) DID
-                // insert the row -- only the subsequent activate() call
-                // failed, so state stays 'inactive', never flipped to
-                // 'active'.
+                self::assertCount(1, $errors);
+                self::assertStringContainsString('does not exist', $errors[0]);
                 $row = $this->repo->find(ExtensionType::Plugin, $id);
                 self::assertNotNull($row);
                 self::assertSame('inactive', $row['state']);
             } finally {
-                $this->removePluginDir($id);
-            }
-        }
-
-        // ------------------------------------------- buildPluginMaintain()
-
-        public function testBuildPluginMaintainLoadsARealClassPhpFile(): void
-        {
-            $id = $this->pluginId();
-            $this->writePluginMaintainFile($id, 'class.php', extendsBase: true);
-
-            try {
-                $method = new ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
-                $maintain = $method->invoke($this->lifecycle, $id);
-
-                self::assertInstanceOf(PluginMaintain::class, $maintain);
-            } finally {
-                $this->removePluginDir($id);
-            }
-        }
-
-        public function testBuildPluginMaintainThrowsWhenTheClassPhpClassDoesNotExtendPluginMaintain(): void
-        {
-            $id = $this->pluginId();
-            $this->writePluginMaintainFile($id, 'class.php', extendsBase: false);
-            $classname = str_replace('-', '_', $id . '_maintain');
-
-            try {
-                $method = new ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
-
-                $this->expectException(LogicException::class);
-                $this->expectExceptionMessageIsOrContains("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
-
-                $method->invoke($this->lifecycle, $id);
-            } finally {
-                $this->removePluginDir($id);
-            }
-        }
-
-        public function testBuildPluginMaintainLoadsARealIncPhpFile(): void
-        {
-            $id = $this->pluginId();
-            $this->writePluginMaintainFile($id, 'inc.php', extendsBase: true);
-
-            try {
-                $method = new ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
-                $maintain = $method->invoke($this->lifecycle, $id);
-
-                self::assertInstanceOf(PluginMaintain::class, $maintain);
-            } finally {
-                $this->removePluginDir($id);
-            }
-        }
-
-        public function testBuildPluginMaintainThrowsWhenTheIncPhpClassDoesNotExtendPluginMaintain(): void
-        {
-            $id = $this->pluginId();
-            $this->writePluginMaintainFile($id, 'inc.php', extendsBase: false);
-            $classname = str_replace('-', '_', $id . '_maintain');
-
-            try {
-                $method = new ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
-
-                $this->expectException(LogicException::class);
-                $this->expectExceptionMessageIsOrContains("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
-
-                $method->invoke($this->lifecycle, $id);
-            } finally {
-                $this->removePluginDir($id);
-            }
-        }
-
-        // -------------------------------------------- buildThemeMaintain()
-
-        public function testBuildThemeMaintainLoadsARealMaintainIncPhpFile(): void
-        {
-            $id = $this->themeIdNoHyphens();
-            $this->writeThemeMaintainFile($id, extendsBase: true);
-
-            try {
-                $method = new ReflectionMethod($this->lifecycle, 'buildThemeMaintain');
-                $maintain = $method->invoke($this->lifecycle, $id);
-
-                self::assertInstanceOf(ThemeMaintain::class, $maintain);
-            } finally {
-                $this->removeThemeDir($id);
-            }
-        }
-
-        public function testBuildThemeMaintainThrowsWhenTheClassDoesNotExtendThemeMaintain(): void
-        {
-            $id = $this->themeIdNoHyphens();
-            $this->writeThemeMaintainFile($id, extendsBase: false);
-
-            try {
-                $method = new ReflectionMethod($this->lifecycle, 'buildThemeMaintain');
-
-                $this->expectException(LogicException::class);
-                $this->expectExceptionMessageIsOrContains("buildThemeMaintain(): {$id}_maintain does not extend ThemeMaintain");
-
-                $method->invoke($this->lifecycle, $id);
-            } finally {
-                $this->removeThemeDir($id);
+                $this->removePluginManifest($id);
             }
         }
 
@@ -957,14 +1027,14 @@ PHP);
 
         public function testThemeDeactivateOfANeverInstalledThemeIsASilentNoop(): void
         {
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $this->themeId(), null);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $this->rawThemeId(), null);
 
             self::assertSame([], $errors);
         }
 
         public function testThemeDeleteOfAThemeNeitherInstalledNorOnDiskIsASilentNoop(): void
         {
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'delete', $this->themeId(), null);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'delete', $this->rawThemeId(), null);
 
             self::assertSame([], $errors);
         }
@@ -1044,7 +1114,9 @@ PHP);
             // of Reflection -- covers performThemeAction()'s own
             // 'set_default' case (a 1-line delegation to the private
             // setDefaultTheme(), otherwise only ever exercised directly).
-            $new = $this->themeId();
+            // 'set_default' never touches ThemeRegistry, so a bare id
+            // (no manifest) is fine here.
+            $new = $this->rawThemeId();
             $before = $this->conn->fetchAllAssociative('SELECT user_id, theme FROM user_infos' . " WHERE theme = 'default'");
 
             try {
@@ -1220,7 +1292,9 @@ PHP);
 
         public function testSetDefaultThemeReassignsEveryUserOnTheFallbackDefaultTheme(): void
         {
-            $new = $this->themeId();
+            // setDefaultTheme() (Reflection-invoked directly below) never
+            // touches ThemeRegistry either -- a bare id is fine here too.
+            $new = $this->rawThemeId();
 
             // See this section's own docblock above: getDefaultTheme()
             // always returns the literal 'default' string in this harness,

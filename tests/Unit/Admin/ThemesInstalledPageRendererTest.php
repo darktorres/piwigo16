@@ -9,7 +9,6 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
-use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -21,13 +20,14 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
-use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginMigrationEntity;
+use Piwigo\PluginConfig\PluginRegistry;
+use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -369,13 +369,13 @@ function themesInstalledLifecycle(): ExtensionLifecycle
 
     $activityRepo = EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class);
 
-    $wsContext = Kernel::container()->get(WsContext::class);
-    $accessControl = Kernel::container()->get(AccessControl::class);
-    if (! $wsContext instanceof WsContext || ! $accessControl instanceof AccessControl) {
+    $pluginRegistry = Kernel::container()->get(PluginRegistry::class);
+    $themeRegistry = Kernel::container()->get(ThemeRegistry::class);
+    if (! $pluginRegistry instanceof PluginRegistry || ! $themeRegistry instanceof ThemeRegistry) {
         throw new LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPathsTestFactory::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), $wsContext, $accessControl, CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), new EventDispatcher());
+    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPathsTestFactory::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), new EventDispatcher(), $pluginRegistry, $themeRegistry);
 }
 
 /**

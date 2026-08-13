@@ -23,13 +23,14 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsContext;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndThemesInstalled;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginMigrationEntity;
+use Piwigo\PluginConfig\PluginRegistry;
+use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
@@ -63,9 +64,10 @@ final readonly class ThemesInstalledPageRenderer
         private UserService $userService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
-        private WsContext $wsContext,
         private CurrentUser $currentUser,
         private Paths $paths,
+        private PluginRegistry $pluginRegistry,
+        private ThemeRegistry $themeRegistry,
     ) {}
 
     /**
@@ -89,7 +91,7 @@ final readonly class ThemesInstalledPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl, $this->paths, $this->currentUser, $this->eventDispatcher);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
 
         $themesAction = ThemesInstalledActionRequest::fromGlobals();
         if ($themesAction->action !== null and $themesAction->themeId !== null and $this->accessControl->isWebmaster()) {

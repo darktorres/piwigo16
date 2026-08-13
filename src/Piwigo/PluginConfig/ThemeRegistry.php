@@ -99,9 +99,19 @@ final class ThemeRegistry
         $this->loaded = true;
     }
 
+    /**
+     * $autoloadRegistered also has to reset here, not just $loaded --
+     * same real bug PluginRegistry::reload()'s own docblock documents
+     * (found live via the identical scenario, 2 theme fixtures written
+     * in the same request with a reload() between them): registerAutoload()
+     * has its own separate one-time guard, so without this, a theme
+     * whose manifest is only discovered by a POST-first-load() reload()
+     * never gets its own PSR-4 mapping registered at all.
+     */
     public function reload(): void
     {
         $this->loaded = false;
+        $this->autoloadRegistered = false;
         $this->load();
     }
 
@@ -142,21 +152,26 @@ final class ThemeRegistry
     }
 
     /**
-     * Activates a theme: check dependencies, insert the `themes` row if
-     * not already present, then invoke `activate()`. Idempotent if
-     * already active.
+     * Activates a theme: check dependencies, invoke `activate()`, then
+     * insert the `themes` row if not already present. Idempotent if
+     * already active. `bootInstance()` (validates the manifest's own
+     * `main` class) and the hook itself both run BEFORE the DB write --
+     * same reasoning as PluginRegistry::install()'s own docblock: the
+     * reverse order would leave a permanent "ghost" row for a theme
+     * whose main class is broken, since a later activate() call would
+     * see isInstalled()===true and never retry bootInstance().
      */
     public function activate(string $themeId): void
     {
         $manifest = $this->requireManifest($themeId);
         $this->assertDependenciesSatisfied($manifest);
 
+        $instance = $this->bootInstance($manifest);
+        $instance->activate();
+
         if (! $this->isInstalled($themeId)) {
             $this->repository->insert(ThemeId::from($themeId), $manifest->version, $manifest->name);
         }
-
-        $this->bootInstance($manifest)
-            ->activate();
     }
 
     /**

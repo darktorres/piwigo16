@@ -22,7 +22,6 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Bootstrap\CoreDomainAccessor;
 use Piwigo\Bootstrap\ExtendedDomainAccessor;
-use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
@@ -94,11 +93,11 @@ final class InstallService
             CoreDomainAccessor::userService(),
             PresentationAccessor::htmlService(),
             $currentConfig,
-            InfrastructureAccessor::wsContext(),
-            CoreDomainAccessor::accessControl(),
             $paths,
             $currentUser,
             $eventDispatcher,
+            PresentationAccessor::pluginRegistry(),
+            PresentationAccessor::themeRegistry(),
         );
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService, $lang, $paths, $currentUser, $eventDispatcher, $currentConfig);

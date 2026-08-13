@@ -90,9 +90,20 @@ final class PluginRegistry
         $this->loaded = true;
     }
 
+    /**
+     * $autoloadRegistered also has to reset here, not just $loaded --
+     * found live via a real Integration test writing 2 plugin fixtures
+     * in the same request and reload()ing between them: registerAutoload()
+     * has its own separate one-time guard, so without this, a plugin
+     * whose manifest is only discovered by a POST-first-load() reload()
+     * never gets its own PSR-4 mapping registered at all, and
+     * bootInstance() fails with "class does not exist" even though a
+     * real, valid manifest is genuinely on disk.
+     */
     public function reload(): void
     {
         $this->loaded = false;
+        $this->autoloadRegistered = false;
         $this->load();
     }
 
@@ -146,9 +157,17 @@ final class PluginRegistry
     }
 
     /**
-     * Install a plugin: check dependencies, insert the DB row (state=
-     * inactive), record the migration ledger entry, then invoke the
-     * plugin's `install()` hook. Idempotent if already installed.
+     * Install a plugin: check dependencies, invoke the plugin's
+     * `install()` hook, then insert the DB row (state=inactive) and
+     * record the migration ledger entry. Idempotent if already
+     * installed. `bootInstance()` (which validates the manifest's own
+     * `main` class exists and implements ExtensionInterface) and the
+     * hook itself both run BEFORE any DB write -- deliberately, found
+     * live while writing a real "install fails" test: the reverse order
+     * would leave a permanent, unremovable "ghost" row for a plugin
+     * whose main class is simply broken (a real, plausible authoring
+     * mistake), since a later install() call short-circuits on "already
+     * installed" without ever retrying bootInstance().
      */
     public function install(string $pluginId): void
     {
@@ -159,16 +178,18 @@ final class PluginRegistry
             return;
         }
 
+        $instance = $this->bootInstance($manifest);
+        $instance->install();
+
         $id = PluginId::from($pluginId);
         $this->repository->insert($id, $manifest->version);
         $this->migrationRepository->record($id, $manifest->version, Env::now()->format('Y-m-d H:i:s'));
-        $this->bootInstance($manifest)
-            ->install();
     }
 
     /**
      * Activate an installed plugin: set state=active, then invoke
-     * `activate()`. Idempotent.
+     * `activate()`. Idempotent. Same validate/hook-before-persist
+     * ordering as install() above, for the same reason.
      */
     public function activate(string $pluginId): void
     {
@@ -186,15 +207,17 @@ final class PluginRegistry
             return;
         }
 
+        $instance = $this->bootInstance($manifest);
+        $instance->activate();
+
         $this->repository->updateState(PluginId::from($pluginId), PluginState::Active);
-        $this->bootInstance($manifest)
-            ->activate();
     }
 
     /**
      * Deactivate a plugin: refuse if any other active plugin still
      * requires it, otherwise set state=inactive and invoke
-     * `deactivate()`. Idempotent if already inactive.
+     * `deactivate()`. Idempotent if already inactive. Same
+     * validate/hook-before-persist ordering as install() above.
      */
     public function deactivate(string $pluginId): void
     {
@@ -206,9 +229,10 @@ final class PluginRegistry
             return;
         }
 
+        $instance = $this->bootInstance($manifest);
+        $instance->deactivate();
+
         $this->repository->updateState(PluginId::from($pluginId), PluginState::Inactive);
-        $this->bootInstance($manifest)
-            ->deactivate();
     }
 
     /**
@@ -233,9 +257,12 @@ final class PluginRegistry
 
     /**
      * Reconcile DB version with the manifest's filesystem version: if
-     * they differ, record the migration ledger entry, invoke
-     * `update($old, $new)`, and bump the DB row. Idempotent when
-     * versions already match.
+     * they differ, invoke `update($old, $new)`, then record the
+     * migration ledger entry and bump the DB row. Idempotent when
+     * versions already match. Same validate/hook-before-persist
+     * ordering as install() above -- a failing update() hook no longer
+     * leaves a stale ledger entry recorded against a version bump that
+     * never actually happened.
      */
     public function update(string $pluginId): void
     {
@@ -251,10 +278,11 @@ final class PluginRegistry
             return;
         }
 
+        $instance = $this->bootInstance($manifest);
+        $instance->update($oldVersion, $newVersion);
+
         $id = PluginId::from($pluginId);
         $this->migrationRepository->record($id, $newVersion, Env::now()->format('Y-m-d H:i:s'));
-        $this->bootInstance($manifest)
-            ->update($oldVersion, $newVersion);
         $this->repository->updateVersion($pluginId, $newVersion);
     }
 

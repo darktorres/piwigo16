@@ -34,12 +34,12 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 //   reachable input.
 // Also: `ucfirst($propertyName)` in both hydrate() and confDeleteParam()
 // is unobservable via ReflectionMethod -- PHP resolves method names
-// case-insensitively, confirmed live (`new ReflectionMethod($class,
+// case-insensitively (`new ReflectionMethod($class,
 // 'setblkmenubar')` still finds/invokes setBlkMenubar()). And the
 // `(float) $decoded` cast for an int $decoded is unobservable too:
 // invoking a float-typed parameter via Reflection with a raw int still
 // auto-widens to float (PHP's own strict_types exception for numeric
-// widening applies the same way through Reflection), confirmed live.
+// widening applies the same way through Reflection).
 function unconnectedConfigService(): ConfigService
 {
     $connection = DriverManager::getConnection([

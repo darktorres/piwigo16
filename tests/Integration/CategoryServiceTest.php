@@ -663,7 +663,7 @@ namespace Piwigo\Tests\Integration {
         public function testFindCategoryIdFromPermalinksReturnsNullWhenTheSqlMatchHasNoExactStringKey(): void
         {
             // MySQL's default VARCHAR comparison ignores trailing whitespace
-            // (PAD SPACE semantics, confirmed live even under old_permalinks'
+            // (PAD SPACE semantics, even under old_permalinks'
             // own utf8mb4_bin collation: 'old-sample-album' =
             // 'old-sample-album ' evaluates true) -- a permalink string with
             // trailing whitespace therefore SQL-matches findPermalinkMatches()'s
@@ -683,7 +683,7 @@ namespace Piwigo\Tests\Integration {
             // `rank` is a genuine reserved word on both platforms (a bare
             // backtick is MySQL-only); visible/commentable are genuine
             // boolean columns (a bare `1` literal is rejected outright by
-            // Postgres). Both confirmed live.
+            // Postgres).
             $rank = $this->conn->getDatabasePlatform()
                 ->quoteSingleIdentifier('rank');
             $trueLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
@@ -780,8 +780,8 @@ namespace Piwigo\Tests\Integration {
             // gets a 'count_images' key set. The loop's own isset() guard
             // "skips" building a 'url' for it (not building one would
             // otherwise crash on an undefined offset further down), but the
-            // category itself stays in the returned list -- confirmed live,
-            // and by design: menubar_related_categories.latte's own {foreach}
+            // category itself stays in the returned list, by design:
+            // menubar_related_categories.latte's own {foreach}
             // needs the ancestor present to correctly nest category 2 under
             // it (LEVEL-based <ul> nesting), it just renders a bare link with
             // no href via its own isset($cat.url) guard.

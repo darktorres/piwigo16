@@ -21,6 +21,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
@@ -70,6 +71,7 @@ final readonly class RegisterController implements ControllerInterface
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private UserService $userService,
+        private MailerInterface $mailer,
         private AuditService $auditService,
         private AuthService $authService,
         private HtmlService $htmlService,
@@ -157,6 +159,7 @@ final readonly class RegisterController implements ControllerInterface
                         $post_password,
                         $post_mail_address,
                         $this->urlService,
+                        $this->mailer,
                         true,
                         $registerSubmit->sendPasswordByMail
                     );

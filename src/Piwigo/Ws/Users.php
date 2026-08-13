@@ -464,6 +464,7 @@ final readonly class Users
                 $params['password'],
                 $params['email'],
                 $this->urlService,
+                $this->mailService,
                 false, // notify admin
                 false // $params['send_password_by_mail']
             );

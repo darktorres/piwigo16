@@ -28,7 +28,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Event\Search\QsearchGetScopes;
     use Piwigo\Group\GroupEntity;
-    use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Permission\SqlCondition;
@@ -367,7 +366,6 @@ namespace Piwigo\Tests\Integration {
                     TranslatorTestFactory::get(),
                     $accessLevelChecker
                 ),
-                $this->mailService(),
                 HtmlServiceTestFactory::build(),
                 new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
                 new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
@@ -403,16 +401,6 @@ namespace Piwigo\Tests\Integration {
             return $userService;
         }
 
-        private function mailService(): MailService
-        {
-            $mailer = Kernel::container()->get(MailService::class);
-            if (! $mailer instanceof MailService) {
-                throw new LogicException('Container returned an unexpected type for ' . MailService::class);
-            }
-
-            return $mailer;
-        }
-
         /**
          * Same dependency graph as setUp()'s own $this->service, but with a
          * caller-supplied $repo (for forcing an internal collision retry) and/or
@@ -436,7 +424,6 @@ namespace Piwigo\Tests\Integration {
                     TranslatorTestFactory::get(),
                     $accessLevelChecker
                 ),
-                $this->mailService(),
                 $htmlRenderer,
                 new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
                 new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),

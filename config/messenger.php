@@ -5,10 +5,8 @@ declare(strict_types=1);
 use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Bootstrap\RequestBootstrap;
-use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -24,12 +22,8 @@ use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Job\ReindexImagesJob;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Lang\Translator;
-use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Session\SessionEntity;
-use Piwigo\Session\SessionService;
-use Piwigo\Users\CurrentUser;
 
 /**
  * Transport + routing + handler-factory configuration for
@@ -82,22 +76,6 @@ return [
             RequestBootstrap::filterState(),
             Paths::fromRoot(dirname(__DIR__))
         )),
-        SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService(
-            new Lang(
-                new Translator(RequestBootstrap::currentConfig()),
-                PresentationAccessor::htmlService(),
-                Paths::fromRoot(dirname(__DIR__)),
-                new InstallationFlag(),
-            ),
-            RequestBootstrap::currentConfig(),
-            new DeploymentPolicy(),
-            new PageState(),
-            Paths::fromRoot(dirname(__DIR__)),
-            new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), RequestBootstrap::currentConfig()),
-            new Translator(RequestBootstrap::currentConfig()),
-            RequestBootstrap::eventDispatcher(),
-            new CurrentUser(RequestBootstrap::currentConfig()),
-            PresentationAccessor::urlService(),
-        )),
+        SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(PresentationAccessor::mailService()),
     ],
 ];

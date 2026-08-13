@@ -65,6 +65,8 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
+use Piwigo\Mail\MailRecipientRepository;
+use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\UserMailNotificationEntity;
@@ -209,9 +211,9 @@ return [
 
     // Interface binding -- Piwigo\Users\UserRepository provides the
     // webmaster mail address; Piwigo\Mail\MailService takes
-    // WebmasterMailProviderInterface as an optional constructor test seam
-    // (lazily defaulting to the real UserRepository). Bound here for
-    // consistency with the other Core interfaces. See
+    // WebmasterMailProviderInterface as a real, required constructor
+    // collaborator (still a genuine test seam -- unit tests substitute a
+    // fake implementation). See
     // src/Piwigo/Core/WebmasterMailProviderInterface.php's own docblock.
     //
     // No equivalent entry for Piwigo\Core\ThemeConfProviderInterface: its
@@ -221,6 +223,12 @@ return [
     // Piwigo\Core\CurrentThemeConfProvider::current()->get()->themeConf($key)
     // instead.
     WebmasterMailProviderInterface::class => get(UserRepository::class),
+
+    // Interface binding, same shape as WebmasterMailProviderInterface
+    // above -- Piwigo\Mail\MailService's own required
+    // $mailRecipientRepo constructor collaborator, still a genuine test
+    // seam for unit tests substituting a fake implementation.
+    MailRecipientRepositoryInterface::class => get(MailRecipientRepository::class),
 
     // RouteCollection has no container entry of its own -- a real
     // constructor param autowire can't provide.

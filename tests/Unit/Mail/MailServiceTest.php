@@ -5,10 +5,8 @@ declare(strict_types=1);
 use Piwigo\Auth\AuthService;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
@@ -31,6 +29,7 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
+use Piwigo\Users\UserService;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
@@ -57,18 +56,24 @@ function mail_service_test_build(
 
     $lang = Kernel::container()->get(Lang::class);
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
-    $deploymentPolicy = Kernel::container()->get(DeploymentPolicy::class);
-    $pageState = Kernel::container()->get(PageState::class);
     $paths = Kernel::container()->get(Paths::class);
     $sessionService = Kernel::container()->get(SessionService::class);
     $translator = Kernel::container()->get(Translator::class);
     $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
     $currentUser = Kernel::container()->get(CurrentUser::class);
     $urlService = Kernel::container()->get(UrlServiceInterface::class);
-    if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig || ! $deploymentPolicy instanceof DeploymentPolicy
-        || ! $pageState instanceof PageState || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
+    $webmasterMailProvider ??= Kernel::container()->get(WebmasterMailProviderInterface::class);
+    $mailRecipientRepo ??= Kernel::container()->get(MailRecipientRepositoryInterface::class);
+    $authService ??= Kernel::container()->get(AuthService::class);
+    $userService = Kernel::container()->get(UserService::class);
+    if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig
+        || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
         || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
         || ! $currentUser instanceof CurrentUser || ! $urlService instanceof UrlServiceInterface
+        || ! $webmasterMailProvider instanceof WebmasterMailProviderInterface
+        || ! $mailRecipientRepo instanceof MailRecipientRepositoryInterface
+        || ! $authService instanceof AuthService
+        || ! $userService instanceof UserService
     ) {
         throw new LogicException('Container returned an unexpected type');
     }
@@ -76,8 +81,6 @@ function mail_service_test_build(
     return new MailService(
         $lang,
         $currentConfig,
-        $deploymentPolicy,
-        $pageState,
         $paths,
         $sessionService,
         $translator,
@@ -87,15 +90,17 @@ function mail_service_test_build(
         $webmasterMailProvider,
         $mailRecipientRepo,
         $authService,
+        $userService,
     );
 }
 
-// MailService takes WebmasterMailProviderInterface as an optional
-// constructor param (lazily defaulting to the real
-// Piwigo\Users\UserRepository, which would need a DB connection this
-// isolated test doesn't have), so the tests whose paths reach the
-// webmaster lookup (getMailConfiguration() always calls
-// getMailSenderEmail()) construct the service with this real fake.
+// MailService takes WebmasterMailProviderInterface as a required
+// constructor collaborator (mail_service_test_build()'s own default
+// resolves the real container-shared Piwigo\Users\UserRepository, which
+// would need a DB connection this isolated test doesn't have), so the
+// tests whose paths reach the webmaster lookup (getMailConfiguration()
+// always calls getMailSenderEmail()) construct the service with this
+// real fake instead.
 function mail_service_with_fake_webmaster(): MailService
 {
     return mail_service_test_build(new class() implements WebmasterMailProviderInterface {

@@ -24,7 +24,6 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
@@ -35,7 +34,6 @@ use Piwigo\Group\GroupService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
-use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -127,22 +125,6 @@ function userActivitySubControllerTestLang(): Lang
     return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
-function userActivitySubControllerTestMailService(): MailService
-{
-    return new MailService(
-        userActivitySubControllerTestLang(),
-        new CurrentConfig(),
-        new DeploymentPolicy(),
-        new PageState(),
-        Paths::fromRoot(sys_get_temp_dir()),
-        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), new CurrentConfig()),
-        new Translator(new CurrentConfig()),
-        new EventDispatcher(),
-        new CurrentUser(new CurrentConfig()),
-        UrlServiceTestFactory::build(),
-    );
-}
-
 function userActivitySubControllerTestUserService(ActivityService $activityService): UserService
 {
     $conn = DbConnection::build();
@@ -151,7 +133,6 @@ function userActivitySubControllerTestUserService(ActivityService $activityServi
         userActivitySubControllerTestLang(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        userActivitySubControllerTestMailService(),
         $activityService,
         HtmlServiceTestFactory::build(),
         $conn,

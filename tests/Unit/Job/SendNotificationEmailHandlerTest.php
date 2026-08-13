@@ -2,58 +2,38 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
-use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Job\Handler\SendNotificationEmailHandler;
 use Piwigo\Job\SendNotificationEmailJob;
-use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Users\CurrentUser;
 
-// MailService reaches the webmaster address through its optional
-// WebmasterMailProviderInterface constructor param. No fake is needed
-// here: the empty-$to job below short-circuits MailService::mail() to
-// `return true` before getMailConfiguration()/the webmaster lookup ever
-// runs (verified against mail()'s own first guard).
+// MailService reaches the webmaster address through its
+// WebmasterMailProviderInterface constructor collaborator. No fake is
+// needed here: the empty-$to job below short-circuits MailService::mail()
+// to `return true` before getMailConfiguration()/the webmaster lookup
+// ever runs (verified against mail()'s own first guard).
 
 /**
- * Every MailService::__construct() collaborator is resolved from a real
- * booted container -- Kernel::boot() is idempotent, so calling it here is
+ * MailService is fully container-resolvable (every constructor
+ * collaborator either bound or autowireable) -- resolve the real
+ * container-shared instance instead of hand-reconstructing it from its
+ * own collaborators. Kernel::boot() is idempotent, so calling it here is
  * a safe no-op when the caller already booted its own Kernel.
  */
 function send_notification_email_handler_test_mail_service(): MailService
 {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
 
-    $lang = Kernel::container()->get(Lang::class);
-    $currentConfig = Kernel::container()->get(CurrentConfig::class);
-    $deploymentPolicy = Kernel::container()->get(DeploymentPolicy::class);
-    $pageState = Kernel::container()->get(PageState::class);
-    $paths = Kernel::container()->get(Paths::class);
-    $sessionService = Kernel::container()->get(SessionService::class);
-    $translator = Kernel::container()->get(Translator::class);
-    $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
-    $currentUser = Kernel::container()->get(CurrentUser::class);
-    $urlService = Kernel::container()->get(UrlServiceInterface::class);
-    if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig || ! $deploymentPolicy instanceof DeploymentPolicy
-        || ! $pageState instanceof PageState || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
-        || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
-        || ! $currentUser instanceof CurrentUser || ! $urlService instanceof UrlServiceInterface
-    ) {
-        throw new LogicException('Container returned an unexpected type');
+    $mailService = Kernel::container()->get(MailService::class);
+    if (! $mailService instanceof MailService) {
+        throw new LogicException('Container returned an unexpected type for ' . MailService::class);
     }
 
-    return new MailService($lang, $currentConfig, $deploymentPolicy, $pageState, $paths, $sessionService, $translator, $eventDispatcher, $currentUser, $urlService);
+    return $mailService;
 }
 
 test('__invoke delegates to MailService::mail with the job to/args/tpl', function (): void {

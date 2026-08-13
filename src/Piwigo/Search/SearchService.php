@@ -22,7 +22,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
@@ -93,7 +92,6 @@ final readonly class SearchService
         private SearchRepository $repo,
         private PermissionService $permissionService,
         private CategoryService $categoryService,
-        private MailerInterface $mailer,
         private HtmlRenderingInterface $htmlRenderer,
         private RedirectServiceInterface $redirectService,
         private SessionService $sessionService,
@@ -1566,7 +1564,7 @@ final readonly class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $userService = $this->userService ?? new UserService($this->lang, new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), $this->mailer, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), $this->processCache(), $this->paths);
+        $userService = $this->userService ?? new UserService($this->lang, new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), $this->processCache(), $this->paths);
         $langCode = substr($userService->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector' . ucfirst($langCode);
         if (class_exists($className)) {

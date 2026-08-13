@@ -24,7 +24,6 @@ use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Search\QsearchGetScopes;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
@@ -63,10 +62,10 @@ use Piwigo\Users\UserService;
  * ImageRepositoryTest.php pattern for the repository, plus a real
  * Kernel::boot() (PermissionServiceTest.php's/PermalinkServiceTest.php's
  * own established beforeEach()/afterEach() precedent) for the rest of
- * this service's 17-dependency constructor -- CategoryService,
- * PermissionService, MailService, UserService and RedirectService all
- * need real, container-wired collaborators the way the Integration
- * original builds them, not a bare Kernel-free construction.
+ * this service's 16-dependency constructor -- CategoryService,
+ * PermissionService, UserService and RedirectService all need real,
+ * container-wired collaborators the way the Integration original builds
+ * them, not a bare Kernel-free construction.
  *
  * Same fixture shape as CategoryRepositoryTest/SearchRepositoryTest:
  * images 1-5 (1,2,3 in category 1 "Sample Album", 4,5 in category 2
@@ -162,16 +161,6 @@ function searchServiceTestUserService(): UserService
     return $userService;
 }
 
-function searchServiceTestMailService(): MailService
-{
-    $mailer = Kernel::container()->get(MailService::class);
-    if (! $mailer instanceof MailService) {
-        throw new LogicException('Container returned an unexpected type for ' . MailService::class);
-    }
-
-    return $mailer;
-}
-
 /**
  * Same dependency graph as beforeEach()'s own default service below,
  * with a caller-supplied HtmlRenderingInterface (for observing the
@@ -204,7 +193,6 @@ function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): Sea
             TranslatorTestFactory::get(),
             $accessLevelChecker
         ),
-        searchServiceTestMailService(),
         $htmlRenderer,
         new RedirectService(LangTestFactory::get(), searchServiceTestUserService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),

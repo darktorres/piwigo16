@@ -17,12 +17,10 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Lang\Translator;
-use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -56,26 +54,6 @@ function redirect_service_test_lang(): Lang
     return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
-/**
- * Same "no Kernel boot" reasoning as redirect_service_test_lang() above --
- * every MailService::__construct() collaborator is built bare, DB-free.
- */
-function redirect_service_test_mail_service(): MailService
-{
-    return new MailService(
-        redirect_service_test_lang(),
-        new CurrentConfig(),
-        new DeploymentPolicy(),
-        new PageState(),
-        Paths::fromRoot(sys_get_temp_dir()),
-        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), new CurrentConfig()),
-        new Translator(new CurrentConfig()),
-        new EventDispatcher(),
-        new CurrentUser(new CurrentConfig()),
-        UrlServiceTestFactory::build(),
-    );
-}
-
 function redirect_service_test_user_service(): UserService
 {
     $conn = DbConnection::build();
@@ -84,7 +62,6 @@ function redirect_service_test_user_service(): UserService
         redirect_service_test_lang(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        redirect_service_test_mail_service(),
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
         HtmlServiceTestFactory::build(),
         $conn,

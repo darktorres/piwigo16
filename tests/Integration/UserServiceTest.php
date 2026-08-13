@@ -72,6 +72,8 @@ namespace Piwigo\Tests\Integration {
 
         private UserService $service;
 
+        private MailService $mailer;
+
         private Connection $conn;
 
         private ProcessCache $processCache;
@@ -120,7 +122,8 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, $this->processCache, CurrentPathsTestFactory::get());
+            $this->mailer = $mailer;
+            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, $this->processCache, CurrentPathsTestFactory::get());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -215,7 +218,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testRegisterUserRejectsAnEmptyLogin(): void
         {
-            $result = $this->service->registerUser('', 'password123', null, UrlServiceTestFactory::build());
+            $result = $this->service->registerUser('', 'password123', null, UrlServiceTestFactory::build(), $this->mailer);
 
             self::assertNull($result->userId);
             self::assertNotSame([], $result->errors);
@@ -226,7 +229,7 @@ namespace Piwigo\Tests\Integration {
         {
             // 'guest' (fixture) has no email on file, so the duplicate-
             // account notice email is never attempted here.
-            $result = $this->service->registerUser('guest', 'password123', null, UrlServiceTestFactory::build());
+            $result = $this->service->registerUser('guest', 'password123', null, UrlServiceTestFactory::build(), $this->mailer);
 
             self::assertNull($result->userId);
             self::assertTrue($result->duplicateUsername);
@@ -241,7 +244,7 @@ namespace Piwigo\Tests\Integration {
                 ->executeQuery()
                 ->fetchOne();
 
-            $this->service->registerUser('guest', 'password123', null, UrlServiceTestFactory::build());
+            $this->service->registerUser('guest', 'password123', null, UrlServiceTestFactory::build(), $this->mailer);
 
             $countAfter = $this->conn->createQueryBuilder()
                 ->select('COUNT(*)')
@@ -266,7 +269,7 @@ namespace Piwigo\Tests\Integration {
             $defaultGroupId = $groupRepo->insert('p18-regression-' . bin2hex(random_bytes(4)), true);
 
             $login = 'p18-regression-' . bin2hex(random_bytes(4));
-            $result = $this->service->registerUser($login, 'password123', null, UrlServiceTestFactory::build());
+            $result = $this->service->registerUser($login, 'password123', null, UrlServiceTestFactory::build(), $this->mailer);
 
             try {
                 self::assertNotNull($result->userId);
@@ -936,7 +939,7 @@ namespace Piwigo\Tests\Integration {
             // reliable way to swallow it.
             set_error_handler(static fn (): bool => true);
             try {
-                $result = $this->service->registerUser($login, 'password123', null, UrlServiceTestFactory::build(), true, false);
+                $result = $this->service->registerUser($login, 'password123', null, UrlServiceTestFactory::build(), $this->mailer, true, false);
             } finally {
                 restore_error_handler();
             }
@@ -970,7 +973,7 @@ namespace Piwigo\Tests\Integration {
 
             set_error_handler(static fn (): bool => true);
             try {
-                $result = $this->service->registerUser($login, 'password123', null, UrlServiceTestFactory::build(), true, false);
+                $result = $this->service->registerUser($login, 'password123', null, UrlServiceTestFactory::build(), $this->mailer, true, false);
             } finally {
                 restore_error_handler();
             }
@@ -996,7 +999,8 @@ namespace Piwigo\Tests\Integration {
                 'trailing-space-' . bin2hex(random_bytes(3)) . ' ',
                 'password123',
                 null,
-                UrlServiceTestFactory::build()
+                UrlServiceTestFactory::build(),
+                $this->mailer
             );
 
             self::assertNull($result->userId);
@@ -1009,7 +1013,8 @@ namespace Piwigo\Tests\Integration {
                 ' leading-space-' . bin2hex(random_bytes(3)),
                 'password123',
                 null,
-                UrlServiceTestFactory::build()
+                UrlServiceTestFactory::build(),
+                $this->mailer
             );
 
             self::assertNull($result->userId);
@@ -1022,7 +1027,8 @@ namespace Piwigo\Tests\Integration {
                 '<b>tag-' . bin2hex(random_bytes(3)) . '</b>',
                 'password123',
                 null,
-                UrlServiceTestFactory::build()
+                UrlServiceTestFactory::build(),
+                $this->mailer
             );
 
             self::assertNull($result->userId);
@@ -1035,7 +1041,8 @@ namespace Piwigo\Tests\Integration {
                 'valid-login-' . bin2hex(random_bytes(3)),
                 'password123',
                 'not-an-email',
-                UrlServiceTestFactory::build()
+                UrlServiceTestFactory::build(),
+                $this->mailer
             );
 
             self::assertNull($result->userId);
@@ -1053,7 +1060,7 @@ namespace Piwigo\Tests\Integration {
             // test_register_user_sets_duplicate_username_without_revealing_it_in_errors).
             CurrentConfigTestFactory::get()->insensitiveCaseLogon = true;
 
-            $result = $this->service->registerUser('GUEST', 'password123', null, UrlServiceTestFactory::build());
+            $result = $this->service->registerUser('GUEST', 'password123', null, UrlServiceTestFactory::build(), $this->mailer);
 
             self::assertNull($result->userId);
             self::assertTrue($result->duplicateUsername);
@@ -1218,13 +1225,11 @@ namespace Piwigo\Tests\Integration {
             // $this->service is shared across every test in this file and
             // DeploymentPolicy is a constructor dependency, not a mutable
             // static, so it can't be flipped on the shared instance.
-            $mailer = Kernel::container()->get(MailService::class);
-            self::assertInstanceOf(MailService::class, $mailer);
             $installationFlag = Kernel::container()->get(InstallationFlag::class);
             if (! $installationFlag instanceof InstallationFlag) {
                 throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
             }
-            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, new ProcessCache(), CurrentPathsTestFactory::get());
+            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, new ProcessCache(), CurrentPathsTestFactory::get());
 
             try {
                 self::assertSame(0, $this->fetchOneInt(

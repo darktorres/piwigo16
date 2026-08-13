@@ -9,6 +9,7 @@ use LogicException;
 use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Auth\AuthService;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
@@ -21,10 +22,10 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\LoadingLang;
@@ -160,8 +161,6 @@ final class MailServiceTest extends IntegrationTestCase
 
     private function buildUserService(): UserService
     {
-        $mailer = Kernel::container()->get(MailService::class);
-        self::assertInstanceOf(MailService::class, $mailer);
         $paths = Kernel::container()->get(Paths::class);
         self::assertInstanceOf(Paths::class, $paths);
 
@@ -169,7 +168,6 @@ final class MailServiceTest extends IntegrationTestCase
             LangTestFactory::get(),
             new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()),
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
-            $mailer,
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
             HtmlServiceTestFactory::build(),
             $this->conn,
@@ -193,23 +191,27 @@ final class MailServiceTest extends IntegrationTestCase
     {
         $lang = Kernel::container()->get(Lang::class);
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
-        $deploymentPolicy = Kernel::container()->get(DeploymentPolicy::class);
-        $pageState = Kernel::container()->get(PageState::class);
         $paths = Kernel::container()->get(Paths::class);
         $sessionService = Kernel::container()->get(SessionService::class);
         $translator = Kernel::container()->get(Translator::class);
         $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
         $currentUser = Kernel::container()->get(CurrentUser::class);
         $urlService = Kernel::container()->get(UrlServiceInterface::class);
-        if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig || ! $deploymentPolicy instanceof DeploymentPolicy
-            || ! $pageState instanceof PageState || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
+        $webmasterMailProvider = Kernel::container()->get(WebmasterMailProviderInterface::class);
+        $authService = Kernel::container()->get(AuthService::class);
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig
+            || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
             || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
             || ! $currentUser instanceof CurrentUser || ! $urlService instanceof UrlServiceInterface
+            || ! $webmasterMailProvider instanceof WebmasterMailProviderInterface
+            || ! $authService instanceof AuthService
+            || ! $userService instanceof UserService
         ) {
             throw new LogicException('Container returned an unexpected type');
         }
 
-        return new MailService($lang, $currentConfig, $deploymentPolicy, $pageState, $paths, $sessionService, $translator, $eventDispatcher, $currentUser, $urlService, mailRecipientRepo: $repo);
+        return new MailService($lang, $currentConfig, $paths, $sessionService, $translator, $eventDispatcher, $currentUser, $urlService, $webmasterMailProvider, $repo, $authService, $userService);
     }
 
     private function setCurrentUserToFixtureAdmin(): void

@@ -23,7 +23,6 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
@@ -34,7 +33,6 @@ use Piwigo\Group\GroupService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
-use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -133,29 +131,13 @@ function userActivityTestActivityService(): ActivityService
     return new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class));
 }
 
-// $lang/$mailService/$userService below never observably affect
-// render()'s own default-path output -- same "type-satisfying instance
-// is enough" reasoning CoreUpdateServiceTest.php's own equivalent
-// helpers already established for these exact classes.
+// $lang/$userService below never observably affect render()'s own
+// default-path output -- same "type-satisfying instance is enough"
+// reasoning CoreUpdateServiceTest.php's own equivalent helpers already
+// established for these exact classes.
 function userActivityTestLang(): Lang
 {
     return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
-}
-
-function userActivityTestMailService(): MailService
-{
-    return new MailService(
-        userActivityTestLang(),
-        new CurrentConfig(),
-        new DeploymentPolicy(),
-        new PageState(),
-        Paths::fromRoot(sys_get_temp_dir()),
-        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), new CurrentConfig()),
-        new Translator(new CurrentConfig()),
-        new EventDispatcher(),
-        new CurrentUser(new CurrentConfig()),
-        UrlServiceTestFactory::build(),
-    );
 }
 
 function userActivityTestUserService(ActivityService $activityService): UserService
@@ -166,7 +148,6 @@ function userActivityTestUserService(ActivityService $activityService): UserServ
         userActivityTestLang(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        userActivityTestMailService(),
         $activityService,
         HtmlServiceTestFactory::build(),
         $conn,

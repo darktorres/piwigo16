@@ -126,7 +126,6 @@ final readonly class UserBootstrap
             RequestBootstrap::lang(),
             new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, RequestBootstrap::currentConfig()),
             EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-            $mailer,
             new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
             RequestBootstrap::htmlService(),
             $conn,
@@ -179,7 +178,7 @@ final readonly class UserBootstrap
                         throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
                     }
                     $user['id'] = $userService
-                        ->registerUser($remote_user, '', '', $urlService, false)
+                        ->registerUser($remote_user, '', '', $urlService, $mailer, false)
                         ->userId ?? false;
                 }
             }

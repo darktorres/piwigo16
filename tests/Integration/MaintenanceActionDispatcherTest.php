@@ -39,7 +39,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Image\ImageEntity;
     use Piwigo\Image\ImageService;
     use Piwigo\Lang\Translator;
-    use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
@@ -154,16 +153,11 @@ namespace Piwigo\Tests\Integration {
         private function maintenanceActionDispatcherTestUserService(): UserService
         {
             $conn = DbConnection::build();
-            $mailer = Kernel::container()->get(MailService::class);
-            if (! $mailer instanceof MailService) {
-                throw new LogicException('Container returned an unexpected type for ' . MailService::class);
-            }
 
             return new UserService(
                 LangTestFactory::get(),
                 new UserRepository(EntityManagerFactory::build($conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()),
                 EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-                $mailer,
                 $this->maintenanceActionDispatcherTestActivityService(),
                 HtmlServiceTestFactory::build(),
                 $conn,

@@ -35,7 +35,6 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
-use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -80,27 +79,6 @@ afterEach(function (): void {
 function piwigoInfosSenderTestLang(): Lang
 {
     return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
-}
-
-/**
- * Same "no Kernel::boot(), never actually read" reasoning as
- * piwigoInfosSenderTestLang() above -- every MailService::__construct()
- * collaborator is built bare, DB-free.
- */
-function piwigoInfosSenderTestMailService(): MailService
-{
-    return new MailService(
-        piwigoInfosSenderTestLang(),
-        new CurrentConfig(),
-        new DeploymentPolicy(),
-        new PageState(),
-        Paths::fromRoot(sys_get_temp_dir()),
-        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig()),
-        new Translator(new CurrentConfig()),
-        new EventDispatcher(),
-        new CurrentUser(new CurrentConfig()),
-        UrlServiceTestFactory::build(),
-    );
 }
 
 test('send returns immediately without touching the DB or network when telemetry is disabled', function (): void {
@@ -166,7 +144,6 @@ test('send returns immediately without touching the DB or network when telemetry
         piwigoInfosSenderTestLang(),
         new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), new CurrentConfig()),
         EntityManagerFactory::build()->getRepository(GroupEntity::class),
-        piwigoInfosSenderTestMailService(),
         $activityService,
         HtmlServiceTestFactory::build(),
         DbConnection::build(),

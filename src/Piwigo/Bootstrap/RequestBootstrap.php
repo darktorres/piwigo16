@@ -521,7 +521,6 @@ final class RequestBootstrap
             self::lang(),
             new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()),
             EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-            self::mailService(),
             self::activityService($conn),
             self::htmlService(),
             $conn,

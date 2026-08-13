@@ -6,6 +6,12 @@ use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Auth\AuthRepository;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\CookieService;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
+use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
@@ -20,6 +26,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
+use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
@@ -60,7 +67,6 @@ function core_update_service_test_user_service(): UserService
         core_update_service_test_lang(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        core_update_service_test_mail_service(),
         core_update_service_test_activity_service(),
         HtmlServiceTestFactory::build(),
         $conn,
@@ -92,17 +98,34 @@ function core_update_service_test_lang(): Lang
  */
 function core_update_service_test_mail_service(): MailService
 {
+    $conn = DbConnection::build();
+
     return new MailService(
         core_update_service_test_lang(),
         new CurrentConfig(),
-        new DeploymentPolicy(),
-        new PageState(),
         Paths::fromRoot(sys_get_temp_dir()),
-        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), new CurrentConfig()),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
         new Translator(new CurrentConfig()),
         new EventDispatcher(),
         new CurrentUser(new CurrentConfig()),
         UrlServiceTestFactory::build(),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
+        new MailRecipientRepository(EntityManagerFactory::build($conn)),
+        new AuthService(
+            new AuthRepository(EntityManagerFactory::build($conn)),
+            new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+            HtmlServiceTestFactory::build(),
+            new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
+            new CookieService(),
+            EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
+            new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
+            new EventDispatcher(),
+            new PageState(),
+            new CurrentUser(new CurrentConfig()),
+            new CurrentConfig(),
+            Paths::fromRoot(sys_get_temp_dir()),
+        ),
+        core_update_service_test_user_service(),
     );
 }
 

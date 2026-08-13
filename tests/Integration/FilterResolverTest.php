@@ -33,7 +33,6 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
-use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -121,13 +120,10 @@ final class FilterResolverTest extends IntegrationTestCase
             $accessLevelChecker,
         );
         $caddieRepo = $em->getRepository(CaddieEntity::class);
-        $mailer = Kernel::container()->get(MailService::class);
-        self::assertInstanceOf(MailService::class, $mailer);
         $userService = new UserService(
             LangTestFactory::get(),
             new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()),
             $em->getRepository(GroupEntity::class),
-            $mailer,
             new ActivityService($em->getRepository(ActivityEntity::class)),
             HtmlServiceTestFactory::build(),
             $this->conn,

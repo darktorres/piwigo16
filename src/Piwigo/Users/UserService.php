@@ -77,11 +77,17 @@ use SensitiveParameter;
  * assigns default groups, the same real dependency that put Group in
  * L2aCoreDomain in the first place).
  *
- * Constructor-injects MailerInterface (Piwigo\Core) rather than depending
- * on Piwigo\Mail\MailService directly -- Mail lives in L3Presentation
- * (constructs Piwigo\Template\Template), and L2aCoreDomain may not depend
- * upward on L3; see deptrac.yaml's own comment on the Mail namespace
- * entry and MailerInterface's own docblock.
+ * registerUser() takes MailerInterface (Piwigo\Core) as an explicit
+ * parameter rather than a constructor property -- Mail lives in
+ * L3Presentation (Piwigo\Mail\MailService constructs
+ * Piwigo\Template\Template), and L2aCoreDomain may not depend upward on
+ * L3; see deptrac.yaml's own comment on the Mail namespace entry and
+ * MailerInterface's own docblock. A constructor property would also
+ * create a real cycle: MailService::userService() needs a real
+ * UserService constructor property of its own (Category E/Category G
+ * DI-campaign fix), which MailerInterface's own concrete implementation
+ * (MailService) constructor-depending on UserService would make
+ * circular.
  *
  * Implements DefaultLanguageProviderInterface (Piwigo\Core) so
  * Piwigo\Core\Lang::load() (L1Infrastructure, static) can resolve the
@@ -94,7 +100,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private Lang $lang,
         private UserRepository $repo,
         private GroupRepository $groupRepo,
-        private MailerInterface $mailer,
         private ActivityLoggerInterface $activityLogger,
         private HtmlRenderingInterface $htmlRenderer,
         private Connection $conn,
@@ -327,6 +332,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         string $password,
         ?string $mailAddress,
         UrlServiceInterface $urlService,
+        MailerInterface $mailer,
         bool $notifyAdmin = true,
         bool $notifyUser = false
     ): RegistrationOutcome {
@@ -383,7 +389,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if ($errors !== [] || $duplicateUsername) {
             if ($duplicateUsername) {
-                $this->notifyExistingAccountOfDuplicateRegistration($login, $mailAddress);
+                $this->notifyExistingAccountOfDuplicateRegistration($login, $mailAddress, $mailer);
             }
 
             return new RegistrationOutcome(userId: null, errors: $errors, duplicateUsername: $duplicateUsername);
@@ -432,12 +438,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $emailAdminOnNewUserSetting = $this->currentConfig->emailAdminOnNewUser;
         if ($notifyAdmin && $emailAdminOnNewUserSetting !== 'none') {
-            $this->notifyAdminsOfNewRegistration($userId, $login, $mailAddress, $urlService);
+            $this->notifyAdminsOfNewRegistration($userId, $login, $mailAddress, $urlService, $mailer);
         }
 
         if ($notifyUser && InputValidator::checkEmailFormat($mailAddress)) {
             assert($mailAddress !== null);
-            $this->sendWelcomeEmail($login, $mailAddress, $urlService);
+            $this->sendWelcomeEmail($login, $mailAddress, $urlService, $mailer);
         }
 
         $this->eventDispatcher->dispatchNotify(new RegisterUser([
@@ -566,7 +572,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         return DefaultUserInfo::fromArray($stringKeyed);
     }
 
-    private function notifyExistingAccountOfDuplicateRegistration(string $login, ?string $mailAddress): void
+    private function notifyExistingAccountOfDuplicateRegistration(string $login, ?string $mailAddress, MailerInterface $mailer): void
     {
         $existing = $this->repo->findByUsernameCaseInsensitive($login);
         if (! $existing instanceof UsernameLookup || $existing->email === '' || ! InputValidator::checkEmailFormat($existing->email)) {
@@ -575,7 +581,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $gallery_title = $this->currentConfig->galleryTitle;
 
-        $this->mailer->mail(
+        $mailer->mail(
             $existing->email,
             [
                 'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Registration'),
@@ -590,7 +596,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         );
     }
 
-    private function notifyAdminsOfNewRegistration(UserId $userId, string $login, ?string $mailAddress, UrlServiceInterface $urlService): void
+    private function notifyAdminsOfNewRegistration(UserId $userId, string $login, ?string $mailAddress, UrlServiceInterface $urlService, MailerInterface $mailer): void
     {
 
         $adminUrl = $urlService->getAbsoluteRootUrl() . 'admin.php?page=user_list&user_id=' . $userId->value;
@@ -608,7 +614,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $groupId = $matches[1];
         }
 
-        $this->mailer->mailNotificationAdmins(
+        $mailer->mailNotificationAdmins(
             $this->lang->buildArgs('Registration of %s', stripslashes($login)),
             $keyargsContent,
             true,
@@ -616,7 +622,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         );
     }
 
-    private function sendWelcomeEmail(string $login, string $mailAddress, UrlServiceInterface $urlService): void
+    private function sendWelcomeEmail(string $login, string $mailAddress, UrlServiceInterface $urlService, MailerInterface $mailer): void
     {
 
         $length = mt_rand(10, 15);
@@ -636,7 +642,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $gallery_title = $this->currentConfig->galleryTitle;
 
-        $this->mailer->mail(
+        $mailer->mail(
             $mailAddress,
             [
                 'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Registration'),

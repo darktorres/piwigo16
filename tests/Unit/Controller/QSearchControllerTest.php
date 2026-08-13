@@ -25,7 +25,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Lang\Translator;
-use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
@@ -86,22 +85,6 @@ function qSearchTestLang(): Lang
     return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
-function qSearchTestMailService(): MailService
-{
-    return new MailService(
-        qSearchTestLang(),
-        new CurrentConfig(),
-        new DeploymentPolicy(),
-        new PageState(),
-        Paths::fromRoot(sys_get_temp_dir()),
-        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), new CurrentConfig()),
-        new Translator(new CurrentConfig()),
-        new EventDispatcher(),
-        new CurrentUser(new CurrentConfig()),
-        UrlServiceTestFactory::build(),
-    );
-}
-
 function qSearchTestUserService(): UserService
 {
     $conn = DbConnection::build();
@@ -110,7 +93,6 @@ function qSearchTestUserService(): UserService
         qSearchTestLang(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        qSearchTestMailService(),
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
         HtmlServiceTestFactory::build(),
         $conn,

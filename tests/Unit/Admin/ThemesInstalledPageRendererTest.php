@@ -23,7 +23,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
@@ -384,16 +383,11 @@ function themesInstalledLifecycle(): ExtensionLifecycle
 function themesInstalledLifecycleUserService(): UserService
 {
     $conn = DbConnection::build();
-    $mailer = Kernel::container()->get(MailService::class);
-    if (! $mailer instanceof MailService) {
-        throw new LogicException('Container returned an unexpected type for ' . MailService::class);
-    }
 
     return new UserService(
         LangTestFactory::get(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        $mailer,
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
         HtmlServiceTestFactory::build(),
         $conn,

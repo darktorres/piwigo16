@@ -9,42 +9,28 @@ use InvalidArgumentException;
 use LogicException;
 use Override;
 use Pelago\Emogrifier\CssInliner;
-use Piwigo\Activity\ActivityEntity;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
-use Piwigo\Auth\CookieService;
-use Piwigo\Auth\PasswordRepository;
-use Piwigo\Auth\PasswordService;
-use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
-use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Mail\BeforeParseMailTemplate;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\Projection\EmailRecipient;
 use Piwigo\Mail\Projection\MailContent;
@@ -56,7 +42,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\Mailer;
@@ -76,11 +61,14 @@ use Symfony\Component\Mime\Email;
  * settings read here (debug_mail, smtp_host, mail_sender_name, ...) reflect
  * real admin-configured values rather than install-time defaults.
  *
- * Accepts an optional WebmasterMailProviderInterface test seam (see the
- * constructor's own docblock). Remaining cross-domain calls (l10n(),
- * trigger_notify()/trigger_change()) stay as plain global-function calls
- * to the composer-autoloaded procedural helpers; l10n() itself stays a
- * bare call (see src/Piwigo/Lang/functions.php).
+ * Takes WebmasterMailProviderInterface as a real, required constructor
+ * collaborator (Piwigo\Users\UserRepository in production) -- still a
+ * genuine test seam (unit tests substitute a fake implementation), just
+ * not optional-with-lazy-default the way it once was. Remaining
+ * cross-domain calls (l10n(), trigger_notify()/trigger_change()) stay as
+ * plain global-function calls to the composer-autoloaded procedural
+ * helpers; l10n() itself stays a bare call (see
+ * src/Piwigo/Lang/functions.php).
  *
  * The template-render cache and language-switch stack are request-scoped
  * state with no other reader in the codebase -- kept as private instance
@@ -97,8 +85,12 @@ use Symfony\Component\Mime\Email;
  * Implements `Piwigo\Core\MailerInterface` so L2aCoreDomain/L2bExtendedDomain
  * classes that may not depend on this class directly (this file is
  * L3Presentation) can constructor-inject the interface instead —
- * `Users\UserService`/`Comment\CommentService`, bound via
- * `config/container.php`.
+ * `Comment\CommentService`, bound via `config/container.php`.
+ * `Users\UserService` takes it as an explicit `registerUser()` parameter
+ * instead of a constructor property, since this class constructor-injects
+ * `UserService` itself (see this constructor's own `$userService`
+ * property) -- a constructor cycle either direction would otherwise
+ * result.
  */
 final class MailService implements MailerInterface
 {
@@ -110,28 +102,19 @@ final class MailService implements MailerInterface
      */
     private const float MAIL_TRANSPORT_TIMEOUT_SECONDS = 10.0;
 
-    /**
-     * Optional-with-lazy-default rather than required: the dependency is
-     * only reached on the sender-fallback/Bcc-webmaster paths -- callers
-     * that never reach them get the real Piwigo\Users\UserRepository (a
-     * legal L3->L2a downward dep, constructed lazily so no DB connection
-     * is built for the many code paths that never need it); unit tests
-     * pass a fake implementation instead.
-     */
     public function __construct(
         private readonly Lang $lang,
         private readonly CurrentConfig $currentConfig,
-        private readonly DeploymentPolicy $deploymentPolicy,
-        private readonly PageState $pageState,
         private readonly Paths $paths,
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
         private readonly EventDispatcher $eventDispatcher,
         private readonly CurrentUser $currentUser,
         private readonly UrlServiceInterface $urlService,
-        private readonly ?WebmasterMailProviderInterface $webmasterMailProvider = null,
-        private readonly ?MailRecipientRepositoryInterface $mailRecipientRepo = null,
-        private readonly ?AuthService $authService = null,
+        private readonly WebmasterMailProviderInterface $webmasterMailProvider,
+        private readonly MailRecipientRepositoryInterface $mailRecipientRepo,
+        private readonly AuthService $authService,
+        private readonly UserService $userService,
     ) {}
 
     /**
@@ -177,23 +160,6 @@ final class MailService implements MailerInterface
         return $errorCollector;
     }
 
-    /**
-     * Container resolve, not a constructor property -- same reasoning as
-     * adminContext()/errorCollector()/processCache()/currentConfigService()
-     * above. Used only inside authService()/userService()'s own
-     * throwaway-fallback constructions below, for HtmlService's own
-     * required constructor collaborators.
-     */
-    private function htmlRenderer(): HtmlRenderingInterface
-    {
-        $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
-        if (! $htmlRenderer instanceof HtmlRenderingInterface) {
-            throw new LogicException('Container returned an unexpected type for ' . HtmlRenderingInterface::class);
-        }
-
-        return $htmlRenderer;
-    }
-
     private function processCache(): ProcessCache
     {
         $processCache = Kernel::container()->get(ProcessCache::class);
@@ -202,22 +168,6 @@ final class MailService implements MailerInterface
         }
 
         return $processCache;
-    }
-
-    /**
-     * Same reasoning as processCache() above -- used only inside
-     * userService()'s own throwaway-fallback construction below, for
-     * UserService's own required InstallationFlag/ProcessCache
-     * collaborators.
-     */
-    private function installationFlag(): InstallationFlag
-    {
-        $installationFlag = Kernel::container()->get(InstallationFlag::class);
-        if (! $installationFlag instanceof InstallationFlag) {
-            throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
-        }
-
-        return $installationFlag;
     }
 
     private function currentConfigService(): CurrentConfigService
@@ -232,80 +182,7 @@ final class MailService implements MailerInterface
 
     private function webmasterMailAddress(): string
     {
-        $provider = $this->webmasterMailProvider
-            ?? new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig);
-
-        return $provider->getWebmasterMailAddress();
-    }
-
-    /**
-     * Optional-with-lazy-default, same reasoning as
-     * $webmasterMailProvider above -- most callers never reach
-     * mailAdmins()/mailGroup() at all.
-     */
-    private function recipientRepo(): MailRecipientRepositoryInterface
-    {
-        return $this->mailRecipientRepo
-            ?? new MailRecipientRepository(EntityManagerFactory::build(DbConnection::build()));
-    }
-
-    /**
-     * Optional-with-lazy-default, same reasoning as
-     * $webmasterMailProvider above -- only mailGroup() reaches this. Unlike UserService (which
-     * genuinely can't be a constructor dependency here -- UserService
-     * constructor-depends on MailerInterface, i.e. this class, a real
-     * cycle), AuthService doesn't depend back on MailerInterface, so this
-     * is just the usual high-caller-count lazy-default, not a circular-
-     * dependency workaround.
-     */
-    private function authService(): AuthService
-    {
-        return $this->authService
-            ?? new AuthService(
-                new AuthRepository(EntityManagerFactory::build(DbConnection::build())),
-                new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)),
-                $this->htmlRenderer(),
-                new PasswordService(new PasswordRepository(EntityManagerFactory::build(DbConnection::build())), $this->deploymentPolicy),
-                new CookieService(),
-                EntityManagerFactory::build(DbConnection::build())->getRepository(UserFailedLoginEntity::class),
-                $this->sessionService,
-                $this->eventDispatcher,
-                $this->pageState,
-                $this->currentUser,
-                $this->currentConfig,
-                $this->paths,
-            );
-    }
-
-    /**
-     * DRY extraction, not a constructor dependency: unlike authService()
-     * above, UserService's own constructor takes MailerInterface (this
-     * class), so an optional-default constructor param the way
-     * $authService is would create a real eager-construction cycle the
-     * moment both sides used their own zero-arg default. A private method
-     * building a fresh instance keeps the exact same behavior every call
-     * site already had (a fresh `new self()` passed as UserService's own
-     * $mailer, not $this) -- was repeated verbatim at 2 call sites.
-     */
-    private function userService(): UserService
-    {
-        return new UserService(
-            $this->lang,
-            new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig),
-            EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class),
-            new self($this->lang, $this->currentConfig, $this->deploymentPolicy, $this->pageState, $this->paths, $this->sessionService, $this->translator, $this->eventDispatcher, $this->currentUser, $this->urlService),
-            new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)),
-            $this->htmlRenderer(),
-            DbConnection::build(),
-            $this->sessionService,
-            $this->eventDispatcher,
-            $this->deploymentPolicy,
-            $this->currentUser,
-            $this->currentConfig,
-            $this->installationFlag(),
-            $this->processCache(),
-            $this->paths,
-        );
+        return $this->webmasterMailProvider->getWebmasterMailAddress();
     }
 
     /**
@@ -648,7 +525,7 @@ final class MailService implements MailerInterface
         }
 
         if (is_array($subject) || is_array($content)) {
-            $this->switchLangTo($this->userService()->getDefaultLanguage());
+            $this->switchLangTo($this->userService->getDefaultLanguage());
 
             if (is_array($subject)) {
                 $subject = $this->lang->args($subject);
@@ -709,7 +586,7 @@ final class MailService implements MailerInterface
             $userStatuses[] = 'admin';
         }
 
-        $admins = $this->recipientRepo()
+        $admins = $this->mailRecipientRepo
             ->findAdminsAndWebmasters(
                 $userStatuses,
                 $groupId !== null ? (int) $groupId : null,
@@ -728,7 +605,7 @@ final class MailService implements MailerInterface
         // shared contract to also understand a real MailRecipient object.
         $adminRows = array_map(static fn (MailRecipient $r): array => $r->toArray(), $admins);
 
-        $this->switchLangTo($this->userService()->getDefaultLanguage());
+        $this->switchLangTo($this->userService->getDefaultLanguage());
         $return = $this->mail($adminRows, $args, $tpl);
         $this->switchLangBack();
 
@@ -753,7 +630,7 @@ final class MailService implements MailerInterface
             ? $args['language_selected']
             : null;
 
-        $languages = $this->recipientRepo()
+        $languages = $this->mailRecipientRepo
             ->findDistinctLanguagesInGroup(
                 $groupId,
                 $languageSelected,
@@ -768,7 +645,7 @@ final class MailService implements MailerInterface
                 continue;
             }
 
-            $users = $this->recipientRepo()
+            $users = $this->mailRecipientRepo
                 ->findByGroupAndLanguage(
                     $groupId,
                     $language,
@@ -783,7 +660,7 @@ final class MailService implements MailerInterface
             foreach ($users as $u) {
                 $uEmail = $u->email;
 
-                $authkey = $this->authService()
+                $authkey = $this->authService
                     ->createUserAuthKey($u->userId, $u->status);
 
                 $userTpl = $tpl;

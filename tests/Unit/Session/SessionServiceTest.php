@@ -304,6 +304,32 @@ test('setSessionVar/unsetSessionVar return false when no session is active', fun
         ->toBeFalse();
 });
 
+test('getSessionVar reads back a value written by setSessionVar', function (): void {
+    $service = makeSessionService();
+    $_SESSION = [];
+
+    $service->setSessionVar('foo', 'bar');
+
+    expect($service->getSessionVar('foo'))
+        ->toBe('bar');
+});
+
+test('getSessionVar returns null for a key that was never set', function (): void {
+    $service = makeSessionService();
+    $_SESSION = [];
+
+    expect($service->getSessionVar('never_set'))
+        ->toBeNull();
+});
+
+test('getSessionVar returns null when no session is active', function (): void {
+    $service = makeSessionService();
+    unset($_SESSION);
+
+    expect($service->getSessionVar('foo'))
+        ->toBeNull();
+});
+
 test('sessionWrite short-circuits to true without touching the repository when the request is api_key-authenticated', function (): void {
     // Same "never touches the repository's DB-backed methods" shape as
     // this file's own header comment: if this short-circuit branch

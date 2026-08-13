@@ -186,6 +186,19 @@ final readonly class SessionService
     }
 
     /**
+     * Generic counterpart to setSessionVar() -- every other getter in this
+     * class is a bespoke, narrowly-typed accessor for one of core's own
+     * known session keys, but PluginConfig\ExtensionSession (P27.2) needs
+     * a genuinely arbitrary-key read to back a plugin/theme's own
+     * namespaced session() store, the same generic-KV-bag rationale
+     * setSessionVar() itself already documents.
+     */
+    public function getSessionVar(string $var): mixed
+    {
+        return $_SESSION['pwg_' . $var] ?? null;
+    }
+
+    /**
      * `filter_enabled` -- every real caller casts to bool with a `false`
      * default regardless of whether the stored value itself is truthy, so
      * both are baked in here (unlike the other accessors below, which stay

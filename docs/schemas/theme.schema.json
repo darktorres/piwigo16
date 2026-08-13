@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/darktorres/piwigo17/17.x-rewrite/docs/schemas/theme.schema.json",
+  "title": "Piwigo theme manifest",
+  "description": "Declarative manifest for Piwigo 17+ themes. One file per theme at themes/<id>/theme.json. Read by ThemeRegistry at load time; validated via opis/json-schema.",
+  "type": "object",
+  "required": ["id", "name", "version", "description", "license", "minPiwigo", "main"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI pointing at this schema for IDE/editor autocomplete. Optional; not enforced."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Unique identifier. Must match the theme directory basename."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Human-readable theme name shown in the admin UI."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+(?:\\.[0-9]+){1,3}(?:[-+][A-Za-z0-9._-]+)?$",
+      "description": "Theme version — SemVer or PEM-revision-string (e.g. '1.4.0', '2.0', '1.0.0-beta.1', '1.0+r42'). Up to 4 dot-separated numeric segments: the bundled 'modus' theme's own real version is '16.3.0.1'."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Single-line description shown in the admin UI."
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "Theme homepage URL."
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Theme author name or organisation."
+    },
+    "authorUri": {
+      "type": "string",
+      "format": "uri",
+      "description": "Theme author URL."
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "description": "SPDX license identifier (e.g. 'GPL-3.0-or-later', 'MIT', 'Apache-2.0'). Required — this fork rejects themes distributed without a license."
+    },
+    "minPiwigo": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Minimum Piwigo version this theme targets, matching Core\\AppInfo::VERSION's own 3-part shape (e.g. '16.3.0') — see plugin.schema.json's own minPiwigo description for why this isn't a 'MAJOR.MINOR' branch marker."
+    },
+    "hasSettings": {
+      "oneOf": [{ "type": "boolean" }, { "type": "string", "enum": ["webmaster"] }],
+      "description": "Whether the theme exposes a settings page: true (admin), false (none), or 'webmaster' (webmaster-only). Default: false."
+    },
+    "require": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Map of dependency names to composer-style version constraints. Keys are 'piwigo' for core, 'plugin/<id>' for a plugin, or 'theme/<id>' for another theme."
+    },
+    "main": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\\\[A-Za-z_][A-Za-z0-9_]*)*$",
+      "description": "Fully-qualified class name implementing Piwigo\\PluginConfig\\ExtensionInterface."
+    },
+    "autoload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "psr-4": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "PSR-4 namespace prefix to directory map, relative to the theme root."
+        }
+      },
+      "description": "Autoload configuration for the theme's source files."
+    },
+    "parent": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$",
+      "description": "Parent theme id for inheritance. Omit for a root theme with no parent."
+    },
+    "loadParentCss": {
+      "type": "boolean",
+      "description": "Whether the parent theme's CSS loads before this theme's own CSS. Default: false."
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Map of asset kind to directory, relative to the theme root."
+    },
+    "localHead": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to a template fragment injected into the page <head>, relative to the theme root. Omit if the theme has none."
+    },
+    "colorscheme": {
+      "type": "string",
+      "enum": ["dark", "light"],
+      "description": "Picks a CSS variant in standard_pages/batch-manager templates. Omit when the theme inherits its colorscheme from its parent."
+    },
+    "useStandardPages": {
+      "type": "boolean",
+      "description": "Whether this theme opts into the standard_pages auth-page redirect. No bundled theme sets this today; reserved for third-party themes. Default: false."
+    }
+  }
+}

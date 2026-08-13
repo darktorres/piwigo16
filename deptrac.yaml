@@ -150,12 +150,32 @@ deptrac:
     # relocate just to satisfy this one caller). Nothing outside
     # RequestBootstrap (also L4Integration, same-layer deps always
     # allowed) depends on it, so this carve-out is safe.
+    # Piwigo\PluginConfig\{ExtensionInterface,ExtensionContext,
+    # ExtensionSession,PluginManifest,ThemeManifest} (P27.1/P27.2) sit here
+    # rather than PluginConfig's other two layers (EventDispatcher/
+    # EventHandler at L1Infrastructure; PluginRepository/PluginEntity at
+    # L2bExtendedDomain, both above): ExtensionContext needs read access
+    # to Config/Lang/Session (L1), CurrentUser/UserService (L2a), and
+    # CurrentTemplate (L3) -- L3Presentation is the lowest layer that
+    # covers all three, matching this layer's own established "L3 may
+    # depend on L2b/L2a/L1/L0" ruleset. redirect() doesn't push it to L4:
+    # Core\RedirectServiceInterface already lives at L1Infrastructure.
+    # ExtensionInterface/PluginManifest/ThemeManifest ride along in the
+    # same collector purely because ExtensionInterface::boot() takes
+    # ExtensionContext as a parameter -- without this, they'd have no
+    # layer at all. Piwigo\PluginConfig\Facade\ImageReadFacade (its own
+    # sub-namespace) needs Caddie (L2b) + Image/Category (L2a) read
+    # access, same reasoning, same layer.
     - name: L3Presentation
       collectors:
         - type: classLike
           value: ^Piwigo\\(Html|Http|Menu|Page|Template|Asset|Routing|Mail|Picture)\\.*
         - type: classLike
           value: ^Piwigo\\Listener\\(?!UploadFormatListener$).+
+        - type: classLike
+          value: ^Piwigo\\PluginConfig\\(ExtensionInterface|ExtensionContext|ExtensionSession|PluginManifest|ThemeManifest)$
+        - type: classLike
+          value: ^Piwigo\\PluginConfig\\Facade\\.*
     # L4 Integration — Piwigo\Command (bin/piwigo's Symfony Console
     # commands) has the same edge-of-the-app shape as Controller.
     - name: L4Integration

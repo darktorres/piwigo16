@@ -2,21 +2,47 @@
 
 declare(strict_types=1);
 
+use Piwigo\Cache\AbstractNamedCachePool;
+use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\CachePools;
+use Piwigo\Cache\TagCloudCachePool;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 
 /**
  * @return int the pool's real, resolved defaultLifetime (private on
- *             AbstractAdapter -- no public getter, so read via Reflection)
+ *             AbstractAdapter -- no public getter, so read via Reflection).
+ *             Unwraps AbstractNamedCachePool's own private `pool` property
+ *             first when given a named-pool wrapper (e.g. TagCloudCachePool)
+ *             instead of a bare adapter -- the wrapper composes an adapter
+ *             rather than extending it.
  */
 function cachePoolsTestDefaultLifetime(CacheItemPoolInterface $pool): int
 {
-    $lifetime = new ReflectionClass(AbstractAdapter::class)->getProperty('defaultLifetime')->getValue($pool);
+    $adapter = $pool;
+    if ($pool instanceof AbstractNamedCachePool) {
+        $unwrapped = new ReflectionClass(AbstractNamedCachePool::class)->getProperty('pool')->getValue($pool);
+        if (! $unwrapped instanceof CacheItemPoolInterface) {
+            throw new LogicException('AbstractNamedCachePool::$pool was not a CacheItemPoolInterface');
+        }
+        $adapter = $unwrapped;
+    }
+    $lifetime = new ReflectionClass(AbstractAdapter::class)->getProperty('defaultLifetime')->getValue($adapter);
     if (! is_int($lifetime)) {
         throw new LogicException('defaultLifetime was not an int');
     }
     return $lifetime;
+}
+
+/**
+ * Matches config/container.php's own TagCloudCachePool::class factory
+ * entry's literal namespace/TTL exactly -- built directly here (not
+ * container-resolved) since this whole file deliberately runs with no
+ * Kernel::boot() at all.
+ */
+function cachePoolsTestTagCloud(): TagCloudCachePool
+{
+    return new TagCloudCachePool(CacheFactory::create(namespace: 'piwigo.tag_cloud', defaultLifetime: 300));
 }
 
 // Filesystem-forced throughout: the real behavior under test is namespace
@@ -34,11 +60,12 @@ afterEach(function (): void {
             CachePools::permissions(),
             CachePools::effectivePermissions(),
             CachePools::categoryTree(),
-            CachePools::tagCloud(),
             CachePools::general(),
         ] as $pool) {
             $pool->clear();
         }
+        cachePoolsTestTagCloud()
+            ->clear();
     };
     $clear();
     putenv('PIWIGO_CACHE_ADAPTER');
@@ -79,15 +106,18 @@ test('permissions/effectivePermissions/categoryTree/tagCloud pools carry their o
     expect(cachePoolsTestDefaultLifetime(CachePools::permissions()))->toBe(30)
         ->and(cachePoolsTestDefaultLifetime(CachePools::effectivePermissions()))->toBe(30)
         ->and(cachePoolsTestDefaultLifetime(CachePools::categoryTree()))->toBe(300)
-        ->and(cachePoolsTestDefaultLifetime(CachePools::tagCloud()))->toBe(300);
+        ->and(cachePoolsTestDefaultLifetime(cachePoolsTestTagCloud()))
+        ->toBe(300);
 });
 
 test('config, tagCloud and general pools are each independently addressable', function (): void {
     CachePools::config()->save(CachePools::config()->getItem('k')->set('config_value'));
-    CachePools::tagCloud()->save(CachePools::tagCloud()->getItem('k')->set('tag_cloud_value'));
+    cachePoolsTestTagCloud()
+        ->save(cachePoolsTestTagCloud()->getItem('k')->set('tag_cloud_value'));
     CachePools::general()->save(CachePools::general()->getItem('k')->set('general_value'));
 
     expect(CachePools::config()->getItem('k')->get())->toBe('config_value')
-        ->and(CachePools::tagCloud()->getItem('k')->get())->toBe('tag_cloud_value')
+        ->and(cachePoolsTestTagCloud()->getItem('k')->get())
+        ->toBe('tag_cloud_value')
         ->and(CachePools::general()->getItem('k')->get())->toBe('general_value');
 });

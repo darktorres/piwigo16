@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
-use Piwigo\Cache\CachePools;
+use LogicException;
+use Piwigo\Cache\TagCloudCachePool;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Event\Tag\DeleteTags;
 use Piwigo\Event\Tag\GetTagAltNames;
@@ -64,6 +66,24 @@ final readonly class TagService
         private ImageService $imageService,
     ) {
         $this->tagIdFromTagNameCache = new TagIdCache();
+    }
+
+    /**
+     * Container resolve, not a constructor property -- TagService is
+     * constructed manually (`new TagService(...)`) at ~10 call sites, no
+     * DI container involvement at most of them; a required constructor
+     * param here would ripple to every one for a single caller
+     * (getAvailableTags() below). Same reasoning as UrlService's own
+     * translator()/currentLogger()/etc private resolver methods.
+     */
+    private function tagCloudCachePool(): TagCloudCachePool
+    {
+        $tagCloudCachePool = Kernel::container()->get(TagCloudCachePool::class);
+        if (! $tagCloudCachePool instanceof TagCloudCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . TagCloudCachePool::class);
+        }
+
+        return $tagCloudCachePool;
     }
 
     /**
@@ -212,17 +232,12 @@ final readonly class TagService
         $condition = $this->permissionService->getPermissionCriteria();
 
         if ($usePersistentCache) {
-            // CachePools::tagCloud() replaces the older
-            // CurrentPersistentCache mechanism -- a fixed 300s TTL instead
-            // of the previous cacheUpdateTime-keyed immediate invalidation,
-            // same accepted staleness tradeoff CategoryTreeCache's own
-            // docblock already documents for the equivalent categoryTree()
-            // wiring. TagService is constructed manually (`new
-            // TagService(...)`) at ~18 call sites, no DI container, so the
-            // pool is fetched inline here rather than constructor-injected
-            // (same reasoning as CachePools::config()'s own inline use in
-            // ConfigService).
-            $pool = CachePools::tagCloud();
+            // TagCloudCachePool replaces the older CurrentPersistentCache
+            // mechanism -- a fixed 300s TTL instead of the previous
+            // cacheUpdateTime-keyed immediate invalidation, same accepted
+            // staleness tradeoff CategoryTreeCache's own docblock already
+            // documents for the equivalent categoryTree() wiring.
+            $pool = $this->tagCloudCachePool();
             $item = $pool->getItem('counts_' . $this->currentUser->get()->id->value);
             $cached = $item->isHit() ? $item->get() : null;
             $tagCounters = is_array($cached) ? array_map(

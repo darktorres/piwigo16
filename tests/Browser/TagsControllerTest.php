@@ -5,8 +5,23 @@ declare(strict_types=1);
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TagCloudCachePool;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
+
+/**
+ * Matches config/container.php's own TagCloudCachePool::class factory
+ * entry's literal namespace/TTL exactly -- built directly here, not
+ * container-resolved: this Browser suite exercises the real app over
+ * HTTP, with no Kernel::boot() of its own in this test process, and a
+ * throwaway instance pointed at the same namespace clears the identical
+ * shared backing (see AbstractNamedCachePool's own docblock -- pool
+ * identity carries no correctness risk).
+ */
+function tagsControllerTestTagCloudCachePool(): TagCloudCachePool
+{
+    return new TagCloudCachePool(CacheFactory::create(namespace: 'piwigo.tag_cloud', defaultLifetime: 300));
+}
 
 /**
  * Piwigo\Controller\TagsController (tags.php) -- the front-end tag cloud/
@@ -51,7 +66,7 @@ it('renders the letters display mode, grouping tags by first letter', function (
     // a visible image (an inner join against image_category/image_tag,
     // confirmed live) -- a bare pwg.tags.add row with no photo never
     // appears on this front-end page. The result is also cached for 300s
-    // (Piwigo\Cache\CachePools::tagCloud()), so a freshly-tagged photo
+    // (Piwigo\Cache\TagCloudCachePool), so a freshly-tagged photo
     // still needs that pool cleared to show up within this same test run.
     $suffix = uniqid();
     $alphaTagId = tagsControllerAddTag($page, 'Alpha Tag ' . $suffix);
@@ -64,7 +79,8 @@ it('renders the letters display mode, grouping tags by first letter', function (
     ]);
     expect($updateResult['stat'] ?? null)->toBe('ok');
 
-    CachePools::tagCloud()->clear();
+    tagsControllerTestTagCloudCachePool()
+        ->clear();
 
     $page = H::navigateOk($page, '/tags.php?display_mode=letters');
 
@@ -204,7 +220,8 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
         ]);
         expect($updateResult['stat'] ?? null)->toBe('ok');
 
-        CachePools::tagCloud()->clear();
+        tagsControllerTestTagCloudCachePool()
+            ->clear();
 
         H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 

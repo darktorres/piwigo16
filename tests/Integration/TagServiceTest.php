@@ -12,7 +12,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Activity\ActivityService;
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Cache\CacheFactory;
-    use Piwigo\Cache\CachePools;
+    use Piwigo\Cache\TagCloudCachePool;
     use Piwigo\Cache\TranslationsCachePool;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
@@ -104,7 +104,11 @@ namespace Piwigo\Tests\Integration {
         #[Override]
         protected function tearDown(): void
         {
-            CachePools::tagCloud()->clear();
+            $tagCloudCachePool = Kernel::container()->get(TagCloudCachePool::class);
+            if (! $tagCloudCachePool instanceof TagCloudCachePool) {
+                throw new LogicException('Container returned an unexpected type for ' . TagCloudCachePool::class);
+            }
+            $tagCloudCachePool->clear();
             CurrentUserTestFactory::get()->reset();
             parent::tearDown();
         }
@@ -225,7 +229,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * CachePools::tagCloud() replaces the older
+         * TagCloudCachePool replaces the older
          * CurrentPersistentCache mechanism for getAvailableTags()'s
          * no-tag-id-filter branch -- proven the same way
          * ForbiddenCategoriesCacheTest/CategoryTreeCacheTest prove their

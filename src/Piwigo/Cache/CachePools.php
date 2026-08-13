@@ -74,16 +74,6 @@ final class CachePools
     }
 
     /**
-     * 300s TTL -- same reasoning as categoryTree() above. Real consumer:
-     * Piwigo\Tag\TagService::getAvailableTags(), which uses this pool
-     * instead of PersistentFileCache/CurrentPersistentCache.
-     */
-    public static function tagCloud(): CacheItemPoolInterface
-    {
-        return CacheFactory::create(namespace: 'piwigo.tag_cloud', defaultLifetime: 300);
-    }
-
-    /**
      * Catch-all pool for cacheable work that doesn't warrant its own named
      * pool -- callers should still prefer a dedicated method here once they
      * have specific TTL/invalidation needs, matching the reasoning that

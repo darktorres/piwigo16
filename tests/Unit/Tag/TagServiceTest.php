@@ -3,13 +3,11 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
-use Error;
-use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CacheFactory;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\TagCloudCachePool;
 use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -171,7 +169,11 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CachePools::tagCloud()->clear();
+    $tagCloudCachePool = Kernel::container()->get(TagCloudCachePool::class);
+    if (! $tagCloudCachePool instanceof TagCloudCachePool) {
+        throw new LogicException('Container returned an unexpected type for ' . TagCloudCachePool::class);
+    }
+    $tagCloudCachePool->clear();
     Kernel::reset();
     CurrentConfigTestFactory::get()->reset();
     CurrentUserTestFactory::get()->reset();
@@ -307,7 +309,7 @@ test('tagsCounterCompare() breaks ties by id', function (): void {
 });
 
 /**
- * CachePools::tagCloud() caches getAvailableTags()'s no-filter branch --
+ * TagCloudCachePool caches getAvailableTags()'s no-filter branch --
  * proven by mutating the underlying data after the first (caching)
  * call, then showing a 2nd no-filter call still returns the stale
  * result while an explicitly-filtered call (which always bypasses this
@@ -322,7 +324,7 @@ test('tagsCounterCompare() breaks ties by id', function (): void {
  * mechanism, same fix, as 'getTagIds() creates a new tag for a plain
  * name when allowed' above (reproduced live there: DeadlockException).
  */
-test('getAvailableTags() with no filter caches the result via CachePools::tagCloud()', function (): void {
+test('getAvailableTags() with no filter caches the result via TagCloudCachePool', function (): void {
     DbTransactionTestOverride::rollback();
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(2),

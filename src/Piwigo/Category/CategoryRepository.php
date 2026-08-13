@@ -44,6 +44,7 @@ use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Group\GroupAccessEntity;
@@ -1095,8 +1096,10 @@ final readonly class CategoryRepository
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.representativePictureId', ':null')
+            ->set('c.lastmodified', ':now')
             ->where('c.id IN (:ids)')
             ->setParameter('null', null)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', $ids)
             ->getQuery()
             ->execute();
@@ -1275,8 +1278,10 @@ final readonly class CategoryRepository
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.visible', ':visible')
+            ->set('c.lastmodified', ':now')
             ->where('c.id IN (:ids)')
             ->setParameter('visible', $visible)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', array_values($ids))
             ->getQuery()
             ->execute();
@@ -1296,8 +1301,10 @@ final readonly class CategoryRepository
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.commentable', ':commentable')
+            ->set('c.lastmodified', ':now')
             ->where('c.id IN (:ids)')
             ->setParameter('commentable', $commentable)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', array_values($ids))
             ->getQuery()
             ->execute();
@@ -1317,8 +1324,10 @@ final readonly class CategoryRepository
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.status', ':status')
+            ->set('c.lastmodified', ':now')
             ->where('c.id IN (:ids)')
             ->setParameter('status', $status)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', array_values($ids))
             ->getQuery()
             ->execute();
@@ -1352,8 +1361,10 @@ final readonly class CategoryRepository
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.imageOrder', ':imageOrder')
+            ->set('c.lastmodified', ':now')
             ->where('c.uppercats LIKE :uppercatsPrefix')
             ->setParameter('imageOrder', $imageOrder)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('uppercatsPrefix', $uppercatsPrefix . '%')
             ->getQuery()
             ->execute();
@@ -1779,8 +1790,10 @@ final readonly class CategoryRepository
             ->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.representativePictureId', ':imageId')
+            ->set('c.lastmodified', ':now')
             ->where('c.id = :categoryId')
             ->setParameter('imageId', $imageId)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('categoryId', $categoryId)
             ->getQuery()
             ->execute();
@@ -1849,8 +1862,10 @@ final readonly class CategoryRepository
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.idUppercat', ':newParent')
+            ->set('c.lastmodified', ':now')
             ->where('c.id IN (:ids)')
             ->setParameter('newParent', $newParent === 'NULL' ? null : (int) $newParent)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', array_values($ids))
             ->getQuery()
             ->execute();
@@ -2669,8 +2684,10 @@ final readonly class CategoryRepository
             ->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.representativePictureId', ':imageId')
+            ->set('c.lastmodified', ':now')
             ->where('c.id IN (:categoryIds)')
             ->setParameter('imageId', $imageId)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();

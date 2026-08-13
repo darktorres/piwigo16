@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Extensions;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Core\Env;
 use Piwigo\Users\UserInfoEntity;
 use RuntimeException;
 
@@ -214,8 +215,10 @@ final readonly class ExtensionRepository
         $this->em->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.theme', ':theme')
+            ->set('ui.lastmodified', ':now')
             ->where('ui.userId IN (:ids)')
             ->setParameter('theme', $theme)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', $userIds)
             ->getQuery()
             ->execute();
@@ -237,8 +240,10 @@ final readonly class ExtensionRepository
         $this->em->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.language', ':new')
+            ->set('ui.lastmodified', ':now')
             ->where('ui.language = :old')
             ->setParameter('new', $newLanguageVo)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('old', $oldLanguageVo)
             ->getQuery()
             ->execute();
@@ -258,8 +263,10 @@ final readonly class ExtensionRepository
         $this->em->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.language', ':language')
+            ->set('ui.lastmodified', ':now')
             ->where('ui.userId IN (:ids)')
             ->setParameter('language', $languageVo)
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', [$defaultUserId, $guestId])
             ->getQuery()
             ->execute();

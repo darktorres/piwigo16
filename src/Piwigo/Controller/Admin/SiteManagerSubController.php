@@ -142,7 +142,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             switch ($siteManagerRequest->action) {
                 case 'delete':
 
-                    $this->categoryService->deleteSite($site_id, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher, new PermalinkRepository($this->entityManager));
+                    $this->categoryService->deleteSite($site_id, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher, new PermalinkRepository($this->entityManager), $this->entityManager);
                     $this->pageState->addInfo($galleries_url . ' ' . $this->lang->t('deleted'));
                     break;
 

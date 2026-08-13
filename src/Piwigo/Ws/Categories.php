@@ -1139,7 +1139,7 @@ final readonly class Categories
             return new WsErrorResponse(500, 'unable to determine a new representative picture for this category');
         }
 
-        return $categoryService->getCategoryRepresentantProperties($representative_picture_id, $this->urlService, ImageStdParams::SMALL);
+        return $categoryService->getCategoryRepresentantProperties($representative_picture_id, $this->urlService, $this->entityManager, ImageStdParams::SMALL);
     }
 
     /**
@@ -1206,6 +1206,7 @@ final readonly class Categories
             $this->urlService,
             $this->sessionService,
             $this->eventDispatcher,
+            $this->entityManager,
             new PermalinkRepository($this->entityManager),
             $params['photo_deletion_mode']
         );

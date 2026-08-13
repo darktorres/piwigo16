@@ -988,7 +988,7 @@ test('deleteCategories() delete_orphans mode preserves an image still linked els
         // category must NOT delete it, unlike a genuinely orphaned image.
         $conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (2, {$tempId})");
 
-        $service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($conn)), 'delete_orphans');
+        $service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($conn), new PermalinkRepository(EntityManagerFactory::build($conn)), 'delete_orphans');
 
         expect($repo->findById($tempId))
             ->toBeNull();
@@ -1063,7 +1063,7 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
         EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
 
         try {
-            $service->deleteSite($siteId, new CategoryServiceUnitTestFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($conn)));
+            $service->deleteSite($siteId, new CategoryServiceUnitTestFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn));
 
             expect($repo->findById((int) $categoryId))
                 ->toBeNull();
@@ -1318,7 +1318,7 @@ test('getCategoryRepresentantProperties() throws for a missing image', function 
     // unconditionally when Kernel isn't booted -- confirmed by reading
     // its source. Kernel is already booted file-wide (see this file's
     // own top docblock for why).
-    expect(fn () => categoryServiceTestService()->getCategoryRepresentantProperties(999999, UrlServiceTestFactory::build()))
+    expect(fn () => categoryServiceTestService()->getCategoryRepresentantProperties(999999, UrlServiceTestFactory::build(), EntityManagerFactory::build(DbConnection::build())))
         ->toThrow(Exception::class, 'getCategoryRepresentantProperties(): image 999999 does not exist (stale representative_picture_id?)');
 });
 
@@ -1326,7 +1326,7 @@ test('getCategoryRepresentantProperties() returns a thumb url when size is null'
     $urlService = UrlServiceTestFactory::build();
 
     $props = categoryServiceTestService()
-        ->getCategoryRepresentantProperties(1, $urlService);
+        ->getCategoryRepresentantProperties(1, $urlService, EntityManagerFactory::build(DbConnection::build()));
 
     expect($props['url'])
         ->toBe($urlService->getRootUrl() . 'admin.php?page=photo-1');

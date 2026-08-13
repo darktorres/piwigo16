@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
@@ -52,8 +53,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Event\Album\CreateVirtualCategory;
 use Piwigo\Event\Album\DeleteCategories;
@@ -139,9 +138,9 @@ final readonly class CategoryService
      * this method is itself a `CategoryService` instance method, so no
      * second construction is needed.
      */
-    private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService, EventDispatcher $eventDispatcher): ImageService
+    private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager): ImageService
     {
-        return new ImageService(EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig, $this->paths(), $this);
+        return new ImageService($entityManager->getRepository(ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig, $this->paths(), $this);
     }
 
     /**
@@ -1102,10 +1101,10 @@ final readonly class CategoryService
      * first regardless, so this stays synchronous rather than a fire-
      * and-forget notification.
      */
-    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher, OldPermalinkLookupInterface $oldPermalinkRepo): void
+    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher, OldPermalinkLookupInterface $oldPermalinkRepo, EntityManagerInterface $entityManager): void
     {
         $categoryIds = $this->repo->findCategoryIdsBySite($id);
-        $this->deleteCategories($categoryIds, $activityLogger, $urlService, $sessionService, $eventDispatcher, oldPermalinkRepo: $oldPermalinkRepo);
+        $this->deleteCategories($categoryIds, $activityLogger, $urlService, $sessionService, $eventDispatcher, $entityManager, oldPermalinkRepo: $oldPermalinkRepo);
 
         $this->eventDispatcher->dispatchNotify(new DeleteSite($id));
     }
@@ -1126,7 +1125,7 @@ final readonly class CategoryService
      *    - delete_orphans: delete photos that are no longer linked to any category
      *    - force_delete: delete photos even if they are linked to another category
      */
-    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher, OldPermalinkLookupInterface $oldPermalinkRepo, string $photoDeletionMode = 'no_delete'): void
+    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager, OldPermalinkLookupInterface $oldPermalinkRepo, string $photoDeletionMode = 'no_delete'): void
     {
         if (count($ids) === 0) {
             return;
@@ -1136,7 +1135,7 @@ final readonly class CategoryService
         // sub-categories must be so
         $ids = $this->getSubcatIds($ids);
 
-        $imageService = $this->imageService($activityLogger, $sessionService, $eventDispatcher);
+        $imageService = $this->imageService($activityLogger, $sessionService, $eventDispatcher, $entityManager);
 
         // destruction of all photos physically linked to the category
         $elementIds = $this->repo->findStorageLinkedImageIds($ids);
@@ -1676,10 +1675,10 @@ final readonly class CategoryService
     /**
      * @return array{src: string|array<int|string, mixed>, url: string}
      */
-    public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, ?string $size = null): array
+    public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, EntityManagerInterface $entityManager, ?string $size = null): array
     {
         $imageIdVo = ImageId::tryFrom($imageId);
-        $row = $imageIdVo instanceof ImageId ? EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class)->findById($imageIdVo) : null;
+        $row = $imageIdVo instanceof ImageId ? $entityManager->getRepository(ImageEntity::class)->findById($imageIdVo) : null;
         if ($row === null) {
             throw new Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
         }

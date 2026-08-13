@@ -861,7 +861,7 @@ namespace Piwigo\Tests\Integration {
             // image.
             $this->conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$tempId})");
 
-            $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($this->conn)), 'delete_orphans');
+            $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($this->conn), new PermalinkRepository(EntityManagerFactory::build($this->conn)), 'delete_orphans');
 
             self::assertNull($this->repo->findById($tempId));
             $stillLinked = $this->conn->createQueryBuilder()
@@ -909,7 +909,7 @@ namespace Piwigo\Tests\Integration {
             EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
 
             try {
-                $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($this->conn)));
+                $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn));
 
                 self::assertNull($this->repo->findById((int) $categoryId));
                 self::assertNull($siteRepo->findGalleriesUrlById($siteId));
@@ -1146,14 +1146,14 @@ namespace Piwigo\Tests\Integration {
             $this->expectException(Exception::class);
             $this->expectExceptionMessageIsOrContains('getCategoryRepresentantProperties(): image 999999 does not exist (stale representative_picture_id?)');
 
-            $this->service->getCategoryRepresentantProperties(999999, UrlServiceTestFactory::build());
+            $this->service->getCategoryRepresentantProperties(999999, UrlServiceTestFactory::build(), EntityManagerFactory::build($this->conn));
         }
 
         public function testGetCategoryRepresentantPropertiesReturnsAThumbUrlWhenSizeIsNull(): void
         {
             $urlService = UrlServiceTestFactory::build();
 
-            $props = $this->service->getCategoryRepresentantProperties(1, $urlService);
+            $props = $this->service->getCategoryRepresentantProperties(1, $urlService, EntityManagerFactory::build($this->conn));
 
             self::assertSame($urlService->getRootUrl() . 'admin.php?page=photo-1', $props['url']);
         }

@@ -268,7 +268,7 @@ final class CatModifyPageRenderer
             // picture to display : the identified representant or the generic random
             // representant ?
             if (! in_array($category_representative_picture_id, [0, '0', ''], true)) {
-                $tpl_representant['picture'] = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, $urlService, ImageStdParams::MEDIUM);
+                $tpl_representant['picture'] = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, $urlService, $entityManager, ImageStdParams::MEDIUM);
             }
 
             // can the admin choose to set a new random representant ?

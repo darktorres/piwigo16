@@ -88,7 +88,7 @@ test('createNavigationBar clamps a negative start to zero', function (): void {
  * `< 0`). Both differ from real code ONLY at $start === 0 exactly, and
  * in that one case they wrongly re-clamp $start to 0 -- a value it
  * already was. Assigning 0 to an int already holding 0 is invisible to
- * every downstream computation; confirmed live both mutations produce
+ * every downstream computation; both mutations produce
  * byte-identical output to real code for $start = 0 (and, by the same
  * reasoning, every other integer, since `< 0` and `<= 0`/`< 1` agree
  * everywhere except exactly at 0).
@@ -97,7 +97,7 @@ test('createNavigationBar clamps a start of exactly -1, one below the real bound
     // Kills line 57's DecrementInteger (`$start < -1` instead of `<
     // 0`): a start of exactly -1 is the one value real code's `< 0`
     // check still clamps (to 0) but the mutant's `< -1` check does
-    // NOT (`-1 < -1` is false) -- confirmed live the unclamped -1
+    // NOT (`-1 < -1` is false) -- the unclamped -1
     // survives into the current-page arithmetic, producing 0.95
     // instead of the real, clamped 1.0.
     $currentConfig = new CurrentConfig();
@@ -116,7 +116,7 @@ test('createNavigationBar returns an empty bar when nbElement exactly equals nbE
     // exactly one page's worth of elements means no navigation is
     // needed (matches the "everything fits on one page" test's own
     // intent, but that test's nbElement=10 vs nbElementPage=20 never
-    // reaches the boundary itself). Confirmed live the mutant instead
+    // reaches the boundary itself). The mutant instead
     // treats an exact match as "more than one page".
     $currentConfig = new CurrentConfig();
     $service = new PaginationService($currentConfig);
@@ -150,7 +150,7 @@ test('createNavigationBar rounds the total page count up, not down or to nearest
  * int/float division promotes the whole expression to float the
  * moment EITHER side is cast, so which specific side carries the
  * explicit `(float)` makes no difference to the computed
- * $cur_page. Confirmed live: every test in this file passes
+ * $cur_page. Every test in this file passes
  * identically with this cast removed.
  */
 
@@ -160,7 +160,7 @@ test('createNavigationBar rounds the total page count up, not down or to nearest
  * downstream use -- comparisons (`$start < 0`), arithmetic (`(float)
  * $start / ...`) -- already coerces a numeric string the same way PHP's
  * own operators always do, regardless of these top-level casts.
- * Confirmed live: every test in this file, including the numeric-
+ * Every test in this file, including the numeric-
  * string one directly below, passes identically with both casts
  * removed.
  */
@@ -222,8 +222,7 @@ test('createNavigationBar builds the full "pages" link array around the current 
     // 93's own URL-building concatenation (MinusToPlus on $i-1,
     // MultiplicationToDivision, Decrement/IncrementInteger on the loop
     // index arithmetic, and all 3 ConcatRemoveLeft/Right/SwitchSides
-    // mutations on the url/start_str/offset concatenation) -- each
-    // independently confirmed live via a sed-applied mutation rerun.
+    // mutations on the url/start_str/offset concatenation).
     $currentConfig = new CurrentConfig();
     $service = new PaginationService($currentConfig);
 
@@ -287,7 +286,7 @@ test('createNavigationBar\'s "pages" array starts from floor(), not ceil() or ro
     // substitution here), and start=30 with a 20-per-page size gives a
     // genuinely non-integer current page (2.5) where floor (2), ceil
     // (3), and round (3, PHP rounds .5 away from zero) disagree --
-    // confirmed live each of these 3 mutations changes which pages
+    // each of these 3 mutations changes which pages
     // appear. CeilToRound isn't closable here since ceil(2.5) and
     // round(2.5) happen to agree -- see the dedicated test below.
     //
@@ -319,12 +318,12 @@ test('createNavigationBar\'s "pages" array starts from floor(), not ceil() or ro
 test('createNavigationBar\'s "pages" array uses ceil(), not round(), for its upper bound when they genuinely disagree', function (): void {
     // Kills line 91's CeilToRound specifically: ceil(2.3) is 3 but
     // round(2.3) is 2 (rounds down, unlike the .5 case above) --
-    // confirmed live the mutant's upper bound excludes page 3 that
+    // the mutant's upper bound excludes page 3 that
     // real code correctly includes.
     //
     // Also closes line 68's RoundToCeil: round(1.3) is 1 but ceil(1.3)
     // is 2, snapping $start to a different page boundary (20 vs 40) --
-    // confirmed live via the URL_PREV/URL_NEXT assertions below, which
+    // via the URL_PREV/URL_NEXT assertions below, which
     // the .5-boundary test above can't reach (round and ceil agree at
     // exactly .5).
     $currentConfig = new CurrentConfig();
@@ -389,8 +388,8 @@ test('createNavigationBar builds an exact URL_PREV/URL_NEXT/URL_LAST when nbElem
  * ($next < $last ? ...)` instead of `. (string) (...)`) -- string
  * concatenation already coerces an operand to string identically to
  * an explicit cast, the same "cast redundant with implicit operator
- * coercion" pattern already established elsewhere in this test suite,
- * confirmed live here too. And line 84's SmallerToSmallerOrEqual (`<=`
+ * coercion" pattern already established elsewhere in this test suite.
+ * And line 84's SmallerToSmallerOrEqual (`<=`
  * instead of `<`): the ternary's two branches are only reachable with
  * different results when $next actually differs from $last; at the
  * one point where `<` and `<=` themselves disagree (`$next ===

@@ -80,7 +80,7 @@ test('dumpForLog redacts sensitive properties', function (): void {
 });
 
 test('chmodValue defaults to 0777 in test mode regardless of SAPI, overridable via a plain nullable int', function (): void {
-    // Real bug, found live: this test used to assert 0755 here ("non-Apache
+    // This test used to assert 0755 here ("non-Apache
     // SAPI in a CLI test run") -- true of the raw SAPI-only heuristic, but
     // wrong for this actual test environment, where CLI-run suites (Unit/
     // Integration, as torres) and real Apache-served suites (Contract/

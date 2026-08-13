@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Db;
 
+use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use Piwigo\Cache\CachePools;
 use Piwigo\Db\DqlFunction\DateFormatMonthDayFunction;
@@ -127,7 +129,14 @@ final class EntityManagerFactory
         $config->addCustomNumericFunction('YEAR', YearFunction::class);
         $config->addCustomNumericFunction('MONTH', MonthFunction::class);
 
-        return new EntityManager($conn ?? DbConnection::build(), $config);
+        // Explicit, not the default `$conn->getEventManager()` -- DbConnection::build()
+        // returns a fresh, listener-less Connection on every call (not memoized), so
+        // relying on the default would silently drop the listener whenever $conn isn't
+        // an override the caller already wired one onto themselves.
+        $eventManager = new EventManager();
+        $eventManager->addEventListener([Events::prePersist, Events::preUpdate], new LastModifiedListener());
+
+        return new EntityManager($conn ?? DbConnection::build(), $config, $eventManager);
     }
 
     /**

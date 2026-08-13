@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\ORM\Mapping as ORM;
+use Override;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Db\HasLastModified;
 
 /**
  * Maps the `user_infos` table. `user_id` is the PK, application-assigned (the
@@ -74,7 +76,7 @@ use Piwigo\Common\ValueObject\UserId;
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'user_infos')]
-final class UserInfoEntity
+final class UserInfoEntity implements HasLastModified
 {
     public function __construct(
         #[ORM\Id]
@@ -118,4 +120,10 @@ final class UserInfoEntity
         #[ORM\Column(type: 'json', nullable: true)]
         public ?array $preferences,
     ) {}
+
+    #[Override]
+    public function touchLastModified(SqlDateTime $now): void
+    {
+        $this->lastmodified = $now;
+    }
 }

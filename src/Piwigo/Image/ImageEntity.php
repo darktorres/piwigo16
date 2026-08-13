@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Doctrine\ORM\Mapping as ORM;
+use Override;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Db\HasLastModified;
 
 /**
  * Maps the `images` table. `dateMetadataUpdate` stays plain ?string, not a VO
@@ -72,7 +74,7 @@ use Piwigo\Common\ValueObject\UserId;
  */
 #[ORM\Entity(repositoryClass: ImageRepository::class)]
 #[ORM\Table(name: 'images')]
-final class ImageEntity
+final class ImageEntity implements HasLastModified
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -134,4 +136,10 @@ final class ImageEntity
         #[ORM\Column(type: 'sql_datetime', length: 19)]
         public SqlDateTime $lastmodified,
     ) {}
+
+    #[Override]
+    public function touchLastModified(SqlDateTime $now): void
+    {
+        $this->lastmodified = $now;
+    }
 }

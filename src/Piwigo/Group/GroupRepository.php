@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Group;
 
-use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Exception\ConstraintViolationException;
 use Doctrine\DBAL\ParameterType;
@@ -13,6 +12,7 @@ use Doctrine\ORM\Query\Expr\Join;
 use LogicException;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Group\Projection\Group;
@@ -260,8 +260,10 @@ final class GroupRepository extends EntityRepository
     {
         // lastmodified set explicitly rather than left to the schema's own
         // DEFAULT CURRENT_TIMESTAMP, which reads the real DB-server clock --
-        // invisible to Env::now()'s PIWIGO_TEST_NOW freeze.
-        $entity = new GroupEntity($name, $isDefault, DateTimeImmutable::createFromInterface(Env::now()));
+        // invisible to Env::now()'s PIWIGO_TEST_NOW freeze. Redundant with
+        // LastModifiedListener's own prePersist handling but harmless (same
+        // value) -- not worth omitting for a required constructor param.
+        $entity = new GroupEntity($name, $isDefault, SqlDateTime::fromDateTime(Env::now()));
 
         $em = $this->getEntityManager();
         $em->persist($entity);

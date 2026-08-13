@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Group;
 
-use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
+use Override;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Db\HasLastModified;
 
 /**
  * Maps the `groups` table. Real shape: id smallint PK auto-increment, name
- * varchar(255) unique, is_default tinyint(1), lastmodified TIMESTAMP
- * (DB-managed ON UPDATE CURRENT_TIMESTAMP -- set explicitly to Env::now() on
- * insert only, matching GroupRepository::insert()'s pre-ORM behavior exactly;
- * never touched on update(), same as before).
+ * varchar(255) unique, is_default tinyint(1), lastmodified TIMESTAMP --
+ * kept on `Env::now()` by {@see \Piwigo\Db\LastModifiedListener} on every
+ * entity-flush insert/update, `EntityManagerFactory::build()`-wide, not by
+ * this entity or GroupRepository individually.
  *
  * `id`'s `group_id` column type is a custom Doctrine Type
  * ({@see \Piwigo\Db\Type\GroupIdType}, registered in
@@ -22,7 +24,7 @@ use Piwigo\Common\ValueObject\GroupId;
  */
 #[ORM\Entity(repositoryClass: GroupRepository::class)]
 #[ORM\Table(name: '`groups`')]
-final class GroupEntity
+final class GroupEntity implements HasLastModified
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -34,7 +36,13 @@ final class GroupEntity
         public string $name,
         #[ORM\Column(name: 'is_default', type: 'boolean')]
         public bool $isDefault,
-        #[ORM\Column(type: 'datetime_immutable')]
-        public DateTimeImmutable $lastmodified,
+        #[ORM\Column(type: 'sql_datetime', length: 19)]
+        public SqlDateTime $lastmodified,
     ) {}
+
+    #[Override]
+    public function touchLastModified(SqlDateTime $now): void
+    {
+        $this->lastmodified = $now;
+    }
 }

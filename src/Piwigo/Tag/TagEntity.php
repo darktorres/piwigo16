@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Tag;
 
 use Doctrine\ORM\Mapping as ORM;
+use Override;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Db\HasLastModified;
 
 /**
  * Maps the `tags` table. Real shape: id smallint PK auto-increment, name
@@ -24,7 +26,7 @@ use Piwigo\Common\ValueObject\TagId;
  */
 #[ORM\Entity(repositoryClass: TagRepository::class)]
 #[ORM\Table(name: 'tags')]
-final class TagEntity
+final class TagEntity implements HasLastModified
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -39,4 +41,10 @@ final class TagEntity
         #[ORM\Column(type: 'sql_datetime', length: 19)]
         public SqlDateTime $lastmodified,
     ) {}
+
+    #[Override]
+    public function touchLastModified(SqlDateTime $now): void
+    {
+        $this->lastmodified = $now;
+    }
 }

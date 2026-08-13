@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Doctrine\ORM\Mapping as ORM;
+use Override;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Db\HasLastModified;
 
 /**
  * Maps the `categories` table. `lastmodified` is `SqlDateTime`-typed -- `NOT
@@ -57,7 +59,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'categories')]
-final class CategoryEntity
+final class CategoryEntity implements HasLastModified
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -96,4 +98,10 @@ final class CategoryEntity
         #[ORM\Column(type: 'sql_datetime', length: 19)]
         public SqlDateTime $lastmodified,
     ) {}
+
+    #[Override]
+    public function touchLastModified(SqlDateTime $now): void
+    {
+        $this->lastmodified = $now;
+    }
 }

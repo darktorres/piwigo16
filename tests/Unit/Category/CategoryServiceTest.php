@@ -1401,25 +1401,38 @@ test('createVirtualCategory() inherits invisibility from an invisible parent', f
     // open for a whole test's duration -- same mechanism, same fix, as
     // TagServiceTest.php's 'getTagIds() creates a new tag for a plain
     // name when allowed' (reproduced live there: DeadlockException).
+    //
+    // A disposable, already-invisible parent -- not real fixture
+    // category 1 -- rather than flipping category 1's own visible
+    // column, which CategoryRepositoryTest.php's own findByVisible()
+    // exact-list assertion (both categories visible) can observe for
+    // the whole span this real commit is live before this test's own
+    // cleanup runs (confirmed live via a 15-run --parallel verification
+    // loop, the same class of leak the parent's own rank needed 'last'
+    // position for below).
     DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
-    $falseLiteral = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'false' : '0';
-    $trueLiteral = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'true' : '1';
+    $parentId = null;
     $newId = null;
 
     try {
         $service = categoryServiceTestServiceRepoForConn($conn)[0];
-        $conn->executeStatement("UPDATE categories SET visible = {$falseLiteral} WHERE id = 1");
+        $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
 
         // 'last' position -- createVirtualCategory()'s own internal
-        // updateGlobalRank() call renumbers EVERY child of category 1
+        // updateGlobalRank() call renumbers EVERY root category
         // sequentially by (rank, name); a default-position (rank 0)
-        // child would sort ahead of real fixture category 2 (rank 1) and
-        // displace its own rank to 2 for as long as this child exists.
-        // 'last' appends after category 2 instead, leaving its rank
-        // untouched.
+        // parent would sort ahead of real fixture category 1 (rank 1)
+        // and displace its own rank for as long as this parent exists.
         CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
-        $result = $service->createVirtualCategory('Invisible Child Test', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get(), 1);
+        $parentResult = $service->createVirtualCategory('ct_invisible_parent_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), null, [
+            'visible' => false,
+        ]);
+        expect(is_numeric($parentResult->id))
+            ->toBeTrue();
+        $parentId = (int) $parentResult->id;
+
+        $result = $service->createVirtualCategory('Invisible Child Test', $activityLogger, CurrentUserTestFactory::get(), $parentId);
         $newIdRaw = $result->id;
         expect(is_numeric($newIdRaw))
             ->toBeTrue();
@@ -1435,9 +1448,12 @@ test('createVirtualCategory() inherits invisibility from an invisible parent', f
         expect((int) (bool) $visible)
             ->toBe(0);
     } finally {
-        $conn->executeStatement("UPDATE categories SET visible = {$trueLiteral} WHERE id = 1");
         if ($newId !== null) {
             $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$newId]);
+        }
+
+        if ($parentId !== null) {
+            $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$parentId]);
         }
 
         CurrentConfigTestFactory::get()->newcatDefaultPosition = 'first';
@@ -1457,20 +1473,47 @@ test('createVirtualCategory() with inherit propagates the parent\'s groups and u
     // open for a whole test's duration -- same mechanism, same fix, as
     // TagServiceTest.php's 'getTagIds() creates a new tag for a plain
     // name when allowed' (reproduced live there: DeadlockException).
+    //
+    // A disposable, already-private parent carrying its own explicit
+    // group_access (mirroring category 1's real 1/2/3 grants) and
+    // user_access grants -- not real fixture category 1 -- rather than
+    // flipping category 1's own status column and adding a user_access
+    // row on it directly, both of which CategoryRepositoryTest.php's own
+    // findListForWs(publicOnly)/findPrivateCategoriesGrantedToUser()
+    // exact assertions can observe for the whole span this real commit
+    // is live before this test's own cleanup runs (confirmed live via a
+    // 15-run --parallel verification loop). Proves the exact same
+    // inherit-copy behavior without ever touching category 1 itself.
     DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
+    $parentId = null;
     $newId = null;
 
     try {
         [$service, $repo] = categoryServiceTestServiceRepoForConn($conn);
-        $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
-        $conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (4, 1)');
+        $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
 
         // 'last' position -- see 'createVirtualCategory() inherits
-        // invisibility...' above for why (avoids displacing category 2's
-        // own real rank as category 1's other child).
+        // invisibility...' above for why (avoids displacing category 1's
+        // own real rank as this private parent is itself root-level too).
         CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
-        $result = $service->createVirtualCategory('Inherited Child Test', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get(), 1, [
+        $parentResult = $service->createVirtualCategory('ct_inherit_parent_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), null, [
+            'status' => 'private',
+        ]);
+        expect(is_numeric($parentResult->id))
+            ->toBeTrue();
+        $parentId = (int) $parentResult->id;
+
+        // createVirtualCategory() auto-grants the parent's own creator
+        // (CurrentUserTestFactory's user 1) access on any private
+        // category it creates -- cleared here so the parent's own grants
+        // are exactly what this test controls below, not an implicit
+        // extra id the child's inherit-copy would also pick up.
+        $conn->executeStatement('DELETE FROM user_access WHERE cat_id = ?', [$parentId]);
+        $conn->executeStatement('INSERT INTO group_access (group_id, cat_id) VALUES (1, ?), (2, ?), (3, ?)', [$parentId, $parentId, $parentId]);
+        $conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (4, ?)', [$parentId]);
+
+        $result = $service->createVirtualCategory('Inherited Child Test', $activityLogger, CurrentUserTestFactory::get(), $parentId, [
             'inherit' => true,
         ]);
         $newIdRaw = $result->id;
@@ -1478,24 +1521,28 @@ test('createVirtualCategory() with inherit propagates the parent\'s groups and u
             ->toBeTrue();
         $newId = (int) $newIdRaw;
 
-        // category 1's own fixture groups (1, 2, 3) must all have been
+        // the parent's own group grants (1, 2, 3) must all have been
         // copied onto the new child.
         $groupIds = $repo->findAccessGroupIds(CategoryId::from($newId));
         sort($groupIds);
         expect($groupIds)
             ->toBe([1, 2, 3]);
 
-        // the user_access row just added to category 1 must also have
+        // the user_access row just added to the parent must also have
         // been copied.
         expect($repo->findAccessUserIds(CategoryId::from($newId)))
             ->toBe([4]);
     } finally {
-        $conn->executeStatement("UPDATE categories SET status = 'public' WHERE id = 1");
-        $conn->executeStatement('DELETE FROM user_access WHERE user_id = 4 AND cat_id = 1');
         if ($newId !== null) {
             $conn->executeStatement('DELETE FROM user_access WHERE cat_id = ?', [$newId]);
             $conn->executeStatement('DELETE FROM group_access WHERE cat_id = ?', [$newId]);
             $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$newId]);
+        }
+
+        if ($parentId !== null) {
+            $conn->executeStatement('DELETE FROM user_access WHERE cat_id = ?', [$parentId]);
+            $conn->executeStatement('DELETE FROM group_access WHERE cat_id = ?', [$parentId]);
+            $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$parentId]);
         }
 
         CurrentConfigTestFactory::get()->newcatDefaultPosition = 'first';

@@ -349,6 +349,14 @@ test('tagIdFromTagName() returns the existing id for a known name', function ():
 });
 
 test('tagIdFromTagName() creates a new tag for an unknown name', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction: `tags`
+    // carries a FULLTEXT index (tags_ft_name), and InnoDB's FULLTEXT
+    // auxiliary-index maintenance on INSERT can deadlock against another
+    // --parallel worker's own concurrent tags INSERT when held open for
+    // a whole test's duration -- same mechanism, same fix, as
+    // 'getTagIds() creates a new tag for a plain name when allowed'
+    // elsewhere in this file (reproduced live there: DeadlockException).
+    DbTransactionTestOverride::rollback();
     [$service, $conn] = tagServiceTestServiceConn();
     $name = 'brand-new-tag-' . uniqid();
 
@@ -703,6 +711,11 @@ test('addTags() is a no-op for empty tags or images', function (): void {
  * with a different id instead.
  */
 test('tagIdFromTagName() returns the cached id without touching the db', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- the
+    // first call below creates a new tag, same FULLTEXT auxiliary-index
+    // deadlock reasoning as 'tagIdFromTagName() creates a new tag for an
+    // unknown name' above.
+    DbTransactionTestOverride::rollback();
     [$service, $conn] = tagServiceTestServiceConn();
     $name = 'cache-hit-tag-' . uniqid();
 
@@ -771,6 +784,11 @@ test('tagIdFromTagName() matches via a plugin-supplied LIKE pattern', function (
  * would have resolved to an arbitrary existing tag.
  */
 test('tagIdFromTagName() treats a plugin-supplied SQL injection attempt as a literal value', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- this
+    // creates a new tag, same FULLTEXT auxiliary-index deadlock
+    // reasoning as 'tagIdFromTagName() creates a new tag for an unknown
+    // name' above.
+    DbTransactionTestOverride::rollback();
     [$service, $conn] = tagServiceTestServiceConn();
     EventDispatcherTestFactory::get()->addTypedHandler(
         GetTagNameLikeWhere::class,

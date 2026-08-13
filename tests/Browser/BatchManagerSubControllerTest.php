@@ -471,7 +471,7 @@ it('moves a whole_set selection, clearing all prior album links and adding the t
     // links with all old albums but their storage album" -- but a photo
     // uploaded via pwg.images.addSimple (H::uploadPhotoViaApi(), not a
     // filesystem-synchronized one) always has a real NULL
-    // storage_category_id (confirmed live), so no existing link is ever
+    // storage_category_id, so no existing link is ever
     // exempt: move() clears every prior album, including the one it was
     // uploaded to.
     expect(bmImageCategoryLinks($imageId, $storageAlbumId, $targetAlbumId))
@@ -690,7 +690,7 @@ it('rejects a delete action without confirm_deletion, then deletes and records a
     ]);
     expect($unconfirmedResult['status'])->toBe(200);
     // The loaded en_UK catalog rephrases this from its literal PHP source
-    // msgid ("You need to confirm deletion") -- confirmed live.
+    // msgid ("You need to confirm deletion").
     expect($unconfirmedResult['body'])->toContain('You must confirm deletion');
 
     $db = bmDbConnect();
@@ -857,7 +857,7 @@ it('rejects a whole_set value containing a non-digit element as a hacking attemp
  * (widths === [] at ~690-693) and computeFilesizeOptions()'s identical
  * fallback (filesizes === [] at ~773-774). Both read
  * ImageRepository::findDistinctDimensions()/findDistinctFilesizes(),
- * confirmed by direct source read to be UNCONDITIONAL queries over the
+ * UNCONDITIONAL queries over the
  * whole images table -- no category/album/search scoping of any
  * kind, unlike SearchFilterRenderer's own sibling "arbitrary bucket"
  * fallback (closed in SearchFilterRendererDataFiltersTest.php), which

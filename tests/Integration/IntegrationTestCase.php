@@ -18,7 +18,6 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
-use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
@@ -163,15 +162,6 @@ abstract class IntegrationTestCase extends TestCase
         if ($filterState instanceof FilterState) {
             $filterState->set(false);
         }
-        // Truncate rather than delete -- Piwigo\Core\ErrorCollector appends
-        // to this file while test-mode is active regardless of which test
-        // wrote it last; starting each test from an empty file is what lets
-        // assertNoPhpErrors() attribute an entry to the request that just
-        // ran, not a previous test. _data/logs/ isn't guaranteed to exist
-        // yet on a fresh checkout (see ErrorCollector::writeTestErrorsLog()'s
-        // own identical guard) -- ensure it before truncating.
-        FilesystemHelper::mkgetdir(dirname(__DIR__, 2) . '/_data/logs', CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_RECURSIVE);
-        file_put_contents(dirname(__DIR__, 2) . '/_data/logs/test_errors.log', '');
         // ConfigService::allRowsFromCacheOrDb()'s cache is real,
         // cross-process-persistent storage in this environment -- ext-apcu
         // isn't installed here, so
@@ -709,38 +699,6 @@ abstract class IntegrationTestCase extends TestCase
         }
 
         return implode(' ', $parts);
-    }
-
-    /**
-     * Fetches `GET /__test/errors` (Piwigo\Controller\TestErrorsController)
-     * and asserts Piwigo\Core\ErrorCollector's buffer is empty -- call after
-     * exercising a real HTTP request to catch PHP errors/warnings/
-     * deprecations a test might otherwise miss (the X-PHP-Error-N response
-     * headers are easy to not notice, and don't survive a redirect).
-     * Requires PIWIGO_BASE_URL, same as every other real-HTTP-request helper
-     * on this class.
-     */
-    protected function assertNoPhpErrors(): void
-    {
-        $this->requireBaseUrl();
-
-        $ch = curl_init($this->baseUrl . '/__test/errors');
-        self::assertNotFalse($ch, 'curl_init failed');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
-        $body = curl_exec($ch);
-
-        self::assertIsString($body, 'GET /__test/errors did not return a body');
-        $data = json_decode($body, true, flags: JSON_THROW_ON_ERROR);
-        self::assertIsArray($data);
-        self::assertArrayHasKey('errors', $data);
-        self::assertIsArray($data['errors']);
-        $errors = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $data['errors']);
-        self::assertSame(
-            [],
-            $data['errors'],
-            'Expected no PHP errors/warnings/deprecations, got: ' . implode('; ', $errors)
-        );
     }
 
     /**

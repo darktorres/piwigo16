@@ -11,12 +11,18 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Piwigo\Core\ErrorCollector::drain() directly (tests/Unit/Core/
  * ErrorCollectorTest.php); this controller class itself has no existing
  * Unit/Integration/Browser reference anywhere in the repo (confirmed via a
- * project-wide grep before writing this file), even though
- * IntegrationTestCase::assertNoPhpErrors() already calls the real route --
- * that hits the live Apache-served process, a different PHP process than
- * the one PHPUnit/Pest coverage instrumentation runs in, so the controller
+ * project-wide grep before writing this file) -- the route only runs
+ * against the live Apache-served process, a different PHP process than the
+ * one PHPUnit/Pest coverage instrumentation runs in, so the controller
  * class itself stays at 0% measured coverage until a real HTTP request
  * exercises it under the Browser suite's own coverage-visibility wiring.
+ * (A prior IntegrationTestCase::assertNoPhpErrors() helper also called this
+ * route, via a separate curl follow-up request after the one under test --
+ * deleted as dead code once ContractTestCase::assertNoPhpErrorHeaders()
+ * proved that approach structurally can't work: ErrorCollector's buffer is
+ * per-request, so a second, separate request can never see the first
+ * request's errors. See ContractTestCase's own docblock for the working
+ * alternative, which reads X-PHP-Error-N headers off the SAME response.)
  *
  * The class's own "outside test mode" 404 branch (`! Env::testModeIsActive()`)
  * is NOT exercised here: omitting the X-Piwigo-Env header makes

@@ -96,11 +96,11 @@ final class ErrorCollector
     /**
      * Returns the collected buffer, then clears it -- the read side of the
      * `GET /__test/errors` test-mode route (see Piwigo\Controller\
-     * TestErrorsController), which Integration tests poll via
-     * IntegrationTestCase::assertNoPhpErrors() after exercising a real HTTP
-     * request. Distinct from collected() (a non-destructive peek with no
-     * real caller yet) so a test can drain exactly the errors its own
-     * request produced without earlier requests' errors leaking forward.
+     * TestErrorsController), exercised directly by
+     * tests/Browser/TestErrorsControllerTest.php. Distinct from collected()
+     * (a non-destructive peek with no real caller yet) so a test can drain
+     * exactly the errors its own request produced without earlier requests'
+     * errors leaking forward.
      *
      * @return list<string>
      */

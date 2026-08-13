@@ -143,18 +143,13 @@ afterEach(function (): void {
 });
 
 test('getAllTags() returns every fixture tag alphabetically', function (): void {
-    // getAllTags() returns literally every row in `tags`, not just the 3
-    // real fixture ones -- filtered down to just those here rather than
-    // an unfiltered toBe(), since another --parallel file's own
-    // disposable-tag test (any of many across the Tag test files) can
-    // transiently add an extra row while this runs; what's actually
-    // under test is the alphabetical ordering among the real tags, not
-    // "nothing else in the whole suite ever creates a tag at this exact
-    // instant." Confirmed live via a 15-run --parallel verification loop.
+    // getAllTags() returns literally every row in `tags` -- the fixture
+    // has exactly 3 (this test's own transaction never sees any other
+    // --parallel worker's uncommitted disposable-tag rows), so an
+    // unfiltered assertion also proves the alphabetical ordering.
     $names = array_column(tagServiceTestService()->getAllTags(HtmlServiceTestFactory::build()), 'name');
-    $realNames = array_values(array_intersect($names, ['family', 'nature', 'travel']));
 
-    expect($realNames)
+    expect($names)
         ->toBe(['family', 'nature', 'travel']);
 });
 
@@ -367,24 +362,12 @@ test('tagIdFromTagName() creates a new tag for an unknown name', function (): vo
 });
 
 /**
- * setTagsOf() internally opens a *second*, independent DB connection
- * for its own trailing updateImagesLastmodified() call (TagService::
- * newImageService()'s own docblock: inline-constructed, not
- * constructor-injected) -- transaction-wrapping this test the way every
- * other file in this campaign does self-deadlocks: the outer
- * transaction's own FK-driven shared lock on the target image row (from
- * the image_tag delete+insert) blocks that inner connection's own
- * UPDATE on the same row, which never gets released before the outer
- * transaction itself would commit/rollback. Confirmed live (a real
- * LockWaitTimeoutException, reproduced twice in an otherwise-idle
- * isolated run). A disposable image row -- not transaction isolation --
- * is the fix here: TagRepositoryTest.php's own disposable-tag tests
- * already contest every real fixture image (1, 4, 5) as their "known
- * image" fixture, so reusing any of them (even non-transactionally)
- * risks the same cross-file collision setTagsOf()'s own blanket
- * delete-then-insert caused earlier in this campaign (a real fixture
- * row disappearing mid-test, confirmed live via a 30-run --parallel
- * loop). A randomized id below the real auto-increment counter (already
+ * A disposable image row for setTagsOf()-based tests below, rather than
+ * a real fixture image -- TagRepositoryTest.php's own disposable-tag
+ * tests already treat images 1, 4 and 5 as their own "known image"
+ * fixtures, so setTagsOf()'s own blanket delete-then-insert of
+ * image_tag rows targets an image no other file has any stake in. A
+ * randomized id below the real auto-increment counter (already
  * 700,000+, confirmed live) avoids ever colliding with a future
  * auto-generated row.
  */
@@ -459,8 +442,8 @@ test('setTagsOf() creates then overwrites image tag associations', function (): 
  * this would have wrongly reported every image as changed on every
  * call, even when the tag list genuinely didn't change.
  *
- * Disposable image row -- see the sibling test above for why this
- * can't be transaction-wrapped instead.
+ * Disposable image row -- see tagServiceTestDisposableImageId()'s own
+ * docblock for why.
  */
 test('compareImageTagLists() reports no change when tags are set to the same values', function (): void {
     $conn = DbConnection::build();

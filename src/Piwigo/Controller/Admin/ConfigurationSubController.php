@@ -847,8 +847,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      * Every branch is a real bool checkbox except 'index_search_in_set_action'
      * (CurrentConfig::indexSearchInSetAction()), a 'results'|'filter' string
      * config value grouped here anyway since this dispatcher only cares
-     * about the key set, not a strict boolean contract -- verified against
-     * every one of the ~48 delegate methods' own return types, not assumed.
+     * about the key set, not a strict boolean contract, matching each of
+     * the ~48 delegate methods' own return type.
      */
     private function checkboxValue(string $checkbox): bool|string
     {

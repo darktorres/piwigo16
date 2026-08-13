@@ -203,9 +203,9 @@ test('currentTemplate resolver throws when the container returns an unexpected t
     // argument (self::urlService(), evaluated before currentTemplate())
     // transitively resolves HtmlService -- which independently needs
     // CurrentTemplate as a natively-typed constructor param -- so going
-    // through finalizeOutput() (confirmed live via a full stack trace)
-    // trips PHP's own TypeError on THAT unrelated construction first,
-    // before this method's own manual instanceof guard ever runs.
+    // through finalizeOutput() trips PHP's own TypeError on THAT
+    // unrelated construction first, before this method's own manual
+    // instanceof guard ever runs.
     // Invoking the private currentTemplate() directly is the only way to
     // reach its own guard in isolation.
     $currentTemplateMethod = new ReflectionMethod(Template::class, 'currentTemplate');

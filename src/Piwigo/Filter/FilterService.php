@@ -48,6 +48,28 @@ final class FilterService implements FilterUpdaterInterface
     ) {}
 
     /**
+     * Built from this class's own already-required $entityManager/
+     * $currentConfig/$filterState -- PermissionRepository/CategoryRepository
+     * need only $entityManager/$currentConfig, GroupRepository is
+     * $entityManager's own getRepository() call. $currentUser/
+     * $accessLevelChecker aren't constructor properties (this class has no
+     * general need for either), so both come in as params from this
+     * method's one real caller below, matching Auth\AccessLevelChecker's
+     * own "safe to construct eagerly" docblock.
+     */
+    private function permissionService(CurrentUser $currentUser, AccessLevelChecker $accessLevelChecker): PermissionService
+    {
+        return new PermissionService(
+            new PermissionRepository($this->entityManager),
+            $this->entityManager->getRepository(GroupEntity::class),
+            new CategoryRepository($this->entityManager, $this->currentConfig),
+            $currentUser,
+            $this->filterState,
+            $accessLevelChecker,
+        );
+    }
+
+    /**
      * Builds the request's $filter global — the top-level body of the
      * deleted include/filter.inc.php, ported verbatim.
      * Called by Piwigo\Bootstrap\RequestBootstrap::finalize() when
@@ -162,7 +184,7 @@ final class FilterService implements FilterUpdaterInterface
                 $computedCategories = new CategoryService(
                     $this->lang,
                     new CategoryRepository($this->entityManager, $this->currentConfig),
-                    new PermissionService(new PermissionRepository($this->entityManager), $this->entityManager->getRepository(GroupEntity::class), new CategoryRepository($this->entityManager, $this->currentConfig), $currentUser, $this->filterState, $accessLevelChecker),
+                    $this->permissionService($currentUser, $accessLevelChecker),
                     $this->currentConfig,
                     $this->eventDispatcher,
                     $this->translator,

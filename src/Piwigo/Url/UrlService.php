@@ -157,9 +157,9 @@ final class UrlService implements UrlServiceInterface
 
     /**
      * Same reasoning as currentLogger()/sessionService()/translator()
-     * above -- used only inside this class's own 2 `new
-     * PermissionService(...)` construction sites. Falls back to a fresh,
-     * uninitialised instance when `Kernel::boot()` hasn't run.
+     * above -- used only inside this class's own permissionService()
+     * resolver below. Falls back to a fresh, uninitialised instance when
+     * `Kernel::boot()` hasn't run.
      */
     private function filterState(): FilterState
     {
@@ -173,6 +173,31 @@ final class UrlService implements UrlServiceInterface
         }
 
         return new FilterState();
+    }
+
+    /**
+     * Built from this class's own already-required/already-resolvable
+     * properties -- PermissionRepository/CategoryRepository need only
+     * this class's own $entityManager/$currentConfig, GroupRepository is
+     * $entityManager's own getRepository() call, CurrentUser is already a
+     * constructor property, and FilterState/AccessLevelChecker come from
+     * this class's own filterState()/accessLevelChecker() resolvers above
+     * -- no container resolve needed. Used at this class's own 3 `new
+     * PermissionService(...)` construction sites this replaces
+     * (parseSectionUrl()'s categories branch, and twice more inside its
+     * tags branch's nested TagService/ImageService/CategoryService
+     * construction).
+     */
+    private function permissionService(): PermissionService
+    {
+        return new PermissionService(
+            new PermissionRepository($this->entityManager),
+            $this->entityManager->getRepository(GroupEntity::class),
+            new CategoryRepository($this->entityManager, $this->currentConfig),
+            $this->currentUser,
+            $this->filterState(),
+            $this->accessLevelChecker(),
+        );
     }
 
     /**
@@ -709,7 +734,7 @@ final class UrlService implements UrlServiceInterface
             $categoryService = new CategoryService(
                 $this->lang,
                 new CategoryRepository($this->entityManager, $this->currentConfig),
-                new PermissionService(new PermissionRepository($this->entityManager), $this->entityManager->getRepository(GroupEntity::class), new CategoryRepository($this->entityManager, $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()),
+                $this->permissionService(),
                 $this->currentConfig,
                 $this->eventDispatcher,
                 $this->translator(),
@@ -841,7 +866,7 @@ final class UrlService implements UrlServiceInterface
                 $this->htmlRenderer->badRequest($redirectService, 'at least one tag required');
             }
 
-            $page['tags'] = new TagService($this->lang, $this->entityManager->getRepository(TagEntity::class), new PermissionService(new PermissionRepository($this->entityManager), $this->entityManager->getRepository(GroupEntity::class), new CategoryRepository($this->entityManager, $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), new ImageService($this->entityManager->getRepository(ImageEntity::class), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->sessionService(), $this->eventDispatcher, $this->currentConfig, $this->paths(), new CategoryService($this->lang, new CategoryRepository($this->entityManager, $this->currentConfig), new PermissionService(new PermissionRepository($this->entityManager), $this->entityManager->getRepository(GroupEntity::class), new CategoryRepository($this->entityManager, $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()), $this->currentConfig, $this->eventDispatcher, $this->translator(), $this->accessLevelChecker(), new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig))))
+            $page['tags'] = new TagService($this->lang, $this->entityManager->getRepository(TagEntity::class), $this->permissionService(), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), new ImageService($this->entityManager->getRepository(ImageEntity::class), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->sessionService(), $this->eventDispatcher, $this->currentConfig, $this->paths(), new CategoryService($this->lang, new CategoryRepository($this->entityManager, $this->currentConfig), $this->permissionService(), $this->currentConfig, $this->eventDispatcher, $this->translator(), $this->accessLevelChecker(), new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig))))
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');

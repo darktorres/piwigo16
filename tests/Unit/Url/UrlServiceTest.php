@@ -1854,15 +1854,27 @@ test('parseSectionUrl collects every tag token via the while loop before advanci
     // '3' and '5' tokens (collecting into $requested_tag_ids) before
     // $nextToken advanced past them -- a WhileAlwaysFalse mutation would
     // leave $i at its initial value (0) instead.
-    $service = UrlServiceTestFactory::build();
-    $i = 0;
+    //
+    // Same "real booted Kernel + a real Paths" requirement as the
+    // categories-branch tests above: the tags branch unconditionally
+    // constructs a TagService (needing a real ImageService collaborator,
+    // in turn needing a real Paths) once tag identifiers are found.
+    KernelContainerOverride::with(
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
+        static function (): void {
+            $service = UrlServiceTestFactory::build();
+            $i = 0;
 
-    $page = $service->parseSectionUrl(['tags', '3', '5'], $i, new UrlServiceTestRedirectService());
+            $page = $service->parseSectionUrl(['tags', '3', '5'], $i, new UrlServiceTestRedirectService());
 
-    expect($i)
-        ->toBe(3)
-        ->and($page['tags'])->toHaveCount(1)
-        ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
+            expect($i)
+                ->toBe(3)
+                ->and($page['tags'])->toHaveCount(1)
+                ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
+        }
+    );
 });
 
 test('parseSectionUrl stops collecting tag tokens at a "start-" continuation token, without consuming it', function (): void {
@@ -1872,15 +1884,25 @@ test('parseSectionUrl stops collecting tag tokens at a "start-" continuation tok
     // "start-" token immediately after a real tag id, confirming the
     // loop breaks (leaving $i pointed AT the "start-" token, not past
     // it) rather than mistakenly consuming it as a third tag identifier.
-    $service = UrlServiceTestFactory::build();
-    $i = 0;
+    //
+    // Same "real booted Kernel + a real Paths" requirement as the sibling
+    // test above.
+    KernelContainerOverride::with(
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
+        static function (): void {
+            $service = UrlServiceTestFactory::build();
+            $i = 0;
 
-    $page = $service->parseSectionUrl(['tags', '3', 'start-5'], $i, new UrlServiceTestRedirectService());
+            $page = $service->parseSectionUrl(['tags', '3', 'start-5'], $i, new UrlServiceTestRedirectService());
 
-    expect($i)
-        ->toBe(2)
-        ->and($page['tags'])->toHaveCount(1)
-        ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
+            expect($i)
+                ->toBe(2)
+                ->and($page['tags'])->toHaveCount(1)
+                ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
+        }
+    );
 });
 
 test('parseSectionUrl stops collecting tag tokens at a "posted-" continuation token, without consuming it', function (): void {
@@ -1889,15 +1911,25 @@ test('parseSectionUrl stops collecting tag tokens at a "posted-" continuation to
     // str_starts_with('posted-') check specifically -- neither that
     // test's own "start-" token nor the loop's real tag ids exercise
     // this particular branch.
-    $service = UrlServiceTestFactory::build();
-    $i = 0;
+    //
+    // Same "real booted Kernel + a real Paths" requirement as the
+    // sibling tests above.
+    KernelContainerOverride::with(
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
+        static function (): void {
+            $service = UrlServiceTestFactory::build();
+            $i = 0;
 
-    $page = $service->parseSectionUrl(['tags', '3', 'posted-5'], $i, new UrlServiceTestRedirectService());
+            $page = $service->parseSectionUrl(['tags', '3', 'posted-5'], $i, new UrlServiceTestRedirectService());
 
-    expect($i)
-        ->toBe(2)
-        ->and($page['tags'])->toHaveCount(1)
-        ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
+            expect($i)
+                ->toBe(2)
+                ->and($page['tags'])->toHaveCount(1)
+                ->and(urlServiceTestFirstTagId($page['tags']))->toBe(3);
+        }
+    );
 });
 
 test('parseSectionUrl advances nextToken past both the list token and its trailing increment', function (): void {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
@@ -17,8 +18,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permalink\OldPermalinkSortField;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
@@ -41,6 +40,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -49,7 +49,6 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         $template = $this->currentTemplate->get();
 
         $htmlRenderer = $this->htmlRenderer;
-        $conn = DbConnection::build();
 
         $permalinksRequest = PermalinksRequest::fromGlobals($this->inputValidator);
 
@@ -126,7 +125,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         $url_del_base = $this->urlService->getRootUrl() . 'admin.php?page=permalinks';
         $sortField = count($sort_by) > 0 ? OldPermalinkSortField::fromToken($sort_by[0]) : null;
         $deleted_permalinks = [];
-        foreach (new PermalinkRepository(EntityManagerFactory::build($conn))->findAllOrderedBy($sortField) as $permalinkRow) {
+        foreach (new PermalinkRepository($this->entityManager)->findAllOrderedBy($sortField) as $permalinkRow) {
             $row = $permalinkRow->toArray();
             $row['name'] = $htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId);
             $row['U_DELETE'] =

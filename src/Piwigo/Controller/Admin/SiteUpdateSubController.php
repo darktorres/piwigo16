@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
@@ -34,8 +33,6 @@ use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\BatchWriter;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
@@ -108,9 +105,9 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         private Paths $paths,
     ) {}
 
-    private function imageService(Connection $conn): ImageService
+    private function imageService(): ImageService
     {
-        return new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
+        return new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
     }
 
     #[Override]
@@ -132,11 +129,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         }
         $site_id = (int) $siteUpdateRequest->siteRaw;
 
-        // A single connection is used for the whole request, avoiding
-        // repeated reconnection.
-        $conn = DbConnection::build();
-
-        $site_url = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)
+        $site_url = $this->entityManager->getRepository(SiteEntity::class)
             ->findGalleriesUrlById($site_id);
         if (! is_string($site_url)) {
             $this->htmlRenderer
@@ -185,7 +178,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             $this->htmlRenderer
                 ->fatalError('remote sites not supported');
         } else {
-            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths));
+            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository($this->entityManager), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths));
         }
 
         if ($this->pageState->noMd5sumNumber !== null) {
@@ -276,7 +269,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
             // get categort full directories in an array for comparison with file
             // system directory tree
-            $siteGalleriesUrlLookup = EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class);
+            $siteGalleriesUrlLookup = $this->entityManager->getRepository(SiteEntity::class);
             $db_fulldirs = $this->categoryService->getFulldirs(array_map(intval(...), array_keys($db_categories)), $siteGalleriesUrlLookup);
 
             // what is the base directory to search file system sub-directories ?
@@ -429,9 +422,9 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
                     $category_up = array_values(array_unique($category_up));
                     if ($this->currentConfig->inheritanceByDefault and $category_up !== []) {
-                        $granted_grps = new PermissionRepository(EntityManagerFactory::build($conn))
+                        $granted_grps = new PermissionRepository($this->entityManager)
                             ->findGrantedGroupIdsByCategory($category_up);
-                        $granted_users = new PermissionRepository(EntityManagerFactory::build($conn))
+                        $granted_users = new PermissionRepository($this->entityManager)
                             ->findGrantedUserIdsByCategory($category_up);
                         $insert_granted_users = [];
                         $insert_granted_grps = [];
@@ -471,7 +464,8 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                         $this->permissionService
                             ->addPermissionOnCategory($category_ids, array_map(
                                 static fn (UserId $id): int => $id->value,
-                                new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)->findAdminIds()
+                                new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
+                                    ->findAdminIds()
                             ));
                     }
                 }
@@ -500,7 +494,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    $this->categoryService->deleteCategories($to_delete, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher, new PermalinkRepository(EntityManagerFactory::build($conn)));
+                    $this->categoryService->deleteCategories($to_delete, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher, new PermalinkRepository($this->entityManager));
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService($this->currentConfig, $this->paths)
@@ -532,12 +526,12 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             $db_elements = [];
 
             if (count($cat_ids) > 0) {
-                $db_elements = $this->imageService($conn)
+                $db_elements = $this->imageService()
                     ->getIdsAndPathsByStorageCategoryIds($cat_ids);
             }
 
             // next element id available
-            $next_element_id = $this->imageService($conn)
+            $next_element_id = $this->imageService()
                 ->getNextId();
 
             $start = TimingHelper::getMoment();
@@ -632,7 +626,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
                     // find formats for existing photos (already in database)
                     $existing_ids_int = array_values(array_map(intval(...), array_filter($existing_ids, is_numeric(...))));
-                    foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findFullFormatsByImageIds($existing_ids_int) as $formatRow) {
+                    foreach ($this->entityManager->getRepository(ImageEntity::class)->findFullFormatsByImageIds($existing_ids_int) as $formatRow) {
                         $format_image_id = $formatRow->imageId->value;
                         if (! isset($db_formats[$format_image_id])) {
                             $db_formats[$format_image_id] = [];
@@ -687,11 +681,11 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             if (! $simulate) {
                 // inserts all new elements
                 if (count($inserts) > 0) {
-                    $this->imageService($conn)
+                    $this->imageService()
                         ->massInsertImages($inserts);
 
                     // inserts all links between new elements and their storage category
-                    $this->imageService($conn)
+                    $this->imageService()
                         ->insertImageCategoryLinks($insert_links);
                     $this->entityManager->clear();
 
@@ -707,12 +701,12 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
                 // inserts all formats
                 if (count($insert_formats) > 0) {
-                    $this->imageService($conn)
+                    $this->imageService()
                         ->massInsertFormats($insert_formats);
                 }
 
                 if (count($formats_to_delete) > 0) {
-                    $this->imageService($conn)
+                    $this->imageService()
                         ->deleteFormatsByIds($formats_to_delete);
                 }
             }
@@ -734,7 +728,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             }
             if (count($to_delete_elements) > 0) {
                 if (! $simulate) {
-                    $this->imageService($conn)
+                    $this->imageService()
                         ->deleteElements($to_delete_elements, $this->urlService);
                 }
                 $counts['del_elements'] = count($to_delete_elements);
@@ -799,7 +793,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
                 $counts['upd_elements'] = count($datas);
                 if (! $simulate and count($datas) > 0) {
-                    $this->imageService($conn)
+                    $this->imageService()
                         ->massUpdateFields(
                             [
                                 'primary' => ['id'],
@@ -893,7 +887,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
             if (! $simulate) {
                 if (count($datas) > 0) {
-                    $this->imageService($conn)
+                    $this->imageService()
                         ->massUpdateFields(
                             [
                                 'primary' => ['id'],

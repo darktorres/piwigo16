@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
@@ -25,8 +26,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\NbmEventHandlerAdded;
 use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
@@ -88,6 +87,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private PageState $pageState,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -387,8 +387,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
         // base_url from.
         $base_url = $urlService->getRootUrl() . 'admin.php';
 
-        $conn = DbConnection::build();
-        $notificationByMailService = new NotificationByMailService(EntityManagerFactory::build($conn)->getRepository(UserMailNotificationEntity::class), $sessionService);
+        $notificationByMailService = new NotificationByMailService($this->entityManager->getRepository(UserMailNotificationEntity::class), $sessionService);
 
         // Set null mail_address empty
         $notificationByMailService->nullifyBlankEmails();

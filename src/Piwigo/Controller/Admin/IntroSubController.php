@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use DateInterval;
 use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AdminUiHelper;
@@ -33,8 +34,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndIntro;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\ImageService;
@@ -103,6 +102,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         private UserService $userService,
         private CurrentConfig $currentConfig,
         private Paths $paths,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -115,10 +115,6 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         $link_start = $this->urlService->getRootUrl() . 'admin.php?page=';
         $logger = $this->currentLogger->get();
         $template = $this->currentTemplate->get();
-
-        // A single connection is used for the whole request, avoiding
-        // needless reconnects.
-        $conn = DbConnection::build();
 
         if (IntroActionRequest::fromGlobals()->isHideNewsletterSubscription) {
             $this->preferencesService
@@ -177,7 +173,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         $newsletter_subscribe_base_url = null;
         $newsletter_old_newsletters_url = null;
         if ($this->currentConfig->showNewsletterSubscription and ($this->preferencesService->getShowNewsletterSubscription() ?? true)) {
-            $register_date = new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)
+            $register_date = new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
                 ->findEarliestRegistrationDate();
             $nb_cats = $this->categoryService->countAllCategories();
             $nb_images = $this->imageService->getTotalImageCount();
@@ -526,7 +522,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'intro.latte');
 
         // Check integrity
-        $integrityRepo = EntityManagerFactory::build($conn)->getRepository(IntegrityIgnoredAnomalyEntity::class);
+        $integrityRepo = $this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class);
         $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         // add internal checks
         new C13yInternal($this->lang, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->userService, $this->currentConfig)

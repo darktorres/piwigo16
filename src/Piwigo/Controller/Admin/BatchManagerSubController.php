@@ -34,8 +34,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\BatchManagerPerformFilters;
 use Piwigo\Event\Admin\BatchManagerRegisterFilters;
 use Piwigo\Event\Admin\BatchManagerUrlFilter;
@@ -189,7 +187,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class)
+            $this->entityManager->getRepository(CaddieEntity::class)
                 ->replaceForUser($userId->value, []);
 
             $_SESSION['page_infos'] = [
@@ -647,7 +645,6 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         if (isset($bulkFilter['search']) && is_array($bulkFilter['search'])
             && isset($bulkFilter['search']['q']) && is_string($bulkFilter['search']['q'])
             && (bool) strlen($bulkFilter['search']['q'])) {
-            $searchConn = DbConnection::build();
             $res = $this->searchService->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
                 'permissions' => false,
             ]);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AlbumNotificationPageRenderer;
@@ -22,8 +23,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -63,6 +62,7 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
         private CategoryService $categoryService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -77,7 +77,7 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
         $adminAlbumBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
         $this->coreTabs->setContext(new CoreTabsContext(adminAlbumBaseUrl: $adminAlbumBaseUrl));
 
-        $categoryRow = new CategoryRepository(EntityManagerFactory::build(DbConnection::build()), $this->currentConfig)
+        $categoryRow = new CategoryRepository($this->entityManager, $this->currentConfig)
             ->findById($cat_id);
         if (! $categoryRow instanceof Category) {
             $this->htmlRenderer

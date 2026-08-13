@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
@@ -20,8 +21,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Album\GetAdminsSiteLinks;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -66,6 +65,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
         private Paths $paths,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -84,8 +84,6 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
-
-        $conn = DbConnection::build();
 
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
@@ -121,7 +119,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             }
 
             // site must not exists
-            $site_repo = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class);
+            $site_repo = $this->entityManager->getRepository(SiteEntity::class);
             if ($site_repo->countByUrl($url) > 0) {
                 $this->pageState->addError($this->lang->t('This site already exists') . ' [' . $url . ']');
             }
@@ -139,23 +137,23 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
 
         if ($siteManagerRequest->action !== null and $siteManagerRequest->siteId !== null) {
             $site_id = $siteManagerRequest->siteId;
-            $galleries_url = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)
+            $galleries_url = $this->entityManager->getRepository(SiteEntity::class)
                 ->findGalleriesUrlById($site_id);
             switch ($siteManagerRequest->action) {
                 case 'delete':
 
-                    $this->categoryService->deleteSite($site_id, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher, new PermalinkRepository(EntityManagerFactory::build($conn)));
+                    $this->categoryService->deleteSite($site_id, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher, new PermalinkRepository($this->entityManager));
                     $this->pageState->addInfo($galleries_url . ' ' . $this->lang->t('deleted'));
                     break;
 
             }
         }
 
-        $sites_detail = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)
+        $sites_detail = $this->entityManager->getRepository(SiteEntity::class)
             ->findCategoryAndImageCountsBySite();
 
         $tpl_sites = [];
-        foreach (EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)->findAllSites() as $row) {
+        foreach ($this->entityManager->getRepository(SiteEntity::class)->findAllSites() as $row) {
             $id = (string) $row->id;
             $id_int = $row->id;
             $galleries_url = $row->galleriesUrl;

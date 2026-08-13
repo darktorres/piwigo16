@@ -10,7 +10,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * A freshly-uploaded photo carries no rating_score/date_creation at all
- * (both genuinely NULL -- confirmed live -- there's no WS setter for
+ * (both genuinely NULL -- there's no WS setter for
  * either column, same established fact SearchFilterRendererDataFiltersTest.php's
  * own docblock already documents). A search filtering on either of those
  * columns must set a real value directly first, or it matches zero
@@ -34,7 +34,7 @@ function extraFiltersSetImageAttrs(int $imageId, ?float $ratingScore = null, ?st
 
 /**
  * assertSee()'s own retry-polling doesn't reliably re-check a page right
- * after navigate() -- confirmed live: H::rawWebpage($page)->content()
+ * after navigate(): H::rawWebpage($page)->content()
  * already contains the real, correct final HTML at the same point
  * assertSee() still reports failure (a stale/pre-navigation snapshot).
  * Same bounded-retry technique BrowserTestHelpers::assertNoServerErrors()
@@ -72,7 +72,7 @@ function extraFiltersSettledContent(Webpage|PendingAwaitablePage|AwaitableWebpag
  * path can currently produce on its own. Returns the generated
  * search_uuid (same `psk-YYYYMMDD-<10 chars>` shape
  * SearchService::getAvailableSearchUuid() builds), navigable via
- * `/index.php?/search/<uuid>` (confirmed URL shape, see
+ * `/index.php?/search/<uuid>` (see
  * SearchControllerTest.php's own docblock).
  *
  * @param array<string, mixed> $rules
@@ -307,7 +307,7 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
         // below, at RENDER time, which is what makes this a real 2-step
         // sequence rather than a single config snapshot.
         H::setConfigValue('rate', 'true');
-        // Real bug, found while investigating this test's own failure:
+        // Real bug:
         // SearchService::getRegularSearchResults() returns zero items
         // whenever $imageIdsForFilter ends up completely empty (line
         // ~422: `$items = [];` unconditionally, only ever populated
@@ -419,13 +419,13 @@ it('forces a searched tag with no intersection among the other active filters ba
         }
         $tagId = (int) $tagResult['id'];
 
-        // Real bug, found while investigating this test's own failure:
+        // Real bug:
         // TagService::getAvailableTags($ids) -- the call render() uses to
         // resolve the "forced back" tag's own display row -- delegates to
         // TagRepository::countImagesPerTag(), which INNER JOINs image_tag
         // and therefore returns NOTHING for a tag with zero images attached
-        // anywhere, *regardless* of the explicit id filter (confirmed
-        // identical in the pre-rewrite include/functions_tag.inc.php --
+        // anywhere, *regardless* of the explicit id filter (identical
+        // to the pre-rewrite include/functions_tag.inc.php --
         // not a rewrite regression). render()'s own "force" fallback
         // silently no-ops in that case: $missingTagIds correctly names the
         // tag, but array_merge($tagService->getAvailableTags($missingTagIds), ...)
@@ -873,7 +873,7 @@ it('skips the ALBUMS_FOUND search hint entirely when every allwords-matched albu
         H::assertNoServerErrors($guestPage, 'guest allwords search matching only a forbidden album');
         $guestPage->assertNoJavaScriptErrors();
 
-        // Not a bare ->not->toContain($uniqueWord) -- confirmed live: the
+        // Not a bare ->not->toContain($uniqueWord): the
         // search page's own "you searched for" summary (.search-words) and
         // its global_params JS blob both legitimately echo back the raw
         // query text regardless of whether anything matched, so that

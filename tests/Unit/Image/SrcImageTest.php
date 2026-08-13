@@ -23,6 +23,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use RuntimeException;
@@ -663,6 +664,15 @@ test('getSize() persists the real, correctly-ordered width/height back onto the 
     // DISTINCT width/height (anti-transposition) and a real
     // ImageRepository persisting the call proves both arguments land in
     // their own correct column, not swapped or duplicated.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction: `images`
+    // carries a FULLTEXT index (images_ft_name_comment/images_ft_author)
+    // whose auxiliary-index maintenance can deadlock against another
+    // --parallel worker's own concurrent images INSERT when held open
+    // for a whole test's duration -- same mechanism, same fix, as
+    // TagServiceTest.php's 'getTagIds() creates a new tag for a plain
+    // name when allowed' (reproduced live there: DeadlockException).
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class);
 

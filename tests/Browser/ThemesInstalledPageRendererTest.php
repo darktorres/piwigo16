@@ -10,15 +10,27 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * smoke route. This file exercises the CSRF-gated action dispatch
  * (activate/deactivate/set_default/delete). It does NOT actually toggle a
  * real theme's active state: this test environment has only one theme on
- * disk (themes/default), so "deactivate" is provably a no-op guard
- * (DEACTIVABLE=false, "you need at least one theme") on this env's real
- * installed set -- exercised passively below -- and a real activate/
- * delete cycle would need a second throwaway theme directory written
- * directly under the live, Apache-shared themes/ root, which no other
- * test in this suite does (too much blast radius for concurrently
- * running Browser tests). ExtensionLifecycle::performAction() itself
- * already has its own dedicated Integration coverage
- * (ExtensionLifecycleTest.php) for the actual state-transition logic.
+ * disk (themes/default), and a real activate/delete cycle would need a
+ * second throwaway theme directory written directly under the live,
+ * Apache-shared themes/ root, which no other test in this suite does (too
+ * much blast radius for concurrently running Browser tests).
+ * ExtensionLifecycle::performAction() itself already has its own dedicated
+ * Integration coverage (ExtensionLifecycleTest.php) for the actual
+ * state-transition logic.
+ *
+ * 'default' itself NEVER gets a `themes` DB row through any real code
+ * path -- ExtensionLifecycle::performThemeAction()'s 'activate' case
+ * special-cases `$id === 'default'` into an unconditional no-op break
+ * (faithful port of legacy admin/include/themes.class.php's identical
+ * `'default' === $theme_id` guard; confirmed neither install/config.sql
+ * nor any fixture ever INSERTs a 'default' row either). So `action=
+ * deactivate&theme=default` always hits this class's own `$dbRow === null`
+ * early break first and never reaches the "need at least one theme" guard
+ * -- the "you need at least one theme" test below seeds that DB row
+ * directly (matching StatsPageRendererTest's own precedent of raw-SQL
+ * seeding to reach an otherwise-unreachable-via-the-app code path) so the
+ * guard itself is still exercised, without relying on an activation path
+ * that can't produce that state for 'default'.
  */
 it('renders an empty installed-themes list since the only real theme (default) is deliberately excluded', function (): void {
     // ThemesInstalledPageRenderer::render()'s own $fs_themes loop
@@ -67,16 +79,27 @@ it('handles a CSRF-valid activate action on the already-active default theme as 
 });
 
 it('rejects a CSRF-valid deactivate action on the only installed theme with the "need at least one theme" error', function (): void {
-    // performThemeAction()'s 'deactivate' case checks $this->repo->count(Theme) <= 1
-    // before touching anything -- 'default' is the only row in this test
-    // environment's themes table, so this always trips that guard and
-    // leaves DB state untouched.
-    $page = H::loginAsAdmin($this);
-    $token = H::pwgToken($page);
+    // performThemeAction()'s 'deactivate' case checks `$dbRow === null`
+    // before ever reaching `$this->repo->count(Theme) <= 1` -- 'default'
+    // never has a real `themes` row (see this file's own top docblock), so
+    // that row is seeded directly here to make the count<=1 guard
+    // reachable at all, exactly the state a genuinely-installed
+    // last-remaining theme would be in.
+    $db = H::connect();
+    H::dbQuery($db, "DELETE FROM themes WHERE id = 'default'");
+    H::dbQuery($db, "INSERT INTO themes (id, version, name) VALUES ('default', '1.0.0', 'default')");
 
-    $page = H::navigateOk($page, '/admin.php?page=themes&action=deactivate&theme=default&pwg_token=' . $token);
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
 
-    $page->assertSee('Impossible to deactivate this theme, you need at least one theme');
+        $page = H::navigateOk($page, '/admin.php?page=themes&action=deactivate&theme=default&pwg_token=' . $token);
+
+        $page->assertSee('Impossible to deactivate this theme, you need at least one theme');
+    } finally {
+        H::dbQuery($db, "DELETE FROM themes WHERE id = 'default'");
+        H::dbClose($db);
+    }
 });
 
 it('does not attempt any action when action= is present but theme= is missing', function (): void {

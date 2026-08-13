@@ -11,19 +11,22 @@
 <link rel="start" title="Home" href="/piwigo17-4/" >
 <link rel="search" title="Search" href="search.php" >
 
-<link rel="next" title="Next" href="picture.php?/2/category/1&amp;slideshow=" ><link rel="last" title="Last" href="picture.php?/3/category/1&amp;slideshow=" ><link rel="up" title="Thumbnails" href="index.php?/category/1" >
-<link rel="prefetch" href="action.php?id=2&amp;part=e"><link rel="canonical" href="picture.php?/1">
+
+
+<link rel="next" title="Next" href="picture.php?/2/category/1&amp;slideshow=" >
+<link rel="last" title="Last" href="picture.php?/3/category/1&amp;slideshow=" >
+<link rel="up" title="Thumbnails" href="index.php?/category/1" >
+
+<link rel="prefetch" href="action.php?id=2&amp;part=e">
+<link rel="canonical" href="picture.php?/1">
+
 <meta http-equiv="refresh" content="4;url=picture.php?/2/category/1&amp;slideshow=">
- 
-	<!--[if lt IE 7]>
+
+<!--[if lt IE 7]>
 		<link rel="stylesheet" type="text/css" href="themes/default/fix-ie5-ie6.css">
-	<![endif]-->
-	<!--[if IE 7]>
+	<![endif]--><!--[if IE 7]>
 		<link rel="stylesheet" type="text/css" href="themes/default/fix-ie7.css">
 	<![endif]-->
-	
-
-
 <!-- BEGIN get_combined -->
 <link rel="stylesheet" type="text/css" href="_data/combined/174b7fc.css">
 
@@ -37,7 +40,7 @@
   <meta name="robots" content="noindex,nofollow">
 </head>
 
-<body id="thePicturePage" class="section-categories category-1 image-1 "  data-infos='{"section":"categories","category_id":"1","image_id":"1"}'>
+<body id="thePicturePage" class="section-categories category-1 image-1 "  data-infos="&#123;&quot;section&quot;:&quot;categories&quot;,&quot;category_id&quot;:&quot;1&quot;,&quot;image_id&quot;:&quot;1&quot;}">
 
 <div id="the_page">
 
@@ -45,6 +48,7 @@
 <div id="theHeader"><h1>Fixture Gallery</h1>
 
 <p>Welcome to my photo gallery</p></div>
+
 
 <div id="slideshow">
 	<div id="imageHeaderBar">
@@ -86,13 +90,29 @@
 
   Powered by	<a href="https://upstream.example.invalid" class="Piwigo">Piwigo</a>
   
+
 </div>
+
 </div>
+
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
 <script type="text/javascript">//<![CDATA[
 
-document.onkeydown = function(e){e=e||window.event;if (e.altKey) return true;var target=e.target||e.srcElement;if (target && target.type) return true;	var keyCode=e.keyCode||e.which, docElem=document.documentElement, url;switch(keyCode){case 63235: case 39: if (e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth)url="picture.php?/2/category/1&amp;slideshow="; break;case 35: if (e.ctrlKey)url="picture.php?/3/category/1&amp;slideshow="; break;case 32: url="picture.php?/1/category/1&amp;slideshow=+play-false"; break;}if (url) {window.location=url.replace("&amp;","&"); return false;}return true;}
+document.onkeydown = function(e){
+	e=e||window.event;
+	if (e.altKey) return true;
+	var target=e.target||e.srcElement;
+	if (target && target.type) return true;
+	var keyCode=e.keyCode||e.which, docElem=document.documentElement, url;
+	switch(keyCode){
+	case 63235: case 39: if (e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth)url="picture.php?/2/category/1&amp;slideshow="; break;
+	case 35: if (e.ctrlKey)url="picture.php?/3/category/1&amp;slideshow="; break;
+	case 32: url="picture.php?/1/category/1&amp;slideshow=+play-false"; break;
+	}
+	if (url) { window.location=url.replace("&amp;","&"); return false;}
+	return true;
+}
 //]]></script>
 <!-- END get_combined -->
 

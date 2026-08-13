@@ -7,12 +7,11 @@
 <link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
 <link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
 
-  
 
 <!-- BEGIN get_combined -->
 <link rel="stylesheet" type="text/css" href="_data/combined/12duurm.css">
 
-<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
 <!-- END get_combined -->
 
 </head>
@@ -28,9 +27,7 @@
 
   <div id="headActions">
     <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
-
 <a href="admin.php?page=user_activity&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
-
     <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
     <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
   </div>
@@ -40,6 +37,7 @@
 
 
 <div id="pwgMain">
+
 
 <div id="menubar">
   <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
@@ -98,7 +96,7 @@
       <ul>
         <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
         <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
-        				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
+				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
         <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
       </ul>
     </dd>
@@ -120,23 +118,23 @@
 </ul>
 </div>
 
+
 <div class="eiw">
+
+
+
+
 </div> 
+
   
-
-
-
-
-
-
 
  
 
-<div class="container"> 
+<div class="container">
     <div>
         <div class="activity-header">
             <div class="user_activity_end_options">
-                <a class="download_csv tiptip" title="Download all activities" href="admin.php?page=user_activity&type=download_logs"> 
+                <a class="download_csv tiptip" title="Download all activities" href="admin.php?page=user_activity&type=download_logs">
                     <i class="icon-download"> </i>
                 </a>
                 <div id="activityMoreFilters" class="activity-more-filters">
@@ -147,7 +145,7 @@
         <div id="activityMoreFiltersContent" class="activity-more-filters-content">
             <div class="activity-select">
                 <span class="activity-select"> User </span>
-            
+
                 <select class="user-selecter" placeholder="---" single>
                     <option value="none">
                         <span class='username_filter'>---</span>
@@ -169,7 +167,7 @@
 
             <div class="activity-select">
                 <span class="activity-select"> Action </span>
-            
+
                 <select class="action-selecter" placeholder="---" single>
                     <option value="none">
                         <span class='action_filter'>---</span>
@@ -224,10 +222,10 @@
                         </option>
                 </select>
             </div>
-            
+
             <div class="activity-select">
                 <span class="activity-select">Start date</span>
-                <input 
+                <input
                     class="activity-date-selecter"
                     type="date"
                     id="date_min_activity"
@@ -239,7 +237,7 @@
 
             <div class="activity-select">
                 <span class="activity-select">End date</span>
-                <input 
+                <input
                     class="activity-date-selecter"
                     type="date"
                     id="date_max_activity"
@@ -268,7 +266,7 @@
         No results
     </div>
 
-    
+
 
     <div class="tab-title">
         <div class="action-title">
@@ -290,7 +288,7 @@
 
 
     <div class="tab">
-    <div class="loading"> 
+    <div class="loading">
         <span class="icon-spin6 animate-spin"> </span>
     </div>
         <div class="line hide" id="-1">
@@ -308,7 +306,7 @@
                 <span class="icon-clock"> </span>
                 <span class="date-day">1 Janvier 1970</span>
                 <span class="date-hour">a 00:00</span>
-            </div> 
+            </div>
 
             <div class="user-section">
                 <div class="user-pic">
@@ -370,7 +368,7 @@
     margin: 0 0 10px 35px;
 }
 
-.tab-title .action-title, 
+.tab-title .action-title,
 .line .action-section {
     min-width: 320px;
     max-width: 340px;
@@ -379,13 +377,13 @@
     min-width: 298px !important;
 }
 
-.tab-title .date-title, 
+.tab-title .date-title,
 .line .date-section {
     min-width: 280px;
     max-width: 300px;
 }
 
-.tab-title .user-title, 
+.tab-title .user-title,
 .line .user-section {
     min-width: 200px;
     max-width: 250px;
@@ -399,7 +397,7 @@
 .tab-title .date-title,
 .tab-title .user-title {
     text-align: left;
-    }
+}
 
 .line .action-section,
 .line .date-section,
@@ -612,46 +610,51 @@ div:has(> .activity-header) {
     opacity: 0.6;
 }
 </style>
+
 </div>
 </div>
+
 
 
 <div id="footer">
   <div>
     <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What's new in version 16?">
+    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What&apos;s new in version 17?">
       <i class="icon-bell"></i>
     </span>
   </div>
   <div id="pageInfos">
+
     Contact
     <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
-  </div>
-</div></div>
+  </div></div>
+</div>
+
 <div id="whats_new">
     <div id="whats_new_popin">
       <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
-      <h3>What's new in version 16?</h3>
+      <h3>What's new in version 17?</h3>
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4>Brand new login & preferences with Standard pages!</h4>
-            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
+            <h4>Brand new login &amp; preferences with Standard pages !</h4>
+            <a href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
             <h4>Two factor authentication is here</h4>
-            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
+            <a href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
             <h4>UI redesigns that make a difference</h4>
-            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
+            <a href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
           </div>
-                </div>
+        </div>
+      </div>
       <div class="whats_new_buttons">
         <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
-        <a class="buttonLike" href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+        <a class="buttonLike" href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
       </div>
     </div>
 </div>
@@ -662,14 +665,12 @@ div:has(> .activity-header) {
 </style>
 
 
-
-
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/96dvw8.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 var usersCache = new UsersCache({
-  serverKey: '1786382439_4',
+  serverKey: '1785553200_4',
   serverId: 'dda54766ec207d793317d8d6ae40a754',
   rootUrl: ''
 });
@@ -701,14 +702,12 @@ const users_key = "Users";
 const line_key = "%s line";
 const lines_key = "%s lines";
 
-
 var actionType_add = "add";
 var actionType_delete = "deletion";
 var actionType_move = "move";
 var actionType_edit = "edit";
 var actionType_login = "login";
 var actionType_logout = "logout";
-
 
 var actionInfos_album_added = "%d album added";
 var actionInfos_album_deleted = "%d album deleted";
@@ -719,7 +718,6 @@ var actionInfos_albums_added = "%d albums added";
 var actionInfos_albums_deleted = "%d albums deleted";
 var actionInfos_albums_edited = "%d albums edited";
 var actionInfos_albums_moved = "%d albums moved";
-
 
 var actionInfos_user_added = "%d user added";
 var actionInfos_user_deleted = "%d user deleted";
@@ -733,7 +731,6 @@ var actionInfos_users_edited = "%d users edited";
 var actionInfos_users_logged_in = "%d users logged in";
 var actionInfos_users_logged_out = "%d users logged out";
 
-
 var actionInfos_photo_added = "%d photo added";
 var actionInfos_photo_deleted = "%d photo deleted";
 var actionInfos_photo_edited = "%d photo edited";
@@ -744,7 +741,6 @@ var actionInfos_photos_deleted = "%d photos deleted";
 var actionInfos_photos_edited = "%d photos edited";
 var actionInfos_photos_moved = "%d photos moved";
 
-
 var actionInfos_group_added = "%d group added";
 var actionInfos_group_deleted = "%d group deleted";
 var actionInfos_group_edited = "%d group edited";
@@ -754,7 +750,6 @@ var actionInfos_groups_added = "%d groups added";
 var actionInfos_groups_deleted = "%d groups deleted";
 var actionInfos_groups_edited = "%d groups edited";
 var actionInfos_groups_moved = "%d groups moved";
-
 
 var actionInfos_tag_added = "%d tag added";
 var actionInfos_tag_deleted = "%d tag deleted";
@@ -771,15 +766,15 @@ jQuery.fn.lightAccordion = function(options) {
     content: 'dd',
     active: 0
   }, options);
-  
+
   return this.each(function() {
     var self = jQuery(this);
-    
+
     var contents = self.find(settings.content),
         headers = self.find(settings.header);
-    
+
     contents.not(contents[settings.active]).hide();
-  
+
     self.on('click', settings.header, function() {
         var content = jQuery(this).next(settings.content);
         content.slideDown();
@@ -826,7 +821,7 @@ function hide_user_whats_new() {
     type: "POST",
     dataType: "JSON",
     data: {
-      param: 'show_whats_new_16',
+      param: 'show_whats_new_17',
       value: false,
     }
   })
@@ -840,7 +835,7 @@ function show_user_whats_new() {
 <script type="text/javascript">
 (function() {
 var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
-s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='themes/admin/default/js/user_activity.js?v16.3.0';
+s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='themes/admin/default/js/user_activity.js?v17.0.0';
 after = after.parentNode.insertBefore(s, after);
 })();
 </script>

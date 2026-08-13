@@ -240,7 +240,7 @@ it('strips HTML tags from the description when HTML descriptions are disabled', 
     }
 });
 
-it('fatal-errors on an invalid whole_set element (the "Hacking attempt" guard)', function (): void {
+it('fatal-errors on an invalid whole_set element (the invalid-parameter guard)', function (): void {
     $page = H::loginAsAdmin($this);
 
     // Every whole_set element must match /^\d+$/ -- one non-digit element
@@ -254,7 +254,7 @@ it('fatal-errors on an invalid whole_set element (the "Hacking attempt" guard)',
     ]);
 
     expect($result['status'])->toBe(500);
-    expect($result['body'])->toContain('[Hacking attempt] the input parameter "whole_set" is not valid');
+    expect($result['body'])->toContain('Invalid request parameter "whole_set"');
 });
 
 it('falls back to 5 images per page when the configured value is not 5/10/50 and no display param is given', function (): void {

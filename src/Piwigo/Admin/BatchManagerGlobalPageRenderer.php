@@ -135,7 +135,7 @@ final readonly class BatchManagerGlobalPageRenderer
             foreach (explode(',', $batchManagerGlobalRequest->wholeSet) as $id) {
                 if (! (bool) preg_match('/^\d+$/', $id)) {
                     $this->htmlRenderer
-                        ->fatalError('[Hacking attempt] the input parameter "whole_set" is not valid');
+                        ->fatalError('Invalid request parameter "whole_set"');
                 }
                 $collection[] = (int) $id;
             }

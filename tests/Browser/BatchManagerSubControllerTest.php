@@ -828,7 +828,7 @@ it('nb_photos_deleted fakes a placeholder collection for the ajax-driven post-de
     expect($result['body'])->not->toContain('Select at least one photo');
 });
 
-it('rejects a whole_set value containing a non-digit element as a hacking attempt', function (): void {
+it('rejects a whole_set value containing a non-digit element as an invalid request parameter', function (): void {
     $page = H::loginAsAdmin($this);
 
     $result = bmPost($page, [
@@ -839,7 +839,7 @@ it('rejects a whole_set value containing a non-digit element as a hacking attemp
     ]);
 
     expect($result['status'])->toBe(500);
-    expect($result['body'])->toContain('[Hacking attempt]');
+    expect($result['body'])->toContain('Invalid request parameter');
     expect($result['body'])->toContain('whole_set');
 });
 

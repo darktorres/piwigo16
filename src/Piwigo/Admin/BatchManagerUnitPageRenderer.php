@@ -185,7 +185,7 @@ final readonly class BatchManagerUnitPageRenderer
 
             foreach ($collection as $id) {
                 if (! (bool) preg_match('/^\d+$/', $id)) {
-                    $htmlRenderer->fatalError('[Hacking attempt] the input parameter "whole_set" is not valid');
+                    $htmlRenderer->fatalError('Invalid request parameter "whole_set"');
                 }
             }
         } elseif ($batchManagerUnitRequest->selectionPresent) {

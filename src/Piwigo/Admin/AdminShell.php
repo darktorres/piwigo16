@@ -343,8 +343,7 @@ final readonly class AdminShell
         $whats_new_major_version = VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
         if ((bool) $this->preferencesService->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
-            // >=, not > -- confirmed live (VR suite regression, 2026-08-04)
-            // that a fresh install/fixture-regen genuinely produces the
+            // >=, not > -- a fresh install/fixture-regen genuinely produces the
             // exact same timestamp for both sides: registration_date
             // (UserService::createUserInfos()) and last_major_update
             // (RequestBootstrap, "if not set, set it now") are both stamped

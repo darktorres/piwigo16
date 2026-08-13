@@ -61,8 +61,7 @@ final class CatModifyPageRenderer
         // can't see into) always returns it as numeric. Narrow once here and reuse
         // throughout the rest of this method's many uses of the category id.
         //
-        // This replaces a real bug found while auditing raw
-        // superglobal reads -- the original `isset($_GET['cat_id']) &&
+        // This replaces a real bug: the original `isset($_GET['cat_id']) &&
         // is_numeric(...)` check logged a fatal signal (ErrorCollector::
         // recordFatal(), see HtmlService::fatalError()'s own docblock for
         // why that never actually halts) on failure without a following

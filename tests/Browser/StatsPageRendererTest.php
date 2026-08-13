@@ -122,11 +122,21 @@ it('renders more than one year of history summary data and a real day-level mont
         // explicit dates spans from the oldest to the newest real
         // year-only row -- both seeded years must survive verbatim into
         // the rendered data-years JSON (stats.latte's
-        // `data-years='{json_encode($lastYears)}'`).
+        // `data-years='{$lastYears|json_encode}'`).
+        //
+        // Asserted against the &quot;-encoded form, not a literal '"' --
+        // Latte's HtmlHelpers::escapeQuotes() unconditionally HTML-escapes
+        // quotes printed inside an attribute-value context (confirmed live
+        // in commit 4b6cd2f448's own investigation; |noescape does not
+        // suppress it there). This is not a functional bug: browsers
+        // HTML-entity-decode attribute values before any JS reads them
+        // (stats.js's own $("#data").data("years") call sees the
+        // already-decoded string), so the literal-quote form this test
+        // originally asserted can never appear in the raw response body.
         expect($body)
-            ->toContain('"2019":42');
+            ->toContain('&quot;2019&quot;:42');
         expect($body)
-            ->toContain('"2020":7');
+            ->toContain('&quot;2020&quot;:7');
 
         // getMonthStats()'s own foreach ($historyService->
         // getDailyRowsForMonths(...) as $value) loop body (getDateObject()
@@ -134,9 +144,9 @@ it('renders more than one year of history summary data and a real day-level mont
         // real day-level row matches one of its 3 (year, month) candidates
         // -- the seeded last-month bucket forces it, and its own
         // setMissingValues('day', ...) overlay carries the seeded value
-        // through to data-month-stats.
+        // through to data-month-stats. Same &quot;-encoding caveat as above.
         expect($body)
-            ->toContain(sprintf('"%04d-%02d-10":99', $lastMonthYear, $lastMonthMonth));
+            ->toContain(sprintf('&quot;%04d-%02d-10&quot;:99', $lastMonthYear, $lastMonthMonth));
     } finally {
         $deleteSeeds();
         H::dbClose($db);

@@ -82,9 +82,9 @@ function tagServiceTestRoot(): string
 /**
  * @return array{0: TagService, 1: Connection}
  */
-function tagServiceTestServiceConn(): array
+function tagServiceTestServiceConn(?Connection $conn = null): array
 {
-    $conn = DbConnection::build();
+    $conn ??= DbConnection::build();
     $currentConfig = CurrentConfigTestFactory::get();
     $filterState = new FilterState();
 
@@ -262,7 +262,10 @@ test('tagsCounterCompare() breaks ties by id', function (): void {
  * call, then showing a 2nd no-filter call still returns the stale
  * result while an explicitly-filtered call (which always bypasses this
  * cache) reflects the change. Uses a disposable tag rather than the
- * real tag 1 ("nature") -- see file docblock.
+ * real tag 1 ("nature") -- see file docblock. Transaction-wrapped --
+ * even a disposable tag transiently attached to fixture image 1 would
+ * break TagRepositoryTest.php's own findTagsForImage(1) exact-list
+ * assertion (['family', 'nature', 'travel']) under --parallel.
  */
 test('getAvailableTags() with no filter caches the result via CachePools::tagCloud()', function (): void {
     CurrentUserTestFactory::get()->set(new User(
@@ -275,21 +278,24 @@ test('getAvailableTags() with no filter caches the result via CachePools::tagClo
         enabledHigh: false,
     ));
 
-    [$service, $conn] = tagServiceTestServiceConn();
-
-    $suffix = bin2hex(random_bytes(4));
-    $tagName = "p18-cache-test-{$suffix}";
-    $conn->executeStatement(
-        'INSERT INTO tags (name, url_name, lastmodified) VALUES (?, ?, NOW())',
-        [$tagName, $tagName]
-    );
-    $tagId = (int) $conn->lastInsertId();
-
-    // Fixture image 1 is already in a public/visible category, and
-    // brand new so it can't already carry the disposable tag.
-    $imageId = 1;
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
+        [$service] = tagServiceTestServiceConn($conn);
+
+        $suffix = bin2hex(random_bytes(4));
+        $tagName = "p18-cache-test-{$suffix}";
+        $conn->executeStatement(
+            'INSERT INTO tags (name, url_name, lastmodified) VALUES (?, ?, NOW())',
+            [$tagName, $tagName]
+        );
+        $tagId = (int) $conn->lastInsertId();
+
+        // Fixture image 1 is already in a public/visible category, and
+        // brand new so it can't already carry the disposable tag.
+        $imageId = 1;
+
         $before = array_column($service->getAvailableTags(), 'id');
         expect($before)
             ->not->toContain($tagId);
@@ -309,8 +315,7 @@ test('getAvailableTags() with no filter caches the result via CachePools::tagClo
         expect($bypassed)
             ->toContain($tagId);
     } finally {
-        $conn->executeStatement('DELETE FROM image_tag WHERE image_id = ? AND tag_id = ?', [$imageId, $tagId]);
-        $conn->executeStatement('DELETE FROM tags WHERE id = ?', [$tagId]);
+        $conn->rollBack();
     }
 });
 
@@ -340,24 +345,58 @@ test('tagIdFromTagName() creates a new tag for an unknown name', function (): vo
     }
 });
 
+/**
+ * setTagsOf() internally opens a *second*, independent DB connection
+ * for its own trailing updateImagesLastmodified() call (TagService::
+ * newImageService()'s own docblock: inline-constructed, not
+ * constructor-injected) -- transaction-wrapping this test the way every
+ * other file in this campaign does self-deadlocks: the outer
+ * transaction's own FK-driven shared lock on the target image row (from
+ * the image_tag delete+insert) blocks that inner connection's own
+ * UPDATE on the same row, which never gets released before the outer
+ * transaction itself would commit/rollback. Confirmed live (a real
+ * LockWaitTimeoutException, reproduced twice in an otherwise-idle
+ * isolated run). A disposable image row -- not transaction isolation --
+ * is the fix here: TagRepositoryTest.php's own disposable-tag tests
+ * already contest every real fixture image (1, 4, 5) as their "known
+ * image" fixture, so reusing any of them (even non-transactionally)
+ * risks the same cross-file collision setTagsOf()'s own blanket
+ * delete-then-insert caused earlier in this campaign (a real fixture
+ * row disappearing mid-test, confirmed live via a 30-run --parallel
+ * loop). A randomized id below the real auto-increment counter (already
+ * 700,000+, confirmed live) avoids ever colliding with a future
+ * auto-generated row.
+ */
+function tagServiceTestDisposableImageId(Connection $conn): int
+{
+    $imageId = random_int(600_000, 649_998);
+    $conn->executeStatement(
+        'INSERT INTO images (id, file, path) VALUES (?, ?, ?)',
+        [$imageId, "p17-unit-test-{$imageId}.jpg", "upload/2026/08/p17-unit-test-{$imageId}.jpg"]
+    );
+
+    return $imageId;
+}
+
 test('setTagsOf() creates then overwrites image tag associations', function (): void {
-    // fixture image 4 has no image_tag rows at all, so it's safe to
-    // freely set/overwrite here without disturbing any other test.
-    [$service, $conn] = tagServiceTestServiceConn();
+    $conn = DbConnection::build();
+    $imageId = tagServiceTestDisposableImageId($conn);
+    $service = tagServiceTestService();
 
     try {
         $service->setTagsOf([
-            4 => [TagId::from(1), TagId::from(2)],
+            $imageId => [TagId::from(1), TagId::from(2)],
         ]);
-        expect($service->getImageTagIds([4])[4])->toEqualCanonicalizing([TagId::from(1), TagId::from(2)]);
+        expect($service->getImageTagIds([$imageId])[$imageId])->toEqualCanonicalizing([TagId::from(1), TagId::from(2)]);
 
         // Overwrites, not appends -- tag 3 replaces 1+2 entirely.
         $service->setTagsOf([
-            4 => [TagId::from(3)],
+            $imageId => [TagId::from(3)],
         ]);
-        expect($service->getImageTagIds([4])[4])->toEqualCanonicalizing([TagId::from(3)]);
+        expect($service->getImageTagIds([$imageId])[$imageId])->toEqualCanonicalizing([TagId::from(3)]);
     } finally {
-        $conn->executeStatement('DELETE FROM image_tag WHERE image_id = 4');
+        $conn->executeStatement('DELETE FROM image_tag WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
@@ -367,27 +406,33 @@ test('setTagsOf() creates then overwrites image tag associations', function (): 
  * separately-constructed TagId(1) instances are never `!==`-equal, so
  * this would have wrongly reported every image as changed on every
  * call, even when the tag list genuinely didn't change.
+ *
+ * Disposable image row -- see the sibling test above for why this
+ * can't be transaction-wrapped instead.
  */
 test('compareImageTagLists() reports no change when tags are set to the same values', function (): void {
-    [$service, $conn] = tagServiceTestServiceConn();
+    $conn = DbConnection::build();
+    $imageId = tagServiceTestDisposableImageId($conn);
+    $service = tagServiceTestService();
 
     try {
         $service->setTagsOf([
-            4 => [TagId::from(1), TagId::from(2)],
+            $imageId => [TagId::from(1), TagId::from(2)],
         ]);
-        $before = $service->getImageTagIds([4]);
+        $before = $service->getImageTagIds([$imageId]);
 
         // Re-set the exact same tags -- a genuine no-op from the
         // caller's perspective.
         $service->setTagsOf([
-            4 => [TagId::from(1), TagId::from(2)],
+            $imageId => [TagId::from(1), TagId::from(2)],
         ]);
-        $after = $service->getImageTagIds([4]);
+        $after = $service->getImageTagIds([$imageId]);
 
         expect($service->compareImageTagLists($before, $after))
             ->toBe([]);
     } finally {
-        $conn->executeStatement('DELETE FROM image_tag WHERE image_id = 4');
+        $conn->executeStatement('DELETE FROM image_tag WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
@@ -459,7 +504,13 @@ test('getAvailableTags() returns empty when the filter matches no images', funct
  * tag instead, letting the caller filter down by its own id set -- this
  * is that filter-down, reached via 1000 disposable tags all linked to
  * the same fixture image, plus one more disposable tag with zero image
- * links at all. Uses image 4 instead of image 1 -- see file docblock.
+ * links at all. Transaction-wrapped -- TagRepositoryTest.php's own
+ * disposable-tag tests use images 1, 4 and 5 for their own "known
+ * fixture image" needs (findTagsForImage()/findTagIdsByImageIds()
+ * exact-count assertions among them), so linking 1000 extra tags onto
+ * ANY real fixture image non-transactionally collides with one of them;
+ * confirmed live via a 30-run --parallel verification loop (a
+ * findTagIdsByImageIds([4]) assertion saw 1001 rows instead of 1).
  */
 test('getAvailableTags() skips a tag absent from the counters once past the 1000 id threshold', function (): void {
     CurrentUserTestFactory::get()->set(new User(
@@ -472,35 +523,38 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
         enabledHigh: false,
     ));
 
-    [$service, $conn] = tagServiceTestServiceConn();
-
-    $suffix = bin2hex(random_bytes(4));
-
-    $tagValues = [];
-    for ($i = 0; $i < 1000; $i++) {
-        $name = "p18-test-bulk-{$suffix}-{$i}";
-        $tagValues[] = "('{$name}', '{$name}', NOW())";
-    }
-    $conn->executeStatement('INSERT INTO tags (name, url_name, lastmodified) VALUES ' . implode(',', $tagValues));
-    $bulkIds = array_map(
-        static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-        $conn->fetchFirstColumn("SELECT id FROM tags WHERE name LIKE 'p18-test-bulk-{$suffix}-%'")
-    );
-    expect($bulkIds)
-        ->toHaveCount(1000);
-
-    $imageId = 4;
-    $imageTagValues = [];
-    foreach ($bulkIds as $tagId) {
-        $imageTagValues[] = "({$imageId}, {$tagId})";
-    }
-    $conn->executeStatement('INSERT INTO image_tag (image_id, tag_id) VALUES ' . implode(',', $imageTagValues));
-
-    $extraName = "p18-test-bulk-extra-{$suffix}";
-    $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('{$extraName}', '{$extraName}', NOW())");
-    $extraId = (int) $conn->lastInsertId();
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
+        [$service] = tagServiceTestServiceConn($conn);
+
+        $suffix = bin2hex(random_bytes(4));
+
+        $tagValues = [];
+        for ($i = 0; $i < 1000; $i++) {
+            $name = "p18-test-bulk-{$suffix}-{$i}";
+            $tagValues[] = "('{$name}', '{$name}', NOW())";
+        }
+        $conn->executeStatement('INSERT INTO tags (name, url_name, lastmodified) VALUES ' . implode(',', $tagValues));
+        $bulkIds = array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $conn->fetchFirstColumn("SELECT id FROM tags WHERE name LIKE 'p18-test-bulk-{$suffix}-%'")
+        );
+        expect($bulkIds)
+            ->toHaveCount(1000);
+
+        $imageId = 4;
+        $imageTagValues = [];
+        foreach ($bulkIds as $tagId) {
+            $imageTagValues[] = "({$imageId}, {$tagId})";
+        }
+        $conn->executeStatement('INSERT INTO image_tag (image_id, tag_id) VALUES ' . implode(',', $imageTagValues));
+
+        $extraName = "p18-test-bulk-extra-{$suffix}";
+        $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('{$extraName}', '{$extraName}', NOW())");
+        $extraId = (int) $conn->lastInsertId();
+
         $ids = array_column($service->getAvailableTags(), 'id');
 
         expect($ids)
@@ -510,8 +564,7 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
             ->and($ids)
             ->toContain($bulkIds[999]);
     } finally {
-        $conn->executeStatement('DELETE FROM image_tag WHERE image_id = ' . $imageId . ' AND tag_id IN (' . implode(',', $bulkIds) . ')');
-        $conn->executeStatement('DELETE FROM tags WHERE id IN (' . implode(',', $bulkIds) . ", {$extraId})");
+        $conn->rollBack();
     }
 });
 

@@ -22,14 +22,14 @@ final class Tabsheet
     /**
      * @var array<string, TabSheetEntry>
      */
-    public array $sheets;
+    public array $sheets = [];
 
     /**
      * Only ever assigned null (constructor) or a real string (setId()).
      */
-    public ?string $uniqid;
+    public ?string $uniqid = null;
 
-    public string $selected;
+    public string $selected = '';
 
     /*
       $name is the tabsheet's name inside the template .tpl file
@@ -38,11 +38,7 @@ final class Tabsheet
     public function __construct(
         public string $name = 'TABSHEET',
         public string $titlename = 'TABSHEET_TITLE'
-    ) {
-        $this->sheets = [];
-        $this->uniqid = null;
-        $this->selected = '';
-    }
+    ) {}
 
     public function setId(string $id): void
     {

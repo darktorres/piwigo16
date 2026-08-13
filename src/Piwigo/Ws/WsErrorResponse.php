@@ -18,21 +18,14 @@ use Piwigo\Bootstrap\PresentationAccessor;
  */
 final readonly class WsErrorResponse
 {
-    private int $code;
-
-    private string $codeText;
-
     public function __construct(
-        int $code,
-        string $codeText
+        private readonly int $code,
+        private readonly string $codeText
     ) {
         if ($code >= 400 and $code < 600) {
             PresentationAccessor::htmlService()
                 ->setStatusHeader($code, $codeText);
         }
-
-        $this->code = $code;
-        $this->codeText = $codeText;
     }
 
     public function code(): int

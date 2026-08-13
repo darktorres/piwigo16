@@ -1894,8 +1894,13 @@ final readonly class CategoryService
      * @param int|string|null $parentId ws_categories_add() passes null by
      *   default (WsParamType::INT param, unset by the caller), admin/cat_list.php
      *   passes a raw, unvalidated $_GET['parent_id'] string
-     * @param array{commentable?: mixed, visible?: mixed, status?: mixed, comment?: mixed, inherit?: mixed} $options
-     *   values are validated internally (is_bool()/==), not trusted from callers
+     * @param array{commentable?: bool, visible?: bool, status?: string, comment?: string, inherit?: bool} $options
+     *   Ws\Categories::add() (the only real caller ever populating this) --
+     *   visible/commentable are real WsParamType::BOOL params, status is
+     *   only ever set after an in_array(['private', 'public']) check,
+     *   comment already required a real string today (strip_tags() throws
+     *   a TypeError otherwise, under this codebase's strict_types=1),
+     *   inherit's only real setter (a test) passes a bool literal
      */
     public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, int|string|null $parentId = null, array $options = []): CategoryCreateOutcome
     {
@@ -1926,7 +1931,7 @@ final readonly class CategoryService
         ];
 
         // is the album commentable?
-        if (isset($options['commentable']) && is_bool($options['commentable'])) {
+        if (isset($options['commentable'])) {
             $insert['commentable'] = $options['commentable'];
         } else {
             $insert['commentable'] = $this->currentConfig->newcatDefaultCommentable;
@@ -1935,7 +1940,7 @@ final readonly class CategoryService
         // is the album temporarily locked? (only visible by administrators,
         // whatever permissions) (may be overwritten if parent album is not
         // visible)
-        if (isset($options['visible']) && is_bool($options['visible'])) {
+        if (isset($options['visible'])) {
             $insert['visible'] = $options['visible'];
         } else {
             $insert['visible'] = $this->currentConfig->newcatDefaultVisible;
@@ -1950,8 +1955,7 @@ final readonly class CategoryService
 
         // any description for this album?
         if (isset($options['comment'])) {
-            $comment = is_scalar($options['comment']) ? (string) $options['comment'] : '';
-            $insert['comment'] = ($this->currentConfig->allowHtmlDescriptions) ? $options['comment'] : strip_tags($comment);
+            $insert['comment'] = ($this->currentConfig->allowHtmlDescriptions) ? $options['comment'] : strip_tags($options['comment']);
         }
 
         $parentIdIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
@@ -2002,7 +2006,7 @@ final readonly class CategoryService
         $this->updateGlobalRank();
 
         $insertIdUppercat = $insert['id_uppercat'] ?? null;
-        if ($insert['status'] === CategoryStatus::Private->value && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && (bool) $options['inherit']) || $this->currentConfig->inheritanceByDefault)) {
+        if ($insert['status'] === CategoryStatus::Private->value && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && $options['inherit']) || $this->currentConfig->inheritanceByDefault)) {
             $grantedGrps = $this->repo->findAccessGroupIds(CategoryId::from($insertIdUppercat));
             $inserts = [];
             foreach ($grantedGrps as $grantedGrp) {

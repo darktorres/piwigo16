@@ -833,6 +833,18 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
+     * Compiles `$file` into the Latte cache without rendering it -- unlike
+     * `parse()`, no `ROOT_URL`/`ROOT_PATH` var assignment, since compiling
+     * doesn't execute the template.
+     */
+    public function warmupLatteCache(string $file): void
+    {
+        $path = $this->resolveLatteTemplatePath($file);
+        $this->latteEngine()
+            ->warmupCache($path);
+    }
+
+    /**
      * Loads the template file of the handle, compiles it and appends the result to the output,
      * then sends the output to the browser.
      */

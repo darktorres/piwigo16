@@ -41,6 +41,11 @@ final class LatteEngine
         return $this->engine->renderToString($absolutePath, $params);
     }
 
+    public function warmupCache(string $absolutePath): void
+    {
+        $this->engine->warmupCache($absolutePath);
+    }
+
     /**
      * `_data/templates_c/latte` -- the directory `Piwigo\Command\
      * CacheClearCommand` already assumes exists and purges (it predates

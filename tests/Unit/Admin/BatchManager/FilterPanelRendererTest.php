@@ -167,6 +167,7 @@ test('render() shows every built-in prefilter and no active filter/selection whe
                 filterPanelTestTagService(),
                 HtmlServiceTestFactory::build(),
                 CurrentConfigTestFactory::get(),
+                EntityManagerFactory::build(DbConnection::build()),
             );
 
         $prefilters = $template->getTemplateVars('prefilters');

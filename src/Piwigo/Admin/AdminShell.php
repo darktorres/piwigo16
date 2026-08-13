@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Projection\AdminShellFramePageContext;
 use Piwigo\Admin\Projection\AdminShellPostDispatchPageContext;
@@ -33,8 +34,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Event\Location\LocBeginAdmin;
 use Piwigo\Event\Location\LocBeginAdminPage;
@@ -88,6 +87,7 @@ final readonly class AdminShell
         private HtmlService $htmlService,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -111,7 +111,6 @@ final readonly class AdminShell
     private function runDispatch(): void
     {
         $template = $this->currentTemplate->get();
-        $conn = DbConnection::build();
 
         $this->eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
 
@@ -279,7 +278,7 @@ final readonly class AdminShell
         // any photo in the caddie?
         $user_id = $this->currentUser->get()
             ->id->value;
-        $nb_photos_in_caddie = count(EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class)->findElementIdsForUser($user_id));
+        $nb_photos_in_caddie = count($this->entityManager->getRepository(CaddieEntity::class)->findElementIdsForUser($user_id));
 
         if ($nb_photos_in_caddie > 0) {
             $u_caddie = $link_start . 'batch_manager&amp;filter=prefilter-caddie';

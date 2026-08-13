@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\Projection\FilterPanelPageContext;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\GetBatchManagerPrefilters;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageEntity;
@@ -57,8 +56,8 @@ final class FilterPanelRenderer
         TagService $tagService,
         HtmlService $htmlService,
         CurrentConfig $currentConfig,
+        EntityManagerInterface $entityManager,
     ): void {
-        $conn = DbConnection::build();
 
         /** @var array<string, mixed> $bulk_manager_filter */
         $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
@@ -169,7 +168,7 @@ final class FilterPanelRenderer
             $cat_elements_id_for_sql = array_filter($catElementsId, is_scalar(...));
 
             $associated_categories = array_column(
-                EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+                $entityManager->getRepository(ImageEntity::class)
                     ->findVirtuallyAssociatedCategoryRows($cat_elements_id_for_sql),
                 'id',
                 'id'

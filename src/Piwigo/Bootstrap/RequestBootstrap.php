@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
@@ -1015,6 +1016,23 @@ final class RequestBootstrap
         }
 
         return $pageState;
+    }
+
+    /**
+     * Public (unlike most resolver helpers here): public/admin.php's own
+     * legacy-style `new AdminShell(...)` manual construction needs a way to
+     * obtain the same container-shared instance every other
+     * EntityManagerInterface consumer receives via constructor injection,
+     * without calling Kernel::container() directly itself.
+     */
+    public static function entityManager(): EntityManagerInterface
+    {
+        $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+        if (! $entityManager instanceof EntityManagerInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+        }
+
+        return $entityManager;
     }
 
     /**

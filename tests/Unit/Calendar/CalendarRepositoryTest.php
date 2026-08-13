@@ -9,6 +9,7 @@ use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Calendar\CalendarRepository -- has its own dedicated
@@ -275,6 +276,16 @@ test('findImageIds() DQL path only joins image_category when the scope asks for 
     // JOIN image_category (joinImageCategory: true) drops it from the
     // result, proving the join really is conditional on the scope's own
     // flag, not always-on or always-off.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction: `images`
+    // carries a FULLTEXT index (images_ft_name_comment/images_ft_author),
+    // and InnoDB's FULLTEXT auxiliary-index maintenance on INSERT/DELETE
+    // can deadlock against another --parallel worker's own concurrent
+    // DML on the same table when held open for a whole test's duration
+    // -- same mechanism, same fix, as TagServiceTest.php's 'getTagIds()
+    // creates a new tag for a plain name when allowed' (reproduced live
+    // there: DeadlockException).
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $conn->executeStatement("INSERT INTO images (file, path) VALUES ('p17-unit-test-calendar-orphan.jpg', 'p17-unit-test-calendar-orphan.jpg')");
     $orphanId = (int) $conn->lastInsertId();

@@ -15,6 +15,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageCategoryLink;
 use Piwigo\Image\Projection\PathRepresentativeExt;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Image\ImageRepository -- direct Unit-suite coverage for the
@@ -133,6 +134,18 @@ test('findPathsForFileDeletion returns id as a real int and path as a real strin
     // executeQuery() returns the DBAL driver's own raw column types,
     // not PHP-native ones; the (int) cast is what makes 'id' a genuine
     // int rather than whatever the driver handed back.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction:
+    // imageRepositoryTestInsertImage() INSERTs an `images` row, and
+    // `images` carries a FULLTEXT index (images_ft_name_comment/
+    // images_ft_author) whose auxiliary-index maintenance can deadlock
+    // against another --parallel worker's own concurrent images INSERT
+    // when held open for a whole test's duration -- same mechanism,
+    // same fix, as TagServiceTest.php's 'getTagIds() creates a new tag
+    // for a plain name when allowed' (reproduced live there:
+    // DeadlockException). Every other test below using
+    // imageRepositoryTestInsertImage() is exempt for the same reason.
+    DbTransactionTestOverride::rollback();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/del-test.jpg');
 
     try {
@@ -158,6 +171,10 @@ test('findLoungeRows returns image_id/category_id as real ints, ordered by categ
     // DecrementInteger/IncrementInteger/RemoveIntegerCast (the mirrored
     // cast for 'category_id') is closed the identical way -- both rows
     // use a non-zero category_id (1) too.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $imageA = imageRepositoryTestInsertImage('upload/2026/07/lounge-a.jpg');
     $imageB = imageRepositoryTestInsertImage('upload/2026/07/lounge-b.jpg');
     $conn = DbConnection::build();
@@ -204,6 +221,10 @@ test('findLoungeRows returns image_id/category_id as real ints, ordered by categ
 
 test('deleteLoungeUpTo removes only rows at or below the given image id', function (): void {
     // Kills line 689's RemoveMethodCall (the whole DELETE statement).
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $imageA = imageRepositoryTestInsertImage('upload/2026/07/lounge-del-a.jpg');
     $imageB = imageRepositoryTestInsertImage('upload/2026/07/lounge-del-b.jpg');
     $conn = DbConnection::build();
@@ -247,6 +268,10 @@ test('deleteImages cascades away rows from every real referencing table, and cle
     // deleteImages() alone already performs this cleanup, via the
     // database itself. One real row is seeded in every table to prove
     // that live, not just cite the schema.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(ImageId::from(1));
     expect($cached)
@@ -381,6 +406,10 @@ test('deleteImages removes the row for real, and clears the identity map', funct
     // DIFFERENT, unrelated cached entity (fixture image 1), since the
     // deleted row itself would read back as null either way regardless
     // of whether the identity map was cleared.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(ImageId::from(1));
     expect($cached)
@@ -412,10 +441,24 @@ test('findRepresentedCategoryIds returns real ints for every category whose repr
     // still points at a live image -- the FK's own ON DELETE SET NULL
     // already clears it first -- so a direct call here, bypassing that
     // caller, is what actually exercises the non-empty path for real.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why. The category INSERT
+    // below also gives `rank` an explicit, high value rather than
+    // leaving it to the schema's own NULL default -- NULLs sort first
+    // in updateGlobalRank()'s own ORDER BY, so a real fixture category
+    // 1 (rank 1) would otherwise be displaced by this row for as long
+    // as it's live, the exact mechanism SearchServiceTest.php's own
+    // 'zqualifiesonlycat' category needed the same fix for (reproduced
+    // live there: findMaxRankForParent()/findFullCategoriesByIds() both
+    // observed category 1's own rank column change value).
+    DbTransactionTestOverride::rollback();
     $repo = imageRepositoryTestRepo();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/represents-test.jpg');
     $conn = DbConnection::build();
-    $conn->executeStatement("INSERT INTO categories (name, representative_picture_id) VALUES ('mutation-sweep-repr-category', {$imageId})");
+    $rank = $conn->getDatabasePlatform()
+        ->quoteSingleIdentifier('rank');
+    $conn->executeStatement("INSERT INTO categories (name, representative_picture_id, {$rank}) VALUES ('mutation-sweep-repr-category', {$imageId}, 999)");
     $categoryId = (int) $conn->lastInsertId();
 
     try {
@@ -437,6 +480,10 @@ test('findExistingAssociations groups real int image ids under their real int ca
     // removed) -- same mysqli-native-types root cause as the file's own
     // top-of-file consolidated docblock (image_category's own image_id/
     // category_id columns are NOT NULL ints).
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $repo = imageRepositoryTestRepo();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/existing-assoc-test.jpg');
     $conn = DbConnection::build();
@@ -482,9 +529,18 @@ test('findMaxRanksByCategory returns the real int max rank for a category with r
     // writes to category 1 races this assertion (caught live: a
     // concurrent rank=8 write made this test observe 8, not the 7 it
     // itself inserted).
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why. The category INSERT
+    // below also gives categories.rank (a different column from the
+    // image_category.rank under test here) an explicit, high value --
+    // see 'findRepresentedCategoryIds...' above for why that matters.
+    DbTransactionTestOverride::rollback();
     $repo = imageRepositoryTestRepo();
     $conn = DbConnection::build();
-    $conn->executeStatement("INSERT INTO categories (name) VALUES ('mutation-sweep-max-rank-category')");
+    $categoriesRank = $conn->getDatabasePlatform()
+        ->quoteSingleIdentifier('rank');
+    $conn->executeStatement("INSERT INTO categories (name, {$categoriesRank}) VALUES ('mutation-sweep-max-rank-category', 999)");
     $categoryId = (int) $conn->lastInsertId();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/max-rank-test.jpg');
     $rankColumn = $conn->getDatabasePlatform()
@@ -523,6 +579,10 @@ test('massInsertImageCategory persists every real row it is given', function ():
     // Kills line 1470's RemoveMethodCall (clear() -- the identity map,
     // via the same unrelated-cached-entity technique as the sibling
     // tests above).
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(ImageId::from(1));
     expect($cached)
@@ -627,6 +687,10 @@ test('massUpdateMd5sums updates only the md5sum column, keyed by id, and clears 
     // RemoveArrayItem (emptying, then dropping, the 'update' key --
     // either leaves the row's md5sum untouched), and line 1488's
     // RemoveMethodCall ($em->clear()).
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(ImageId::from(1));
     expect($cached)
@@ -660,6 +724,10 @@ test('massUpdateMd5sums updates only the md5sum column, keyed by id, and clears 
 test('findPathsForMd5sum maps id => path as a real string, not a raw driver value', function (): void {
     // Kills line 955's UnwrapArrayMap/RemoveStringCast/
     // EmptyStringToNotEmpty.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/md5sum-paths.jpg');
 
     try {
@@ -714,6 +782,10 @@ test('findIdsByFilenameInCategory returns real ints for a matching filename/cate
     // DecrementInteger/IncrementInteger -- fetchFirstColumn() on this
     // DBAL QueryBuilder path also returns raw driver types, same
     // reasoning as findPathsForFileDeletion() above.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/filename-test.jpg');
     $conn = DbConnection::build();
     $conn->createQueryBuilder()
@@ -745,6 +817,10 @@ test('findIdsByFilenameInCategory returns real ints for a matching filename/cate
 test('findIdsByMd5sum returns real ints for every image sharing the given md5sum', function (): void {
     // Kills line 2362's UnwrapArrayMap/RemoveIntegerCast/
     // DecrementInteger/IncrementInteger.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/md5-lookup.jpg', 'dupe0dupe0dupe0dupe0dupe0dupe0dp');
 
     try {
@@ -761,6 +837,10 @@ test('findIdsByMd5sum returns real ints for every image sharing the given md5sum
 test('findIdsVisibleInCategoriesRecentlyAvailable returns real ints for a recently-available image in a given category', function (): void {
     // Kills line 2934's UnwrapArrayMap/RemoveIntegerCast/
     // DecrementInteger/IncrementInteger.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/recent-test.jpg');
     $conn = DbConnection::build();
     $conn->createQueryBuilder()
@@ -841,6 +921,10 @@ test('deleteNonStorageCategoryLinks clears the identity map after a raw write ou
     // generic over any image id, so a disposable one with the same
     // "NULL storage_category_id, one category link" shape exercises the
     // identical code path without touching shared fixture data at all.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $conn->insert('images', [
         'file' => 'p17-unit-test-identity-map.jpg',
@@ -876,6 +960,10 @@ test('deleteNonStorageCategoryLinks spares the image\'s own storage_category_id 
     // image_category rows across both fixture categories (1 and 2) and a
     // real storage_category_id, so a bug that deletes every link (or
     // spares the wrong one) is observable.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $conn->createQueryBuilder()
         ->insert('images')
@@ -923,6 +1011,10 @@ test('deleteNonStorageCategoryLinks also spares any category explicitly passed i
     // Covers the other half: storage_category_id IS NULL (no exclusion
     // from that side at all) plus the optional $categories keep-list,
     // which the sibling test above never passes.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'findPathsForFileDeletion...' above for why.
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $conn->createQueryBuilder()
         ->insert('images')

@@ -253,7 +253,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
     {
         $pairs = $this->repo->findMembersByGroupIds([1]);
 
-        $userIds = array_map(static fn (array $row): int => is_numeric($row['user_id']) ? (int) $row['user_id'] : 0, $pairs);
+        $userIds = array_map(static fn (array $row): int => $row['user_id'], $pairs);
         sort($userIds);
         self::assertSame([1, 3], $userIds);
     }
@@ -267,7 +267,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
     {
         $pairs = $this->repo->findMembershipsForUserIds([1]);
 
-        $groupIds = array_map(static fn (array $row): int => is_numeric($row['group_id']) ? (int) $row['group_id'] : 0, $pairs);
+        $groupIds = array_map(static fn (array $row): int => $row['group_id'], $pairs);
         self::assertContains(1, $groupIds);
     }
 

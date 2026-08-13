@@ -722,8 +722,8 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findAuthorCounts(new CommentApiCriteria(search: $marker));
 
         self::assertCount(1, $rows);
-        self::assertSame(1, is_numeric($rows[0]['author_id']) ? (int) $rows[0]['author_id'] : null);
-        self::assertSame(2, is_numeric($rows[0]['nb_authors']) ? (int) $rows[0]['nb_authors'] : null);
+        self::assertSame(1, $rows[0]['author_id']);
+        self::assertSame(2, $rows[0]['nb_authors']);
     }
 
     public function testFindAuthorCountsIgnoresTheAuthorIdFilter(): void
@@ -766,7 +766,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findAuthorCounts(new CommentApiCriteria(authorId: UserId::from(1), imageId: ImageId::from(5)));
 
         $authorIds = array_map(
-            static fn (array $row): ?int => is_numeric($row['author_id']) ? (int) $row['author_id'] : null,
+            static fn (array $row): ?int => $row['author_id'],
             $rows
         );
         sort($authorIds);

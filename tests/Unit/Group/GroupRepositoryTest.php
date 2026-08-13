@@ -397,7 +397,7 @@ test('findMembersByGroupIds() returns the raw user_id/group_id pairs for the giv
     $pairs = groupTestRepo()
         ->findMembersByGroupIds([1]);
 
-    $userIds = array_map(static fn (array $row): int => is_numeric($row['user_id']) ? (int) $row['user_id'] : 0, $pairs);
+    $userIds = array_map(static fn (array $row): int => $row['user_id'], $pairs);
     sort($userIds);
 
     expect($userIds)
@@ -412,7 +412,7 @@ test('findMembershipsForUserIds() returns the raw user_id/group_id pairs for the
     $pairs = groupTestRepo()
         ->findMembershipsForUserIds([1]);
 
-    $groupIds = array_map(static fn (array $row): int => is_numeric($row['group_id']) ? (int) $row['group_id'] : 0, $pairs);
+    $groupIds = array_map(static fn (array $row): int => $row['group_id'], $pairs);
 
     expect($groupIds)
         ->toContain(1);

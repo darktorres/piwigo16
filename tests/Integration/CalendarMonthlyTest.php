@@ -58,7 +58,7 @@ namespace Piwigo\Tests\Integration {
      *
      * Lang::reset()/Translator::reset() pin this process's translation state
      * to "nothing loaded" -- IntegrationTestCase's own setUp() doesn't manage
-     * Lang at all (confirmed via a full grep), so leaving it alone would make
+     * Lang at all, so leaving it alone would make
      * getDateComponentLabel()'s month/day-name lookups depend on whichever
      * earlier test file in the same PHPUnit/Pest process happened to load a
      * language file first. With nothing loaded, Piwigo\Core\Lang::t() (used
@@ -271,21 +271,6 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * REAL BUG found while writing this test (reproducible against a real
-         * MySQL/MariaDB connection with the standard ONLY_FULL_GROUP_BY
-         * sql_mode, which this project's own DbConnection deliberately never
-         * strips -- see CalendarRepository's own docblock): buildGlobalCalendar()'s
-         * `ORDER BY YEAR(date_field) DESC, MONTH(date_field) ASC` references
-         * the raw date column directly while the query only `GROUP BY period`
-         * (a DATE_FORMAT(...) alias) -- MySQL can't prove YEAR()/MONTH() are
-         * functionally dependent on that alias, so this ORDER BY is rejected
-         * outright. This is CAL_VIEW_CALENDAR + monthly style (the default
-         * style) + no year selected yet -- i.e. the very first calendar page a
-         * real visitor lands on -- so every real request down this path 500s.
-         * Reproduced two ways: directly here, and end-to-end through the real
-         * CalendarRenderer::render() entry point in CalendarRendererTest.
-         */
-        /**
          * Regression test for a fixed bug: buildGlobalCalendar()'s
          * `ORDER BY YEAR(date_field) DESC, MONTH(date_field) ASC` used to
          * reference the raw date column directly while the query only
@@ -298,7 +283,7 @@ namespace Piwigo\Tests\Integration {
          * visitor lands on -- so every real request down this path 500d.
          * Fixed by also grouping by the exact YEAR()/MONTH() expressions used
          * in ORDER BY. Verifies the real, now-working two-year/three-month
-         * grouping (real values captured from a live run, not guessed).
+         * grouping.
          */
         public function testBuildGlobalCalendarGroupsMultipleYearsAndMonthsCorrectly(): void
         {
@@ -718,8 +703,8 @@ namespace Piwigo\Tests\Integration {
          * current one -- so with chronology_date=[2024, 'any'] the whole
          * query groups by (YEAR(date_field), 'any'), collapsing every month
          * within a year into one period per year ('2024-any', '2025-any'),
-         * not one period per real month. Confirmed live: this is genuinely
-         * how the algorithm behaves, not a documented-elsewhere edge case.
+         * not one period per real month -- this is genuinely how the
+         * algorithm behaves, not a documented-elsewhere edge case.
          * '2024-any' sorts before '2025-any' under version_compare(),
          * landing at rank 0 -- no previous, and 'next' pointing at the only
          * other period, 2025 (getDateNiceName() skips the 'any' component
@@ -919,8 +904,8 @@ namespace Piwigo\Tests\Integration {
      * ever call duplicateIndexUrl() (see CalendarBase's own code); the real
      * Piwigo\Url\UrlService's own duplicateIndexUrl() falls through to
      * getAbsoluteRootUrl(), whose output depends on $_SERVER['SCRIPT_NAME']/
-     * $_SERVER['HTTP_HOST'] (confirmed live: it echoed back this test
-     * process's own invoking script path, not a gallery URL) -- entirely an
+     * $_SERVER['HTTP_HOST'] (it echoes back this test process's own invoking
+     * script path, not a gallery URL) -- entirely an
      * artifact of how the test binary happens to be invoked, not of anything
      * CalendarMonthly itself computes. This fake instead returns a
      * deterministic, exact encoding of the real $redefined/$removed params it

@@ -27,6 +27,11 @@ function userFailedLoginTestRepo(): UserFailedLoginRepository
     return $repo;
 }
 
+function userFailedLoginTestRepoForConn(Connection $conn): UserFailedLoginRepository
+{
+    return EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class);
+}
+
 function userFailedLoginTestPurgeIp(Connection $conn, string $ip): void
 {
     $conn->createQueryBuilder()
@@ -119,11 +124,22 @@ test('countRecentByUserId() counts only attempts for that user at or after the t
     // ImageRepositoryTest.php/ApiKeyRepositoryTest.php. The strict
     // toBe(int) assertions throughout this file would already fail if
     // this driver ever started returning a numeric string instead.
+    //
+    // Transaction-wrapped -- countRecentByUserId() has no ip scoping at
+    // all (by design: it's the user-scoped lockout check), and its own
+    // '2026-08-01 00:00:00' threshold here is exactly
+    // PIWIGO_TEST_NOW's frozen value, i.e. "every user_id=1 row that
+    // has ever existed under the frozen clock" -- AuthServiceTest.php's
+    // own pwgLogin()-triggered rows for user_id=1 (ip='', a different
+    // ip, so unaffected by this file's own ip-scoped cleanup) share
+    // that exact same timestamp and were observed inflating this count
+    // under --parallel; confirmed live via a 5-run composer test loop.
     $conn = DbConnection::build();
+    $conn->beginTransaction();
     $ip = '203.0.113.13';
 
     try {
-        $repo = userFailedLoginTestRepo();
+        $repo = userFailedLoginTestRepoForConn($conn);
         $repo->recordFailure(1, $ip, '2026-08-01 10:00:00');
         $repo->recordFailure(1, $ip, '2026-08-01 11:00:00');
         $repo->recordFailure(3, $ip, '2026-08-01 11:00:00');
@@ -135,7 +151,7 @@ test('countRecentByUserId() counts only attempts for that user at or after the t
             ->and($repo->countRecentByUserId(3, '2026-08-01 00:00:00'))
             ->toBe(1);
     } finally {
-        userFailedLoginTestPurgeIp($conn, $ip);
+        $conn->rollBack();
     }
 });
 

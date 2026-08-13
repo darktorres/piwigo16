@@ -88,9 +88,13 @@ jobs:
       - run: composer analyse:phpstan
 
   # Psalm was never gated in CI (see docs/REFERENCE.md's "Psalm gating is
-  # moot, not just paused" decision) — its global-function-resolution
-  # scanner didn't hold up at this codebase's scale/style (non-namespaced
-  # procedural legacy code), and the dependency itself is gone now anyway.
+  # moot, not just paused — but Psalm itself is back" decision) — its
+  # global-function-resolution scanner didn't hold up at this codebase's
+  # scale/style (non-namespaced procedural legacy code), so gating stays
+  # moot regardless of whether the dependency is installed. `vimeo/psalm`
+  # was dropped from composer.json entirely 2026-08-07, then reinstalled
+  # 2026-08-11 (pinned to 7.x-dev) for real, local, best-effort use — no
+  # CI job, no composer script wired to it.
 
   rector:
     name: Rector (dry-run, non-blocking)

@@ -8,11 +8,9 @@ use Closure;
 use LogicException;
 use Piwigo\Template\Latte\PiwigoExtension;
 use ReflectionFunction;
-use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionParameter;
 use ReflectionType;
-use ReflectionUnionType;
 
 /**
  * Emits `LatteAnalysisShims`: one static method per PiwigoExtension
@@ -184,33 +182,7 @@ final class ShimClassGenerator
 
     private function renderType(ReflectionType $type): string
     {
-        if ($type instanceof ReflectionNamedType) {
-            $name = $type->getName();
-            $rendered = $type->isBuiltin() ? $name : '\\' . $name;
-            if ($type->allowsNull() && $name !== 'null' && $name !== 'mixed') {
-                return '?' . $rendered;
-            }
-
-            return $rendered;
-        }
-
-        if ($type instanceof ReflectionUnionType) {
-            return implode('|', array_map(
-                fn (ReflectionNamedType|ReflectionIntersectionType $t): string => $t instanceof ReflectionNamedType
-                    ? ($t->isBuiltin() ? $t->getName() : '\\' . $t->getName())
-                    : $this->renderType($t),
-                $type->getTypes(),
-            ));
-        }
-
-        if ($type instanceof ReflectionIntersectionType) {
-            return implode('&', array_map(
-                fn (ReflectionType $t): string => $this->renderType($t),
-                $type->getTypes(),
-            ));
-        }
-
-        throw new LogicException('Unhandled ReflectionType subclass: ' . $type::class);
+        return ReflectionTypeRenderer::render($type);
     }
 
     /**

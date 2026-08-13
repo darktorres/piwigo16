@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -17,8 +18,6 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginNotification;
 use Piwigo\Event\Location\LocEndNotification;
 use Piwigo\Feed\FeedEntity;
@@ -64,6 +63,7 @@ final readonly class NotificationController implements ControllerInterface
         private Translator $translator,
         private CurrentLogger $currentLogger,
         private PermissionService $permissionService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -73,7 +73,7 @@ final readonly class NotificationController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginNotification());
 
-        $feedRepo = EntityManagerFactory::build(DbConnection::build())->getRepository(FeedEntity::class);
+        $feedRepo = $this->entityManager->getRepository(FeedEntity::class);
         $feedId = $this->findAvailableFeedId($feedRepo);
         $urlService = $this->urlService;
 
@@ -112,7 +112,7 @@ final readonly class NotificationController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService, $this->entityManager);
         }
 
         new PageHeaderRenderer()

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu;
 
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
@@ -22,8 +23,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
@@ -75,13 +74,12 @@ final class MenubarRenderer
      * (see that method's own docblock); every caller but GalleryController
      * ignores the return value.
      */
-    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, UrlServiceInterface $urlService, FilterState $filterState, SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, DeploymentPolicy $deploymentPolicy, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, Translator $translator, CurrentLogger $currentLogger, PermissionService $permissionService): ?int
+    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, UrlServiceInterface $urlService, FilterState $filterState, SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, DeploymentPolicy $deploymentPolicy, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, Translator $translator, CurrentLogger $currentLogger, PermissionService $permissionService, EntityManagerInterface $entityManager): ?int
     {
         $template = $currentTemplate->get();
         $section_context = $sectionContextRegistry->current();
 
-        $conn = DbConnection::build();
-        $categoryService = new CategoryService($lang, new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, $currentConfig));
+        $categoryService = new CategoryService($lang, new CategoryRepository($entityManager, $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker, new UserRepository($entityManager, $eventDispatcher, $currentConfig));
 
         // ImageService is a throwaway, never-actually-used collaborator
         // here -- TagService only needs it for updateImagesLastmodified(),
@@ -90,8 +88,8 @@ final class MenubarRenderer
         if (! $menubarPaths instanceof Paths) {
             throw new LogicException('Container returned an unexpected type for ' . Paths::class);
         }
-        $imageService = new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $sessionService, $eventDispatcher, $currentConfig, $menubarPaths, $categoryService);
-        $tagService = new TagService($lang, EntityManagerFactory::build($conn)->getRepository(TagEntity::class), $permissionService, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $imageService);
+        $imageService = new ImageService($entityManager->getRepository(ImageEntity::class), new ActivityService($entityManager->getRepository(ActivityEntity::class)), $sessionService, $eventDispatcher, $currentConfig, $menubarPaths, $categoryService);
+        $tagService = new TagService($lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $imageService);
 
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig);
 
@@ -152,7 +150,7 @@ final class MenubarRenderer
 
         $categoryCountCategories = null;
         if ($block !== null) {
-            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, $translator, $lang, $currentConfig, $eventDispatcher, EntityManagerFactory::build($conn)), $urlService, $filterState, $currentUser, $lang);
+            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, $translator, $lang, $currentConfig, $eventDispatcher, $entityManager), $urlService, $filterState, $currentUser, $lang);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
                 'NB_PICTURE' => $currentUser->get()

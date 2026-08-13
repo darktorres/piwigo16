@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -31,8 +32,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Location\LocBeginComments;
@@ -84,6 +83,7 @@ final readonly class CommentsController implements ControllerInterface
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private PermissionService $permissionService,
+        private EntityManagerInterface $entityManager,
         private CategoryService $categoryService,
         private HtmlService $htmlService,
         private MailerInterface $mailer,
@@ -97,8 +97,6 @@ final readonly class CommentsController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $template = $this->currentTemplate->get();
-
-        $conn = DbConnection::build();
 
         if (! $this->currentConfig->activateComments) {
             $this->htmlService
@@ -319,7 +317,7 @@ final readonly class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = new CommentService($this->lang, EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
+        $commentService = new CommentService($this->lang, $this->entityManager->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);
@@ -461,7 +459,7 @@ final readonly class CommentsController implements ControllerInterface
             // retrieving element informations
             $elements = array_map(
                 static fn (Image $image): array => $image->toArray(),
-                EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+                $this->entityManager->getRepository(ImageEntity::class)
                     ->findByIds($element_ids)
             );
 
@@ -614,7 +612,7 @@ final readonly class CommentsController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService, $this->entityManager);
         }
 
         new PageHeaderRenderer()

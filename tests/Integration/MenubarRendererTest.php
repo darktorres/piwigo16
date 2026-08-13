@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
@@ -69,6 +70,8 @@ final class MenubarRendererTest extends IntegrationTestCase
 
     private PermissionService $permissionService;
 
+    private EntityManagerInterface $entityManager;
+
     #[Override]
     protected function setUp(): void
     {
@@ -127,6 +130,11 @@ final class MenubarRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . PermissionService::class);
         }
         $this->permissionService = $permissionService;
+        $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+        if (! $entityManager instanceof EntityManagerInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+        }
+        $this->entityManager = $entityManager;
         // The mbCategories block (built unconditionally by every test in
         // this file) reaches CategoryService::getCategoriesMenu() ->
         // getComputedCategories()/filterMenuRows(), which read
@@ -173,7 +181,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             ],
         ));
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
 
         self::assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $this->template->getTemplateVars('QUERY_SEARCH'));
     }
@@ -182,7 +190,7 @@ final class MenubarRendererTest extends IntegrationTestCase
     {
         $this->sectionContextRegistry->set(new SectionContext(section: Section::Categories));
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
 
         self::assertNull($this->template->getTemplateVars('QUERY_SEARCH'));
     }
@@ -197,7 +205,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         ];
         $this->filterState->set(true, '', '', []);
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
 
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), [
             'filter' => 'stop',
@@ -217,7 +225,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         $this->filterState->set(false, '', '', []);
         CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withRawAttribute('recent_period', 7));
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
 
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), [
             'filter' => 'start-recent-7',
@@ -249,7 +257,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             combinedCategories: null,
         ));
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
 
         // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in
         // Latte\Runtime\Html, not a plain string.
@@ -286,7 +294,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             ]],
         ));
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
 
         // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in
         // Latte\Runtime\Html, not a plain string.

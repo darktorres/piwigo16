@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -23,7 +24,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Event\Location\LocBeginIdentification;
 use Piwigo\Event\Location\LocEndIdentification;
 use Piwigo\Html\HtmlService;
@@ -78,6 +78,7 @@ final readonly class IdentificationController implements ControllerInterface
         private CurrentLogger $currentLogger,
         private Paths $paths,
         private PermissionService $permissionService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -125,7 +126,6 @@ final readonly class IdentificationController implements ControllerInterface
                 $username = $identificationSubmit->username;
                 $password = $identificationSubmit->password;
 
-                $conn = DbConnection::build();
                 if ($this->currentConfig->insensitiveCaseLogon) {
                     $username = $this->userService
                         ->searchCaseUsername($username);
@@ -188,7 +188,7 @@ final readonly class IdentificationController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! $this->currentConfig->galleryLocked && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
             new MenubarRenderer()
-                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService, $this->entityManager);
         }
 
         // Load language if cookie is set from login/register/password

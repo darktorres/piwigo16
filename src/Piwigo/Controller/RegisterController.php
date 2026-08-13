@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
@@ -26,7 +27,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Event\Location\LocBeginRegister;
 use Piwigo\Event\Location\LocEndRegister;
 use Piwigo\Html\HtmlService;
@@ -81,6 +81,7 @@ final readonly class RegisterController implements ControllerInterface
         private CurrentLogger $currentLogger,
         private Paths $paths,
         private PermissionService $permissionService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -153,7 +154,6 @@ final readonly class RegisterController implements ControllerInterface
                 // rationale (this is also why an existing account gets a
                 // "someone tried to register your username" email instead of
                 // the requester ever seeing an error here).
-                $conn = DbConnection::build();
                 $userService = $this->userService;
                 $registration_result = $userService
                     ->registerUser(
@@ -248,7 +248,7 @@ final readonly class RegisterController implements ControllerInterface
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
         if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService, $this->entityManager);
         }
 
         // Load language if cookie is set from login/register/password

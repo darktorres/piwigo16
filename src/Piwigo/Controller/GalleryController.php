@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -93,6 +94,7 @@ final readonly class GalleryController implements ControllerInterface
         private Translator $translator,
         private CurrentLogger $currentLogger,
         private PermissionService $permissionService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -203,7 +205,7 @@ final readonly class GalleryController implements ControllerInterface
         $nb_items = count($page_items);
 
         $categoryCountCategories = new MenubarRenderer()
-            ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService);
+            ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService, $this->entityManager);
 
         $this->pageState->setBodyId('theCategoryPage');
 

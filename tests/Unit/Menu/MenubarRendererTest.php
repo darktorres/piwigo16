@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -115,6 +116,7 @@ test('render skips every real DB-backed block when no listener has registered an
         $translator = Kernel::container()->get(Translator::class);
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         $permissionService = Kernel::container()->get(PermissionService::class);
+        $entityManager = Kernel::container()->get(EntityManagerInterface::class);
 
         if (! $lang instanceof Lang
             || ! $accessLevelChecker instanceof AccessLevelChecker
@@ -130,6 +132,7 @@ test('render skips every real DB-backed block when no listener has registered an
             || ! $translator instanceof Translator
             || ! $currentLogger instanceof CurrentLogger
             || ! $permissionService instanceof PermissionService
+            || ! $entityManager instanceof EntityManagerInterface
         ) {
             throw new LogicException('Container returned an unexpected type for one of render()\'s method params.');
         }
@@ -149,6 +152,7 @@ test('render skips every real DB-backed block when no listener has registered an
             $translator,
             $currentLogger,
             $permissionService,
+            $entityManager,
         );
 
         // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in

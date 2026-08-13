@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
@@ -30,8 +31,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginPassword;
 use Piwigo\Event\Location\LocEndPassword;
 use Piwigo\Html\HtmlService;
@@ -89,6 +88,7 @@ final class PasswordController implements ControllerInterface
         private readonly CurrentLogger $currentLogger,
         private readonly Paths $paths,
         private PermissionService $permissionService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -167,12 +167,11 @@ final class PasswordController implements ControllerInterface
         if ($key !== null and ! $this->request->isSubmitted) {
             $user_id = $this->checkPasswordResetKey($key);
             if (is_int($user_id)) {
-                $conn = DbConnection::build();
                 $userdata = $this->userService->getUserData(UserId::from($user_id));
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
                 $key_value = $key;
-                $first_login = $this->authService->hasAlreadyLoggedIn($user_id, EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
+                $first_login = $this->authService->hasAlreadyLoggedIn($user_id, $this->entityManager->getRepository(ActivityEntity::class));
 
                 if ($this->action === null) {
                     $this->action = 'reset';
@@ -254,7 +253,7 @@ final class PasswordController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService, $this->entityManager);
         }
 
         // Load language if cookie is set from login/register/password
@@ -330,8 +329,6 @@ final class PasswordController implements ControllerInterface
             $this->errors['password_form_error'] = $this->lang->t('Invalid username or email');
             return false;
         }
-
-        $conn = DbConnection::build();
 
         // retrievies user by email is not try by username
         $emailOrNull = Email::tryFrom($username_or_email);
@@ -417,8 +414,6 @@ final class PasswordController implements ControllerInterface
      */
     private function processPasswordRequest(): bool
     {
-        $conn = DbConnection::build();
-
         $state = $_SESSION['reset_password_code'] ?? null;
         if (! is_array($state)) {
             return true;
@@ -609,8 +604,6 @@ final class PasswordController implements ControllerInterface
             return false;
         }
 
-        $conn = DbConnection::build();
-
         $this->userService->updateAccountFields(
             UserId::from($user_id),
             null,
@@ -675,7 +668,6 @@ final class PasswordController implements ControllerInterface
             return false;
         }
 
-        $conn = DbConnection::build();
         $this->authService->deactivatePasswordResetKey($user_id);
         $this->authService->deactivateUserAuthKeys($user_id);
         return $user_id;

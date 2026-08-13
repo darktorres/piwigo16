@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -17,7 +18,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
@@ -61,6 +61,7 @@ final readonly class NbmController implements ControllerInterface
         private CurrentLogger $currentLogger,
         private Paths $paths,
         private PermissionService $permissionService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -79,7 +80,6 @@ final readonly class NbmController implements ControllerInterface
 
         $htmlRenderer = $this->htmlService;
 
-        $conn = DbConnection::build();
         $nbmSender = $this->notificationByMailSender;
 
         $queryParams = $request->getQueryParams();
@@ -108,7 +108,7 @@ final readonly class NbmController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService, $this->entityManager);
         }
 
         new PageHeaderRenderer()

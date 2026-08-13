@@ -57,10 +57,10 @@ final readonly class PopuphelpController implements ControllerInterface
         $rawPage = $queryParams['page'] ?? null;
 
         // Legacy popuphelp.php also did `define('PWG_HELP', true);`
-        // here -- confirmed via a project-wide grep that nothing reads
-        // that constant anywhere (not even admin/popuphelp.php, which
-        // defines the same constant for its own, unrelated reasons);
-        // dropped rather than ported, and src/Piwigo/ itself is
+        // here -- nothing reads that constant anywhere (not even
+        // admin/popuphelp.php, which defines the same constant for its
+        // own, unrelated reasons); dropped rather than ported, and
+        // src/Piwigo/ itself is
         // arch-tested to contain zero define() calls at all
         // (tests/Arch/StructuralTest.php).
 

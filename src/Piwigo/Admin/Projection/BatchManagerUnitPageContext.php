@@ -16,8 +16,8 @@ use Piwigo\Core\TemplatePageContext;
  * exact original behavior. `$storageCategory` is also optional and
  * genuinely dead: it's overwritten once per matching category across
  * the whole per-image loop (last write wins), and `batch_manager_unit.latte`
- * never actually reads `$STORAGE_CATEGORY` (confirmed by direct read) --
- * kept here anyway as a faithful 1:1 port of the original assign() call,
+ * never actually reads `$STORAGE_CATEGORY` -- kept here anyway as a
+ * faithful 1:1 port of the original assign() call,
  * not removed as an out-of-scope dead-code cleanup. `$elements` is
  * always included (even empty) since `batch_manager_unit.latte` reads it
  * with `{if !empty($elements)}`, not `isset()`.

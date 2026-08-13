@@ -27,8 +27,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndPictureModify;
 use Piwigo\Event\Picture\PictureModifyBeforeUpdate;
 use Piwigo\Image\DerivativeImage;
@@ -99,8 +97,7 @@ final readonly class PictureModifyPageRenderer
         $page = [];
         $template = $this->currentTemplate->get();
 
-        $conn = DbConnection::build();
-        $imageService = new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
+        $imageService = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
         $htmlRenderer = $this->htmlRenderer;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
@@ -148,7 +145,7 @@ final readonly class PictureModifyPageRenderer
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->metadataService
-                ->syncMetadata([$image_id]);
+                ->syncMetadata([$image_id], $this->permissionService);
             $this->pageState->addInfo($this->lang->t('Metadata synchronized from file'));
         }
 
@@ -298,7 +295,7 @@ final readonly class PictureModifyPageRenderer
 
         $added_by = 'N/A';
         $row_added_by = UserId::tryFrom($row['added_by']);
-        $added_by_username = $row_added_by instanceof UserId ? new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)
+        $added_by_username = $row_added_by instanceof UserId ? new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
             ->findUsernameById($row_added_by) : null;
         if ($added_by_username instanceof Username) {
             $row['added_by'] = $added_by_username->value;
@@ -325,7 +322,7 @@ final readonly class PictureModifyPageRenderer
             $intro_vars['stats'] .= ', ' . sprintf($this->lang->t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
-        $formats = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+        $formats = $this->entityManager->getRepository(ImageEntity::class)
             ->findFormatsForImage(ImageId::from($image_id));
 
         if ($formats !== []) {

@@ -1555,7 +1555,7 @@ final readonly class Images
         // update metadata from the uploaded file (exif/iptc), even if the sync
         // was already performed by add_uploaded_file().
         $this->metadataService
-            ->syncMetadata([$image_id]);
+            ->syncMetadata([$image_id], $this->permissionService);
 
         return [
             'image_id' => $image_id,
@@ -2723,7 +2723,7 @@ final readonly class Images
         }
 
         $this->metadataService
-            ->syncMetadata($image_ids);
+            ->syncMetadata($image_ids, $this->permissionService);
 
         return [
             'nb_synchronized' => count($image_ids),

@@ -22,6 +22,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -122,7 +123,12 @@ function upload_service_test_make(): UploadService
         throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
     }
 
-    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcherTestFactory::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get());
+    $permissionService = Kernel::container()->get(PermissionService::class);
+    if (! $permissionService instanceof PermissionService) {
+        throw new LogicException('Container returned an unexpected type for ' . PermissionService::class);
+    }
+
+    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcherTestFactory::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get(), $permissionService);
 }
 
 beforeEach(function (): void {

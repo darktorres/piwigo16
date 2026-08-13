@@ -44,6 +44,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
@@ -104,6 +105,7 @@ final class UploadService
         private readonly Paths $paths,
         private readonly DbCredentials $dbCredentials,
         private readonly ImageStdParams $imageStdParams,
+        private readonly PermissionService $permissionService,
     ) {}
 
     /**
@@ -616,7 +618,7 @@ final class UploadService
             $this->currentConfig->useExif = false;
         }
         $this->metadataService
-            ->syncMetadata([$image_id]);
+            ->syncMetadata([$image_id], $this->permissionService);
 
         // cache a derivative
         //

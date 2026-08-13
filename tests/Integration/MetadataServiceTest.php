@@ -111,8 +111,8 @@ namespace Piwigo\Tests\Integration {
          * APP13 segment (the real "8BIM"/0x0404 IPTC-NAA resource block format)
          * spliced in right after the SOI marker -- same "getimagesize()/
          * iptcparse() need genuinely valid marker-segment bytes" reasoning as
-         * ImageBackendTest's own EXIF-orientation helper (Admin\Image domain),
-         * confirmed live: neither ImageMagick's `-set`/`-define` nor a
+         * ImageBackendTest's own EXIF-orientation helper (Admin\Image domain)
+         * -- neither ImageMagick's `-set`/`-define` nor a
          * synthetic `xc:` canvas actually persists an IPTC profile either.
          *
          * @param  list<array{0: int<0, 255>, 1: string}>  $records  [datasetNumber, value] pairs, all under IPTC record 2 (Application Record)
@@ -278,14 +278,14 @@ namespace Piwigo\Tests\Integration {
         // getSyncMetadata()'s own `if ($fs === false) { return false; }` guard
         // right after `filesize($file)` is not chased here: it's only
         // reachable if filesize() fails on a path is_readable() (the guard
-        // directly above it) just confirmed true -- confirmed live that a
+        // directly above it) just confirmed true -- a
         // custom stream wrapper reporting a readable regular file via
         // url_stat() (the ImageServiceTestFailedOpenStreamWrapper-style
         // technique that isolates countPdfPages()'s analogous
         // is_file()-then-file_get_contents() branch) can't isolate this one:
         // PHP's own stream stat cache means is_readable()'s url_stat() call
         // and filesize()'s subsequent one on the exact same path resolve from
-        // the *same* cached stat result (verified live: forcing url_stat() to
+        // the *same* cached stat result (forcing url_stat() to
         // fail on a 2nd call never fires a 2nd call at all without an explicit
         // clearstatcache() between them, which getSyncMetadata() itself never
         // does) -- so a path that is_readable() accepts always has its
@@ -1006,8 +1006,8 @@ namespace Piwigo\Tests\Integration {
             );
 
             // Forces preg_replace()'s own DOCTYPE-strip to fail with
-            // PREG_BACKTRACK_LIMIT_ERROR (confirmed live: a backtrack_limit of
-            // 0 fails even this simple, non-catastrophic-backtracking pattern),
+            // PREG_BACKTRACK_LIMIT_ERROR -- a backtrack_limit of
+            // 0 fails even this simple, non-catastrophic-backtracking pattern,
             // returning null exactly like a real PCRE resource-limit failure
             // would in production.
             $originalLimit = ini_get('pcre.backtrack_limit');
@@ -1024,7 +1024,7 @@ namespace Piwigo\Tests\Integration {
         // parseSvgDimensions()'s `$attributes === null` guard is not exercised
         // here -- SimpleXMLElement::attributes() only returns null for a
         // handful of internal-error conditions that don't occur once
-        // simplexml_load_string() has already succeeded (confirmed live: even
+        // simplexml_load_string() has already succeeded (even
         // a real root element with zero attributes returns an empty
         // SimpleXMLElement, never null). Same "verified unreachable through
         // realistic input" shape as this file's other documented guards.

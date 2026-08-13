@@ -1,0 +1,525 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\PluginConfig;
+
+use Composer\Autoload\ClassLoader;
+use Composer\Semver\Semver;
+use JsonException;
+use Opis\JsonSchema\Validator;
+use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\AppInfo;
+use Piwigo\Core\Paths;
+use Piwigo\Core\ThemeRepository;
+use RuntimeException;
+
+/**
+ * Registry for Piwigo 17+ themes. Cannot be adapted from
+ * `../piwigo16-rewrite`'s own `Theme\ThemeRegistry` the same way
+ * `PluginRegistry` was from its `Plugin\PluginRegistry` counterpart --
+ * the reference genuinely has no request-time boot method at all
+ * (see this class's own P27 plan section for the full discussion of
+ * why "active" doesn't mean the same thing for themes it does for
+ * plugins, and why `bootCurrent()` below is designed fresh, not ported).
+ *
+ * A `themes` row's mere existence already means active -- there is no
+ * persisted installed-but-inactive state the way plugins have
+ * (confirmed against `Admin\Extensions\ExtensionRepository`'s own real
+ * docblock and `ExtensionLifecycle::performThemeAction()`'s real
+ * dispatch, which only ever has `activate`/`deactivate` cases, never a
+ * separate `install`/`uninstall`). `install()`/`uninstall()` below are
+ * still real, separate hooks on the theme's own class (matching
+ * `ExtensionInterface`'s uniform 5-hook contract) -- they just don't
+ * carry their own DB write, since there's nothing to persist beyond
+ * what `activate()`/`deactivate()` already do.
+ *
+ * No topological sort across every installed theme, unlike
+ * `PluginRegistry`: many plugins boot simultaneously every request, but
+ * exactly one theme (+ its parent chain) does, and that chain's own
+ * order is already fully determined by walking `ThemeManifest::$parent`
+ * pointers -- a general `require:` dependency graph across every
+ * *other* installed theme has no bearing on boot order.
+ */
+final class ThemeRegistry
+{
+    /**
+     * @var array<string, ThemeManifest>
+     */
+    private array $manifests = [];
+
+    private bool $loaded = false;
+
+    private readonly Validator $validator;
+
+    private ?object $schema = null;
+
+    private bool $autoloadRegistered = false;
+
+    public function __construct(
+        private readonly ThemeRepository $repository,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly ExtensionContextFactory $contextFactory,
+        private readonly CurrentConfig $currentConfig,
+        private readonly Paths $paths,
+    ) {
+        $this->validator = new Validator();
+    }
+
+    /**
+     * Scans `themes/<id>/theme.json`, validates every manifest against
+     * `docs/schemas/theme.schema.json`. Re-callable: idempotent on the
+     * second invocation.
+     */
+    public function load(): void
+    {
+        if ($this->loaded) {
+            return;
+        }
+        $this->manifests = [];
+
+        foreach ($this->scanThemeDirs() as $dir) {
+            $themeId = basename($dir);
+            $manifestPath = $dir . '/theme.json';
+            if (! is_file($manifestPath)) {
+                continue;
+            }
+
+            try {
+                $manifest = $this->loadManifest($themeId, $manifestPath);
+            } catch (ThemeValidationException) {
+                continue;
+            }
+
+            $this->manifests[$manifest->id] = $manifest;
+        }
+
+        $this->registerAutoload();
+        $this->loaded = true;
+    }
+
+    public function reload(): void
+    {
+        $this->loaded = false;
+        $this->load();
+    }
+
+    public function getManifest(string $themeId): ?ThemeManifest
+    {
+        $this->load();
+
+        return $this->manifests[$themeId] ?? null;
+    }
+
+    /**
+     * @return array<string, ThemeManifest>
+     */
+    public function getAllManifests(): array
+    {
+        $this->load();
+
+        return $this->manifests;
+    }
+
+    public function isInstalled(string $themeId): bool
+    {
+        $id = ThemeId::tryFrom($themeId);
+
+        return $id instanceof ThemeId && $this->repository->find($id) !== null;
+    }
+
+    /**
+     * Runs the theme's own `install()` hook. No DB write of its own --
+     * see this class's own docblock for why there's nothing separate to
+     * persist for themes.
+     */
+    public function install(string $themeId): void
+    {
+        $manifest = $this->requireManifest($themeId);
+        $this->bootInstance($manifest)
+            ->install();
+    }
+
+    /**
+     * Activates a theme: check dependencies, insert the `themes` row if
+     * not already present, then invoke `activate()`. Idempotent if
+     * already active.
+     */
+    public function activate(string $themeId): void
+    {
+        $manifest = $this->requireManifest($themeId);
+        $this->assertDependenciesSatisfied($manifest);
+
+        if (! $this->isInstalled($themeId)) {
+            $this->repository->insert(ThemeId::from($themeId), $manifest->version, $manifest->name);
+        }
+
+        $this->bootInstance($manifest)
+            ->activate();
+    }
+
+    /**
+     * Runs the theme's own `deactivate()` hook, then deletes the
+     * `themes` row. Idempotent if already inactive.
+     */
+    public function deactivate(string $themeId): void
+    {
+        $manifest = $this->requireManifest($themeId);
+        $this->assertNoActiveDependents($themeId);
+
+        if (! $this->isInstalled($themeId)) {
+            return;
+        }
+
+        $this->bootInstance($manifest)
+            ->deactivate();
+        $this->repository->delete(ThemeId::from($themeId));
+    }
+
+    /**
+     * Runs the theme's own `uninstall()` hook. No DB write of its own
+     * -- `deactivate()` already removed the row.
+     */
+    public function uninstall(string $themeId): void
+    {
+        $manifest = $this->requireManifest($themeId);
+        $this->bootInstance($manifest)
+            ->uninstall();
+    }
+
+    /**
+     * Reconciles DB version with the manifest's filesystem version:
+     * invokes `update($old, $new)` and bumps the DB row when they
+     * differ. Idempotent when versions already match.
+     */
+    public function update(string $themeId): void
+    {
+        $manifest = $this->requireManifest($themeId);
+        $id = ThemeId::tryFrom($themeId);
+        if (! $id instanceof ThemeId) {
+            return;
+        }
+        $entity = $this->repository->find($id);
+        if ($entity === null) {
+            return;
+        }
+        $oldVersion = $entity->version;
+        $newVersion = $manifest->version;
+        if ($oldVersion === $newVersion) {
+            return;
+        }
+
+        $this->bootInstance($manifest)
+            ->update($oldVersion, $newVersion);
+        $this->repository->updateVersion($id, $newVersion);
+    }
+
+    /**
+     * Boots the current request's theme + its full parent-resolution
+     * chain -- called once per request with whichever theme
+     * `Bootstrap\RequestBootstrap` already resolved (P27.4), right
+     * after picking it and before constructing `Template`.
+     *
+     * Chain order is furthest ancestor first, self last, for both
+     * registration and boot -- the reverse of the natural-seeming
+     * "self first, then walk up" order that matches CSS/asset-file
+     * lookup. `dispatchChange()` is a pipeline (each handler's return
+     * value feeds the next as the new event), so the *last* handler to
+     * run has final say -- registering the child before the parent
+     * would give the parent's handler the last word over the child's.
+     * See this class's own P27 plan section for the full reasoning.
+     *
+     * Two-pass construct-once/reuse, same shape as
+     * `PluginRegistry::bootActive()` and for the identical two reasons
+     * (a theme dispatching its own custom event from `boot()` needs
+     * every chain member's `subscribedEvents()` already registered;
+     * `bootInstance()` has zero caching, so registering and booting
+     * against two separately-constructed instances would make anything
+     * `boot()` sets on `$this` invisible to the handlers).
+     */
+    public function bootCurrent(ThemeId $themeId): void
+    {
+        /** @var array<string, ExtensionInterface> $instances */
+        $instances = [];
+        foreach ($this->resolveParentChain($themeId->value) as $id) {
+            $manifest = $this->getManifest($id);
+            if ($manifest === null) {
+                continue;
+            }
+            $instance = $this->bootInstance($manifest);
+            $instances[$id] = $instance;
+
+            foreach ($instance->subscribedEvents() as $eventClass => $handlers) {
+                foreach (is_array($handlers) ? $handlers : [$handlers] as $handler) {
+                    $this->eventDispatcher->addTypedHandler($eventClass, $handler);
+                }
+            }
+        }
+
+        foreach ($instances as $id => $instance) {
+            $instance->boot($this->contextFactory->build(ThemeId::from($id)));
+        }
+    }
+
+    /**
+     * Furthest ancestor first, self last. Cycle-safe: stops the moment
+     * an id already seen in this walk would repeat. A missing/
+     * unmanifested ancestor stops the walk there too -- the
+     * already-collected chain below it still boots, rather than
+     * crashing the whole request over one broken ancestor.
+     *
+     * @return list<string>
+     */
+    private function resolveParentChain(string $themeId): array
+    {
+        $chain = [];
+        $seen = [];
+        $current = $themeId;
+        while ($current !== null && ! isset($seen[$current])) {
+            $seen[$current] = true;
+            array_unshift($chain, $current);
+            $manifest = $this->getManifest($current);
+            $current = $manifest?->parent;
+        }
+
+        return $chain;
+    }
+
+    /**
+     * `require:` constraints against Piwigo core + other themes.
+     * Cross-registry `plugin/<id>` dependencies aren't resolvable here
+     * (would need real coupling to `PluginRegistry`) -- deliberately
+     * not built: zero bundled themes declare any `require:` entry at
+     * all yet (none have been ported, P27.6), so this would be
+     * speculative-ahead-of-a-real-caller infrastructure. Add real
+     * cross-registry resolution only once a real theme needs it.
+     */
+    private function assertDependenciesSatisfied(ThemeManifest $manifest): void
+    {
+        foreach ($manifest->require as $depName => $constraint) {
+            $depVersion = match (true) {
+                $depName === 'piwigo' => AppInfo::VERSION,
+                str_starts_with($depName, 'theme/') => $this->resolveDependencyVersion(substr($depName, 6)),
+                default => null,
+            };
+
+            if ($depVersion === null) {
+                throw new ThemeDependencyException(
+                    $manifest->id,
+                    "Theme '{$manifest->id}' requires '{$depName}' (constraint: {$constraint}) but it is not active.",
+                );
+            }
+            if (! Semver::satisfies($depVersion, $constraint)) {
+                throw new ThemeDependencyException(
+                    $manifest->id,
+                    "Theme '{$manifest->id}' requires '{$depName}' {$constraint} but only {$depVersion} is available.",
+                );
+            }
+        }
+
+        if (! Semver::satisfies(AppInfo::VERSION, '>=' . $manifest->minPiwigo)) {
+            throw new ThemeDependencyException(
+                $manifest->id,
+                "Theme '{$manifest->id}' requires Piwigo >= {$manifest->minPiwigo}; running " . AppInfo::VERSION,
+            );
+        }
+    }
+
+    private function resolveDependencyVersion(string $themeId): ?string
+    {
+        $manifest = $this->manifests[$themeId] ?? null;
+        if ($manifest === null) {
+            return null;
+        }
+        if (! $this->isInstalled($themeId)) {
+            return null;
+        }
+
+        return $manifest->version;
+    }
+
+    /**
+     * `deactivate()`'s reverse-dependency guard -- refuses if any other
+     * installed theme's manifest still declares `require:
+     * {"theme/<this-id>": ...}`. Same shape as `PluginRegistry`'s own
+     * guard; deliberately separate from `ExtensionLifecycle`'s existing
+     * "last theme"/"child theme" guards, which stay in
+     * `ExtensionLifecycle` (P27.5) since they encode different rules
+     * (parent/child inheritance, not `require:` dependencies).
+     */
+    private function assertNoActiveDependents(string $themeId): void
+    {
+        $this->load();
+        $dependents = [];
+        foreach ($this->manifests as $candidateId => $candidate) {
+            if ($candidateId === $themeId) {
+                continue;
+            }
+            if (! $this->isInstalled($candidateId)) {
+                continue;
+            }
+            if (array_key_exists('theme/' . $themeId, $candidate->require)) {
+                $dependents[] = $candidateId;
+            }
+        }
+
+        if ($dependents !== []) {
+            throw new ThemeDependencyException(
+                $themeId,
+                "Theme '{$themeId}' cannot be removed: still required by " . implode(', ', $dependents) . '.',
+            );
+        }
+    }
+
+    private function requireManifest(string $themeId): ThemeManifest
+    {
+        $this->load();
+        $manifest = $this->manifests[$themeId] ?? null;
+        if ($manifest === null) {
+            throw new ThemeValidationException(
+                $themeId,
+                rtrim($this->currentConfig->themesPath, '/') . "/{$themeId}/theme.json",
+                "Theme '{$themeId}' has no validated manifest.",
+            );
+        }
+
+        return $manifest;
+    }
+
+    private function bootInstance(ThemeManifest $manifest): ExtensionInterface
+    {
+        $class = $manifest->main;
+        if (! class_exists($class)) {
+            throw new ThemeValidationException(
+                $manifest->id,
+                rtrim($this->currentConfig->themesPath, '/') . "/{$manifest->id}/theme.json",
+                "Theme main class '{$class}' does not exist (autoload missing).",
+            );
+        }
+
+        $instance = new $class();
+        if (! $instance instanceof ExtensionInterface) {
+            throw new ThemeValidationException(
+                $manifest->id,
+                rtrim($this->currentConfig->themesPath, '/') . "/{$manifest->id}/theme.json",
+                "Theme main class '{$class}' must implement ExtensionInterface.",
+            );
+        }
+
+        return $instance;
+    }
+
+    private function registerAutoload(): void
+    {
+        if ($this->autoloadRegistered) {
+            return;
+        }
+
+        $loader = new ClassLoader();
+        foreach ($this->manifests as $id => $manifest) {
+            $baseDir = rtrim($this->currentConfig->themesPath, '/') . '/' . $id . '/';
+            foreach ($manifest->autoloadPsr4 as $prefix => $relativeDir) {
+                $loader->addPsr4($prefix, $baseDir . ltrim($relativeDir, '/'));
+            }
+        }
+        $loader->register();
+        $this->autoloadRegistered = true;
+    }
+
+    private function loadManifest(string $themeId, string $manifestPath): ThemeManifest
+    {
+        if (! is_readable($manifestPath)) {
+            throw new ThemeValidationException($themeId, $manifestPath, 'cannot read theme.json');
+        }
+        $raw = file_get_contents($manifestPath);
+        if ($raw === false) {
+            throw new ThemeValidationException($themeId, $manifestPath, 'cannot read theme.json');
+        }
+
+        try {
+            $decoded = json_decode($raw, false, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new ThemeValidationException($themeId, $manifestPath, 'theme.json is not valid JSON: ' . $e->getMessage(), $e);
+        }
+        if (! is_object($decoded)) {
+            throw new ThemeValidationException($themeId, $manifestPath, 'theme.json top level must be an object');
+        }
+
+        $result = $this->validator->validate($decoded, $this->schema());
+        if (! $result->isValid()) {
+            $err = $result->error();
+            $errMsg = $err === null ? 'schema validation failed' : ($err->message() . ' at /' . implode('/', $err->data()->path()));
+            throw new ThemeValidationException($themeId, $manifestPath, $errMsg);
+        }
+
+        $id = property_exists($decoded, 'id') && is_string($decoded->id) ? $decoded->id : null;
+        if ($id !== $themeId) {
+            throw new ThemeValidationException(
+                $themeId,
+                $manifestPath,
+                "manifest id '" . ($id ?? '?') . "' does not match directory '{$themeId}'",
+            );
+        }
+
+        try {
+            /** @var array<string, mixed> $arr */
+            $arr = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new ThemeValidationException($themeId, $manifestPath, 'theme.json is not valid JSON: ' . $e->getMessage(), $e);
+        }
+
+        return ThemeManifest::fromArray($arr);
+    }
+
+    private function schema(): object
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        $schemaPath = rtrim($this->paths->root, '/') . '/docs/schemas/theme.schema.json';
+        if (! is_readable($schemaPath)) {
+            throw new RuntimeException("Theme schema not found at {$schemaPath}");
+        }
+        $raw = file_get_contents($schemaPath);
+        if ($raw === false) {
+            throw new RuntimeException("Theme schema not found at {$schemaPath}");
+        }
+
+        try {
+            $decoded = json_decode($raw, false, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new RuntimeException('Theme schema is not valid JSON: ' . $e->getMessage(), 0, $e);
+        }
+        if (! is_object($decoded)) {
+            throw new RuntimeException('Theme schema must decode to an object');
+        }
+
+        return $this->schema = $decoded;
+    }
+
+    /**
+     * @return iterable<string>
+     */
+    private function scanThemeDirs(): iterable
+    {
+        $themesDir = rtrim($this->currentConfig->themesPath, '/');
+        if (! is_dir($themesDir)) {
+            return;
+        }
+        $entries = scandir($themesDir);
+        if ($entries === false) {
+            return;
+        }
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            $path = $themesDir . '/' . $entry;
+            if (is_dir($path)) {
+                yield $path;
+            }
+        }
+    }
+}

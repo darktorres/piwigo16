@@ -60,4 +60,54 @@ final class ThemeRepository extends EntityRepository
 
         return $themes;
     }
+
+    /**
+     * `ThemeRegistry::activate()`'s own write (P27.3) -- this class's
+     * pre-P27 real callers only ever read; the admin-side write path went
+     * through `Admin\Extensions\ExtensionRepository::insertNamed()`/
+     * `delete()` instead (raw DBAL against the `themes` table by string
+     * id, no `ThemeEntity` involved at all). Unlike plugins, a `themes`
+     * row's mere existence already means "active" -- there is no
+     * persisted installed-but-inactive state, so `ThemeRegistry` only
+     * ever needs insert/delete here, never an updateState() equivalent.
+     */
+    public function insert(ThemeId $id, string $version, ?string $name): void
+    {
+        $this->getEntityManager()
+            ->persist(new ThemeEntity($id, $version, $name));
+        $this->getEntityManager()
+            ->flush();
+    }
+
+    public function delete(ThemeId $id): void
+    {
+        $entity = $this->find($id);
+        if ($entity === null) {
+            return;
+        }
+
+        $this->getEntityManager()
+            ->remove($entity);
+        $this->getEntityManager()
+            ->flush();
+    }
+
+    /**
+     * `ThemeRegistry::update()`'s own write -- `EntityRepository::
+     * getEntityManager()` is protected, so a caller outside this class
+     * can't flush a mutated entity's version directly; this wraps the
+     * find+mutate+flush sequence the same way `PluginConfig\
+     * PluginRepository::updateVersion()` already does for plugins.
+     */
+    public function updateVersion(ThemeId $id, string $version): void
+    {
+        $entity = $this->find($id);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->version = $version;
+        $this->getEntityManager()
+            ->flush();
+    }
 }

@@ -23,6 +23,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\PluginMigrationRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 

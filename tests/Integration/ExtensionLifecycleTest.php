@@ -13,8 +13,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Admin\Extensions\ExtensionRepository;
     use Piwigo\Admin\Extensions\ExtensionType;
     use Piwigo\Admin\Extensions\PemCatalog;
-    use Piwigo\Admin\Extensions\PluginMigrationEntity;
-    use Piwigo\Admin\Extensions\PluginMigrationRepository;
     use Piwigo\Admin\Extensions\ZipExtractor;
     use Piwigo\Admin\PluginLoader;
     use Piwigo\Admin\PluginMaintain;
@@ -32,6 +30,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Html\HtmlService;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\PluginConfig\PluginMigrationEntity;
+    use Piwigo\PluginConfig\PluginMigrationRepository;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;

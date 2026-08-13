@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Piwigo\Admin\Extensions;
+namespace Piwigo\PluginConfig;
 
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\PluginId;
@@ -19,9 +19,12 @@ use Piwigo\Common\ValueObject\PluginId;
  *
  * `$pluginId` uses the `plugin_id` custom Doctrine Type
  * (`Piwigo\Common\ValueObject\PluginId`) -- this table is plugin-only (no
- * theme equivalent), unlike ExtensionRepository's own
- * deliberately-generic plugins/themes/languages wrapper, so it's in
- * scope here despite living under Admin\Extensions.
+ * theme equivalent), unlike `Admin\Extensions\ExtensionRepository`'s own
+ * deliberately-generic plugins/themes/languages wrapper. Relocated here
+ * from `Admin\Extensions\` in P27.3 -- `PluginConfig\PluginRegistry`
+ * needs this ledger directly, and this fork's own `deptrac.yaml`
+ * boundaries only let `PluginConfig\*` classes depend on it cleanly,
+ * beside `PluginEntity`/`PluginRepository`.
  */
 #[ORM\Entity(repositoryClass: PluginMigrationRepository::class)]
 #[ORM\Table(name: 'plugin_migrations')]

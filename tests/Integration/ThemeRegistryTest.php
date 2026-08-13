@@ -1,0 +1,479 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Integration;
+
+use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
+use Piwigo\Caddie\CaddieRepository;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\AdminContext;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
+use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\ThemeRepository;
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\DbConnection;
+use Piwigo\Image\ImageRepository;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\ExtensionContext;
+use Piwigo\PluginConfig\ExtensionContextFactory;
+use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\ThemeDependencyException;
+use Piwigo\PluginConfig\ThemeRegistry;
+use Piwigo\PluginConfig\ThemeValidationException;
+use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
+
+/**
+ * Test-only typed change-event -- `dispatchChange()`-shaped (each
+ * handler's return value feeds the next as the new event), used to prove
+ * `ThemeRegistry::bootCurrent()`'s parent-chain dispatch order.
+ */
+final class ThemeRegistryTestFakeChangeEvent
+{
+    public string $tag = 'untouched';
+}
+
+/**
+ * Covers ThemeRegistry end-to-end against a real DB + real filesystem
+ * scan + real runtime class autoloading -- fixture themes are written to
+ * a fresh temp directory per test (each with a unique class/namespace
+ * suffix, since PHP can't redeclare a class and Pest runs every test
+ * file in one shared process).
+ */
+final class ThemeRegistryTest extends IntegrationTestCase
+{
+    private static bool $fixtureReady = false;
+
+    private Connection $conn;
+
+    private ThemeRepository $repository;
+
+    private EventDispatcher $eventDispatcher;
+
+    private ExtensionContextFactory $contextFactory;
+
+    /**
+     * @var list<string>
+     */
+    private array $tempDirs = [];
+
+    #[Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpConnectionFromEnv();
+
+        if (! self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            self::$fixtureReady = true;
+        }
+
+        $this->conn = DbConnection::build();
+
+        $currentUser = Kernel::container()->get(CurrentUser::class);
+        if (! $currentUser instanceof CurrentUser) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+        }
+        $currentUser->attachGlobals();
+
+        $this->repository = $this->containerGet(ThemeRepository::class);
+        $this->eventDispatcher = $this->containerGet(EventDispatcher::class);
+
+        $imageReadFacade = new ImageReadFacade(
+            $this->containerGet(CaddieRepository::class),
+            $this->containerGet(ImageRepository::class),
+            $this->containerGet(CategoryRepository::class),
+        );
+        $this->contextFactory = new ExtensionContextFactory(
+            $this->containerGet(CurrentTemplate::class),
+            $this->containerGet(CurrentConfig::class),
+            $currentUser,
+            $this->containerGet(UserService::class),
+            $this->containerGet(Lang::class),
+            $this->containerGet(UrlServiceInterface::class),
+            $this->containerGet(RedirectServiceInterface::class),
+            $this->containerGet(AdminContext::class),
+            $this->eventDispatcher,
+            $this->containerGet(SessionService::class),
+            $imageReadFacade,
+        );
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        $this->conn->executeStatement("DELETE FROM themes WHERE id LIKE 'zz-%'");
+        foreach ($this->tempDirs as $dir) {
+            $this->removeDir($dir);
+        }
+        parent::tearDown();
+    }
+
+    /**
+     * @template T of object
+     * @param class-string<T> $class
+     * @return T
+     */
+    private function containerGet(string $class): object
+    {
+        $instance = Kernel::container()->get($class);
+        if (! $instance instanceof $class) {
+            throw new LogicException('Container returned an unexpected type for ' . $class);
+        }
+
+        return $instance;
+    }
+
+    private function buildRegistry(string $themesDir): ThemeRegistry
+    {
+        $currentConfig = $this->containerGet(CurrentConfig::class);
+        // themesPath is a get-only property hook derived from themesDir
+        // ($this->themesDir . '/') -- no trailing slash here, themesPath
+        // itself appends it.
+        $currentConfig->themesDir = rtrim($themesDir, '/');
+
+        return new ThemeRegistry(
+            $this->repository,
+            $this->eventDispatcher,
+            $this->contextFactory,
+            $currentConfig,
+            Paths::fromRoot(dirname(__DIR__, 2)),
+        );
+    }
+
+    private function makeTempDir(): string
+    {
+        $dir = sys_get_temp_dir() . '/piwigo_theme_registry_test_' . uniqid('', true);
+        mkdir($dir, 0o777, true);
+        $this->tempDirs[] = $dir;
+
+        return $dir;
+    }
+
+    /**
+     * Writes a fixture theme: `theme.json` + a real PHP class file
+     * implementing `ExtensionInterface`, PSR-4-autoloadable via the
+     * manifest's own `autoload.psr-4` map. Every fixture subscribes to
+     * `ThemeRegistryTestFakeChangeEvent`, tagging `$event->tag` with its
+     * own suffix -- `bootCurrent()`'s dispatch-order test relies on this
+     * to prove the child's tag survives (child registered/booted last).
+     *
+     * @param array<string, string> $require
+     */
+    private function writeFixtureTheme(
+        string $themesDir,
+        string $id,
+        string $namespaceSuffix,
+        ?string $parent = null,
+        string $version = '1.0.0',
+        array $require = [],
+    ): void {
+        $dir = $themesDir . '/' . $id;
+        if (! is_dir($dir . '/src')) {
+            mkdir($dir . '/src', 0o777, true);
+        }
+
+        $namespace = 'PiwigoTest\\ThemeFixture' . $namespaceSuffix;
+        $className = 'Theme' . $namespaceSuffix;
+
+        $manifest = [
+            'id' => $id,
+            'name' => $id,
+            'version' => $version,
+            'description' => 'Fixture theme for ThemeRegistryTest',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\' . $className,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ];
+        if ($parent !== null) {
+            $manifest['parent'] = $parent;
+        }
+        if ($require !== []) {
+            $manifest['require'] = $require;
+        }
+
+        file_put_contents($dir . '/theme.json', json_encode($manifest, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        $classSource = <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+            use Piwigo\\Tests\\Integration\\ThemeRegistryTestFakeChangeEvent;
+
+            final class {$className} implements ExtensionInterface
+            {
+                public static bool \$installed = false;
+                public static bool \$activated = false;
+                public static bool \$deactivated = false;
+                public static bool \$uninstalled = false;
+                public static ?array \$updatedFromTo = null;
+                public static ?ExtensionContext \$receivedContext = null;
+                public static bool \$booted = false;
+
+                public function boot(ExtensionContext \$context): void
+                {
+                    self::\$receivedContext = \$context;
+                    self::\$booted = true;
+                }
+
+                public function install(): void { self::\$installed = true; }
+                public function activate(): void { self::\$activated = true; }
+                public function deactivate(): void { self::\$deactivated = true; }
+                public function uninstall(): void { self::\$uninstalled = true; }
+                public function update(string \$oldVersion, string \$newVersion): void
+                {
+                    self::\$updatedFromTo = [\$oldVersion, \$newVersion];
+                }
+
+                public function subscribedEvents(): array
+                {
+                    return [
+                        ThemeRegistryTestFakeChangeEvent::class => \$this->onFakeEvent(...),
+                    ];
+                }
+
+                public function onFakeEvent(ThemeRegistryTestFakeChangeEvent \$event): ThemeRegistryTestFakeChangeEvent
+                {
+                    \$event->tag = '{$namespaceSuffix}';
+
+                    return \$event;
+                }
+            }
+
+            PHP;
+
+        file_put_contents($dir . '/src/' . $className . '.php', $classSource);
+    }
+
+    private function removeDir(string $dir): void
+    {
+        if (! is_dir($dir)) {
+            return;
+        }
+        $items = scandir($dir);
+        if ($items === false) {
+            return;
+        }
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            $path = $dir . '/' . $item;
+            if (is_dir($path)) {
+                $this->removeDir($path);
+            } else {
+                unlink($path);
+            }
+        }
+        rmdir($dir);
+    }
+
+    /**
+     * The exact scenario the P27 plan calls out by name: a 2-level
+     * parent/child theme pair, both subscribing to the same
+     * `dispatchChange()`-shaped event with distinguishably-tagged
+     * handlers. Asserts the *child's* tag is what survives in the final
+     * returned event (child boots last, furthest-ancestor-first chain
+     * order) -- not merely that both handlers ran, which a
+     * self-first/parent-last (the "natural-seeming" but wrong) order
+     * would also satisfy.
+     */
+    public function testBootCurrentDispatchOrderGivesTheChildTheFinalWord(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $parentId = 'zz-parent-' . $suffix;
+        $childId = 'zz-child-' . $suffix;
+        $this->writeFixtureTheme($dir, $parentId, 'Parent' . $suffix);
+        $this->writeFixtureTheme($dir, $childId, 'Child' . $suffix, parent: $parentId);
+
+        $registry = $this->buildRegistry($dir);
+        $registry->bootCurrent(ThemeId::from($childId));
+
+        $event = new ThemeRegistryTestFakeChangeEvent();
+        $result = $this->eventDispatcher->dispatchChange($event);
+
+        self::assertSame('Child' . $suffix, $result->tag, 'the child theme must have the final word in the dispatch pipeline');
+    }
+
+    public function testBootCurrentBootsBothParentAndChildWithARealExtensionContext(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $parentId = 'zz-both-parent-' . $suffix;
+        $childId = 'zz-both-child-' . $suffix;
+        $this->writeFixtureTheme($dir, $parentId, 'BothParent' . $suffix);
+        $this->writeFixtureTheme($dir, $childId, 'BothChild' . $suffix, parent: $parentId);
+
+        $registry = $this->buildRegistry($dir);
+        $registry->bootCurrent(ThemeId::from($childId));
+
+        $parentClass = 'PiwigoTest\\ThemeFixtureBothParent' . $suffix . '\\ThemeBothParent' . $suffix;
+        $childClass = 'PiwigoTest\\ThemeFixtureBothChild' . $suffix . '\\ThemeBothChild' . $suffix;
+
+        self::assertTrue($parentClass::$booted);
+        self::assertTrue($childClass::$booted);
+        self::assertInstanceOf(ExtensionContext::class, $parentClass::$receivedContext);
+        self::assertInstanceOf(ExtensionContext::class, $childClass::$receivedContext);
+    }
+
+    public function testActivateDeactivateRoundTrip(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-roundtrip-' . $suffix;
+        $this->writeFixtureTheme($dir, $id, 'Roundtrip' . $suffix);
+        $className = 'PiwigoTest\\ThemeFixtureRoundtrip' . $suffix . '\\ThemeRoundtrip' . $suffix;
+
+        $registry = $this->buildRegistry($dir);
+
+        self::assertFalse($registry->isInstalled($id));
+
+        $registry->activate($id);
+        self::assertTrue($className::$activated);
+        self::assertTrue($registry->isInstalled($id));
+
+        $registry->deactivate($id);
+        self::assertTrue($className::$deactivated);
+        self::assertFalse($registry->isInstalled($id));
+    }
+
+    /**
+     * Deactivating/uninstalling a child must not affect the parent's own
+     * independent state -- the parent theme's own `themes` row and its
+     * own installed/active status are unrelated to whatever the child
+     * does.
+     */
+    public function testDeactivatingTheChildDoesNotAffectTheParentsIndependentState(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $parentId = 'zz-indep-parent-' . $suffix;
+        $childId = 'zz-indep-child-' . $suffix;
+        $this->writeFixtureTheme($dir, $parentId, 'IndepParent' . $suffix);
+        $this->writeFixtureTheme($dir, $childId, 'IndepChild' . $suffix, parent: $parentId);
+
+        $registry = $this->buildRegistry($dir);
+        $registry->activate($parentId);
+        $registry->activate($childId);
+
+        self::assertTrue($registry->isInstalled($parentId));
+        self::assertTrue($registry->isInstalled($childId));
+
+        $registry->deactivate($childId);
+
+        self::assertFalse($registry->isInstalled($childId));
+        self::assertTrue($registry->isInstalled($parentId), 'deactivating the child must not deactivate the parent');
+    }
+
+    public function testDeactivateRefusesWhileAnActiveDependentStillRequiresIt(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $depId = 'zz-req-dep-' . $suffix;
+        $dependentId = 'zz-req-dependent-' . $suffix;
+        $this->writeFixtureTheme($dir, $depId, 'ReqDep' . $suffix);
+        $this->writeFixtureTheme($dir, $dependentId, 'ReqDependent' . $suffix, require: [
+            'theme/' . $depId => '*',
+        ]);
+
+        $registry = $this->buildRegistry($dir);
+        $registry->activate($depId);
+        $registry->activate($dependentId);
+
+        $this->expectException(ThemeDependencyException::class);
+        $registry->deactivate($depId);
+    }
+
+    public function testInstallUninstallUpdateAndReloadAreCallableAndReflectARealScan(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-lifecycle-' . $suffix;
+        $this->writeFixtureTheme($dir, $id, 'Lifecycle' . $suffix, version: '1.0.0');
+        $className = 'PiwigoTest\\ThemeFixtureLifecycle' . $suffix . '\\ThemeLifecycle' . $suffix;
+
+        $registry = $this->buildRegistry($dir);
+
+        // install()/uninstall() carry no DB write of their own for themes
+        // (see ThemeRegistry's own class docblock) -- just real, callable
+        // hooks on the theme's own class.
+        $registry->install($id);
+        self::assertTrue($className::$installed);
+
+        $registry->uninstall($id);
+        self::assertTrue($className::$uninstalled);
+
+        self::assertArrayHasKey($id, $registry->getAllManifests());
+
+        // update() is a no-op when versions match.
+        $registry->update($id);
+        self::assertNull($className::$updatedFromTo);
+
+        // Bump the on-disk manifest version and reload() to pick it up.
+        $this->writeFixtureTheme($dir, $id, 'Lifecycle' . $suffix, version: '2.0.0');
+        $registry->activate($id);
+        $registry->reload();
+        $registry->update($id);
+
+        self::assertSame(['1.0.0', '2.0.0'], $className::$updatedFromTo);
+    }
+
+    public function testThemeValidationExceptionCarriesTheFailingIdAndManifestPath(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-invalid-manifest-' . $suffix;
+        mkdir($dir . '/' . $id, 0o777, true);
+        file_put_contents($dir . '/' . $id . '/theme.json', '{not valid json');
+
+        $registry = $this->buildRegistry($dir);
+
+        try {
+            $registry->activate($id);
+            self::fail('activate() must throw for a theme with no valid manifest');
+        } catch (ThemeValidationException $e) {
+            self::assertSame($id, $e->themeId);
+            self::assertSame($dir . '/' . $id . '/theme.json', $e->manifestPath);
+        }
+    }
+
+    public function testThemeDependencyExceptionCarriesTheFailingThemeId(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-dep-exc-' . $suffix;
+        $this->writeFixtureTheme($dir, $id, 'DepExc' . $suffix, require: [
+            'piwigo' => '>=999.0.0',
+        ]);
+
+        $registry = $this->buildRegistry($dir);
+
+        try {
+            $registry->activate($id);
+            self::fail('activate() must throw when require: is unsatisfiable');
+        } catch (ThemeDependencyException $e) {
+            self::assertSame($id, $e->themeId);
+        }
+    }
+}

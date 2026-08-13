@@ -44,6 +44,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\ThemeEntity;
+use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
@@ -67,6 +69,8 @@ use Piwigo\Mail\MailService;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\UserMailNotificationEntity;
 use Piwigo\PluginConfig\PluginEntity;
+use Piwigo\PluginConfig\PluginMigrationEntity;
+use Piwigo\PluginConfig\PluginMigrationRepository;
 use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
@@ -345,6 +349,10 @@ return [
     CommentRepository::class => factory(static fn (EntityManagerInterface $em): CommentRepository => $em->getRepository(CommentEntity::class)),
 
     PluginRepository::class => factory(static fn (EntityManagerInterface $em): PluginRepository => $em->getRepository(PluginEntity::class)),
+
+    PluginMigrationRepository::class => factory(static fn (EntityManagerInterface $em): PluginMigrationRepository => $em->getRepository(PluginMigrationEntity::class)),
+
+    ThemeRepository::class => factory(static fn (EntityManagerInterface $em): ThemeRepository => $em->getRepository(ThemeEntity::class)),
 
     RateRepository::class => factory(static fn (EntityManagerInterface $em): RateRepository => $em->getRepository(RateEntity::class)),
 

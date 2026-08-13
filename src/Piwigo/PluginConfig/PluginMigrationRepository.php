@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Piwigo\Admin\Extensions;
+namespace Piwigo\PluginConfig;
 
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\ValueObject\PluginId;

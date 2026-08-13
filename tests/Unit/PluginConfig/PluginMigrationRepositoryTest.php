@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Admin\Extensions\PluginMigrationEntity;
-use Piwigo\Admin\Extensions\PluginMigrationRepository;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\PluginConfig\PluginMigrationEntity;
+use Piwigo\PluginConfig\PluginMigrationRepository;
 
 /**
- * Piwigo\Admin\Extensions\PluginMigrationRepository -- has no dedicated
+ * Piwigo\PluginConfig\PluginMigrationRepository -- has no dedicated
  * Integration test file of its own (spec ported down from
  * tests/Integration/ExtensionLifecycleTest.php, which exercises
  * record() only indirectly through ExtensionLifecycle's own real

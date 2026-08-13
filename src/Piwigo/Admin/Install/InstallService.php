@@ -19,7 +19,6 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
-use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Bootstrap\CoreDomainAccessor;
 use Piwigo\Bootstrap\ExtendedDomainAccessor;
@@ -36,6 +35,7 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\Users\CurrentUser;
 use RuntimeException;
 

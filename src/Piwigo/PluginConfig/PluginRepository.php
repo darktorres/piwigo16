@@ -85,4 +85,47 @@ final class PluginRepository extends EntityRepository
         $this->getEntityManager()
             ->flush();
     }
+
+    /**
+     * `PluginRegistry::install()`'s own write (P27.3) -- this class's
+     * pre-P27 real caller (`Admin\PluginLoader`) only ever reads, so
+     * insert/updateState/delete didn't exist here before; the admin-side
+     * write path went through `Admin\Extensions\ExtensionRepository::
+     * insertPlugin()`/`updatePluginState()` instead (raw DBAL against the
+     * `plugins` table by string id, no `PluginEntity` involved at all).
+     * Those become genuinely dead once P27.5 retargets `ExtensionLifecycle`
+     * onto this registry -- deleted in P27.8, not here.
+     */
+    public function insert(PluginId $id, string $version, PluginState $state = PluginState::Inactive): void
+    {
+        $this->getEntityManager()
+            ->persist(new PluginEntity($id, $state, $version));
+        $this->getEntityManager()
+            ->flush();
+    }
+
+    public function updateState(PluginId $id, PluginState $state): void
+    {
+        $entity = $this->find($id);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->state = $state;
+        $this->getEntityManager()
+            ->flush();
+    }
+
+    public function delete(PluginId $id): void
+    {
+        $entity = $this->find($id);
+        if ($entity === null) {
+            return;
+        }
+
+        $this->getEntityManager()
+            ->remove($entity);
+        $this->getEntityManager()
+            ->flush();
+    }
 }

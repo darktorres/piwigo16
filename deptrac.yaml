@@ -111,13 +111,19 @@ deptrac:
     # collector, same reasoning as EventHandler riding with
     # EventDispatcher above -- without it, these classes would have no
     # layer at all and every dependency touching them would go
-    # unchecked.
+    # unchecked. PluginMigrationEntity/PluginMigrationRepository
+    # relocated here from Admin\Extensions\ in P27.3 -- PluginRegistry
+    # (L3Presentation) needs this ledger directly, and L3 may depend
+    # downward on L2b, so this is the coherent placement beside
+    # PluginEntity/PluginRepository, matching deptrac's own existing
+    # "moved because a new real caller needs it at a layer that can
+    # reach it" precedent.
     - name: L2bExtendedDomain
       collectors:
         - type: classLike
           value: ^Piwigo\\(Search|Calendar|Site|Url|Csrf|Permalink|Feed|Filter|Comment|Rate|Caddie|History|Activity|Notification|Metadata|Telemetry|Section)\\.*
         - type: classLike
-          value: ^Piwigo\\PluginConfig\\(PluginRepository|PluginEntity|Projection\\Plugin)$
+          value: ^Piwigo\\PluginConfig\\(PluginRepository|PluginEntity|Projection\\Plugin|PluginMigrationEntity|PluginMigrationRepository)$
     # L3 Presentation — Http\Middleware\RoutingMiddleware depends on
     # Routing\Router, and L3 may only depend on layers at or below
     # itself, so Routing lives at L3 too (same-layer, always allowed).
@@ -165,7 +171,13 @@ deptrac:
     # ExtensionContext as a parameter -- without this, they'd have no
     # layer at all. Piwigo\PluginConfig\Facade\ImageReadFacade (its own
     # sub-namespace) needs Caddie (L2b) + Image/Category (L2a) read
-    # access, same reasoning, same layer.
+    # access, same reasoning, same layer. PluginRegistry/ThemeRegistry
+    # (P27.3) join the same layer as ExtensionContext, since they
+    # construct and boot() every extension instance -- both need
+    # PluginMigrationRepository/PluginRepository (L2b, above) and
+    # Core\ThemeRepository (L1, below), both allowed downward
+    # dependencies from L3. ExtensionContextFactory composes the exact
+    # same 11 collaborators ExtensionContext itself does, same layer.
     - name: L3Presentation
       collectors:
         - type: classLike
@@ -173,7 +185,7 @@ deptrac:
         - type: classLike
           value: ^Piwigo\\Listener\\(?!UploadFormatListener$).+
         - type: classLike
-          value: ^Piwigo\\PluginConfig\\(ExtensionInterface|ExtensionContext|ExtensionSession|PluginManifest|ThemeManifest)$
+          value: ^Piwigo\\PluginConfig\\(ExtensionInterface|ExtensionContext|ExtensionContextFactory|ExtensionSession|PluginManifest|ThemeManifest|PluginRegistry|ThemeRegistry|PluginValidationException|PluginDependencyException|ThemeValidationException|ThemeDependencyException)$
         - type: classLike
           value: ^Piwigo\\PluginConfig\\Facade\\.*
     # L4 Integration — Piwigo\Command (bin/piwigo's Symfony Console

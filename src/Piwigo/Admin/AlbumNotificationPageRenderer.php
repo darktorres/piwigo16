@@ -275,7 +275,7 @@ final readonly class AlbumNotificationPageRenderer
 
             if (count($group_ids) > 0) {
                 $user_ids_access_indirect = array_map(
-                    static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+                    strval(...),
                     array_column($this->groupService->getMembersByGroupIds($group_ids), 'user_id')
                 );
             }

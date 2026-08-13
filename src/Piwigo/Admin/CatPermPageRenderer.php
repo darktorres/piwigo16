@@ -119,17 +119,8 @@ final readonly class CatPermPageRenderer
             $granted_groups = [];
 
             foreach ($this->groupService->getMembersByGroupIds($group_granted_ids) as $row) {
-                // group_id/user_id are NOT NULL numeric columns; DBAL can hand
-                // back a native int for either (mysqli always gave a numeric
-                // string), so accept both before using group_id as an array key
-                // and collecting user_id.
                 $row_group_id = $row['group_id'];
                 $row_user_id = $row['user_id'];
-                if ((! is_int($row_group_id) && ! is_string($row_group_id)) || (! is_int($row_user_id) && ! is_string($row_user_id))) {
-                    continue;
-                }
-                $row_group_id = (int) $row_group_id;
-                $row_user_id = (int) $row_user_id;
                 if (! isset($granted_groups[$row_group_id])) {
                     $granted_groups[$row_group_id] = [];
                 }

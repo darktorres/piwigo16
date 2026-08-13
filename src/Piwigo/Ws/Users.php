@@ -340,9 +340,9 @@ final readonly class Users
                 // above, which iterates a differently-shaped result set) keeps
                 // PHPStan's per-loop type inference precise.
                 foreach ($this->groupService->getMembershipsForUserIds(array_keys($users)) as $group_row) {
-                    $group_user_id = is_numeric($group_row['user_id']) ? (int) $group_row['user_id'] : null;
-                    $group_id = is_numeric($group_row['group_id']) ? (int) $group_row['group_id'] : null;
-                    if ($group_user_id === null || $group_id === null || ! isset($users[$group_user_id]) || ! is_array($users[$group_user_id]['groups'] ?? null)) {
+                    $group_user_id = $group_row['user_id'];
+                    $group_id = $group_row['group_id'];
+                    if (! isset($users[$group_user_id]) || ! is_array($users[$group_user_id]['groups'] ?? null)) {
                         continue;
                     }
                     $users[$group_user_id]['groups'][] = $group_id;

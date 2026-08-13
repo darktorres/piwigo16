@@ -60,7 +60,7 @@ final readonly class GroupService
 
     /**
      * @param list<int> $groupIds
-     * @return list<array<string, mixed>>
+     * @return list<array{user_id: int, group_id: int}>
      */
     public function getMembersByGroupIds(array $groupIds): array
     {
@@ -91,7 +91,7 @@ final readonly class GroupService
 
     /**
      * @param  list<int>  $userIds
-     * @return list<array<string, mixed>>
+     * @return list<array{user_id: int, group_id: int}>
      */
     public function getMembershipsForUserIds(array $userIds): array
     {

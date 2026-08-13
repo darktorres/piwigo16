@@ -600,7 +600,7 @@ final class GroupRepository extends EntityRepository
      * findMemberUserIds() above (that one is scoped to a single group).
      *
      * @param list<int> $groupIds
-     * @return list<array<string, mixed>>
+     * @return list<array{user_id: int, group_id: int}>
      */
     public function findMembersByGroupIds(array $groupIds): array
     {
@@ -647,7 +647,7 @@ final class GroupRepository extends EntityRepository
      * this one by user).
      *
      * @param  list<int>  $userIds
-     * @return list<array<string, mixed>>
+     * @return list<array{user_id: int, group_id: int}>
      */
     public function findMembershipsForUserIds(array $userIds): array
     {

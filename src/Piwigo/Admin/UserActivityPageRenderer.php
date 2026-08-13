@@ -146,7 +146,7 @@ final class UserActivityPageRenderer
                 }
 
                 $additional_filt_type = $filter_key;
-                $additional_filt_name = is_string($name) ? $name : null;
+                $additional_filt_name = $name;
                 $additional_filt_value = $filter_value;
 
                 break;

@@ -1125,8 +1125,21 @@ final readonly class ImageService
      * \Exception on null, unlike getImageInfos()'s HtmlRenderingInterface
      * fatal-error path above, so this stays a separate, simpler method
      * rather than reusing that one with a different error-handling shape).
+     * Stays an array, not the real Image Projection: one real caller
+     * (AlbumNotificationPageRenderer) feeds the whole row straight into
+     * DerivativeImage::url(array<string, mixed>|SrcImage $infos) -- an
+     * object there must already be a real SrcImage (is_object($infos) is
+     * used as-is, never wrapped), so a different typed object would break
+     * silently, same "array form stays generic" contract SrcImage::
+     * __construct() already documents. The shape itself is exactly
+     * Image::toArray()'s own already-precise return type, copied here.
      *
-     * @return array<string, mixed>|null
+     * @return array{id: int, file: string, date_available: ?string, date_creation: ?string,
+     *   name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int,
+     *   width: ?int, height: ?int, coi: ?string, representative_ext: ?string,
+     *   date_metadata_update: ?string, rating_score: ?float, path: string,
+     *   storage_category_id: ?int, level: int, md5sum: ?string, added_by: ?int,
+     *   rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: string}|null
      */
     public function getImageRow(int|string $imageId): ?array
     {

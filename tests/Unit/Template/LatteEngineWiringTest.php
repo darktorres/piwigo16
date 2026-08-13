@@ -11,19 +11,17 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
- * P31.1 (Smarty -> Latte engine adapter) wiring proof -- a throwaway
+ * Smarty -> Latte engine adapter wiring proof -- a throwaway
  * fixture template exercising the direct-filename `parse()` dispatch,
  * `resolveLatteTemplatePath()`, the lazily-constructed `LatteEngine`,
  * `PiwigoExtension`'s filter/function registration, and the `{capture}`+
  * `{do}` composition a stateful function (`htmlHead()`) needs -- end to
- * end, before any real `.tpl` is converted. See docs/PLAN.md's P31
- * section, "Transition strategy" and "Blocks/functions".
+ * end.
  *
  * Not testing individual filter/function correctness (each is a thin,
  * separately-reviewable wrapper) -- testing that the wiring connecting
  * them all together actually works. Also gives `Template::
- * assignVarFromTemplate()`/`templateExists()` their first real callers
- * (both otherwise unused until a P31.2+ conversion sub-item lands).
+ * assignVarFromTemplate()`/`templateExists()` real callers.
  */
 function latte_engine_wiring_test_rrmdir(string $dir): void
 {
@@ -132,10 +130,10 @@ test('assignVarFromTemplate() renders a real .latte file and assigns the result 
 });
 
 test('resolveLatteTemplatePath() honors a basename-keyed extents override, matching how a direct parse(\'x.latte\') call resolves', function (): void {
-    // Real shape confirmed against ExtendForTemplatesPageRenderer's own
-    // $eligible_templates docblock: a template only ever reached via a
+    // A template only ever reached via a
     // direct parse('x.latte') call gets overridden by keying
-    // Template::$extents under that same real basename.
+    // Template::$extents under that same real basename (see
+    // ExtendForTemplatesPageRenderer's own $eligible_templates docblock).
     $t = TemplateTestFactory::build();
     $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));
     mkdir($tplDir, 0o777, true);
@@ -157,11 +155,11 @@ test('resolveLatteTemplatePath() honors a basename-keyed extents override, match
 });
 
 test('getExtent() honors a handle-keyed extents override, matching how a real {include getExtent(...)} template call resolves', function (): void {
-    // Real shape confirmed against every live getExtent() call site under
+    // Every live getExtent() call site under
     // themes/ and template-extension/ (navigation_bar.latte/
     // picture_nav_buttons.latte's {include getExtent('x.latte', 'handle')}
     // sites, menubar.latte's {include getExtent($block->template, $id)})
-    // -- each hardcodes a short opaque handle string as getExtent()'s own
+    // hardcodes a short opaque handle string as getExtent()'s own
     // second argument, so Template::$extents has to stay keyed by that
     // exact string for these specific partials, not by basename.
     $t = TemplateTestFactory::build();

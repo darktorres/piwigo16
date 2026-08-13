@@ -12,6 +12,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\History\HistoryService;
@@ -75,10 +76,10 @@ final class StatsPageRenderer
 
         $base_url = $urlService->getRootUrl() . 'admin.php?page=history';
 
-        $actual_date = new DateTime();
+        $actual_date = Env::now();
         $actual_date->add(new DateInterval('PT1S'));
 
-        $first_date = new DateTime();
+        $first_date = Env::now();
         $last_hours = self::setMissingValues(
             'hour',
             self::getLast($historyService, 72, 'hour'),
@@ -86,7 +87,7 @@ final class StatsPageRenderer
             $actual_date
         );
 
-        $first_date = new DateTime();
+        $first_date = Env::now();
         $last_days = self::setMissingValues(
             'day',
             self::getLast($historyService, 90, 'day'),
@@ -94,7 +95,7 @@ final class StatsPageRenderer
             $actual_date
         );
 
-        $first_date = new DateTime();
+        $first_date = Env::now();
         $last_months = self::setMissingValues(
             'month',
             self::getLast($historyService, 60, 'month'),
@@ -108,12 +109,12 @@ final class StatsPageRenderer
                 self::getLast($historyService, 60, 'year')
             );
         } else {
-            $last_year_date = new DateTime();
+            $last_year_date = Env::now();
             $last_years = self::setMissingValues(
                 'year',
                 self::getLast($historyService, 60, 'year'),
                 $last_year_date->sub(new DateInterval('P1Y')),
-                new DateTime()
+                Env::now()
             );
         }
 
@@ -166,23 +167,23 @@ final class StatsPageRenderer
     private static function getMonthOfLastYears(HistoryService $historyService, int|string $last = self::ALL_YEARS): array
     {
         if ($last !== self::ALL_YEARS) {
-            $date = new DateTime();
+            $date = Env::now();
             $limit = ($last - 1) * 12 + (int) $date->format('n') - 1;
             $result = $historyService->getMonthlyRows($limit);
             $lastDate = $date->sub(new DateInterval('P' . ($last - 1) . 'Y' . ((int) $date->format('n') - 1) . 'M'));
-            return self::setMissingValues('month', $result, $lastDate, new DateTime());
+            return self::setMissingValues('month', $result, $lastDate, Env::now());
         }
 
         $allRows = $historyService->getMonthlyRows(null);
         if (count($allRows) > 1) {
             return self::setMissingValues('month', $allRows);
         } else {
-            $last_year_date = new DateTime();
+            $last_year_date = Env::now();
             return self::setMissingValues(
                 'month',
                 $allRows,
                 $last_year_date->sub(new DateInterval('P1Y')),
-                new DateTime()
+                Env::now()
             );
         }
     }
@@ -193,7 +194,7 @@ final class StatsPageRenderer
     private static function getMonthStats(HistoryService $historyService): array
     {
         $result = [];
-        $date = new DateTime();
+        $date = Env::now();
         $date_last_month = clone $date;
         $date_last_year = clone $date;
         $months = [];
@@ -213,7 +214,7 @@ final class StatsPageRenderer
             @$months[$date->format('Y/m/1')][] = $value;
         }
 
-        $actual_date = new DateTime();
+        $actual_date = Env::now();
         if (! isset($months[$actual_date->format('Y/m/1')])) {
             @$months[$actual_date->format('Y/m/1')][] = [
                 'year' => $actual_date->format('Y'),
@@ -228,8 +229,8 @@ final class StatsPageRenderer
             $lastDate = new DateTime($key);
             $lastDate = $lastDate->add(new DateInterval('P1M'));
             $lastDate = $lastDate->sub(new DateInterval('P1D'));
-            if ($lastDate > new DateTime()) {
-                $lastDate = new DateTime();
+            if ($lastDate > Env::now()) {
+                $lastDate = Env::now();
             }
             $result['month'][] = self::setMissingValues('day', $val, new DateTime($key), $lastDate);
         }

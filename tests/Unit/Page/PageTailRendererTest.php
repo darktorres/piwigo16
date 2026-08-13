@@ -27,7 +27,7 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
 /**
- * Piwigo\Page\PageTailRenderer -- has 8 real constructor deps, but none
+ * Piwigo\Page\PageTailRenderer -- has 9 real constructor deps, but none
  * are heavy: every one is already an established pattern from earlier in
  * this campaign. No dedicated Integration/Browser spec of its own --
  * reached only as a shared page-chrome helper from every real page
@@ -101,6 +101,7 @@ test('renderToString() returns the parsed footer output and always sends telemet
             CurrentTemplateTestFactory::get(),
             $currentConfig,
             new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
+            EntityManagerFactory::build($conn),
         );
 
         $output = $renderer->renderToString(microtime(true));

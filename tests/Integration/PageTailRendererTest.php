@@ -97,7 +97,8 @@ final class PageTailRendererTest extends IntegrationTestCase
             PageStateTestFactory::get(),
             CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
-            new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get())
+            new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+            EntityManagerFactory::build(DbConnection::build()),
         );
     }
 

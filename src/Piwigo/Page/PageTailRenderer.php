@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -12,8 +13,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginPageTail;
 use Piwigo\Event\Location\LocEndPageTail;
 use Piwigo\Page\Projection\PageTailPageContext;
@@ -54,6 +53,7 @@ final readonly class PageTailRenderer
         private CurrentTemplate $currentTemplate,
         private CurrentConfig $currentConfig,
         private SessionService $sessionService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     public function render(float $startTime): void
@@ -86,7 +86,8 @@ final readonly class PageTailRenderer
 
         $contactMail = null;
         if (! $this->accessLevelChecker->isAGuest()) {
-            $contactMail = new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig)->getWebmasterMailAddress();
+            $contactMail = new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
+                ->getWebmasterMailAddress();
         }
 
         $this->telemetrySender->send();

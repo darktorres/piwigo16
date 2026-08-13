@@ -54,7 +54,7 @@ final class PageTail
         // one place the concrete L4 implementation gets constructed.
         // UrlServiceInterface is wired the same way; see
         // PageTailRenderer's own docblock.
-        new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService())
+        new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager())
             ->render(self::pageState()->requestStart);
     }
 
@@ -68,7 +68,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService())
+        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager())
             ->renderToString(self::pageState()->requestStart);
     }
 

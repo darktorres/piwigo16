@@ -34,3 +34,14 @@ test('fromArray reads the literal string false verbatim', function (): void {
         ->and($request->mobileRaw)
         ->toBe('false');
 });
+
+test('fromArray reads a malformed array value verbatim, e.g. ?mobile[]=1', function (): void {
+    $request = MobileThemeRequest::fromArray([
+        'mobile' => ['1'],
+    ]);
+
+    expect($request->mobilePresent)
+        ->toBeTrue()
+        ->and($request->mobileRaw)
+        ->toBe(['1']);
+});

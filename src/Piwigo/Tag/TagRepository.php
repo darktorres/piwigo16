@@ -787,6 +787,11 @@ final class TagRepository extends EntityRepository
     }
 
     /**
+     * Raw Doctrine hydration input, before this method's own real job
+     * (narrowing it into a typed TagIdName) runs -- the boundary itself,
+     * not a gap. Same category as CategoryRepository::
+     * narrowIdNameUppercatsRankRows()/SearchRepository::castRows().
+     *
      * @param  array<string, mixed>  $row
      */
     private static function toIdNameRow(array $row): TagIdName

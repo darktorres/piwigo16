@@ -255,7 +255,7 @@ namespace Piwigo\Tests\Integration {
          * users to ONE group -- registerUser() must call it with each
          * default group's id as $groupId and the new user's id as the
          * sole member, never the reverse. The fixture itself has zero
-         * is_default groups (confirmed: all 3 fixture groups are
+         * is_default groups (all 3 fixture groups are
          * is_default=0), so this test creates its own.
          */
         public function testRegisterUserAddsTheNewUserToDefaultGroups(): void
@@ -473,8 +473,7 @@ namespace Piwigo\Tests\Integration {
             ], PageStateTestFactory::get());
 
             // Real production typo: the array key is 'code ' (trailing
-            // space), not 'code' -- confirmed live via a standalone
-            // sanity script, not assumed. Documented here, not "fixed" --
+            // space), not 'code'. Documented here, not "fixed" --
             // out of scope here.
             self::assertSame(
                 [
@@ -891,8 +890,8 @@ namespace Piwigo\Tests\Integration {
             // Every one of syncUsers()'s 5 child tables carries a real
             // ON DELETE CASCADE FK back to users in this schema, so
             // a genuine orphan can never arise through normal DB writes --
-            // confirmed live (a plain INSERT with a nonexistent user_id
-            // is rejected by the FK). Disabling FK checks just for this
+            // a plain INSERT with a nonexistent user_id
+            // is rejected by the FK. Disabling FK checks just for this
             // insert reproduces the only real way this state has ever
             // existed in practice: a bulk import/migration that ran with
             // checks off.
@@ -1101,10 +1100,10 @@ namespace Piwigo\Tests\Integration {
             $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->webmasterId = $tempId;
             // availablePermissionLevels's own set hook treats an empty
-            // array as "reset to the built-in default" ([0,1,2,4,8]) --
-            // confirmed live, not a real empty state -- and
+            // array as "reset to the built-in default" ([0,1,2,4,8]), not
+            // a real empty state, and
             // ReflectionProperty::setValue() invokes that hook rather than
-            // bypassing it (confirmed live: it's the property's own write
+            // bypassing it (it's the property's own write
             // path, not a separate setter method). setRawValue() writes the
             // backing storage directly, skipping the hook entirely -- the
             // only way left to reach a genuinely empty list.
@@ -1373,8 +1372,8 @@ namespace Piwigo\Tests\Integration {
 
         public function testGetDefaultThemeFallsBackToTheLiteralDefaultWhenNothingInstalledMatches(): void
         {
-            // The fixture's own themes table is empty (confirmed
-            // live -- same fact SizingParams/ThemeCatalog tests elsewhere
+            // The fixture's own themes table is empty (same fact
+            // SizingParams/ThemeCatalog tests elsewhere
             // in this suite already establish), so once the configured
             // default user's own theme also fails checkThemeInstalled(),
             // there's no installed theme left to fall back to at all --

@@ -9,6 +9,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 
@@ -81,15 +82,34 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     PageStateTestFactory::get()->reset();
 
+    // Exempt from tests/Pest.php's blanket per-test transaction: every
+    // test in this file mutates categories.permalink on the 2 disposable
+    // categories created here, and `categories` carries a FULLTEXT index
+    // whose auxiliary-index maintenance on INSERT can deadlock against
+    // another --parallel worker's own concurrent categories INSERT when
+    // held open for a whole test's duration -- same mechanism, same fix,
+    // as TagServiceTest.php's 'getTagIds() creates a new tag for a plain
+    // name when allowed' (reproduced live there: DeadlockException).
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
+    $rankColumn = $conn->getDatabasePlatform()
+        ->quoteSingleIdentifier('rank');
     $conn->insert('categories', [
         'name' => permalinkServiceTestSlug('under-test-cat-'),
     ]);
     $this->catId = (int) $conn->lastInsertId();
+    // An explicit, high rank rather than leaving it to the schema's own
+    // NULL default -- NULLs sort first in updateGlobalRank()'s own ORDER
+    // BY, so a real fixture category 1 (rank 1) would otherwise be
+    // displaced by this row for as long as it's live, the exact
+    // mechanism SearchServiceTest.php's own 'zqualifiesonlycat' category
+    // needed the same fix for.
+    $conn->executeStatement("UPDATE categories SET {$rankColumn} = 999 WHERE id = {$this->catId}");
     $conn->insert('categories', [
         'name' => permalinkServiceTestSlug('other-cat-'),
     ]);
     $this->otherCatId = (int) $conn->lastInsertId();
+    $conn->executeStatement("UPDATE categories SET {$rankColumn} = 999 WHERE id = {$this->otherCatId}");
 });
 
 afterEach(function (): void {

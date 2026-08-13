@@ -196,9 +196,6 @@ final readonly class CatListPageRenderer
             $subcats_of = [];
 
             foreach ($all_categories as $id => $uppercats) {
-                if (! is_string($uppercats)) {
-                    continue;
-                }
                 foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
                     $subcats_of[(int) $uppercat_id][] = $id;
                 }

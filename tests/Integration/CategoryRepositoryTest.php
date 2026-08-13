@@ -721,6 +721,40 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([], $this->repo->findDirsByIds([]));
         }
 
+        public function testFindDirsByIdsReturnsNullForAVirtualCategory(): void
+        {
+            // Both fixture categories are virtual (dir IS NULL) -- proves the
+            // ?string narrowing's null branch, not just the array-shape.
+            self::assertSame([
+                1 => null,
+                2 => null,
+            ], $this->repo->findDirsByIds([1, 2]));
+        }
+
+        public function testFindDirsByIdsReturnsTheRealDirForAPhysicalCategory(): void
+        {
+            try {
+                $this->conn->executeStatement("UPDATE categories SET dir = 'sample_album' WHERE id = 1");
+
+                self::assertSame([
+                    1 => 'sample_album',
+                    2 => null,
+                ], $this->repo->findDirsByIds([1, 2]));
+            } finally {
+                $this->conn->executeStatement('UPDATE categories SET dir = NULL WHERE id = 1');
+            }
+        }
+
+        public function testFindAllCategoryUppercatsReturnsEveryCategoryKeyedById(): void
+        {
+            // Fixture: category 1 (root) has uppercats '1', category 2 (child
+            // of 1) has uppercats '1,2' -- see this file's own class docblock.
+            self::assertSame([
+                1 => '1',
+                2 => '1,2',
+            ], $this->repo->findAllCategoryUppercats());
+        }
+
         public function testFindExistingIdsReturnsEmptyForNoIds(): void
         {
             self::assertSame([], $this->repo->findExistingIds([]));

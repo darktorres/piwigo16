@@ -2903,7 +2903,8 @@ final readonly class CategoryRepository
      * Every category's own uppercats string, unfiltered and keyed by id --
      * Admin\CatListPageRenderer's own subcategory/photo-rollup computation.
      *
-     * @return array<int|string, mixed> keyed by id
+     * @return array<int, string> keyed by id -- CategoryEntity::$uppercats
+     *   is a non-nullable string column, always computed for every category
      *
      * Single-table, unconditional select, both columns plain-typed.
      */
@@ -2916,11 +2917,11 @@ final readonly class CategoryRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId || ! is_string($row['uppercats'] ?? null)) {
                 continue;
             }
 
-            $byId[$row['id']->value] = $row['uppercats'] ?? null;
+            $byId[$row['id']->value] = $row['uppercats'];
         }
 
         return $byId;
@@ -3144,7 +3145,8 @@ final readonly class CategoryRepository
      * getLocalDir() path-segment resolution.
      *
      * @param list<int|string> $ids
-     * @return array<int|string, mixed> keyed by id
+     * @return array<int, ?string> keyed by id -- CategoryEntity::$dir is a
+     *   nullable string column (only set for on-disk "physical" categories)
      *
      * Single-table, static WHERE, both columns plain-typed.
      */
@@ -3167,7 +3169,8 @@ final readonly class CategoryRepository
                 continue;
             }
 
-            $byId[$row['id']->value] = $row['dir'] ?? null;
+            $dir = $row['dir'] ?? null;
+            $byId[$row['id']->value] = is_string($dir) ? $dir : null;
         }
 
         return $byId;

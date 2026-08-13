@@ -374,7 +374,7 @@ final class CatModifyPageRenderer
 
         $database_dirs = [];
         foreach ($categoryService->getDirsByIds(explode(',', $uppercats)) as $dir_row_id => $dir) {
-            $database_dirs[$dir_row_id] = is_scalar($dir) ? (string) $dir : '';
+            $database_dirs[$dir_row_id] = $dir ?? '';
         }
         foreach ($upper_array as $id) {
             $local_dir .= ($database_dirs[$id] ?? '') . '/';

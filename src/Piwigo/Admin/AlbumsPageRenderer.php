@@ -220,8 +220,7 @@ final class AlbumsPageRenderer
         $subcats_of = [];
 
         foreach ($all_categories as $id => $uppercats) {
-            $uppercats_str = is_scalar($uppercats) ? (string) $uppercats : '';
-            foreach (array_slice(explode(',', $uppercats_str), 0, -1) as $uppercat_id) {
+            foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
                 @$subcats_of[$uppercat_id][] = $id;
             }
         }

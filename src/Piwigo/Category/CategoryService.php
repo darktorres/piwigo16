@@ -2170,7 +2170,7 @@ final readonly class CategoryService
     }
 
     /**
-     * @return array<int|string, mixed>
+     * @return array<int, string> keyed by id
      */
     public function getAllCategoryUppercats(): array
     {
@@ -2229,7 +2229,7 @@ final readonly class CategoryService
 
     /**
      * @param list<int|string> $ids
-     * @return array<int|string, mixed>
+     * @return array<int, ?string> keyed by id
      */
     public function getDirsByIds(array $ids): array
     {

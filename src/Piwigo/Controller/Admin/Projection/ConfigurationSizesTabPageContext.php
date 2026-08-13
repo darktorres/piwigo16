@@ -19,8 +19,7 @@ use Piwigo\Core\TemplatePageContext;
  * `$derivatives`/`$resizeQuality`/`$customDerivatives` in a second call
  * once those are computed -- the two calls' own `toArray()` keys never
  * overlap, so the second one's `assignContext()` never wipes the
- * first's (verified live against Template's own `assign()` merge
- * semantics, not assumed).
+ * first's.
  */
 final readonly class ConfigurationSizesTabPageContext implements TemplatePageContext
 {

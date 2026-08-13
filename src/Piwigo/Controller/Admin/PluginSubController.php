@@ -22,7 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * real, already-established global from Piwigo\Admin\PluginLoader's
  * plugin-loading bootstrap chain -- same usage already exists in
  * BatchManagerUnitPageRenderer). No other real
- * caller of admin/plugin.php exists (confirmed via grep) -- admin.php's own
+ * caller of admin/plugin.php exists -- admin.php's own
  * routing already gates this page behind
  * check_status(AccessLevel::Administrator) before dispatch, so the shell's
  * own (redundant) copy of that check is dropped here.

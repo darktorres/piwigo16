@@ -28,8 +28,8 @@ use Piwigo\Core\TemplatePageContext;
  * `picture_content.latte`'s own `{$current['TITLE_ESC']}`/etc. reads --
  * `defaultPictureContent()`'s own dispatch runs before `__invoke()`'s
  * later `PicturePageContext` assign, and nothing else in the codebase
- * ever writes the `'current'` template var before this point (confirmed
- * via a full-repo grep), so this is always the first and only write --
+ * ever writes the `'current'` template var before this point, so this
+ * is always the first and only write --
  * a plain required field, not a Template::append(..., merge: true) onto
  * a variable that's never actually pre-populated.
  */

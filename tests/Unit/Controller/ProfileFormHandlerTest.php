@@ -89,7 +89,7 @@ function profileFormHandlerTestRrmdir(string $dir): void
  * getLanguages() both do a genuine file_exists()/is_dir() check against
  * Paths::root -- using the real project root directly for that (instead
  * of symlinking into a temp one) would also redirect dataLocation's own
- * templates_c compile-cache into the real checkout, confirmed live (a
+ * templates_c compile-cache into the real checkout (a
  * stray data/templates_c/ appeared in the repo root the one time this
  * was tried directly).
  */
@@ -185,7 +185,7 @@ test('loadIntoTemplate populates the real profile form template context', functi
  * 'default'/'en_UK' as valid at all, and because getPwgThemes()'s own
  * synthesized entry for 'default' still passes through that same real
  * filesystem check. Submits user 1's own real, current field values
- * (fixture-confirmed via a direct query) so the resulting user_infos
+ * so the resulting user_infos
  * UPDATE is a genuine no-op, not a real state change needing its own
  * before/after restore.
  */

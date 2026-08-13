@@ -638,12 +638,24 @@ test('getCommonTags() returns empty for no items', function (): void {
 });
 
 test('addTags() is a no-op for empty tags or images', function (): void {
+    // A disposable image, not real fixture image 5 -- this test's own
+    // exact getImageTagIds()===[] assertion is otherwise fragile to
+    // TagRepositoryTest.php's own (already self-cleaning, legitimate)
+    // disposable-tag tests, which also use image 5 as a "known real
+    // image" fixture; confirmed live via a 15-run --parallel
+    // verification loop.
+    $conn = DbConnection::build();
+    $imageId = tagServiceTestDisposableImageId($conn);
     $service = tagServiceTestService();
 
-    $service->addTags([], [5]);
-    $service->addTags([TagId::from(1)], []);
+    try {
+        $service->addTags([], [$imageId]);
+        $service->addTags([TagId::from(1)], []);
 
-    expect($service->getImageTagIds([5])[5])->toBe([]);
+        expect($service->getImageTagIds([$imageId])[$imageId])->toBe([]);
+    } finally {
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
+    }
 });
 
 /**

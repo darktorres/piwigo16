@@ -18,7 +18,12 @@ commit-msg:
 pre-push:
   commands:
     phpstan:
-      run: vendor/bin/phpstan analyse --no-progress
+      # composer analyse:phpstan, not the bare phpstan binary -- the script
+      # chains the phpstan-latte:compile pre-step (generates
+      # _analysis/phpstan-latte/) ahead of the analysis; calling the binary
+      # directly would silently skip template type-checking. phpstan
+      # auto-disables progress output on non-TTY, no --no-progress needed.
+      run: composer analyse:phpstan
     # Psalm (vimeo/psalm) is installed and psalm.xml is maintained, but
     # nothing gates on it here yet -- composer.json's own `analyse` script
     # doesn't invoke it either (analyse:phpstan only).

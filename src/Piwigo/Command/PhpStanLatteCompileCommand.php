@@ -83,6 +83,17 @@ final class PhpStanLatteCompileCommand extends Command
 
         $map = (new VariableMapBuilder($scan->templatesByClass, $scan->contextsByClass, $varsByContext))->build();
 
+        // Always-available variables from outside the context system:
+        // Template.php's own framework assigns, every theme's parseable
+        // $theme_template_vars literal, and assignVarFromTemplate()'s
+        // rendered-Html outputs.
+        $themeVars = $extractor->themeTemplateVars($root);
+        $notices = [...$notices, ...$themeVars['notices']];
+        $globals = $extractor->frameworkGlobals() + $themeVars['vars'];
+        foreach ($scan->assignedTemplateVars as $name) {
+            $globals[$name] ??= '\\Latte\\Runtime\\Html';
+        }
+
         $engine = new Engine();
         $engine->addExtension($this->piwigoExtension);
         $compiler = new LatteTemplateCompiler($engine, $root, $outputDir);
@@ -93,7 +104,7 @@ final class PhpStanLatteCompileCommand extends Command
         $produced = [];
         foreach ($this->allTemplates($root) as $templatePath) {
             try {
-                $result = $compiler->compile($templatePath, $map->forTemplate($templatePath, $extractor));
+                $result = $compiler->compile($templatePath, $map->forTemplate($templatePath, $globals));
             } catch (Throwable $e) {
                 $failed[] = "{$templatePath}: {$e->getMessage()}";
                 continue;

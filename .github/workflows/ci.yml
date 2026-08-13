@@ -81,7 +81,11 @@ jobs:
           path: /tmp/phpstan
           key: ${{ runner.os }}-phpstan-${{ hashFiles('composer.lock') }}
           restore-keys: ${{ runner.os }}-phpstan-
-      - run: vendor/bin/phpstan analyse --no-progress
+      # composer analyse:phpstan, not the bare phpstan binary -- the script
+      # chains the phpstan-latte:compile pre-step (generates
+      # _analysis/phpstan-latte/) ahead of the analysis; calling the binary
+      # directly would silently skip template type-checking.
+      - run: composer analyse:phpstan
 
   # Psalm was never gated in CI (see docs/REFERENCE.md's "Psalm gating is
   # moot, not just paused" decision) — its global-function-resolution

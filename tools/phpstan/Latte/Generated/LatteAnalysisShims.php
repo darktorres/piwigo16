@@ -17,6 +17,68 @@ namespace Piwigo\Tools\PhpStan\Latte\Generated;
 final class LatteAnalysisShims
 {
     public const FILTERS = [
+        'batch',
+        'breakLines',
+        'breaklines',
+        'bytes',
+        'capitalize',
+        'ceil',
+        'checkUrl',
+        'clamp',
+        'column',
+        'commas',
+        'dataStream',
+        'datastream',
+        'date',
+        'escape',
+        'escapeCss',
+        'escapeHtml',
+        'escapeHtmlComment',
+        'escapeICal',
+        'escapeJs',
+        'escapeUrl',
+        'escapeXml',
+        'explode',
+        'filter',
+        'first',
+        'firstLower',
+        'firstUpper',
+        'floor',
+        'group',
+        'implode',
+        'indent',
+        'join',
+        'last',
+        'length',
+        'limit',
+        'localDate',
+        'lower',
+        'map',
+        'number',
+        'padLeft',
+        'padRight',
+        'query',
+        'random',
+        'repeat',
+        'replace',
+        'replaceRe',
+        'replaceRE',
+        'reverse',
+        'round',
+        'slice',
+        'sort',
+        'spaceless',
+        'split',
+        'strip',
+        'stripHtml',
+        'striphtml',
+        'stripTags',
+        'striptags',
+        'substr',
+        'trim',
+        'truncate',
+        'upper',
+        'webalize',
         'translate',
         'l10n',
         'translate_dec',
@@ -32,7 +94,6 @@ final class LatteAnalysisShims
         'ucfirst',
         'strstr',
         'stristr',
-        'trim',
         'md5',
         'strtolower',
         'str_ireplace',
@@ -45,10 +106,7 @@ final class LatteAnalysisShims
         'array_key_exists',
         'sizeOf',
         'str_replace',
-        'lower',
         'nl2br',
-        'join',
-        'explode',
         'ternary',
         'cat',
         'count',
@@ -57,7 +115,6 @@ final class LatteAnalysisShims
         'default',
         'date_format',
         'number_format',
-        'replace',
         'escapeJavascript',
         'url_is_remote',
         'is_admin',
@@ -67,6 +124,16 @@ final class LatteAnalysisShims
     ];
 
     public const FUNCTIONS = [
+        'clamp',
+        'divisibleBy',
+        'even',
+        'first',
+        'group',
+        'last',
+        'odd',
+        'slice',
+        'hasBlock',
+        'hasTemplate',
         'translate',
         'l10n',
         'translate_dec',
@@ -95,7 +162,364 @@ final class LatteAnalysisShims
      * the calling template as an implicit first argument, so the
      * compiled-call rewrite must NOT strip it for them.
      */
-    public const TEMPLATE_AWARE = [];
+    public const TEMPLATE_AWARE = [
+        'hasBlock',
+        'hasTemplate',
+    ];
+
+    /**
+     * @param iterable<mixed, mixed> $list
+     * @return \Generator<mixed, mixed, mixed, mixed>
+     */
+    public static function batch(iterable $list, int $length, mixed $rest = null): \Generator
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function breakLines(\Stringable|string|null $s): \Latte\Runtime\Html
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function bytes(float $bytes, int $precision = 2): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function capitalize(\Stringable|string|null $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function ceil(float $value, int $precision = 0): float
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function checkUrl(mixed $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function clamp(int|float $value, int|float $min, int|float $max): int|float
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param iterable<mixed, mixed> $data
+     * @return array<array-key, mixed>
+     */
+    public static function column(iterable $data, string|int|null $columnKey, string|int|null $indexKey = null): array
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param iterable<mixed, mixed> $arr
+     */
+    public static function commas(iterable $arr, ?string $lastGlue = null): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function dataStream(string $data, ?string $type = null): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function date(\DateTimeInterface|\DateInterval|string|int|null $time, string $format = 'j. n. Y'): ?string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function escape(mixed $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function escapeCss(mixed $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function escapeHtml(mixed $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function escapeHtmlComment(mixed $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function escapeICal(mixed $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function escapeJs(mixed $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function escapeUrl(string $string): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function escapeXml(mixed $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function explode(string $text, string $delimiter = ','): array
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param iterable<mixed, mixed> $iterable
+     * @return iterable<mixed, mixed>
+     */
+    public static function filter(iterable $iterable, callable $predicate): iterable
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param \Traversable<mixed, mixed>|array<array-key, mixed>|string $value
+     */
+    public static function first(\Traversable|array|string $value): mixed
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function firstLower(\Stringable|string|null $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function firstUpper(\Stringable|string|null $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function floor(float $value, int $precision = 0): float
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param iterable<mixed, mixed> $data
+     * @return iterable<mixed, mixed>
+     */
+    public static function group(iterable $data, \Closure|string|int $by): iterable
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param iterable<mixed, mixed> $arr
+     */
+    public static function implode(iterable $arr, string $glue = ''): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function indent(string $s, int $level = 1, string $chars = "\t"): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param array<int, scalar> $pieces
+     */
+    public static function join(array $pieces, string $glue = ','): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param \Traversable<mixed, mixed>|array<array-key, mixed>|string $value
+     */
+    public static function last(\Traversable|array|string $value): mixed
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param \Countable|\Traversable<mixed, mixed>|array<array-key, mixed>|string $val
+     */
+    public static function length(\Countable|\Traversable|array|string $val): int
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param \Traversable<mixed, mixed>|array<array-key, mixed>|string $value
+     * @return mixed
+     */
+    public static function limit(\Traversable|array|string $value, int $length)
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function localDate(\DateTimeInterface|string|int|null $value, ?string $format = null, ?string $date = null, ?string $time = null): ?string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function lower(string $string): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param iterable<mixed, mixed> $iterable
+     * @return iterable<mixed, mixed>
+     */
+    public static function map(iterable $iterable, callable $transformer): iterable
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function number(float $number, string|int $patternOrDecimals = 0, string $decimalSeparator = '.', string $thousandsSeparator = ','): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function padLeft(\Stringable|string|int|float|null $s, int $length, string $append = ' '): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function padRight(\Stringable|string|int|float|null $s, int $length, string $append = ' '): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param array<array-key, mixed>|string $data
+     */
+    public static function query(array|string $data): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param \Traversable<mixed, mixed>|array<array-key, mixed>|string $values
+     */
+    public static function random(\Traversable|array|string $values): mixed
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function repeat(\Stringable|string|null $s, int $count): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function replace(string $subject, string $search, string $replacement): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function replaceRe(string $subject, string $pattern, string $replacement = ''): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param \Traversable<mixed, mixed>|array<array-key, mixed>|string $val
+     * @return array<array-key, mixed>|string
+     */
+    public static function reverse(\Traversable|array|string $val, bool $preserveKeys = false): array|string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function round(float $value, int $precision = 0): float
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param \Traversable<mixed, mixed>|array<array-key, mixed>|string $value
+     * @return \Generator<mixed, mixed, mixed, mixed>|array<array-key, mixed>|string
+     */
+    public static function slice(\Traversable|array|string $value, int $start, ?int $length = null, bool $preserveKeys = false): \Generator|array|string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param iterable<mixed, mixed> $data
+     * @return iterable<mixed, mixed>
+     */
+    public static function sort(iterable $data, ?\Closure $comparison = null, \Closure|string|int|null $by = null, \Closure|string|int|bool $byKey = false): iterable
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function spaceless(string $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public static function split(string $value, string $separator = ''): array
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function strip(string $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function stripHtml(\Stringable|string|null $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function stripTags(\Stringable|string|null $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function substr(\Stringable|string|null $s, int $start, ?int $length = null): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function trim(string $string, string $characters = " \n\r\t\v\000"): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function truncate(\Stringable|string|null $s, int $length, string $append = '…'): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function upper(\Stringable|string|null $s): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function webalize()
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
 
     public static function translate(string $key, \Latte\Runtime\Html|string|int|float|bool|null ...$args): string
     {
@@ -175,11 +599,6 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function trim(string $string, string $characters = " \n\r\t\v\000"): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
     public static function md5(string $string, bool $binary = false): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
@@ -254,28 +673,7 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function lower(string $string): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
     public static function nl2br(string $string, bool $use_xhtml = true): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param array<int, scalar> $pieces
-     */
-    public static function join(array $pieces, string $glue = ','): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @return list<string>
-     */
-    public static function explode(string $text, string $delimiter = ','): array
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
@@ -323,11 +721,6 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function replace(string $subject, string $search, string $replacement): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
     public static function escapeJavascript(string $value): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
@@ -354,6 +747,31 @@ final class LatteAnalysisShims
     }
 
     public static function get_gallery_home_url(): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function divisibleBy(int $value, int $by): bool
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function even(int $value): bool
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function odd(int $value): bool
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function hasBlock(\Latte\Runtime\Template $template, string $name): bool
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function hasTemplate(\Latte\Runtime\Template $template, string $name): bool
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

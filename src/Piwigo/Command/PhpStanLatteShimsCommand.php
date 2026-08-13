@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Command;
 
+use Latte\Engine;
 use Override;
 use Piwigo\Core\Paths;
 use Piwigo\Template\Latte\PiwigoExtension;
@@ -67,7 +68,13 @@ final class PhpStanLatteShimsCommand extends Command
         }
         $outputPath = str_starts_with($outputArg, '/') ? $outputArg : $this->paths->root . $outputArg;
 
-        $source = (new ShimClassGenerator($this->piwigoExtension))->generate();
+        // The full real Engine, not PiwigoExtension alone -- compiled
+        // templates call Latte's own built-in filters (escape, checkUrl,
+        // ...) through the same property-invoke convention, so the merged
+        // Engine registration set is the set that needs shims.
+        $engine = new Engine();
+        $engine->addExtension($this->piwigoExtension);
+        $source = (new ShimClassGenerator($engine))->generate();
 
         $dir = dirname($outputPath);
         if (! is_dir($dir) && ! mkdir($dir, 0o775, true) && ! is_dir($dir)) {

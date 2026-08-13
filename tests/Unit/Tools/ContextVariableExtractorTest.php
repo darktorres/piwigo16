@@ -96,9 +96,14 @@ it('builds per-template maps with same-class association and a cross-class fallb
     expect($map->byTemplate['/t/a.latte'])->toBe([
         'title' => 'string',
     ]);
+    // The fallback union covers every context (assigns accumulate on the
+    // request's shared Template instance), while fallbackContexts names
+    // only the render-less classes' contexts -- the ones with no specific
+    // association at all.
     expect($map->fallback)
         ->toBe([
             'messages' => 'list<string>',
+            'title' => 'string',
         ]);
     expect($map->fallbackContexts)
         ->toBe(['App\\SharedCtx']);
@@ -130,10 +135,25 @@ it('unions conflicting types deterministically and never overrides specific vars
 
     expect($map->byTemplate['/t/shared.latte']['val'])->toBe('int|string');
 
-    $forTemplate = $map->forTemplate('/t/shared.latte', new ContextVariableExtractor());
+    $globals = (new ContextVariableExtractor())->frameworkGlobals();
+    $forTemplate = $map->forTemplate('/t/shared.latte', $globals);
     expect($forTemplate['val'])->toBe('int|string');
     expect($forTemplate['ROOT_URL'])->toBe('string');
 
-    $unknown = $map->forTemplate('/t/unknown.latte', new ContextVariableExtractor());
-    expect($unknown['val'])->toBe('float');
+    $unknown = $map->forTemplate('/t/unknown.latte', $globals);
+    expect($unknown['val'])->toBe('float|int|string');
+});
+
+it('extracts conditional dim-assigned variables with their declared types', function (): void {
+    $extracted = (new ContextVariableExtractor())->extract('Piwigo\\Controller\\Admin\\Projection\\ConfigurationWatermarkPageContext');
+
+    expect($extracted->vars)
+        ->toHaveKey('watermark');
+});
+
+it('enumerates theme_template_vars keys across real themeconf files with reflected config types', function (): void {
+    $result = (new ContextVariableExtractor())->themeTemplateVars(dirname(__DIR__, 3));
+
+    expect($result['vars']['GALLERY_TITLE'])->toBe('string')
+        ->and($result['vars'])->toHaveKey('STD_PGS_SELECTED_SKIN');
 });

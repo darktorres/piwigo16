@@ -36,14 +36,22 @@ final class VariableMapBuilder
 
     public function build(): VariableMap
     {
+        // The fallback union covers EVERY context, not only the render-less
+        // classes': all assigns accumulate on the request's shared Template
+        // instance, so a context assigned by one renderer is genuinely
+        // visible to any template rendered later in the same request
+        // (confirmed live: header.latte's U_HOME comes from
+        // PageHeaderPageContext but is read by templates other classes
+        // render). Per-template types stay first -- forTemplate() merges
+        // specific-before-fallback -- so this only widens, never overrides.
+        // fallbackContexts still names only the render-less classes'
+        // contexts: those have no specific association at all, which is
+        // the visibility-worthy tradeoff.
         $fallbackSets = [];
         $fallbackContexts = [];
         foreach ($this->contextsByClass as $class => $contexts) {
-            if (isset($this->templatesByClass[$class])) {
-                continue;
-            }
             foreach ($contexts as $context) {
-                if (! in_array($context, $fallbackContexts, true)) {
+                if (! isset($this->templatesByClass[$class]) && ! in_array($context, $fallbackContexts, true)) {
                     $fallbackContexts[] = $context;
                 }
                 self::mergeInto($fallbackSets, $this->varsByContext[$context] ?? []);

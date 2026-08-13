@@ -67,6 +67,7 @@ final class TemplateCallSiteScanner
     {
         $templatesByClass = [];
         $contextsByClass = [];
+        $assignedTemplateVars = [];
         $notices = [];
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
@@ -99,7 +100,7 @@ final class TemplateCallSiteScanner
                  */
                 private array $classStack = [];
 
-                public function enterNode(Node $node): null
+                public function enterNode(Node $node): ?Node
                 {
                     if ($node instanceof ClassLike) {
                         $this->classStack[] = isset($node->namespacedName)
@@ -117,7 +118,7 @@ final class TemplateCallSiteScanner
                     return null;
                 }
 
-                public function leaveNode(Node $node): null
+                public function leaveNode(Node $node): ?Node
                 {
                     if ($node instanceof ClassLike) {
                         array_pop($this->classStack);
@@ -140,6 +141,7 @@ final class TemplateCallSiteScanner
                     $file,
                     $templatesByClass,
                     $contextsByClass,
+                    $assignedTemplateVars,
                     $notices,
                 );
             }
@@ -147,13 +149,16 @@ final class TemplateCallSiteScanner
 
         ksort($templatesByClass);
         ksort($contextsByClass);
+        $assignedTemplateVars = array_keys($assignedTemplateVars);
+        sort($assignedTemplateVars);
 
-        return new CallSiteScanResult($templatesByClass, $contextsByClass, $notices);
+        return new CallSiteScanResult($templatesByClass, $contextsByClass, $assignedTemplateVars, $notices);
     }
 
     /**
      * @param array<string, list<string>> $templatesByClass
      * @param array<string, list<string>> $contextsByClass
+     * @param array<string, true> $assignedTemplateVars
      * @param list<string> $notices
      */
     private function collectCall(
@@ -163,6 +168,7 @@ final class TemplateCallSiteScanner
         string $file,
         array &$templatesByClass,
         array &$contextsByClass,
+        array &$assignedTemplateVars,
         array &$notices,
     ): void {
         if ($method === 'assignContext') {
@@ -190,6 +196,19 @@ final class TemplateCallSiteScanner
         if ($argIndex === null) {
             return;
         }
+
+        // assignVarFromTemplate('VARNAME', 'x.latte') also *defines* a
+        // template variable (the rendered output, always Html) consumed by
+        // whatever template renders later -- collect the literal names so
+        // VariableMapBuilder can type them instead of leaving e.g.
+        // $ADMIN_CONTENT undefined in admin_shell.latte.
+        if ($method === 'assignVarFromTemplate') {
+            $varArg = $node->args[0] ?? null;
+            if ($varArg instanceof Node\Arg && $varArg->value instanceof String_) {
+                $assignedTemplateVars[$varArg->value->value] = true;
+            }
+        }
+
         $arg = $node->args[$argIndex] ?? null;
         if (! $arg instanceof Node\Arg || ! $arg->value instanceof String_) {
             // Variable/computed template args are legitimate internal

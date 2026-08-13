@@ -5,23 +5,32 @@ declare(strict_types=1);
 namespace Piwigo\Tools\PhpStan\Latte;
 
 use Closure;
+use Latte\Engine;
 use LogicException;
-use Piwigo\Template\Latte\PiwigoExtension;
 use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionParameter;
 use ReflectionType;
 
 /**
- * Emits `LatteAnalysisShims`: one static method per PiwigoExtension
- * filter/function, carrying the real reflected signature -- parameter
- * names, types, by-ref/variadic flags, and (critically) real default
- * value expressions. Real defaults are the property PHPDoc
+ * Emits `LatteAnalysisShims`: one static method per filter/function the
+ * real Engine exposes -- PiwigoExtension's registrations PLUS Latte's
+ * own built-in defaults (`escape`, `checkUrl`, ...; compiled templates
+ * call those through the exact same property-invoke convention, so they
+ * need shims too -- found live as `staticMethod.notFound` on the first
+ * full run, not assumed). Signatures are real reflected ones --
+ * parameter names, types, by-ref/variadic flags, and (critically) real
+ * default value expressions. Real defaults are the property PHPDoc
  * `Closure(...)` types structurally cannot express, and their absence
  * is what made PHPStan's ArgumentsNormalizer::reorderArgs() throw under
  * efabrica/phpstan-latte when a template call skipped an optional
  * middle parameter via named arguments (`combineScript(...,
  * require: 'jquery', ...)`).
+ *
+ * Filters whose first parameter is `Latte\Runtime\FilterInfo` get that
+ * parameter dropped from the shim: FilterExecutor injects it at
+ * runtime, the compiled call site never passes it -- the filter-side
+ * mirror of the function-side `$this` strip.
  *
  * The compiled-template rewrite (LatteTemplateCompiler) redirects every
  * `($this->filters->X)(...)` / `($this->global->fn->X)($this, ...)`
@@ -36,13 +45,13 @@ final class ShimClassGenerator
     private const NAMESPACE = 'Piwigo\\Tools\\PhpStan\\Latte\\Generated';
 
     public function __construct(
-        private readonly PiwigoExtension $extension,
+        private readonly Engine $engine,
     ) {}
 
     public function generate(): string
     {
-        $filters = $this->extension->getFilters();
-        $functions = $this->extension->getFunctions();
+        $filters = $this->engine->getFilters();
+        $functions = $this->engine->getFunctions();
 
         // A name registered as both filter and function (translate, l10n,
         // is_admin, ...) becomes one shim method, so the two registrations
@@ -57,9 +66,21 @@ final class ShimClassGenerator
 
         $methods = [];
         $templateAware = [];
+        $seenMethodNames = [];
         foreach ($merged as $name => $callable) {
+            // Latte registers some built-ins under case variants
+            // (breaklines/breakLines); PHP method dispatch is
+            // case-insensitive, so one shim method serves every spelling
+            // -- a second declaration would be a fatal redeclare.
+            $lower = strtolower($name);
+            if (isset($seenMethodNames[$lower])) {
+                continue;
+            }
+            $seenMethodNames[$lower] = true;
+
             $reflection = new ReflectionFunction(Closure::fromCallable($callable));
-            $methods[] = $this->renderMethod($name, $reflection);
+            $isFilter = isset($filters[$name]);
+            $methods[] = $this->renderMethod($name, $reflection, dropFilterInfoParam: $isFilter && $this->isFilterInfoAware($reflection));
             if ($this->isTemplateAware($reflection)) {
                 $templateAware[] = $name;
             }
@@ -102,17 +123,37 @@ final class ShimClassGenerator
         return $type instanceof ReflectionNamedType && $type->getName() === 'Latte\\Runtime\\Template';
     }
 
-    private function renderMethod(string $name, ReflectionFunction $reflection): string
+    private function isFilterInfoAware(ReflectionFunction $reflection): bool
     {
+        $params = $reflection->getParameters();
+        if ($params === []) {
+            return false;
+        }
+        $type = $params[0]->getType();
+
+        return $type instanceof ReflectionNamedType && $type->getName() === 'Latte\\Runtime\\FilterInfo';
+    }
+
+    private function renderMethod(string $name, ReflectionFunction $reflection, bool $dropFilterInfoParam = false): string
+    {
+        $reflectionParams = $reflection->getParameters();
+        if ($dropFilterInfoParam) {
+            array_shift($reflectionParams);
+        }
         $params = array_map(
             fn (ReflectionParameter $p): string => $this->renderParameter($p),
-            $reflection->getParameters(),
+            $reflectionParams,
         );
 
         $returnType = $reflection->getReturnType() ?? $reflection->getTentativeReturnType();
         $returnSuffix = $returnType === null ? '' : ': ' . $this->renderType($returnType);
 
-        $docblock = $this->renderDocblock($reflection, $this->synthesizedArrayParamLines($reflection));
+        $docblock = $this->renderDocblock(
+            $reflection,
+            $this->synthesizedArrayParamLines($reflection, $dropFilterInfoParam),
+            array_map(static fn (ReflectionParameter $p): string => $p->getName(), $reflectionParams),
+            $this->synthesizedReturnLine($reflection),
+        );
 
         return ($docblock === '' ? '' : $docblock . "\n")
             . '    public static function ' . $name . '(' . implode(', ', $params) . ')' . $returnSuffix . "\n"
@@ -194,19 +235,22 @@ final class ShimClassGenerator
      *
      * @return array<string, string> param name => synthesized @param line
      */
-    private function synthesizedArrayParamLines(ReflectionFunction $reflection): array
+    private function synthesizedArrayParamLines(ReflectionFunction $reflection, bool $dropFilterInfoParam): array
     {
+        $params = $reflection->getParameters();
+        if ($dropFilterInfoParam) {
+            array_shift($params);
+        }
         $lines = [];
-        foreach ($reflection->getParameters() as $param) {
+        foreach ($params as $param) {
             $type = $param->getType();
             if ($type === null) {
                 continue;
             }
-            $rendered = $this->renderType($type);
-            if (preg_match('/(^|\|)\??array($|\|)/', $rendered) !== 1) {
+            $docType = $this->widenedIterableDocType($this->renderType($type));
+            if ($docType === null) {
                 continue;
             }
-            $docType = str_replace('array', 'array<array-key, mixed>', $rendered);
             $lines[$param->getName()] = '@param ' . $docType . ' $' . $param->getName();
         }
 
@@ -214,23 +258,64 @@ final class ShimClassGenerator
     }
 
     /**
+     * Latte's own built-in filters return/accept bare `array`,
+     * `iterable`, and `\Generator` -- widen each to its
+     * explicitly-mixed generic form so the generated class passes this
+     * project's level-10 missingType rules. Returns null when the
+     * rendered type needs no widening.
+     */
+    private function widenedIterableDocType(string $rendered): ?string
+    {
+        $widened = strtr($rendered, [
+            'iterable' => 'iterable<mixed, mixed>',
+            '\\Generator' => '\\Generator<mixed, mixed, mixed, mixed>',
+            '\\Traversable' => '\\Traversable<mixed, mixed>',
+            '\\Iterator' => '\\Iterator<mixed, mixed>',
+        ]);
+        $widened = preg_replace('/(?<![<,\s])\barray\b(?!<)/', 'array<array-key, mixed>', $widened) ?? $widened;
+
+        return $widened === $rendered ? null : $widened;
+    }
+
+    private function synthesizedReturnLine(ReflectionFunction $reflection): ?string
+    {
+        $returnType = $reflection->getReturnType() ?? $reflection->getTentativeReturnType();
+        if ($returnType === null) {
+            // A vendor callable with no reflectable return type at all
+            // (Latte's `limit`): declare mixed rather than leaving the
+            // shim method unreturn-typed.
+            return '@return mixed';
+        }
+        $docType = $this->widenedIterableDocType($this->renderType($returnType));
+
+        return $docType === null ? null : '@return ' . $docType;
+    }
+
+    /**
      * Copies the underlying callable's own `@param`/`@return` lines --
      * they carry array value types (`list<string>|string`, ...) the
      * native signature cannot -- and appends synthesized lines for
      * bare-array parameters the source docblock leaves uncovered.
-     * Guarded against docblock types containing unqualified class names:
-     * those would silently re-resolve in the generated file's own
-     * namespace. No current callable has one (all class types live in
-     * the native signatures); if one ever appears, fail generation
-     * loudly instead of emitting a wrong type.
+     * Copying only applies to this project's own callables: vendor
+     * (Latte built-in) docblocks use unqualified class names resolved
+     * against Latte's own namespaces, which cannot be transplanted, and
+     * their native signatures are fully typed anyway. Project docblocks
+     * stay guarded against unqualified class names: those would silently
+     * re-resolve in the generated file's own namespace; none exists
+     * today, and a new one fails generation loudly instead of emitting a
+     * wrong type.
      *
      * @param array<string, string> $synthesized param name => @param line
+     * @param list<string> $keptParamNames rendered parameter names --
+     *   copied @param lines for dropped params (FilterInfo) are skipped
      */
-    private function renderDocblock(ReflectionFunction $reflection, array $synthesized): string
+    private function renderDocblock(ReflectionFunction $reflection, array $synthesized, array $keptParamNames, ?string $synthesizedReturn): string
     {
         $doc = $reflection->getDocComment();
+        $file = $reflection->getFileName();
+        $isVendor = $file === false || str_contains($file, '/vendor/');
         $rawLines = [];
-        if ($doc !== false) {
+        if ($doc !== false && ! $isVendor) {
             $split = preg_split('/\R/', $doc);
             $rawLines = $split === false ? [] : $split;
         }
@@ -250,13 +335,22 @@ final class ShimClassGenerator
                 );
             }
             if (preg_match('/@param\s.*\$(\w+)/', $line, $m) === 1) {
+                if (! in_array($m[1], $keptParamNames, true)) {
+                    continue;
+                }
                 unset($synthesized[$m[1]]);
+            }
+            if (str_contains($line, '@return')) {
+                $synthesizedReturn = null;
             }
             $lines[] = '     ' . ltrim($line);
         }
 
         foreach ($synthesized as $line) {
             $lines[] = '     * ' . $line;
+        }
+        if ($synthesizedReturn !== null) {
+            $lines[] = '     * ' . $synthesizedReturn;
         }
 
         if ($lines === []) {

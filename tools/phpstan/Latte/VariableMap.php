@@ -24,15 +24,17 @@ final class VariableMap
     ) {}
 
     /**
+     * @param array<string, string> $globals always-available variables from
+     *   outside the context system (framework globals, themeconf vars,
+     *   assignVarFromTemplate outputs) -- the caller merges those sources
      * @return array<string, string> the full variable set for one template:
      *   its own call-site-associated variables + the global fallback union
-     *   + the framework globals, later sources never overriding earlier
-     *   more-specific ones
+     *   + $globals, later sources never overriding earlier more-specific ones
      */
-    public function forTemplate(string $realPath, ContextVariableExtractor $extractor): array
+    public function forTemplate(string $realPath, array $globals): array
     {
         $vars = $this->byTemplate[$realPath] ?? [];
-        foreach ([$this->fallback, $extractor->frameworkGlobals()] as $source) {
+        foreach ([$this->fallback, $globals] as $source) {
             foreach ($source as $name => $type) {
                 if (! isset($vars[$name])) {
                     $vars[$name] = $type;

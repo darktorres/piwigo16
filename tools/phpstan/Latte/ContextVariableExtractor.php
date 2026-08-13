@@ -119,8 +119,26 @@ final class ContextVariableExtractor
             }
         }
 
+        // `$result['literal'] = $this->prop;` -- the dominant shape for
+        // contexts with conditional variables (ConfigurationWatermark,
+        // MenubarIdentification, ...): the guard means the key is only
+        // sometimes present at runtime, but the declared type still holds
+        // whenever it is.
         foreach ($finder->findInstanceOf($toArray, Assign::class) as $assign) {
-            if ($assign->var instanceof ArrayDimFetch && ! $assign->var->dim instanceof String_ && $assign->var->dim !== null) {
+            if (! $assign->var instanceof ArrayDimFetch) {
+                continue;
+            }
+            $dim = $assign->var->dim;
+            if ($dim instanceof String_) {
+                $vars[$dim->value] = $this->typeOfExpression(
+                    $assign->expr,
+                    $contextClass,
+                    $reflection,
+                    $propertyTypes,
+                    $dim->value,
+                    $notices,
+                );
+            } elseif ($dim !== null) {
                 $notices[] = "dynamic array-dim assignment in {$contextClass}::toArray() (line {$assign->getStartLine()}) -- variable unknowable statically";
             }
         }
@@ -136,12 +154,10 @@ final class ContextVariableExtractor
     /**
      * The framework-level variables `Template` itself assigns outside
      * any page context -- always present for every render. From reading
-     * Template.php's own internal assign() sites: `pwg` (line ~224),
-     * `lang_info` (~242), `ROOT_URL`/`ROOT_PATH` (parse(), ~818/824),
+     * Template.php's own internal assign()/append() sites: `pwg` (line
+     * ~224), `lang_info` (~242), `themeconf` (append(), ~527),
+     * `ROOT_URL`/`ROOT_PATH` (parse(), ~818/824),
      * `PLUGIN_PICTURE_BUTTONS`/`PLUGIN_INDEX_BUTTONS` (~1252/1275).
-     * Deliberately absent: themeconf's `$theme_template_vars` bulk
-     * spread (~1206) assigns arbitrary per-theme keys no static map can
-     * enumerate.
      *
      * @return array<string, string>
      */
@@ -152,9 +168,110 @@ final class ContextVariableExtractor
             'ROOT_PATH' => 'string',
             'pwg' => '\\Piwigo\\Template\\TemplateAdapter',
             'lang_info' => 'array<string, mixed>',
+            'themeconf' => 'array<string, mixed>',
             'PLUGIN_PICTURE_BUTTONS' => 'array<array-key, mixed>',
             'PLUGIN_INDEX_BUTTONS' => 'array<array-key, mixed>',
         ];
+    }
+
+    /**
+     * The `$theme_template_vars` bulk spread (`Template::loadThemeconf()`
+     * `include`s each theme's `themeconf.inc.php`, then bulk-assigns
+     * whatever that file put in `$theme_template_vars`). Not arbitrary in
+     * practice: the files are real, parseable array literals, so their
+     * keys ARE statically enumerable. Values are typed when they follow
+     * the one real shape (`Template::currentConfig()->prop`, resolved via
+     * reflection through currentConfig()'s return type), `mixed` with a
+     * notice otherwise. Union across every theme, same widening-only
+     * semantics as everything else.
+     *
+     * @return array{vars: array<string, string>, notices: list<string>}
+     */
+    public function themeTemplateVars(string $root): array
+    {
+        $vars = [];
+        $notices = [];
+        $shallow = glob(rtrim($root, '/') . '/themes/*/themeconf.inc.php');
+        $nested = glob(rtrim($root, '/') . '/themes/*/*/themeconf.inc.php');
+        $files = [...($shallow === false ? [] : $shallow), ...($nested === false ? [] : $nested)];
+        foreach ($files as $file) {
+            $source = file_get_contents($file);
+            if ($source === false) {
+                continue;
+            }
+            $ast = (new ParserFactory())->createForNewestSupportedVersion()
+                ->parse($source);
+            if ($ast === null) {
+                continue;
+            }
+            foreach ((new NodeFinder())->findInstanceOf($ast, Assign::class) as $assign) {
+                if (! $assign->var instanceof Variable || $assign->var->name !== 'theme_template_vars') {
+                    continue;
+                }
+                if (! $assign->expr instanceof Array_) {
+                    $notices[] = "non-literal \$theme_template_vars in {$file} -- keys unknowable statically";
+                    continue;
+                }
+                foreach ($assign->expr->items as $item) {
+                    if (! $item->key instanceof String_) {
+                        $notices[] = "dynamic \$theme_template_vars key in {$file} (line {$item->getStartLine()})";
+                        continue;
+                    }
+                    $type = $this->currentConfigChainType($item->value);
+                    if ($type === null) {
+                        $type = 'mixed';
+                        $notices[] = "\$theme_template_vars['{$item->key->value}'] in {$file} has an unrecognized value shape -- typed mixed";
+                    }
+                    $existing = $vars[$item->key->value] ?? null;
+                    $vars[$item->key->value] = $existing === null || $existing === $type
+                        ? $type
+                        : $existing . '|' . $type;
+                }
+            }
+        }
+        ksort($vars);
+
+        return [
+            'vars' => $vars,
+            'notices' => $notices,
+        ];
+    }
+
+    /**
+     * Types the one real themeconf value shape:
+     * `Template::currentConfig()->prop` -- reflect currentConfig()'s
+     * declared return class, then the property's declared type.
+     */
+    private function currentConfigChainType(Expr $expr): ?string
+    {
+        if (! $expr instanceof PropertyFetch || ! $expr->name instanceof Identifier) {
+            return null;
+        }
+        $call = $expr->var;
+        if (! $call instanceof Node\Expr\StaticCall
+            || ! $call->name instanceof Identifier
+            || $call->name->name !== 'currentConfig'
+        ) {
+            return null;
+        }
+
+        $method = new \ReflectionMethod('Piwigo\\Template\\Template', 'currentConfig');
+        $returnType = $method->getReturnType();
+        if (! $returnType instanceof ReflectionNamedType || $returnType->isBuiltin()) {
+            return null;
+        }
+        $configClassName = $returnType->getName();
+        if (! class_exists($configClassName)) {
+            return null;
+        }
+        $configClass = new ReflectionClass($configClassName);
+        if (! $configClass->hasProperty($expr->name->name)) {
+            return null;
+        }
+        $propType = $configClass->getProperty($expr->name->name)
+            ->getType();
+
+        return $propType === null ? null : ReflectionTypeRenderer::render($propType);
     }
 
     /**

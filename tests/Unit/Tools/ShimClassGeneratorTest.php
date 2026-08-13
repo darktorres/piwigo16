@@ -32,6 +32,14 @@ function shim_generator_test_extension(): PiwigoExtension
     );
 }
 
+function shim_generator_test_engine(): Latte\Engine
+{
+    $engine = new Latte\Engine();
+    $engine->addExtension(shim_generator_test_extension());
+
+    return $engine;
+}
+
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-shim-generator-test-' . bin2hex(random_bytes(8));
     $this->root = $root;
@@ -41,7 +49,7 @@ beforeEach(function (): void {
     CurrentConfigTestFactory::get()->dataLocation = 'data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentUserTestFactory::get()->attachGlobals();
-    $this->generated = (new ShimClassGenerator(shim_generator_test_extension()))->generate();
+    $this->generated = (new ShimClassGenerator(shim_generator_test_engine()))->generate();
 });
 
 afterEach(function (): void {
@@ -84,11 +92,22 @@ it('copies array-typed docblock lines the native signature cannot express', func
         ->toContain('@return list<string>');
 });
 
-it('declares filter/function name lists and no template-aware functions', function (): void {
+it('declares name lists and detects Latte\'s own Template-aware functions', function (): void {
     expect($this->generated)
-        ->toContain("public const FILTERS = [\n        'translate',")
-        ->toContain("public const FUNCTIONS = [\n        'translate',")
-        ->toContain('public const TEMPLATE_AWARE = []');
+        ->toContain("'translate',")
+        ->toContain("'checkUrl',")
+        ->toContain("public const TEMPLATE_AWARE = [\n        'hasBlock',\n        'hasTemplate',\n    ]");
+});
+
+it('covers Latte\'s own built-in filters, with FilterInfo parameters dropped', function (): void {
+    expect($this->generated)
+        ->toContain('public static function checkUrl(mixed $s): string')
+        ->toContain('public static function escape(mixed $s): string')
+        // stripHtml is FilterInfo-aware at registration (Latte injects the
+        // info at runtime); the shim keeps only the value parameter the
+        // compiled call site actually passes.
+        ->toContain('public static function stripHtml(\Stringable|string|null $s): string')
+        ->not->toContain('FilterInfo $');
 });
 
 it('matches the checked-in artifact, so a PiwigoExtension change without regeneration fails here', function (): void {
@@ -100,17 +119,19 @@ it('matches the checked-in artifact, so a PiwigoExtension change without regener
         ->toBe($checkedIn);
 });
 
-it('shapes the real generated class to exactly the registered filter/function names', function (): void {
-    $extension = shim_generator_test_extension();
+it('shapes the real generated class to exactly the Engine-merged filter/function names', function (): void {
+    $engine = shim_generator_test_engine();
     $methodNames = array_map(
-        static fn (ReflectionMethod $m): string => $m->getName(),
+        static fn (ReflectionMethod $m): string => strtolower($m->getName()),
         (new ReflectionClass(Piwigo\Tools\PhpStan\Latte\Generated\LatteAnalysisShims::class))
             ->getMethods(ReflectionMethod::IS_STATIC),
     );
-    $registered = array_unique([
-        ...array_keys($extension->getFilters()),
-        ...array_keys($extension->getFunctions()),
-    ]);
+    // PHP methods dispatch case-insensitively, so Latte's case-variant
+    // registrations (breaklines/breakLines) collapse to one shim method.
+    $registered = array_unique(array_map(strtolower(...), [
+        ...array_keys($engine->getFilters()),
+        ...array_keys($engine->getFunctions()),
+    ]));
 
     sort($methodNames);
     sort($registered);

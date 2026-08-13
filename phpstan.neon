@@ -199,3 +199,215 @@ parameters:
             # from that one connection's view alone.
             identifier: cast.useless
             path: tests/Contract/WsHelperTest.php
+
+        # ------------------------------------------------------------------
+        # Generated Latte analysis files (_analysis/phpstan-latte/, written
+        # by `bin/piwigo phpstan-latte:compile`). Every identifier below was
+        # individually triaged against a full-census real run (6,152
+        # findings, zero left unbucketed) -- three dispositions, each entry
+        # scoped to the analysis dir only, never repo-wide. reportUnmatched
+        # stays on, so an entry whose category empties out fails the run
+        # until removed.
+        #
+        # (1) PERMANENT -- Latte's own codegen calling Latte's own @internal
+        # runtime API (HtmlHelpers::escape*, Template::createTemplate,
+        # CachingIterator, WhitespaceMinifier, ...). The generated code IS
+        # Latte-authored; @internal means "not for user code", and compiled
+        # templates are the intended caller. No app change can exist.
+        -
+            identifier: staticMethod.internalClass
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: method.internal
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: method.internalClass
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: new.internalClass
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: property.internalClass
+            path: _analysis/phpstan-latte/*
+        -
+            # Latte's compiled {block} methods: its own codegen declares
+            # `array $ʟ_args` bare, and dispatch goes through a runtime
+            # string table shipmonk's call-graph cannot see.
+            identifier: missingType.iterableValue
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: shipmonk.deadMethod
+            path: _analysis/phpstan-latte/*
+
+        # (2) PERMANENT while the @var injection asserts presence -- the
+        # compile step declares every known variable as defined (extract()
+        # semantics can't express "maybe absent"), so templates' own
+        # defensive isset()/??/empty() checks for genuinely-conditional
+        # variables read as dead code. The defensive template code is
+        # CORRECT; the assertion is the approximation.
+        -
+            identifier: isset.variable
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: empty.variable
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: nullCoalesce.expr
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: nullCoalesce.variable
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: nullCoalesce.unnecessary
+            path: _analysis/phpstan-latte/*
+
+        # (3) Variables the static model cannot see yet: {include}-passed
+        # parameters (cross-file arg flow -- a scoped future extension of
+        # the compile step) and Latte codegen temporaries (ʟ_tmp across
+        # block-method boundaries). 93 instances at census time, mostly
+        # $block/$grp_id/$themes-style include args.
+        -
+            identifier: variable.undefined
+            path: _analysis/phpstan-latte/*
+
+        # ------------------------------------------------------------------
+        # CAMPAIGN-PENDING (temporary): true positives whose real fix is
+        # source work, tracked as named follow-up campaigns; each batch of
+        # fixes shrinks these until reportUnmatched forces the entry out.
+        #
+        # Campaign A -- context-docblock enrichment: mixed-typed values
+        # flowing out of the 130 TemplatePageContext classes' array<*,
+        # mixed> docblocks. Tightening those docblocks (array shapes, value
+        # types) immediately tightens template checking; ~1,400 findings.
+        -
+            identifier: offsetAccess.nonOffsetAccessible
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: offsetAccess.notFound
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: offsetAccess.invalidOffset
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: argument.type
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: if.condNotBoolean
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: elseif.condNotBoolean
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: ternary.condNotBoolean
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: booleanNot.exprNotBoolean
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: booleanAnd.rightNotBoolean
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: booleanOr.leftNotBoolean
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: booleanOr.rightNotBoolean
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: logicalAnd.rightNotBoolean
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: logicalOr.leftNotBoolean
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: logicalOr.rightNotBoolean
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: echo.nonString
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: encapsedStringPart.nonString
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: foreach.nonIterable
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: binaryOp.invalid
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: method.nonObject
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: property.nonObject
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: isset.offset
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: empty.offset
+            path: _analysis/phpstan-latte/*
+
+        # Campaign B -- template-source modernization: Smarty-conversion
+        # legacy in the .latte files themselves (loose ==/!=, empty(),
+        # foreach loop-variable shadowing, always-true/false conditions);
+        # ~450 findings, each needing per-site semantic care, not bulk
+        # replacement.
+        -
+            identifier: equal.notAllowed
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: notEqual.notAllowed
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: empty.notAllowed
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: foreach.keyOverwrite
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: foreach.valueOverwrite
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: if.alwaysTrue
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: booleanAnd.alwaysFalse
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: booleanOr.rightAlwaysFalse
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: logicalOr.alwaysTrue
+            path: _analysis/phpstan-latte/*
+        -
+            identifier: identical.alwaysFalse
+            path: _analysis/phpstan-latte/*
+
+services:
+    # A second, plain TableErrorFormatter instance for the override below
+    # to delegate to. Explicit name-references where PHPStan's own
+    # attribute-registered services are not type-autowirable
+    # (simpleRelativePathHelper is #[NonAutowiredService]); the
+    # RelativePathHelper and CiDetectedErrorFormatter parameters autowire
+    # by type.
+    piwigoLatteInnerTableFormatter:
+        class: PHPStan\Command\ErrorFormatter\TableErrorFormatter
+        arguments:
+            simpleRelativePathHelper: @simpleRelativePathHelper
+            showTipsOfTheDay: %tipsOfTheDay%
+            editorUrl: %editorUrl%
+            editorUrlTitle: %editorUrlTitle%
+            usedLevel: %usedLevel%
+        autowired: no
+
+    # Replaces the default table formatter (the same override hook
+    # efabrica/phpstan-latte's own TableErrorFormatter used): errors
+    # reported against the generated analysis files under
+    # _analysis/phpstan-latte/ (written by `bin/piwigo
+    # phpstan-latte:compile`, chained ahead of the analysis in composer's
+    # analyse:phpstan script) are remapped to their real .latte
+    # file/line before display.
+    errorFormatter.table!:
+        class: Piwigo\Tools\PhpStan\Latte\TemplateErrorFormatter
+        arguments:
+            inner: @piwigoLatteInnerTableFormatter
+            analysisDir: %currentWorkingDirectory%/_analysis/phpstan-latte

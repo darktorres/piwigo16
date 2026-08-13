@@ -114,7 +114,8 @@ it('injects @var docblocks after every extract anchor, including block methods',
 
     $code = (string) file_get_contents($result->outputPath);
     $anchors = preg_match_all('/^\s*extract\(/m', $code);
-    expect($anchors)->toBeGreaterThan(2);
+    expect($anchors)
+        ->toBeGreaterThan(2);
     expect(preg_match_all('/@var array<string, array\{caption: string, url: string\}> \$tabsheet/', $code))
         ->toBe($anchors);
 });
@@ -132,7 +133,8 @@ it('skips invalid PHP identifiers with a notice instead of emitting broken docbl
     expect($code)
         ->toContain('@var string $valid_name')
         ->not->toContain('invalid-name');
-    expect($result->notices)->toHaveCount(1);
+    expect($result->notices)
+        ->toHaveCount(1);
 });
 
 it('is deterministic and write-only-if-changed for result-cache friendliness', function (): void {
@@ -146,10 +148,14 @@ it('is deterministic and write-only-if-changed for result-cache friendliness', f
         'CSRF_TOKEN' => 'string',
     ]);
 
-    expect($first->changed)->toBeTrue()
-        ->and($second->changed)->toBeFalse()
-        ->and($second->outputPath)->toBe($first->outputPath)
-        ->and(filemtime($second->outputPath))->toBe($mtime);
+    expect($first->changed)
+        ->toBeTrue()
+        ->and($second->changed)
+        ->toBeFalse()
+        ->and($second->outputPath)
+        ->toBe($first->outputPath)
+        ->and(filemtime($second->outputPath))
+        ->toBe($mtime);
 });
 
 it('hard-fails on a filter/function calling convention the rewrite does not cover', function (): void {

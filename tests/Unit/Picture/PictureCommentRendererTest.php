@@ -151,8 +151,8 @@ test('render does nothing when no related category is commentable', function ():
 // stripped: it's the sole expression inside an `if (...)` condition, and
 // PHP's `if` already applies the exact same truthiness conversion
 // (zend_is_true()) that an explicit (bool) cast does -- there is no PHP
-// value for which `if ($x)` and `if ((bool) $x)` diverge. Live-verified
-// with a PHP probe across every representative type this column can hold
+// value for which `if ($x)` and `if ((bool) $x)` diverge. Confirmed
+// across every representative type this column can hold
 // per this method's own docblock (int|bool from the DB driver) plus the
 // wider scalar/compound space, to be thorough:
 //   true, false, 0, 1, -1, '0', '1', '', '0.0', null, 0.0, -0.0, NAN,
@@ -180,7 +180,7 @@ test('render only counts the first commentable related category then stops (`bre
     // (same technique as ImageServiceTest.php's own break-vs-continue
     // test) rather than relying on phpunit.xml.dist's failOnWarning to
     // fail the test out from under us, so this assertion is self-
-    // contained. Live-verified: mutating this `break` to `continue`
+    // contained. Mutating this `break` to `continue`
     // makes $capturedWarning become the literal string
     // `Undefined array key "commentable"` instead of staying null, while
     // the render() call itself still throws the same "Session expired"
@@ -350,7 +350,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // too, and asserts on the fully-rendered result -- stronger evidence
     // than merely "didn't throw".
     //
-    // Live-verified: mutating line 97's `and` to `or` makes this exact
+    // Mutating line 97's `and` to `or` makes this exact
     // scenario throw ResponseReadyException("Session expired") instead of
     // completing, confirming this test distinguishes the two operators.
     CurrentConfigTestFactory::get()->commentsForall = false;

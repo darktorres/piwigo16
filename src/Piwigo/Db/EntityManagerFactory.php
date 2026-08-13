@@ -108,7 +108,7 @@ final class EntityManagerFactory
         $config = ORMSetup::createAttributeMetadataConfig(
             paths: [dirname(__DIR__)],
             isDevMode: true,
-            cache: $cache ?? CachePools::doctrineMetadata(self::entityMtimeHash()),
+            cache: $cache ?? self::doctrineMetadataCachePool(),
         );
         $config->enableNativeLazyObjects(true);
         $config->addCustomStringFunction('REGEXP', RegexpFunction::class);
@@ -209,5 +209,27 @@ final class EntityManagerFactory
         sort($mtimes);
 
         return self::$entityMtimeHashCache = md5(implode(',', $mtimes));
+    }
+
+    /**
+     * Memoized for the same reason as $entityMtimeHashCache above (this
+     * class's own docblock there explains the "once per request, not
+     * once per build() call" model in full): entityMtimeHash() is itself
+     * already memoized, so every call within one request/test-process
+     * resolves the exact same namespace -- constructing a fresh adapter
+     * instance against that unchanged namespace on all ~35 of build()'s
+     * own per-request calls is pure redundant work, not a correctness
+     * requirement (two pool instances pointed at the same namespace
+     * behave identically, see AbstractNamedCachePool's own docblock).
+     * Only backs the *default* pool -- a caller that explicitly passes
+     * its own $cache override (e.g. DqlPlatformQueryTestFactory's
+     * per-call ArrayAdapter, deliberately never shared) bypasses this
+     * entirely, never populating or reading it.
+     */
+    private static ?CacheItemPoolInterface $doctrineMetadataCachePoolCache = null;
+
+    private static function doctrineMetadataCachePool(): CacheItemPoolInterface
+    {
+        return self::$doctrineMetadataCachePoolCache ??= CachePools::doctrineMetadata(self::entityMtimeHash());
     }
 }

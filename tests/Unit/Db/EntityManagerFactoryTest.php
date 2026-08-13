@@ -68,6 +68,29 @@ test('build() configures a real entity source path, not an empty one', function 
         ->not->toBeEmpty();
 });
 
+test('build() reuses the same default doctrine metadata cache pool instance across repeated calls', function (): void {
+    // Kills a regression back to the pre-Step-13 behavior (a fresh
+    // CachePools::doctrineMetadata() call, and therefore a fresh adapter
+    // instance, on every build() call) -- entityMtimeHash() is itself
+    // already memoized per-process, so two calls with no explicit $cache
+    // override must resolve to the exact same pool object, not just two
+    // objects pointed at the same namespace.
+    $conn1 = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
+    $conn2 = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
+
+    $em1 = EntityManagerFactory::build($conn1);
+    $em2 = EntityManagerFactory::build($conn2);
+
+    expect($em2->getConfiguration()->getMetadataCache())
+        ->toBe($em1->getConfiguration()->getMetadataCache());
+});
+
 test('build() uses the given connection, not a freshly built one', function (): void {
     // Kills line 58's CoalesceRemoveLeft (`DbConnection::build()`
     // instead of `$conn ?? DbConnection::build()`) -- confirmed live

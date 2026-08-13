@@ -16,10 +16,9 @@ use Piwigo\Core\TemplatePageContext;
  * that exact original behavior. `$storageCategory` is also optional and
  * genuinely dead: it's overwritten once per matching category across
  * the whole related-categories loop (last write wins), and
- * `picture_modify.latte` never actually reads `$STORAGE_CATEGORY`
- * (confirmed by direct read) -- kept here anyway as a faithful 1:1 port
- * of the original assign() call, not removed as an out-of-scope
- * dead-code cleanup.
+ * `picture_modify.latte` never actually reads `$STORAGE_CATEGORY` --
+ * kept here anyway as a faithful 1:1 port of the original assign() call,
+ * not removed as an out-of-scope dead-code cleanup.
  *
  * `dateCreation` stays `string|int|null`, unvalidated -- `picture_modify.latte`
  * renders it straight into `<input type="hidden" name="date_creation"

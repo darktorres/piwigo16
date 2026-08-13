@@ -50,8 +50,7 @@ final class MenubarPageRenderer
         $reg_blocks = $menu->getRegisteredBlocks();
 
         // blk_menubar is the only real BlockManager id anywhere in this
-        // codebase (confirmed by grepping every `new BlockManager(...)`
-        // call site) -- a real CurrentConfig property instead of the
+        // codebase -- a real CurrentConfig property instead of the
         // former dynamic 'blk_' . $id bag key. Already decoded -- no
         // manual unserialize() needed.
         // Every position is already a real int -- blkMenubar's own

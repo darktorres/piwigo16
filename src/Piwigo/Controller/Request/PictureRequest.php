@@ -18,10 +18,10 @@ use Piwigo\Validation\InputValidator;
  * `comment_to_edit` GET param stays silently ignored for any other
  * action, same as before.
  *
- * `websiteUrl` stays `mixed` -- the original read it with zero
- * normalization (`@$_POST['website_url']`, passed straight through to
- * `CommentService::updateComment()`); this only drops the `@`
- * suppression in favor of `?? null`, same effect.
+ * `websiteUrl` is `?string`, the same `is_string(...) ? ... : null`
+ * guard the two sibling DTOs handling this identical `website_url`
+ * POST field (`Picture\Request\PictureCommentSubmitRequest.php` /
+ * `Controller\Request\CommentsRequest.php`) already use.
  *
  * `contentPresent` is the raw, unmutated `isset($_POST['content'])`
  * snapshot -- the original later `unset($_POST['content'])` inside the
@@ -40,7 +40,7 @@ final readonly class PictureRequest
         public ?string $commentToEdit,
         public ?string $content,
         public string $postKey,
-        public mixed $websiteUrl,
+        public ?string $websiteUrl,
         public ?string $commentToDelete,
         public ?string $commentToValidate,
         public bool $contentPresent,
@@ -99,6 +99,9 @@ final readonly class PictureRequest
         $slideshow_raw = $get['slideshow'] ?? null;
         $slideshow = is_string($slideshow_raw) ? $slideshow_raw : null;
 
+        $website_url_raw = $post['website_url'] ?? null;
+        $website_url = is_string($website_url_raw) ? $website_url_raw : null;
+
         return new self(
             isset($get['metadata']),
             $action,
@@ -106,7 +109,7 @@ final readonly class PictureRequest
             $comment_to_edit,
             $content,
             $post_key,
-            $post['website_url'] ?? null,
+            $website_url,
             $comment_to_delete,
             $comment_to_validate,
             isset($post['content']),

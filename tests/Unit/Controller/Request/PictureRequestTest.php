@@ -129,6 +129,15 @@ test('fromArrays parses content/postKey/websiteUrl regardless of action', functi
         ->toBe('https://example.test');
 });
 
+test('fromArrays defaults websiteUrl to null when present but not a string', function (): void {
+    $request = PictureRequest::fromArrays([], [
+        'website_url' => ['https://example.test'],
+    ], new InputValidator());
+
+    expect($request->websiteUrl)
+        ->toBeNull();
+});
+
 test('fromArrays reports slideshowPresent and the raw slideshow string', function (): void {
     $request = PictureRequest::fromArrays([
         'slideshow' => 'abc',

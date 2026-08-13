@@ -440,7 +440,7 @@ test('callablesEqual does not reflect a non-Closure removal target when the regi
     // Kills BooleanAndToBooleanOr (`&&` -> `||`) and an InstanceOfToTrue
     // mutation on the second `instanceof` check: either mutation makes the
     // branch fire here, calling `new ReflectionFunction($b)` on an
-    // array-callable -- confirmed live to throw TypeError, since
+    // array-callable, which throws TypeError since
     // ReflectionFunction only accepts string|Closure, not the
     // array-callable shape a removal target may hold.
     $obj = new class() {
@@ -481,8 +481,8 @@ test('triggerChange skips include_once for a handler registered with an empty-st
     // Kills an EmptyStringToNotEmpty mutation on the `!== ''` guard: if the
     // guard stopped treating '' as "no path", include_once('') would run
     // and (per phpunit.xml.dist's failOnWarning="true") fail this test on
-    // the resulting "Filename cannot be empty"-style warning -- confirmed
-    // live that include_once('') does emit that warning rather than
+    // the resulting "Filename cannot be empty"-style warning --
+    // include_once('') emits that warning rather than
     // throwing, so failOnWarning is what makes it observable here.
     $dispatcher = new EventDispatcher();
     $dispatcher->addEventHandler('e', static fn (string $s): string => strtoupper($s), 50, '');

@@ -961,6 +961,15 @@ test('deleteCategories() delete_orphans mode preserves an image still linked els
         $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
         $urlService = UrlServiceTestFactory::build();
 
+        // 'last' position -- createVirtualCategory()'s own internal
+        // updateGlobalRank() call renumbers EVERY root category
+        // sequentially by (rank, name); a default-position (rank 0)
+        // temp category would sort ahead of real fixture category 1
+        // (rank 1) and displace its own rank to 2 for as long as this
+        // temp category exists, visible to any other test reading it in
+        // that window. 'last' appends after category 1 instead, leaving
+        // its rank untouched.
+        CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
         $result = $service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get());
         $tempIdRaw = $result->id;
         expect(is_numeric($tempIdRaw))
@@ -993,6 +1002,8 @@ test('deleteCategories() delete_orphans mode preserves an image still linked els
             $conn->executeStatement('DELETE FROM image_category WHERE category_id = ?', [$tempId]);
             $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$tempId]);
         }
+
+        CurrentConfigTestFactory::get()->newcatDefaultPosition = 'first';
     }
 });
 
@@ -1035,6 +1046,9 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
             ->toBeTrue();
         $siteId = is_numeric($rawSiteId) ? (int) $rawSiteId : 0;
 
+        // 'last' position -- see 'deleteCategories() delete_orphans...'
+        // above for why (avoids displacing category 1's own real rank).
+        CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
         $categoryId = $service->createVirtualCategory('Site Delete Temp', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get())->id;
         expect(is_numeric($categoryId))
             ->toBeTrue();
@@ -1063,6 +1077,8 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
         if ($siteId !== null) {
             $conn->executeStatement('DELETE FROM sites WHERE id = ?', [$siteId]);
         }
+
+        CurrentConfigTestFactory::get()->newcatDefaultPosition = 'first';
     }
 });
 
@@ -1395,6 +1411,14 @@ test('createVirtualCategory() inherits invisibility from an invisible parent', f
         $service = categoryServiceTestServiceRepoForConn($conn)[0];
         $conn->executeStatement("UPDATE categories SET visible = {$falseLiteral} WHERE id = 1");
 
+        // 'last' position -- createVirtualCategory()'s own internal
+        // updateGlobalRank() call renumbers EVERY child of category 1
+        // sequentially by (rank, name); a default-position (rank 0)
+        // child would sort ahead of real fixture category 2 (rank 1) and
+        // displace its own rank to 2 for as long as this child exists.
+        // 'last' appends after category 2 instead, leaving its rank
+        // untouched.
+        CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
         $result = $service->createVirtualCategory('Invisible Child Test', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get(), 1);
         $newIdRaw = $result->id;
         expect(is_numeric($newIdRaw))
@@ -1415,6 +1439,8 @@ test('createVirtualCategory() inherits invisibility from an invisible parent', f
         if ($newId !== null) {
             $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$newId]);
         }
+
+        CurrentConfigTestFactory::get()->newcatDefaultPosition = 'first';
     }
 });
 
@@ -1440,6 +1466,10 @@ test('createVirtualCategory() with inherit propagates the parent\'s groups and u
         $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
         $conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (4, 1)');
 
+        // 'last' position -- see 'createVirtualCategory() inherits
+        // invisibility...' above for why (avoids displacing category 2's
+        // own real rank as category 1's other child).
+        CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
         $result = $service->createVirtualCategory('Inherited Child Test', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get(), 1, [
             'inherit' => true,
         ]);
@@ -1467,6 +1497,8 @@ test('createVirtualCategory() with inherit propagates the parent\'s groups and u
             $conn->executeStatement('DELETE FROM group_access WHERE cat_id = ?', [$newId]);
             $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$newId]);
         }
+
+        CurrentConfigTestFactory::get()->newcatDefaultPosition = 'first';
     }
 });
 
@@ -1651,6 +1683,10 @@ test('moveCategories() into a private parent cascades private status', function 
     try {
         [$service, $repo] = categoryServiceTestServiceRepoForConn($conn);
 
+        // 'last' position -- see 'deleteCategories() delete_orphans...'
+        // above for why (avoids displacing category 1's own real rank
+        // as this private parent is itself a root-level category too).
+        CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
         $privateParent = $service->createVirtualCategory(
             'ct_move_private_parent_' . uniqid(),
             $activityLogger,
@@ -1689,6 +1725,8 @@ test('moveCategories() into a private parent cascades private status', function 
         if ($privateParentId !== null) {
             $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$privateParentId]);
         }
+
+        CurrentConfigTestFactory::get()->newcatDefaultPosition = 'first';
     }
 });
 
@@ -1701,34 +1739,75 @@ test('createVirtualCategory() with "last" position ranks after existing siblings
     // open for a whole test's duration -- same mechanism, same fix, as
     // TagServiceTest.php's 'getTagIds() creates a new tag for a plain
     // name when allowed' (reproduced live there: DeadlockException).
+    //
+    // Both siblings below live under a disposable parent, not root --
+    // findMaxRankForParent(null) is a bare MAX(rank) aggregate with
+    // nothing to filter down to known-real ids the way an exact-list
+    // assertion could, so this test creating a real root-level sibling
+    // (as it did before) is directly observable by that other test's own
+    // exact toBe(1) assertion for the whole span this row is committed.
+    //
+    // 'last' position for every create below, including the disposable
+    // parent's own -- createVirtualCategory()'s internal
+    // updateGlobalRank() call renumbers every sibling group sequentially
+    // by (rank, name), and a default-position (rank 0) parent would sort
+    // ahead of real fixture category 1 (rank 1) and displace its own
+    // rank for as long as this test's own data exists. This is also
+    // exactly the behavior under test, so setting it once up front
+    // (rather than only for the final create) changes nothing about the
+    // test's own intent.
     DbTransactionTestOverride::rollback();
     CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
     $conn = DbConnection::build();
-    $newId = null;
+    $parentId = null;
+    $firstChildId = null;
+    $lastChildId = null;
 
     try {
         $service = categoryServiceTestServiceRepoForConn($conn)[0];
-        $result = $service
-            ->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get());
-        $newIdRaw = $result->id;
-        expect(is_numeric($newIdRaw))
+        $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
+
+        $parentResult = $service->createVirtualCategory('ct_last_position_parent_' . uniqid(), $activityLogger, CurrentUserTestFactory::get());
+        expect(is_numeric($parentResult->id))
             ->toBeTrue();
-        $newId = (int) $newIdRaw;
+        $parentId = (int) $parentResult->id;
+
+        $firstChildResult = $service->createVirtualCategory('ct_last_position_first_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), $parentId);
+        expect(is_numeric($firstChildResult->id))
+            ->toBeTrue();
+        $firstChildId = (int) $firstChildResult->id;
+
+        $lastChildResult = $service->createVirtualCategory('ct_last_position_last_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), $parentId);
+        expect(is_numeric($lastChildResult->id))
+            ->toBeTrue();
+        $lastChildId = (int) $lastChildResult->id;
 
         $rank = $conn->createQueryBuilder()
             ->select($conn->getDatabasePlatform()->quoteSingleIdentifier('rank'))
             ->from('categories')
-            ->where('id = ' . $newId)
+            ->where('id = ' . $lastChildId)
             ->executeQuery()
             ->fetchOne();
-        // category 1 is the only other root-level album, at rank 1 --
-        // newcatDefaultPosition=last must place the new sibling right
-        // after it rather than at the default rank 0.
+        // The first child is the only existing sibling -- updateGlobalRank()
+        // (called internally by createVirtualCategory(), both times)
+        // renumbers every sibling group to a 1-indexed sequential rank
+        // regardless of the raw insert-time value, so the first child
+        // actually ends up at rank 1, not the naive "default rank 0" its
+        // own insert used. newcatDefaultPosition=last must place the new
+        // sibling right after it, at rank 2.
         expect(is_numeric($rank) ? (int) $rank : null)
             ->toBe(2);
     } finally {
-        if ($newId !== null) {
-            $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$newId]);
+        if ($lastChildId !== null) {
+            $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$lastChildId]);
+        }
+
+        if ($firstChildId !== null) {
+            $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$firstChildId]);
+        }
+
+        if ($parentId !== null) {
+            $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$parentId]);
         }
 
         CurrentConfigTestFactory::get()->newcatDefaultPosition = 'first';

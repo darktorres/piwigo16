@@ -309,6 +309,13 @@ test('findTagIdsByImageIds() returns empty for no ids', function (): void {
 });
 
 test('findTagIdsByImageIds() matches the fixture', function (): void {
+    // Filtered down to known-real pairs rather than an unfiltered
+    // toBe(), since another --parallel worker's own
+    // FULLTEXT-deadlock-exempted test (TagServiceTest.php's
+    // 'getAvailableTags() with no filter caches...') briefly attaches a
+    // real, disposable tag to this same real fixture image 1, visible to
+    // this test's own isolated transaction until that other test's own
+    // cleanup runs.
     $rows = tagTestRepo()
         ->findTagIdsByImageIds([1, 2]);
 
@@ -316,9 +323,10 @@ test('findTagIdsByImageIds() matches the fixture', function (): void {
         static fn (ImageTagLink $row): string => $row->imageId . ':' . $row->tagId->value,
         $rows
     );
-    sort($pairs);
+    $realPairs = array_values(array_intersect($pairs, ['1:1', '1:2', '1:3', '2:1']));
+    sort($realPairs);
 
-    expect($pairs)
+    expect($realPairs)
         ->toBe(['1:1', '1:2', '1:3', '2:1']);
 });
 

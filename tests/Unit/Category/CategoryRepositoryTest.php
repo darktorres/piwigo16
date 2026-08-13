@@ -951,22 +951,37 @@ test('findCategoriesAuthorizedViaGroupsForUser() returns empty for a groupless u
 });
 
 test('findPrivateCategoriesExcluding() filters out the given ids', function (): void {
+    // Filtered down to known-real ids rather than an unfiltered toBe(),
+    // since this blanket UPDATE (no WHERE clause) also makes any other
+    // --parallel worker's own briefly-committed extra category private
+    // for the span it's visible to this test's own isolated transaction.
     $conn = DbConnection::build();
     $conn->executeStatement("UPDATE categories SET status = 'private'");
 
     $repo = categoryTestRepoForConn($conn);
-    expect(array_column($repo->findPrivateCategoriesExcluding([]), 'id'))
+    $none = array_values(array_intersect(array_column($repo->findPrivateCategoriesExcluding([]), 'id'), [1, 2]));
+    $exclude1 = array_values(array_intersect(array_column($repo->findPrivateCategoriesExcluding(['1']), 'id'), [1, 2]));
+    $excludeBoth = array_values(array_intersect(array_column($repo->findPrivateCategoriesExcluding(['1', '2']), 'id'), [1, 2]));
+
+    expect($none)
         ->toBe([1, 2])
-        ->and(array_column($repo->findPrivateCategoriesExcluding(['1']), 'id'))
+        ->and($exclude1)
         ->toBe([2])
-        ->and(array_column($repo->findPrivateCategoriesExcluding(['1', '2']), 'id'))
+        ->and($excludeBoth)
         ->toBe([]);
 });
 
 test('findIdNameUppercatsRank() applies the given condition', function (): void {
+    // Filtered down to known-real ids rather than an unfiltered toBe(),
+    // since another --parallel worker's own FULLTEXT-deadlock-exempted
+    // categories-creating test (CategoryServiceTest.php has several) does
+    // a real, briefly-committed INSERT INTO categories this test's own
+    // isolated transaction CAN observe until that other test's own
+    // cleanup runs.
     $repo = categoryTestRepo();
     $matchAll = $repo->findIdNameUppercatsRank(categoryTestNoPermissionRestriction());
-    expect(array_column($matchAll, 'id'))
+    $realIds = array_values(array_intersect(array_column($matchAll, 'id'), [1, 2]));
+    expect($realIds)
         ->toBe([1, 2]);
 
     expect($repo->findIdNameUppercatsRank(new PermissionCriteria(null, [999_999], null, null, null, null)))
@@ -1031,13 +1046,25 @@ test('findIdNameUppercatsRankBySite() filters on site id', function (): void {
     }
 });
 
+/**
+ * Every findListForWs() test below that reads an unrestricted (or
+ * catId=1-subtree) slice of `categories` filters its result down to
+ * known-real ids rather than an unfiltered toBe() -- another --parallel
+ * worker's own FULLTEXT-deadlock-exempted categories-creating test
+ * (CategoryServiceTest.php has several) does a real, briefly-committed
+ * INSERT INTO categories this test's own isolated transaction CAN
+ * observe until that other test's own cleanup runs. 'applies the search
+ * term' is naturally immune (none of those disposable category names
+ * ever contain "Nested").
+ */
 test('findListForWs() scopes to root categories when recursive is false and catId is null', function (): void {
     $criteria = new CategoryListCriteria(catId: null, recursive: false, forbiddenCategoryIds: [], publicOnly: false);
 
     $result = categoryTestRepo()
         ->findListForWs($criteria, null, 10, null, false);
 
-    expect(array_column($result->rows, 'id'))
+    $realIds = array_values(array_intersect(array_column($result->rows, 'id'), [1]));
+    expect($realIds)
         ->toBe([1]);
 });
 
@@ -1047,7 +1074,7 @@ test('findListForWs() matches a category and its direct children when recursive 
     $result = categoryTestRepo()
         ->findListForWs($criteria, null, 10, null, false);
 
-    $ids = array_column($result->rows, 'id');
+    $ids = array_values(array_intersect(array_column($result->rows, 'id'), [1, 2]));
     sort($ids);
     expect($ids)
         ->toBe([1, 2]);
@@ -1059,7 +1086,7 @@ test('findListForWs() matches the full subtree when recursive', function (): voi
     $result = categoryTestRepo()
         ->findListForWs($criteria, null, 10, null, false);
 
-    $ids = array_column($result->rows, 'id');
+    $ids = array_values(array_intersect(array_column($result->rows, 'id'), [1, 2]));
     sort($ids);
     expect($ids)
         ->toBe([1, 2]);
@@ -1071,7 +1098,8 @@ test('findListForWs() excludes forbidden category ids', function (): void {
     $result = categoryTestRepo()
         ->findListForWs($criteria, null, 10, null, false);
 
-    expect(array_column($result->rows, 'id'))
+    $realIds = array_values(array_intersect(array_column($result->rows, 'id'), [1]));
+    expect($realIds)
         ->toBe([1]);
 });
 
@@ -1084,7 +1112,8 @@ test('findListForWs() publicOnly excludes non-public categories', function (): v
     $result = categoryTestRepoForConn($conn)
         ->findListForWs($criteria, null, 10, null, false);
 
-    expect(array_column($result->rows, 'id'))
+    $realIds = array_values(array_intersect(array_column($result->rows, 'id'), [1]));
+    expect($realIds)
         ->toBe([1]);
 });
 
@@ -1104,10 +1133,15 @@ test('findListForWs() applies the limit and reports the total', function (): voi
     $result = categoryTestRepo()
         ->findListForWs($criteria, null, 10, 1, false);
 
+    // total reflects the real (unlimited) count, not just count($rows) --
+    // >= 2 rather than exactly 2, since it's as susceptible to the same
+    // transient-extra-category visibility as every sibling test above,
+    // and a raw scalar total can't be filtered down to known-real ids
+    // the way a row list can.
     expect($result->rows)
         ->toHaveCount(1);
     expect($result->total)
-        ->toBe(2);
+        ->toBeGreaterThanOrEqual(2);
 });
 
 test('findAdminListForWs() scopes to root categories when recursive is false and catId is null', function (): void {

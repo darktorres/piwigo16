@@ -143,13 +143,21 @@ afterEach(function (): void {
 });
 
 test('getAllTags() returns every fixture tag alphabetically', function (): void {
-    // getAllTags() returns literally every row in `tags` -- the fixture
-    // has exactly 3 (this test's own transaction never sees any other
-    // --parallel worker's uncommitted disposable-tag rows), so an
-    // unfiltered assertion also proves the alphabetical ordering.
+    // getAllTags() returns literally every row in `tags`, not just the 3
+    // real fixture ones -- filtered down to just those here rather than
+    // an unfiltered toBe(), since another --parallel worker's own
+    // FULLTEXT-deadlock-exempted tag-creating test (this file has
+    // several: 'getTagIds() creates a new tag...',
+    // 'getAvailableTags() with no filter caches...', etc.) does a real,
+    // briefly-committed INSERT INTO tags that this test's own isolated
+    // transaction CAN observe until that other test's own cleanup runs.
+    // What's actually under test is the alphabetical ordering among the
+    // real tags, not "nothing else in the whole suite ever creates a tag
+    // at this exact instant."
     $names = array_column(tagServiceTestService()->getAllTags(HtmlServiceTestFactory::build()), 'name');
+    $realNames = array_values(array_intersect($names, ['family', 'nature', 'travel']));
 
-    expect($names)
+    expect($realNames)
         ->toBe(['family', 'nature', 'travel']);
 });
 
@@ -405,10 +413,19 @@ function tagServiceTestDisposableTagIds(Connection $conn, int $count): array
  * associating the real "nature" tag with an extra (disposable) image
  * would make TagRepositoryTest.php's own findImageIdsForTagIds([1])
  * exact-list assertion (`[1, 2, 3]`) observe a 4th, spurious id under
- * --parallel; confirmed live via a 15-run --parallel verification loop.
- * 3 disposable tags stand in for what tags 1/2/3 would otherwise cover.
+ * --parallel. 3 disposable tags stand in for what tags 1/2/3 would
+ * otherwise cover.
+ *
+ * Exempt from tests/Pest.php's blanket per-test transaction: both
+ * `images` and `tags` carry a FULLTEXT index, and InnoDB's FULLTEXT
+ * auxiliary-index maintenance on INSERT can deadlock against another
+ * --parallel worker's own concurrent INSERT into either table when held
+ * open for a whole test's duration -- same mechanism, same fix, as
+ * 'getTagIds() creates a new tag for a plain name when allowed'
+ * (reproduced live there and here: DeadlockException).
  */
 test('setTagsOf() creates then overwrites image tag associations', function (): void {
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $imageId = tagServiceTestDisposableImageId($conn);
     [$tagIdA, $tagIdB, $tagIdC] = tagServiceTestDisposableTagIds($conn, 3);
@@ -444,8 +461,13 @@ test('setTagsOf() creates then overwrites image tag associations', function (): 
  *
  * Disposable image row -- see tagServiceTestDisposableImageId()'s own
  * docblock for why.
+ *
+ * Exempt from tests/Pest.php's blanket per-test transaction -- same
+ * FULLTEXT auxiliary-index deadlock reasoning as the sibling setTagsOf()
+ * test above.
  */
 test('compareImageTagLists() reports no change when tags are set to the same values', function (): void {
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $imageId = tagServiceTestDisposableImageId($conn);
     [$tagIdA, $tagIdB] = tagServiceTestDisposableTagIds($conn, 2);
@@ -652,8 +674,12 @@ test('addTags() is a no-op for empty tags or images', function (): void {
     // exact getImageTagIds()===[] assertion is otherwise fragile to
     // TagRepositoryTest.php's own (already self-cleaning, legitimate)
     // disposable-tag tests, which also use image 5 as a "known real
-    // image" fixture; confirmed live via a 15-run --parallel
-    // verification loop.
+    // image" fixture.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- same
+    // FULLTEXT auxiliary-index deadlock reasoning as
+    // tagServiceTestDisposableImageId()'s other callers in this file.
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $imageId = tagServiceTestDisposableImageId($conn);
     $service = tagServiceTestService();

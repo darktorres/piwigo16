@@ -45,8 +45,9 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
  *  - the fresh-install "piwigo_installed_version was never set" stamp.
  *  - the "installed version differs from AppInfo::VERSION" autoupdate
  *    activity-log record + re-stamp -- the fixture's own default value
- *    ('16.3.0') happens to already equal AppInfo::VERSION, so nothing
- *    naturally exercises this branch without a deliberate mismatch.
+ *    ('17.0.0', tests/Fixtures/piwigo-17.0*.sql) is kept in sync with
+ *    AppInfo::VERSION on purpose, so nothing naturally exercises this
+ *    branch without a deliberate mismatch.
  *  - the "last_major_update was never set" stamp.
  *  - the order_by_inside_category_custom override.
  *  - the LoungeMaintenance::needsEmptying() -> ImageService::emptyLounge()
@@ -295,7 +296,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
                 'DELETE FROM activity WHERE object = ? AND object_id = ? AND action = ? AND ' . $detailsColumn . ' LIKE ?',
                 ['system', ActivitySystem::Core, 'autoupdate', '%16.0.0%']
             );
-            $this->configService->confUpdateParam('piwigo_installed_version', '16.3.0');
+            $this->configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
     }
 

@@ -1398,7 +1398,7 @@ test('mail assigns every real GALLERY_TITLE/GALLERY_URL/VERSION/APP_URL/CONTACT_
         ->and($body)
         ->toMatch('/Sent by "My Real Gallery" \S+/')
         ->and($body)
-        ->toContain('Powered by "Piwigo 16.3.0" https://upstream.example.invalid')
+        ->toContain('Powered by "Piwigo 17.0.0" https://upstream.example.invalid')
         ->and($body)
         ->toContain('Contact: sender@example.test');
 });
@@ -1416,7 +1416,7 @@ test('mail omits the version number entirely from the footer when show_version i
     ]);
 
     expect($result['email']->getTextBody())->toContain('Powered by "Piwigo" ')
-        ->and($result['email']->getTextBody())->not->toContain('16.3.0');
+        ->and($result['email']->getTextBody())->not->toContain('17.0.0');
 });
 
 test('mail assigns the real CONTENT_ENCODING charset into the html header\'s meta tag', function (): void {

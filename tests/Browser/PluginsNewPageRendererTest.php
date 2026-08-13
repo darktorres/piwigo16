@@ -30,7 +30,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * scope for the same reason ThemesInstalledPageRendererTest's own docblock
  * gives for not writing a second theme under the shared themes/ root. The
  * beta-test URL param (`preg_match('/(beta|RC)/', AppInfo::VERSION)`) is
- * gated on AppInfo::VERSION (a fixed class constant, currently '16.3.0')
+ * gated on AppInfo::VERSION (a fixed class constant, currently '17.0.0')
  * containing "beta" or "RC", which it never does -- not overridable from a
  * test.
  */

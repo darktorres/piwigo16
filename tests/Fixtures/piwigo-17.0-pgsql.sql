@@ -3018,7 +3018,7 @@ use_standard_pages	true	\N
 secret_key	"75c9c6fe09cb4cfdae81547823137019bb38fd8e"	a secret key specific to the gallery for internal use
 activate_comments	true	Global parameter for usage of comments system
 page_banner	"<h1>%gallery_title%</h1>\\n\\n<p>Welcome to my photo gallery</p>"	html displayed on the top each page of your gallery
-piwigo_installed_version	"16.3.0"	\N
+piwigo_installed_version	"17.0.0"	\N
 last_major_update	"2026-08-01 00:00:00"	\N
 data_dir_checked	"1"	\N
 lounge_active	true	\N

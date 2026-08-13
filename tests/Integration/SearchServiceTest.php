@@ -217,7 +217,7 @@ namespace Piwigo\Tests\Integration {
      * resource-exhaustion error is still reachable in-process via
      * `ini_set('pcre.backtrack_limit', '0')`, the exact same technique
      * MetadataServiceTest::test_parse_svg_dimensions_returns_null_when_preg_replace_hits_the_backtrack_limit()
-     * already confirmed live works even for a plain, non-catastrophic
+     * already uses, working even for a plain, non-catastrophic
      * pattern -- see the 2 tests near the end of this file.
      * SearchService::getValidatedSearchInfo()/getValidatedSearchArray()'s
      * `fatalError()`/`badRequest()` gates ARE exercised below, via a
@@ -1142,11 +1142,11 @@ namespace Piwigo\Tests\Integration {
             // ini_set('pcre.backtrack_limit', '0') technique as
             // MetadataServiceTest::test_parse_svg_dimensions_returns_null_when_preg_replace_hits_the_backtrack_limit().
             // Must contain at least one of the pattern's own delimiter
-            // characters (confirmed live: a plain 'helloworld' with none of
+            // characters: a plain 'helloworld' with none of
             // them never makes preg_split() attempt any real matching work at
             // all, so it never backtracks and backtrack_limit=0 has nothing
             // to bite -- only a string the split pattern actually has to work
-            // on, like the real '-' here, reproduces PREG_BACKTRACK_LIMIT_ERROR).
+            // on, like the real '-' here, reproduces PREG_BACKTRACK_LIMIT_ERROR.
             $originalLimit = ini_get('pcre.backtrack_limit');
             ini_set('pcre.backtrack_limit', '0');
 
@@ -1582,7 +1582,7 @@ namespace Piwigo\Tests\Integration {
             // real tag/category match computed *before* the hook ran (the
             // fixture's own 'family' tag, id 3, linked to image 1) still
             // reaches the final result via $ids, independently of whatever
-            // the hook did. Confirmed live: this method never discards that
+            // the hook did -- this method never discards that
             // real match just because the hook's own extra items were unusable.
             self::assertSame([1], $results['items']);
             self::assertSame([
@@ -1681,7 +1681,7 @@ namespace Piwigo\Tests\Integration {
 
             // getSearchIdPattern()'s own search_uuid regex requires exactly 10
             // alphanumeric chars after the date ('doesnotexist' is 12) --
-            // confirmed live, a too-long suffix doesn't match *any* recognised
+            // a too-long suffix doesn't match *any* recognised
             // pattern at all, so getValidatedSearchInfo()'s earlier "Invalid
             // search identifier" fatalError() fires first instead of ever
             // reaching the not-found badRequest() this test means to exercise.

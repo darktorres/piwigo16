@@ -22,14 +22,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * reproduction) unambiguous and independent of any browser-tooling
  * behavior.
  *
- * Regression coverage for a fixed bug, found while writing this file
- * (reproduced directly with a bare curl request, independent of Pest/
- * Playwright entirely, before writing any assertion around it): submitting
+ * Regression coverage for a fixed bug: submitting
  * the register form with `send_password_by_mail` checked -- register.latte's
  * own checkbox is `checked="checked"` UNCONDITIONALLY, so this is what
  * every real browser submission sends by default, not an edge case -- used
- * to make the request hang for minutes (observed >2 minutes before being
- * killed; never confirmed to resolve on its own) instead of responding.
+ * to make the request hang for minutes instead of responding.
  * UserService::registerUser()'s mail-sending path went through
  * MailService::mail()'s underlying transport with no timeout of its own in
  * this environment (no smtp_host configured -> Symfony Mailer's own
@@ -48,10 +45,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * anything past RegisterController::__invoke()'s own pageForbidden() gate
  * -- `allow_user_registration` is shared, global config across the whole
  * Browser suite run (same caveat every H::setConfigValue()-using file in
- * this suite already documents), and this is confirmed live, not just
- * theoretical: while writing this file, a concurrent process had already
- * left it set to `false`, and a bare curl request against /register.php
- * came back the real "User registration closed" 403 instead of the
+ * this suite already documents): a concurrent process leaving it set to
+ * `false` makes a bare curl request against /register.php come back the
+ * real "User registration closed" 403 instead of the
  * register form. Resetting it to the fixture's own documented default
  * ('true', see tests/Fixtures/piwigo-17.0.sql) both before AND after each
  * test (not a snapshot/restore round trip) matches
@@ -173,7 +169,7 @@ function registerCurlWithRawCookie(string $path, string $rawCookieHeader): array
 
 /**
  * Temporarily registers a language row in `languages` -- this
- * fixture only ever ships `en_UK` (confirmed via the fixture SQL dump),
+ * fixture only ever ships `en_UK`,
  * but LangService::getLanguages() requires a real DB row (on top of a
  * real on-disk `language/<code>/` directory, which `fr_FR` genuinely has)
  * before RegisterController's own `array_key_exists($lang_cookie, ...)`
@@ -324,8 +320,7 @@ it('shows "passwords do not match" and does not create an account', function ():
 // real address -- the same slow/unreachable local mail transport this
 // file's own docblock documents for send_password_by_mail, just hit from a
 // different call site. Before the BoundedSendmailTransport fix this one
-// consistently took ~127s (confirmed reproducible across separate runs,
-// not one-off contention); now bounded to Piwigo\Mail\MailService::
+// consistently took ~127s; now bounded to Piwigo\Mail\MailService::
 // MAIL_TRANSPORT_TIMEOUT_SECONDS instead.
 it('[SEC-31] handles a duplicate username indistinguishably from a real success, without creating a second account', function (): void {
     $jar = registerFreshCookieJar();
@@ -390,7 +385,7 @@ it('shows a Forbidden page and never renders the form when registration is close
 });
 
 it('rejects an invalid/expired form key with a real 403 and does not attempt registration', function (): void {
-    // Regression test for a fixed bug, found while writing this test:
+    // Regression test for a fixed bug:
     // RegisterController::__invoke()'s invalid-key branch used to call
     // HtmlService::setStatusHeader(403) directly -- a bare header() call
     // that Http\ResponseEmitter::emit() always overwrites with the final
@@ -398,8 +393,7 @@ it('rejects an invalid/expired form key with a real 403 and does not attempt reg
     // already-documented recent_pics bug for the same root cause). Since
     // this method's own final `return ResponseFactory::html($body)` used
     // to hard-code 200, an invalid/expired key always came back 200, never
-    // the intended 403 -- confirmed live via a bare curl request before
-    // this test existed. Fixed by threading a local $status through to
+    // the intended 403. Fixed by threading a local $status through to
     // that final Response instead of the dead setStatusHeader() call; this
     // test both closes the coverage gap and pins the fix.
     //
@@ -527,8 +521,7 @@ it("surfaces registerUser()'s own validation errors (invalid email format) and d
 it('treats a non-string lang cookie (PHP array syntax) as a hacking attempt and returns a fatal 500', function (): void {
     // `Cookie: lang[]=x` parses into $_COOKIE['lang'] as a genuine PHP
     // array (PHP applies the same bracket-name parsing to cookies as it
-    // does to GET/POST params) -- confirmed live before writing this
-    // assertion. HtmlService::fatalError() always responds 500 regardless
+    // does to GET/POST params). HtmlService::fatalError() always responds 500 regardless
     // of its specific message (see that method's own docblock) --
     // independent of the $status-threading fix above, since this path
     // throws its own ResponseReadyException long before RegisterController's
@@ -563,7 +556,7 @@ it("applies a valid, different lang cookie: switches CurrentUser's language, loa
     registerAddLanguage('fr_FR', 'Français');
 
     // The default theme's own register.latte never references {$HELP_LINK}
-    // at all (confirmed by reading it) -- only standard_pages' register.latte
+    // at all -- only standard_pages' register.latte
     // renders it (`<a href="{$HELP_LINK}">`), so swapping the guest's
     // theme is what makes this test's own French-help-link assertion a
     // real, visible behavior rather than an inference. Same rationale as

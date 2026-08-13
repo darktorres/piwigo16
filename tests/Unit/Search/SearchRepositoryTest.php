@@ -10,6 +10,7 @@ use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\CategoryIdUppercats;
 use Piwigo\Search\Projection\Search;
 use Piwigo\Search\SearchRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Search\SearchRepository -- has its own dedicated
@@ -337,6 +338,16 @@ test('countImagesGroupedBy() returns counts ordered desc', function (): void {
     // to sort the same way alphabetically as by count DESC, so it can't
     // tell a real ORDER BY counter DESC apart from GROUP BY's own
     // incidental (frequently alphabetical) scan order.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction:
+    // `author` is part of a FULLTEXT index (images_ft_author), and
+    // InnoDB's FULLTEXT auxiliary-index maintenance on an UPDATE that
+    // changes an indexed column's value can deadlock against another
+    // --parallel worker's own concurrent images write when held open for
+    // a whole test's duration -- same mechanism, same fix, as
+    // TagServiceTest.php's 'getTagIds() creates a new tag for a plain
+    // name when allowed' (reproduced live there: DeadlockException).
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $conn->executeStatement("UPDATE images SET author = 'Zzz Author' WHERE id IN (1, 2)");
     $conn->executeStatement("UPDATE images SET author = 'Aaa Author' WHERE id = 3");

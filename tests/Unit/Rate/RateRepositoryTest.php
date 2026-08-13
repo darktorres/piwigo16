@@ -15,6 +15,7 @@ use Piwigo\Rate\Projection\RateSummaryForElement;
 use Piwigo\Rate\Projection\RatingReportRow;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Rate\RateRepository -- has its own dedicated
@@ -257,6 +258,16 @@ test('findRateSummaries() matches the fixture', function (): void {
 });
 
 test('updateRatingScores() persists the given score', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction:
+    // rateTestInsertImage() INSERTs an `images` row, and `images` carries
+    // a FULLTEXT index whose auxiliary-index maintenance can deadlock
+    // against another --parallel worker's own concurrent images INSERT
+    // when held open for a whole test's duration -- same mechanism, same
+    // fix, as TagServiceTest.php's 'getTagIds() creates a new tag for a
+    // plain name when allowed' (reproduced live there:
+    // DeadlockException). Every other test below using
+    // rateTestInsertImage() is exempt for the same reason.
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $imageId = rateTestInsertImage($conn);
 
@@ -280,6 +291,9 @@ test('updateRatingScores() persists the given score', function (): void {
 });
 
 test('updateRatingScores() clears the identity map, so a later find() sees the real update instead of a stale cached entity', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'updateRatingScores() persists...' above for why.
+    DbTransactionTestOverride::rollback();
     [$repo, $em] = rateTestRepoWithEm();
     $imageId = rateTestInsertImage(DbConnection::build());
     $imageIdVo = ImageId::from($imageId);
@@ -365,6 +379,9 @@ test('findImageIdsWithStaleRatingScore() finds an image with a leftover score bu
 });
 
 test('clearRatingScores() nulls only the given ids', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'updateRatingScores() persists...' above for why.
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $imageId1 = rateTestInsertImage($conn);
     $imageId2 = rateTestInsertImage($conn);
@@ -408,6 +425,9 @@ test('clearRatingScores() nulls only the given ids', function (): void {
 });
 
 test('clearRatingScores() clears the identity map, so a later find() sees the real deletion instead of a stale cached entity', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'updateRatingScores() persists...' above for why.
+    DbTransactionTestOverride::rollback();
     [$repo, $em] = rateTestRepoWithEm();
     $conn = DbConnection::build();
     $imageId = rateTestInsertImage($conn);

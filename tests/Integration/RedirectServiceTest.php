@@ -173,9 +173,8 @@ final class RedirectServiceTest extends IntegrationTestCase
         // Lang::langInfo() once into the 'lang_info' template var (see
         // Template::__construct()'s own body); setting it afterwards would
         // leave header.latte's `{$lang_info['code']}`/`{$lang_info['direction']}`
-        // reads pointed at an empty array (confirmed live: a real
-        // "Undefined array key" warning under this suite's own
-        // failOnWarning=true).
+        // reads pointed at an empty array, triggering an "Undefined array
+        // key" warning under this suite's own failOnWarning=true.
         LangTestFactory::get()->setLangInfo([
             'code' => 'en_UK',
             'direction' => 'ltr',

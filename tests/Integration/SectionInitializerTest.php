@@ -102,8 +102,8 @@ namespace Piwigo\Tests\Integration {
          * RedirectServiceTest.php's own "already-initialised template" setup.
          * LangTestFactory::get()->setLangInfo() must run BEFORE constructing Template -- its
          * constructor snapshots Lang::langInfo() once into the 'lang_info'
-         * template var (confirmed live: a real "Undefined array key"
-         * warning under this suite's failOnWarning=true otherwise).
+         * template var, otherwise triggering a real "Undefined array key"
+         * warning under this suite's failOnWarning=true.
          */
         private function userService(): UserService
         {

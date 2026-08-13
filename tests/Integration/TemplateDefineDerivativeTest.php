@@ -17,24 +17,17 @@ use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
- * Piwigo\Template\Template::defineDerivative() -- genuinely needs a real
- * DB: ImageStdParams::getCustom()'s own first-use-in-24h path calls
- * ConfigService::confUpdateParam() (confirmed live -- every custom
- * w/h/crop combination this test uses is new, so save() always fires),
- * unlike every other Template instance method covered by
- * TemplateInstanceTest.php.
+ * Piwigo\Template\Template::defineDerivative() needs a real DB:
+ * ImageStdParams::getCustom()'s first-use-in-24h path calls
+ * ConfigService::confUpdateParam() whenever a custom w/h/crop
+ * combination is new, unlike every other Template instance method
+ * covered by TemplateInstanceTest.php.
  *
- * defineDerivative() takes real, natively-typed parameters (?string
- * $type, ?int $width, ?int $height, bool|float|int $crop, ?int
- * $minWidth, ?int $minHeight) and returns the DerivativeParams directly
- * -- unlike the old Smarty-plugin-style funcDefineDerivative(array
- * $params, $smarty), which took a loosely-typed array and assigned its
- * result to a template var named by $params['name']. Every dynamic-typed
- * validation the old array-unwrapping code did (non-string name/type,
- * non-scalar width/height/crop/min_width/min_height) is no longer
- * reachable at all -- PHP's own type system now rejects those calls
- * before defineDerivative() ever runs, so there is nothing left to test
- * for them.
+ * defineDerivative() takes natively-typed parameters (?string $type,
+ * ?int $width, ?int $height, bool|float|int $crop, ?int $minWidth,
+ * ?int $minHeight), so invalid-type input is rejected by PHP's type
+ * system before the method ever runs -- there is nothing to test for
+ * non-string/non-scalar arguments.
  */
 final class TemplateDefineDerivativeTest extends IntegrationTestCase
 {

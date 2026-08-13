@@ -26,8 +26,8 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/user_activity.php (page slug "user_activity") -- a
- * flat, read-only page. Confirmed via direct read: no write logic at all,
- * aside from the ?type=download_logs CSV-export branch, which streams a
+ * flat, read-only page. No write logic at all, aside from the
+ * ?type=download_logs CSV-export branch, which streams a
  * response directly via header()/fputcsv()/exit() and never reaches the
  * template-render path below it -- same exit()-before-render shape already
  * used elsewhere in this project.

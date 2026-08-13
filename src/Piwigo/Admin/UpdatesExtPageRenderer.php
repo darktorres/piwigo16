@@ -70,7 +70,7 @@ final class UpdatesExtPageRenderer
 
         $extension_update_checker = $extensionUpdateChecker;
 
-        // Investigated, not reproduced exactly: updates.class.php::get_server_extensions()
+        // Not reproduced exactly: updates.class.php::get_server_extensions()
         // makes ONE combined, uncategorized (no pem_*_category get_data key) PEM
         // call across every type in $this->types, whereas ExtensionUpdateChecker
         // (built on PemCatalog, shared with the plugins/themes/languages listing

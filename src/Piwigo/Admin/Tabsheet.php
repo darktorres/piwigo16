@@ -25,8 +25,7 @@ final class Tabsheet
     public array $sheets;
 
     /**
-     * Only ever assigned null (constructor) or a real string (setId()) --
-     * confirmed via every real read/write site in this class.
+     * Only ever assigned null (constructor) or a real string (setId()).
      */
     public ?string $uniqid;
 

@@ -44,6 +44,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -1243,6 +1244,16 @@ test('getQuickSearchResultsNoCache() widens a match via the default-language Inf
     // proves qsearchGetTextTokenSearchSql()'s own `array_merge([term],
     // variants)` step actually widens the match, not just that the
     // Inflector class loads without throwing.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction: InnoDB's
+    // FULLTEXT auxiliary index only ever syncs on COMMIT (confirmed via a
+    // direct probe -- MATCH()/AGAINST() sees 0 rows for an uncommitted
+    // INSERT in the same transaction, 1 row for the same data right after
+    // COMMIT), so under the wrapper's never-committed transaction this
+    // test's own 'natures' tag can never be found at all, not merely
+    // delayed. A real commit is required, as it was before the wrapper
+    // existed.
+    DbTransactionTestOverride::rollback();
     $conn = searchServiceTestConn();
     $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('natures', 'natures', NOW())");
     $tagId = (int) $conn->lastInsertId();
@@ -1277,6 +1288,16 @@ test('getQuickSearchResultsNoCache() a term matching a real tag with zero curren
     // that currently has zero images linked to it (crtIds stays empty).
     // The sibling test above (a genuinely unrecognized word) can never
     // observe this, since it never populates tag_ids either.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction:
+    // searchServiceTestFlushFulltext()'s OPTIMIZE TABLE implicitly commits
+    // in MySQL, same as any other table-maintenance DDL -- under the
+    // wrapper this would silently end the enclosing transaction, briefly
+    // making this test's disposable tag really visible to every other
+    // --parallel worker's own connection until the finally block's own
+    // DELETE below runs, defeating the wrapper's whole isolation guarantee
+    // for exactly the window it exists to close.
+    DbTransactionTestOverride::rollback();
     $conn = searchServiceTestConn();
     $conn->executeStatement("INSERT INTO tags (name, url_name, lastmodified) VALUES ('zqualifiesonly', 'zqualifiesonly', NOW())");
     $tagId = (int) $conn->lastInsertId();
@@ -1299,6 +1320,11 @@ test('getQuickSearchResultsNoCache() a term matching a real category with zero c
     // (`count($qsr->cat_ids[idx]) > 0`) -- a real, empty category is
     // the only way to populate cat_ids while crtIds itself stays
     // empty.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction: same
+    // OPTIMIZE-TABLE-implicitly-commits reasoning as the tag-based sibling
+    // test above.
+    DbTransactionTestOverride::rollback();
     $conn = searchServiceTestConn();
     $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('zqualifiesonlycat')");
     $catId = (int) $conn->lastInsertId();

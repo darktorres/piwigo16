@@ -394,6 +394,23 @@ test('UniqueExecLock::reset() is only called from tests/', function (): void {
         ->toBe([]);
 });
 
+test('DbConnection::useTestOverride() is only called from tests/', function (): void {
+    // useTestOverride() exists purely so tests/Support/DbTransactionTestOverride.php
+    // can make DbConnection::build() return one shared, already-transactional
+    // connection for the duration of a single Unit test; production code
+    // must never touch it.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'DbConnection::useTestOverride('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'DbConnection::useTestOverride('),
+        ...findCallSitesInBinFiles($repoRoot, 'DbConnection::useTestOverride('),
+    ];
+
+    expect(describeCallSites($hits))
+        ->toBe([]);
+});
+
 test('CurrentConfigService::reset() is only called from tests/', function (): void {
     // Same test-isolation rationale as CurrentConfig::reset() above.
     $repoRoot = __DIR__ . '/../..';

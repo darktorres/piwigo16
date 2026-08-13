@@ -30,6 +30,22 @@ use Piwigo\Core\Kernel;
 final class DbConnection
 {
     /**
+     * Test-only -- restricted to tests/ by an arch test (see
+     * StructuralTest.php's own "X::reset() is only called from tests/"
+     * convention, applied here to useTestOverride() instead). Lets the
+     * Unit suite's own per-test transaction wrapper
+     * (tests/Support/DbTransactionTestOverride.php) make every build()
+     * call anywhere in a test's call graph -- test code, service
+     * internals, container-resolved Connection::class -- transparently
+     * return the same already-in-a-transaction connection, without every
+     * caller needing to thread one connection through by hand. Mirrors
+     * Env::now()'s own PIWIGO_TEST_NOW branch: a narrow, explicit
+     * test-mode seam baked directly into otherwise-production code, not
+     * a mock or a facade.
+     */
+    private static ?Connection $testOverride = null;
+
+    /**
      * Direct container resolve, not the DbCredentials::current() shim --
      * this class is a purely static factory (see this class's own
      * docblock), matching FilesystemHelper's own established "no wrapper
@@ -52,7 +68,15 @@ final class DbConnection
 
     public static function build(): Connection
     {
-        return DriverManager::getConnection(self::params());
+        return self::$testOverride ?? DriverManager::getConnection(self::params());
+    }
+
+    /**
+     * Test-only -- see $testOverride's own docblock above.
+     */
+    public static function useTestOverride(?Connection $connection): void
+    {
+        self::$testOverride = $connection;
     }
 
     /**

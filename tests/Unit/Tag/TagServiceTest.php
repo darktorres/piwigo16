@@ -35,6 +35,7 @@ use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -852,6 +853,14 @@ test('getTagIds() parses existing tag id markers', function (): void {
 });
 
 test('getTagIds() creates a new tag for a plain name when allowed', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction: `tags` carries
+    // a FULLTEXT index (tags_ft_name), and InnoDB's FULLTEXT auxiliary-index
+    // maintenance on INSERT holds internal locks that, under the wrapper's
+    // whole-test-duration transaction, deadlock against another --parallel
+    // worker's own concurrent tags INSERT (reproduced live:
+    // DeadlockException). A plain INSERT commits and releases immediately, as
+    // it did before this session's wrapper existed.
+    DbTransactionTestOverride::rollback();
     [$service, $conn] = tagServiceTestServiceConn();
     $name = 'freeform-tag-' . uniqid();
 

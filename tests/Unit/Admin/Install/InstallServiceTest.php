@@ -21,6 +21,7 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -85,6 +86,25 @@ function installServiceTestLang(): Lang
         new InstallationFlag(),
     );
 }
+
+/**
+ * This whole file is exempt from tests/Pest.php's own blanket per-test
+ * transaction wrapper: executeSqlfile()'s own CREATE/DROP TABLE implicitly
+ * commits in MySQL either way, and every installDbConnect() test below
+ * specifically exercises DbConnection::build()'s own real credential-based
+ * connection-establishment logic (via putenv()'d PIWIGO_DB_* vars) -- the
+ * wrapper's own override would silently short-circuit build() to always
+ * return the one already-open, already-good connection regardless of
+ * whatever credentials a test just set, defeating the entire point of
+ * these tests. DbTransactionTestOverride::rollback() ends the wrapper's
+ * transaction and clears its override immediately, before any test body
+ * runs, falling back to build()'s normal behavior for every test in this
+ * file; the wrapper's own global afterEach() then finds nothing left to
+ * roll back and is a safe no-op.
+ */
+beforeEach(function (): void {
+    DbTransactionTestOverride::rollback();
+});
 
 test('PHP5_HOSTING_HTACCESS carries the expected hosting directives', function (): void {
     // Same reasoning as the Integration original -- this legacy-hosting

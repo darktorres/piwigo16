@@ -202,8 +202,8 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         // `footer_elements` accumulates real cross-branch shared state (a
         // debug/timing trace built up across this method's own several
         // sequential, independently-gated sync stages -- dirs/files/
-        // metadata) -- not genuinely progressive/AJAX-polled (confirmed:
-        // no flush()/ob_flush()/echo anywhere in this class), so every
+        // metadata) -- not genuinely progressive/AJAX-polled (no
+        // flush()/ob_flush()/echo anywhere in this class), so every
         // stage's own message is read back once, together, by the single
         // unconditional SiteUpdatePageContext assign near the end of this
         // method.

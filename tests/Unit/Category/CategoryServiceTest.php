@@ -249,6 +249,50 @@ function categoryServiceTestService(): CategoryService
     return categoryServiceTestServiceRepoConn()[0];
 }
 
+/**
+ * Same construction as categoryServiceTestServiceRepoConn(), but built
+ * against a caller-supplied connection instead of a fresh one --
+ * lets a test open $conn->beginTransaction() first and thread that
+ * exact connection through every collaborator, so every raw-SQL
+ * mutation, the service's own writes, and every assertion all happen
+ * on the one connection a final rollBack() can undo in one shot. Used
+ * by every test below that mutates category 1/2's own status/visible
+ * columns or creates a root-level category -- CategoryRepositoryTest.php
+ * asserts on exactly that shared state, and a transaction is the only
+ * way to mutate it that's genuinely invisible to that other file's own
+ * connection while both run concurrently under --parallel (confirmed
+ * live: a 15-run and a follow-up 5-run composer test loop both showed
+ * frequent cross-file failures on findMaxRankForParent()/findByStatus()/
+ * findListForWs()/findAdminListForWs()/findPrivateCategories() even
+ * after every individual test's own try/finally restore ran correctly).
+ *
+ * @return array{0: CategoryService, 1: CategoryRepository}
+ */
+function categoryServiceTestServiceRepoForConn(Connection $conn): array
+{
+    $currentConfig = CurrentConfigTestFactory::get();
+    $repo = new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig);
+    $filterState = new FilterState();
+    $service = new CategoryService(
+        LangTestFactory::get(),
+        $repo,
+        new PermissionService(
+            new PermissionRepository(EntityManagerFactory::build($conn)),
+            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+            new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig),
+            CurrentUserTestFactory::get(),
+            $filterState,
+            new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
+        ),
+        CurrentConfigTestFactory::get(),
+        EventDispatcherTestFactory::get(),
+        TranslatorTestFactory::get(),
+        new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
+    );
+
+    return [$service, $repo];
+}
+
 function categoryServiceTestRoot(): string
 {
     $root = sys_get_temp_dir() . '/piwigo-categoryservice-test-' . bin2hex(random_bytes(8)) . '/';
@@ -720,27 +764,36 @@ test('getComputedCategories() walks up through more than one ancestor level', fu
     // `rank` is a genuine reserved word on both platforms (a bare
     // backtick is MySQL-only); visible/commentable are genuine boolean
     // columns (a bare `1` literal is rejected outright by Postgres).
-    $conn = categoryServiceTestConn();
-    $rank = $conn->getDatabasePlatform()
-        ->quoteSingleIdentifier('rank');
-    $trueLiteral = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'true' : '1';
-    $conn->executeStatement(
-        "INSERT INTO categories (name, id_uppercat, {$rank}, status, visible, uppercats, commentable, global_rank) VALUES ('Grandchild Album', 2, 1, 'public', {$trueLiteral}, '1,2,0', {$trueLiteral}, '1.1.1')"
-    );
-    $grandchildId = (int) $conn->lastInsertId();
-    $conn->executeStatement("UPDATE categories SET uppercats = '1,2,{$grandchildId}' WHERE id = {$grandchildId}");
-    // Reuse image 1 (already directly in category 1) as a second,
-    // additional link into the new grandchild -- proves the walk
-    // propagates a real image count up two ancestor levels, not just one.
-    $conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$grandchildId})");
+    //
+    // Transaction-wrapped -- this creates a real extra category row,
+    // which CategoryRepositoryTest.php's own unrestricted
+    // findIdNameUppercatsRank() (asserts the full id list is exactly
+    // [1, 2]) would otherwise be able to observe under --parallel.
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
+        $service = categoryServiceTestServiceRepoForConn($conn)[0];
+        $rank = $conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('rank');
+        $trueLiteral = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'true' : '1';
+        $conn->executeStatement(
+            "INSERT INTO categories (name, id_uppercat, {$rank}, status, visible, uppercats, commentable, global_rank) VALUES ('Grandchild Album', 2, 1, 'public', {$trueLiteral}, '1,2,0', {$trueLiteral}, '1.1.1')"
+        );
+        $grandchildId = (int) $conn->lastInsertId();
+        $conn->executeStatement("UPDATE categories SET uppercats = '1,2,{$grandchildId}' WHERE id = {$grandchildId}");
+        // Reuse image 1 (already directly in category 1) as a second,
+        // additional link into the new grandchild -- proves the walk
+        // propagates a real image count up two ancestor levels, not
+        // just one.
+        $conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$grandchildId})");
+
         $userdata = [
             'id' => 1,
             'level' => 0,
             'forbidden_categories' => '',
         ];
-        $result = categoryServiceTestService()
+        $result = $service
             ->getComputedCategories($userdata);
         $cats = $result['categories'];
 
@@ -755,7 +808,7 @@ test('getComputedCategories() walks up through more than one ancestor level', fu
             ->and($cats[1]['count_categories'])
             ->toBe(2); // cat2 + grandchild
     } finally {
-        $conn->executeStatement("DELETE FROM categories WHERE id = {$grandchildId}");
+        $conn->rollBack();
     }
 });
 
@@ -888,33 +941,47 @@ test('getRelatedCategoriesMenuWithUrls() merges combinedCategories into the url'
 });
 
 test('deleteCategories() delete_orphans mode preserves an image still linked elsewhere', function (): void {
-    [$service, $repo, $conn] = categoryServiceTestServiceRepoConn();
-    $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
-    $urlService = UrlServiceTestFactory::build();
+    // Transaction-wrapped -- createVirtualCategory() briefly creates a
+    // real root-level category, which CategoryRepositoryTest.php's own
+    // root-category-listing assertions (findMaxRankForParent()/
+    // findListForWs()/findAdminListForWs()) would otherwise be able to
+    // observe under --parallel, even though this test's own
+    // deleteCategories() call removes it again before the test ends.
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
-    $result = $service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get());
-    $tempIdRaw = $result->id;
-    expect(is_numeric($tempIdRaw))
-        ->toBeTrue();
-    $tempId = (int) $tempIdRaw;
+    try {
+        [$service, $repo] = categoryServiceTestServiceRepoForConn($conn);
+        $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
+        $urlService = UrlServiceTestFactory::build();
 
-    // image 1 already belongs to category 1 -- linking it into the temp
-    // category too makes it a real "non-orphan": deleting the temp
-    // category must NOT delete it, unlike a genuinely orphaned image.
-    $conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$tempId})");
+        $result = $service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get());
+        $tempIdRaw = $result->id;
+        expect(is_numeric($tempIdRaw))
+            ->toBeTrue();
+        $tempId = (int) $tempIdRaw;
 
-    $service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($conn)), 'delete_orphans');
+        // image 1 already belongs to category 1 -- linking it into the
+        // temp category too makes it a real "non-orphan": deleting the
+        // temp category must NOT delete it, unlike a genuinely orphaned
+        // image.
+        $conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$tempId})");
 
-    expect($repo->findById($tempId))
-        ->toBeNull();
-    $stillLinked = $conn->createQueryBuilder()
-        ->select('COUNT(*) AS c')
-        ->from('image_category')
-        ->where('image_id = 1 AND category_id = 1')
-        ->executeQuery()
-        ->fetchOne();
-    expect(is_numeric($stillLinked) ? (int) $stillLinked : null)
-        ->toBe(1);
+        $service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($conn)), 'delete_orphans');
+
+        expect($repo->findById($tempId))
+            ->toBeNull();
+        $stillLinked = $conn->createQueryBuilder()
+            ->select('COUNT(*) AS c')
+            ->from('image_category')
+            ->where('image_id = 1 AND category_id = 1')
+            ->executeQuery()
+            ->fetchOne();
+        expect(is_numeric($stillLinked) ? (int) $stillLinked : null)
+            ->toBe(1);
+    } finally {
+        $conn->rollBack();
+    }
 });
 
 test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for the row itself', function (): void {
@@ -924,42 +991,53 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
     // registers the SAME listener shape RequestBootstrap.php itself
     // registers in production, to prove the wiring (not just the
     // individual pieces) actually works end to end.
-    [$service, $repo, $conn] = categoryServiceTestServiceRepoConn();
-    $siteRepo = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class);
-    $siteUrl = 'p17-test-delete-site-' . bin2hex(random_bytes(4));
-    $siteRepo->insert($siteUrl);
-    // lastInsertId() isn't reliable straight after an ORM persist()+
-    // flush() -- read the id back with a plain SELECT instead.
-    $rawSiteId = $conn->createQueryBuilder()
-        ->select('id')
-        ->from('sites')
-        ->where('galleries_url = :url')
-        ->setParameter('url', $siteUrl)
-        ->executeQuery()
-        ->fetchOne();
-    expect(is_numeric($rawSiteId))
-        ->toBeTrue();
-    $siteId = is_numeric($rawSiteId) ? (int) $rawSiteId : 0;
-
-    $categoryId = $service->createVirtualCategory('Site Delete Temp', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get())->id;
-    expect(is_numeric($categoryId))
-        ->toBeTrue();
-    $conn->executeStatement('UPDATE categories SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
-
-    $handler = static function (DeleteSite $e) use ($siteRepo): void {
-        $siteRepo->delete($e->siteId);
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
+    //
+    // Transaction-wrapped -- createVirtualCategory() briefly creates a
+    // real root-level category (see the sibling deleteCategories() test
+    // above for why that matters under --parallel).
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
-        $service->deleteSite($siteId, new CategoryServiceUnitTestFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($conn)));
+        [$service, $repo] = categoryServiceTestServiceRepoForConn($conn);
+        $siteRepo = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class);
+        $siteUrl = 'p17-test-delete-site-' . bin2hex(random_bytes(4));
+        $siteRepo->insert($siteUrl);
+        // lastInsertId() isn't reliable straight after an ORM persist()+
+        // flush() -- read the id back with a plain SELECT instead.
+        $rawSiteId = $conn->createQueryBuilder()
+            ->select('id')
+            ->from('sites')
+            ->where('galleries_url = :url')
+            ->setParameter('url', $siteUrl)
+            ->executeQuery()
+            ->fetchOne();
+        expect(is_numeric($rawSiteId))
+            ->toBeTrue();
+        $siteId = is_numeric($rawSiteId) ? (int) $rawSiteId : 0;
 
-        expect($repo->findById((int) $categoryId))
-            ->toBeNull();
-        expect($siteRepo->findGalleriesUrlById($siteId))
-            ->toBeNull();
+        $categoryId = $service->createVirtualCategory('Site Delete Temp', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get())->id;
+        expect(is_numeric($categoryId))
+            ->toBeTrue();
+        $conn->executeStatement('UPDATE categories SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
+
+        $handler = static function (DeleteSite $e) use ($siteRepo): void {
+            $siteRepo->delete($e->siteId);
+        };
+        EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
+
+        try {
+            $service->deleteSite($siteId, new CategoryServiceUnitTestFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($conn)));
+
+            expect($repo->findById((int) $categoryId))
+                ->toBeNull();
+            expect($siteRepo->findGalleriesUrlById($siteId))
+                ->toBeNull();
+        } finally {
+            EventDispatcherTestFactory::get()->removeEventHandler(DeleteSite::class, $handler);
+        }
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(DeleteSite::class, $handler);
+        $conn->rollBack();
     }
 });
 
@@ -1126,10 +1204,11 @@ test('setCatStatus() warns and returns false for an invalid value', function ():
 });
 
 test('setCatStatus() public makes parent categories public too', function (): void {
-    $conn = categoryServiceTestConn();
-    [$service, $repo] = categoryServiceTestServiceRepoConn();
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
+        [$service, $repo] = categoryServiceTestServiceRepoForConn($conn);
         $conn->executeStatement("UPDATE categories SET status = 'private'");
 
         $service->setCatStatus([2], 'public');
@@ -1139,19 +1218,20 @@ test('setCatStatus() public makes parent categories public too', function (): vo
             ->and($repo->findCategoryStatus(2))
             ->toBe('public');
     } finally {
-        $conn->executeStatement("UPDATE categories SET status = 'public'");
+        $conn->rollBack();
     }
 });
 
 test('setCatStatus() private uses the private parent as the permission reference', function (): void {
-    $conn = categoryServiceTestConn();
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
+        [$service] = categoryServiceTestServiceRepoForConn($conn);
         $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
         $conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (3, 2)');
 
-        categoryServiceTestService()
-            ->setCatStatus([2], 'private');
+        $service->setCatStatus([2], 'private');
 
         // category 1 (the reference, since it's already private) grants
         // no direct user access at all -- the inconsistent-access sweep
@@ -1168,21 +1248,7 @@ test('setCatStatus() private uses the private parent as the permission reference
         expect(is_numeric($remaining) ? (int) $remaining : null)
             ->toBe(0);
     } finally {
-        $conn->executeStatement('DELETE FROM user_access WHERE cat_id IN (1, 2)');
-        // setCatStatus([2], 'private') above also mutated category 2's
-        // own status, not just category 1's raw-SQL mutation -- both
-        // need restoring, not just the one this test set directly.
-        $conn->executeStatement("UPDATE categories SET status = 'public' WHERE id IN (1, 2)");
-        // deleteInconsistentAccess() runs for BOTH CategoryAccessTarget
-        // cases every call, including GroupAccess -- confirmed live: the
-        // real fixture's own (group_id=1, cat_id=2) group_access row can
-        // get swept away as a side effect of this test's own
-        // setCatStatus() call (its "reference" computation depends on
-        // category 1's live group_access set, which can itself be
-        // transiently disturbed by a concurrent --parallel file).
-        // INSERT IGNORE restores it unconditionally, safe whether or not
-        // it actually got removed.
-        $conn->executeStatement('INSERT IGNORE INTO group_access (group_id, cat_id) VALUES (1, 2)');
+        $conn->rollBack();
     }
 });
 
@@ -1193,16 +1259,19 @@ test('setCatStatus() private removes inconsistent group_access too', function ()
     // -- the fixture's own groups 1-3 already have real access to
     // category 1 (the "reference"), which would make it the *consistent*
     // case this test isn't trying to cover.
-    $conn = categoryServiceTestConn();
-    $groupsTable = $conn->getDatabasePlatform()
-        ->quoteSingleIdentifier('groups');
-    $conn->executeStatement("INSERT INTO {$groupsTable} (name) VALUES ('zzz-p17-unit-probe-group')");
-    $groupId = (int) $conn->lastInsertId();
-    $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
-    $conn->executeStatement('INSERT INTO group_access (group_id, cat_id) VALUES (?, 2)', [$groupId]);
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
-        categoryServiceTestService()->setCatStatus([2], 'private');
+        [$service] = categoryServiceTestServiceRepoForConn($conn);
+        $groupsTable = $conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('groups');
+        $conn->executeStatement("INSERT INTO {$groupsTable} (name) VALUES ('zzz-p17-unit-probe-group')");
+        $groupId = (int) $conn->lastInsertId();
+        $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
+        $conn->executeStatement('INSERT INTO group_access (group_id, cat_id) VALUES (?, 2)', [$groupId]);
+
+        $service->setCatStatus([2], 'private');
 
         $remaining = $conn->createQueryBuilder()
             ->select('COUNT(*) AS c')
@@ -1214,15 +1283,7 @@ test('setCatStatus() private removes inconsistent group_access too', function ()
         expect(is_numeric($remaining) ? (int) $remaining : null)
             ->toBe(0);
     } finally {
-        $conn->executeStatement('DELETE FROM group_access WHERE group_id = ?', [$groupId]);
-        $conn->executeStatement("DELETE FROM {$groupsTable} WHERE id = ?", [$groupId]);
-        // setCatStatus([2], 'private') above also mutated category 2's
-        // own status, not just category 1's raw-SQL mutation.
-        $conn->executeStatement("UPDATE categories SET status = 'public' WHERE id IN (1, 2)");
-        // Same defensive restore as the sibling test above -- the real
-        // fixture's own (group_id=1, cat_id=2) row can get swept away as
-        // a side effect of this test's own setCatStatus() call.
-        $conn->executeStatement('INSERT IGNORE INTO group_access (group_id, cat_id) VALUES (1, 2)');
+        $conn->rollBack();
     }
 });
 
@@ -1307,15 +1368,19 @@ test('createVirtualCategory() returns an error when the parent does not exist', 
 
 test('createVirtualCategory() inherits invisibility from an invisible parent', function (): void {
     // visible is a genuine boolean column -- bare `0`/`1` literals in the
-    // SQL text are rejected outright by Postgres.
-    $conn = categoryServiceTestConn();
+    // SQL text are rejected outright by Postgres. Transaction-wrapped --
+    // flips category 1's own visible column, which
+    // CategoryRepositoryTest.php's own concurrent --parallel reads must
+    // never observe.
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
     $falseLiteral = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'false' : '0';
-    $trueLiteral = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'true' : '1';
-    $conn->executeStatement("UPDATE categories SET visible = {$falseLiteral} WHERE id = 1");
 
     try {
-        $result = categoryServiceTestService()
-            ->createVirtualCategory('Invisible Child Test', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get(), 1);
+        $service = categoryServiceTestServiceRepoForConn($conn)[0];
+        $conn->executeStatement("UPDATE categories SET visible = {$falseLiteral} WHERE id = 1");
+
+        $result = $service->createVirtualCategory('Invisible Child Test', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get(), 1);
         $newIdRaw = $result->id;
         expect(is_numeric($newIdRaw))
             ->toBeTrue();
@@ -1330,20 +1395,27 @@ test('createVirtualCategory() inherits invisibility from an invisible parent', f
         // A native PHP bool on Postgres, numeric 1/0 on MySQL.
         expect((int) (bool) $visible)
             ->toBe(0);
-
-        $conn->executeStatement('DELETE FROM categories WHERE id = ' . $newId);
     } finally {
-        $conn->executeStatement("UPDATE categories SET visible = {$trueLiteral} WHERE id = 1");
+        $conn->rollBack();
     }
 });
 
 test('createVirtualCategory() with inherit propagates the parent\'s groups and users', function (): void {
-    $conn = categoryServiceTestConn();
-    [$service, $repo] = categoryServiceTestServiceRepoConn();
+    // Transaction-wrapped -- flips category 1's own status column, which
+    // CategoryRepositoryTest.php's own concurrent --parallel reads must
+    // never observe. User 4 (power_user), not user 3 -- CategoryRepositoryTest.php's
+    // own findPrivateCategoriesGrantedToUser() test uses the exact same
+    // (user_id=3, cat_id=1) user_access pair; a real (non-transactional)
+    // INSERT there racing against this transaction's own INSERT of the
+    // same primary key raised a real UniqueConstraintViolationException,
+    // confirmed live via a 15-run --parallel verification loop.
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
+        [$service, $repo] = categoryServiceTestServiceRepoForConn($conn);
         $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
-        $conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (3, 1)');
+        $conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (4, 1)');
 
         $result = $service->createVirtualCategory('Inherited Child Test', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get(), 1, [
             'inherit' => true,
@@ -1363,12 +1435,9 @@ test('createVirtualCategory() with inherit propagates the parent\'s groups and u
         // the user_access row just added to category 1 must also have
         // been copied.
         expect($repo->findAccessUserIds(CategoryId::from($newId)))
-            ->toBe([3]);
-
-        $conn->executeStatement('DELETE FROM categories WHERE id = ' . $newId);
+            ->toBe([4]);
     } finally {
-        $conn->executeStatement('DELETE FROM user_access WHERE cat_id = 1');
-        $conn->executeStatement("UPDATE categories SET status = 'public' WHERE id = 1");
+        $conn->rollBack();
     }
 });
 
@@ -1485,17 +1554,21 @@ test('updateCategory() with a non-integer id string is intval-cast before bindin
 });
 
 test('setCatVisible() with unlockChild unlocks descendant categories too', function (): void {
-    $conn = categoryServiceTestConn();
+    // Transaction-wrapped -- flips category 2's own visible column,
+    // which CategoryRepositoryTest.php's own concurrent --parallel
+    // reads must never observe.
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
     $falseLiteral = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'false' : '0';
-    $trueLiteral = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'true' : '1';
-    $conn->executeStatement("UPDATE categories SET visible = {$falseLiteral} WHERE id = 2");
 
     try {
+        $service = categoryServiceTestServiceRepoForConn($conn)[0];
+        $conn->executeStatement("UPDATE categories SET visible = {$falseLiteral} WHERE id = 2");
+
         // unlockChild=true merges getSubcatIds([1]) (== [1, 2]) into the
         // ancestor-only list getUppercatIds([1]) would otherwise produce
         // -- category 2 only ends up unlocked because of that merge.
-        categoryServiceTestService()
-            ->setCatVisible([1], true, true);
+        $service->setCatVisible([1], true, true);
 
         $visible = $conn->createQueryBuilder()
             ->select('visible')
@@ -1506,7 +1579,7 @@ test('setCatVisible() with unlockChild unlocks descendant categories too', funct
         expect((int) (bool) $visible)
             ->toBe(1);
     } finally {
-        $conn->executeStatement("UPDATE categories SET visible = {$trueLiteral} WHERE id = 2");
+        $conn->rollBack();
     }
 });
 
@@ -1526,11 +1599,18 @@ test('moveCategories() returns early for no category ids', function (): void {
 });
 
 test('moveCategories() to root sets parent status public', function (): void {
-    $conn = categoryServiceTestConn();
-    [$service, $repo] = categoryServiceTestServiceRepoConn();
-    $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
+    // Transaction-wrapped -- moving category 2 to root briefly makes it
+    // a 2nd real root-level category, which CategoryRepositoryTest.php's
+    // own root-category-listing assertions (findMaxRankForParent()/
+    // findListForWs()/findAdminListForWs()) would otherwise be able to
+    // observe under --parallel.
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
+        [$service, $repo] = categoryServiceTestServiceRepoForConn($conn);
+        $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
+
         // default $newParent = -1 -> $newParentSql = 'NULL' -> moving to
         // root, the branch that hardcodes $parentStatus = 'public' rather
         // than looking an actual parent category up.
@@ -1547,32 +1627,38 @@ test('moveCategories() to root sets parent status public', function (): void {
         expect($repo->findCategoryStatus(2))
             ->toBe('public');
     } finally {
-        $conn->executeStatement(
-            "UPDATE categories SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1' WHERE id = 2"
-        );
+        $conn->rollBack();
     }
 });
 
 test('moveCategories() into a private parent cascades private status', function (): void {
-    $conn = categoryServiceTestConn();
-    [$service, $repo] = categoryServiceTestServiceRepoConn();
-    $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
-
-    $privateParent = $service->createVirtualCategory(
-        'ct_move_private_parent_' . uniqid(),
-        $activityLogger,
-        CurrentUserTestFactory::get(),
-        null,
-        [
-            'status' => 'private',
-        ]
-    );
-    $privateParentIdRaw = $privateParent->id;
-    expect(is_numeric($privateParentIdRaw))
-        ->toBeTrue();
-    $privateParentId = (int) $privateParentIdRaw;
+    // Transaction-wrapped -- createVirtualCategory() below creates a
+    // real root-level (private) category, and the setCatStatus(...,
+    // 'private') cascade further down sweeps the real fixture's own
+    // (group_id=1, cat_id=2) group_access row -- both need to stay
+    // invisible to CategoryRepositoryTest.php's/GroupRepositoryTest.php's
+    // own concurrent --parallel reads.
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
+        [$service, $repo] = categoryServiceTestServiceRepoForConn($conn);
+        $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
+
+        $privateParent = $service->createVirtualCategory(
+            'ct_move_private_parent_' . uniqid(),
+            $activityLogger,
+            CurrentUserTestFactory::get(),
+            null,
+            [
+                'status' => 'private',
+            ]
+        );
+        $privateParentIdRaw = $privateParent->id;
+        expect(is_numeric($privateParentIdRaw))
+            ->toBeTrue();
+        $privateParentId = (int) $privateParentIdRaw;
+
         // moving into a real, non-root parent (status looked up via
         // findCategoryStatus()) that happens to be private -- the
         // setCatStatus(..., 'private') cascade onto the moved categories
@@ -1582,28 +1668,23 @@ test('moveCategories() into a private parent cascades private status', function 
         expect($repo->findCategoryStatus(2))
             ->toBe('private');
     } finally {
-        $conn->executeStatement(
-            "UPDATE categories SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1', status = 'public' WHERE id = 2"
-        );
-        $conn->executeStatement('DELETE FROM categories WHERE id = ' . $privateParentId);
-        // The setCatStatus(..., 'private') cascade above ran
-        // deleteInconsistentAccess() against category 2's *new* parent
-        // (the disposable private category just created, with zero
-        // group_access rows of its own) as the reference -- that sweeps
-        // away the real fixture's own (group_id=1, cat_id=2) row too,
-        // same as the two setCatStatus() tests above. INSERT IGNORE
-        // restores it unconditionally, safe whether or not it actually
-        // got removed.
-        $conn->executeStatement('INSERT IGNORE INTO group_access (group_id, cat_id) VALUES (1, 2)');
+        $conn->rollBack();
     }
 });
 
 test('createVirtualCategory() with "last" position ranks after existing siblings', function (): void {
+    // Transaction-wrapped -- this creates a real root-level category at
+    // rank 2, exactly the shape CategoryRepositoryTest.php's own
+    // findMaxRankForParent()/findListForWs()/findAdminListForWs() read;
+    // confirmed live as the single most frequent cross-file failure this
+    // session's own --parallel verification loops surfaced.
     CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
-    $conn = categoryServiceTestConn();
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
-        $result = categoryServiceTestService()
+        $service = categoryServiceTestServiceRepoForConn($conn)[0];
+        $result = $service
             ->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get());
         $newIdRaw = $result->id;
         expect(is_numeric($newIdRaw))
@@ -1621,9 +1702,8 @@ test('createVirtualCategory() with "last" position ranks after existing siblings
         // after it rather than at the default rank 0.
         expect(is_numeric($rank) ? (int) $rank : null)
             ->toBe(2);
-
-        $conn->executeStatement('DELETE FROM categories WHERE id = ' . $newId);
     } finally {
+        $conn->rollBack();
         CurrentConfigTestFactory::get()->newcatDefaultPosition = 'first';
     }
 });

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryAdminListCriteria;
 use Piwigo\Category\CategoryListCriteria;
 use Piwigo\Category\CategoryRefDateAggregate;
@@ -60,14 +61,37 @@ function categoryTestRepo(): CategoryRepository
     return new CategoryRepository(EntityManagerFactory::build(DbConnection::build()), CurrentConfigTestFactory::get());
 }
 
+/**
+ * Same construction as categoryTestRepo(), but built against a
+ * caller-supplied connection instead of a fresh one -- lets a test open
+ * $conn->beginTransaction() first and thread that exact connection
+ * through the repository, so every raw-SQL mutation, the repository's
+ * own reads, and every assertion all happen on the one connection a
+ * final rollBack() can undo in one shot. Used by every test below that
+ * mutates category 1/2's own status/representative_picture_id columns
+ * or user_access/group_access rows on them -- CategoryServiceTest.php
+ * mutates the exact same shared state (also transaction-wrapped, see
+ * its own file docblock), and a transaction is the only way to mutate
+ * it that's genuinely invisible to that other file's own connection
+ * while both run concurrently under --parallel (confirmed live: this
+ * file's own docblock claim that "no other Unit-suite file currently
+ * reads categories.status/.../representative_picture_id for ids 1/2"
+ * was accurate when written but went stale once CategoryServiceTest.php
+ * was added).
+ */
+function categoryTestRepoForConn(Connection $conn): CategoryRepository
+{
+    return new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get());
+}
+
 function categoryTestNoPermissionRestriction(): PermissionCriteria
 {
     return new PermissionCriteria(null, null, null, null, null, null);
 }
 
-function categoryTestCountRows(string $table): int
+function categoryTestCountRows(string $table, ?Connection $conn = null): int
 {
-    $count = DbConnection::build()->createQueryBuilder()
+    $count = ($conn ?? DbConnection::build())->createQueryBuilder()
         ->select('COUNT(*) AS c')
         ->from($table)
         ->executeQuery()
@@ -433,22 +457,26 @@ test('findDistinctStorageCategoryIds() returns the real distinct set', function 
 });
 
 test('updateImagePathsForCategory() rewrites the path from the new fulldir', function (): void {
+    // Transaction-wrapped -- mutates fixture image 1's own row, which a
+    // concurrent --parallel CategoryServiceTest.php test's own
+    // image_category insert referencing image 1 (an FK, which takes a
+    // shared lock on the referenced row) can deadlock against when both
+    // are plain, non-transactional statements; confirmed live via a
+    // 15-run --parallel verification loop (DeadlockException).
     $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
         $conn->executeStatement('UPDATE images SET storage_category_id = 1 WHERE id = 1');
 
-        categoryTestRepo()
+        categoryTestRepoForConn($conn)
             ->updateImagePathsForCategory(CategoryId::from(1), 'galleries/renamed-album');
 
         $path = $conn->fetchOne('SELECT path FROM images WHERE id = 1');
         expect($path)
             ->toBe('galleries/renamed-album/fixture-photo-1.jpg');
     } finally {
-        $realHash = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? '2e7e2ce3' : '2e7e6c90';
-        $conn->executeStatement(
-            "UPDATE images SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-{$realHash}.jpg' WHERE id = 1"
-        );
+        $conn->rollBack();
     }
 });
 
@@ -476,44 +504,85 @@ test('findNonOrphanImageIds() keeps only images still linked outside the exclude
         ->toBe([1, 2, 3]);
 });
 
+/**
+ * Both before/after COUNT(*) reads below happen inside the same
+ * transaction, on the same connection, specifically for InnoDB's
+ * default REPEATABLE READ snapshot consistency, not for rollback --
+ * GroupRepositoryTest.php's own addAccess()/removeAccess() round-trip
+ * tests briefly change user_access/group_access's total row count via
+ * disposable groups (still targeting real fixture category 1), and a
+ * plain, non-transactional pair of COUNT(*) calls could otherwise
+ * observe different counts if one of those commits in between;
+ * confirmed live via a 25-run --parallel verification loop. No actual
+ * mutation happens in either test, so there's nothing to roll back
+ * other than releasing the snapshot.
+ */
 test('deleteUserAccessForCategories() is a no-op for no ids', function (): void {
-    $before = categoryTestCountRows('user_access');
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
-    categoryTestRepo()
-        ->deleteUserAccessForCategories([]);
+    try {
+        $before = categoryTestCountRows('user_access', $conn);
 
-    expect(categoryTestCountRows('user_access'))
-        ->toBe($before);
+        categoryTestRepoForConn($conn)
+            ->deleteUserAccessForCategories([]);
+
+        expect(categoryTestCountRows('user_access', $conn))
+            ->toBe($before);
+    } finally {
+        $conn->rollBack();
+    }
 });
 
 test('deleteGroupAccessForCategories() is a no-op for no ids', function (): void {
-    $before = categoryTestCountRows('group_access');
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
-    categoryTestRepo()
-        ->deleteGroupAccessForCategories([]);
+    try {
+        $before = categoryTestCountRows('group_access', $conn);
 
-    expect(categoryTestCountRows('group_access'))
-        ->toBe($before);
+        categoryTestRepoForConn($conn)
+            ->deleteGroupAccessForCategories([]);
+
+        expect(categoryTestCountRows('group_access', $conn))
+            ->toBe($before);
+    } finally {
+        $conn->rollBack();
+    }
 });
 
 test('deleteUserAccessForUsersAndCategories() is a no-op for no user ids', function (): void {
-    $before = categoryTestCountRows('user_access');
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
-    categoryTestRepo()
-        ->deleteUserAccessForUsersAndCategories([], [1]);
+    try {
+        $before = categoryTestCountRows('user_access', $conn);
 
-    expect(categoryTestCountRows('user_access'))
-        ->toBe($before);
+        categoryTestRepoForConn($conn)
+            ->deleteUserAccessForUsersAndCategories([], [1]);
+
+        expect(categoryTestCountRows('user_access', $conn))
+            ->toBe($before);
+    } finally {
+        $conn->rollBack();
+    }
 });
 
 test('deleteGroupAccessForGroupsAndCategories() is a no-op for no group ids', function (): void {
-    $before = categoryTestCountRows('group_access');
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
-    categoryTestRepo()
-        ->deleteGroupAccessForGroupsAndCategories([], [1]);
+    try {
+        $before = categoryTestCountRows('group_access', $conn);
 
-    expect(categoryTestCountRows('group_access'))
-        ->toBe($before);
+        categoryTestRepoForConn($conn)
+            ->deleteGroupAccessForGroupsAndCategories([], [1]);
+
+        expect(categoryTestCountRows('group_access', $conn))
+            ->toBe($before);
+    } finally {
+        $conn->rollBack();
+    }
 });
 
 test('deleteCategoriesByIds() is a no-op for no ids', function (): void {
@@ -743,10 +812,14 @@ test('setRepresentativeImageForCategories() is a no-op for no ids', function ():
 });
 
 test('setRepresentativeImageForCategories() updates every listed category', function (): void {
+    // Transaction-wrapped -- flips both categories' representative_picture_id,
+    // which CategoryServiceTest.php's own concurrent --parallel reads
+    // must never observe.
     $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
-        categoryTestRepo()->setRepresentativeImageForCategories([1, 2], 3);
+        categoryTestRepoForConn($conn)->setRepresentativeImageForCategories([1, 2], 3);
 
         $repId1 = $conn->createQueryBuilder()
             ->select('representative_picture_id')
@@ -766,8 +839,7 @@ test('setRepresentativeImageForCategories() updates every listed category', func
             ->and(is_numeric($repId2) ? (int) $repId2 : null)
             ->toBe(3);
     } finally {
-        $conn->executeStatement('UPDATE categories SET representative_picture_id = 1 WHERE id = 1');
-        $conn->executeStatement('UPDATE categories SET representative_picture_id = 4 WHERE id = 2');
+        $conn->rollBack();
     }
 });
 
@@ -831,12 +903,16 @@ test('findByVisible() filters on the visible flag', function (): void {
 });
 
 test('findByStatus() filters on the status column', function (): void {
+    // Transaction-wrapped -- flips category 2's own status column, which
+    // CategoryServiceTest.php's own concurrent --parallel reads must
+    // never observe.
     $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
         $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 2");
 
-        $repo = categoryTestRepo();
+        $repo = categoryTestRepoForConn($conn);
         $publicRows = $repo->findByStatus('public');
         $privateRows = $repo->findByStatus('private');
 
@@ -845,30 +921,35 @@ test('findByStatus() filters on the status column', function (): void {
             ->and(array_column($privateRows, 'id'))
             ->toBe([2]);
     } finally {
-        $conn->executeStatement("UPDATE categories SET status = 'public' WHERE id = 2");
+        $conn->rollBack();
     }
 });
 
 test('findByRepresentativePresence() true returns categories with a representative', function (): void {
-    // Both fixture categories already have representative_picture_id set.
+    // Transaction-wrapped -- flips both categories' representative_picture_id,
+    // which CategoryServiceTest.php's own concurrent --parallel reads
+    // must never observe.
     $conn = DbConnection::build();
-    $repo = categoryTestRepo();
-    $rows = $repo->findByRepresentativePresence(true);
-    expect(array_column($rows, 'id'))
-        ->toBe([1, 2]);
+    $conn->beginTransaction();
 
     try {
+        $repo = categoryTestRepoForConn($conn);
+        $rows = $repo->findByRepresentativePresence(true);
+        expect(array_column($rows, 'id'))
+            ->toBe([1, 2]);
+
         $conn->executeStatement('UPDATE categories SET representative_picture_id = NULL WHERE id IN (1, 2)');
         expect($repo->findByRepresentativePresence(true))
             ->toBe([]);
     } finally {
-        $conn->executeStatement('UPDATE categories SET representative_picture_id = 1 WHERE id = 1');
-        $conn->executeStatement('UPDATE categories SET representative_picture_id = 4 WHERE id = 2');
+        $conn->rollBack();
     }
 });
 
 test('findByRepresentativePresence() false joins image_category and deduplicates', function (): void {
+    // Transaction-wrapped -- see the sibling test above for why.
     $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
         // Category 1 has no representative but 3 direct images (image_category
@@ -877,18 +958,23 @@ test('findByRepresentativePresence() false joins image_category and deduplicates
         // matching image_category row).
         $conn->executeStatement('UPDATE categories SET representative_picture_id = NULL WHERE id = 1');
 
-        $rows = categoryTestRepo()
+        $rows = categoryTestRepoForConn($conn)
             ->findByRepresentativePresence(false);
 
         expect(array_column($rows, 'id'))
             ->toBe([1]);
     } finally {
-        $conn->executeStatement('UPDATE categories SET representative_picture_id = 1 WHERE id = 1');
+        $conn->rollBack();
     }
 });
 
 test('findPrivateCategoriesGrantedToUser() excludes group-authorized ids', function (): void {
+    // Transaction-wrapped -- flips category 1's own status column and
+    // adds a user_access row on it, both of which
+    // CategoryServiceTest.php's own concurrent --parallel reads must
+    // never observe.
     $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
         $conn->executeStatement(
@@ -897,7 +983,7 @@ test('findPrivateCategoriesGrantedToUser() excludes group-authorized ids', funct
         );
         $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
-        $repo = categoryTestRepo();
+        $repo = categoryTestRepoForConn($conn);
         $rows = $repo->findPrivateCategoriesGrantedToUser(3);
         expect(array_column($rows, 'id'))
             ->toBe([1]);
@@ -907,20 +993,24 @@ test('findPrivateCategoriesGrantedToUser() excludes group-authorized ids', funct
         expect($repo->findPrivateCategoriesGrantedToUser(3, ['1']))
             ->toBe([]);
     } finally {
-        $conn->executeStatement('DELETE FROM user_access WHERE user_id = 3 AND cat_id = 1');
-        $conn->executeStatement("UPDATE categories SET status = 'public' WHERE id = 1");
+        $conn->rollBack();
     }
 });
 
 test('findPrivateCategoriesGrantedToGroup() matches fixture grants', function (): void {
     // Fixture group_access: (group_id=1, cat_id=1), (group_id=2, cat_id=1),
     // (group_id=3, cat_id=1), (group_id=1, cat_id=2).
+    //
+    // Transaction-wrapped -- this blanket UPDATE flips every category's
+    // status, which CategoryServiceTest.php's own concurrent --parallel
+    // reads must never observe.
     $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
         $conn->executeStatement("UPDATE categories SET status = 'private'");
 
-        $repo = categoryTestRepo();
+        $repo = categoryTestRepoForConn($conn);
         expect(array_column($repo->findPrivateCategoriesGrantedToGroup(1), 'id'))
             ->toBe([1, 2])
             ->and(array_column($repo->findPrivateCategoriesGrantedToGroup(2), 'id'))
@@ -928,7 +1018,7 @@ test('findPrivateCategoriesGrantedToGroup() matches fixture grants', function ()
             ->and(array_column($repo->findPrivateCategoriesGrantedToGroup(999999), 'id'))
             ->toBe([]);
     } finally {
-        $conn->executeStatement("UPDATE categories SET status = 'public'");
+        $conn->rollBack();
     }
 });
 
@@ -939,12 +1029,15 @@ test('findPrivateCategoryIdsGrantedToGroup() matches fixture grants', function (
     // resolves correctly against a real DB (DQL JOIN...WITH conditions
     // compile to a plain SQL column comparison regardless of PHP-side
     // Type differences).
+    //
+    // Transaction-wrapped -- see the sibling test above for why.
     $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
         $conn->executeStatement("UPDATE categories SET status = 'private'");
 
-        $repo = categoryTestRepo();
+        $repo = categoryTestRepoForConn($conn);
         expect($repo->findPrivateCategoryIdsGrantedToGroup(1))
             ->toBe([1, 2])
             ->and($repo->findPrivateCategoryIdsGrantedToGroup(2))
@@ -952,7 +1045,7 @@ test('findPrivateCategoryIdsGrantedToGroup() matches fixture grants', function (
             ->and($repo->findPrivateCategoryIdsGrantedToGroup(999999))
             ->toBe([]);
     } finally {
-        $conn->executeStatement("UPDATE categories SET status = 'public'");
+        $conn->rollBack();
     }
 });
 
@@ -974,12 +1067,16 @@ test('findCategoriesAuthorizedViaGroupsForUser() returns empty for a groupless u
 });
 
 test('findPrivateCategoriesExcluding() filters out the given ids', function (): void {
+    // Transaction-wrapped -- this blanket UPDATE flips every category's
+    // status, which CategoryServiceTest.php's own concurrent --parallel
+    // reads must never observe.
     $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
         $conn->executeStatement("UPDATE categories SET status = 'private'");
 
-        $repo = categoryTestRepo();
+        $repo = categoryTestRepoForConn($conn);
         expect(array_column($repo->findPrivateCategoriesExcluding([]), 'id'))
             ->toBe([1, 2])
             ->and(array_column($repo->findPrivateCategoriesExcluding(['1']), 'id'))
@@ -987,7 +1084,7 @@ test('findPrivateCategoriesExcluding() filters out the given ids', function (): 
             ->and(array_column($repo->findPrivateCategoriesExcluding(['1', '2']), 'id'))
             ->toBe([]);
     } finally {
-        $conn->executeStatement("UPDATE categories SET status = 'public'");
+        $conn->rollBack();
     }
 });
 
@@ -1104,20 +1201,24 @@ test('findListForWs() excludes forbidden category ids', function (): void {
 });
 
 test('findListForWs() publicOnly excludes non-public categories', function (): void {
+    // Transaction-wrapped -- flips category 2's own status column, which
+    // CategoryServiceTest.php's own concurrent --parallel reads must
+    // never observe.
     $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
         $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 2");
 
         $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [], publicOnly: true);
 
-        $result = categoryTestRepo()
+        $result = categoryTestRepoForConn($conn)
             ->findListForWs($criteria, null, 10, null, false);
 
         expect(array_column($result->rows, 'id'))
             ->toBe([1]);
     } finally {
-        $conn->executeStatement("UPDATE categories SET status = 'public' WHERE id = 2");
+        $conn->rollBack();
     }
 });
 

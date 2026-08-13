@@ -93,6 +93,17 @@ final readonly class CommentsController implements ControllerInterface
         private CurrentLogger $currentLogger,
     ) {}
 
+    /**
+     * Same recipe as Controller\PictureController's own commentService()
+     * resolver -- unlike that one, $urlService here is already a
+     * constructor property (this controller has no per-call-varying URL
+     * builder), so this needs no param.
+     */
+    private function commentService(): CommentService
+    {
+        return new CommentService($this->lang, $this->entityManager->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
+    }
+
     #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -317,7 +328,7 @@ final readonly class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = new CommentService($this->lang, $this->entityManager->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
+        $commentService = $this->commentService();
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);

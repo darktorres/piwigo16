@@ -1326,7 +1326,17 @@ test('getQuickSearchResultsNoCache() a term matching a real category with zero c
     // test above.
     DbTransactionTestOverride::rollback();
     $conn = searchServiceTestConn();
-    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('zqualifiesonlycat')");
+    $rank = $conn->getDatabasePlatform()
+        ->quoteSingleIdentifier('rank');
+    // An explicit, high rank -- leaving it to the schema's own NULL
+    // default sorts this root category AHEAD of real fixture category 1
+    // (rank 1) in updateGlobalRank()'s own ORDER BY (NULLs sort first in
+    // ASC order), so another --parallel worker's own
+    // createVirtualCategory()-based test running its own updateGlobalRank()
+    // while this row is still live would renumber category 1's own rank
+    // out from under it (reproduced live: findMaxRankForParent()
+    // returned 2, not 1).
+    $conn->executeStatement("INSERT INTO categories (name, {$rank}) VALUES ('zqualifiesonlycat', 999)");
     $catId = (int) $conn->lastInsertId();
     searchServiceTestFlushFulltext($conn, 'categories');
 

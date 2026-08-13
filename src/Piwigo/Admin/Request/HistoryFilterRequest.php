@@ -10,15 +10,17 @@ use Piwigo\Validation\InputValidator;
  * Validated `$_GET` filter shape for HistoryPageRenderer::render() (page
  * slug "history"). `ip`/`imageId` are only ever
  * pattern-validated then passed straight through to the template (never
- * computed on), so they stay `mixed` here -- both already pattern-checked
- * (digits/dots for ip, digits for image id, not mandatory) before this
- * DTO returns.
+ * computed on) -- both already pattern-checked (digits/dots for ip,
+ * digits for image id, not mandatory) before this DTO returns, then
+ * narrowed to a clean `?string` via the same `is_string(...) ? ... :
+ * null` local guard `FeedRequest.php` already uses after its own
+ * `validate()` call.
  */
 final readonly class HistoryFilterRequest
 {
     private function __construct(
-        public mixed $ip,
-        public mixed $imageId,
+        public ?string $ip,
+        public ?string $imageId,
         public int $userId,
         public bool $hasAnyFilter,
     ) {}
@@ -40,8 +42,11 @@ final readonly class HistoryFilterRequest
         $inputValidator
             ->validate('filter_user_id', $source, false, '/^\d+$/');
 
-        $ip = $source['filter_ip'] ?? null;
-        $imageId = $source['filter_image_id'] ?? null;
+        $ip_raw = $source['filter_ip'] ?? null;
+        $ip = is_string($ip_raw) ? $ip_raw : null;
+
+        $image_id_raw = $source['filter_image_id'] ?? null;
+        $imageId = is_string($image_id_raw) ? $image_id_raw : null;
 
         $user_id_raw = $source['filter_user_id'] ?? null;
         $userId = isset($source['filter_user_id']) && is_numeric($user_id_raw) ? (int) $user_id_raw : -1;

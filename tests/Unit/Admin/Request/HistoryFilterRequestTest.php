@@ -76,6 +76,22 @@ test('fromArray defaults userId to -1 when filter_user_id is present but empty',
         ->toBe(-1);
 });
 
+test('fromArray defaults ip/imageId to null for an empty-array value', function (): void {
+    // [] is the only non-string shape that can survive validate() here
+    // without throwing: InputValidator::validate()'s own emptyValue()
+    // check treats a bare [] as "empty" (short-circuits before the
+    // is_scalar() guard that would otherwise reject any other array).
+    $request = HistoryFilterRequest::fromArray([
+        'filter_ip' => [],
+        'filter_image_id' => [],
+    ], new InputValidator());
+
+    expect($request->ip)
+        ->toBeNull()
+        ->and($request->imageId)
+        ->toBeNull();
+});
+
 test('fromArray reports hasAnyFilter true when only filter_ip is present', function (): void {
     // Distinct from the ip+image_id-together case above -- exactly one of
     // the first two isset() checks true (not both) is what actually

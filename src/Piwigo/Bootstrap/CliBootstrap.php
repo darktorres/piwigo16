@@ -12,6 +12,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ShutdownHandler;
 use Piwigo\Users\CurrentUser;
+use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
@@ -59,6 +60,47 @@ final class CliBootstrap
     }
 
     /**
+     * The boot-and-configure half of the CLI bootstrap sequence, split out
+     * so `tools/phpstan-latte-engine.php` (PHPStan's own `engineBootstrap`
+     * contract requires a bare file returning an `Engine`, not a
+     * dispatchable Command -- the one CLI-adjacent tool that structurally
+     * can't go through a real Command) can still reach a fully-configured
+     * container through `src/Piwigo/Bootstrap/` instead of hand-rolling a
+     * second, parallel `Kernel::boot()`/`Kernel::container()` sequence
+     * outside it. Every other CLI-facing need should go through a real
+     * `Command` (resolved via `buildApplication()` below), not this method
+     * directly.
+     *
+     * Both `ConfigLoader` calls are genuine no-ops today (see its own
+     * docblocks) -- kept as real, callable steps in the standard boot
+     * sequence for when either gains a real body, but there is nothing for
+     * a test to observe either removed today.
+     */
+    public static function bootContainer(?Paths $paths = null): ContainerInterface
+    {
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+        Kernel::boot($paths);
+        $container = Kernel::container();
+        $currentUser = $container->get(CurrentUser::class);
+        if (! $currentUser instanceof CurrentUser) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+        }
+        $currentUser->attachGlobals();
+        $configService = $container->get(ConfigService::class);
+        if (! $configService instanceof ConfigService) {
+            throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
+        }
+        $currentConfigService = $container->get(CurrentConfigService::class);
+        if (! $currentConfigService instanceof CurrentConfigService) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
+        }
+        $currentConfigService->set($configService);
+
+        return $container;
+    }
+
+    /**
      * Split out from run() so tests can inspect the registered command set
      * (tests/Unit/Bootstrap/CliBootstrapTest.php) without actually running
      * one -- ContainerDefinitionsTest.php's "every entry resolves" shape,
@@ -87,28 +129,7 @@ final class CliBootstrap
      */
     public static function buildApplication(?Paths $paths = null, ?array $overrideCommands = null): Application
     {
-        // Both calls are genuine no-ops today (see ConfigLoader's own
-        // docblocks on each) -- kept as real, callable steps in the
-        // standard boot sequence for when either gains a real body, but
-        // there is nothing for a test to observe either removed today.
-        ConfigLoader::applyDefaults();
-        ConfigLoader::applyEnvOverrides();
-        Kernel::boot($paths);
-        $container = Kernel::container();
-        $currentUser = $container->get(CurrentUser::class);
-        if (! $currentUser instanceof CurrentUser) {
-            throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
-        }
-        $currentUser->attachGlobals();
-        $configService = $container->get(ConfigService::class);
-        if (! $configService instanceof ConfigService) {
-            throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
-        }
-        $currentConfigService = $container->get(CurrentConfigService::class);
-        if (! $currentConfigService instanceof CurrentConfigService) {
-            throw new LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
-        }
-        $currentConfigService->set($configService);
+        $container = self::bootContainer($paths);
 
         $commandClasses = $overrideCommands ?? CommandDefinitions::all();
 

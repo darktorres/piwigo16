@@ -280,8 +280,7 @@ function ctArr(mixed $value): array
  * never mentioned. A snapshot covering only the specific field(s) a test
  * cares about silently resets every other checkbox in that same section
  * to 'false' and leaves it that way once restoreConfig() runs -- a real
- * cross-test-file pollution incident this file caused once already,
- * confirmed via composer test:browser failures in RegisterControllerTest
+ * cross-test-file pollution risk for RegisterControllerTest
  * (allow_user_registration)/CommentsControllerTest (activate_comments
  * and friends)/ProfileControllerTest (allow_user_customization). Any
  * test that submits successfully to one of these 3 sections must
@@ -611,7 +610,7 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
     // checkbox), and massUpdate()'s own generated UPDATE always includes
     // every column in $fields regardless of whether $data has the key --
     // omitting it here reproduces a genuine `Column 'expand' cannot be
-    // null` DB crash (confirmed live), same class of gap as this admin
+    // null` DB crash, same class of gap as this admin
     // form's own established "send the whole section" convention. This
     // data lives on guest's own user_infos row, not the config
     // table -- same direct-mysqli snapshot/restore shape as
@@ -836,8 +835,7 @@ it('saves the watermark tab with a fixed topleft position, persisting the derive
         expect($result['body'])->toContain('Your configuration settings are saved');
 
         // w[position] is a radio group (input[type=radio]), not a
-        // <select>/<option> pair -- confirmed live via a real raw POST +
-        // GET round trip.
+        // <select>/<option> pair.
         $page = H::navigateOk($page, ctConfigSection('watermark'));
         $page->assertPresent('input[name="w[position]"][value="topleft"][checked]');
     } finally {
@@ -1628,10 +1626,10 @@ it('main tab: warns about a deprecated $conf[\'order_by\'] set in a real local c
     // technique BrowserTestHelpers::setCustomLogo() already uses under
     // `local/`, just targeting the actual file orderByIsLocal() itself
     // @include()s (the live, container-bound Paths->local .
-    // 'config/config.inc.php'), not a config-table row. Confirmed via a
-    // full grep of every real @include site of this exact path
+    // 'config/config.inc.php'), not a config-table row. Every real
+    // @include site of this exact path
     // (Admin\UserListPageRenderer, this controller, and BackupService's
-    // own file copy) that it is NEVER read
+    // own file copy) confirms it is NEVER read
     // into the live app's real runtime $conf during normal request
     // bootstrap (ConfigLoader::applyDefaults()/applyEnvOverrides() are both
     // no-ops) -- writing it here cannot affect any other concurrently-
@@ -1760,8 +1758,8 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
     try {
         mkdir($holdingDir, 0777, true);
 
-        // Preserve whatever the live app (running as www-data -- confirmed
-        // via this environment's reciprocal torres/www-data group
+        // Preserve whatever the live app (running as www-data, via
+        // this environment's reciprocal torres/www-data group
         // membership, the same shared-filesystem assumption every direct-
         // DB/-filesystem fixture helper in BrowserTestHelpers already
         // makes) currently has in local/watermarks/, rather than deleting
@@ -1797,7 +1795,7 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
         // recreating it as torres is the only way to control its
         // permissions at all: the live app normally creates/owns
         // local/watermarks/ as www-data, which torres cannot chmod()
-        // (confirmed live: chmod() requires file ownership, group
+        // (chmod() requires file ownership, group
         // membership alone isn't enough).
         if (! mkdir($watermarksDir, 0555)) {
             throw new RuntimeException("Failed to recreate {$watermarksDir} while seeding the unwritable-directory fixture.");
@@ -2228,7 +2226,7 @@ it('sizes tab: changing an already-enabled type\'s own dimensions bumps its last
         // include/derivative_std_params.inc.php loadFromDb(), not a
         // rewrite bug. ctDerivativesPayload()'s default submits every type
         // (including 3xlarge) as enabled, which leaves disabled_type_map
-        // genuinely empty after a save -- confirmed live: the very next
+        // genuinely empty after a save -- the very next
         // request's own loadFromDb() then silently resets 4xlarge back
         // to disabled, so it can never reach the "already enabled" branch
         // this test means to exercise. Keeping 3xlarge disabled (omitting

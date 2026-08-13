@@ -326,8 +326,7 @@ final class WsHistoryTest extends ContractTestCase
         // login() records as a 'user'/'login' row with object_id = the user
         // who just logged in (fixture_admin) but performed_by = the
         // pre-login identity (guest -- login is recorded before CurrentUser
-        // is re-resolved to the newly authenticated user, confirmed live
-        // via a direct DB query before writing this assertion).
+        // is re-resolved to the newly authenticated user).
         $response = $this->wsAdmin('pwg.activity.getList', [
             'object' => 'user',
             'action' => 'login',
@@ -426,7 +425,7 @@ final class WsHistoryTest extends ContractTestCase
         // A real 'user' activity row whose `details` JSON already has a
         // 'users' key set to a non-array value -- no real
         // ActivityLoggerInterface::record() call site ever does this
-        // (grep-confirmed: every 'user'-object record() call across
+        // (every 'user'-object record() call across
         // UserService/GroupService/AuthService/PasswordController/
         // RegisterController/ProfileFormHandler passes 'associated'/no
         // extra details at all, never 'users'), so a raw INSERT is the
@@ -633,7 +632,7 @@ final class WsHistoryTest extends ContractTestCase
     }
 
     /**
-     * Real bug found live: a real browser client always sends every
+     * Real bug: a real browser client always sends every
      * current_param key, including image_id as the literal empty string
      * when no image filter is active (history.latte's own `image_id: {if
      * isset($IMAGE_ID)}"{$IMAGE_ID}"{else}""{/if}`) -- unlike this test
@@ -646,8 +645,7 @@ final class WsHistoryTest extends ContractTestCase
      * and HistoryRepository::search() later threw
      * "ImageId must be a positive integer, got 0" -- a genuine,
      * always-triggered 500 on admin.php?page=history's default,
-     * unfiltered search (confirmed live via a real Playwright
-     * reproduction), not a test-only edge case.
+     * unfiltered search, not a test-only edge case.
      */
     public function testHistorySearchWithAnEmptyStringImageIdDoesNotThrow(): void
     {
@@ -897,7 +895,7 @@ final class WsHistoryTest extends ContractTestCase
     /**
      * historySearch()'s "reconstruct rule details for a saved search_id"
      * branch -- pwg.history.log has no search_id parameter at all
-     * (confirmed via its WsDefaultMethods registration and
+     * (per its WsDefaultMethods registration and
      * HistoryService::logVisit()'s own signature: image_id/image_type/
      * section/category/tagIds only), so the *only* way a real
      * history row ever gets a non-null search_id is a lower-level
@@ -914,8 +912,8 @@ final class WsHistoryTest extends ContractTestCase
         $this->enableHistoryForAdmin();
         // pwg.history.search is admin_only -- getPwgToken() reads the
         // *current* session's token, so the login must happen first
-        // (confirmed live: without it, the session stays guest and the
-        // final search call below fails with 401 Access denied).
+        // (without it, the session stays guest and the final search call
+        // below fails with 401 Access denied).
         $this->loginAsAdmin();
         $token = $this->getPwgToken();
 
@@ -969,8 +967,8 @@ final class WsHistoryTest extends ContractTestCase
     }
 
     /**
-     * Regression-documenting test for a real, pre-existing bug found while
-     * writing the sibling test above: historySearch()'s own
+     * Regression-documenting test for a real, pre-existing bug in the
+     * sibling test above: historySearch()'s own
      * tags/cat/added_by reconstruction filters each id list through
      * `array_filter($words, is_string(...))` -- but
      * filteredSearchCreate() registers 'tags'/'categories'/'added_by' with
@@ -978,11 +976,10 @@ final class WsHistoryTest extends ContractTestCase
      * element to a real PHP int (filter_var(..., FILTER_VALIDATE_INT)), and
      * json round-tripping through search.rules preserves that int
      * type. is_string() on an int is always false, so the filter empties
-     * the list every time regardless of what was actually searched --
-     * confirmed live (a real WS call, not a unit test poking internals)
-     * before writing this test. Out of scope to fix in a test-writing
-     * pass; documented here so a future fix is a deliberate, visible
-     * change to this assertion, not a silent one.
+     * the list every time regardless of what was actually searched. Out
+     * of scope to fix in a test-writing pass; documented here so a future
+     * fix is a deliberate, visible change to this assertion, not a
+     * silent one.
      */
     public function testHistorySearchSavedSearchTagsCatAddedByAreAlwaysNullDueToARealBug(): void
     {
@@ -1047,7 +1044,7 @@ final class WsHistoryTest extends ContractTestCase
      * `{"fields": {...}}` shape -- so both rows are written directly, the
      * same "reproduce the only real way this state could exist" rationale
      * as this file's own dangling-image-id test. `rules` is `json DEFAULT
-     * NULL` (nullable), confirmed against search's own CREATE TABLE.
+     * NULL` (nullable), per search's own CREATE TABLE.
      */
     public function testHistorySearchGracefullySkipsASavedSearchWithMalformedOrNullRules(): void
     {
@@ -1274,8 +1271,7 @@ final class WsHistoryTest extends ContractTestCase
      * deletion just nulls the column instead of leaving a real dangling
      * id) -- same "reproduce the only real way this state has ever
      * existed" rationale as UserServiceTest's own
-     * SET FOREIGN_KEY_CHECKS=0 pattern -- confirmed live (a real WS call
-     * against the real Apache-served app) before writing this assertion.
+     * SET FOREIGN_KEY_CHECKS=0 pattern.
      */
     public function testHistorySearchWithADanglingImageIdAndNoCategoryFallsBackToDefaults(): void
     {
@@ -1330,7 +1326,7 @@ final class WsHistoryTest extends ContractTestCase
      * historySearch()'s per-line pagination-window guard, faithfully
      * preserved from the pre-rewrite legacy include/ws_functions/pwg.php
      * (`if ($i <= $first_line && $i >= $last_line) { continue; }`,
-     * grep-confirmed identical at piwigo16/include/ws_functions/pwg.php:941)
+     * identical at piwigo16/include/ws_functions/pwg.php:941)
      * -- with the real default nb_logs_page (300), $first_line
      * ($page_start+1) and $last_line ($page_start+300) can never both
      * bound the same $i, so this `continue` is realistically dead under
@@ -1449,8 +1445,7 @@ final class WsHistoryTest extends ContractTestCase
      * section/category only, no image_id argument at all) --
      * pwg.history.log always requires a real positive image_id
      * (WsParamType::ID), so the WS API itself can never produce one; a
-     * real page visit is needed, confirmed live before writing this
-     * assertion.
+     * real page visit is needed to reach it.
      */
     public function testHistorySearchWithAnAlbumBrowseRowLeavesImageFieldsEmpty(): void
     {
@@ -1590,8 +1585,8 @@ final class WsHistoryTest extends ContractTestCase
      * bug (see WsDefaultMethods::register()'s own inline comment on the
      * 'pwg.activity.downloadLog' registration): its callback string
      * 'ws_activity_downloadLog' has never actually been defined anywhere
-     * in this codebase, confirmed there via a full-repo grep before the
-     * legacy include/ws_functions/pwg.php file was even deleted. Calling
+     * in this codebase -- not even in the legacy
+     * include/ws_functions/pwg.php file, before it was deleted. Calling
      * this method (admin_only, so an authenticated call is required to
      * even reach the broken callback -- Server::invoke()'s own
      * admin_only gate runs before parameter checks or the call itself)
@@ -1608,7 +1603,7 @@ final class WsHistoryTest extends ContractTestCase
      * display_errors is off in the real Apache-served environment, so the
      * body is just the generic "Internal Server Error" text, not a
      * verbose trace containing the undefined function's name -- correct,
-     * secure production behavior, confirmed live rather than assumed.
+     * secure production behavior.
      */
     public function testActivityDownloadLogFatalsOnItsOwnPreExistingUndefinedCallback(): void
     {

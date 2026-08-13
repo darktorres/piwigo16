@@ -15,8 +15,8 @@ require_once __DIR__ . '/plural-forms.php';
 // content that stays 2-form. gettext/translator's own Translator::
 // translatePlural() already degrades gracefully for a missing index
 // (falls back to the untranslated English plural string), so this is a
-// lossy-but-safe migration, not a crash risk -- confirmed via
-// TranslatorTest's own 3-form coverage.
+// lossy-but-safe migration, not a crash risk, per TranslatorTest's own
+// 3-form coverage.
 
 /**
  * @param array<string, string> $pairs singular => plural pairs from extract-pairs.php

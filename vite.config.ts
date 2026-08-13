@@ -17,9 +17,9 @@ export default defineConfig({
   // the build's own publicDir-copy step walks into public/dist (a symlink
   // back to this very outDir, bridging the built assets so the PHP app can
   // serve them) and recursively copies dist/ into itself without bound --
-  // confirmed live: a real `vite build` run filled the disk
-  // (dist/dist/dist/... nested ~100 levels deep, ENOSPC) before this was
-  // set. Nothing here needs Vite's copy step anyway: outDir already IS what
+  // real bug: a `vite build` run filled the disk (dist/dist/dist/...
+  // nested ~100 levels deep, ENOSPC) before this was set. Nothing here
+  // needs Vite's copy step anyway: outDir already IS what
   // public/dist symlinks to, so the built assets are already reachable at
   // /dist/... with zero copying.
   publicDir: false,

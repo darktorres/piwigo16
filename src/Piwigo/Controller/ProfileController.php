@@ -122,7 +122,7 @@ final readonly class ProfileController implements ControllerInterface
         if ($cookie_lang !== null and (! is_string($cookie_lang) or $this->currentUser->get()->language->value !== $cookie_lang)) {
             if (! is_string($cookie_lang)) {
                 $this->htmlService
-                    ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
+                    ->fatalError('Invalid request parameter "lang"');
             }
             if (! array_key_exists($cookie_lang, LangService::getLanguages($this->paths))) {
                 $this->htmlService

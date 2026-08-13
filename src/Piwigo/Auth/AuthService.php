@@ -156,7 +156,7 @@ final readonly class AuthService
         if (isset($_COOKIE['lang']) && $this->currentUser->get()->language->value !== $_COOKIE['lang']) {
             $lang_cookie = $_COOKIE['lang'];
             if (! is_string($lang_cookie)) {
-                $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
+                $this->htmlRenderer->fatalError('Invalid request parameter "lang"');
             }
             if (! array_key_exists($lang_cookie, LangService::getLanguages($this->paths))) {
                 $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');

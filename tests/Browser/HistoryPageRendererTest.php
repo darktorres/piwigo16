@@ -66,10 +66,10 @@ it('resets an unresolvable filter_user_id back to -1 without erroring', function
     H::assertNoServerErrors($page, 'history unresolvable filter_user_id');
 });
 
-it('rejects a non-digit filter_ip as a hacking attempt', function (): void {
+it('rejects a non-digit filter_ip as an invalid request parameter', function (): void {
     $page = H::loginAsAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=history&filter_ip=not-an-ip');
 
-    expect($result['body'])->toContain('Hacking attempt');
+    expect($result['body'])->toContain('Invalid request parameter');
 });

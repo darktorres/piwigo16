@@ -9,8 +9,8 @@ use Piwigo\Core\ValidationPattern;
 use RuntimeException;
 
 /**
- * Validates request-input parameters against a regex pattern, treating
- * any mismatch as a hacking attempt.
+ * Validates request-input parameters against a regex pattern, rejecting
+ * any mismatch as an invalid request parameter.
  *
  * `$htmlRenderer` is optional: callers without an instance context to
  * inject it through (e.g. `Request\*Request::fromGlobals()`/
@@ -52,35 +52,35 @@ final readonly class InputValidator
         // it's ok if the input parameter is null
         if (self::emptyValue($paramValue)) {
             if ($mandatory) {
-                $this->fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+                $this->fatalError('Invalid request parameter "' . $paramName . '"');
             }
             return true;
         }
 
         if ($isArray) {
             if (! is_array($paramValue)) {
-                $this->fatalError('[Hacking attempt] the input parameter "' . $paramName . '" should be an array');
+                $this->fatalError('Invalid request parameter "' . $paramName . '"');
             }
 
             foreach ($paramValue as $key => $itemToCheck) {
                 // a non-scalar item (e.g. an unexpected nested array) has no
                 // sane string form to validate against $pattern -- that's a
-                // malformed/hacking-attempt input in its own right.
+                // malformed input in its own right.
                 if (! is_scalar($itemToCheck)) {
-                    $this->fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
+                    $this->fatalError('an invalid item in input parameter "' . $paramName . '"');
                 }
 
                 if ($pattern === '' || ! (bool) preg_match(ValidationPattern::ID, (string) $key) || ! (bool) preg_match($pattern, (string) $itemToCheck)) {
-                    $this->fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
+                    $this->fatalError('an invalid item in input parameter "' . $paramName . '"');
                 }
             }
         } else {
             if (! is_scalar($paramValue)) {
-                $this->fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+                $this->fatalError('Invalid request parameter "' . $paramName . '"');
             }
 
             if ($pattern === '' || ! (bool) preg_match($pattern, (string) $paramValue)) {
-                $this->fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+                $this->fatalError('Invalid request parameter "' . $paramName . '"');
             }
         }
 

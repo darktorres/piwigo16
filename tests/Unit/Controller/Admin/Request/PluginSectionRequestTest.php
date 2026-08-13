@@ -125,5 +125,5 @@ test('fromArray rejects a "0" segment as a known, documented empty-value edge ca
     expect(fn (): PluginSectionRequest => PluginSectionRequest::fromArray([
         'section' => 'my-plugin/0',
     ], new InputValidator()))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "segment" is not valid');
+        ->toThrow(RuntimeException::class, 'Invalid request parameter "segment"');
 });

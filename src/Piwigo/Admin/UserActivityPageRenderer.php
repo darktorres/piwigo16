@@ -130,7 +130,7 @@ final class UserActivityPageRenderer
                 $filter_value = $userActivityRequest->filterValue($filter_key);
                 if (! is_string($filter_value)) {
                     $htmlRenderer
-                        ->fatalError('[Hacking attempt] the input parameter "' . $filter_key . '" is not valid');
+                        ->fatalError('Invalid request parameter "' . $filter_key . '"');
                 }
 
                 $filter_id = (int) $filter_value;

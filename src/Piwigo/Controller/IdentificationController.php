@@ -195,7 +195,7 @@ final readonly class IdentificationController implements ControllerInterface
         if ($lang_cookie !== null and (! is_string($lang_cookie) or $this->currentUser->get()->language->value !== $lang_cookie)) {
             if (! is_string($lang_cookie)) {
                 $this->htmlService
-                    ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
+                    ->fatalError('Invalid request parameter "lang"');
             }
             if (! array_key_exists($lang_cookie, LangService::getLanguages($this->paths))) {
                 $this->htmlService

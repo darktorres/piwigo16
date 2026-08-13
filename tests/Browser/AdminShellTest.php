@@ -96,12 +96,12 @@ it('resolves the photo-N-tab page-slug alias to page=photo&image_id=N&tab=proper
     H::assertNoServerErrors($page, 'photo-N-tab page-slug alias');
 });
 
-it('rejects a tab value containing disallowed characters as a hacking attempt', function (): void {
+it('rejects a tab value containing disallowed characters as an invalid request parameter', function (): void {
     $page = H::loginAsAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=intro&tab=' . rawurlencode('../../etc/passwd'));
 
-    expect($result['body'])->toContain('Hacking attempt');
+    expect($result['body'])->toContain('Invalid request parameter');
 });
 
 it('shows the pending-comments counter when at least one unvalidated comment exists', function (): void {

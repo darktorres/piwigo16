@@ -163,7 +163,7 @@ final readonly class SearchController implements ControllerInterface
                 $tag_id_value = $searchQuery->tagId;
                 if (! is_string($tag_id_value)) {
                     $this->htmlRenderer
-                        ->fatalError('[Hacking attempt] the input parameter "tag_id" is not valid');
+                        ->fatalError('Invalid request parameter "tag_id"');
                 }
 
                 $tag_ids = explode(',', $tag_id_value);

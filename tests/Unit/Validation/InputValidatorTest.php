@@ -66,7 +66,7 @@ test('validate raises a hacking-attempt error for a mandatory missing parameter'
     $validator = new InputValidator();
 
     expect(fn (): ?true => $validator->validate('id', [], false, ValidationPattern::ID, true))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "id" is not valid');
+        ->toThrow(RuntimeException::class, 'Invalid request parameter "id"');
 });
 
 test('validate raises a hacking-attempt error for a scalar value not matching the pattern', function (): void {
@@ -75,7 +75,7 @@ test('validate raises a hacking-attempt error for a scalar value not matching th
     expect(fn (): ?true => $validator->validate('id', [
         'id' => 'not-a-number',
     ], false, ValidationPattern::ID))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "id" is not valid');
+        ->toThrow(RuntimeException::class, 'Invalid request parameter "id"');
 });
 
 test('validate raises a hacking-attempt error for a non-scalar value', function (): void {
@@ -86,7 +86,7 @@ test('validate raises a hacking-attempt error for a non-scalar value', function 
             'nested' => 'array',
         ],
     ], false, ValidationPattern::ID))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "id" is not valid');
+        ->toThrow(RuntimeException::class, 'Invalid request parameter "id"');
 });
 
 test('validate accepts every item in an array parameter matching the pattern', function (): void {
@@ -116,7 +116,7 @@ test('validate raises a hacking-attempt error when an array item does not match 
     expect(fn (): ?true => $validator->validate('ids', [
         'ids' => ['1', 'bad'],
     ], true, ValidationPattern::ID))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] an item is not valid in input parameter "ids"');
+        ->toThrow(RuntimeException::class, 'an invalid item in input parameter "ids"');
 });
 
 test('validate raises a hacking-attempt error when an array key is not numeric', function (): void {
@@ -136,7 +136,7 @@ test('validate raises a hacking-attempt error when is_array is true but the valu
     expect(fn (): ?true => $validator->validate('ids', [
         'ids' => 'not-an-array',
     ], true, ValidationPattern::ID))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "ids" should be an array');
+        ->toThrow(RuntimeException::class, 'Invalid request parameter "ids"');
 });
 
 test('validate accepts a custom regex pattern', function (): void {
@@ -162,7 +162,7 @@ test('validate raises a hacking-attempt error for a scalar value when the patter
     expect(fn (): ?true => $validator->validate('mode', [
         'mode' => 'anything',
     ], false, ''))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "mode" is not valid');
+        ->toThrow(RuntimeException::class, 'Invalid request parameter "mode"');
 });
 
 test('validate raises a hacking-attempt error for an array item when the pattern is the empty string', function (): void {
@@ -176,7 +176,7 @@ test('validate raises a hacking-attempt error for an array item when the pattern
     expect(fn (): ?true => $validator->validate('modes', [
         'modes' => ['a'],
     ], true, ''))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] an item is not valid in input parameter "modes"');
+        ->toThrow(RuntimeException::class, 'an invalid item in input parameter "modes"');
 });
 
 test('validate raises a hacking-attempt error when an array item is itself non-scalar', function (): void {
@@ -191,7 +191,7 @@ test('validate raises a hacking-attempt error when an array item is itself non-s
             'nested' => 'array',
         ]],
     ], true, ValidationPattern::ID))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] an item is not valid in input parameter "ids"');
+        ->toThrow(RuntimeException::class, 'an invalid item in input parameter "ids"');
 });
 
 test('checkUrlFormat rejects a url missing the http(s) protocol prefix', function (): void {
@@ -233,7 +233,7 @@ test('fatalError calls the installed HtmlRenderingInterface before throwing, whe
     $validator = new InputValidator($renderer);
 
     expect(fn (): ?true => $validator->validate('id', [], false, ValidationPattern::ID, true))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "id" is not valid');
+        ->toThrow(RuntimeException::class, 'Invalid request parameter "id"');
 
     // The RuntimeException above is thrown either way (by the fake
     // itself when the renderer IS called, or by InputValidator's own
@@ -243,5 +243,5 @@ test('fatalError calls the installed HtmlRenderingInterface before throwing, whe
     expect($renderer->fatalErrorWasCalled)
         ->toBeTrue()
         ->and($renderer->lastMessage)
-        ->toBe('[Hacking attempt] the input parameter "id" is not valid');
+        ->toBe('Invalid request parameter "id"');
 });

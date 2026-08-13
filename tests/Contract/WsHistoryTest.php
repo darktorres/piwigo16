@@ -1496,7 +1496,7 @@ final class WsHistoryTest extends ContractTestCase
     /**
      * historySearch()'s display_thumbnail cookie: emptyValue('')
      * short-circuits InputValidator::validate()'s mandatory=false check
-     * (no [Hacking attempt] error, unlike the invalid non-empty value
+     * (no invalid-parameter error, unlike the invalid non-empty value
      * tested below), but the `$param['display_thumbnail'] !== ''` guard
      * around the setCookieVar() call means an explicit empty value clears
      * the cookie (CookieService::setCookieVar(..., null, ...)) instead of
@@ -1539,7 +1539,7 @@ final class WsHistoryTest extends ContractTestCase
      * error in this method uses -- so this can't go through
      * wsAdmin()/callWs() (which expect JSON back).
      */
-    private function assertHistorySearchIsAHackingAttempt(string $inputParamName, string $rawPostFields): void
+    private function assertHistorySearchRejectsInvalidParameter(string $inputParamName, string $rawPostFields, string $expectedMessage = 'Invalid request parameter'): void
     {
         $this->loginAsAdmin();
         $url = $this->baseUrl . '/ws.php?format=json';
@@ -1561,23 +1561,27 @@ final class WsHistoryTest extends ContractTestCase
 
         self::assertIsString($body);
         self::assertSame(500, $status);
-        self::assertStringContainsString('[Hacking attempt]', $body);
+        self::assertStringContainsString($expectedMessage, $body);
         self::assertStringContainsString('"' . $inputParamName . '"', $body);
     }
 
     public function testHistorySearchInvalidTypesReturnsError(): void
     {
-        $this->assertHistorySearchIsAHackingAttempt('types', 'types%5B%5D=not-a-real-type');
+        // 'types' is validated as an array parameter (Ws\Core::validate()'s
+        // isArray=true), which throws InputValidator's array-item wording,
+        // not the scalar "Invalid request parameter" wording the other two
+        // cases below use.
+        $this->assertHistorySearchRejectsInvalidParameter('types', 'types%5B%5D=not-a-real-type', 'an invalid item in input parameter');
     }
 
     public function testHistorySearchInvalidDateFormatReturnsError(): void
     {
-        $this->assertHistorySearchIsAHackingAttempt('start', 'start=not-a-date');
+        $this->assertHistorySearchRejectsInvalidParameter('start', 'start=not-a-date');
     }
 
     public function testHistorySearchInvalidDisplayThumbnailReturnsError(): void
     {
-        $this->assertHistorySearchIsAHackingAttempt('display_thumbnail', 'display_thumbnail=bogus');
+        $this->assertHistorySearchRejectsInvalidParameter('display_thumbnail', 'display_thumbnail=bogus');
     }
 
     /**
@@ -1594,7 +1598,7 @@ final class WsHistoryTest extends ContractTestCase
      * function` Error -- Server::invoke() has no try/catch around its
      * own call_user_func_array(), so this reaches PHP as an unhandled
      * fatal. Raw curl (not wsAdmin()/callWs(), which assert HTTP status
-     * < 500) -- same shape as assertHistorySearchIsAHackingAttempt()
+     * < 500) -- same shape as assertHistorySearchRejectsInvalidParameter()
      * above. Out of scope to fix here: flagged in the source as its own
      * follow-up task, not a test-writing-pass concern -- this test only
      * documents the current, real behavior so a future fix is a

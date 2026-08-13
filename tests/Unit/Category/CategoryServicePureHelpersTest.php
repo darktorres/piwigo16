@@ -141,7 +141,7 @@ test('isRecentCategory zeroes out the today-threshold time-of-day down to the se
 
 /**
  * @return array{cat_id: int, id_uppercat: ?int, global_rank: ?string,
- *   rank: ?int, date_last: ?string, nb_images: int, user_id: mixed,
+ *   rank: ?int, date_last: ?string, nb_images: int, user_id: int,
  *   nb_categories: int, count_categories: int, count_images: int,
  *   max_date_last: ?string, name: string, permalink: ?string, id: int}
  */
@@ -154,7 +154,7 @@ function catMenuRow(int $id, ?int $idUppercat): array
         'rank' => null,
         'date_last' => null,
         'nb_images' => 0,
-        'user_id' => null,
+        'user_id' => 0,
         'nb_categories' => 0,
         'count_categories' => 0,
         'count_images' => 0,
@@ -305,7 +305,7 @@ test('getDisplayImagesCount reports sub-albums after a direct/remainder split wh
 
 /**
  * @return array{cat_id: int, id_uppercat: ?int, global_rank: ?string,
- *   rank: ?int, date_last: ?string, nb_images: int, user_id: mixed,
+ *   rank: ?int, date_last: ?string, nb_images: int, user_id: int,
  *   nb_categories: int, count_categories: int, count_images: int,
  *   max_date_last: ?string}
  */
@@ -318,7 +318,7 @@ function catComputedRow(int $id, ?int $idUppercat, int $nbCategories, int $count
         'rank' => null,
         'date_last' => null,
         'nb_images' => 0,
-        'user_id' => null,
+        'user_id' => 0,
         'nb_categories' => $nbCategories,
         'count_categories' => $countCategories,
         'count_images' => $countImages,

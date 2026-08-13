@@ -229,13 +229,13 @@ final readonly class CategoryService
      * `visible_categories` condition), applied to `CategoryTreeCache`'s
      * cached, permission-filtered row set.
      *
-     * @param array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> $allRows keyed by category id,
+     * @param array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> $allRows keyed by category id,
      *   already permission-filtered (CategoryTreeCache::getForUser())
      * @param array<string, mixed>|null $categoryPage the currently-viewed
      *   category ($page['category']/SectionContext::$category), if any --
      *   only 'uppercats' is read here, defensively, matching that
      *   property's own already-declared array<string,mixed>|null type
-     * @return array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}>
+     * @return array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}>
      */
     public static function filterMenuRows(
         array $allRows,
@@ -456,7 +456,7 @@ final readonly class CategoryService
 
     /**
      * @param  array<string, mixed>  $userdata
-     * @return array{categories: array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>, lastPhotoDate: ?string}
+     * @return array{categories: array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>, lastPhotoDate: ?string}
      */
     public function getComputedCategories(array $userdata, ?int $filterDays = null): array
     {
@@ -465,6 +465,13 @@ final readonly class CategoryService
 
         $forbiddenCategories = $userdata['forbidden_categories'];
         $forbiddenCategoriesCsv = is_string($forbiddenCategories) ? $forbiddenCategories : '';
+
+        // Same is_numeric() ? (int) ... : 0 normalization as $level above --
+        // real callers pass either UserId::$value (already int) or
+        // User::$rawAttributes' own raw 'id' (numeric-string under some
+        // construction paths), never anything genuinely non-numeric.
+        $userId = $userdata['id'];
+        $userId = is_numeric($userId) ? (int) $userId : 0;
 
         $rows = $this->repo->findComputedCategoriesRollup($level, $filterDays, $forbiddenCategoriesCsv);
 
@@ -476,7 +483,7 @@ final readonly class CategoryService
             $dateLast = $row->dateLast;
 
             $catRow = $row->toArray();
-            $catRow['user_id'] = $userdata['id'];
+            $catRow['user_id'] = $userId;
             $catRow['nb_categories'] = 0;
             $catRow['count_categories'] = 0;
             $catRow['count_images'] = $nbImages;
@@ -540,8 +547,8 @@ final readonly class CategoryService
     }
 
     /**
-     * @param  array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>  $cats
-     * @param  array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}  $cat  category to remove
+     * @param  array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>  $cats
+     * @param  array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}  $cat  category to remove
      */
     public static function removeComputedCategory(array &$cats, array $cat): void
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Cache\AbstractNamedCachePool;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\CachePools;
+use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Cache\EffectivePermissionsCachePool;
 use Piwigo\Cache\PermissionsCachePool;
@@ -76,6 +77,15 @@ function cachePoolsTestConfig(): ConfigCachePool
     return new ConfigCachePool(CacheFactory::create(namespace: 'piwigo.config'));
 }
 
+/**
+ * Same reasoning as cachePoolsTestTagCloud() above, for
+ * CategoryTreeCachePool::class's own factory entry.
+ */
+function cachePoolsTestCategoryTree(): CategoryTreeCachePool
+{
+    return new CategoryTreeCachePool(CacheFactory::create(namespace: 'piwigo.category_tree', defaultLifetime: 300));
+}
+
 // Filesystem-forced throughout: the real behavior under test is namespace
 // isolation between pools, not adapter selection (already covered by
 // CacheFactoryTest) -- forcing one adapter keeps this deterministic
@@ -86,12 +96,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     $clear = static function (): void {
-        foreach ([
-            CachePools::categoryTree(),
-            CachePools::general(),
-        ] as $pool) {
-            $pool->clear();
-        }
+        CachePools::general()->clear();
         cachePoolsTestTagCloud()
             ->clear();
         cachePoolsTestEffectivePermissions()
@@ -99,6 +104,8 @@ afterEach(function (): void {
         cachePoolsTestPermissions()
             ->clear();
         cachePoolsTestConfig()
+            ->clear();
+        cachePoolsTestCategoryTree()
             ->clear();
     };
     $clear();
@@ -116,23 +123,27 @@ test('each named pool is isolated from the others', function (): void {
         ->toBeTrue()
         ->and(cachePoolsTestPermissions()->getItem('shared_key')->get())
         ->toBe('permissions_value')
-        ->and(CachePools::categoryTree()->getItem('shared_key')->isHit())->toBeFalse()
+        ->and(cachePoolsTestCategoryTree()->getItem('shared_key')->isHit())
+        ->toBeFalse()
         ->and(CachePools::general()->getItem('shared_key')->isHit())->toBeFalse();
 });
 
 test('a value saved in one pool is retrievable from a fresh call to the same method', function (): void {
-    $item = CachePools::categoryTree()->getItem('tree_key');
+    $item = cachePoolsTestCategoryTree()
+        ->getItem('tree_key');
     $item->set([
         'album_1' => 42,
     ]);
-    CachePools::categoryTree()->save($item);
+    cachePoolsTestCategoryTree()
+        ->save($item);
 
-    // A fresh CachePools::categoryTree() call builds a new adapter instance
-    // pointed at the same namespace/backend -- proves pool identity is
-    // namespace-derived, not tied to holding onto one object.
-    expect(CachePools::categoryTree()->getItem('tree_key')->get())->toBe([
-        'album_1' => 42,
-    ]);
+    // A fresh cachePoolsTestCategoryTree() call builds a new adapter
+    // instance pointed at the same namespace/backend -- proves pool
+    // identity is namespace-derived, not tied to holding onto one object.
+    expect(cachePoolsTestCategoryTree()->getItem('tree_key')->get())
+        ->toBe([
+            'album_1' => 42,
+        ]);
 });
 
 test('permissions/effectivePermissions/categoryTree/tagCloud pools carry their own documented TTL, not a neighboring value', function (): void {
@@ -145,7 +156,8 @@ test('permissions/effectivePermissions/categoryTree/tagCloud pools carry their o
         ->toBe(30)
         ->and(cachePoolsTestDefaultLifetime(cachePoolsTestEffectivePermissions()))
         ->toBe(30)
-        ->and(cachePoolsTestDefaultLifetime(CachePools::categoryTree()))->toBe(300)
+        ->and(cachePoolsTestDefaultLifetime(cachePoolsTestCategoryTree()))
+        ->toBe(300)
         ->and(cachePoolsTestDefaultLifetime(cachePoolsTestTagCloud()))
         ->toBe(300);
 });

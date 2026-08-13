@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use DateTimeImmutable;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
 use Piwigo\Category\Projection\CategoryCatsPageContext;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
@@ -59,7 +59,7 @@ use Psr\Cache\CacheItemPoolInterface;
  *   PHP-side predicates/sorts over the cached tree. Pagination is
  *   `array_slice()` over the filtered+sorted set.
  * - `user_representative_picture_id` is a real, stateful write-back cache
- *   (not a pure rollup value), stored in `CachePools::categoryTree()`,
+ *   (not a pure rollup value), stored in `CategoryTreeCachePool`,
  *   distinctly key-prefixed (`repr_*`) from the tree cache's own `tree_*`
  *   keys.
  */
@@ -82,6 +82,7 @@ final readonly class CategoryCatsRenderer
         private Lang $lang,
         private ProcessCache $processCache,
         private PageState $pageState,
+        private CategoryTreeCachePool $categoryTreeCachePool,
     ) {}
 
     /**
@@ -101,7 +102,7 @@ final readonly class CategoryCatsRenderer
 
         $categoryRepo = $this->categoryRepo;
         $categoryService = $this->categoryService;
-        $reprPool = CachePools::categoryTree();
+        $reprPool = $this->categoryTreeCachePool;
         $treeCache = new CategoryTreeCache($categoryService, $categoryRepo, $reprPool);
 
         $user = $this->currentUser->get();

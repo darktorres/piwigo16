@@ -9,7 +9,7 @@ use Error;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -101,7 +101,7 @@ final class CategoryCatsRendererFakeActivityLogger implements ActivityLoggerInte
  * CategoryTreeCache from this renderer's own injected -- also `final` --
  * CategoryRepository/CategoryService) -- but IS reachable another way: the
  * rollup side ($tree) comes from CategoryTreeCache::getForUser(), backed by
- * the same real, persistent CachePools::categoryTree() this file already
+ * the same real, persistent CategoryTreeCachePool this file already
  * manipulates directly for its own repr_* assertions above. Priming that
  * cache with a real render() call, then deleting the category from the live
  * DB *without* invalidating the cache, reproduces the exact race
@@ -156,14 +156,14 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->loadFromDb();
 
-        // render() builds its own internal CategoryTreeCache from
-        // CachePools::categoryTree() (not injectable) -- a stale repr_*/
+        // render() builds its own internal CategoryTreeCache from this
+        // test's own injected CategoryTreeCachePool -- a stale repr_*/
         // tree_* entry left over from an earlier test run (this is a real
         // persistent filesystem-backed pool, not an in-memory fake) would
         // silently make an assertion here pass or fail for the wrong
         // reason.
-        CachePools::categoryTree()->clear();
-
+        $this->categoryTreeCachePool()
+            ->clear();
         $em = EntityManagerFactory::build($this->conn);
         $categoryRepo = new CategoryRepository($em, $currentConfig);
         $imageRepo = $em->getRepository(ImageEntity::class);
@@ -227,6 +227,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             LangTestFactory::get(),
             $processCache,
             PageStateTestFactory::get(),
+            $this->categoryTreeCachePool(),
         );
     }
 
@@ -234,7 +235,8 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement("UPDATE categories SET status = 'public'");
-        CachePools::categoryTree()->clear();
+        $this->categoryTreeCachePool()
+            ->clear();
         parent::tearDown();
     }
 
@@ -253,6 +255,16 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             'recent_period' => 30,
             'last_photo_date' => null,
         ], $overrides)));
+    }
+
+    private function categoryTreeCachePool(): CategoryTreeCachePool
+    {
+        $categoryTreeCachePool = Kernel::container()->get(CategoryTreeCachePool::class);
+        if (! $categoryTreeCachePool instanceof CategoryTreeCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . CategoryTreeCachePool::class);
+        }
+
+        return $categoryTreeCachePool;
     }
 
     private function renderedCategoriesHtml(): string
@@ -334,7 +346,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         );
 
         try {
-            // Primes CachePools::categoryTree()'s per-user 'tree_*' entry
+            // Primes CategoryTreeCachePool's per-user 'tree_*' entry
             // (300s TTL, not cleared again until this test's own tearDown)
             // with a snapshot that includes the new category.
             $this->renderer->render(Section::Categories, null, 0);
@@ -373,7 +385,9 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
                 'id' => 1,
             ], 0);
 
-            $item = CachePools::categoryTree()->getItem('repr_1_2');
+            $item = $this->categoryTreeCachePool()
+
+                ->getItem('repr_1_2');
             self::assertTrue($item->isHit());
             self::assertContains($item->get(), ['4', '5']);
         } finally {
@@ -394,7 +408,8 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
             // category 2 (the only sub-category) has exactly one
             // representative_picture_id set (4) -- the only possible match.
-            $item = CachePools::categoryTree()->getItem('repr_1_1');
+            $item = $this->categoryTreeCachePool()
+                ->getItem('repr_1_1');
             self::assertTrue($item->isHit());
             self::assertSame('4', $item->get());
         } finally {
@@ -467,7 +482,8 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             // category 2's real representative (4) is too high-level;
             // image 5 (also directly in category 2, not excluded) is the
             // only possible substitute.
-            $item = CachePools::categoryTree()->getItem('repr_1_2');
+            $item = $this->categoryTreeCachePool()
+                ->getItem('repr_1_2');
             self::assertTrue($item->isHit());
             self::assertSame('5', $item->get());
         } finally {
@@ -489,7 +505,9 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
                 'id' => 1,
             ], 0);
 
-            $item = CachePools::categoryTree()->getItem('repr_1_2');
+            $item = $this->categoryTreeCachePool()
+
+                ->getItem('repr_1_2');
             self::assertTrue($item->isHit());
             self::assertNull($item->get());
         } finally {

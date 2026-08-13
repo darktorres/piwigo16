@@ -15,7 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Category\CategoryAdminListCriteria;
@@ -76,6 +76,7 @@ final readonly class Categories
         private ImageStdParams $imageStdParams,
         private WsHelper $wsHelper,
         private PermissionsCachePool $permissionsCachePool,
+        private CategoryTreeCachePool $categoryTreeCachePool,
     ) {}
 
     /**
@@ -90,7 +91,7 @@ final readonly class Categories
      */
     private function categoryTreeCache(): CategoryTreeCache
     {
-        return new CategoryTreeCache($this->categoryService, $this->categoryRepository, CachePools::categoryTree());
+        return new CategoryTreeCache($this->categoryService, $this->categoryRepository, $this->categoryTreeCachePool);
     }
 
     /**
@@ -111,16 +112,16 @@ final readonly class Categories
     /**
      * A per-user "remembered random representative" override, not just a
      * permission-visibility cache -- see getList()'s own write-back logic
-     * below. Shares the same CachePools::categoryTree() pool and
+     * below. Shares the same CategoryTreeCachePool pool and
      * `'repr_' . $userId . '_' . $catId'` key format as
      * Category\CategoryCatsRenderer's own getCachedRepresentative()/
      * setCachedRepresentative(), deliberately not a separate pool, so a
      * user sees the same remembered representative whether browsing the
      * website or calling this WS method.
      */
-    private static function getCachedRepresentative(int $userId, int $catId): ?string
+    private function getCachedRepresentative(int $userId, int $catId): ?string
     {
-        $item = CachePools::categoryTree()->getItem('repr_' . $userId . '_' . $catId);
+        $item = $this->categoryTreeCachePool->getItem('repr_' . $userId . '_' . $catId);
         if (! $item->isHit()) {
             return null;
         }
@@ -130,9 +131,9 @@ final readonly class Categories
         return is_string($value) ? $value : null;
     }
 
-    private static function setCachedRepresentative(int $userId, int $catId, ?string $imageId): void
+    private function setCachedRepresentative(int $userId, int $catId, ?string $imageId): void
     {
-        $pool = CachePools::categoryTree();
+        $pool = $this->categoryTreeCachePool;
         $item = $pool->getItem('repr_' . $userId . '_' . $catId);
         $item->set($imageId);
         $pool->save($item);
@@ -379,7 +380,7 @@ final readonly class Categories
         $output = [];
         $user_id = $currentUser->id->value;
         // Which user's own "remembered random representative" cache entry
-        // (CachePools::categoryTree(), see below) each row's
+        // (CategoryTreeCachePool, see below) each row's
         // user_representative_picture_id is read from/written to --
         // overridden to the guest identity in the public branch.
         $repr_user_id = $user_id;
@@ -516,7 +517,7 @@ final readonly class Categories
             }
 
             // See getCachedRepresentative()'s own docblock.
-            $row['user_representative_picture_id'] = self::getCachedRepresentative($repr_user_id, $row['id']);
+            $row['user_representative_picture_id'] = $this->getCachedRepresentative($repr_user_id, $row['id']);
 
             // uppercats is a NOT NULL column of the categories table --
             // asserted here (unconditionally) rather than only inside the
@@ -676,7 +677,7 @@ final readonly class Categories
             // `! $params['public']` guard above ensures this always
             // persists against $user_id specifically, never the guest id.
             foreach ($user_representative_updates_for as $cat_id => $image_id) {
-                self::setCachedRepresentative(
+                $this->setCachedRepresentative(
                     $repr_user_id,
                     $cat_id,
                     is_scalar($image_id) ? (string) $image_id : null
@@ -1054,13 +1055,13 @@ final readonly class Categories
         $this->entityManager->clear();
 
         // Invalidates every user's own remembered-representative cache
-        // entry (CachePools::categoryTree(), see getCachedRepresentative()'s
+        // entry (CategoryTreeCachePool, see getCachedRepresentative()'s
         // own docblock) so the admin's explicit choice above takes
         // priority on the next read. PSR-6 has no per-key-prefix bulk
         // delete, so this clears the whole pool -- a rare admin action,
         // not a hot path, and the pool's own 300s TTL already treats
         // broader staleness as tolerable.
-        CachePools::categoryTree()->clear();
+        $this->categoryTreeCachePool->clear();
 
         $this->activityService->record('album', $params['category_id'], 'edit', [
             'image_id' => $params['image_id'],

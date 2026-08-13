@@ -25,16 +25,6 @@ use Psr\Cache\CacheItemPoolInterface;
 final class CachePools
 {
     /**
-     * 300s TTL -- per-user per-album counts, cheaper to hold slightly
-     * stale than to recompute the `COUNT(*) ... GROUP BY category_id`
-     * rollup on every category listing.
-     */
-    public static function categoryTree(): CacheItemPoolInterface
-    {
-        return CacheFactory::create(namespace: 'piwigo.category_tree', defaultLifetime: 300);
-    }
-
-    /**
      * Catch-all pool for cacheable work that doesn't warrant its own named
      * pool -- callers should still prefer a dedicated method here once they
      * have specific TTL/invalidation needs, matching the reasoning that

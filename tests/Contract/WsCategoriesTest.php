@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
+use LogicException;
 use Override;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\CategoryTreeCachePool;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 
 final class WsCategoriesTest extends ContractTestCase
@@ -48,6 +50,16 @@ final class WsCategoriesTest extends ContractTestCase
         $this->conn->executeStatement('UPDATE categories SET image_order = NULL WHERE id = 1');
 
         parent::tearDown();
+    }
+
+    private function categoryTreeCachePool(): CategoryTreeCachePool
+    {
+        $categoryTreeCachePool = Kernel::container()->get(CategoryTreeCachePool::class);
+        if (! $categoryTreeCachePool instanceof CategoryTreeCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . CategoryTreeCachePool::class);
+        }
+
+        return $categoryTreeCachePool;
     }
 
     /**
@@ -643,8 +655,8 @@ final class WsCategoriesTest extends ContractTestCase
         // effective-permissions pools) -- clear it explicitly so
         // regular_user's getList() call below sees the association just
         // made, not a stale pre-association snapshot.
-        CachePools::categoryTree()->clear();
-
+        $this->categoryTreeCachePool()
+            ->clear();
         $login = $this->callWs('pwg.session.login', [
             'username' => 'regular_user',
             'password' => 'regular_user_pass',

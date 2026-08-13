@@ -22,7 +22,7 @@ use Psr\Cache\CacheItemPoolInterface;
  * ~10 call sites throughout `include/functions_category.inc.php` -- adding a
  * cache dependency to its own constructor would break every one of them.
  *
- * 300s TTL ({@see \Piwigo\Cache\CachePools::categoryTree()}) means a newly
+ * 300s TTL ({@see \Piwigo\Cache\CategoryTreeCachePool}) means a newly
  * created/renamed category can take up to 5 minutes to appear/update in the
  * category menu -- a real, user-visible behavior change from the previous
  * `user_cache.need_update`-flagged (effectively immediate) invalidation,

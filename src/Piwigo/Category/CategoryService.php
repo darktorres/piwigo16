@@ -10,7 +10,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Category\Projection\ActivePermalinkRow;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Category\Projection\CategoryAdminListForWsRow;
@@ -118,6 +119,27 @@ final readonly class CategoryService
         }
 
         return new ProcessCache();
+    }
+
+    /**
+     * Same "avoid a 2nd touch of every manual `new CategoryService(...)`
+     * call site" reasoning as this class's own processCache() above.
+     * Kernel::isBooted()-guarded fallback stays genuinely functional (not
+     * just non-throwing) pre-boot: pool identity carries no correctness
+     * risk (see AbstractNamedCachePool's own docblock).
+     */
+    private function categoryTreeCachePool(): CategoryTreeCachePool
+    {
+        if (Kernel::isBooted()) {
+            $categoryTreeCachePool = Kernel::container()->get(CategoryTreeCachePool::class);
+            if (! $categoryTreeCachePool instanceof CategoryTreeCachePool) {
+                throw new LogicException('Container returned an unexpected type for ' . CategoryTreeCachePool::class);
+            }
+
+            return $categoryTreeCachePool;
+        }
+
+        return new CategoryTreeCachePool(CacheFactory::create(namespace: 'piwigo.category_tree', defaultLifetime: 300));
     }
 
     /**
@@ -766,7 +788,7 @@ final readonly class CategoryService
         $allRows = new CategoryTreeCache(
             $this,
             $this->repo,
-            CachePools::categoryTree()
+            $this->categoryTreeCachePool()
         )->getForUser($user->rawAttributes);
 
         $rows = self::filterMenuRows(

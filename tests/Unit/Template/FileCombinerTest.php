@@ -173,8 +173,7 @@ test('computeForce is false for an admin JS combine with no cache-busting header
 });
 
 /**
- * Confirmed-equivalent, verified live via a temporary
- * sed-applied mutation plus a standalone script targeting the exact
+ * Confirmed-equivalent: checked against the exact
  * scenario this class's own mutation-testing report suggested (an admin
  * combining with HTTP_PRAGMA's value starting with "no-cache" -- the
  * one case where strpos() returns the falsy-but-real int 0 instead of
@@ -191,7 +190,7 @@ test('computeForce is false for an admin JS combine with no cache-busting header
  * clearCombinedFiles()'s own equivalence write-up further down this
  * file, and FilesystemHelperTest.php's mkgetdir() cluster). A position-0
  * 'no-cache' match at the very start of HTTP_PRAGMA returns false either
- * way -- confirmed identical with and without the cast.
+ * way, identical with and without the cast.
  */
 
 // --- initialKey() ---
@@ -283,8 +282,7 @@ test('combine flushes pending items before appending a remote combinable, preser
 // file_get_contents()) ---
 
 /**
- * Confirmed-equivalent, verified live via temporary
- * sed-applied mutations plus a standalone script exercising every
+ * Confirmed-equivalent: exercised against every
  * scalar shape combine()'s own multi-item cache key can realistically
  * carry (int 7/0/-3, bool true/false, float 1.5, and this class's own
  * documented default '0'): combine()'s own RemoveStringCast on
@@ -482,8 +480,7 @@ test('add merges an array of combinables', function (): void {
 });
 
 /**
- * Confirmed-equivalent (both verified live via temporary
- * sed-applied mutations against this file's own existing suite): line
+ * Confirmed-equivalent: line
  * 46's own RemoveBooleanCast on `while ((bool) ($file = readdir($dir)))`
  * -- same redundant-cast-in-boolean-context pattern already documented
  * in FilesystemHelperTest.php's own mkgetdir() cluster (a `while`
@@ -494,10 +491,10 @@ test('add merges an array of combinables', function (): void {
  * RemoveFunctionCall on `closedir($dir);` -- $dir is a local variable
  * in this static method, never read again after the loop, so PHP's own
  * refcounted resource GC closes the handle once $dir goes out of scope
- * at function return regardless of the explicit call, confirmed live
- * via a real /proc/self/fd descriptor-count check across 10 repeated
- * clearCombinedFiles() calls with the closedir() call removed: the
- * count never grows past its first-call baseline. Same convention as
+ * at function return regardless of the explicit call (a real
+ * /proc/self/fd descriptor-count check across 10 repeated
+ * clearCombinedFiles() calls with the closedir() call removed shows the
+ * count never growing past its first-call baseline). Same convention as
  * FilesystemHelperTest.php's/DerivativeCacheServiceTest.php's own
  * closedir()/clearstatcache() equivalence write-ups.
  */
@@ -574,16 +571,13 @@ function invokeProcessCombinable(FileCombiner $combiner, Combinable $combinable,
 }
 
 /**
- * Confirmed-equivalent, verified live via temporary
- * sed-applied mutations (each including a real reproduction script that
- * exercises the exact scenario, run against both the mutated and
- * original source to confirm byte-identical output):
+ * Confirmed-equivalent:
  *
  * - flushPending()'s own EmptyStringToNotEmpty on `$header = '';`
  *   (its count===1 branch, right before calling processCombinable()
  *   with $return_content=false): $header there is a fresh local
  *   variable passed only into *that one* by-ref call and never read
- *   again afterward in flushPending() itself -- confirmed with a CSS
+ *   again afterward in flushPending() itself -- verified with a CSS
  *   template combinable carrying a suspicious @import (so processCss()
  *   really does append into $header via this exact call path), whose
  *   written single-item cache file's content is identical regardless of
@@ -960,8 +954,7 @@ test('processCss throws when a combined_css_postfilter listener returns somethin
 })->throws(Error::class, 'must return an instance of');
 
 /**
- * Confirmed-equivalent, verified live via temporary
- * sed-applied mutations against this file's own existing suite:
+ * Confirmed-equivalent:
  *
  * - Both RemoveBooleanCast mutations on `if ((bool) preg_match_all(...))`
  *   (the url() pattern and the @import pattern): same redundant-cast-
@@ -984,8 +977,7 @@ test('processCss throws when a combined_css_postfilter listener returns somethin
  * already killed by this file's own pre-existing tests -- "processCssRec
  * only rewrites url() references starting with '/'..." below, and
  * "processCssRec resolves a doubly-nested @import..." further down,
- * respectively (confirmed live: each fails under its own sed-applied
- * mutation). pest --mutate's own report listed them as UNTESTED anyway;
+ * respectively. pest --mutate's own report listed them as UNTESTED anyway;
  * same class of tool limitation as this project's other documented
  * pest-plugin-mutate blind spots.
  */

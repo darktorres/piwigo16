@@ -32,6 +32,7 @@ use Piwigo\Lang\LangService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
+use SensitiveParameter;
 
 /**
  * Login/logout session lifecycle: remember-me auto-login, session
@@ -278,8 +279,12 @@ final readonly class AuthService
      *   $_POST, ws_session_login()'s optional WS param) can genuinely pass
      *   null when the field is omitted
      */
-    public function tryLogUser(string $username, ?string $password, bool $rememberMe): bool
-    {
+    public function tryLogUser(
+        string $username,
+        #[SensitiveParameter]
+        ?string $password,
+        bool $rememberMe
+    ): bool {
         $event = $this->eventDispatcher->dispatchChange(new TryLogUser(false, $username, $password, $rememberMe));
 
         return $event->success;

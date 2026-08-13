@@ -20,4 +20,24 @@ final class TryLogUser
         public readonly ?string $password,
         public readonly bool $rememberMe,
     ) {}
+
+    /**
+     * `#[\SensitiveParameter]` only redacts scalar/array function
+     * parameters, not object properties, so a `TryLogUser` instance
+     * flowing through the event bus and into a stack trace's captured
+     * arguments still exposes `$password` unless this hooks the object's
+     * own debug-output path -- var_dump()-family serialization only,
+     * same redaction convention as Config\CurrentConfig::all().
+     *
+     * @return array<string, mixed>
+     */
+    public function __debugInfo(): array
+    {
+        return [
+            'success' => $this->success,
+            'username' => $this->username,
+            'password' => $this->password === null ? null : str_repeat('*', 8),
+            'rememberMe' => $this->rememberMe,
+        ];
+    }
 }

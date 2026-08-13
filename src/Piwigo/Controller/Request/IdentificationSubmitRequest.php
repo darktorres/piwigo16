@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Request;
 
 use Piwigo\Auth\CookieService;
 use Piwigo\Validation\InputValidator;
+use SensitiveParameter;
 
 /**
  * Validated `$_GET`/`$_POST` shape for IdentificationController::__invoke()
@@ -30,6 +31,7 @@ final readonly class IdentificationSubmitRequest
         public bool $hideRedirectErrorPresent,
         public bool $isLoginSubmitted,
         public string $username,
+        #[SensitiveParameter]
         public ?string $password,
         public bool $isRememberMe,
     ) {}

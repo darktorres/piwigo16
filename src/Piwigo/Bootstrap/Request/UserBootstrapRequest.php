@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap\Request;
 
+use SensitiveParameter;
+
 /**
  * Validated `$_GET`/`$_POST`/`$_REQUEST` shape for
  * UserBootstrap::initialize().
@@ -40,6 +42,7 @@ final readonly class UserBootstrapRequest
         public ?string $authKey,
         public ?string $wsMethod,
         public ?string $username,
+        #[SensitiveParameter]
         public ?string $password,
     ) {}
 

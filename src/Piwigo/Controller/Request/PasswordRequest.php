@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Request;
 
 use Piwigo\Validation\InputValidator;
+use SensitiveParameter;
 
 /**
  * Validated `$_GET`/`$_POST` shape for PasswordController's `__invoke()`
@@ -33,7 +34,9 @@ final readonly class PasswordRequest
         public bool $usernameOrEmailPresent,
         public string $usernameOrEmail,
         public string $userCode,
+        #[SensitiveParameter]
         public string $newPassword,
+        #[SensitiveParameter]
         public string $passwordConf,
     ) {}
 

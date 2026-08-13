@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Request;
 
+use SensitiveParameter;
+
 /**
  * Validated `$_POST` shape for RegisterController::__invoke() (the
  * self-registration form/handler, replacing register.php).
@@ -30,7 +32,9 @@ final readonly class RegisterSubmitRequest
     private function __construct(
         public bool $isSubmitted,
         public string $key,
+        #[SensitiveParameter]
         public string $password,
+        #[SensitiveParameter]
         public string $passwordConf,
         public string $login,
         public ?string $mailAddress,

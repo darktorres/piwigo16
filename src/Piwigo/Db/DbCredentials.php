@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Db;
 
+use SensitiveParameter;
+
 /**
  * The 6 PIWIGO_DB_* connection parameters, read from the process
  * environment only -- the one source of DB credentials for the whole app.
@@ -43,6 +45,7 @@ final class DbCredentials
     public function __construct(
         public string $host,
         public string $user,
+        #[SensitiveParameter]
         public string $password,
         public string $database,
         public ?int $port = null,

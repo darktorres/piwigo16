@@ -48,6 +48,7 @@
 !/themes/admin
 !/themes/default
 !/themes/standard_pages
+!/themes/golden_html_test
 /upload
 /galleries/*
 !/galleries/index.php

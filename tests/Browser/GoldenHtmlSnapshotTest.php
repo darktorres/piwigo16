@@ -213,7 +213,12 @@ function goldenHtmlNormalize(string $html): string
 {
     $html = preg_replace('#(_data/combined/)[a-zA-Z0-9]+(\.(?:css|js))#', '$1{{HASH}}$2', $html) ?? $html;
     $html = preg_replace('#\b[a-f0-9]{32}(?:[a-f0-9]{32})?\b#', '{{TOKEN}}', $html) ?? $html;
-    $html = preg_replace('#[0-9]{9,11}\.[0-9]+:[0-9]+:\{\{TOKEN\}\}#', '{{ANTIBOT_KEY}}', $html) ?? $html;
+    // EphemeralKeyService::generate()'s round(microtime(true), 1) drops the
+    // fractional part in string context whenever it rounds to a whole
+    // second (~10% of real requests, confirmed live: PHP stringifies
+    // round(1786654287.04, 1) as "1786654287", no trailing ".0") -- the
+    // decimal group has to be optional, not assumed always-present.
+    $html = preg_replace('#[0-9]{9,11}(?:\.[0-9]+)?:[0-9]+:\{\{TOKEN\}\}#', '{{ANTIBOT_KEY}}', $html) ?? $html;
     $html = preg_replace('#feed=[A-Za-z0-9]{40,60}#', 'feed={{FEED_TOKEN}}', $html) ?? $html;
     $html = preg_replace('#(psk-[0-9]{8}-)[A-Za-z0-9]{10}#', '$1{{SEARCH_SUFFIX}}', $html) ?? $html;
 
@@ -322,7 +327,8 @@ function goldenHtmlAssertOrWrite(string $name, string $body): void
         $message .= " Diff written to {$diffPath}.";
     }
 
-    expect($normalizedFresh)->toBe($normalizedExisting, $message);
+    expect($normalizedFresh)
+        ->toBe($normalizedExisting, $message);
 }
 
 /** @var array<string, array{0: string, 1: bool}> $routes */
@@ -426,4 +432,145 @@ it("captures infos-errors's golden HTML", function (): void {
     expect($result['status'])->toBe(200, "infos-errors returned HTTP {$result['status']}, expected 200");
 
     goldenHtmlAssertOrWrite('infos-errors', $result['body']);
+})->group('golden-html-snapshot');
+
+/**
+ * Template::setTheme()'s standard_pages fallback only fires for a
+ * non-'default' CurrentUser theme (guest user id 2 for these 3 anonymous
+ * routes) on exactly identification/register/password -- the fixture has
+ * no second real gallery theme installed, so themes/golden_html_test/
+ * (a themeconf.inc.php-only stub, no template overrides) exists purely to
+ * give Template::setTheme() something real to load before it swaps to
+ * the real themes/standard_pages directory. H::setUserTheme() mutates the
+ * shared guest row every other anonymous route's baseline also depends on
+ * rendering under 'default' -- restored in `finally` immediately after
+ * the request, matching this file's own narrow-DB-slice-freeze precedent
+ * (H::freezeImageHits()/H::truncateHistory()).
+ *
+ * @param 'identification'|'register'|'password' $routeName
+ */
+function goldenHtmlCapturesStandardPages(string $routeName, string $path): void
+{
+    $guestUserId = 2;
+    $previousTheme = H::userTheme($guestUserId);
+    expect($previousTheme)
+        ->not->toBeNull("fixture guest user (id {$guestUserId}) has no user_infos row");
+
+    H::setUserTheme($guestUserId, 'golden_html_test');
+
+    try {
+        $result = goldenHtmlCurl('', $path);
+    } finally {
+        H::setUserTheme($guestUserId, $previousTheme ?? 'default');
+    }
+
+    expect($result['status'])->toBe(200, "standard-pages-{$routeName} returned HTTP {$result['status']}, expected 200");
+
+    goldenHtmlAssertOrWrite("standard-pages-{$routeName}", $result['body']);
+}
+
+it("captures standard-pages-identification's golden HTML", function (): void {
+    goldenHtmlCapturesStandardPages('identification', '/identification.php');
+})->group('golden-html-snapshot');
+
+it("captures standard-pages-register's golden HTML", function (): void {
+    goldenHtmlCapturesStandardPages('register', '/register.php');
+})->group('golden-html-snapshot');
+
+it("captures standard-pages-password's golden HTML", function (): void {
+    goldenHtmlCapturesStandardPages('password', '/password.php');
+})->group('golden-html-snapshot');
+
+it("captures standard-pages-profile's golden HTML", function (): void {
+    // profile.php is auth-required, so it needs a logged-in user rather
+    // than the anonymous guest row goldenHtmlCapturesStandardPages() above
+    // mutates -- fixture_admin (via goldenHtmlLoginAsAdmin(), same as
+    // every other admin-* capture) is reused here rather than a second
+    // dedicated user: its *gallery* theme (user_infos.theme) is a
+    // different setting from the *admin* theme
+    // (PreferencesService::getAdminThemePref()) every admin-* capture
+    // actually depends on, so mutating it here can't affect them.
+    // 'favorites'/'profile' in VisualRegressionRoutes.php DO render under
+    // fixture_admin's gallery theme, though -- the restore in `finally`
+    // is what keeps this safe for them.
+    $adminUserId = 1;
+    $previousTheme = H::userTheme($adminUserId);
+    expect($previousTheme)
+        ->not->toBeNull("fixture admin user (id {$adminUserId}) has no user_infos row");
+
+    H::setUserTheme($adminUserId, 'golden_html_test');
+
+    try {
+        $cookieJar = goldenHtmlLoginAsAdmin();
+        $result = goldenHtmlCurl($cookieJar, '/profile.php');
+        unlink($cookieJar);
+    } finally {
+        H::setUserTheme($adminUserId, $previousTheme ?? 'default');
+    }
+
+    expect($result['status'])->toBe(200, "standard-pages-profile returned HTTP {$result['status']}, expected 200");
+
+    goldenHtmlAssertOrWrite('standard-pages-profile', $result['body']);
+})->group('golden-html-snapshot');
+
+it("captures no-photo-yet-guest's and no-photo-yet-admin's golden HTML", function (): void {
+    // Page/NoPhotoYetRenderer.php (wired into RequestBootstrap.php's own
+    // per-request bootstrap, not a route of its own) shows this on *any*
+    // real page once ImageRepository::countAllImages() -- a bare,
+    // unconditional COUNT(*) -- is 0, except inside admin context or on
+    // identification/password/ws/popuphelp (which stay reachable on
+    // purpose). It renders two different content variants depending on
+    // the viewer: NoPhotoYetAdminPageContext (step 2, deactivate options)
+    // for a logged-in admin browsing the *gallery* (not admin.php --
+    // adminContext()->isActive() excludes that entirely), or
+    // NoPhotoYetGuestPageContext (step 1, a login link) for a guest.
+    // Both captured from the same plain gallery-home route
+    // (index.php), once anonymously and once via
+    // goldenHtmlLoginAsAdmin()'s session.
+    //
+    // The fixture's 5 real images are load-bearing for dozens of other
+    // already-captured baselines, so this can't just DELETE FROM images
+    // and move on -- H::snapshotAllImages()/restoreAllImages() capture
+    // and replay everything the delete touches (images itself plus its
+    // real FK dependents, both the ON DELETE CASCADE tables and the 2 ON
+    // DELETE SET NULL columns a cascade doesn't hand back), same
+    // snapshot-then-restore shape as this file's own
+    // snapshotDerivativeConfig()/restoreDerivativeConfig(), restored in
+    // `finally` regardless of outcome.
+    //
+    // RequestBootstrap.php's own call site
+    // (`if (self::currentConfig()->noPhotoYet === null)`) is the real
+    // trap here: NoPhotoYetRenderer only runs at all while `no_photo_yet`
+    // has never been written to `config` -- the very first request this
+    // fixture ever served (with all 5 real photos present) already took
+    // the `else` branch (`confUpdateParam('no_photo_yet', 'false')`), so
+    // deleting images alone permanently gets ignored: confirmed live that
+    // a real committed DELETE FROM images, curl'd immediately after,
+    // still rendered the normal gallery page -- not stale cached data,
+    // the whole check is gated shut once that config row exists.
+    // H::setConfigValue('no_photo_yet', null) clears it back to "genuine
+    // absence" (CurrentConfig::$noPhotoYet's own docblock) so the check
+    // runs fresh, same finally-guaranteed restore discipline as the image
+    // snapshot.
+    $snapshot = H::snapshotAllImages();
+    $previousNoPhotoYetConfig = H::configValue('no_photo_yet');
+
+    try {
+        H::deleteAllImages();
+        H::setConfigValue('no_photo_yet', null);
+
+        $guestResult = goldenHtmlCurl('', '/index.php');
+        expect($guestResult['status'])->toBe(200, "no-photo-yet-guest returned HTTP {$guestResult['status']}, expected 200");
+
+        $cookieJar = goldenHtmlLoginAsAdmin();
+        $adminResult = goldenHtmlCurl($cookieJar, '/index.php');
+        unlink($cookieJar);
+        expect($adminResult['status'])->toBe(200, "no-photo-yet-admin returned HTTP {$adminResult['status']}, expected 200");
+    } finally {
+        H::restoreAllImages($snapshot);
+        H::setConfigValue('no_photo_yet', $previousNoPhotoYetConfig);
+    }
+
+    goldenHtmlAssertOrWrite('no-photo-yet-guest', $guestResult['body']);
+    goldenHtmlAssertOrWrite('no-photo-yet-admin', $adminResult['body']);
 })->group('golden-html-snapshot');

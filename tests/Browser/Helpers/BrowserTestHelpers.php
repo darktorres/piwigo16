@@ -1120,6 +1120,35 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Reads a single user's `user_infos`.`theme` value -- same narrow-DB-slice
+     * pattern as freezeImageHits()/configValue(), used to snapshot a user's
+     * theme before a golden-HTML capture that needs it temporarily changed
+     * (the standard_pages theme swap in Template::setTheme() only fires for
+     * a non-'default' CurrentUser theme), so it can be restored exactly
+     * afterward.
+     */
+    public static function userTheme(int $userId): ?string
+    {
+        $db = self::connect();
+        $row = self::dbFetchAssoc($db, sprintf('SELECT theme FROM user_infos WHERE user_id = %d', $userId));
+        self::dbClose($db);
+
+        return is_array($row) && is_string($row['theme'] ?? null) ? $row['theme'] : null;
+    }
+
+    /**
+     * Writes a single user's `user_infos`.`theme` value directly -- the
+     * counterpart to userTheme(), for both the temporary override and the
+     * guaranteed restore.
+     */
+    public static function setUserTheme(int $userId, string $theme): void
+    {
+        $db = self::connect();
+        self::dbQuery($db, sprintf("UPDATE user_infos SET theme = '%s' WHERE user_id = %d", self::dbEscape($db, $theme), $userId));
+        self::dbClose($db);
+    }
+
+    /**
      * json_encode() for a value the caller knows cannot fail to encode
      * (plain scalars/arrays, no resources or invalid-UTF8 strings) --
      * throws instead of silently handing a `false` (encode failure) or
@@ -1270,6 +1299,115 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Same snapshot-then-restore shape as snapshotDerivativeConfig()/
+     * restoreDerivativeConfig() above, sized for
+     * NoPhotoYetRenderer's own trigger condition:
+     * ImageRepository::countAllImages() is a bare, unconditional COUNT(*)
+     * over `images` with no WHERE clause, so making it 0 for a
+     * no_photo_yet.latte capture means real rows have to not exist, not a
+     * flag/filter to toggle.
+     *
+     * `images`' 10 real foreign-key dependents (confirmed live via
+     * information_schema.REFERENTIAL_CONSTRAINTS) are all ON DELETE CASCADE
+     * except categories.representative_picture_id and history.image_id
+     * (both ON DELETE SET NULL) -- a single `DELETE FROM images` cascades
+     * comments/favorites/image_category/image_tag/rate (and the fixture's
+     * always-empty caddie/image_format/lounge) automatically; only the 2
+     * SET NULL columns need their own explicit snapshot+restore, since a
+     * cascade delete doesn't return what it nulled.
+     *
+     * categories_representative_picture_id/history_image_id rows are always
+     * exactly {id, representative_picture_id}/{id, image_id} (the SELECT
+     * above names only those 2 columns), but kept at dbFetchAll()'s own
+     * list<array<string, mixed>> shape rather than a narrower sealed
+     * array{...} -- PHPStan can't statically narrow a generic DB-row read
+     * down to a literal shape, and restoreAllImages() already reads both
+     * keys through an explicit (int) cast, so the looser type loses no
+     * real safety.
+     *
+     * @return array{images: list<array<string, mixed>>, comments: list<array<string, mixed>>, favorites: list<array<string, mixed>>, image_category: list<array<string, mixed>>, image_tag: list<array<string, mixed>>, rate: list<array<string, mixed>>, categories_representative_picture_id: list<array<string, mixed>>, history_image_id: list<array<string, mixed>>}
+     */
+    public static function snapshotAllImages(): array
+    {
+        $db = self::connect();
+
+        $snapshot = [
+            'images' => self::dbFetchAll($db, 'SELECT * FROM images'),
+            'comments' => self::dbFetchAll($db, 'SELECT * FROM comments'),
+            'favorites' => self::dbFetchAll($db, 'SELECT * FROM favorites'),
+            'image_category' => self::dbFetchAll($db, 'SELECT * FROM image_category'),
+            'image_tag' => self::dbFetchAll($db, 'SELECT * FROM image_tag'),
+            'rate' => self::dbFetchAll($db, 'SELECT * FROM rate'),
+            'categories_representative_picture_id' => self::dbFetchAll($db, 'SELECT id, representative_picture_id FROM categories WHERE representative_picture_id IS NOT NULL'),
+            'history_image_id' => self::dbFetchAll($db, 'SELECT id, image_id FROM history WHERE image_id IS NOT NULL'),
+        ];
+
+        self::dbClose($db);
+
+        return $snapshot;
+    }
+
+    /**
+     * Deletes every real image row -- see snapshotAllImages()'s own
+     * docblock for exactly what cascades automatically vs. what
+     * restoreAllImages() has to repair by hand afterward.
+     */
+    public static function deleteAllImages(): void
+    {
+        $db = self::connect();
+        self::dbQuery($db, 'DELETE FROM images');
+        self::dbClose($db);
+    }
+
+    /**
+     * Counterpart to snapshotAllImages(). Restores `images` and its CASCADE
+     * dependents via delete-then-insert (matching restoreDerivativeConfig()'s
+     * own reasoning: a test may have added/removed whole rows, not just
+     * edited existing ones -- though the only real caller here is
+     * deleteAllImages() itself, so these deletes are normally already
+     * empty), then repairs the 2 SET NULL columns snapshotAllImages()
+     * captured separately.
+     *
+     * @param array{images: list<array<string, mixed>>, comments: list<array<string, mixed>>, favorites: list<array<string, mixed>>, image_category: list<array<string, mixed>>, image_tag: list<array<string, mixed>>, rate: list<array<string, mixed>>, categories_representative_picture_id: list<array<string, mixed>>, history_image_id: list<array<string, mixed>>} $snapshot
+     */
+    public static function restoreAllImages(array $snapshot): void
+    {
+        $db = self::connect();
+
+        self::dbQuery($db, 'DELETE FROM images');
+        foreach ($snapshot['images'] as $row) {
+            self::insertRow($db, 'images', $row);
+        }
+
+        foreach (['comments', 'favorites', 'image_category', 'image_tag', 'rate'] as $table) {
+            self::dbQuery($db, 'DELETE FROM ' . $table);
+            foreach ($snapshot[$table] as $row) {
+                self::insertRow($db, $table, $row);
+            }
+        }
+
+        foreach ($snapshot['categories_representative_picture_id'] as $row) {
+            $representativePictureId = $row['representative_picture_id'] ?? null;
+            $id = $row['id'] ?? null;
+            if (! is_numeric($representativePictureId) || ! is_numeric($id)) {
+                continue;
+            }
+            self::dbQuery($db, sprintf('UPDATE categories SET representative_picture_id = %d WHERE id = %d', (int) $representativePictureId, (int) $id));
+        }
+
+        foreach ($snapshot['history_image_id'] as $row) {
+            $imageId = $row['image_id'] ?? null;
+            $id = $row['id'] ?? null;
+            if (! is_numeric($imageId) || ! is_numeric($id)) {
+                continue;
+            }
+            self::dbQuery($db, sprintf('UPDATE history SET image_id = %d WHERE id = %d', (int) $imageId, (int) $id));
+        }
+
+        self::dbClose($db);
+    }
+
+    /**
      * Replaces every currently-*enabled* `derivative_size` row with exactly
      * the given set (upsert given rows, delete any other enabled row not
      * in the set) -- mirrors DerivativeSizeRepository::syncEnabled()'s own
@@ -1303,20 +1441,22 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Unquoted identifiers: every real column this is ever called with
-     * (derivative_settings/derivative_size, per the two callers above) is
-     * already lowercase snake_case with no reserved-word collisions on
-     * either platform (confirmed by reading both tables' real DDL) --
-     * unquoted works identically on both, rather than branching a
-     * quote-char per platform for a case that never actually needs it.
-     * Backtick quoting is simply invalid syntax on Postgres, so this
-     * can't stay driver-blind.
+     * Identifiers are always quoted -- image_category.rank (a real reserved
+     * word since MySQL 8.0.2's window-function support) is a real
+     * collision snapshotAllImages()/restoreAllImages() hit live; unlike
+     * this method's original 2 callers (derivative_settings/
+     * derivative_size, neither has a reserved-word column), a
+     * DB-agnostic generic table dumper can't assume every future caller's
+     * columns stay collision-free. Backtick (mysqli) vs. double-quote
+     * (pgsql) is real driver-specific syntax, so the quote char still has
+     * to branch per platform.
      *
      * @param array<string, mixed> $row
      */
     private static function insertRow(mysqli|Connection $db, string $table, array $row): void
     {
-        $columns = array_keys($row);
+        $quote = $db instanceof mysqli ? '`' : '"';
+        $columns = array_map(static fn (string $column): string => $quote . $column . $quote, array_keys($row));
         $values = array_map(static function (mixed $value) use ($db): string {
             if ($value === null) {
                 return 'NULL';

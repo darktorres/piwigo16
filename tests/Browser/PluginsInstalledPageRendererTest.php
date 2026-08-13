@@ -207,6 +207,103 @@ function pluginsInstalledDb(): mysqli|Connection
     return H::connect();
 }
 
+/**
+ * Writes ONLY plugin.json + src/Plugin.php -- deliberately no main.inc.php
+ * at all, unlike pluginsInstalledWriteHookedFixturePlugin() above.
+ * ExtensionScanner (main.inc.php header-comment only) is genuinely blind
+ * to a fixture built this way; the only thing that can make it appear in
+ * the admin listing is PluginsInstalledPageRenderer's own PluginRegistry
+ * manifest merge (P27.5's deferred gap, closed here) -- the concrete
+ * regression this test exists to prove fixed.
+ */
+function pluginsInstalledWriteManifestOnlyFixturePlugin(string $pluginId): void
+{
+    $dir = pluginsInstalledPluginsPath() . $pluginId;
+    mkdir($dir . '/src', 0o777, true);
+
+    $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+    file_put_contents($dir . '/plugin.json', json_encode([
+        'id' => $pluginId,
+        'name' => $pluginId,
+        'version' => '1.0.0',
+        'description' => 'Manifest-only test fixture (no main.inc.php).',
+        'license' => 'MIT',
+        'minPiwigo' => '16.3.0',
+        'main' => $namespace . '\\Plugin',
+        'autoload' => [
+            'psr-4' => [
+                $namespace . '\\' => 'src/',
+            ],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+    file_put_contents($dir . '/src/Plugin.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use Piwigo\\PluginConfig\\ExtensionContext;
+        use Piwigo\\PluginConfig\\ExtensionInterface;
+
+        final class Plugin implements ExtensionInterface
+        {
+            public function boot(ExtensionContext \$context): void {}
+            public function install(): void {}
+            public function activate(): void {}
+            public function deactivate(): void {}
+            public function uninstall(): void {}
+            public function update(string \$oldVersion, string \$newVersion): void {}
+
+            public function subscribedEvents(): array
+            {
+                return [];
+            }
+        }
+
+        PHP);
+}
+
+function pluginsInstalledRemoveManifestOnlyFixturePlugin(string $pluginId): void
+{
+    $dir = pluginsInstalledPluginsPath() . $pluginId;
+    if (is_file($dir . '/src/Plugin.php')) {
+        unlink($dir . '/src/Plugin.php');
+    }
+    if (is_dir($dir . '/src')) {
+        rmdir($dir . '/src');
+    }
+    if (is_file($dir . '/plugin.json')) {
+        unlink($dir . '/plugin.json');
+    }
+    if (is_dir($dir)) {
+        rmdir($dir);
+    }
+}
+
+it('lists a new-contract, manifest-only plugin (no main.inc.php at all) via the PluginRegistry merge', function (): void {
+    $page = H::loginAsAdmin($this);
+    $pluginId = 'manifest-only-plugin-' . uniqid();
+
+    pluginsInstalledWriteManifestOnlyFixturePlugin($pluginId);
+
+    $db = H::connect();
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
+
+    try {
+        $page = H::navigateOk($page, '/admin.php?page=plugins');
+
+        $page->assertSee($pluginId);
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
+        pluginsInstalledRemoveManifestOnlyFixturePlugin($pluginId);
+    }
+});
+
 it('resolves a settings URL from a real get_admin_plugin_menu_links hook via both the legacy "plugin-X" and the "section=X" regex fallbacks', function (): void {
     $hooksId = 'pwgtest-plugins-installed-hooks';
     $targetId = 'pwgtest-plugins-installed-target';

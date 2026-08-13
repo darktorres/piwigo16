@@ -24,6 +24,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\GetAdminPluginMenuLinks;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
@@ -48,7 +49,7 @@ final class PluginsInstalledPageRenderer
      * fixed page slug statically (it's the only class registered for the
      * 'plugins' slug in config/admin_pages.php).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CurrentUser $currentUser, Paths $paths): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CurrentUser $currentUser, Paths $paths, PluginRegistry $pluginRegistry): void
     {
         $template = $currentTemplate->get();
 
@@ -77,6 +78,30 @@ final class PluginsInstalledPageRenderer
         // defensively instead.
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService, $lang, $paths, $currentUser, $eventDispatcher, $currentConfig);
+
+        // ExtensionScanner only recognizes the legacy main.inc.php header-
+        // comment format -- a new-contract plugin (plugin.json only, no
+        // main.inc.php) is invisible to it, so a fresh install's own
+        // bundled plugins would otherwise never appear here at all (P27.5's
+        // own deferred gap, closed here). Merge in any manifest not already
+        // covered by the fs scan, in the same array shape the loop below
+        // already reads.
+        foreach ($pluginRegistry->getAllManifests() as $manifestId => $manifest) {
+            if (isset($fs_plugins[$manifestId])) {
+                continue;
+            }
+            $fs_plugins[$manifestId] = [
+                'name' => $manifest->name,
+                'version' => $manifest->version,
+                'description' => $manifest->description,
+                'author' => $manifest->author ?? '',
+                'author uri' => $manifest->authorUri,
+                'uri' => $manifest->homepage ?? '',
+                'hasSettings' => $manifest->hasSettings,
+                'extension' => null,
+            ];
+        }
+
         uasort($fs_plugins, $htmlRenderer->nameCompare(...));
         $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 

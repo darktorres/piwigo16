@@ -116,6 +116,33 @@ final readonly class ThemesInstalledPageRenderer
         // its documented convention and reads specific keys defensively
         // instead.
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
+
+        // ExtensionScanner only recognizes the legacy themeconf.inc.php
+        // header-comment format -- a new-contract theme (theme.json only,
+        // no themeconf.inc.php) is invisible to it, so a fresh install's
+        // own bundled themes would otherwise never appear here at all
+        // (P27.5's own deferred gap, closed here). Merge in any manifest
+        // not already covered by the fs scan, in the same array shape
+        // buildTplTheme() already reads.
+        foreach ($this->themeRegistry->getAllManifests() as $manifestId => $manifest) {
+            if (isset($fs_themes[$manifestId])) {
+                continue;
+            }
+            $fs_themes[$manifestId] = [
+                'name' => $manifest->name,
+                'uri' => $manifest->homepage ?? '',
+                'version' => $manifest->version,
+                'description' => $manifest->description,
+                'author' => $manifest->author ?? '',
+                'author uri' => $manifest->authorUri,
+                'parent' => $manifest->parent,
+                'screenshot' => $manifest->assets['screenshot'] ?? '',
+                'mobile' => false,
+                'admin_uri' => null,
+                'activable' => true,
+            ];
+        }
+
         uasort($fs_themes, $this->htmlRenderer->nameCompare(...));
 
         $default_theme = $this->userService

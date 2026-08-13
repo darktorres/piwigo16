@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Connection;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
@@ -61,13 +62,18 @@ use Piwigo\Users\UserStatus;
  * wrapping is dropped in this port.
  *
  * user_failed_logins is append-only with no natural unique key
- * (UserFailedLoginRepositoryTest.php's own docblock); every cleanup
- * below scopes by `user_id = X AND ip = ''` rather than bare
- * `user_id = X` -- pwgLogin() always records failures with ip=''
- * in this CLI process (no $_SERVER['REMOTE_ADDR']), while
- * UserFailedLoginRepositoryTest.php exclusively uses real TEST-NET-3
- * ips for its own user_id=1 rows, so this scoping can never collide
- * with it under --parallel.
+ * (UserFailedLoginRepositoryTest.php's own docblock). Every
+ * pwgLogin()-triggered test that writes to it is transaction-wrapped
+ * (AuthService doesn't open any secondary connection internally, unlike
+ * TagService::setTagsOf()'s own updateImagesLastmodified() call, so
+ * this is safe here) -- a plain, non-transactional write scoped only by
+ * `ip = ''` still leaves the row genuinely, immediately visible to any
+ * other connection for its entire lifetime, and
+ * UserFailedLoginRepositoryTest.php's own countRecentByUserId() test
+ * has no ip scoping at all (it's the user-scoped lockout check), so it
+ * was observed picking these rows up under --parallel; confirmed live
+ * via a 5-run full composer test loop, each with a fresh fixture
+ * reimport.
  */
 function authServiceTestRoot(): string
 {
@@ -77,9 +83,9 @@ function authServiceTestRoot(): string
     return $root;
 }
 
-function authServiceTestService(): AuthService
+function authServiceTestService(?Connection $conn = null): AuthService
 {
-    $conn = DbConnection::build();
+    $conn ??= DbConnection::build();
     $currentConfig = CurrentConfigTestFactory::get();
 
     return new AuthService(
@@ -121,9 +127,9 @@ function authServiceTestApiKeyService(): ApiKeyService
  * AuthService::pwgLogin() is the real, registered try_log_user handler
  * -- it takes/returns a TryLogUser event, not 4 loose params.
  */
-function authServiceTestPwgLoginResult(bool $success, string $username, ?string $password, bool $rememberMe): bool
+function authServiceTestPwgLoginResult(bool $success, string $username, ?string $password, bool $rememberMe, ?Connection $conn = null): bool
 {
-    return authServiceTestService()
+    return authServiceTestService($conn)
         ->pwgLogin(new TryLogUser($success, $username, $password, $rememberMe))
         ->success;
 }
@@ -392,6 +398,23 @@ test('pwgLogin() returns true immediately when success is already true', functio
         ->toBeTrue();
 });
 
+/**
+ * Every test below that triggers a real recordFailure() call is
+ * transaction-wrapped -- AuthService doesn't open any secondary
+ * connection internally (unlike TagService::setTagsOf()'s own
+ * updateImagesLastmodified() call), so this is safe here. Plain,
+ * non-transactional writes to user_failed_logins (as this file
+ * originally had, scoped only by `ip = ''`) are still genuinely,
+ * immediately visible to any other connection for the row's entire
+ * lifetime -- UserFailedLoginRepositoryTest.php's own
+ * countRecentByUserId() test has no ip scoping at all (it's the
+ * user-scoped lockout check) and was observed picking up these rows
+ * under --parallel even after transaction-wrapping *that* test's own
+ * reads, since a REPEATABLE READ snapshot still includes whatever's
+ * already committed elsewhere at the moment the snapshot is taken.
+ * Confirmed live via a 5-run full composer test loop, each with a
+ * fresh fixture reimport.
+ */
 test('pwgLogin() denies the login when a FinalizeLogin handler blocks it', function (): void {
     // fixture_admin / fixture_admin -- a real username+password that
     // passes pwgLogin()'s own password_verify() check, so execution
@@ -407,33 +430,36 @@ test('pwgLogin() denies the login when a FinalizeLogin handler blocks it', funct
         $event->rememberMe,
     );
     EventDispatcherTestFactory::get()->addTypedHandler(FinalizeLogin::class, $handler);
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
-        expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false))
+        expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false, $conn))
             ->toBeFalse();
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(FinalizeLogin::class, $handler);
-        DbConnection::build()->executeStatement("DELETE FROM user_failed_logins WHERE user_id = 1 AND ip = ''");
+        $conn->rollBack();
     }
 });
 
 test('pwgLogin() records a failed login row for a wrong password', function (): void {
     $conn = DbConnection::build();
+    $conn->beginTransaction();
     $countFailedLoginsForFixtureAdmin = static fn (): int => (int) $conn->fetchOne(
         "SELECT COUNT(*) FROM user_failed_logins WHERE user_id = 1 AND ip = ''"
     );
 
-    $before = $countFailedLoginsForFixtureAdmin();
-
     try {
-        $result = authServiceTestPwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false);
+        $before = $countFailedLoginsForFixtureAdmin();
+
+        $result = authServiceTestPwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false, $conn);
 
         expect($result)
             ->toBeFalse()
             ->and($countFailedLoginsForFixtureAdmin())
             ->toBe($before + 1);
     } finally {
-        $conn->executeStatement("DELETE FROM user_failed_logins WHERE user_id = 1 AND ip = ''");
+        $conn->rollBack();
     }
 });
 
@@ -443,11 +469,11 @@ test('pwgLogin() locks out the username after max attempts even with the correct
     // username-scoped lockout alone.
     CurrentConfigTestFactory::get()->loginLockoutMaxAttempts = 3;
     $conn = DbConnection::build();
-    $conn->executeStatement("DELETE FROM user_failed_logins WHERE user_id = 1 AND ip = ''");
+    $conn->beginTransaction();
 
     try {
         for ($i = 0; $i < 3; $i++) {
-            expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false))
+            expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false, $conn))
                 ->toBeFalse();
         }
 
@@ -456,7 +482,7 @@ test('pwgLogin() locks out the username after max attempts even with the correct
         // pwgLogin() reached it on this specific call.
         unset($_SESSION['fake_user_cache']);
 
-        $result = authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false);
+        $result = authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false, $conn);
 
         expect($result)
             ->toBeFalse();
@@ -464,7 +490,7 @@ test('pwgLogin() locks out the username after max attempts even with the correct
             ->not->toHaveKey('fake_user_cache');
     } finally {
         unset($_SESSION['fake_user_cache']);
-        $conn->executeStatement("DELETE FROM user_failed_logins WHERE user_id = 1 AND ip = ''");
+        $conn->rollBack();
     }
 });
 
@@ -480,12 +506,11 @@ test('pwgLogin() fast-rejects a locked-out username via the user-scoped lockout 
     // IP-scoped lockout check runs FIRST, before the username is even
     // resolved, and only when $_SERVER['REMOTE_ADDR'] is non-empty.
     // Force REMOTE_ADDR to the same guaranteed-empty state every
-    // sibling test here relies on implicitly, and clear any leftover
-    // user-scoped row too rather than trusting either precondition.
+    // sibling test here relies on implicitly.
     $originalRemoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
     $_SERVER['REMOTE_ADDR'] = '';
     $conn = DbConnection::build();
-    $conn->executeStatement("DELETE FROM user_failed_logins WHERE user_id = 1 AND ip = ''");
+    $conn->beginTransaction();
     CurrentConfigTestFactory::get()->loginLockoutMaxAttempts = 1;
 
     $countFailedLoginsForFixtureAdmin = static fn (): int => (int) $conn->fetchOne(
@@ -493,13 +518,13 @@ test('pwgLogin() fast-rejects a locked-out username via the user-scoped lockout 
     );
 
     try {
-        expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false))
+        expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false, $conn))
             ->toBeFalse();
         $afterFirstFailure = $countFailedLoginsForFixtureAdmin();
 
         unset($_SESSION['fake_user_cache']);
 
-        $result = authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false);
+        $result = authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false, $conn);
 
         expect($result)
             ->toBeFalse();
@@ -510,7 +535,7 @@ test('pwgLogin() fast-rejects a locked-out username via the user-scoped lockout 
             ->toBe($afterFirstFailure + 1);
     } finally {
         unset($_SESSION['fake_user_cache']);
-        $conn->executeStatement("DELETE FROM user_failed_logins WHERE user_id = 1 AND ip = ''");
+        $conn->rollBack();
         $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
     }
 });

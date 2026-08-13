@@ -106,9 +106,10 @@ deptrac:
     # Admin\PluginLoader/Admin\Extensions\ExtensionLifecycle instead), so
     # L2b's inability to depend on L4Integration never actually comes
     # into play here. PluginEntity (the ORM entity Admin\PluginLoader
-    # fetches via the EntityManager) and Projection\Plugin
-    # (PluginRepository's own read-shape DTO) ride along in the same
-    # collector, same reasoning as EventHandler riding with
+    # fetches via the EntityManager), Projection\Plugin
+    # (PluginRepository's own read-shape DTO), and PluginState
+    # (PluginEntity's own `state` column enum type) ride along in the
+    # same collector, same reasoning as EventHandler riding with
     # EventDispatcher above -- without it, these classes would have no
     # layer at all and every dependency touching them would go
     # unchecked. PluginMigrationEntity/PluginMigrationRepository
@@ -117,13 +118,17 @@ deptrac:
     # downward on L2b, so this is the coherent placement beside
     # PluginEntity/PluginRepository, matching deptrac's own existing
     # "moved because a new real caller needs it at a layer that can
-    # reach it" precedent.
+    # reach it" precedent. PluginState was missed by this exact fix the
+    # first two times it was applied to this namespace (EventHandler,
+    # then PluginEntity/Projection\Plugin) -- a periodic
+    # `deptrac analyse --report-uncovered` check is worth adding
+    # alongside the 0-violations gate below, given the pattern.
     - name: L2bExtendedDomain
       collectors:
         - type: classLike
           value: ^Piwigo\\(Search|Calendar|Site|Url|Csrf|Permalink|Feed|Filter|Comment|Rate|Caddie|History|Activity|Notification|Metadata|Telemetry|Section)\\.*
         - type: classLike
-          value: ^Piwigo\\PluginConfig\\(PluginRepository|PluginEntity|Projection\\Plugin|PluginMigrationEntity|PluginMigrationRepository)$
+          value: ^Piwigo\\PluginConfig\\(PluginRepository|PluginEntity|PluginState|Projection\\Plugin|PluginMigrationEntity|PluginMigrationRepository)$
     # L3 Presentation — Http\Middleware\RoutingMiddleware depends on
     # Routing\Router, and L3 may only depend on layers at or below
     # itself, so Routing lives at L3 too (same-layer, always allowed).

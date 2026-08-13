@@ -105,6 +105,10 @@ final readonly class UserBootstrap
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
+        $csrfService = Kernel::container()->get(CsrfService::class);
+        if (! $csrfService instanceof CsrfService) {
+            throw new LogicException('Container returned an unexpected type for ' . CsrfService::class);
+        }
         $installationFlag = Kernel::container()->get(InstallationFlag::class);
         if (! $installationFlag instanceof InstallationFlag) {
             throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
@@ -242,7 +246,7 @@ final readonly class UserBootstrap
                 // docblock): must stay visible to later $_POST/$_GET reads
                 // in this same request (Ws\Request\WsRawRequest::fromGlobals()
                 // and any downstream CSRF check).
-                $_POST['pwg_token'] = $_GET['pwg_token'] = new CsrfService($currentConfig)->getToken();
+                $_POST['pwg_token'] = $_GET['pwg_token'] = $csrfService->getToken();
 
                 // logger
                 $logger = $this->currentLogger->get();

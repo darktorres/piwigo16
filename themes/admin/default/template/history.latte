@@ -34,7 +34,7 @@ var current_param = {
   pageNumber: 0 {* fetch lines from line 0 to line 100*}
 }
 
-const API_METHOD = "{$API_METHOD}";
+const API_METHOD = "{$API_METHOD|noescape}";
 const str_dwld = "{='Downloaded'|translate|noescape}";
 const str_most_visited = "{='Most visited'|translate|noescape}";
 const str_best_rated = "{='Best rated'|translate|noescape}";

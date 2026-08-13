@@ -90,7 +90,7 @@ jQuery().ready(function(){
 translate_type['{$type_to_translate|noescape}'] = "{$type_to_translate|translate|noescape}";
 {/foreach}
 {/capture}
-{do footerScript($tmpFooterScript)}
+{do footerScript($tmpFooterScript, 'jquery.cluetip')}
 {do combineScript(id: 'intro_tooltips', load: 'footer', path: 'themes/admin/default/js/intro_tooltips.js')}
 
 {capture $tmpHtmlStyle}
@@ -175,7 +175,7 @@ translate_type['{$type_to_translate|noescape}'] = "{$type_to_translate|translate
 
 <div class="stat-box">
 <i class="icon-hdd icon-blue"></i>
-<span class="number">{$STORAGE_USED}</span><span class="caption">{='Storage used'|translate}</span>
+<span class="number">{$STORAGE_USED|noescape}</span><span class="caption">{='Storage used'|translate}</span>
 </div>
 
 </div> {* .stat-boxes *}

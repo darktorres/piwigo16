@@ -13,7 +13,7 @@ namespace Piwigo\Calendar;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\CalendarNavCachePool;
 use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -64,6 +64,7 @@ final readonly class CalendarRenderer
         private PageState $pageState,
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
+        private CalendarNavCachePool $calendarNavCachePool,
     ) {}
 
     /**
@@ -292,7 +293,7 @@ final readonly class CalendarRenderer
                     or ($page_chronology_date[0] === 'any' && count($page_chronology_date) === 1))
             ) {
                 $user = $this->currentUser->get();
-                $cache_item = CachePools::calendarNav()
+                $cache_item = $this->calendarNavCachePool
                     ->getItem('nav_' . $user->id->value . '_' . md5($calendar->date_field . $order_by));
             }
 
@@ -313,7 +314,7 @@ final readonly class CalendarRenderer
                     );
                 if ($cache_item instanceof CacheItemInterface) {
                     $cache_item->set($items);
-                    CachePools::calendarNav()->save($cache_item);
+                    $this->calendarNavCachePool->save($cache_item);
                 }
             }
         }

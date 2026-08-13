@@ -8,7 +8,8 @@ namespace Piwigo\Tests\Integration {
     use LogicException;
     use Override;
     use Piwigo\Auth\AccessLevelChecker;
-    use Piwigo\Cache\CachePools;
+    use Piwigo\Cache\CacheFactory;
+    use Piwigo\Cache\CalendarNavCachePool;
     use Piwigo\Calendar\CalendarBase;
     use Piwigo\Calendar\CalendarRenderer;
     use Piwigo\Calendar\CalendarRenderResult;
@@ -149,7 +150,7 @@ namespace Piwigo\Tests\Integration {
 
         private function makeRenderer(): CalendarRenderer
         {
-            return new CalendarRenderer(LangTestFactory::get(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn));
+            return new CalendarRenderer(LangTestFactory::get(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn), new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30)));
         }
 
         /**
@@ -281,7 +282,7 @@ namespace Piwigo\Tests\Integration {
         public function testRenderGroupsMultipleYearsAndMonthsForTheDefaultMonthlyCalendarView(): void
         {
             $template = TemplateTestFactory::build();
-            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn));
+            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn), new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30)));
 
             $result = $renderer->render(
                 section: Section::ListView,
@@ -327,7 +328,7 @@ namespace Piwigo\Tests\Integration {
         public function testRenderNormalizesChronologyDateToIntsAndNextPrevNavigationStillWorks(): void
         {
             $template = TemplateTestFactory::build();
-            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn));
+            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn), new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30)));
 
             $result = $renderer->render(
                 section: Section::ListView,
@@ -399,7 +400,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function testRenderReusesACachedCategoriesItemListInsteadOfReQuerying(): void
         {
-            CachePools::calendarNav()->clear();
+            new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30))->clear();
 
             $render = fn (): CalendarRenderResult => $this->makeRenderer()
                 ->render(
@@ -428,7 +429,7 @@ namespace Piwigo\Tests\Integration {
                 $second = $render();
                 self::assertSame($first->items, $second->items);
             } finally {
-                CachePools::calendarNav()->clear();
+                new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30))->clear();
             }
         }
 

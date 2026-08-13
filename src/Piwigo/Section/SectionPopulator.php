@@ -7,6 +7,7 @@ namespace Piwigo\Section;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Cache\CalendarNavCachePool;
 use Piwigo\Cache\SectionImageIdsCachePool;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
@@ -81,6 +82,7 @@ final readonly class SectionPopulator
         private ImageStdParams $imageStdParams,
         private EntityManagerInterface $entityManager,
         private SectionImageIdsCachePool $sectionImageIdsCachePool,
+        private CalendarNavCachePool $calendarNavCachePool,
     ) {}
 
     public function populate(): void
@@ -629,7 +631,7 @@ final readonly class SectionPopulator
             $calendar_items_raw = is_array($page['items']) ? $page['items'] : [];
             $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
 
-            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->imageStdParams, $this->pageState, $this->permissionService, $this->entityManager)
+            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->imageStdParams, $this->pageState, $this->permissionService, $this->entityManager, $this->calendarNavCachePool)
                 ->render(
                     $section,
                     $page_category,

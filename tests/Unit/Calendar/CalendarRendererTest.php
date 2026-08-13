@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\CalendarNavCachePool;
 use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryRepository;
@@ -118,6 +119,7 @@ test('render() returns a no-op result for a non-categories section with no items
                 new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
             ),
             EntityManagerFactory::build($conn),
+            new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30)),
         );
 
         $result = $renderer->render(Section::Tags, null, [], 'posted', null, null, [], false);

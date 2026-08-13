@@ -14,6 +14,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Cache\CalendarNavCachePool;
 use Piwigo\Cache\SectionImageIdsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -212,6 +213,10 @@ final class SectionPopulatorTest extends IntegrationTestCase
         if (! $sectionImageIdsCachePool instanceof SectionImageIdsCachePool) {
             throw new LogicException('Container returned an unexpected type for ' . SectionImageIdsCachePool::class);
         }
+        $calendarNavCachePool = Kernel::container()->get(CalendarNavCachePool::class);
+        if (! $calendarNavCachePool instanceof CalendarNavCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . CalendarNavCachePool::class);
+        }
 
         return new SectionPopulator(
             LangTestFactory::get(),
@@ -239,6 +244,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             ImageStdParamsTestFactory::get(),
             $this->entityManager,
             $sectionImageIdsCachePool,
+            $calendarNavCachePool,
         );
     }
 

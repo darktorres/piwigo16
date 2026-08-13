@@ -112,13 +112,4 @@ final class CachePools
     {
         return CacheFactory::create(namespace: 'piwigo.search_results', defaultLifetime: 30);
     }
-
-    /**
-     * 30s TTL -- same reasoning as permissions() above. Used by
-     * Calendar\CalendarRenderer's calendar navigation-bar cache.
-     */
-    public static function calendarNav(): CacheItemPoolInterface
-    {
-        return CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30);
-    }
 }

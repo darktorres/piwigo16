@@ -354,6 +354,19 @@ test('deleteImageTagByTagIds() is a no-op for no ids', function (): void {
     // 'family' search this way -- linking tag 3 to image 4 mid-test
     // made a concurrent 'family' search return image 4 as a spurious
     // extra match).
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction:
+    // tagTestFixtureLikeTagId() below inserts into `tags`, which carries
+    // a FULLTEXT index (tags_ft_name) -- its auxiliary-index maintenance
+    // can deadlock against another --parallel worker's own concurrent
+    // write to the same table when held open for a whole test's
+    // duration -- same mechanism, same fix, as TagServiceTest.php's own
+    // 'getTagIds() creates a new tag for a plain name when allowed'
+    // (reproduced live there: DeadlockException). Every other test below
+    // that inserts/updates/deletes a `tags` row (directly or via this
+    // same helper) carries the identical exemption for the identical
+    // reason, not repeated in full at each site.
+    DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $conn = DbConnection::build();
     $tagId = tagTestFixtureLikeTagId();
@@ -381,7 +394,10 @@ test('deleteImageTagByTagIds() is a no-op for no ids', function (): void {
 
 test('deleteImageTagByTagIds() removes every link to that tag', function (): void {
     // Disposable tag -- see the sibling no-op test above for why a real
-    // fixture tag id isn't safe to borrow here.
+    // fixture tag id isn't safe to borrow here. Exempt from the blanket
+    // per-test transaction for the same FULLTEXT-deadlock reason -- see
+    // that same sibling test above.
+    DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $conn = DbConnection::build();
     $tagId = tagTestFixtureLikeTagId();
@@ -410,7 +426,10 @@ test('deleteImageTagByTagIds() removes every link to that tag', function (): voi
 
 test('deleteImageTagByImageIds() is a no-op for no ids', function (): void {
     // Disposable tag -- see deleteImageTagByTagIds()'s no-op test above
-    // for why a real fixture tag id isn't safe to borrow here.
+    // for why a real fixture tag id isn't safe to borrow here. Exempt
+    // from the blanket per-test transaction for the same
+    // FULLTEXT-deadlock reason -- see that same test above.
+    DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $tagId = $repo->insert(tagTestName(), tagTestName());
     $conn = DbConnection::build();
@@ -441,7 +460,10 @@ test('deleteImageTagByImageIds() removes every link from that image', function (
     // 2 disposable tags, both linked to image 5, so the assertion below
     // proves every link from that image is gone, not just one -- see
     // deleteImageTagByTagIds()'s no-op test above for why real fixture
-    // tag ids aren't safe to borrow here.
+    // tag ids aren't safe to borrow here. Exempt from the blanket
+    // per-test transaction for the same FULLTEXT-deadlock reason -- see
+    // that same test above.
+    DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $tagIdA = $repo->insert(tagTestName(), tagTestName());
     $tagIdB = $repo->insert(tagTestName(), tagTestName());
@@ -465,6 +487,10 @@ test('deleteImageTagByImageIds() removes every link from that image', function (
 });
 
 test('deleteImageTagByImageAndTagIds() is a no-op for empty image ids', function (): void {
+    // Exempt from the blanket per-test transaction: tagTestFixtureLikeTagId()
+    // below inserts into `tags` -- same FULLTEXT-deadlock reason as
+    // deleteImageTagByTagIds()'s no-op test far above.
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $tagId = tagTestFixtureLikeTagId();
     $conn->insert('image_tag', [
@@ -482,6 +508,10 @@ test('deleteImageTagByImageAndTagIds() is a no-op for empty image ids', function
 });
 
 test('deleteImageTagByImageAndTagIds() is a no-op for empty tag ids', function (): void {
+    // Exempt from the blanket per-test transaction: tagTestFixtureLikeTagId()
+    // below inserts into `tags` -- same FULLTEXT-deadlock reason as
+    // deleteImageTagByTagIds()'s no-op test far above.
+    DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $conn = DbConnection::build();
     $tagId = tagTestFixtureLikeTagId();
@@ -514,6 +544,11 @@ test('deleteImageTagByImageAndTagIds() removes only the intersection', function 
     // (pre-existing, not introduced by this session's own blanket
     // per-test transaction work; confirmed live via a 15-run --parallel
     // verification loop).
+    //
+    // Also exempt from the blanket per-test transaction itself -- same
+    // FULLTEXT-deadlock reason as deleteImageTagByTagIds()'s no-op test
+    // far above.
+    DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $tagIdA = $repo->insert(tagTestName(), tagTestName());
     $tagIdB = $repo->insert(tagTestName(), tagTestName());
@@ -553,6 +588,10 @@ test('deleteByIds() is a no-op for no ids', function (): void {
 });
 
 test('deleteByIds() removes the disposable tag', function (): void {
+    // Exempt from the blanket per-test transaction: this test both
+    // inserts into and deletes from `tags` -- same FULLTEXT-deadlock
+    // reason as deleteImageTagByTagIds()'s no-op test far above.
+    DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $id = $repo->insert(tagTestName(), tagTestName());
 
@@ -563,6 +602,9 @@ test('deleteByIds() removes the disposable tag', function (): void {
 });
 
 test('deleteByIds() clears the identity map, so a later find() sees the real deletion instead of a stale cached entity', function (): void {
+    // Exempt from the blanket per-test transaction -- same
+    // FULLTEXT-deadlock reason as the sibling test just above.
+    DbTransactionTestOverride::rollback();
     [$repo, $em] = tagTestRepoWithEm();
     $id = $repo->insert(tagTestName(), tagTestName());
     $tracked = $em->find(TagEntity::class, $id);
@@ -630,6 +672,10 @@ test('findIdByNameLikeAnyPattern() treats SQL syntax as a literal value', functi
 });
 
 test('updateNameAndUrlName() renames an existing tag', function (): void {
+    // Exempt from the blanket per-test transaction: this test inserts,
+    // renames, and deletes a `tags` row -- same FULLTEXT-deadlock reason
+    // as deleteImageTagByTagIds()'s no-op test far above.
+    DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $id = $repo->insert(tagTestName(), tagTestName());
 
@@ -651,6 +697,14 @@ test('updateNameAndUrlName() renames an existing tag', function (): void {
 });
 
 test('updateNameAndUrlName() is a silent no-op for a nonexistent id', function (): void {
+    // Exempt from the blanket per-test transaction out of caution -- the
+    // UPDATE below matches zero rows (id 999999 doesn't exist), so it
+    // shouldn't trigger `tags`' own FULLTEXT auxiliary-index maintenance
+    // at all, but a point UPDATE against a table with a held-open
+    // blanket transaction from every other --parallel worker is cheap
+    // enough to exempt anyway rather than rely on that distinction
+    // staying true across a MySQL version bump.
+    DbTransactionTestOverride::rollback();
     $name = tagTestName();
     tagTestRepo()
         ->updateNameAndUrlName(TagId::from(999999), $name, $name);
@@ -665,6 +719,11 @@ test('countImagesPerTagUnrestricted() counts every image_tag link regardless of 
     // fixture tag's own counter isn't safe to assert on exactly. Fixture
     // images 4/5 have no tags of their own, so linking this brand-new
     // tag id to them gives an exact, collision-proof count.
+    //
+    // Exempt from the blanket per-test transaction: the insert() below
+    // reaches `tags` -- same FULLTEXT-deadlock reason as
+    // deleteImageTagByTagIds()'s no-op test far above.
+    DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $tagId = $repo->insert(tagTestName(), tagTestName());
     $repo->massInsertImageTags([
@@ -718,6 +777,10 @@ test('massInsertImageTags() with ignore=true silently skips a duplicate, unlike 
 });
 
 test('massInsertImageTags() clears the identity map, so a later find() sees the real insert instead of a stale cached null', function (): void {
+    // Exempt from the blanket per-test transaction: the insert() below
+    // reaches `tags` -- same FULLTEXT-deadlock reason as
+    // deleteImageTagByTagIds()'s no-op test far above.
+    DbTransactionTestOverride::rollback();
     [$repo, $em] = tagTestRepoWithEm();
     $tagId = $repo->insert(tagTestName(), tagTestName());
     $key = [
@@ -1008,6 +1071,16 @@ test('countAll() reflects a freshly inserted tag', function (): void {
     // inside one REPEATABLE READ transaction pins both queries to the
     // exact same snapshot, closing the gap for good rather than just
     // narrowing it.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction: this
+    // test's own explicit beginTransaction()/commit() below (needed for
+    // the snapshot-pinning technique itself) requires a plain,
+    // non-overridden connection to behave as a real, single transaction
+    // rather than nesting a savepoint inside the blanket wrapper's own
+    // already-open one; the insert() also reaches `tags` -- same
+    // FULLTEXT-deadlock reason as deleteImageTagByTagIds()'s no-op test
+    // far above.
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $repo = tagTestRepoFor($conn);
     $id = $repo->insert(tagTestName(), tagTestName());
@@ -1038,6 +1111,12 @@ test('countAllImageTagLinks() reflects a freshly inserted link', function (): vo
     // snapshot comparison itself is race-proof, but a real fixture tag's
     // transient link is still observable by a concurrent search test
     // during the window before this test's own cleanup runs.
+    //
+    // Also exempt from the blanket per-test transaction itself, for the
+    // same 2 reasons as countAll()'s own sibling test just above (real
+    // beginTransaction()/commit() needed for the snapshot technique,
+    // plus the `tags` insert() itself).
+    DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $repo = tagTestRepoFor($conn);
     $tagId = $repo->insert(tagTestName(), tagTestName());

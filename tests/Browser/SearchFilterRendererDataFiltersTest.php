@@ -531,7 +531,7 @@ it('serves the height-rows cache pool across a cache-miss then cache-hit load wh
     // photo ever created, not just this test's own upload) -- the default
     // sort (`date_available DESC, file ASC, id ASC`) can't tell them apart
     // either, since every fixture photo shares the same frozen test-clock
-    // date_available (confirmed live: '2026-08-01 00:00:00' on every row,
+    // date_available ('2026-08-01 00:00:00' on every row,
     // old and new alike), leaving `id ASC` as the real tie-break and
     // burying this test's own just-created (highest id) photo past page 1
     // once enough prior suite runs have piled up matching rows. Ordering
@@ -542,8 +542,7 @@ it('serves the height-rows cache pool across a cache-miss then cache-hit load wh
     // criteria, only by user id -- an unrelated earlier test's own height
     // search by the same admin user, still within its TTL, would otherwise
     // make this test's own "1st load" a stale cache hit that predates the
-    // photo uploaded below. Confirmed live: this test passes in isolation
-    // but flakes in the full suite without this clear.
+    // photo uploaded below.
     CachePools::searchResults()->clear();
 
     try {

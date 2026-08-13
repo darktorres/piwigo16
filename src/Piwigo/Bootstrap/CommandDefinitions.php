@@ -14,6 +14,7 @@ use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Command\MaintenancePurgeHistoryCommand;
 use Piwigo\Command\MaintenancePurgeSessionsCommand;
 use Piwigo\Command\MaintenanceRepairDbCommand;
+use Piwigo\Command\PrecompileTemplatesCommand;
 use Piwigo\Command\SchemaDumpCommand;
 use Piwigo\Command\UserListCommand;
 use Symfony\Component\Console\Command\Command;
@@ -47,6 +48,7 @@ final class CommandDefinitions
             MigrateCommand::class,
             SchemaDumpCommand::class,
             LintLatteCommand::class,
+            PrecompileTemplatesCommand::class,
         ];
     }
 }

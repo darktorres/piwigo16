@@ -109,6 +109,7 @@
     "lint:php": "@php vendor/bin/ecs check",
     "lint:psr4": "@composer dump-autoload --optimize --strict-psr",
     "lint:latte": "@php tools/latte-lint.php",
+    "precompile:templates": "@php bin/piwigo precompile:templates",
     "analyse:phpstan": "@php vendor/bin/phpstan analyse",
     "analyse": [
       "@analyse:phpstan"

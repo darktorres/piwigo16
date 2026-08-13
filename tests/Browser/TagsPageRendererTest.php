@@ -39,7 +39,7 @@ function tagsPageAddTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, str
 // TagRepository::findOrphanTags() only considers a tag orphaned once its
 // lastmodified is >1 day old (a grace period against deleting a tag the
 // instant it's created, before a photo might still be linked to it) --
-// confirmed live via that method's own `lastmodified < SUBDATE(NOW(),
+// per that method's own `lastmodified < SUBDATE(NOW(),
 // INTERVAL 1 DAY)` clause. A tag freshly created via pwg.tags.add never
 // satisfies this on its own, so every test below must explicitly backdate
 // it to actually exercise "orphan" behavior.

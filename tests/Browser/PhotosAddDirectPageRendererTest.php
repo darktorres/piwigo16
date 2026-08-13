@@ -75,7 +75,7 @@ it('falls back to filename-based original detection when formats= targets a none
 
         // No "doesn't exist" error for an unresolvable original -- HAVE_
         // FORMATS_ORIGINAL just stays false, and the template shows this
-        // real hint instead (confirmed live).
+        // real hint instead.
         $page->assertSee('The original picture will be detected with the filename (without extension).');
     } finally {
         H::restoreConfig($snapshot);
@@ -130,7 +130,7 @@ it('computes the GD max-upload-resolution memory warning when forced onto the "g
     $snapshot = H::snapshotConfig(['graphics_library']);
     // Default 'auto' resolves to 'ext_imagick' in this test env (both the
     // imagick PHP extension and the `convert`/`identify` CLI binaries are
-    // present, confirmed live) -- prepareUploadForm()'s own memory-limit
+    // present) -- prepareUploadForm()'s own memory-limit
     // math only runs for the 'gd' library specifically.
     H::setConfigValue('graphics_library', '"gd"');
 
@@ -239,7 +239,7 @@ it('reports a setup error (and suppresses warnings) when the configured upload_d
 it('warns when upload_form_chunk_size is configured larger than PHP\'s real upload_max_filesize', function (): void {
     $snapshot = H::snapshotConfig(['upload_form_chunk_size']);
     // php.ini's upload_max_filesize is 2M (2048kB) in this environment
-    // (confirmed live, see WsUploadTest's own comment) -- any chunk size
+    // (see WsUploadTest's own comment) -- any chunk size
     // configured above that in kB trips prepareUploadForm()'s own sanity
     // warning. Unlike upload_max_filesize/post_max_size themselves (real
     // PHP_INI_PERDIR directives baked into the live Apache php.ini, not
@@ -261,57 +261,49 @@ it('warns when upload_form_chunk_size is configured larger than PHP\'s real uplo
     }
 });
 
-// Four real branches in prepareUploadForm() are left uncovered here, each
-// verified (not assumed) to be unreachable through a genuine, real request
-// against this project's actual, fixed, concurrently-shared test
-// environment, without mutating global state every other parallel
-// Browser-suite test/agent also depends on:
+// Four real branches in prepareUploadForm() are left uncovered here,
+// each unreachable through a genuine, real request against this
+// project's fixed, concurrently-shared test environment, without
+// mutating global state every other parallel Browser-suite test also
+// depends on:
 //
 // - The `if ($max_upload_resolution < 25)` GD memory-math body (assigning
-//   max_upload_width/max_upload_height/max_upload_resolution): confirmed
-//   live (this same "computes the GD..." test's own graphics_library=gd
-//   override, re-checked with a raw curl request and grepped for the
-//   template's own gated "Approximate maximum resolution" string) that with
-//   this environment's real Apache memory_limit (128M, /etc/php/8.5/
-//   apache2/php.ini), max_upload_resolution comes out >= 25 -- the
-//   fudge_factor=1.7 line just above (218) DOES already run every time
-//   (unconditionally, whenever the outer `getLibrary() === 'gd'` block is
-//   entered -- see that test), it's specifically the resolution<25 body
-//   that stays unreached. memory_limit is PHP_INI_ALL (ini_set()-able in
+//   max_upload_width/max_upload_height/max_upload_resolution): with this
+//   environment's real Apache memory_limit (128M), max_upload_resolution
+//   comes out >= 25 -- the fudge_factor=1.7 line just above (218) DOES
+//   already run every time (unconditionally, whenever the outer
+//   `getLibrary() === 'gd'` block is entered -- see the "computes the
+//   GD..." test above), it's specifically the resolution<25 body that
+//   stays unreached. memory_limit is PHP_INI_ALL (ini_set()-able in
 //   principle), but only from *inside* the same request that's executing
 //   admin.php -- there's no test-mode hook in this codebase's bootstrap
-//   that does so (grepped include/ + src/Piwigo/Bootstrap), and the only
-//   external lever (editing the one shared php.ini / dropping a
-//   webroot .htaccess) would apply to every concurrently-running
-//   agent/test hitting this same live Apache instance, not just this one
-//   request.
+//   that does so, and the only external lever (editing the one shared
+//   php.ini / dropping a webroot .htaccess) would apply to every
+//   concurrently-running test hitting this same live Apache instance, not
+//   just this one request.
 //
 // - `if (! function_exists('gd_info'))` ("GD library is missing"): ext-gd
 //   is a hard `require` in composer.json (not `suggest`), and function_exists()
 //   with a literal string argument always resolves the real global
 //   built-in -- it can't be namespaced away, and this environment always
-//   has it loaded (confirmed live: `php -m` lists gd for both the apache2
-//   and cli SAPIs). Same underlying check as ImageBackend::isGd() (also just
+//   has it loaded. Same underlying check as ImageBackend::isGd() (also just
 //   `function_exists('gd_info')`), which the "computes the GD..." test
 //   above only ever observes returning true.
 //
 // - `if (CurrentConfig::useExif() and ! function_exists('exif_read_data'))`
-//   ("Exif extension not available"): confirmed live (php -m, both the
-//   apache2 and cli SAPIs load ext/exif via 20-exif.ini) exif_read_data()
-//   is always available here -- exact same "verified untestable without
-//   breaking a real runtime guarantee" conclusion this codebase already
-//   documents in tests/Integration/MetadataServiceTest.php (getExifData()'s
-//   own identical guard) and tests/Integration/Admin/Integrity/
+//   ("Exif extension not available"): ext/exif is always loaded here --
+//   exact same "verified untestable without breaking a real runtime
+//   guarantee" conclusion this codebase already documents in
+//   tests/Integration/MetadataServiceTest.php (getExifData()'s own
+//   identical guard) and tests/Integration/Admin/Integrity/
 //   C13yInternalTest.php (c13y_exif()'s own identical guard).
 //
 // - `if ($uploadService->getIniSize('upload_max_filesize') >
 //   $uploadService->getIniSize('post_max_size'))` (the "upload_max_filesize
 //   is bigger than post_max_size" warning): both are real PHP_INI_PERDIR
-//   directives (confirmed live: ini_set() on either silently no-ops, still
-//   returns the original "2M"/"8M") baked into the one shared Apache
-//   php.ini this whole Browser suite -- run by ~40 other agents in
-//   parallel in this workflow -- depends on. The only way to flip this
-//   comparison true is a global php.ini/.htaccess edit, which would corrupt
-//   every other concurrently-running test hitting this same live server,
-//   not a scoped, restorable per-test override like every config-row-based
-//   branch above.
+//   directives -- ini_set() on either silently no-ops -- baked into the
+//   one shared Apache php.ini this whole Browser suite depends on. The
+//   only way to flip this comparison true is a global php.ini/.htaccess
+//   edit, which would corrupt every other concurrently-running test
+//   hitting this same live server, not a scoped, restorable per-test
+//   override like every config-row-based branch above.

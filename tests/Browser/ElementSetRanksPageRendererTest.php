@@ -14,8 +14,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * has 3 direct photos (image_id 1/2/3, image_category.rank 1/2/3, ORDER BY
  * `rank` in the renderer's own query) named "Photo 1"/"Photo 2"/"Photo 3".
  * The renderer's own RANK template value is `(++$current_rank) * 10`
- * starting from 1 -- a faithful port of the legacy admin/element_set_ranks.php
- * (confirmed identical, not a rewrite regression), so the FIRST thumbnail
+ * starting from 1 -- a faithful port of the legacy admin/element_set_ranks.php,
+ * not a rewrite regression, so the FIRST thumbnail
  * gets rank 20, not 10 -- asserted explicitly below since it's a genuinely
  * surprising off-by-one to lock in.
  */
@@ -39,9 +39,9 @@ it('renders one ranked thumbnail per photo, in rank order, with the legacy off-b
     // non-empty (null !== ''), so "automatic order" (user_define) is
     // pre-selected instead of "Use the default photo sort order", even
     // though no image_order was ever explicitly set. This is the same
-    // (faithfully ported) behaviour as legacy admin/element_set_ranks.php,
-    // confirmed by direct comparison -- not a rewrite regression, but a
-    // real, surprising-enough-to-lock-in quirk.
+    // (faithfully ported) behaviour as legacy admin/element_set_ranks.php --
+    // not a rewrite regression, but a real, surprising-enough-to-lock-in
+    // quirk.
     $page->assertRadioSelected('image_order_choice', 'user_define');
     $page->assertRadioNotSelected('image_order_choice', 'default');
 });
@@ -85,7 +85,7 @@ it('renders no manual-order thumbnails block for an album with no photos', funct
  * Two of this class's own real-but-untested lines are deliberately NOT
  * covered below, after a full trace of the only real production call
  * path: AlbumSubController::handle() (the sole caller of
- * elementSetRanksPageRenderer()->render(), confirmed via a repo-wide grep)
+ * elementSetRanksPageRenderer()->render())
  * already resolves `cat_id` from the SAME `$_GET['cat_id']` this class's
  * own ElementSetRanksRequest::fromGlobals() re-reads, and already calls
  * its own `CategoryRepository::findById()` + `htmlService()->fatalError()`
@@ -99,7 +99,7 @@ it('renders no manual-order thumbnails block for an album with no photos', funct
  * category genuinely exists with id 0 (the one fallback value this
  * class's own Request DTO ever produces for an invalid cat_id), which no
  * real Piwigo installation can ever have -- categories.id is a normal
- * AUTO_INCREMENT PK starting at 1 (confirmed against the fixture). Not a
+ * AUTO_INCREMENT PK starting at 1. Not a
  * real, externally-reachable behaviour to test.
  */
 it('rejects a save-order submission with no CSRF token as a bad request', function (): void {

@@ -68,8 +68,8 @@ function identCurl(string $cookieJar, array $fields = []): array
     // sends back a session cookie an *earlier* response already set.
     // login=Submit alone, straight into a brand-new/empty $cookieJar, has
     // nothing to send back yet (the server can't set a cookie the client
-    // returns within the very same request) -- confirmed live: it always
-    // hits the "cookies blocked" branch instead of the real username/
+    // returns within the very same request), so it always hits the
+    // "cookies blocked" branch instead of the real username/
     // password check, regardless of credentials. A real browser visits
     // the login page first (receiving the session cookie), then submits
     // the form -- this priming GET reproduces that, matching what this
@@ -240,7 +240,7 @@ it('shows a cookies-blocked error and does not attempt to log in when no session
 
 it('rejects a case-mismatched username by default (bin-collation username column, insensitive_case_logon disabled)', function (): void {
     // Baseline for the paired test below: `users`.`username` is
-    // `utf8mb4_bin` (case-sensitive, confirmed via the fixture's own
+    // `utf8mb4_bin` (case-sensitive, per the fixture's own
     // CREATE TABLE), so an exact-equality lookup for 'FIXTURE_ADMIN' genuinely
     // does not match the stored 'fixture_admin' row, and it isn't
     // email-shaped either -- AuthRepository::findByUsernameOrEmail() finds
@@ -296,9 +296,9 @@ it('resolves a case-mismatched username via UserService::searchCaseUsername() wh
 it('treats a non-string lang cookie (PHP array syntax) as a hacking attempt and returns a fatal 500', function (): void {
     // `Cookie: lang[]=x` parses into $_COOKIE['lang'] as a genuine PHP
     // array (PHP applies the same bracket-name parsing to cookies as it
-    // does to GET/POST params) -- confirmed live via RegisterControllerTest's
-    // identical assertion for the same shared $_COOKIE['lang'] handling
-    // shape. HtmlService::fatalError() always responds 500 regardless of
+    // does to GET/POST params) -- same shared $_COOKIE['lang'] handling
+    // shape as RegisterControllerTest's identical assertion.
+    // HtmlService::fatalError() always responds 500 regardless of
     // its specific message.
     $result = identCurlWithRawCookie('lang[]=fr_FR');
 
@@ -329,7 +329,7 @@ it("applies a valid, different lang cookie: switches CurrentUser's language, loa
 
     // The default theme's own identification.latte never references
     // {$HELP_LINK} or {$current_language}/{$language_options} at all
-    // (confirmed by reading it) -- only standard_pages' identification.latte
+    // -- only standard_pages' identification.latte
     // renders them, so swapping the guest's theme is what makes this
     // test's assertions real, visible behavior rather than inference.
     H::setGuestTheme('standard_pages');

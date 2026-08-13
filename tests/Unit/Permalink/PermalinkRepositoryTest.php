@@ -10,6 +10,7 @@ use Piwigo\Permalink\OldPermalinkEntity;
 use Piwigo\Permalink\OldPermalinkSortField;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\Projection\OldPermalink;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Permalink\PermalinkRepository -- has its own dedicated
@@ -78,6 +79,19 @@ function permalinkRepoTest(): PermalinkRepository
  * A fresh category, not a real fixture id -- see this file's own
  * top-of-file docblock for why: a real fixture category's `permalink`
  * column is shared, observable state across every --parallel worker.
+ *
+ * Every caller below exempts itself from tests/Pest.php's blanket
+ * per-test transaction first (`categories` carries a FULLTEXT index,
+ * whose auxiliary-index maintenance on INSERT can deadlock against
+ * another --parallel worker's own concurrent categories INSERT when
+ * held open for a whole test's duration -- same mechanism as
+ * TagServiceTest.php's own 'getTagIds() creates a new tag for a plain
+ * name when allowed'), so this INSERT gives `rank` an explicit, high
+ * value rather than leaving it to the schema's own NULL default -- NULLs
+ * sort first in updateGlobalRank()'s own ORDER BY, so a real fixture
+ * category 1 (rank 1) would otherwise be displaced by this row for as
+ * long as it's live (the exact mechanism SearchServiceTest.php's own
+ * 'zqualifiesonlycat' category needed the same fix for).
  */
 function permalinkRepoTestDisposableCategory(): int
 {
@@ -85,8 +99,12 @@ function permalinkRepoTestDisposableCategory(): int
     $conn->insert('categories', [
         'name' => permalinkRepoTestSlug('p17-unit-test-cat-'),
     ]);
+    $catId = (int) $conn->lastInsertId();
+    $rankColumn = $conn->getDatabasePlatform()
+        ->quoteSingleIdentifier('rank');
+    $conn->executeStatement("UPDATE categories SET {$rankColumn} = 999 WHERE id = {$catId}");
 
-    return (int) $conn->lastInsertId();
+    return $catId;
 }
 
 function permalinkRepoTestDeleteCategory(int $catId): void
@@ -126,6 +144,9 @@ afterEach(function (): void {
 });
 
 test('setCategoryPermalink() then findCategoryIdByPermalink() round-trips', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // permalinkRepoTestDisposableCategory()'s own docblock for why.
+    DbTransactionTestOverride::rollback();
     $repo = permalinkRepoTest();
     $slug = permalinkRepoTestSlug();
     $catId = permalinkRepoTestDisposableCategory();
@@ -151,6 +172,10 @@ test('findCategoryIdByPermalink() returns null when unused', function (): void {
 test('findPermalinkByCategoryId() returns null when unset', function (): void {
     // A freshly inserted category already starts with permalink=NULL --
     // no pre-clear needed, unlike a real fixture category id would.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // permalinkRepoTestDisposableCategory()'s own docblock for why.
+    DbTransactionTestOverride::rollback();
     $catId = permalinkRepoTestDisposableCategory();
 
     try {
@@ -171,6 +196,9 @@ test('findPermalinkByCategoryId() returns null for a category that does not exis
 });
 
 test('clearCategoryPermalink() removes it', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // permalinkRepoTestDisposableCategory()'s own docblock for why.
+    DbTransactionTestOverride::rollback();
     $repo = permalinkRepoTest();
     $slug = permalinkRepoTestSlug();
     $catId = permalinkRepoTestDisposableCategory();
@@ -464,6 +492,10 @@ test('findPermalinkMatches() finds old and current permalinks', function (): voi
     // the real thing this test is about (a mixed old+current result set,
     // each row correctly tagged via is_old), without needing the 2
     // permalinks to share a category.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // permalinkRepoTestDisposableCategory()'s own docblock for why.
+    DbTransactionTestOverride::rollback();
     $catId = permalinkRepoTestDisposableCategory();
     $slug = permalinkRepoTestSlug('p17-unit-sample-album-');
     $conn = DbConnection::build();
@@ -511,6 +543,10 @@ test('deleteOldPermalinksForCategories() removes only rows for the given categor
     // concurrent test's own old_permalinks row for that same id (see
     // the sibling no-op test below for the confirmed-live incident this
     // caused).
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // permalinkRepoTestDisposableCategory()'s own docblock for why.
+    DbTransactionTestOverride::rollback();
     $repo = permalinkRepoTest();
     $keptSlug = permalinkRepoTestSlug('p17-unit-keep-');
     $deletedSlug = permalinkRepoTestSlug('p17-unit-delete-');
@@ -541,6 +577,10 @@ test('deleteOldPermalinksForCategories() is a no-op for no ids', function (): vo
     // identical to 2"-shaped failure from PermalinkServiceTest.php's own
     // (since-fixed) hardcoded category-2 old_permalinks rows racing
     // against this one's literal cat_id=2.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // permalinkRepoTestDisposableCategory()'s own docblock for why.
+    DbTransactionTestOverride::rollback();
     $repo = permalinkRepoTest();
     $slug = permalinkRepoTestSlug();
     $catId = permalinkRepoTestDisposableCategory();

@@ -16,6 +16,11 @@ return ECSConfig::configure()
         __DIR__,
     ])
     ->withSkip([
+        // Generated PHPStan Latte analysis files (bin/piwigo
+        // phpstan-latte:compile) -- Latte's own compiled-output style,
+        // regenerated wholesale; PHPStan analyses them, ECS must not
+        // restyle them.
+        __DIR__ . '/_analysis',
         __DIR__ . '/_data',
         // Generated analysis shims (bin/piwigo phpstan-latte:generate-shims)
         // -- auto-generated signatures, regenerated wholesale; style churn

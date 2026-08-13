@@ -27,6 +27,11 @@
 # PHPUnit's own test-result cache (--order-by=defects, risky/incomplete tracking)
 /.phpunit.result.cache
 
+# Generated PHPStan Latte analysis files (bin/piwigo phpstan-latte:compile);
+# deliberately NOT under _data/ -- PHPStan's excludePaths beats paths, so a
+# subtree of the excluded _data/* could never be analysed.
+/_analysis/
+
 # Piwigo specific directories
 /_data/*
 !/_data/.gitkeep

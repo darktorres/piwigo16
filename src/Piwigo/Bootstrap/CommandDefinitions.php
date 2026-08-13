@@ -14,6 +14,7 @@ use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Command\MaintenancePurgeHistoryCommand;
 use Piwigo\Command\MaintenancePurgeSessionsCommand;
 use Piwigo\Command\MaintenanceRepairDbCommand;
+use Piwigo\Command\PhpStanLatteCompileCommand;
 use Piwigo\Command\PhpStanLatteShimsCommand;
 use Piwigo\Command\PrecompileTemplatesCommand;
 use Piwigo\Command\SchemaDumpCommand;
@@ -51,6 +52,7 @@ final class CommandDefinitions
             LintLatteCommand::class,
             PrecompileTemplatesCommand::class,
             PhpStanLatteShimsCommand::class,
+            PhpStanLatteCompileCommand::class,
         ];
     }
 }

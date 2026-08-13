@@ -43,7 +43,9 @@ final class VariableMapBuilder
                 continue;
             }
             foreach ($contexts as $context) {
-                $fallbackContexts[] = $context;
+                if (! in_array($context, $fallbackContexts, true)) {
+                    $fallbackContexts[] = $context;
+                }
                 self::mergeInto($fallbackSets, $this->varsByContext[$context] ?? []);
             }
         }

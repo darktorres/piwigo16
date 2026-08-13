@@ -961,6 +961,43 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(0, $this->fetchValidated(2));
         }
 
+        /**
+         * PictureRequest::$websiteUrl's own null-when-absent-or-non-string
+         * DTO retype means PictureController.php's own updateComment() call
+         * site always sets the 'website_url' key (never conditionally
+         * omits it) -- this proves that's fine: an omitted key and an
+         * explicit null value produce identical behavior here, since
+         * updateComment() reads it via `$comment['website_url'] ?? null`
+         * either way (see self::emptyValue() call, line 446).
+         */
+        public function testUpdateCommentTreatsOmittedWebsiteUrlSameAsExplicitNull(): void
+        {
+            CurrentUserTestFactory::get()->set(User::fromUserArray([
+                'id' => 3,
+                'status' => 'normal',
+                'username' => 'regular_user',
+            ]));
+
+            $withoutKey = [
+                'comment_id' => 2,
+                'image_id' => 2,
+                'content' => 'edited without a website_url key',
+            ];
+            $actionWithoutKey = $this->service->updateComment($withoutKey, $this->validKey(2));
+            self::assertSame('moderate', $actionWithoutKey);
+            self::assertSame('edited without a website_url key', $this->fetchColumn(2, 'content'));
+
+            $withNullValue = [
+                'comment_id' => 2,
+                'image_id' => 2,
+                'content' => 'edited with an explicit null website_url',
+                'website_url' => null,
+            ];
+            $actionWithNullValue = $this->service->updateComment($withNullValue, $this->validKey(2));
+            self::assertSame('moderate', $actionWithNullValue);
+            self::assertSame('edited with an explicit null website_url', $this->fetchColumn(2, 'content'));
+        }
+
         public function testUpdateCommentInvalidWebsiteUrlAppendsAPageErrorAndRejects(): void
         {
             $comment = [

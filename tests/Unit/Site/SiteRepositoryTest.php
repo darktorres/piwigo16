@@ -9,6 +9,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Site\SiteRepository;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Site\SiteRepository -- has its own dedicated
@@ -182,20 +183,34 @@ test('findCategoryAndImageCountsBySite() groups by site and ignores categories w
     // install) -- 2 disposable categories are the only way to reach this
     // method's own real work at all. One gets a storage-synced image
     // (storage_category_id) so nb_images is genuinely non-zero.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction: both
+    // `categories` and `images` carry a FULLTEXT index, whose
+    // auxiliary-index maintenance on INSERT can deadlock against another
+    // --parallel worker's own concurrent INSERT on the same table when
+    // held open for a whole test's duration -- same mechanism, same fix,
+    // as TagServiceTest.php's 'getTagIds() creates a new tag for a plain
+    // name when allowed' (reproduced live there: DeadlockException). The
+    // categories INSERTs below also give `rank` an explicit, high value
+    // rather than leaving it to the schema's own NULL default -- see
+    // SearchServiceTest.php's own 'zqualifiesonlycat' category for why.
+    DbTransactionTestOverride::rollback();
     $repo = siteTestRepo();
     $url = siteTestUrl();
     $repo->insert($url);
     $conn = DbConnection::build();
     $siteId = $conn->fetchOne('SELECT id FROM sites WHERE galleries_url = ?', [$url]);
     $siteId = is_numeric($siteId) ? $siteId : 0;
+    $rankColumn = $conn->getDatabasePlatform()
+        ->quoteSingleIdentifier('rank');
 
     $conn->executeStatement(
-        "INSERT INTO categories (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-with-image', ?, '999901')",
+        "INSERT INTO categories (name, site_id, uppercats, {$rankColumn}) VALUES ('p17-unit-test-site-cat-with-image', ?, '999901', 999)",
         [$siteId]
     );
     $catWithImageId = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        "INSERT INTO categories (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-without-image', ?, '999902')",
+        "INSERT INTO categories (name, site_id, uppercats, {$rankColumn}) VALUES ('p17-unit-test-site-cat-without-image', ?, '999902', 999)",
         [$siteId]
     );
     $catWithoutImageId = (int) $conn->lastInsertId();

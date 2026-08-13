@@ -1173,6 +1173,16 @@ test('setCatStatus() private uses the private parent as the permission reference
         // own status, not just category 1's raw-SQL mutation -- both
         // need restoring, not just the one this test set directly.
         $conn->executeStatement("UPDATE categories SET status = 'public' WHERE id IN (1, 2)");
+        // deleteInconsistentAccess() runs for BOTH CategoryAccessTarget
+        // cases every call, including GroupAccess -- confirmed live: the
+        // real fixture's own (group_id=1, cat_id=2) group_access row can
+        // get swept away as a side effect of this test's own
+        // setCatStatus() call (its "reference" computation depends on
+        // category 1's live group_access set, which can itself be
+        // transiently disturbed by a concurrent --parallel file).
+        // INSERT IGNORE restores it unconditionally, safe whether or not
+        // it actually got removed.
+        $conn->executeStatement('INSERT IGNORE INTO group_access (group_id, cat_id) VALUES (1, 2)');
     }
 });
 
@@ -1209,6 +1219,10 @@ test('setCatStatus() private removes inconsistent group_access too', function ()
         // setCatStatus([2], 'private') above also mutated category 2's
         // own status, not just category 1's raw-SQL mutation.
         $conn->executeStatement("UPDATE categories SET status = 'public' WHERE id IN (1, 2)");
+        // Same defensive restore as the sibling test above -- the real
+        // fixture's own (group_id=1, cat_id=2) row can get swept away as
+        // a side effect of this test's own setCatStatus() call.
+        $conn->executeStatement('INSERT IGNORE INTO group_access (group_id, cat_id) VALUES (1, 2)');
     }
 });
 

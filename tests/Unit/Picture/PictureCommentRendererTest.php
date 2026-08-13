@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -130,6 +131,16 @@ function pictureCommentRendererTestMailService(): MailService
     return $mailer;
 }
 
+function pictureCommentRendererTestEntityManager(): EntityManagerInterface
+{
+    $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+    if (! $entityManager instanceof EntityManagerInterface) {
+        throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+    }
+
+    return $entityManager;
+}
+
 test('render does nothing when no related category is commentable', function (): void {
     $renderer = new PictureCommentRenderer();
 
@@ -140,7 +151,7 @@ test('render does nothing when no related category is commentable', function ():
         [
             'commentable' => 0,
         ],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
 
     expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comments'))->toBeNull()
         ->and(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add'))->toBeNull();
@@ -216,7 +227,7 @@ test('render only counts the first commentable related category then stops (`bre
             [
                 'id' => 999,
             ], // no 'commentable' key -- only reached by `continue`
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     } finally {
@@ -247,7 +258,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
             [
                 'commentable' => false,
             ],
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -284,7 +295,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
             [
                 'commentable' => true,
             ],
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -322,7 +333,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
         [
             'commentable' => false,
         ],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
 
     expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comments'))->toBeNull();
 });
@@ -367,7 +378,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
         [
             'commentable' => true,
         ],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
 
     // assignVarFromTemplate() wraps COMMENT_LIST in Latte\Runtime\Html
     // (see that method's own docblock), not a plain string.

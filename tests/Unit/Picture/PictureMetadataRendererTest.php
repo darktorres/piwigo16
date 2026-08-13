@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
@@ -53,6 +54,16 @@ function picture_metadata_test_current_config(): CurrentConfig
     return $currentConfig;
 }
 
+function picture_metadata_test_entity_manager(): EntityManagerInterface
+{
+    $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+    if (! $entityManager instanceof EntityManagerInterface) {
+        throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+    }
+
+    return $entityManager;
+}
+
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-picture-metadata-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
@@ -84,7 +95,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
         ->showIptc = false;
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), CurrentPathsTestFactory::get());
+    $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), CurrentPathsTestFactory::get(), picture_metadata_test_entity_manager());
 
     expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata'))->toBeNull();
 });

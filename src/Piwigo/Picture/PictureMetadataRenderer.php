@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
@@ -31,11 +30,11 @@ final class PictureMetadataRenderer
     /**
      * @param array<string, array{src_image: SrcImage, ...}> $picture
      */
-    public function render(Lang $lang, array $picture, CurrentLogger $currentLogger, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CurrentUser $currentUser, SessionService $sessionService, Paths $paths): void
+    public function render(Lang $lang, array $picture, CurrentLogger $currentLogger, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CurrentUser $currentUser, SessionService $sessionService, Paths $paths, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
-        $metadataService = new MetadataService($lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $sessionService, $paths);
+        $metadataService = new MetadataService($lang, new MetadataRepository($entityManager), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $sessionService, $paths);
 
         $metadata = null;
 

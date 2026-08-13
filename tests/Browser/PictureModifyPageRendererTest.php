@@ -163,7 +163,7 @@ function pictureModifyCategoryIdByDir(int $siteId, string $dir): ?int
  * `Location` response header of a redirect: H::rawGet()'s in-page
  * `fetch(..., {redirect: 'manual'})` reports every redirect as an opaque
  * status 0 with no header access (a Fetch API spec limitation, not a
- * bug -- confirmed elsewhere in this suite), which is enough to assert
+ * bug), which is enough to assert
  * "a redirect happened" but not "redirected to THIS specific URL".
  *
  * @return array{curl: Closure(string, array<string, string>=, bool=): array{status: int, body: string}, cookieJar: non-empty-string, baseUrl: string}
@@ -252,8 +252,7 @@ it('updates a photo\'s title/author/comment/level/date, sets a tag, and reports 
     expect($result['status'])->toBe(200);
     // The en_UK PO translation for this msgid ("Photo informations
     // updated", grammatically off) reads "Photo information updated"
-    // (singular) -- confirmed against language/en_UK/admin.po directly
-    // rather than assuming the source string's own wording.
+    // (singular).
     expect($result['body'])->toContain('Photo information updated');
 
     $row = pictureModifyImageRow($imageId);
@@ -342,8 +341,8 @@ it('synchronizes metadata from file via the sync_metadata CSRF-gated action', fu
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photo Modify Sync Photo');
     @unlink($image);
 
-    // sync_metadata (like delete) is read from $_GET, not $_POST --
-    // confirmed by direct read of PictureModifyRequest::fromArrays().
+    // sync_metadata (like delete) is read from $_GET, not $_POST,
+    // per PictureModifyRequest::fromArrays().
     $token = H::pwgToken($page);
     $page = H::navigateOk($page, '/admin.php?page=photo&image_id=' . $imageId . '&sync_metadata=1&pwg_token=' . $token);
 
@@ -679,7 +678,7 @@ it('swaps width/height and flips the FORMAT flag for a photo with a stored 90/27
     // max-height:100%;{else}max-width:100%; height:100%;{/if}. Unrotated,
     // this 200x150 (width >= height) image is FORMAT=1 -- only a real
     // width/height swap (150x200, width < height) flips it to FORMAT=0
-    // ("max-width:100%; height:100%;"), confirmed live.
+    // ("max-width:100%; height:100%;").
     expect($result['body'])->toContain('max-width:100%; height:100%;');
 });
 

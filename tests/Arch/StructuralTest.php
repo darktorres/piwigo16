@@ -913,6 +913,20 @@ test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls outsid
 
     expect(describeCallSites($hits))
         ->toBe([]);
+
+    // Paired with the assertion above, not a separate concern: P27.0 gives
+    // EventDispatcher real Psr\EventDispatcher\EventDispatcherInterface
+    // conformance via a dispatch() alias over dispatchChange() -- see that
+    // class's own docblock for why this can never become a delegation to
+    // a separate PSR-14 implementation (Symfony's concrete dispatcher
+    // included): the 'trigger' meta-channel this test locks down above is
+    // exactly the array-payload, string-keyed traffic that would
+    // TypeError against PSR-14's object-only dispatch(object $event)
+    // signature. Locking in both facts together guards against a future
+    // change that drops the interface, or one that "simplifies" by
+    // routing 'trigger' through it.
+    expect(new ReflectionClass(Piwigo\PluginConfig\EventDispatcher::class)->implementsInterface(Psr\EventDispatcher\EventDispatcherInterface::class))
+        ->toBeTrue();
 });
 
 /**

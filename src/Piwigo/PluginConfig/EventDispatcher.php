@@ -7,14 +7,28 @@ namespace Piwigo\PluginConfig;
 use Closure;
 use Error;
 use LogicException;
+use Override;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use ReflectionFunction;
 
 /**
  * Plugin event-handler registry, held as a container-shared instance --
  * the sole source of truth for registered handlers (no parallel global
  * variable mirrors this state).
+ *
+ * Implements PSR-14 (`Psr\EventDispatcher\EventDispatcherInterface`) via
+ * `dispatch()`, a thin alias over `dispatchChange()` -- matches this
+ * codebase's own PSR-11/PSR-7/PSR-15/PSR-3 conformance elsewhere. Not a
+ * delegation to Symfony's own concrete `EventDispatcher`: `triggerChange()`/
+ * `dispatchChange()`/`dispatchNotify()` all internally self-notify via the
+ * permanent `'trigger'` string-keyed channel with an array payload
+ * (`['type' => ..., 'event' => ..., 'data' => ...]`), which PSR-14's
+ * `dispatch(object $event)` signature cannot carry -- routing that
+ * meta-channel through Symfony's dispatcher would `TypeError` on the first
+ * typed event fired in any request. Every other method on this class is
+ * unrelated to and unaffected by this interface.
  */
-final class EventDispatcher
+final class EventDispatcher implements EventDispatcherInterface
 {
     // 'function' is declared string|array|object rather than PHPStan's
     // usual `callable` -- PHP's native `callable` type hint validates
@@ -279,6 +293,18 @@ final class EventDispatcher
         }
 
         return $event;
+    }
+
+    /**
+     * PSR-14 `EventDispatcherInterface::dispatch()` -- a safe alias over
+     * `dispatchChange()`, which already takes and returns `object`. See
+     * this class's own docblock for why this can't be a delegation to a
+     * separate PSR-14 implementation instead.
+     */
+    #[Override]
+    public function dispatch(object $event): object
+    {
+        return $this->dispatchChange($event);
     }
 
     /**

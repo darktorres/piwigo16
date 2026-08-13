@@ -13,7 +13,6 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\PluginLoader;
-use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\ApiKeyRepository;
@@ -57,7 +56,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\ServerTiming;
-use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Core\WsContext;
@@ -66,31 +64,23 @@ use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\Init;
 use Piwigo\Event\Lifecycle\LoadingLang;
-use Piwigo\Event\Picture\GetElementUrl;
-use Piwigo\Event\Picture\UploadFile;
-use Piwigo\Event\Picture\UploadImageResize;
-use Piwigo\Event\Picture\UploadThumbnailResize;
-use Piwigo\Event\Site\DeleteSite;
-use Piwigo\Event\Tag\RenderTagUrl;
-use Piwigo\Event\Template\RenderCategoryDescription;
-use Piwigo\Event\Template\RenderCategoryLiteralDescription;
-use Piwigo\Event\Template\RenderCommentAuthor;
-use Piwigo\Event\Template\RenderCommentContent;
-use Piwigo\Event\User\TryLogUser;
-use Piwigo\Event\User\UserCommentCheck;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\LoungeMaintenance;
 use Piwigo\Lang\Translator;
-use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
+use Piwigo\Listener\AuthListener;
+use Piwigo\Listener\CommentSpamListener;
+use Piwigo\Listener\HtmlRenderingListener;
+use Piwigo\Listener\ListenerInterface;
+use Piwigo\Listener\SiteCleanupListener;
+use Piwigo\Listener\UploadFormatListener;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -422,7 +412,7 @@ final class RequestBootstrap
         // dispatch, which runs during RequestPipeline::handle() -- after
         // bootEntryPoint() has fully returned) is unaffected by this
         // ordering.
-        self::eventDispatcher()->addTypedHandler(TryLogUser::class, new AuthService(
+        self::registerListener(new AuthListener(new AuthService(
             new AuthRepository(EntityManagerFactory::build($conn)),
             self::activityService($conn),
             self::htmlService(),
@@ -435,7 +425,7 @@ final class RequestBootstrap
             self::currentUser(),
             self::currentConfig(),
             self::paths(),
-        )->pwgLogin(...));
+        )));
         new UserBootstrap(
             self::accessLevelChecker(),
             new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::pageState()),
@@ -625,96 +615,26 @@ final class RequestBootstrap
 
         $pageState->headerNotes = array_merge($pageState->headerNotes, self::currentConfig()->headerNotes);
 
-        // default event handlers
-        self::eventDispatcher()->addTypedHandler(RenderCategoryLiteralDescription::class, self::htmlService()->renderCategoryLiteralDescription(...));
-        if (! self::currentConfig()->allowHtmlDescriptions) {
-            // pwgNl2br() is a generic string transform reused by
-            // RenderElementDescription's own default handler too -- a thin
-            // adapter closure per event, leaving pwgNl2br() itself untouched,
-            // since one method can't be typed for two different event classes.
-            self::eventDispatcher()->addTypedHandler(
-                RenderCategoryDescription::class,
-                static function (RenderCategoryDescription $e): RenderCategoryDescription {
-                    $result = self::htmlService()
-                        ->pwgNl2br($e->categoryDescription);
-                    $e->categoryDescription = is_string($result) ? $result : null;
-
-                    return $e;
-                },
-            );
-        }
-        self::eventDispatcher()->addTypedHandler(RenderCommentContent::class, self::htmlService()->renderCommentContent(...));
-        // 'strip_tags' is PHP's own native function -- can't be retyped, so
-        // this is a thin adapter closure instead, same reasoning as
-        // pwgNl2br() above.
-        self::eventDispatcher()->addTypedHandler(
-            RenderCommentAuthor::class,
-            static function (RenderCommentAuthor $e): RenderCommentAuthor {
-                $e->commentAuthor = strip_tags($e->commentAuthor);
-
-                return $e;
-            },
-        );
-        // StringHelper::str2url() is called directly from 6+ unrelated
-        // production sites -- a thin adapter closure keeps its own
-        // signature untouched, same reasoning as pwgNl2br()/strip_tags()
-        // above.
-        self::eventDispatcher()->addTypedHandler(
-            RenderTagUrl::class,
-            static function (RenderTagUrl $e): RenderTagUrl {
-                $e->tagName = StringHelper::str2url($e->tagName);
-
-                return $e;
-            },
-        );
-        self::eventDispatcher()->addTypedHandler(BlockManagerRegisterBlocks::class, self::htmlService()->registerDefaultMenubarBlocks(...));
-        // This registration has to live somewhere that always executes.
-        // checkForSpam() is an instance method (unlike UploadService's
-        // static upload_file handlers below), hence the bound
-        // first-class-callable form rather than a bare
-        // [Class::class, 'method'] array.
-        self::eventDispatcher()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessLevelChecker())->checkForSpam(...));
-        // Category\CategoryService::deleteSite() dispatches this instead
-        // of reaching into Site\SiteRepository directly (a real deptrac
-        // boundary, Category is L2aCoreDomain, Site is L2bExtendedDomain).
-        // A thin adapter closure -- SiteRepository::delete()'s own
-        // (int $id): void signature doesn't match addTypedHandler()'s
-        // own callable(T): (T|void) contract.
-        self::eventDispatcher()->addTypedHandler(
-            DeleteSite::class,
-            static function (DeleteSite $e) use ($conn): void {
-                EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)->delete($e->siteId);
-            },
-        );
-        // try_log_user's own handler is registered in connect() instead,
-        // before UserBootstrap::initialize() -- see that registration's
-        // own comment for why.
-        // Must stay after PluginLoader::loadPlugins() (in connect() above)
-        // so a plugin's own 'upload_file' handler (if any) keeps first
-        // crack in the trigger_change() chain.
-        //
-        // 'pwg_image_resize' doesn't exist as a function anywhere in this
-        // codebase and neither event is ever triggered -- a dead-but-harmless
-        // registration, already documented in
-        // Piwigo\PluginConfig\EventDispatcher's own class docblock.
-        // Preserved unchanged rather than "fixed", per that same
-        // documented decision. addEventHandler(), not addTypedHandler():
-        // 'pwg_image_resize' can't satisfy addTypedHandler()'s own
-        // callable(T): (T|void) signature check; addEventHandler()'s
-        // untyped string|array|object parameter keeps this harmless
-        // (lazy, never eagerly validated).
-        self::eventDispatcher()->addEventHandler(UploadImageResize::class, 'pwg_image_resize');
-        self::eventDispatcher()->addEventHandler(UploadThumbnailResize::class, 'pwg_image_resize');
-        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
-        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFileHeic(...));
-        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFileTiff(...));
-        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFileVideo(...));
-        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFilePsd(...));
-        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFileEps(...));
-        if (self::currentConfig()->originalUrlProtection !== '') {
-            self::eventDispatcher()->addTypedHandler(GetElementUrl::class, self::htmlService()->getElementUrlProtectionHandler(...));
-            self::eventDispatcher()->addTypedHandler(GetSrcImageUrl::class, self::htmlService()->getSrcImageUrlProtectionHandler(...));
-        }
+        // Default event handlers -- extracted into Piwigo\Listener\*
+        // classes (P27.0). Must stay after PluginLoader::loadPlugins()
+        // (in connect() above) so a plugin's own 'upload_file' handler
+        // (if any) keeps first crack in the trigger_change() chain.
+        // The 2 dead 'pwg_image_resize' registrations this block used to
+        // carry (UploadImageResize/UploadThumbnailResize -- no function
+        // by that name exists anywhere in this codebase, neither event is
+        // ever triggered) are deleted outright rather than ported: no
+        // Listener\ListenerInterface shape can express "register a string
+        // that isn't callable yet and only fail lazily," and preserving
+        // genuinely dead code isn't worth contorting the new mechanism
+        // for.
+        self::registerListener(new HtmlRenderingListener(self::htmlService(), self::currentConfig()));
+        // checkForSpam() is an instance method (unlike UploadFormatListener's
+        // static upload_file handlers below) -- CommentService is built
+        // here, reusing the request's own shared Connection, and handed
+        // to the listener rather than autowired fresh.
+        self::registerListener(new CommentSpamListener(new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessLevelChecker())));
+        self::registerListener(new SiteCleanupListener(EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)));
+        self::registerListener(new UploadFormatListener());
         self::eventDispatcher()->dispatchNotify(new Init());
 
         // CurrentUser's/PageState's own `??=` guards are already
@@ -1348,6 +1268,28 @@ final class RequestBootstrap
     {
         if (is_string($v)) {
             $v = addslashes($v);
+        }
+    }
+
+    /**
+     * Registers every entry of a Piwigo\Listener\* instance's own
+     * subscribedEvents() map onto EventDispatcher::addTypedHandler() --
+     * the glue P27.0's Listener extraction replaces inline
+     * addTypedHandler() calls with. $listener is already fully
+     * constructed (with real dependencies, reusing the request's shared
+     * Connection where relevant) by the caller; this method only wires
+     * its declared events onto the dispatcher, in whatever order
+     * subscribedEvents() returns them. Entries are already-bound Closures
+     * (see ListenerInterface's own docblock for why -- this codebase's
+     * phpstan-strict-rules config bans variable method calls outright, so
+     * there's no method-name string left to resolve here.
+     */
+    private static function registerListener(ListenerInterface $listener): void
+    {
+        foreach ($listener->subscribedEvents() as $eventClass => $handlers) {
+            foreach (is_array($handlers) ? $handlers : [$handlers] as $handler) {
+                self::eventDispatcher()->addTypedHandler($eventClass, $handler);
+            }
         }
     }
 }

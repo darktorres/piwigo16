@@ -62,7 +62,10 @@ final readonly class CommentService
 
     /**
      * @param list<SqlCondition> $whereClauses
-     * @return PaginatedResult<array<string, mixed>>
+     * @return PaginatedResult<array{comment_id: int|string, image_id: int|string,
+     *   category_id: int|string, author: ?string, author_id: int|string|null,
+     *   user_email: ?string, email: ?string, date: ?string, website_url: ?string,
+     *   content: ?string, validated: bool|int}>
      */
     public function getAllCommentsWithConditions(
         array $whereClauses,
@@ -80,7 +83,10 @@ final readonly class CommentService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int|string, image_id: int|string, date: ?string,
+     *   author: ?string, author_id: int|string|null, username: ?string,
+     *   status: ?string, content: ?string, path: string, representative_ext: ?string,
+     *   file: string, date_available: ?string, validated: bool|int, anonymous_id: string}>
      */
     public function getListForAdminWs(
         CommentApiCriteria $criteria,
@@ -96,7 +102,7 @@ final readonly class CommentService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{author: ?string, author_id: ?int, nb_authors: int}>
      */
     public function getAuthorCounts(CommentApiCriteria $criteria): array
     {

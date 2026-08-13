@@ -740,8 +740,22 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * {@see \Piwigo\Users\UserRepository::findListForWs()}'s own
      * docblock.
      *
+     * Raw DBAL (not DQL) -- every numeric column below comes back as
+     * whichever native PHP type the active driver hands back (a real int
+     * under mysqli's own MYSQLI_OPT_INT_AND_FLOAT_NATIVE, a numeric
+     * string under some pgsql paths), never a VO. `author`/`author_id`/
+     * `email`/`date`/`website_url`/`content` are CommentEntity's own
+     * nullable columns; `validated` is a non-nullable `bool` column, but
+     * SqlDialect::getBoolean() (the one real caller's own consumer) is
+     * this codebase's established "genuinely arbitrary boolean-ish input"
+     * boundary, so it stays a driver-dependent bool|int here rather than
+     * a plain bool.
+     *
      * @param list<SqlCondition> $whereClauses
-     * @return PaginatedResult<array<string, mixed>>
+     * @return PaginatedResult<array{comment_id: int|string, image_id: int|string,
+     *   category_id: int|string, author: ?string, author_id: int|string|null,
+     *   user_email: ?string, email: ?string, date: ?string, website_url: ?string,
+     *   content: ?string, validated: bool|int}>
      */
     public function findAllWithConditions(
         array $whereClauses,
@@ -781,15 +795,39 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 ->setFirstResult($offset);
         }
 
-        $rows = $qb->executeQuery()
+        $rawRows = $qb->executeQuery()
             ->fetchAllAssociative();
 
-        $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
-        $rows = array_map(static function (array $row): array {
-            unset($row['total_count']);
+        $total = $rawRows !== [] && is_numeric($rawRows[0]['total_count'] ?? null) ? (int) $rawRows[0]['total_count'] : 0;
 
-            return $row;
-        }, $rows);
+        $rows = [];
+        foreach ($rawRows as $row) {
+            $commentId = $row['comment_id'] ?? null;
+            $imageId = $row['image_id'] ?? null;
+            $categoryId = $row['category_id'] ?? null;
+            $authorId = $row['author_id'] ?? null;
+            $validated = $row['validated'] ?? null;
+            if ((! is_int($commentId) && ! is_string($commentId))
+                || (! is_int($imageId) && ! is_string($imageId))
+                || (! is_int($categoryId) && ! is_string($categoryId))
+                || (! is_bool($validated) && ! is_int($validated))) {
+                continue;
+            }
+
+            $rows[] = [
+                'comment_id' => $commentId,
+                'image_id' => $imageId,
+                'category_id' => $categoryId,
+                'author' => is_string($row['author'] ?? null) ? $row['author'] : null,
+                'author_id' => (is_int($authorId) || is_string($authorId)) ? $authorId : null,
+                'user_email' => is_string($row['user_email'] ?? null) ? $row['user_email'] : null,
+                'email' => is_string($row['email'] ?? null) ? $row['email'] : null,
+                'date' => is_string($row['date'] ?? null) ? $row['date'] : null,
+                'website_url' => is_string($row['website_url'] ?? null) ? $row['website_url'] : null,
+                'content' => is_string($row['content'] ?? null) ? $row['content'] : null,
+                'validated' => $validated,
+            ];
+        }
 
         return new PaginatedResult($rows, $total);
     }
@@ -840,7 +878,17 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * {@see applyApiConditionsWithStatus()}'s DQL version; see that
      * method's own docblock for why.
      *
-     * @return list<array<string, mixed>>
+     * Raw DBAL, same driver-dependent int|string caveat as
+     * findAllWithConditions() above for id-like columns. `username`/
+     * `status` come from LEFT JOINs (null when no matching row); `path`/
+     * `file` are ImageEntity's own non-nullable columns (INNER JOIN, so
+     * always present); `date`/`date_available`/`representative_ext`/
+     * `author`/`content` are nullable on their respective entities.
+     *
+     * @return list<array{id: int|string, image_id: int|string, date: ?string,
+     *   author: ?string, author_id: int|string|null, username: ?string,
+     *   status: ?string, content: ?string, path: string, representative_ext: ?string,
+     *   file: string, date_available: ?string, validated: bool|int, anonymous_id: string}>
      */
     public function findListForAdminWs(
         CommentApiCriteria $criteria,
@@ -877,8 +925,44 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
         self::applyConditions($qb, self::buildApiConditionsWithStatus($criteria, includeAuthorId: true));
 
-        return $qb->executeQuery()
+        $rawRows = $qb->executeQuery()
             ->fetchAllAssociative();
+
+        $rows = [];
+        foreach ($rawRows as $row) {
+            $id = $row['id'] ?? null;
+            $imageId = $row['image_id'] ?? null;
+            $authorId = $row['author_id'] ?? null;
+            $path = $row['path'] ?? null;
+            $file = $row['file'] ?? null;
+            $validated = $row['validated'] ?? null;
+            $anonymousId = $row['anonymous_id'] ?? null;
+            if ((! is_int($id) && ! is_string($id))
+                || (! is_int($imageId) && ! is_string($imageId))
+                || (! is_bool($validated) && ! is_int($validated))
+                || ! is_string($path) || ! is_string($file) || ! is_string($anonymousId)) {
+                continue;
+            }
+
+            $rows[] = [
+                'id' => $id,
+                'image_id' => $imageId,
+                'date' => is_string($row['date'] ?? null) ? $row['date'] : null,
+                'author' => is_string($row['author'] ?? null) ? $row['author'] : null,
+                'author_id' => (is_int($authorId) || is_string($authorId)) ? $authorId : null,
+                'username' => is_string($row['username'] ?? null) ? $row['username'] : null,
+                'status' => is_string($row['status'] ?? null) ? $row['status'] : null,
+                'content' => is_string($row['content'] ?? null) ? $row['content'] : null,
+                'path' => $path,
+                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+                'file' => $file,
+                'date_available' => is_string($row['date_available'] ?? null) ? $row['date_available'] : null,
+                'validated' => $validated,
+                'anonymous_id' => $anonymousId,
+            ];
+        }
+
+        return $rows;
     }
 
     /**
@@ -924,7 +1008,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * no test asserts on which specific `author` value comes back, only
      * `author_id`/`nb_authors`.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{author: ?string, author_id: ?int, nb_authors: int}>
      */
     public function findAuthorCounts(CommentApiCriteria $criteria): array
     {
@@ -943,10 +1027,14 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 continue;
             }
 
+            $author = $row['author'] ?? null;
+            $authorId = $row['author_id'] ?? null;
+            $nbAuthors = $row['nb_authors'] ?? null;
+
             $result[] = [
-                'author' => $row['author'] ?? null,
-                'author_id' => $row['author_id'] ?? null,
-                'nb_authors' => $row['nb_authors'] ?? null,
+                'author' => is_string($author) ? $author : null,
+                'author_id' => is_int($authorId) ? $authorId : null,
+                'nb_authors' => is_numeric($nbAuthors) ? (int) $nbAuthors : 0,
             ];
         }
 

@@ -439,13 +439,8 @@ final readonly class CommentsController implements ControllerInterface
         );
         foreach ($paginated_comments->rows as $row) {
             $comments[] = $row;
-            $row_image_id = $row['image_id'];
-            $row_category_id = $row['category_id'];
-            // image_category.image_id / .category_id are both NOT NULL
-            // columns.
-            assert(is_scalar($row_image_id) && is_scalar($row_category_id));
-            $element_ids[] = (string) $row_image_id;
-            $category_ids[] = (string) $row_category_id;
+            $element_ids[] = (string) $row['image_id'];
+            $category_ids[] = (string) $row['category_id'];
         }
         $counter = $paginated_comments->total ?? 0;
 
@@ -478,20 +473,13 @@ final readonly class CommentsController implements ControllerInterface
             );
 
             foreach ($comments as $comment) {
-                $image_id_raw = $comment['image_id'];
-                // comments.image_id / image_category.image_id are both
-                // NOT NULL columns.
-                assert(is_scalar($image_id_raw));
-                $image_id = (string) $image_id_raw;
+                $image_id = (string) $comment['image_id'];
                 // $elements is keyed by ImageRepository::findByIds()'s own
                 // real int image ids, not the string $image_id used
                 // everywhere else in this loop (URL params, template vars).
                 $image_id_int = (int) $image_id;
 
-                $category_id_raw = $comment['category_id'];
-                // image_category.category_id is a NOT NULL column
-                assert(is_scalar($category_id_raw));
-                $category_id = (string) $category_id_raw;
+                $category_id = (string) $comment['category_id'];
 
                 $element_name = $elements[$image_id_int]['name'] ?? null;
                 if (is_string($element_name) && $element_name !== '' && $element_name !== '0') {
@@ -513,8 +501,8 @@ final readonly class CommentsController implements ControllerInterface
                 );
 
                 $email = null;
-                $user_email = $comment['user_email'] ?? null;
-                $comment_email = $comment['email'] ?? null;
+                $user_email = $comment['user_email'];
+                $comment_email = $comment['email'];
                 if (is_string($user_email) && $user_email !== '' && $user_email !== '0') {
                     $email = $user_email;
                 } elseif (is_string($comment_email) && $comment_email !== '' && $comment_email !== '0') {
@@ -572,7 +560,7 @@ final readonly class CommentsController implements ControllerInterface
                         ]
                     );
 
-                    $comment_id_str = is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '';
+                    $comment_id_str = (string) $comment['comment_id'];
                     if ($edit_comment !== null and $comment_id_str === (string) $edit_comment) {
                         $tpl_comment['IN_EDIT'] = true;
                         $key = new EphemeralKeyService($this->currentConfig)

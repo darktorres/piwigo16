@@ -171,16 +171,14 @@ final readonly class Comments
             if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === $this->currentConfig->guestId) {
                 $author_name = $row_author;
             } else {
-                $row_username = $row['username'] ?? null;
+                $row_username = $row['username'];
                 $author_name = stripslashes((is_string($row_username) ? $row_username : null) ?? $row_author ?? $this->lang->t('guest'));
             }
 
-            // date/date_available are NOT NULL DATETIME columns -- always
-            // string under both the legacy mysqli driver and DBAL (native
-            // int/float casting only applies to INT/DECIMAL/FLOAT columns,
-            // never temporal ones); format_date()'s phpDoc param forbids
-            // null, so fall back to false (its "no date" sentinel) if that
-            // ever isn't the case.
+            // date/date_available are both nullable columns on their
+            // respective entities (CommentEntity::$date/ImageEntity::
+            // $dateAvailable); format_date()'s phpDoc param forbids null,
+            // so fall back to false (its "no date" sentinel) when absent.
             $comment_date = is_string($row['date']) ? $row['date'] : false;
             $comment_date_available = is_string($row['date_available']) ? $row['date_available'] : false;
 
@@ -191,7 +189,7 @@ final readonly class Comments
             $list[] = [
                 'id' => $row['id'],
                 'admin_link' => $this->urlService
-                    ->getRootUrl() . 'admin.php?page=photo-' . (is_scalar($row_image_id) ? (string) $row_image_id : ''),
+                    ->getRootUrl() . 'admin.php?page=photo-' . (string) $row_image_id,
                 'medium_url' => $medium,
                 'file' => $row['file'],
                 'image_date_available' => DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),

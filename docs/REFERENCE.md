@@ -169,16 +169,20 @@ visibility, retry, or purge path today.
 
 Delegates to `Piwigo\Bootstrap\CliBootstrap`, which boots the same
 Kernel/DI container as the HTTP path and resolves each command in
-`config/commands.php` (autowired). `Piwigo\Core\ShutdownHandler` wires
+`Piwigo\Bootstrap\CommandDefinitions` (autowired). `Piwigo\Core\ShutdownHandler` wires
 `SIGTERM` (`ext-pcntl`, a hard `composer.json` requirement) to run
 registered cleanup callbacks — `Piwigo\Backup\BackupService` uses this so
 an interrupted `backup:create`/`restore` doesn't leave temp files behind.
 
-Current commands (`config/commands.php`): `cache:clear`, `backup:create`,
+Current commands (`Piwigo\Bootstrap\CommandDefinitions`): `cache:clear`, `backup:create`,
 `backup:restore <file> --force [--database=NAME]`, `user:list`,
 `maintenance:orphan-tags`, `maintenance:purge-history`,
 `maintenance:purge-sessions`, `maintenance:purge-failed-logins`,
-`maintenance:repair-db`, `migrations:migrate`, `schema:dump`.
+`maintenance:repair-db`, `migrations:migrate`, `schema:dump`,
+`precompile:templates`, `phpstan-latte:generate-shims`,
+`phpstan-latte:compile` (`lint:latte:inner`, `LintLatteCommand`'s own
+registration, is deliberately hidden — `composer lint:latte` is the real
+entry point, see `tools/latte-lint.php`).
 `maintenance:repair-db` (`Piwigo\Command\MaintenanceRepairDbCommand`) is
 backed by the same `DbMaintenanceRepository::repairOptimizeAllTables()`
 the admin web UI uses. `migrations:migrate` is Doctrine's own command;
@@ -595,9 +599,11 @@ over curl, validating against JSON Schema files in `tests/Contract/schemas/`.
 39 `Ws*Test` classes lock the legacy WS response shapes for as long as the
 WS API exists — a later phase (not yet started) removes it in favor of a
 REST `/api/v1` and retires these in favor of REST contract tests.
+<!-- doc-drift-check: cmd='find tests/Contract -maxdepth 1 -iname "Ws*Test.php" | wc -l' expect="39" -->
 
-**Browser tests**: 94 files in `tests/Browser/` (92 E2E flows, plus the
+**Browser tests**: 95 files in `tests/Browser/` (93 E2E flows, plus the
 two special-purpose files below) via `pestphp/pest-plugin-browser`.
+<!-- doc-drift-check: cmd='find tests/Browser -maxdepth 1 -iname "*.php" | wc -l' expect="95" -->
 `tests/Browser/Helpers/BrowserTestHelpers.php` centralizes the shared
 patterns (`visitPwg()`/`loginAsAdmin()`, `navigateOk()`, `wsCall()`,
 `uploadPhotoViaApi()`).

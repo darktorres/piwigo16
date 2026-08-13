@@ -356,6 +356,16 @@ jobs:
             fi
           done
 
+  doc-drift:
+    name: Doc drift check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # No composer install needed -- tools/doc-drift-check.php has zero
+      # dependencies of its own, just PHP + the repo's docs/*.md files.
+      - run: php tools/doc-drift-check.php
+
   # ── DB-backed suites ─────────────────────────────────────────────────────
 
   # Proves the real install-via-Migrations path (bin/piwigo migrations:migrate)

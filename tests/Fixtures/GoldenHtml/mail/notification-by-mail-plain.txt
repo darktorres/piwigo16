@@ -14,8 +14,8 @@ See you soon,
 Fixture Gallery
 
 
-To unsubscribe, click on nbm.php?unsubscribe=fixture-check-key
-To subscribe, click on nbm.php?subscribe=fixture-check-key
+To unsubscribe, click on nbm.php?unsubscribe=golden-html-check-key
+To subscribe, click on nbm.php?subscribe=golden-html-check-key
 If you encounter problems or have any question, please send a message to fixture_admin@example.test
 
 

@@ -2,14 +2,17 @@
 
 declare(strict_types=1);
 
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\BatchUploadJob;
 use Piwigo\Job\GenerateDerivativeJob;
@@ -24,6 +27,8 @@ use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Lang\Translator;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 
 /**
  * Transport + routing + handler-factory configuration for
@@ -73,8 +78,14 @@ return [
             RequestBootstrap::currentConfig(),
             RequestBootstrap::currentUser(),
             RequestBootstrap::sessionService(),
-            RequestBootstrap::filterState(),
             Paths::fromRoot(dirname(__DIR__))
+        ), new PermissionService(
+            new PermissionRepository(InfrastructureAccessor::entityManager()),
+            InfrastructureAccessor::entityManager()->getRepository(GroupEntity::class),
+            new CategoryRepository(InfrastructureAccessor::entityManager(), RequestBootstrap::currentConfig()),
+            RequestBootstrap::currentUser(),
+            RequestBootstrap::filterState(),
+            new AccessLevelChecker(RequestBootstrap::currentUser(), RequestBootstrap::currentConfig()),
         )),
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(PresentationAccessor::mailService()),
     ],

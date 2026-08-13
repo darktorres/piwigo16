@@ -27,7 +27,6 @@ use Piwigo\Controller\Admin\Projection\BatchManagerNoSearchResultsPageContext;
 use Piwigo\Controller\Admin\Projection\BatchManagerSearchDebugPageContext;
 use Piwigo\Controller\Admin\Request\BatchManagerRequest;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
@@ -109,7 +108,6 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         private HtmlService $htmlRenderer,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
-        private FilterState $filterState,
         private Paths $paths,
     ) {}
 
@@ -175,7 +173,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->inputValidator, $this->filterState, $this->paths)
+            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->inputValidator, $this->paths)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }

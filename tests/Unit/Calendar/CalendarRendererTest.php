@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Calendar\CalendarRenderer;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -12,8 +14,13 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
@@ -88,6 +95,7 @@ test('render() returns a no-op result for a non-categories section with no items
         $template = TemplateTestFactory::build();
         CurrentTemplateTestFactory::get()->set($template);
 
+        $conn = DbConnection::build();
         $renderer = new CalendarRenderer(
             LangTestFactory::get(),
             HtmlServiceTestFactory::build(),
@@ -97,9 +105,16 @@ test('render() returns a no-op result for a non-categories section with no items
             CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             new Translator(new CurrentConfig()),
-            new FilterState(),
             calendarRendererTestImageStdParams(),
             new PageState(),
+            new PermissionService(
+                new PermissionRepository(EntityManagerFactory::build($conn)),
+                EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+                new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()),
+                CurrentUserTestFactory::get(),
+                new FilterState(),
+                new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
+            ),
         );
 
         $result = $renderer->render(Section::Tags, null, [], 'posted', null, null, [], false);

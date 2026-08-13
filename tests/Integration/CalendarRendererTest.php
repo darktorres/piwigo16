@@ -7,17 +7,23 @@ namespace Piwigo\Tests\Integration {
     use Doctrine\DBAL\Connection;
     use LogicException;
     use Override;
+    use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Cache\CachePools;
     use Piwigo\Calendar\CalendarBase;
     use Piwigo\Calendar\CalendarRenderer;
     use Piwigo\Calendar\CalendarRenderResult;
+    use Piwigo\Category\CategoryRepository;
     use Piwigo\Common\Enum\Section;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Core\FilterState;
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Core\UrlServiceInterface;
     use Piwigo\Db\DbConnection;
+    use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Group\GroupEntity;
     use Piwigo\Html\HtmlService;
+    use Piwigo\Permission\PermissionRepository;
+    use Piwigo\Permission\PermissionService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -129,9 +135,21 @@ namespace Piwigo\Tests\Integration {
             parent::tearDown();
         }
 
+        private function permissionService(): PermissionService
+        {
+            return new PermissionService(
+                new PermissionRepository(EntityManagerFactory::build($this->conn)),
+                EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
+                new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()),
+                CurrentUserTestFactory::get(),
+                new FilterState(),
+                new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
+            );
+        }
+
         private function makeRenderer(): CalendarRenderer
         {
-            return new CalendarRenderer(LangTestFactory::get(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
+            return new CalendarRenderer(LangTestFactory::get(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService());
         }
 
         /**
@@ -263,7 +281,7 @@ namespace Piwigo\Tests\Integration {
         public function testRenderGroupsMultipleYearsAndMonthsForTheDefaultMonthlyCalendarView(): void
         {
             $template = TemplateTestFactory::build();
-            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
+            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService());
 
             $result = $renderer->render(
                 section: Section::ListView,
@@ -309,7 +327,7 @@ namespace Piwigo\Tests\Integration {
         public function testRenderNormalizesChronologyDateToIntsAndNextPrevNavigationStillWorks(): void
         {
             $template = TemplateTestFactory::build();
-            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
+            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService());
 
             $result = $renderer->render(
                 section: Section::ListView,

@@ -626,7 +626,7 @@ final readonly class SectionPopulator
             $calendar_items_raw = is_array($page['items']) ? $page['items'] : [];
             $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
 
-            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->filterState, $this->imageStdParams, $this->pageState)
+            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->imageStdParams, $this->pageState, $this->permissionService)
                 ->render(
                     $section,
                     $page_category,

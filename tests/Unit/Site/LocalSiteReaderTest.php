@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
@@ -112,7 +111,6 @@ function lsrTestMetadataService(): MetadataService
         $currentConfig,
         new CurrentUser($currentConfig),
         new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $currentConfig),
-        new FilterState(),
         Paths::fromRoot(sys_get_temp_dir()),
     );
 }

@@ -24,7 +24,6 @@ use Piwigo\Controller\Admin\Projection\SiteUpdateSyncResultPageContext;
 use Piwigo\Controller\Admin\Request\SiteUpdateRequest;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
-use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -106,7 +105,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
-        private FilterState $filterState,
         private Paths $paths,
     ) {}
 
@@ -187,7 +185,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             $this->htmlRenderer
                 ->fatalError('remote sites not supported');
         } else {
-            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState, $this->paths));
+            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths));
         }
 
         if ($this->pageState->noMd5sumNumber !== null) {

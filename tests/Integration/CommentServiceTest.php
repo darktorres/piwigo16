@@ -24,6 +24,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Event\User\UserCommentCheck;
     use Piwigo\Mail\MailService;
+    use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -252,6 +253,16 @@ namespace Piwigo\Tests\Integration {
             }
 
             return $accessLevelChecker;
+        }
+
+        private function permissionService(): PermissionService
+        {
+            $permissionService = Kernel::container()->get(PermissionService::class);
+            if (! $permissionService instanceof PermissionService) {
+                throw new LogicException('Container returned an unexpected type for ' . PermissionService::class);
+            }
+
+            return $permissionService;
         }
 
         // --- checkForSpam() -------------------------------------------------
@@ -1259,8 +1270,8 @@ namespace Piwigo\Tests\Integration {
             // countAvailableWithConditions() tests exercise the same
             // repository mechanism, but never through this exact caller.
             $repo = EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class);
-            $counter = new AvailableCommentsCounter(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $this->accessLevelChecker());
-            $baseline = $counter->count();
+            $counter = new AvailableCommentsCounter(CurrentUserTestFactory::get(), $this->accessLevelChecker());
+            $baseline = $counter->count($this->permissionService());
 
             $validatedId = $repo->insert([
                 'author' => 'nbc-test',
@@ -1289,7 +1300,7 @@ namespace Piwigo\Tests\Integration {
                 // the second call genuinely recomputes.
                 CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withRawAttribute('nb_available_comments', null));
 
-                $afterInsert = $counter->count();
+                $afterInsert = $counter->count($this->permissionService());
 
                 self::assertSame($baseline + 1, $afterInsert, 'only the validated comment should count');
             } finally {

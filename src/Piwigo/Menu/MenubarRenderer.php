@@ -25,13 +25,11 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\CheckMenuLinkVisibility;
 use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContext;
@@ -77,14 +75,12 @@ final class MenubarRenderer
      * (see that method's own docblock); every caller but GalleryController
      * ignores the return value.
      */
-    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, UrlServiceInterface $urlService, FilterState $filterState, SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, DeploymentPolicy $deploymentPolicy, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, Translator $translator, CurrentLogger $currentLogger): ?int
+    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, UrlServiceInterface $urlService, FilterState $filterState, SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, DeploymentPolicy $deploymentPolicy, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, Translator $translator, CurrentLogger $currentLogger, PermissionService $permissionService): ?int
     {
         $template = $currentTemplate->get();
         $section_context = $sectionContextRegistry->current();
 
         $conn = DbConnection::build();
-        // Built once, reused below.
-        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, $filterState, $accessLevelChecker);
         $categoryService = new CategoryService($lang, new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, $currentConfig));
 
         // ImageService is a throwaway, never-actually-used collaborator
@@ -337,8 +333,8 @@ final class MenubarRenderer
                       'TITLE' => $lang->t('display last user comments'),
                       'NAME' => $lang->t('Comments'),
                       'URL' => $urlService->getRootUrl() . 'comments.php',
-                      'COUNTER' => new AvailableCommentsCounter($currentUser, $currentConfig, $accessLevelChecker)
-                          ->count(),
+                      'COUNTER' => new AvailableCommentsCounter($currentUser, $accessLevelChecker)
+                          ->count($permissionService),
                   ];
             }
 

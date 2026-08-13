@@ -18,7 +18,6 @@ use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
-use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
@@ -89,7 +88,6 @@ final readonly class BatchManagerGlobalPageRenderer
         private HtmlService $htmlRenderer,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
-        private FilterState $filterState,
         private Paths $paths,
     ) {}
 
@@ -484,7 +482,7 @@ final readonly class BatchManagerGlobalPageRenderer
         $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
 
         // metadata
-        $site_reader = new LocalSiteReader('./', $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState, $this->paths));
+        $site_reader = new LocalSiteReader('./', $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths));
         $used_metadata = implode(', ', $site_reader->getMetadataAttributes());
 
         // derivatives

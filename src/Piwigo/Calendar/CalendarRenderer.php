@@ -18,7 +18,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
@@ -28,10 +27,8 @@ use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
@@ -64,9 +61,9 @@ final readonly class CalendarRenderer
         private readonly CurrentConfig $currentConfig,
         private EventDispatcher $eventDispatcher,
         private Translator $translator,
-        private FilterState $filterState,
         private ImageStdParams $imageStdParams,
         private PageState $pageState,
+        private PermissionService $permissionService,
     ) {}
 
     /**
@@ -91,10 +88,9 @@ final readonly class CalendarRenderer
 
         $conn = DbConnection::build();
         $accessLevelChecker = new AccessLevelChecker($this->currentUser, $this->currentConfig);
-        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState, $accessLevelChecker);
         $calendarService = new CalendarService(
-            $permissionService,
-            new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator, $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
+            $this->permissionService,
+            new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator, $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
         );
 
         if ($section === Section::Categories) { // we will regenerate the items by including subcats elements

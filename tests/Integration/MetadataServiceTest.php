@@ -21,7 +21,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Core\CurrentLogger;
-    use Piwigo\Core\FilterState;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\Logger;
     use Piwigo\Db\DbConnection;
@@ -31,6 +30,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Metadata\MetadataRepository;
     use Piwigo\Metadata\MetadataService;
     use Piwigo\Metadata\Projection\SvgDimensions;
+    use Piwigo\Permission\PermissionService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -75,7 +75,7 @@ namespace Piwigo\Tests\Integration {
             $currentLogger->set(new Logger([
                 'severity' => Logger::OFF,
             ]));
-            $this->service = new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), CurrentPathsTestFactory::get());
+            $this->service = new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), CurrentPathsTestFactory::get());
 
             CurrentConfigTestFactory::get()->useIptc = false;
             CurrentConfigTestFactory::get()->useExif = true;
@@ -104,6 +104,16 @@ namespace Piwigo\Tests\Integration {
             @rmdir($this->scratchDir);
 
             parent::tearDown();
+        }
+
+        private function permissionService(): PermissionService
+        {
+            $permissionService = Kernel::container()->get(PermissionService::class);
+            if (! $permissionService instanceof PermissionService) {
+                throw new LogicException('Container returned an unexpected type for ' . PermissionService::class);
+            }
+
+            return $permissionService;
         }
 
         /**
@@ -1060,7 +1070,7 @@ namespace Piwigo\Tests\Integration {
             $imageId = (int) $this->conn->lastInsertId();
 
             try {
-                $this->service->syncMetadata([$imageId]);
+                $this->service->syncMetadata([$imageId], $this->permissionService());
 
                 $tagNames = $this->conn->fetchFirstColumn(
                     'SELECT t.name FROM tags' . ' t
@@ -1094,7 +1104,7 @@ namespace Piwigo\Tests\Integration {
                 // Must not throw/fatal -- getSyncMetadata() returns false for
                 // this row (is_readable() fails), hitting the `continue` guard;
                 // the row is never added to $datas/$tagsOf or written back.
-                $this->service->syncMetadata([$imageId]);
+                $this->service->syncMetadata([$imageId], $this->permissionService());
 
                 $updatedDate = $this->conn->fetchOne(
                     'SELECT date_metadata_update FROM images WHERE id = ?',

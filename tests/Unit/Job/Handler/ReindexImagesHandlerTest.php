@@ -7,6 +7,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Job\Handler\ReindexImagesHandler;
 use Piwigo\Job\ReindexImagesJob;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\PermissionService;
 
 /**
  * Piwigo\Job\Handler\ReindexImagesHandler -- a thin delegate to
@@ -31,8 +32,12 @@ test('__invoke delegates to MetadataService::syncMetadata with the job\'s image 
         if (! $metadataService instanceof MetadataService) {
             throw new LogicException('Container returned an unexpected type for ' . MetadataService::class);
         }
+        $permissionService = Kernel::container()->get(PermissionService::class);
+        if (! $permissionService instanceof PermissionService) {
+            throw new LogicException('Container returned an unexpected type for ' . PermissionService::class);
+        }
 
-        $handler = new ReindexImagesHandler($metadataService);
+        $handler = new ReindexImagesHandler($metadataService, $permissionService);
 
         $handler(new ReindexImagesJob([]));
     } finally {

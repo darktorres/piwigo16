@@ -16,6 +16,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
@@ -113,6 +114,7 @@ test('render skips every real DB-backed block when no listener has registered an
         $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
         $translator = Kernel::container()->get(Translator::class);
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        $permissionService = Kernel::container()->get(PermissionService::class);
 
         if (! $lang instanceof Lang
             || ! $accessLevelChecker instanceof AccessLevelChecker
@@ -127,6 +129,7 @@ test('render skips every real DB-backed block when no listener has registered an
             || ! $eventDispatcher instanceof EventDispatcher
             || ! $translator instanceof Translator
             || ! $currentLogger instanceof CurrentLogger
+            || ! $permissionService instanceof PermissionService
         ) {
             throw new LogicException('Container returned an unexpected type for one of render()\'s method params.');
         }
@@ -145,6 +148,7 @@ test('render skips every real DB-backed block when no listener has registered an
             $eventDispatcher,
             $translator,
             $currentLogger,
+            $permissionService,
         );
 
         // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in

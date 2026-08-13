@@ -7,6 +7,8 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
+use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
@@ -14,10 +16,13 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Job\Handler\ReindexImagesHandler;
 use Piwigo\Job\ReindexImagesJob;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -75,7 +80,18 @@ final class ReindexImagesHandlerTest extends IntegrationTestCase
 
     public function testInvokeDelegatesToMetadataServiceSyncMetadata(): void
     {
-        $handler = new ReindexImagesHandler(new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), CurrentPathsTestFactory::get()));
+        $currentConfig = new CurrentConfig();
+        $handler = new ReindexImagesHandler(
+            new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), new CurrentLogger(), new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), CurrentPathsTestFactory::get()),
+            new PermissionService(
+                new PermissionRepository(EntityManagerFactory::build($this->conn)),
+                EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
+                new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
+                CurrentUserTestFactory::get(),
+                new FilterState(),
+                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
+            ),
+        );
 
         // no exception/fatal is the real assertion here -- see the class
         // docblock for why a full real EXIF-sync side effect isn't

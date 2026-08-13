@@ -39,6 +39,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Section\SectionContext;
@@ -91,6 +92,7 @@ final readonly class GalleryController implements ControllerInterface
         private CurrentConfig $currentConfig,
         private Translator $translator,
         private CurrentLogger $currentLogger,
+        private PermissionService $permissionService,
     ) {}
 
     #[Override]
@@ -201,7 +203,7 @@ final readonly class GalleryController implements ControllerInterface
         $nb_items = count($page_items);
 
         $categoryCountCategories = new MenubarRenderer()
-            ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
+            ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService);
 
         $this->pageState->setBodyId('theCategoryPage');
 

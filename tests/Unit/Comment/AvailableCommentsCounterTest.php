@@ -3,11 +3,18 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\AvailableCommentsCounter;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\FilterState;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -26,7 +33,21 @@ use Piwigo\Users\UserStatus;
  */
 function availableCommentsCounterTestSubject(CurrentUser $currentUser, CurrentConfig $currentConfig): AvailableCommentsCounter
 {
-    return new AvailableCommentsCounter($currentUser, $currentConfig, new AccessLevelChecker($currentUser, $currentConfig));
+    return new AvailableCommentsCounter($currentUser, new AccessLevelChecker($currentUser, $currentConfig));
+}
+
+function availableCommentsCounterTestPermissionService(CurrentUser $currentUser, CurrentConfig $currentConfig): PermissionService
+{
+    $conn = DbConnection::build();
+
+    return new PermissionService(
+        new PermissionRepository(EntityManagerFactory::build($conn)),
+        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+        new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig),
+        $currentUser,
+        new FilterState(),
+        new AccessLevelChecker($currentUser, $currentConfig),
+    );
 }
 
 test('count returns the memoized value directly, without recomputing it', function (): void {
@@ -46,7 +67,7 @@ test('count returns the memoized value directly, without recomputing it', functi
     ));
     $counter = availableCommentsCounterTestSubject($currentUser, $currentConfig);
 
-    $result = $counter->count();
+    $result = $counter->count(availableCommentsCounterTestPermissionService($currentUser, $currentConfig));
 
     expect($result)
         ->toBe(987654);
@@ -66,7 +87,7 @@ test('count computes a real value on a cache miss and memoizes it back onto the 
     ));
     $counter = availableCommentsCounterTestSubject($currentUser, $currentConfig);
 
-    $result = $counter->count();
+    $result = $counter->count(availableCommentsCounterTestPermissionService($currentUser, $currentConfig));
 
     expect($result)
         ->toBeGreaterThanOrEqual(0)

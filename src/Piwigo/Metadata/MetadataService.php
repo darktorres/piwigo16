@@ -12,7 +12,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
@@ -20,14 +19,12 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Picture\CleanIptcValue;
 use Piwigo\Event\Picture\FormatExifData;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Metadata\Projection\MetadataImage;
 use Piwigo\Metadata\Projection\SvgDimensions;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -59,7 +56,6 @@ final readonly class MetadataService
         private CurrentConfig $currentConfig,
         private CurrentUser $currentUser,
         private SessionService $sessionService,
-        private FilterState $filterState,
         private Paths $paths,
     ) {}
 
@@ -549,7 +545,7 @@ final readonly class MetadataService
      *
      * @param  list<int>  $ids
      */
-    public function syncMetadata(array $ids): void
+    public function syncMetadata(array $ids, PermissionService $permissionService): void
     {
         // Reuse the DB-consistent CURRENT_DATE when a real top-level definer
         // (install.php/upgrade.php -- not src/Piwigo/, which itself never
@@ -568,9 +564,9 @@ final readonly class MetadataService
         // one-method-only TagService dependency, avoiding touching every
         // existing `new MetadataService(...)` call site for zero benefit.
         $tagConn = DbConnection::build();
-        $tagServiceCategoryService = new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), new PermissionService(new PermissionRepository(EntityManagerFactory::build($tagConn)), EntityManagerFactory::build($tagConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState, new AccessLevelChecker($this->currentUser, $this->currentConfig)), $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig), new AccessLevelChecker($this->currentUser, $this->currentConfig), new UserRepository(EntityManagerFactory::build($tagConn), $this->eventDispatcher, $this->currentConfig));
+        $tagServiceCategoryService = new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig), new AccessLevelChecker($this->currentUser, $this->currentConfig), new UserRepository(EntityManagerFactory::build($tagConn), $this->eventDispatcher, $this->currentConfig));
         $tagServiceImageService = new ImageService(EntityManagerFactory::build($tagConn)->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $tagServiceCategoryService);
-        $tagService = new TagService($this->lang, EntityManagerFactory::build($tagConn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($tagConn)), EntityManagerFactory::build($tagConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState, new AccessLevelChecker($this->currentUser, $this->currentConfig)), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $tagServiceImageService);
+        $tagService = new TagService($this->lang, EntityManagerFactory::build($tagConn)->getRepository(TagEntity::class), $permissionService, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $tagServiceImageService);
 
         foreach ($this->repo->findImagesByIds($ids) as $row) {
             $data = $this->getSyncMetadata($row->toArray());

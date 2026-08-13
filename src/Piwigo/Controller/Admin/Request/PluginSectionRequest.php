@@ -15,8 +15,10 @@ use Piwigo\Validation\InputValidator;
  * and never returns a malformed instance -- every rejection path is
  * `never`-typed.
  *
- * Rejection messages go through `InputValidator`'s own standard
- * "[Hacking attempt] ..." wording.
+ * Per-segment charset rejections go through `InputValidator`'s own
+ * standard "Invalid request parameter ..." wording; the path-traversal
+ * and segment-count guards below reject with their own firmer
+ * "Request rejected ..." wording instead.
  *
  * Empty segments (e.g. from a `foo//bar` value with two consecutive
  * slashes, or a trailing slash) are dropped via
@@ -63,7 +65,7 @@ final readonly class PluginSectionRequest
             // fragile lookahead -- kept as a plain, obviously-correct
             // comparison instead.
             if ($section === '..') {
-                $validator->fail('[Hacking attempt] the input parameter "section" is not valid');
+                $validator->fail('Request rejected: invalid characters in "section"');
             }
             // Known, accepted trade-off: InputValidator::emptyValue()
             // treats a literal '0' the same as an absent value, so a
@@ -77,7 +79,7 @@ final readonly class PluginSectionRequest
         }
 
         if (count($sections) < 2) {
-            $validator->fail('[Hacking attempt] the input parameter "section" is not valid');
+            $validator->fail('Request rejected: invalid characters in "section"');
         }
 
         $plugin_id = $sections[0];

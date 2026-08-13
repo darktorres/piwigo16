@@ -39,16 +39,16 @@ it('renders the page shell with empty help content for a well-formed but unknown
     $page->assertPresent('#closeLink');
 });
 
-it('rejects a page param with invalid characters as a 400 hacking attempt', function (): void {
+it('rejects a page param with invalid characters with a 400 response', function (): void {
     // /^[a-z_]*$/ rejects digits/uppercase/path separators -- a real
     // path-traversal-shaped value exercises the guard exactly as designed.
     expect(H::httpStatus('popuphelp.php?page=../../etc/passwd'))->toBe(400);
-    expect(H::httpBody('popuphelp.php?page=../../etc/passwd'))->toBe('Hacking attempt!');
+    expect(H::httpBody('popuphelp.php?page=../../etc/passwd'))->toBe('Request rejected: invalid page parameter');
 });
 
-it('rejects a missing page param as a 400 hacking attempt', function (): void {
+it('rejects a missing page param with a 400 response', function (): void {
     // $rawPage is null when the GET param is absent entirely -- !is_string()
     // fails the guard the same way a malformed string does.
     expect(H::httpStatus('popuphelp.php'))->toBe(400);
-    expect(H::httpBody('popuphelp.php'))->toBe('Hacking attempt!');
+    expect(H::httpBody('popuphelp.php'))->toBe('Request rejected: invalid page parameter');
 });

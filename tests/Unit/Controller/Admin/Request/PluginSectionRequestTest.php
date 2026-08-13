@@ -56,7 +56,7 @@ test('fromArray rejects a missing section param with the exact "section" message
     // fails the per-segment loop's own pattern check, throwing the same
     // exception class but with a "segment" (not "section") message.
     expect(fn (): PluginSectionRequest => PluginSectionRequest::fromArray([], new InputValidator()))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "section" is not valid');
+        ->toThrow(RuntimeException::class, 'Request rejected: invalid characters in "section"');
 });
 
 test('fromArray rejects a section param with a single segment', function (): void {
@@ -97,7 +97,7 @@ test('fromArray rejects a non-string section param with the exact "section" mess
             'nested' => 'array',
         ],
     ], new InputValidator()))
-        ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "section" is not valid');
+        ->toThrow(RuntimeException::class, 'Request rejected: invalid characters in "section"');
 });
 
 test('fromArray rejects a ".." segment that is not the plugin id itself', function (): void {

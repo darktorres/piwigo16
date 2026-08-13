@@ -80,7 +80,7 @@ final readonly class PopuphelpController implements ControllerInterface
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
 
         if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
-            throw new ResponseReadyException(ResponseFactory::text('Hacking attempt!', 400));
+            throw new ResponseReadyException(ResponseFactory::text('Request rejected: invalid page parameter', 400));
         }
 
         $help_content = $this->lang->load('help/' . $rawPage . '.html', '', [

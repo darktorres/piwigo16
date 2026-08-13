@@ -326,7 +326,7 @@ it('admin popuphelp rejects a page parameter with invalid characters', function 
     $page = H::navigateOk($page, '/admin/popuphelp.php?page=INVALID');
 
     expect($page->content())
-        ->toContain('Hacking attempt!');
+        ->toContain('Request rejected: invalid page parameter');
 });
 
 function pluginSubDb(): mysqli|Connection

@@ -86,7 +86,7 @@ function popuphelpTestAccessControl(): AccessControl
     );
 }
 
-test('__invoke returns a 400 "Hacking attempt!" response for a page value with disallowed characters', function (): void {
+test('__invoke returns a 400 "Request rejected" response for a page value with disallowed characters', function (): void {
     $root = popuphelpTestRoot();
 
     try {
@@ -124,7 +124,7 @@ test('__invoke returns a 400 "Hacking attempt!" response for a page value with d
         expect($response->getStatusCode())
             ->toBe(400)
             ->and((string) $response->getBody())
-            ->toBe('Hacking attempt!');
+            ->toBe('Request rejected: invalid page parameter');
     } finally {
         CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();

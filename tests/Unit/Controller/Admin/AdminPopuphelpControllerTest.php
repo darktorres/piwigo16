@@ -120,7 +120,7 @@ test('__invoke returns the raw help content directly for output=content_only, sk
     }
 });
 
-test('__invoke returns a 400 "Hacking attempt!" response for an invalid page value with the default output', function (): void {
+test('__invoke returns a 400 "Request rejected" response for an invalid page value with the default output', function (): void {
     $root = adminPopuphelpTestRoot();
 
     try {
@@ -156,7 +156,7 @@ test('__invoke returns a 400 "Hacking attempt!" response for an invalid page val
         expect($response->getStatusCode())
             ->toBe(400)
             ->and((string) $response->getBody())
-            ->toBe('Hacking attempt!');
+            ->toBe('Request rejected: invalid page parameter');
     } finally {
         CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();

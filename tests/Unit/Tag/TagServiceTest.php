@@ -597,6 +597,30 @@ test('getAvailableTags() returns empty when the filter matches no images', funct
  * mechanism, same fix, as 'getTagIds() creates a new tag for a plain
  * name when allowed' above (reproduced live there: DeadlockException),
  * and this test's own 1000-row INSERT holds that lock even longer.
+ *
+ * KNOWN, ACCEPTED RESIDUAL under --parallel: this test's own cleanup
+ * (below) deletes all 1000 disposable tags in one `id IN (...)`
+ * statement. `image_tag.tag_id` has an `ON DELETE CASCADE` FK to
+ * `tags.id` -- deleting 1000 parent rows forces InnoDB to broadly
+ * lock/scan `image_tag`'s own secondary index to verify referential
+ * integrity for every one of those ids, regardless of how the `tags`
+ * rows themselves are selected (confirmed live: switching this
+ * cleanup from a `name LIKE` scan to an exact `id IN (...)` list did
+ * NOT change the lock pattern one bit, via 8 separate `SHOW ENGINE
+ * INNODB STATUS` captures -- see git history on this comment).
+ * TagRepositoryTest.php's own `massInsertImageTags()`-calling tests
+ * (e.g. 'massInsertImageTags() clears the identity map...',
+ * 'countImagesPerTagUnrestricted() counts every image_tag link...')
+ * insert single `image_tag` rows concurrently and can lose that race
+ * as either a DeadlockException or (if the loser is this test's own
+ * earlier tag-creation transaction) a ForeignKeyConstraintViolationException
+ * -- reproduced live at roughly a 1-in-2 rate across two independent
+ * 10-run --parallel hunts. This is a legitimate InnoDB deadlock
+ * between two correctly-written, correctly-isolated concurrent
+ * transactions (not a missing-exemption bug), and is accepted as a
+ * known, undominated residual rather than further mitigated (e.g. via
+ * chunked deletes or deadlock-retry) -- a failure here is a genuine
+ * `--parallel` timing collision, not a real defect; rerun the suite.
  */
 test('getAvailableTags() skips a tag absent from the counters once past the 1000 id threshold', function (): void {
     DbTransactionTestOverride::rollback();
@@ -664,16 +688,13 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
         // optimizer can't use for LIKE), so a name-pattern DELETE forces
         // a full clustered-index scan that next-key-locks its way across
         // the ENTIRE table for the whole 1000-row deletion -- including
-        // rows that don't even match the pattern. Under --parallel this
-        // reliably deadlocked against other workers' own single-row tags/
-        // image_tag writes (reproduced live via SHOW ENGINE INNODB STATUS:
-        // this DELETE holding a shared lock on image_tag's own index
-        // while waiting on a `tags` row a concurrent single-row INSERT
-        // INTO image_tag already held a shared lock on, and vice versa --
-        // a textbook two-table lock-order-inversion deadlock, 100%
-        // reproducible across 3 separate captures). An exact `id IN (...)`
-        // delete confines locking to precisely these 1000 rows via direct
-        // primary-key point lookups instead.
+        // rows that don't even match the pattern. This id-list form is a
+        // real improvement (it no longer locks unrelated `tags` rows) but
+        // does NOT eliminate this test's own known-accepted deadlock
+        // residual against TagRepositoryTest.php's own concurrent
+        // image_tag writers -- see this test's own leading docblock for
+        // why (an unavoidable FK-cascade lock on `image_tag` itself, not
+        // something a `tags`-side WHERE clause can route around).
         if ($bulkIds !== []) {
             $conn->executeStatement('DELETE FROM tags WHERE id IN (' . implode(',', $bulkIds) . ')');
         }

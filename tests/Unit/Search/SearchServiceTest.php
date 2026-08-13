@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\SearchResultsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigLoader;
@@ -181,6 +181,16 @@ function searchServiceTestPreferencesService(): PreferencesService
     return $preferencesService;
 }
 
+function searchServiceTestSearchResultsCachePool(): SearchResultsCachePool
+{
+    $searchResultsCachePool = Kernel::container()->get(SearchResultsCachePool::class);
+    if (! $searchResultsCachePool instanceof SearchResultsCachePool) {
+        throw new LogicException('Container returned an unexpected type for ' . SearchResultsCachePool::class);
+    }
+
+    return $searchResultsCachePool;
+}
+
 /**
  * Same dependency graph as beforeEach()'s own default service below,
  * with a caller-supplied HtmlRenderingInterface (for observing the
@@ -223,6 +233,7 @@ function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): Sea
         searchServiceTestTagService(),
         searchServiceTestUserService(),
         searchServiceTestPreferencesService(),
+        searchServiceTestSearchResultsCachePool(),
     );
 }
 
@@ -364,7 +375,8 @@ afterEach(function (): void {
     // pattern loses no real coverage.
     searchServiceTestConn()
         ->executeStatement('DELETE FROM search' . " WHERE search_uuid REGEXP '^psk-[0-9]{8}-'");
-    CachePools::searchResults()->clear();
+    searchServiceTestSearchResultsCachePool()
+        ->clear();
     CurrentUserTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->reset();
     LangTestFactory::get()->reset();
@@ -1416,7 +1428,7 @@ test('getQuickSearchResultsNoCache() binds a multi-value forbidden-categories co
 });
 
 test('getQuickSearchResults() caches across calls', function (): void {
-    // CachePools::searchResults() backs quick-search result caching --
+    // SearchResultsCachePool backs quick-search result caching --
     // proven by mutating the underlying data (tag image 2 "family",
     // which the fixture doesn't already do -- only image 1 is) after the
     // first (caching) call, then showing a 2nd call with the same query

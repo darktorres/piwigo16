@@ -14,6 +14,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Cache\SearchResultsCachePool;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -98,6 +99,10 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         }
 
         $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
+        $searchResultsCachePool = Kernel::container()->get(SearchResultsCachePool::class);
+        if (! $searchResultsCachePool instanceof SearchResultsCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . SearchResultsCachePool::class);
+        }
         $permissionService = new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker);
         $categoryService = new CategoryService(
             LangTestFactory::get(),
@@ -126,6 +131,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             new TagService(LangTestFactory::get(), $this->em->getRepository(TagEntity::class), $permissionService, new ActivityService($this->em->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), new ImageService($this->em->getRepository(ImageEntity::class), new ActivityService($this->em->getRepository(ActivityEntity::class)), new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), $categoryService)),
             $userService,
             new PreferencesService(new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()),
+            $searchResultsCachePool,
         );
     }
 

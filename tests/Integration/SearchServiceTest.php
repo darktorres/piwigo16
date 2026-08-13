@@ -11,7 +11,7 @@ namespace Piwigo\Tests\Integration {
     use Override;
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Bootstrap\RedirectService;
-    use Piwigo\Cache\CachePools;
+    use Piwigo\Cache\SearchResultsCachePool;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
     use Piwigo\Config\ConfigLoader;
@@ -376,13 +376,15 @@ namespace Piwigo\Tests\Integration {
                 $this->tagService(),
                 $this->userService(),
                 $this->preferencesService(),
+                $this->searchResultsCachePool(),
             );
         }
 
         #[Override]
         protected function tearDown(): void
         {
-            CachePools::searchResults()->clear();
+            $this->searchResultsCachePool()
+                ->clear();
             Kernel::reset();
 
             parent::tearDown();
@@ -421,6 +423,16 @@ namespace Piwigo\Tests\Integration {
             return $preferencesService;
         }
 
+        private function searchResultsCachePool(): SearchResultsCachePool
+        {
+            $searchResultsCachePool = Kernel::container()->get(SearchResultsCachePool::class);
+            if (! $searchResultsCachePool instanceof SearchResultsCachePool) {
+                throw new LogicException('Container returned an unexpected type for ' . SearchResultsCachePool::class);
+            }
+
+            return $searchResultsCachePool;
+        }
+
         /**
          * Same dependency graph as setUp()'s own $this->service, but with a
          * caller-supplied $repo (for forcing an internal collision retry) and/or
@@ -454,6 +466,7 @@ namespace Piwigo\Tests\Integration {
                 $this->tagService(),
                 $this->userService(),
                 $this->preferencesService(),
+                $this->searchResultsCachePool(),
             );
         }
 
@@ -1035,7 +1048,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * CachePools::searchResults() backs quick-search result caching --
+         * SearchResultsCachePool backs quick-search result caching --
          * proven the same way TagServiceTest/ForbiddenCategoriesCacheTest prove
          * their own pool wiring: mutate the underlying data (tag image 2
          * "family", which the fixture doesn't already do -- only image 1 is)

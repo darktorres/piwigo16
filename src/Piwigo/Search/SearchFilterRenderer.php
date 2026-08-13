@@ -7,7 +7,7 @@ namespace Piwigo\Search;
 use DateTime;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\SearchResultsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Enum\Section;
@@ -38,7 +38,7 @@ use Piwigo\Users\UserService;
  * width filters) plus the "ALBUMS_FOUND"/"TAGS_FOUND" search-hint block.
  *
  * The per-filter row/count caches below go through
- * {@see \Piwigo\Cache\CachePools::searchResults()} (30s TTL).
+ * {@see \Piwigo\Cache\SearchResultsCachePool} (30s TTL).
  *
  * Every `mixed` below stays that way by design: cacheGet()/cacheSet() are
  * a generic PSR-6 cache-pool wrapper (arbitrary cached value, same
@@ -65,18 +65,19 @@ final readonly class SearchFilterRenderer
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
         private UserService $userService,
+        private SearchResultsCachePool $searchResultsCachePool,
     ) {}
 
     private function cacheGet(string $key): mixed
     {
-        $item = CachePools::searchResults()->getItem($key);
+        $item = $this->searchResultsCachePool->getItem($key);
 
         return $item->isHit() ? $item->get() : null;
     }
 
     private function cacheSet(string $key, mixed $value): void
     {
-        $pool = CachePools::searchResults();
+        $pool = $this->searchResultsCachePool;
         $item = $pool->getItem($key);
         $item->set($value);
         $pool->save($item);

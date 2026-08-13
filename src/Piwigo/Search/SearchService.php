@@ -8,7 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Exception;
 use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\SearchResultsCachePool;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\TagId;
@@ -80,6 +80,7 @@ final readonly class SearchService
         private TagService $tagService,
         private UserService $userService,
         private PreferencesService $preferencesService,
+        private SearchResultsCachePool $searchResultsCachePool,
     ) {}
 
     public static function getSearchIdPattern(int|string $candidate): ?string
@@ -1420,7 +1421,7 @@ final readonly class SearchService
     {
         $user = $this->currentUser->get();
 
-        $pool = CachePools::searchResults();
+        $pool = $this->searchResultsCachePool;
         $cacheKey = md5(serialize([
             strtolower($q),
             $this->currentConfig->orderBy,

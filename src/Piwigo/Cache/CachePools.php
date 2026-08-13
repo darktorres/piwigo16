@@ -75,19 +75,4 @@ final class CachePools
     {
         return CacheFactory::create(namespace: 'piwigo.doctrine_metadata.' . $mtimeHash);
     }
-
-    /**
-     * 30s TTL -- short enough that a permission change becomes visible
-     * well within one user session, long enough to avoid recomputing on
-     * every single request for the same user. Used by
-     * Search\SearchFilterRenderer's several filter-row/count caches and
-     * Search\SearchService::getQuickSearchResults(): a uniform 30s TTL,
-     * not a longer "search content changes slowly" value, since
-     * invalidation here is really about permission changes, not content
-     * staleness.
-     */
-    public static function searchResults(): CacheItemPoolInterface
-    {
-        return CacheFactory::create(namespace: 'piwigo.search_results', defaultLifetime: 30);
-    }
 }

@@ -15,6 +15,7 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\CalendarNavCachePool;
+use Piwigo\Cache\SearchResultsCachePool;
 use Piwigo\Cache\SectionImageIdsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -162,7 +163,11 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
         $this->tagService = new TagService(LangTestFactory::get(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), new ImageService($em->getRepository(ImageEntity::class), new ActivityService($em->getRepository(ActivityEntity::class)), $this->sessionService, new EventDispatcher(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), $this->categoryService));
         $this->userService = new UserService(LangTestFactory::get(), new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), $em->getRepository(GroupEntity::class), new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get(), $em, $this->permissionService, $this->categoryService, new PasswordService(new PasswordRepository($em), new DeploymentPolicy()));
-        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $this->tagService, $this->userService, new PreferencesService(new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()));
+        $searchResultsCachePool = Kernel::container()->get(SearchResultsCachePool::class);
+        if (! $searchResultsCachePool instanceof SearchResultsCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . SearchResultsCachePool::class);
+        }
+        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $this->tagService, $this->userService, new PreferencesService(new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()), $searchResultsCachePool);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger([

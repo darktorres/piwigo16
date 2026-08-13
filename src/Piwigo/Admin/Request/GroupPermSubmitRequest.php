@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Request;
 
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Validation\InputValidator;
 
@@ -13,9 +14,9 @@ use Piwigo\Validation\InputValidator;
  * `cat_false`'s own `InputValidator::validate()` calls only run when
  * `$_POST` is non-empty, matching the original exactly. `groupIdPresent`/
  * `groupId` stay split -- the original's own presence check and its
- * separate `is_numeric(...)` re-check both hard-reject via
+ * separate `GroupId::tryFrom(...)` positivity re-check both hard-reject via
  * `HtmlRenderingInterface::fatalError()` (a direct side effect), so both
- * stay at the call site, same precedent as UserPermSubmitRequest.
+ * stay at the call site.
  */
 final readonly class GroupPermSubmitRequest
 {
@@ -30,7 +31,7 @@ final readonly class GroupPermSubmitRequest
         public bool $isFalsify,
         public bool $isTrueify,
         public bool $groupIdPresent,
-        public mixed $groupId,
+        public ?GroupId $groupId,
     ) {}
 
     public static function fromGlobals(InputValidator $inputValidator): self
@@ -82,7 +83,7 @@ final readonly class GroupPermSubmitRequest
             isset($post['falsify']),
             isset($post['trueify']),
             isset($get['group_id']),
-            $get['group_id'] ?? null,
+            GroupId::tryFrom($get['group_id'] ?? null),
         );
     }
 }

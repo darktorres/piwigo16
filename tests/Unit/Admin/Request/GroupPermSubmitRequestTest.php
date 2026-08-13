@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Request\GroupPermSubmitRequest;
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Validation\InputValidator;
 
 test('fromArrays reports not submitted and empty lists for an empty POST', function (): void {
@@ -49,7 +50,7 @@ test('fromArrays rejects a non-digit cat_false element', function (): void {
         ->toThrow(RuntimeException::class);
 });
 
-test('fromArrays passes group_id through from GET', function (): void {
+test('fromArrays parses group_id to a GroupId when present', function (): void {
     $request = GroupPermSubmitRequest::fromArrays([
         'group_id' => '42',
     ], [], new InputValidator());
@@ -57,7 +58,20 @@ test('fromArrays passes group_id through from GET', function (): void {
     expect($request->groupIdPresent)
         ->toBeTrue()
         ->and($request->groupId)
-        ->toBe('42');
+        ->toBeInstanceOf(GroupId::class)
+        ->and($request->groupId?->value)
+        ->toBe(42);
+});
+
+test('fromArrays reports groupIdPresent true but a null groupId for a non-positive group_id', function (): void {
+    $request = GroupPermSubmitRequest::fromArrays([
+        'group_id' => '0',
+    ], [], new InputValidator());
+
+    expect($request->groupIdPresent)
+        ->toBeTrue()
+        ->and($request->groupId)
+        ->toBeNull();
 });
 
 test('fromArrays reports groupIdPresent false when absent', function (): void {

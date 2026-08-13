@@ -74,11 +74,7 @@ final readonly class GroupPermPageRenderer
                 ->fatalError('group_id URL parameter is missing');
         }
 
-        // is_numeric() alone didn't guarantee positivity before -- a
-        // 0/negative group_id used to silently proceed. tryFrom() now
-        // correctly rejects that too, same error message as the two
-        // existing checks above.
-        $groupId = is_numeric($groupPermSubmit->groupId) ? GroupId::tryFrom((int) $groupPermSubmit->groupId) : null;
+        $groupId = $groupPermSubmit->groupId;
         if (! $groupId instanceof GroupId) {
             $this->htmlRenderer
                 ->fatalError('group_id URL parameter is missing');

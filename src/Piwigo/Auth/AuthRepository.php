@@ -290,11 +290,6 @@ final readonly class AuthRepository
     }
 
     /**
-     * `ui.lastmodified = ui.lastmodified` is a deliberate self-assignment,
-     * not a no-op leftover -- it avoids bumping an ON UPDATE
-     * CURRENT_TIMESTAMP-style column while still writing the other two
-     * columns. DQL's `SET` clause accepts an arbitrary right-hand
-     * expression, including the same property path again.
      * `last_visit_from_history` is a `boolean` column
      * ({@see UserInfoEntity}) -- this binds the real PHP `true`, not a
      * numeric-literal proxy for it.
@@ -304,7 +299,6 @@ final readonly class AuthRepository
         $qb = $this->em->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.lastVisitFromHistory', ':true')
-            ->set('ui.lastmodified', 'ui.lastmodified')
             ->where('ui.userId = :userId')
             ->setParameter('true', true)
             ->setParameter('userId', UserId::from($userId));

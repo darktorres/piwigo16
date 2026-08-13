@@ -108,19 +108,14 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Deliberately avoids bumping `lastmodified` (the original's own SQL
-     * comment, preserved) -- an image's "last modified" timestamp should
-     * reflect real edits, not visit counting. Bypasses the ORM's own
-     * change-tracking (a per-entity `persist()`/`flush()` would only emit
-     * an `UPDATE` for the columns it detects as dirty, i.e. just `hit` --
-     * MySQL's own `ON UPDATE CURRENT_TIMESTAMP` on `lastmodified` would
-     * then fire anyway since the row itself is being updated, silently
-     * bumping it) via a DQL bulk `UPDATE`, which -- unlike a mapped entity
-     * property write -- can express the self-assignment
-     * `i.lastmodified = i.lastmodified` directly to suppress that, same
-     * reasoning as Auth\AuthRepository::saveLastVisitFromHistory(). Clears
-     * the identity map afterward since this bypasses the ORM for a row
-     * {@see ImageEntity} may already have cached.
+     * Deliberately avoids bumping `lastmodified` -- an image's "last
+     * modified" timestamp should reflect real edits, not visit counting.
+     * A DQL bulk `UPDATE` that never mentions `lastmodified` at all
+     * leaves it untouched (no schema-level auto-bump exists anymore, see
+     * `Piwigo\Db\LastModifiedListener`'s own docblock), and bypasses the
+     * ORM entirely, so clears the identity map afterward since this
+     * bypasses the ORM for a row {@see ImageEntity} may already have
+     * cached.
      */
     public function incrementVisitCounter(ImageId $imageId): void
     {
@@ -128,7 +123,6 @@ final class ImageRepository extends EntityRepository
         $em->createQueryBuilder()
             ->update(ImageEntity::class, 'i')
             ->set('i.hit', 'i.hit + 1')
-            ->set('i.lastmodified', 'i.lastmodified')
             ->where('i.id = :id')
             ->setParameter('id', $imageId->value)
             ->getQuery()

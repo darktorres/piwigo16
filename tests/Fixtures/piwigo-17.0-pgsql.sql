@@ -58,11 +58,6 @@ ALTER TABLE IF EXISTS ONLY public.caddie DROP CONSTRAINT IF EXISTS fk_caddie_use
 ALTER TABLE IF EXISTS ONLY public.caddie DROP CONSTRAINT IF EXISTS fk_caddie_element_id;
 ALTER TABLE IF EXISTS ONLY public.audit_log DROP CONSTRAINT IF EXISTS fk_audit_log_actor_id;
 ALTER TABLE IF EXISTS ONLY public.activity DROP CONSTRAINT IF EXISTS fk_activity_performed_by;
-DROP TRIGGER IF EXISTS trg_user_infos_lastmodified ON public.user_infos;
-DROP TRIGGER IF EXISTS trg_tags_lastmodified ON public.tags;
-DROP TRIGGER IF EXISTS trg_images_lastmodified ON public.images;
-DROP TRIGGER IF EXISTS trg_groups_lastmodified ON public.groups;
-DROP TRIGGER IF EXISTS trg_categories_lastmodified ON public.categories;
 DROP INDEX IF EXISTS public.user_infos_lastmodified_idx;
 DROP INDEX IF EXISTS public.tags_lastmodified_idx;
 DROP INDEX IF EXISTS public.tags_i1;
@@ -178,18 +173,6 @@ DROP TABLE IF EXISTS public.categories;
 DROP TABLE IF EXISTS public.caddie;
 DROP TABLE IF EXISTS public.audit_log;
 DROP TABLE IF EXISTS public.activity;
-DROP FUNCTION IF EXISTS public.set_lastmodified();
---
--- Name: set_lastmodified(); Type: FUNCTION; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE FUNCTION public.set_lastmodified() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$ BEGIN NEW.lastmodified = now(); RETURN NEW; END; $$;
-
-
-ALTER FUNCTION public.set_lastmodified() OWNER TO piwigo_fixture_regen;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -1069,7 +1052,7 @@ COMMENT ON COLUMN public.groups.is_default IS 'every newly registered user is au
 -- Name: COLUMN groups.lastmodified; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
 --
 
-COMMENT ON COLUMN public.groups.lastmodified IS 'row last-update timestamp, set on insert only';
+COMMENT ON COLUMN public.groups.lastmodified IS 'row last-update timestamp';
 
 
 --
@@ -2246,7 +2229,7 @@ COMMENT ON COLUMN public.tags.url_name IS 'URL-friendly slug derived from name';
 -- Name: COLUMN tags.lastmodified; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
 --
 
-COMMENT ON COLUMN public.tags.lastmodified IS 'row last-update timestamp, set on insert only';
+COMMENT ON COLUMN public.tags.lastmodified IS 'row last-update timestamp';
 
 
 --
@@ -4046,39 +4029,14 @@ CREATE INDEX tags_lastmodified_idx ON public.tags USING btree (lastmodified);
 CREATE INDEX user_infos_lastmodified_idx ON public.user_infos USING btree (lastmodified);
 
 
---
--- Name: categories trg_categories_lastmodified; Type: TRIGGER; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE TRIGGER trg_categories_lastmodified BEFORE UPDATE ON public.categories FOR EACH ROW EXECUTE FUNCTION public.set_lastmodified();
 
 
---
--- Name: groups trg_groups_lastmodified; Type: TRIGGER; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE TRIGGER trg_groups_lastmodified BEFORE UPDATE ON public.groups FOR EACH ROW EXECUTE FUNCTION public.set_lastmodified();
 
 
---
--- Name: images trg_images_lastmodified; Type: TRIGGER; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE TRIGGER trg_images_lastmodified BEFORE UPDATE ON public.images FOR EACH ROW EXECUTE FUNCTION public.set_lastmodified();
 
 
---
--- Name: tags trg_tags_lastmodified; Type: TRIGGER; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE TRIGGER trg_tags_lastmodified BEFORE UPDATE ON public.tags FOR EACH ROW EXECUTE FUNCTION public.set_lastmodified();
 
 
---
--- Name: user_infos trg_user_infos_lastmodified; Type: TRIGGER; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE TRIGGER trg_user_infos_lastmodified BEFORE UPDATE ON public.user_infos FOR EACH ROW EXECUTE FUNCTION public.set_lastmodified();
 
 
 --

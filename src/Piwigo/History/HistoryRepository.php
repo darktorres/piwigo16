@@ -765,12 +765,9 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
         //
         // Env::now() rather than DQL's CURRENT_TIMESTAMP() -- matches
         // SessionRepository/CommentRepository's own established reasoning
-        // (invisible to PIWIGO_TEST_NOW). `ui.lastmodified = ui.lastmodified`
-        // is a deliberate self-assignment (see Auth\AuthRepository::
-        // saveLastVisitFromHistory()'s own docblock for why) -- DQL
-        // supports this identically to the original DBAL form.
+        // (invisible to PIWIGO_TEST_NOW).
         $em = $this->getEntityManager();
-        $em->createQuery('UPDATE ' . UserInfoEntity::class . ' ui SET ui.lastVisit = :now, ui.lastmodified = ui.lastmodified WHERE ui.userId = :userId')
+        $em->createQuery('UPDATE ' . UserInfoEntity::class . ' ui SET ui.lastVisit = :now WHERE ui.userId = :userId')
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('userId', UserId::from($userId))
             ->execute();

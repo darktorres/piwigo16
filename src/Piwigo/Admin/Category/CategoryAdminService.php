@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Category;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
 use Piwigo\Category\CategoryService;
@@ -12,8 +13,6 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
@@ -40,6 +39,7 @@ final readonly class CategoryAdminService
         private CategoryService $categoryService,
         private PermissionService $permissionService,
         private HtmlRenderingInterface $htmlRenderer,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -182,8 +182,7 @@ final readonly class CategoryAdminService
             return;
         }
 
-        $conn = DbConnection::build();
-        $permissionRepository = new PermissionRepository(EntityManagerFactory::build($conn));
+        $permissionRepository = new PermissionRepository($this->entityManager);
 
         // groups
         $groupsGranted = $this->categoryService->getAccessGroupIds(CategoryId::from($catId));

@@ -169,7 +169,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             $accessLevelChecker,
             new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get())
         );
-        $this->service = new CategoryAdminService($categoryService, $permissionService, HtmlServiceTestFactory::build());
+        $this->service = new CategoryAdminService($categoryService, $permissionService, HtmlServiceTestFactory::build(), EntityManagerFactory::build($this->conn));
     }
 
     private function userService(): UserService

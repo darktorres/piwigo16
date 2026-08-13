@@ -516,6 +516,14 @@ test('compareImageTagLists() reports the image when tags genuinely change', func
 });
 
 test('getOrphanTags() finds a tag with no images past the grace period', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction: `tags`
+    // carries a FULLTEXT index (tags_ft_name), and InnoDB's FULLTEXT
+    // auxiliary-index maintenance on INSERT can deadlock against another
+    // --parallel worker's own concurrent tags INSERT when held open for
+    // a whole test's duration -- same mechanism, same fix, as
+    // 'getTagIds() creates a new tag for a plain name when allowed'
+    // below.
+    DbTransactionTestOverride::rollback();
     [$service, $conn] = tagServiceTestServiceConn();
     $name = 'orphan-tag-' . uniqid();
     $conn->insert('tags', [
@@ -537,6 +545,10 @@ test('getOrphanTags() finds a tag with no images past the grace period', functio
 });
 
 test('deleteOrphanTags() removes a genuinely orphaned tag', function (): void {
+    // Exempt from the blanket per-test transaction -- same
+    // FULLTEXT-deadlock reason as the sibling getOrphanTags() test just
+    // above.
+    DbTransactionTestOverride::rollback();
     [$service, $conn] = tagServiceTestServiceConn();
     $name = 'orphan-tag-' . uniqid();
     $conn->insert('tags', [

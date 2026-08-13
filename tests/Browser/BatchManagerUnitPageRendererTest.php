@@ -57,9 +57,9 @@ it('renders the per-image thumbnail grid for a real category filter', function (
     // this photo's own real row -- confirms the ~400-line per-image loop
     // (categories, tags, jump-to link, level options, filesize/date
     // formatting) executes without a fatal error for a real photo. The
-    // title is an <input> value, not a visible text node -- confirmed
-    // live via a screenshot -- so a raw-content check, not assertSee(),
-    // is the correct way to confirm it rendered.
+    // title is an <input> value, not a visible text node, so a
+    // raw-content check, not assertSee(), is the correct way to confirm
+    // it rendered.
     expect(H::rawWebpage($page)->content())->toContain('value="Batch Unit Grid Photo"');
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'batch_manager unit-mode thumbnail grid');
@@ -93,7 +93,7 @@ it('submits the unit-mode edit form for a whole_set selection and mass-updates e
 
     expect($result['status'])->toBe(200);
     // The loaded en_UK catalog rephrases this from its literal PHP source
-    // msgid ("Photo informations updated") -- confirmed live.
+    // msgid ("Photo informations updated").
     expect($result['body'])->toContain('Photo information updated');
 
     $row = batchManagerUnitImageRow($imageId);
@@ -175,8 +175,8 @@ it('highlights STORAGE_CATEGORY and honors a category-specific image_order for a
     @unlink($image);
 
     $db = H::connect();
-    // pwg.images.addSimple() never populates storage_category_id (confirmed
-    // live -- it stays NULL for every virtual-album upload), so the
+    // pwg.images.addSimple() never populates storage_category_id
+    // (it stays NULL for every virtual-album upload), so the
     // STORAGE_CATEGORY-highlight branch (only reachable when a photo's own
     // storage_category_id matches the active category filter) and the
     // per-category image_order override both need direct SQL, simulating
@@ -223,7 +223,7 @@ it('strips HTML tags from the description when HTML descriptions are disabled', 
         // level-<id> is read unconditionally into $data['level'] (a real
         // NOT NULL column) with no isset() guard, unlike name/author --
         // omitting it crashes with a genuine "Column 'level' cannot be
-        // null" DB error (confirmed live), so it must always be submitted
+        // null" DB error, so it must always be submitted
         // even when this test only cares about the description field.
         $result = H::adminPost($page, '/admin.php?page=batch_manager&mode=unit', [
             'pwg_token' => H::pwgToken($page),
@@ -270,8 +270,9 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
 
         // batch_manager_unit.latte only renders the per-page pagination
         // links at all inside a `{if !empty($elements)}` guard -- with
-        // the default, unfiltered (empty caddie) filter this file's own
-        // top docblock documents, $elements is empty and the whole block
+        // the default (unset session filter defaults to the empty caddie,
+        // see AdminUncoveredPagesSmokeTest.php's own "caddie prefilter"
+        // test), $elements is empty and the whole block
         // (including the "5" link) never appears, regardless of what
         // $per_page was computed as. A real category+photo filter (same
         // setup as "renders the per-image thumbnail grid...” above) is
@@ -420,7 +421,7 @@ it('sets the "see-out" jump-to link when the current admin is authorized for the
     // U_JUMPTO (and therefore the tpl's "see-out" link) is only assigned
     // when $url_img got set inside the per-image loop's authorized-
     // categories foreach -- since $row['cat_id'] is always null for real
-    // data (see this file's own top docblock), the *only* code path that
+    // data, the *only* code path that
     // can ever set it is the `else` branch's single-iteration foreach
     // over $authorizeds, which this fresh public album + its one photo
     // satisfies (the admin test user is authorized for every public
@@ -434,8 +435,8 @@ it('sets the "see-out" jump-to link when the current admin is authorized for the
     // 'class="see-out"' alone isn't specific enough -- the tpl's own
     // disabled fallback (no U_JUMPTO) renders 'class="see-out disabled"',
     // which also contains that substring, so a bare check can't tell the
-    // two apart. UrlService::makePictureUrl() also confirmed live to
-    // build a *relative* URL ('picture.php?/...', no leading '/' --
+    // two apart. UrlService::makePictureUrl() also
+    // builds a *relative* URL ('picture.php?/...', no leading '/' --
     // getRootUrl() is empty in this admin-page context), so the real
     // signal is the exact enabled-variant markup plus the relative
     // picture.php URL, not a leading-slash '/picture' substring.

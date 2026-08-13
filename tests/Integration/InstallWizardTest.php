@@ -87,11 +87,11 @@ use ReflectionProperty;
  * (smtp_host=127.0.0.1:1, the same trick MailServiceTest already
  * establishes) for the mail branch, and AppInfo::URL's own
  * 'upstream.example.invalid' domain (RFC 2606 -- guaranteed to never
- * resolve, confirmed empirically to fail HttpClientService::fetch()'s own
- * SSRF-guard host check in ~10ms with no network egress at all, not just a
- * slow/blocked one) for the newsletter branch. Calling render() this far
+ * resolve, and fails HttpClientService::fetch()'s own SSRF-guard host
+ * check in ~10ms with no network egress at all, not just a slow/blocked
+ * one) for the newsletter branch. Calling render() this far
  * also reaches AuthService::logUser()'s own unconditional setcookie() and
- * session_start() calls, which -- confirmed empirically -- both emit a
+ * session_start() calls, which both emit a
  * real E_WARNING("headers already sent") once Pest's own console output
  * has already occurred earlier in this shared CLI process (the same
  * CLI-SAPI limitation tests/Unit/Http/Middleware/SessionMiddlewareTest.php's
@@ -116,12 +116,12 @@ use ReflectionProperty;
  *  - boot()'s `! extension_loaded('mysqli')` check: every test in this
  *    whole file already requires a real mysqli-backed DB connection in
  *    this exact PHP process, so the negation can never be true here
- *    (confirmed live: `php -m` lists mysqli).
+ *    (`php -m` lists mysqli).
  *  - boot()'s `version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION,
  *    '<')` check: PHP_VERSION is fixed for this whole process's lifetime,
  *    and AppInfo::REQUIRED_PHP_VERSION is a compile-time class constant
- *    ('8.5.0', at or below the actual PHP version this suite runs on,
- *    confirmed live) -- nothing reachable from a real InstallWizard call
+ *    ('8.5.0', at or below the actual PHP version this suite runs on)
+ *    -- nothing reachable from a real InstallWizard call
  *    can make this comparison true.
  *  - render()'s step-2 `$login_user_id` narrowing (the
  *    `elseif (is_string($raw_login_user_id) && is_numeric(...))`/`else`
@@ -129,10 +129,10 @@ use ReflectionProperty;
  *    UserService::buildUser(1)'s own 'id' key, ultimately `users.id`
  *    (a `mediumint unsigned` column) read through this
  *    project's real mysqli DBAL driver config, which returns integer
- *    columns as native PHP int (confirmed live with a throwaway
+ *    columns as native PHP int (e.g. a bare
  *    `fetchAssociative('SELECT 1 AS id')` against this same driver
- *    config: `int(1)`, not `"1"`) -- so the `if (is_int(...))` branch
- *    always wins in practice. The one real knob that could produce a
+ *    config returns `int(1)`, not `"1"`) -- so the `if (is_int(...))`
+ *    branch always wins in practice. The one real knob that could produce a
  *    non-int 'id' here, `$conf['user_fields']['id']` (a genuine
  *    external-auth column remap -- see e.g.
  *    AlbumNotificationPageRenderer's own comment on it), cannot be set to
@@ -194,18 +194,17 @@ final class InstallWizardTest extends IntegrationTestCase
         Kernel::reset();
         $this->setUpConnectionFromEnv();
 
-        // Real bug found live -- PIWIGO_DB_DRIVER/
-        // PIWIGO_DB_PORT were both missing from this list, so boot()'s own
-        // real DbCredentials::seed() call (every real test here reaches
-        // it via analyzeForm()/boot(), submitting no explicit 'dbdriver'
-        // field, which InstallWizardRequest defaults to 'mysqli') left
-        // the REAL process env var permanently flipped to mysqli after
-        // this class's own tests ran, unrestored by tearDown() below --
-        // confirmed live via a full Integration-suite run: dozens of
-        // unrelated later test classes silently ran against the wrong
-        // driver (`PIWIGO_DB_DRIVER=pgsql` in `.env.test`, but
-        // `getenv('PIWIGO_DB_DRIVER')` returning the leaked 'mysqli')
-        // once this class's tests happened to run first in process order.
+        // PIWIGO_DB_DRIVER/PIWIGO_DB_PORT were both missing from this
+        // list, so boot()'s own real DbCredentials::seed() call (every
+        // real test here reaches it via analyzeForm()/boot(), submitting
+        // no explicit 'dbdriver' field, which InstallWizardRequest
+        // defaults to 'mysqli') left the REAL process env var permanently
+        // flipped to mysqli after this class's own tests ran, unrestored
+        // by tearDown() below -- dozens of unrelated later test classes
+        // silently ran against the wrong driver (`PIWIGO_DB_DRIVER=pgsql`
+        // in `.env.test`, but `getenv('PIWIGO_DB_DRIVER')` returning the
+        // leaked 'mysqli') once this class's tests happened to run first
+        // in process order.
         foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
@@ -649,13 +648,13 @@ final class InstallWizardTest extends IntegrationTestCase
     }
 
     /**
-     * Regression test for a real bug found live: MigrateCommand::run() is
+     * Regression test for a fixed bug: MigrateCommand::run() is
      * called directly (not through a full Symfony Application, see
      * performInstall()'s own comment on that block), so it does NOT
      * guarantee catching every failure into a plain exit code the way a
-     * real CLI invocation would. A driver-level exception (confirmed live:
-     * mysqli's own exception-throwing mode surfacing a genuine "table
-     * already exists" collision, reproduced here by pre-creating one of
+     * real CLI invocation would. A driver-level exception (mysqli's own
+     * exception-throwing mode surfacing a genuine "table already exists"
+     * collision, reproduced here by pre-creating one of
      * the baseline migration's own tables) escaped it uncaught, and since
      * public/install.php's own top-level catch only handles
      * ResponseReadyException, that reached a real browser as an uncaught
@@ -790,8 +789,8 @@ final class InstallWizardTest extends IntegrationTestCase
             'admin_pass1' => 'same-password',
             'admin_pass2' => 'same-password',
             // Empty, not a real address: userService()'s own docblock
-            // documents (faithfully preserved from the legacy install.php,
-            // confirmed by reading it directly) that a non-empty admin_mail
+            // documents (faithfully preserved from the legacy install.php)
+            // that a non-empty admin_mail
             // makes analyzeForm() attempt a *second*, entirely independent
             // DbConnection::build() for validateMailAddress() -- with the
             // same broken dbhost above, that second attempt is never
@@ -838,8 +837,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         // install.po's own en_UK translation rewords this slightly from
         // the raw source literal -- install.lang is genuinely loaded by
-        // this point (confirmed live, deterministically, not a cross-test
-        // leak).
+        // this point, deterministically, not a cross-test leak.
         self::assertSame(["the webmaster login may not contain the characters ' or \""], $this->reflectPrivate($wizard, 'errors'));
     }
 
@@ -863,7 +861,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $wizard->analyzeForm();
 
         // common.po's own en_UK translation drops the space before the
-        // colon in "(example : ...)" -- confirmed live, common.lang is
+        // colon in "(example : ...)" -- common.lang is
         // genuinely loaded by this point.
         self::assertSame(
             ['mail address must be like xxx@yyy.eee (example: jack@altern.org)'],
@@ -876,16 +874,16 @@ final class InstallWizardTest extends IntegrationTestCase
     /**
      * render()'s step-2 body reaches AuthService::logUser()'s own
      * unconditional setcookie() call and (since session_id() starts empty
-     * in a fresh process) its session_start() call too -- both confirmed
-     * empirically to emit a real E_WARNING ("headers already sent") once
+     * in a fresh process) its session_start() call too -- both emit a
+     * real E_WARNING ("headers already sent") once
      * Pest's own console output has already occurred earlier in this
      * shared CLI process, the same CLI-SAPI limitation
      * tests/Unit/Http/Middleware/SessionMiddlewareTest.php's own docblock
      * documents for session_start() alone. Neither warning reflects a real
      * application bug (a genuine HTTP response hasn't sent headers yet
      * when this code runs for real) -- a plain `@` does NOT stop PHPUnit's
-     * ErrorHandler from surfacing them regardless (confirmed elsewhere in
-     * this suite, see MailServiceTest's own suppressMailerWarning()), so a
+     * ErrorHandler from surfacing them regardless (see MailServiceTest's
+     * own suppressMailerWarning()), so a
      * real no-op error handler for the whole render() call is the only
      * reliable way to swallow them. Wider than that helper's own
      * single-call scope on purpose: there's no seam to isolate just the
@@ -902,9 +900,8 @@ final class InstallWizardTest extends IntegrationTestCase
      * moment: shutdown functions only fire at the very end of the whole
      * test binary, long after this test's own tearDown() has already
      * dropped its throwaway database, so the deferred write later fails
-     * with "Unknown database" (confirmed empirically: reproduces
-     * identically on the pre-WS1-6 codebase, single test in isolation,
-     * different throwaway db each run). Calling session_write_close()
+     * with "Unknown database", reproducing identically in isolation with
+     * a different throwaway db each run. Calling session_write_close()
      * here forces that write to happen now, while the database still
      * exists -- a no-op for any other caller of this helper with no
      * active session (PHP's own documented behavior).
@@ -1014,9 +1011,8 @@ final class InstallWizardTest extends IntegrationTestCase
      * SSRF guard (assertUrlIsSafe()'s gethostbyname() lookup, which
      * returns the unmodified hostname on failure per PHP's own
      * documented behavior, then fails the private/reserved-IP format
-     * check) reject the request in ~10ms flat, confirmed empirically
-     * (a standalone script against this exact URL returned `false` in
-     * 11.5ms, no warning, no exception escaping) -- fast, deterministic,
+     * check) reject the request in ~10ms flat (measured ~11.5ms in
+     * isolation, no warning, no exception escaping) -- fast, deterministic,
      * and with zero real network egress, not just "unlikely to hang".
      * What IS asserted directly: preferences.show_newsletter_subscription
      * gets persisted to the real user_infos row as false regardless of

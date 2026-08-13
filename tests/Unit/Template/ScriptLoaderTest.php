@@ -97,9 +97,8 @@ function file_combiner_test_rrmdir_scriptloader(string $dir): void
 //    DecrementInteger/IncrementInteger mutations total): doCombine()'s
 //    own `int $load_mode` parameter is accepted but never read anywhere
 //    in its body (only `$scripts`/`$accessLevelChecker` feed
-//    FileCombiner's constructor) -- confirmed by reading the method
-//    directly, then verified live by passing 999/888/777 instead of the
-//    real 0/1/2 values simultaneously, full suite still green.
+//    FileCombiner's constructor) -- passing 999/888/777 instead of the
+//    real 0/1/2 values simultaneously leaves the full suite green.
 //
 // 3. SmallerToSmallerOrEqual (Line 267, `$load_mode < $script->load_mode`
 //    -> `<=`): when the two values are exactly equal, entering the
@@ -126,12 +125,10 @@ function file_combiner_test_rrmdir_scriptloader(string $dir): void
 //    way.
 //
 // 6. TrueToFalse (Line 366, checkLoadDep()'s own async-branch
-//    `$changed = true;`): see the corrected docblock on "checkLoadDep
-//    converges over a multi-pass cascade..." below -- a prior session's
-//    claim that a specific 5-node graph proves this mutation is real was
-//    WRONG (re-verified: it doesn't catch it). Exhaustively brute-force
-//    searched (all edge sets x all load-mode assignments in {1,2} x
-//    multiple registration orders, up to 4 nodes) and found no
+//    `$changed = true;`): see the docblock on "checkLoadDep
+//    converges over a multi-pass cascade..." below. Exhaustively
+//    brute-force searched (all edge sets x all load-mode assignments in
+//    {1,2} x multiple registration orders, up to 4 nodes) and found no
 //    distinguishing graph at all. The real, structural reason: the async
 //    branch's own condition is self-triggering -- any node whose own
 //    load is 2 and that requires a load=2 precedent independently
@@ -881,9 +878,9 @@ test('getHeadScripts warns and excludes a head-mode script whose path was never 
     // add()'s own $path=null is the REAL "no known path" shape --
     // set_path()'s null/''-is-a-no-op guard means Combinable::$path can
     // never actually become '' through the public API, only stay null.
-    // Confirmed live: before this file's own fix, this crashed with a
-    // TypeError inside FileCombiner::combine() (is_remote() calling
-    // urlIsRemote(null)) instead of hitting this warning at all.
+    // Before this class's own null-path guard was added, this crashed
+    // with a TypeError inside FileCombiner::combine() (is_remote()
+    // calling urlIsRemote(null)) instead of hitting this warning at all.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentUserTestFactory::get()->attachGlobals();
 
@@ -1289,8 +1286,8 @@ test('computeScriptTopologicalOrder fatal-errors exactly one level past the recu
 test('computeScriptTopologicalOrder warns and returns 0 for a script id that was never registered', function (): void {
     // Reachable when a precedent id slips past add()'s own auto-load
     // attempt (an unrecognized id, same setup as checkLoadDep's sibling
-    // test above) yet still gets passed into this method -- confirmed via
-    // direct invocation with a bare, never-registered id.
+    // test above) yet still gets passed into this method -- exercised
+    // via direct invocation with a bare, never-registered id.
     $loader = new ScriptLoader();
 
     $caught = null;
@@ -1382,17 +1379,14 @@ test('checkLoadDep needs a second pass to cascade an unconditional downgrade thr
 });
 
 test('checkLoadDep converges over a multi-pass cascade mixing unconditional and async downgrades', function (): void {
-    // CORRECTED 2026-08-11: this test's own docblock previously claimed
-    // this 5-node graph proves the async branch's own `$changed = true;`
-    // (Line 366) is load-bearing -- re-verified via hand-mutation and it
-    // does NOT catch that mutation; the claim was wrong. Traced why: an
-    // unconditional-branch change earlier in the SAME pass (n2 downgrading
-    // n4) already sets $changed=true regardless, masking the async
-    // branch's own contribution in THIS graph. Went further than just
-    // fixing the claim -- wrote a genuinely exhaustive brute-force search
-    // (all edge sets, all load-mode assignments in {1,2}, multiple
-    // registration orders, up to 4 nodes) and could not find ANY graph
-    // that distinguishes Line 366's mutation. The real, structural reason:
+    // This 5-node graph does NOT distinguish the async branch's own
+    // `$changed = true;` (Line 366) mutation: an unconditional-branch
+    // change earlier in the SAME pass (n2 downgrading n4) already sets
+    // $changed=true regardless, masking the async branch's own
+    // contribution in this graph. An exhaustive brute-force search (all
+    // edge sets, all load-mode assignments in {1,2}, multiple
+    // registration orders, up to 4 nodes) found no graph that
+    // distinguishes Line 366's mutation. The real, structural reason:
     // the async branch's own condition (`$load === 2 && precedent's load
     // === 2`) is self-triggering -- any node whose own load is 2 and that
     // requires a load=2 precedent will independently trigger the SAME

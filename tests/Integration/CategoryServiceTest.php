@@ -45,6 +45,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\TranslatorTestFactory;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Piwigo\Users\User;
+    use Piwigo\Users\UserRepository;
     use RuntimeException;
 
     /**
@@ -248,7 +249,8 @@ namespace Piwigo\Tests\Integration {
                 CurrentConfigTestFactory::get(),
                 EventDispatcherTestFactory::get(),
                 TranslatorTestFactory::get(),
-                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
+                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
+                new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), $currentConfig)
             );
 
             CurrentUserTestFactory::get()->set(User::fromUserArray([

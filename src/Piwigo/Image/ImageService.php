@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use LogicException;
-use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -16,20 +14,15 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Image\Projection\AddMethodBreakdown;
 use Piwigo\Image\Projection\ExtensionBreakdown;
 use Piwigo\Image\Projection\FormatCountSum;
@@ -46,13 +39,9 @@ use Piwigo\Image\Projection\SlideshowParams;
 use Piwigo\Image\Projection\UploadInfo;
 use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Image\Request\EmptyLoungeRequest;
-use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionCriteria;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Users\CurrentUser;
 
 /**
  * Slideshow param encode/decode/correct and PDF page counting -- pure
@@ -75,80 +64,21 @@ use Piwigo\Users\CurrentUser;
 final readonly class ImageService
 {
     public function __construct(
-        private Lang $lang,
         private ImageRepository $repo,
         private ActivityLoggerInterface $activityLogger,
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
-        private Translator $translator,
         private Paths $paths,
+        private CategoryService $categoryService,
     ) {}
-
-    /**
-     * `Category` is L2aCoreDomain, same layer as this class -- no
-     * deptrac concern, but constructor-injecting `CategoryService` would
-     * still ripple across every one of this class's own real call sites
-     * for the sake of the 2 methods below, so it's inline-constructed
-     * instead, matching {@see \Piwigo\Tag\TagService::newImageService()}'s
-     * established precedent.
-     *
-     * Falls back to a fresh, disconnected instance when `Kernel::boot()`
-     * hasn't run, matching `CurrentUser::current()`'s own former
-     * graceful degradation -- this class's own PermissionService
-     * construction below never actually reads it back out on
-     * updateCategory()'s call path, same "throwaway, never actually read"
-     * reasoning as every other collaborator built this way in a plain
-     * Unit test (see PiwigoInfosSenderTest.php).
-     */
-    private function currentUser(): CurrentUser
-    {
-        if (Kernel::isBooted()) {
-            $currentUser = Kernel::container()->get(CurrentUser::class);
-            if (! $currentUser instanceof CurrentUser) {
-                throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
-            }
-
-            return $currentUser;
-        }
-
-        return new CurrentUser($this->currentConfig);
-    }
-
-    /**
-     * Built from this class's own currentUser()/currentConfig -- no
-     * separate container resolve needed.
-     */
-    private function accessLevelChecker(): AccessLevelChecker
-    {
-        return new AccessLevelChecker($this->currentUser(), $this->currentConfig);
-    }
-
-    /**
-     * Same reasoning as currentUser() above -- falls back to a fresh,
-     * uninitialised instance, matching `FilterState`'s own former
-     * `isInitializedStatic()` shim's identical pre-boot fallback.
-     */
-    private function filterState(): FilterState
-    {
-        if (Kernel::isBooted()) {
-            $filterState = Kernel::container()->get(FilterState::class);
-            if (! $filterState instanceof FilterState) {
-                throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
-            }
-
-            return $filterState;
-        }
-
-        return new FilterState();
-    }
 
     /**
      * Container resolve, not a constructor property -- used only inside
      * emptyLounge()'s own internal read below. A required constructor
      * param here would ripple across this class's own real construction
      * sites for the sake of this one internal read, same low-blast-radius
-     * reasoning as currentUser()/filterState() above. Falls back to an
+     * reasoning as {@see self::currentConfigService()}. Falls back to an
      * OFF-severity Logger when Kernel::boot() hasn't run.
      */
     private function logger(): Logger
@@ -171,9 +101,7 @@ final readonly class ImageService
      * Same "container resolve, not a constructor param" reasoning as
      * self::logger() above -- constructor-injecting CurrentConfigService
      * would ripple across every one of this class's own real construction
-     * sites for the sake of emptyLounge()'s 2 call sites alone, matching
-     * this class's own CategoryService-inline-construction pattern just
-     * above.
+     * sites for the sake of emptyLounge()'s 2 call sites alone.
      */
     private function currentConfigService(): CurrentConfigService
     {
@@ -187,21 +115,6 @@ final readonly class ImageService
         }
 
         return new CurrentConfigService();
-    }
-
-    private function categoryService(): CategoryService
-    {
-        $conn = DbConnection::build();
-
-        return new CategoryService(
-            $this->lang,
-            new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig),
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser(), $this->filterState(), $this->accessLevelChecker()),
-            $this->currentConfig,
-            $this->eventDispatcher,
-            $this->translator,
-            $this->accessLevelChecker()
-        );
     }
 
     public function getDefaultSlideshowParams(): SlideshowParams
@@ -426,7 +339,7 @@ final readonly class ImageService
         // are the photos used as category representant?
         $categoryIds = $this->repo->findRepresentedCategoryIds($ids);
         if ($categoryIds !== []) {
-            $this->categoryService()
+            $this->categoryService
                 ->updateCategory($categoryIds);
         }
 
@@ -586,7 +499,7 @@ final readonly class ImageService
         if ($inserts !== []) {
             $this->repo->massInsertImageCategory($inserts);
 
-            $this->categoryService()
+            $this->categoryService
                 ->updateCategory($categories);
         }
 

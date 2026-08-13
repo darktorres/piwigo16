@@ -35,6 +35,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Psr\Cache\CacheItemInterface;
 
 /**
@@ -93,7 +94,7 @@ final readonly class CalendarRenderer
         $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState, $accessLevelChecker);
         $calendarService = new CalendarService(
             $permissionService,
-            new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator, $accessLevelChecker)
+            new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator, $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
         );
 
         if ($section === Section::Categories) { // we will regenerate the items by including subcats elements

@@ -6,6 +6,7 @@ use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
@@ -13,10 +14,13 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -28,6 +32,8 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\MailService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
@@ -62,22 +68,29 @@ function core_update_service_test_activity_service(): ActivityService
 function core_update_service_test_user_service(): UserService
 {
     $conn = DbConnection::build();
+    $currentConfig = new CurrentConfig();
+    $currentUser = new CurrentUser($currentConfig);
+    $accessLevelChecker = new AccessLevelChecker($currentUser, $currentConfig);
+    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
 
     return new UserService(
         core_update_service_test_lang(),
-        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         core_update_service_test_activity_service(),
         HtmlServiceTestFactory::build(),
-        $conn,
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
         new EventDispatcher(),
         new DeploymentPolicy(),
-        new CurrentUser(new CurrentConfig()),
-        new CurrentConfig(),
+        $currentUser,
+        $currentConfig,
         new InstallationFlag(),
         new ProcessCache(),
         Paths::fromRoot(sys_get_temp_dir()),
+        EntityManagerFactory::build($conn),
+        $permissionService,
+        new CategoryService(core_update_service_test_lang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
+        new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
     );
 }
 

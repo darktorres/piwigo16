@@ -11,6 +11,8 @@ use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\CookieService;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
@@ -25,7 +27,6 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupService;
@@ -140,31 +141,28 @@ test('send returns immediately without touching the DB or network when telemetry
     );
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
+    $userServiceCurrentConfig = new CurrentConfig();
+    $userServiceCurrentUser = new CurrentUser($userServiceCurrentConfig);
+    $userServiceAccessLevelChecker = new AccessLevelChecker($userServiceCurrentUser, $userServiceCurrentConfig);
+    $userServicePermissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build()), EntityManagerFactory::build()->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build(), $userServiceCurrentConfig), $userServiceCurrentUser, new FilterState(), $userServiceAccessLevelChecker);
     $userService = new UserService(
         piwigoInfosSenderTestLang(),
-        new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), new CurrentConfig()),
+        new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), $userServiceCurrentConfig),
         EntityManagerFactory::build()->getRepository(GroupEntity::class),
         $activityService,
         HtmlServiceTestFactory::build(),
-        DbConnection::build(),
-        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig()),
+        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), $userServiceCurrentConfig),
         new EventDispatcher(),
         new DeploymentPolicy(),
-        new CurrentUser(new CurrentConfig()),
-        new CurrentConfig(),
+        $userServiceCurrentUser,
+        $userServiceCurrentConfig,
         new InstallationFlag(),
         new ProcessCache(),
         Paths::fromRoot(sys_get_temp_dir()),
-    );
-    $imageService = new ImageService(
-        piwigoInfosSenderTestLang(),
-        EntityManagerFactory::build()->getRepository(ImageEntity::class),
-        $activityService,
-        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig()),
-        new EventDispatcher(),
-        new CurrentConfig(),
-        new Translator(new CurrentConfig()),
-        Paths::fromRoot(sys_get_temp_dir()),
+        EntityManagerFactory::build(),
+        $userServicePermissionService,
+        new CategoryService(piwigoInfosSenderTestLang(), new CategoryRepository(EntityManagerFactory::build(), $userServiceCurrentConfig), $userServicePermissionService, $userServiceCurrentConfig, new EventDispatcher(), new Translator($userServiceCurrentConfig), $userServiceAccessLevelChecker, new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), $userServiceCurrentConfig)),
+        new PasswordService(new PasswordRepository(EntityManagerFactory::build()), new DeploymentPolicy()),
     );
     $permissionService = new PermissionService(
         new PermissionRepository(EntityManagerFactory::build()),
@@ -182,6 +180,16 @@ test('send returns immediately without touching the DB or network when telemetry
         new EventDispatcher(),
         new Translator(new CurrentConfig()),
         new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
+        new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), new CurrentConfig()),
+    );
+    $imageService = new ImageService(
+        EntityManagerFactory::build()->getRepository(ImageEntity::class),
+        $activityService,
+        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig()),
+        new EventDispatcher(),
+        new CurrentConfig(),
+        Paths::fromRoot(sys_get_temp_dir()),
+        $categoryService,
     );
     $tagService = new TagService(
         piwigoInfosSenderTestLang(),
@@ -192,7 +200,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new CurrentUser(new CurrentConfig()),
         new CurrentConfig(),
         new CurrentLogger(),
-        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig()),
+        $imageService,
     );
     $groupService = new GroupService(
         EntityManagerFactory::build()->getRepository(GroupEntity::class),

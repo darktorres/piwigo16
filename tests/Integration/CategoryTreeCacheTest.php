@@ -25,6 +25,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Users\UserRepository;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 /**
@@ -88,7 +89,8 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
                 CurrentConfigTestFactory::get(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
-                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
+                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
+                new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), $currentConfig)
             ),
             new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
             $this->pool

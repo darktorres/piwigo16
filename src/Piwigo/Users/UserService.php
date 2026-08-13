@@ -4,21 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
-use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
@@ -32,10 +29,8 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Env;
-use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageFilterHelper;
@@ -45,15 +40,12 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\User\DeleteUser;
 use Piwigo\Event\User\RegisterUser;
 use Piwigo\Event\User\RegisterUserCheck;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Lang\LangService;
-use Piwigo\Lang\Translator;
 use Piwigo\Permission\EffectiveForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\PermissionRepository;
@@ -102,7 +94,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private GroupRepository $groupRepo,
         private ActivityLoggerInterface $activityLogger,
         private HtmlRenderingInterface $htmlRenderer,
-        private Connection $conn,
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private DeploymentPolicy $deploymentPolicy,
@@ -111,6 +102,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private InstallationFlag $installationFlag,
         private ProcessCache $processCache,
         private Paths $paths,
+        private EntityManagerInterface $entityManager,
+        private PermissionService $permissionService,
+        private CategoryService $categoryService,
+        private PasswordService $passwordService,
     ) {}
 
     /**
@@ -121,73 +116,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     private function accessLevelChecker(): AccessLevelChecker
     {
         return new AccessLevelChecker($this->currentUser, $this->currentConfig);
-    }
-
-    /**
-     * Container resolve, not a constructor property -- used only inside
-     * categoryService()'s own throwaway construction below; a required
-     * param here would ripple across every one of this class's own real
-     * `new UserService(...)` construction sites for a single caller.
-     */
-    private function translator(): Translator
-    {
-        $translator = Kernel::container()->get(Translator::class);
-        if (! $translator instanceof Translator) {
-            throw new LogicException('Container returned an unexpected type for ' . Translator::class);
-        }
-
-        return $translator;
-    }
-
-    /**
-     * The same PermissionService recipe was repeated verbatim at 3 call
-     * sites in this file. Not a constructor param -- $conn is already
-     * available, and readonly class means no memoized property, so this
-     * is a plain (non-memoized) DRY extraction, not a caching
-     * optimization.
-     */
-    private function permissionService(): PermissionService
-    {
-        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker());
-    }
-
-    /**
-     * Same reasoning as translator() above. Falls back to a fresh,
-     * uninitialised instance when `Kernel::boot()` hasn't run, matching
-     * `FilterState`'s own former `isInitializedStatic()` shim's identical
-     * pre-boot fallback.
-     */
-    private function filterState(): FilterState
-    {
-        if (Kernel::isBooted()) {
-            $filterState = Kernel::container()->get(FilterState::class);
-            if (! $filterState instanceof FilterState) {
-                throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
-            }
-
-            return $filterState;
-        }
-
-        return new FilterState();
-    }
-
-    /**
-     * Same reasoning as permissionService() above -- the same
-     * CategoryService recipe was repeated verbatim in this file's own
-     * getUserData().
-     */
-    private function categoryService(): CategoryService
-    {
-        return new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($this->conn), $this->currentConfig), $this->permissionService(), $this->currentConfig, $this->eventDispatcher, $this->translator(), $this->accessLevelChecker());
-    }
-
-    /**
-     * Same reasoning as permissionService() above -- the same
-     * PasswordService recipe was repeated verbatim at 2 call sites.
-     */
-    private function passwordService(): PasswordService
-    {
-        return new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), $this->deploymentPolicy);
     }
 
     /**
@@ -405,7 +333,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // throw on that already-accepted case.
         $userId = $this->repo->insertUser(
             $loginUsername,
-            $this->passwordService()
+            $this->passwordService
                 ->hash($password),
             Email::tryFrom($mailAddress),
         );
@@ -792,9 +720,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $effective = new EffectiveForbiddenCategoriesCache(
             $this->accessLevelChecker(),
-            $this->permissionService(),
-            $this->categoryService(),
-            new PermissionRepository(EntityManagerFactory::build($this->conn)),
+            $this->permissionService,
+            $this->categoryService,
+            new PermissionRepository($this->entityManager),
             CachePools::effectivePermissions()
         )->getForUser($userId->value, $effective_status, $effective_level);
 
@@ -831,7 +759,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // category
         $authorizeds = $this->repo->findAuthorizedFavoriteImageIds(
             $user->id,
-            $this->permissionService()
+            $this->permissionService
                 ->getPermissionCriteria()
         );
 
@@ -1323,7 +1251,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
                 $password_param = $params['password'] ?? null;
                 assert(is_string($password_param));
-                $password_update = $this->passwordService()
+                $password_update = $this->passwordService
                     ->hash($password_param);
             }
         }
@@ -1445,12 +1373,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $this->repo->updateAccountFields(UserId::from($user_ids[0]), $username_update, $password_update, $email_update);
 
         $authService = new AuthService(
-            new AuthRepository(EntityManagerFactory::build($this->conn)),
+            new AuthRepository($this->entityManager),
             $this->activityLogger,
             $this->htmlRenderer,
-            $this->passwordService(),
+            $this->passwordService,
             new CookieService(),
-            EntityManagerFactory::build($this->conn)->getRepository(UserFailedLoginEntity::class),
+            $this->entityManager->getRepository(UserFailedLoginEntity::class),
             $this->sessionService,
             $this->eventDispatcher,
             $pageState,

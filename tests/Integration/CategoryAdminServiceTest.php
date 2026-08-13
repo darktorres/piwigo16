@@ -31,6 +31,7 @@ use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use RuntimeException;
 
@@ -165,7 +166,8 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
-            $accessLevelChecker
+            $accessLevelChecker,
+            new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get())
         );
         $this->service = new CategoryAdminService($categoryService, $permissionService, HtmlServiceTestFactory::build());
     }

@@ -52,6 +52,7 @@ use Piwigo\Tests\Unit\Search\SearchServiceTestFatalSignalHtmlRenderer;
 use Piwigo\Tests\Unit\Search\SearchServiceTestNotAnInflector;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -210,7 +211,8 @@ function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): Sea
             CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
-            $accessLevelChecker
+            $accessLevelChecker,
+            new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), CurrentConfigTestFactory::get())
         ),
         $htmlRenderer,
         new RedirectService(LangTestFactory::get(), searchServiceTestUserService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),

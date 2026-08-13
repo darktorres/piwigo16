@@ -51,6 +51,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\TranslatorTestFactory;
     use Piwigo\Users\PreferencesService;
     use Piwigo\Users\User;
+    use Piwigo\Users\UserRepository;
     use Piwigo\Users\UserService;
     use RuntimeException;
 
@@ -363,7 +364,8 @@ namespace Piwigo\Tests\Integration {
                     CurrentConfigTestFactory::get(),
                     new EventDispatcher(),
                     TranslatorTestFactory::get(),
-                    $accessLevelChecker
+                    $accessLevelChecker,
+                    new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get())
                 ),
                 HtmlServiceTestFactory::build(),
                 new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
@@ -440,7 +442,8 @@ namespace Piwigo\Tests\Integration {
                     CurrentConfigTestFactory::get(),
                     new EventDispatcher(),
                     TranslatorTestFactory::get(),
-                    $accessLevelChecker
+                    $accessLevelChecker,
+                    new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get())
                 ),
                 $htmlRenderer,
                 new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),

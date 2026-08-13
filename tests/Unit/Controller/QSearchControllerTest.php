@@ -7,13 +7,18 @@ use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\QSearchController;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -25,6 +30,8 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Lang\Translator;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
@@ -88,22 +95,29 @@ function qSearchTestLang(): Lang
 function qSearchTestUserService(): UserService
 {
     $conn = DbConnection::build();
+    $currentConfig = new CurrentConfig();
+    $currentUser = new CurrentUser($currentConfig);
+    $accessLevelChecker = new AccessLevelChecker($currentUser, $currentConfig);
+    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
 
     return new UserService(
         qSearchTestLang(),
-        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
         HtmlServiceTestFactory::build(),
-        $conn,
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
         new EventDispatcher(),
         new DeploymentPolicy(),
-        new CurrentUser(new CurrentConfig()),
-        new CurrentConfig(),
+        $currentUser,
+        $currentConfig,
         new InstallationFlag(),
         new ProcessCache(),
         Paths::fromRoot(sys_get_temp_dir()),
+        EntityManagerFactory::build($conn),
+        $permissionService,
+        new CategoryService(qSearchTestLang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
+        new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
     );
 }
 

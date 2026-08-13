@@ -22,6 +22,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\StringHelper;
@@ -29,6 +30,8 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -134,6 +137,22 @@ final class UrlService implements UrlServiceInterface
         }
 
         return $translator;
+    }
+
+    /**
+     * Same reasoning as currentLogger()/sessionService()/translator()
+     * above -- used only to satisfy the throwaway `new ImageService(...)`
+     * construction below (TagService's own ImageService collaborator is
+     * never actually read on this findTags() call path).
+     */
+    private function paths(): Paths
+    {
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
+        }
+
+        return $paths;
     }
 
     /**
@@ -694,7 +713,8 @@ final class UrlService implements UrlServiceInterface
                 $this->currentConfig,
                 $this->eventDispatcher,
                 $this->translator(),
-                $this->accessLevelChecker()
+                $this->accessLevelChecker(),
+                new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
             );
 
             while (isset($tokens[$nextToken])) {
@@ -821,7 +841,7 @@ final class UrlService implements UrlServiceInterface
                 $this->htmlRenderer->badRequest($redirectService, 'at least one tag required');
             }
 
-            $page['tags'] = new TagService($this->lang, $this->entityManager->getRepository(TagEntity::class), new PermissionService(new PermissionRepository($this->entityManager), $this->entityManager->getRepository(GroupEntity::class), new CategoryRepository($this->entityManager, $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), $this->sessionService())
+            $page['tags'] = new TagService($this->lang, $this->entityManager->getRepository(TagEntity::class), new PermissionService(new PermissionRepository($this->entityManager), $this->entityManager->getRepository(GroupEntity::class), new CategoryRepository($this->entityManager, $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), new ImageService($this->entityManager->getRepository(ImageEntity::class), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->sessionService(), $this->eventDispatcher, $this->currentConfig, $this->paths(), new CategoryService($this->lang, new CategoryRepository($this->entityManager, $this->currentConfig), new PermissionService(new PermissionRepository($this->entityManager), $this->entityManager->getRepository(GroupEntity::class), new CategoryRepository($this->entityManager, $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()), $this->currentConfig, $this->eventDispatcher, $this->translator(), $this->accessLevelChecker(), new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig))))
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');

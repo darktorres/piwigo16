@@ -40,7 +40,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
-use Piwigo\Lang\Translator;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permalink\PermalinkRepository;
@@ -107,14 +106,13 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
-        private Translator $translator,
         private FilterState $filterState,
         private Paths $paths,
     ) {}
 
     private function imageService(Connection $conn): ImageService
     {
-        return new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths);
+        return new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
     }
 
     #[Override]

@@ -34,6 +34,7 @@ use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
 
 /**
  * Real fake for the 4 write methods' per-call ActivityLoggerInterface
@@ -239,7 +240,8 @@ function categoryServiceTestServiceRepoConn(): array
         CurrentConfigTestFactory::get(),
         EventDispatcherTestFactory::get(),
         TranslatorTestFactory::get(),
-        new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
+        new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
+        new UserRepository(EntityManagerFactory::build($conn), EventDispatcherTestFactory::get(), $currentConfig)
     );
 
     return [$service, $repo, $conn];
@@ -282,7 +284,8 @@ function categoryServiceTestServiceRepoForConn(Connection $conn): array
         CurrentConfigTestFactory::get(),
         EventDispatcherTestFactory::get(),
         TranslatorTestFactory::get(),
-        new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
+        new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
+        new UserRepository(EntityManagerFactory::build($conn), EventDispatcherTestFactory::get(), $currentConfig)
     );
 
     return [$service, $repo];

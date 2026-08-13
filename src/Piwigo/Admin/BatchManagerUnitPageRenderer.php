@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Admin\Projection\BatchManagerUnitPageContext;
 use Piwigo\Admin\Request\BatchManagerUnitRequest;
@@ -19,27 +18,22 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
-use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginElementSetUnit;
 use Piwigo\Event\Location\LocEndElementSetUnit;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Lang\Translator;
 use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
@@ -66,13 +60,11 @@ final readonly class BatchManagerUnitPageRenderer
         private UrlServiceInterface $urlService,
         private ProcessCache $processCache,
         private LoadedPlugins $loadedPlugins,
-        private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private EntityManagerInterface $entityManager,
-        private ActivityService $activityService,
         private TagService $tagService,
         private PermissionService $permissionService,
         private CategoryService $categoryService,
@@ -81,8 +73,6 @@ final readonly class BatchManagerUnitPageRenderer
         private HtmlService $htmlRenderer,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
-        private Translator $translator,
-        private Paths $paths,
     ) {}
 
     /**
@@ -278,7 +268,7 @@ final readonly class BatchManagerUnitPageRenderer
             }
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths);
+            $imageService = $this->imageService;
 
             foreach ($images as $row) {
                 // 'images'.id is a NOT NULL auto_increment primary key; this

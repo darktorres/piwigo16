@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\TagId;
@@ -27,6 +28,9 @@ use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\GetTagNameLikeWhere;
 use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageService;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionEntity;
@@ -40,6 +44,7 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserStatus;
 
 /**
@@ -100,6 +105,34 @@ function tagServiceTestServiceConn(?Connection $conn = null): array
         'severity' => Logger::OFF,
     ]));
 
+    $tagServiceAccessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig);
+    $tagServiceCategoryService = new CategoryService(
+        LangTestFactory::get(),
+        new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig),
+        new PermissionService(
+            new PermissionRepository(EntityManagerFactory::build($conn)),
+            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+            new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig),
+            CurrentUserTestFactory::get(),
+            $filterState,
+            $tagServiceAccessLevelChecker
+        ),
+        $currentConfig,
+        EventDispatcherTestFactory::get(),
+        new Translator($currentConfig),
+        $tagServiceAccessLevelChecker,
+        new UserRepository(EntityManagerFactory::build($conn), EventDispatcherTestFactory::get(), $currentConfig)
+    );
+    $tagServiceImageService = new ImageService(
+        EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
+        new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
+        EventDispatcherTestFactory::get(),
+        $currentConfig,
+        Paths::fromRoot(sys_get_temp_dir()),
+        $tagServiceCategoryService
+    );
+
     $service = new TagService(
         LangTestFactory::get(),
         EntityManagerFactory::build($conn)->getRepository(TagEntity::class),
@@ -116,7 +149,7 @@ function tagServiceTestServiceConn(?Connection $conn = null): array
         CurrentUserTestFactory::get(),
         $currentConfig,
         $currentLogger,
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig)
+        $tagServiceImageService
     );
 
     return [$service, $conn];

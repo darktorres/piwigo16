@@ -33,6 +33,7 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserStatus;
 
 /**
@@ -121,6 +122,7 @@ function extendForTemplatesTestCategoryService(): CategoryService
         new EventDispatcher(),
         new Translator(new CurrentConfig()),
         new AccessLevelChecker($currentUser, new CurrentConfig()),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
     );
 }
 

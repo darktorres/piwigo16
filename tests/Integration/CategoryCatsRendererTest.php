@@ -47,6 +47,7 @@ use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Url\RootPathOverride;
 use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
 
 /**
  * Real fake for FilterUpdaterInterface -- lets a test force a specific
@@ -181,7 +182,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $filterState,
             $accessLevelChecker
         );
-        $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
+        $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker, new UserRepository($em, new EventDispatcher(), $currentConfig));
 
         $htmlService = HtmlServiceTestFactory::build();
         // mainpage_categories.latte's own {var $derivative =

@@ -25,6 +25,7 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserStatus;
 
 /**
@@ -68,7 +69,7 @@ function makeCalendarService(): CalendarService
 
     return new CalendarService(
         $permissionService,
-        new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker),
+        new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), CurrentConfigTestFactory::get())),
     );
 }
 

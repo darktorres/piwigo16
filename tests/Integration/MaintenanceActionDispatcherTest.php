@@ -15,6 +15,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\AccessControl;
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Auth\CookieService;
+    use Piwigo\Auth\PasswordRepository;
+    use Piwigo\Auth\PasswordService;
     use Piwigo\Bootstrap\RedirectService;
     use Piwigo\Cache\PersistentFileCache;
     use Piwigo\Category\CategoryRepository;
@@ -102,14 +104,13 @@ namespace Piwigo\Tests\Integration {
         private function maintenanceActionDispatcherTestImageService(): ImageService
         {
             return new ImageService(
-                LangTestFactory::get(),
                 EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class),
                 $this->maintenanceActionDispatcherTestActivityService(),
                 new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 new EventDispatcher(),
                 CurrentConfigTestFactory::get(),
-                TranslatorTestFactory::get(),
                 CurrentPathsTestFactory::get(),
+                $this->maintenanceActionDispatcherTestCategoryService(),
             );
         }
 
@@ -160,7 +161,6 @@ namespace Piwigo\Tests\Integration {
                 EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
                 $this->maintenanceActionDispatcherTestActivityService(),
                 HtmlServiceTestFactory::build(),
-                $conn,
                 new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 new EventDispatcher(),
                 new DeploymentPolicy(),
@@ -169,6 +169,10 @@ namespace Piwigo\Tests\Integration {
                 new InstallationFlag(),
                 new ProcessCache(),
                 CurrentPathsTestFactory::get(),
+                EntityManagerFactory::build($conn),
+                $this->maintenanceActionDispatcherTestPermissionService(),
+                $this->maintenanceActionDispatcherTestCategoryService(),
+                new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
             );
         }
 
@@ -201,6 +205,7 @@ namespace Piwigo\Tests\Integration {
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
                 new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
+                new UserRepository(EntityManagerFactory::build(DbConnection::build()), new EventDispatcher(), CurrentConfigTestFactory::get()),
             );
         }
 
@@ -235,7 +240,7 @@ namespace Piwigo\Tests\Integration {
                 $currentUser,
                 CurrentConfigTestFactory::get(),
                 new CurrentLogger(),
-                new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+                $this->maintenanceActionDispatcherTestImageService(),
             );
         }
 

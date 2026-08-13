@@ -19,6 +19,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 /**
@@ -54,6 +55,7 @@ function categoryTreeCacheTestService(): CategoryService
         new EventDispatcher(),
         new Translator($currentConfig),
         new AccessLevelChecker($currentUser, $currentConfig),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
     );
 }
 

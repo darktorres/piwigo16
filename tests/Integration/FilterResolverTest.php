@@ -14,6 +14,8 @@ use Piwigo\Admin\BatchManager\Projection\DimensionFilter;
 use Piwigo\Admin\BatchManager\Projection\DuplicateFieldFlags;
 use Piwigo\Admin\BatchManager\Projection\FilesizeFilter;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -88,36 +90,37 @@ final class FilterResolverTest extends IntegrationTestCase
         $paths = Kernel::container()->get(Paths::class);
         self::assertInstanceOf(Paths::class, $paths);
         $sessionService = new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
-        $imageService = new ImageService(
-            LangTestFactory::get(),
-            $em->getRepository(ImageEntity::class),
-            new ActivityService($em->getRepository(ActivityEntity::class)),
-            $sessionService,
-            new EventDispatcher(),
-            CurrentConfigTestFactory::get(),
-            TranslatorTestFactory::get(),
-            $paths,
-        );
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
         $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
+        $permissionService = new PermissionService(
+            new PermissionRepository($em),
+            $em->getRepository(GroupEntity::class),
+            new CategoryRepository($em, CurrentConfigTestFactory::get()),
+            CurrentUserTestFactory::get(),
+            $filterState,
+            $accessLevelChecker,
+        );
         $categoryService = new CategoryService(
             LangTestFactory::get(),
             new CategoryRepository($em, CurrentConfigTestFactory::get()),
-            new PermissionService(
-                new PermissionRepository($em),
-                $em->getRepository(GroupEntity::class),
-                new CategoryRepository($em, CurrentConfigTestFactory::get()),
-                CurrentUserTestFactory::get(),
-                $filterState,
-                $accessLevelChecker,
-            ),
+            $permissionService,
             CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
             $accessLevelChecker,
+            new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()),
+        );
+        $imageService = new ImageService(
+            $em->getRepository(ImageEntity::class),
+            new ActivityService($em->getRepository(ActivityEntity::class)),
+            $sessionService,
+            new EventDispatcher(),
+            CurrentConfigTestFactory::get(),
+            $paths,
+            $categoryService,
         );
         $caddieRepo = $em->getRepository(CaddieEntity::class);
         $userService = new UserService(
@@ -126,7 +129,6 @@ final class FilterResolverTest extends IntegrationTestCase
             $em->getRepository(GroupEntity::class),
             new ActivityService($em->getRepository(ActivityEntity::class)),
             HtmlServiceTestFactory::build(),
-            $this->conn,
             $sessionService,
             new EventDispatcher(),
             new DeploymentPolicy(),
@@ -135,6 +137,10 @@ final class FilterResolverTest extends IntegrationTestCase
             new InstallationFlag(),
             new ProcessCache(),
             $paths,
+            $em,
+            $permissionService,
+            $categoryService,
+            new PasswordService(new PasswordRepository($em), new DeploymentPolicy()),
         );
 
         $this->resolver = new FilterResolver($imageService, $categoryService, $caddieRepo, $userService);

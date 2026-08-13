@@ -15,6 +15,8 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\Request\UserBootstrapRequest;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
@@ -35,6 +37,9 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\User\UserInit;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Lang\Translator;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
@@ -122,13 +127,17 @@ final readonly class UserBootstrap
             RequestBootstrap::currentConfig(),
             $paths,
         );
+        $filterState = RequestBootstrap::filterState();
+        $translator = Kernel::container()->get(Translator::class);
+        if (! $translator instanceof Translator) {
+            throw new LogicException('Container returned an unexpected type for ' . Translator::class);
+        }
         $userService = new UserService(
             RequestBootstrap::lang(),
             new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, RequestBootstrap::currentConfig()),
             EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
             new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
             RequestBootstrap::htmlService(),
-            $conn,
             $sessionService,
             $eventDispatcher,
             $this->deploymentPolicy,
@@ -137,6 +146,10 @@ final readonly class UserBootstrap
             $installationFlag,
             RequestBootstrap::processCache(),
             $paths,
+            EntityManagerFactory::build($conn),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), $currentUser, $filterState, $this->accessLevelChecker),
+            new CategoryService(RequestBootstrap::lang(), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), $currentUser, $filterState, $this->accessLevelChecker), RequestBootstrap::currentConfig(), $eventDispatcher, $translator, $this->accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, RequestBootstrap::currentConfig())),
+            new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), $this->deploymentPolicy),
         );
 
         $guest_id_int = RequestBootstrap::currentConfig()->guestId;

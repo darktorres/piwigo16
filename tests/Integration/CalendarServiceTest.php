@@ -26,6 +26,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\TranslatorTestFactory;
     use Piwigo\Users\User;
+    use Piwigo\Users\UserRepository;
 
     /**
      * Same fixture shape as CategoryRepositoryTest: category 1 "Sample Album"
@@ -76,7 +77,8 @@ namespace Piwigo\Tests\Integration {
                     CurrentConfigTestFactory::get(),
                     new EventDispatcher(),
                     TranslatorTestFactory::get(),
-                    $accessLevelChecker
+                    $accessLevelChecker,
+                    new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), $currentConfig)
                 )
             );
 

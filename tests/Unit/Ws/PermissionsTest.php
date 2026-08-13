@@ -27,6 +27,7 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Permissions;
 use Piwigo\Ws\Server;
@@ -97,6 +98,7 @@ function pwgPermissionsTestSubject(): Permissions
         new EventDispatcher(),
         new Translator($currentConfig),
         new AccessLevelChecker($currentUser, $currentConfig),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
     );
 
     return new Permissions($permissionService, $categoryService, $currentConfig);

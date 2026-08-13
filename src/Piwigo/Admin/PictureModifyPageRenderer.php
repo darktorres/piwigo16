@@ -9,10 +9,8 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Projection\PictureModifyPageContext;
 use Piwigo\Admin\Request\PictureModifyRequest;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
@@ -38,7 +36,6 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Lang\Translator;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionService;
@@ -85,7 +82,6 @@ final readonly class PictureModifyPageRenderer
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
-        private Translator $translator,
         private Paths $paths,
     ) {}
 
@@ -104,7 +100,7 @@ final readonly class PictureModifyPageRenderer
         $template = $this->currentTemplate->get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths);
+        $imageService = new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
         $htmlRenderer = $this->htmlRenderer;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
@@ -217,15 +213,8 @@ final readonly class PictureModifyPageRenderer
 
             $no_longer_thumbnail_for = array_diff($represented_albums, $represent_categories);
             if (count($no_longer_thumbnail_for) > 0) {
-                new CategoryService(
-                    $this->lang,
-                    new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig),
-                    $this->permissionService,
-                    $this->currentConfig,
-                    $this->eventDispatcher,
-                    $this->translator,
-                    new AccessLevelChecker($this->currentUser, $this->currentConfig)
-                )->setRandomRepresentant($no_longer_thumbnail_for);
+                $this->categoryService
+                    ->setRandomRepresentant($no_longer_thumbnail_for);
             }
 
             $new_thumbnail_for = array_diff($represent_categories, $represented_albums);

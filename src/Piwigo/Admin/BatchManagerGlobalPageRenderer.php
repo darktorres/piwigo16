@@ -190,7 +190,7 @@ final readonly class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths);
+            $imageService = new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()

@@ -10,6 +10,8 @@ use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AuthService;
+use Piwigo\Auth\PasswordService;
+use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
@@ -36,6 +38,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
@@ -163,6 +166,12 @@ final class MailServiceTest extends IntegrationTestCase
     {
         $paths = Kernel::container()->get(Paths::class);
         self::assertInstanceOf(Paths::class, $paths);
+        $permissionService = Kernel::container()->get(PermissionService::class);
+        self::assertInstanceOf(PermissionService::class, $permissionService);
+        $categoryService = Kernel::container()->get(CategoryService::class);
+        self::assertInstanceOf(CategoryService::class, $categoryService);
+        $passwordService = Kernel::container()->get(PasswordService::class);
+        self::assertInstanceOf(PasswordService::class, $passwordService);
 
         return new UserService(
             LangTestFactory::get(),
@@ -170,7 +179,6 @@ final class MailServiceTest extends IntegrationTestCase
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
             HtmlServiceTestFactory::build(),
-            $this->conn,
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             new EventDispatcher(),
             new DeploymentPolicy(),
@@ -179,6 +187,10 @@ final class MailServiceTest extends IntegrationTestCase
             new InstallationFlag(),
             new ProcessCache(),
             $paths,
+            EntityManagerFactory::build($this->conn),
+            $permissionService,
+            $categoryService,
+            $passwordService,
         );
     }
 

@@ -36,6 +36,8 @@ use Piwigo\Bootstrap\CoreDomainAccessor;
 use Piwigo\Bootstrap\ExtendedDomainAccessor;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\PresentationAccessor;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
@@ -46,6 +48,7 @@ use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
@@ -61,6 +64,9 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Lang\Translator;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionHandler;
@@ -348,7 +354,11 @@ final class InstallWizard
     private function userService(?Connection $conn = null): UserService
     {
         $conn ??= DbConnection::build();
-        return new UserService($this->lang, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $conn, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), new ProcessCache(), $this->paths);
+        $accessLevelChecker = new AccessLevelChecker($this->currentUser, $this->currentConfig);
+        $filterState = new FilterState();
+        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $filterState, $accessLevelChecker);
+
+        return new UserService($this->lang, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), new ProcessCache(), $this->paths, EntityManagerFactory::build($conn), $permissionService, new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)), $this->passwordService($conn));
     }
 
     /**

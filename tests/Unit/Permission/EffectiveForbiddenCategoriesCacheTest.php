@@ -21,6 +21,7 @@ use Piwigo\Permission\Projection\EffectivePermissionsSnapshot;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
@@ -68,6 +69,7 @@ function effectiveForbiddenCategoriesCacheTestSubject(CacheItemPoolInterface $po
         new EventDispatcher(),
         new Translator($currentConfig),
         $accessLevelChecker,
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
     );
 
     return new EffectiveForbiddenCategoriesCache($accessLevelChecker, $permissionService, $categoryService, $permissionRepository, $pool);

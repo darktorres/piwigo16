@@ -185,7 +185,7 @@ final readonly class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths)
+                $rows = new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService)
                     ->emptyLounge();
                 $this->pageState->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;

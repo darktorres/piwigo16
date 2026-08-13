@@ -45,6 +45,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 
 /**
  * HTML rendering helpers, error pages, and status/header utilities.
@@ -353,7 +354,8 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $this->currentConfig,
             $this->eventDispatcher,
             $this->translator,
-            $this->accessLevelChecker()
+            $this->accessLevelChecker(),
+            new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
         )->getCategoryInfo($catId);
         // $catId isn't existence-validated by callers (WS/URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.

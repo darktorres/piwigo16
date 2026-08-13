@@ -28,6 +28,7 @@ use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\Projection\HeaderMessagesPageContext;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\Email;
@@ -87,6 +88,8 @@ use Piwigo\Listener\ListenerInterface;
 use Piwigo\Listener\SiteCleanupListener;
 use Piwigo\Listener\UploadFormatListener;
 use Piwigo\Page\NoPhotoYetRenderer;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
@@ -419,7 +422,7 @@ final class RequestBootstrap
         }
 
         if (LoungeMaintenance::needsEmptying(self::currentConfig())) {
-            new ImageService(self::lang(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), self::eventDispatcher(), self::currentConfig(), self::translator(), self::paths())
+            new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), self::eventDispatcher(), self::currentConfig(), self::paths(), new CategoryService(self::lang(), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::currentUser(), self::filterState(), self::accessLevelChecker()), self::currentConfig(), self::eventDispatcher(), self::translator(), self::accessLevelChecker(), new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig())))
                 ->emptyLounge();
         }
 
@@ -523,7 +526,6 @@ final class RequestBootstrap
             EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
             self::activityService($conn),
             self::htmlService(),
-            $conn,
             self::sessionService(),
             self::eventDispatcher(),
             self::deploymentPolicy(),
@@ -532,6 +534,10 @@ final class RequestBootstrap
             self::installationFlag(),
             self::processCache(),
             self::paths(),
+            EntityManagerFactory::build($conn),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::currentUser(), self::filterState(), self::accessLevelChecker()),
+            new CategoryService(self::lang(), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::currentUser(), self::filterState(), self::accessLevelChecker()), self::currentConfig(), self::eventDispatcher(), self::translator(), self::accessLevelChecker(), new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig())),
+            self::passwordService($conn),
         ));
         self::lang()->load('common.lang');
         if (self::accessLevelChecker()->isAdmin() || self::adminContext()->isActive()) {

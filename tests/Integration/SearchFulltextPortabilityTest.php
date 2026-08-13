@@ -11,6 +11,8 @@ use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryRepository;
@@ -27,6 +29,8 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -88,34 +92,38 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         $this->em = EntityManagerFactory::build($this->conn);
         $repo = new SearchRepository($this->em);
 
-        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), $this->em->getRepository(GroupEntity::class), new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get());
-
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
         $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
+        $permissionService = new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker);
+        $categoryService = new CategoryService(
+            LangTestFactory::get(),
+            new CategoryRepository($this->em, CurrentConfigTestFactory::get()),
+            $permissionService,
+            CurrentConfigTestFactory::get(),
+            new EventDispatcher(),
+            TranslatorTestFactory::get(),
+            $accessLevelChecker,
+            new UserRepository($this->em, new EventDispatcher(), CurrentConfigTestFactory::get()),
+        );
+
+        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), $this->em->getRepository(GroupEntity::class), new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get(), $this->em, $permissionService, $categoryService, new PasswordService(new PasswordRepository($this->em), new DeploymentPolicy()));
+
         $this->service = new SearchService(
             $accessLevelChecker,
             $repo,
-            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
-            new CategoryService(
-                LangTestFactory::get(),
-                new CategoryRepository($this->em, CurrentConfigTestFactory::get()),
-                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
-                CurrentConfigTestFactory::get(),
-                new EventDispatcher(),
-                TranslatorTestFactory::get(),
-                $accessLevelChecker,
-            ),
+            $permissionService,
+            $categoryService,
             HtmlServiceTestFactory::build(),
             new RedirectService(LangTestFactory::get(), $userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
             new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             EventDispatcherTestFactory::get(),
             CurrentUserTestFactory::get(),
             CurrentConfigTestFactory::get(),
-            new TagService(LangTestFactory::get(), $this->em->getRepository(TagEntity::class), new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker), new ActivityService($this->em->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get())),
+            new TagService(LangTestFactory::get(), $this->em->getRepository(TagEntity::class), $permissionService, new ActivityService($this->em->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), new ImageService($this->em->getRepository(ImageEntity::class), new ActivityService($this->em->getRepository(ActivityEntity::class)), new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), $categoryService)),
             $userService,
             new PreferencesService(new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()),
         );

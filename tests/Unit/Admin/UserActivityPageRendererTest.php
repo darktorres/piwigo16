@@ -10,6 +10,8 @@ use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\LangCode;
@@ -143,22 +145,29 @@ function userActivityTestLang(): Lang
 function userActivityTestUserService(ActivityService $activityService): UserService
 {
     $conn = DbConnection::build();
+    $currentConfig = new CurrentConfig();
+    $currentUser = new CurrentUser($currentConfig);
+    $accessLevelChecker = new AccessLevelChecker($currentUser, $currentConfig);
+    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
 
     return new UserService(
         userActivityTestLang(),
-        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         $activityService,
         HtmlServiceTestFactory::build(),
-        $conn,
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
         new EventDispatcher(),
         new DeploymentPolicy(),
-        new CurrentUser(new CurrentConfig()),
-        new CurrentConfig(),
+        $currentUser,
+        $currentConfig,
         new InstallationFlag(),
         new ProcessCache(),
         Paths::fromRoot(sys_get_temp_dir()),
+        EntityManagerFactory::build($conn),
+        $permissionService,
+        new CategoryService(userActivityTestLang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
+        new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
     );
 }
 
@@ -171,14 +180,13 @@ function userActivityTestImageService(): ImageService
     $conn = DbConnection::build();
 
     return new ImageService(
-        userActivityTestLang(),
         EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
         userActivityTestActivityService(),
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
         new EventDispatcher(),
         new CurrentConfig(),
-        new Translator(new CurrentConfig()),
         Paths::fromRoot(sys_get_temp_dir()),
+        userActivityTestCategoryService(),
     );
 }
 
@@ -202,6 +210,7 @@ function userActivityTestCategoryService(): CategoryService
         new EventDispatcher(),
         new Translator(new CurrentConfig()),
         new AccessLevelChecker($currentUser, new CurrentConfig()),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
     );
 }
 

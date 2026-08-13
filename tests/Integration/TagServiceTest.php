@@ -13,6 +13,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Cache\CachePools;
     use Piwigo\Category\CategoryRepository;
+    use Piwigo\Category\CategoryService;
     use Piwigo\Common\ValueObject\ImageId;
     use Piwigo\Common\ValueObject\LangCode;
     use Piwigo\Common\ValueObject\TagId;
@@ -30,19 +31,25 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Event\Tag\GetTagNameLikeWhere;
     use Piwigo\Event\Tag\RenderTagUrl;
     use Piwigo\Group\GroupEntity;
+    use Piwigo\Image\ImageEntity;
+    use Piwigo\Image\ImageService;
+    use Piwigo\Lang\Translator;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
+    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
     use Piwigo\Tag\Projection\TagBrief;
     use Piwigo\Tag\TagEntity;
     use Piwigo\Tag\TagService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
+    use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Users\User;
+    use Piwigo\Users\UserRepository;
     use Piwigo\Users\UserStatus;
 
     final class TagServiceTest extends IntegrationTestCase
@@ -86,7 +93,10 @@ namespace Piwigo\Tests\Integration {
             }
 
             $this->conn = DbConnection::build();
-            $this->service = new TagService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $currentLogger, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()));
+            $tagServiceAccessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig);
+            $tagServiceCategoryService = new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $tagServiceAccessLevelChecker), $currentConfig, new EventDispatcher(), new Translator($currentConfig), $tagServiceAccessLevelChecker, new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), $currentConfig));
+            $tagServiceImageService = new ImageService(EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), $currentConfig, CurrentPathsTestFactory::get(), $tagServiceCategoryService);
+            $this->service = new TagService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $currentLogger, $tagServiceImageService);
         }
 
         #[Override]

@@ -9,12 +9,18 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
+use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
@@ -23,6 +29,9 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Lang\Translator;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
@@ -383,22 +392,29 @@ function themesInstalledLifecycle(): ExtensionLifecycle
 function themesInstalledLifecycleUserService(): UserService
 {
     $conn = DbConnection::build();
+    $currentConfig = new CurrentConfig();
+    $currentUser = new CurrentUser($currentConfig);
+    $accessLevelChecker = new AccessLevelChecker($currentUser, $currentConfig);
+    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
 
     return new UserService(
         LangTestFactory::get(),
-        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
         HtmlServiceTestFactory::build(),
-        $conn,
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
         new EventDispatcher(),
         new DeploymentPolicy(),
-        new CurrentUser(new CurrentConfig()),
-        new CurrentConfig(),
+        $currentUser,
+        $currentConfig,
         new InstallationFlag(),
         new ProcessCache(),
         CurrentPathsTestFactory::get(),
+        EntityManagerFactory::build($conn),
+        $permissionService,
+        new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
+        new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
     );
 }
 

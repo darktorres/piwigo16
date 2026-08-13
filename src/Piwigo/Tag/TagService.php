@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
-use LogicException;
 use Piwigo\Cache\CachePools;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
@@ -12,23 +11,16 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Paths;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Tag\DeleteTags;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\GetTagNameLikeWhere;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Tag\RenderTagUrl;
-use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageService;
-use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
 use Piwigo\Tag\Projection\TagCreateOutcome;
@@ -69,56 +61,9 @@ final readonly class TagService
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
         private CurrentLogger $currentLogger,
-        private SessionService $sessionService,
+        private ImageService $imageService,
     ) {
         $this->tagIdFromTagNameCache = new TagIdCache();
-    }
-
-    /**
-     * Inline-constructed rather than constructor-injected -- ImageService
-     * is only ever needed for updateImagesLastmodified(), so adding it as
-     * a constructor param would mean touching every existing manual
-     * `new TagService(...)` call site for a single one-line delegation,
-     * matching MetadataService::syncMetadata()'s own "inline-construct a
-     * one-off dependency" precedent rather than TagRepository/
-     * PermissionService/ActivityLoggerInterface's own multi-method,
-     * constructor-injected shape. Reuses $this->activityLogger (Image and
-     * Tag are both L2aCoreDomain, so ActivityLoggerInterface -> concrete
-     * ActivityService's own dependency direction is identical either way).
-     */
-    private function newImageService(): ImageService
-    {
-        return new ImageService($this->lang, EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), $this->activityLogger, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator(), $this->paths());
-    }
-
-    /**
-     * Same "avoid a 2nd touch of every manual `new TagService(...)` call
-     * site" reasoning as translator() above.
-     */
-    private function paths(): Paths
-    {
-        $paths = Kernel::container()->get(Paths::class);
-        if (! $paths instanceof Paths) {
-            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
-        }
-
-        return $paths;
-    }
-
-    /**
-     * Container resolve, not a constructor property -- same "avoid a 2nd
-     * touch of every manual `new TagService(...)` call site for a single
-     * one-line delegation" reasoning as newImageService()'s own docblock
-     * above.
-     */
-    private function translator(): Translator
-    {
-        $translator = Kernel::container()->get(Translator::class);
-        if (! $translator instanceof Translator) {
-            throw new LogicException('Container returned an unexpected type for ' . Translator::class);
-        }
-
-        return $translator;
     }
 
     /**
@@ -465,7 +410,7 @@ final readonly class TagService
 
         $taglistAfter = $this->getImageTagIds($imageIds);
         $imagesToUpdate = $this->compareImageTagLists($taglistBefore, $taglistAfter);
-        $this->newImageService()
+        $this->imageService
             ->updateImagesLastmodified($imagesToUpdate);
 
         $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_tags', null));
@@ -505,7 +450,7 @@ final readonly class TagService
         $this->eventDispatcher->dispatchNotify(new DeleteTags($rawTagIds));
         $this->activityLogger->record('tag', $rawTagIds, 'delete');
 
-        $this->newImageService()
+        $this->imageService
             ->updateImagesLastmodified($imageIds);
         $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_tags', null));
     }
@@ -622,7 +567,7 @@ final readonly class TagService
         $imagesToUpdate = $this->compareImageTagLists($taglistBefore, $taglistAfter);
         $logger->debug('$images_to_update', $imagesToUpdate);
 
-        $this->newImageService()
+        $this->imageService
             ->updateImagesLastmodified($imagesToUpdate);
         $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_tags', null));
     }

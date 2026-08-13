@@ -10,6 +10,8 @@ namespace Piwigo\Tests\Integration {
     use Override;
     use Piwigo\Activity\ActivityEntity;
     use Piwigo\Activity\ActivityService;
+    use Piwigo\Auth\PasswordService;
+    use Piwigo\Category\CategoryService;
     use Piwigo\Common\ValueObject\Email;
     use Piwigo\Common\ValueObject\LangCode;
     use Piwigo\Common\ValueObject\ThemeId;
@@ -28,6 +30,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Mail\MailService;
+    use Piwigo\Permission\PermissionService;
     use Piwigo\Permission\SqlCondition;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Session\SessionEntity;
@@ -123,7 +126,13 @@ namespace Piwigo\Tests\Integration {
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
             $this->mailer = $mailer;
-            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, $this->processCache, CurrentPathsTestFactory::get());
+            $permissionService = Kernel::container()->get(PermissionService::class);
+            self::assertInstanceOf(PermissionService::class, $permissionService);
+            $categoryService = Kernel::container()->get(CategoryService::class);
+            self::assertInstanceOf(CategoryService::class, $categoryService);
+            $passwordService = Kernel::container()->get(PasswordService::class);
+            self::assertInstanceOf(PasswordService::class, $passwordService);
+            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, $this->processCache, CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn), $permissionService, $categoryService, $passwordService);
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -1229,7 +1238,13 @@ namespace Piwigo\Tests\Integration {
             if (! $installationFlag instanceof InstallationFlag) {
                 throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
             }
-            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, new ProcessCache(), CurrentPathsTestFactory::get());
+            $permissionService = Kernel::container()->get(PermissionService::class);
+            self::assertInstanceOf(PermissionService::class, $permissionService);
+            $categoryService = Kernel::container()->get(CategoryService::class);
+            self::assertInstanceOf(CategoryService::class, $categoryService);
+            $passwordService = Kernel::container()->get(PasswordService::class);
+            self::assertInstanceOf(PasswordService::class, $passwordService);
+            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, new ProcessCache(), CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn), $permissionService, $categoryService, $passwordService);
 
             try {
                 self::assertSame(0, $this->fetchOneInt(

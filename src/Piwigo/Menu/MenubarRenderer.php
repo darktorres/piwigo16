@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu;
 
+use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
@@ -16,13 +17,17 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\CheckMenuLinkVisibility;
 use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
@@ -36,6 +41,7 @@ use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 
 /**
  * Builds the main menubar's blocks. Injects nothing on its own
@@ -79,8 +85,17 @@ final class MenubarRenderer
         $conn = DbConnection::build();
         // Built once, reused below.
         $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, $filterState, $accessLevelChecker);
-        $tagService = new TagService($lang, EntityManagerFactory::build($conn)->getRepository(TagEntity::class), $permissionService, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $sessionService);
-        $categoryService = new CategoryService($lang, new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker);
+        $categoryService = new CategoryService($lang, new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, $currentConfig));
+
+        // ImageService is a throwaway, never-actually-used collaborator
+        // here -- TagService only needs it for updateImagesLastmodified(),
+        // never called on this render() path.
+        $menubarPaths = Kernel::container()->get(Paths::class);
+        if (! $menubarPaths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
+        }
+        $imageService = new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $sessionService, $eventDispatcher, $currentConfig, $menubarPaths, $categoryService);
+        $tagService = new TagService($lang, EntityManagerFactory::build($conn)->getRepository(TagEntity::class), $permissionService, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $imageService);
 
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig);
 

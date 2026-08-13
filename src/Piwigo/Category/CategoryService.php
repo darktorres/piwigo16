@@ -95,6 +95,7 @@ final readonly class CategoryService
         private EventDispatcher $eventDispatcher,
         private Translator $translator,
         private AccessLevelChecker $accessLevelChecker,
+        private UserRepository $userRepository,
     ) {}
 
     /**
@@ -123,29 +124,30 @@ final readonly class CategoryService
     /**
      * `Activity` is L2bExtendedDomain; `CategoryService` is L2aCoreDomain
      * and may not depend on it directly (a private helper constructing
-     * `ActivityService` inline, same as {@see \Piwigo\Image\ImageService}'s
-     * own `categoryService()` helper does for same-layer `CategoryService`,
-     * is a real `deptrac analyse` violation here specifically because
-     * Activity crosses layers). Unlike `ImageService`/`TagService` (each
-     * constructed fresh per write operation), `CategoryService` has 33
-     * real construction sites, the vast majority pure-read (menu
-     * rendering, gallery browsing) that never touch activity logging --
-     * constructor-injecting `ActivityLoggerInterface` would force all 33
-     * to supply one. Instead, only the 4 methods that actually log
-     * activity ({@see deleteSite()}, {@see deleteCategories()},
+     * `ActivityService` inline is a real `deptrac analyse` violation here
+     * specifically because Activity crosses layers). Unlike `ImageService`/
+     * `TagService` (each constructed fresh per write operation),
+     * `CategoryService` has many real construction sites, the vast
+     * majority pure-read (menu rendering, gallery browsing) that never
+     * touch activity logging -- constructor-injecting
+     * `ActivityLoggerInterface` would force all of them to supply one.
+     * Instead, only the 4 methods that actually log activity
+     * ({@see deleteSite()}, {@see deleteCategories()},
      * {@see moveCategories()}, {@see createVirtualCategory()}) take it as
-     * an explicit parameter, matching this method's own shape.
+     * an explicit parameter, matching this method's own shape. Passes
+     * `$this` for `ImageService`'s own `CategoryService` collaborator --
+     * this method is itself a `CategoryService` instance method, so no
+     * second construction is needed.
      */
     private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService, EventDispatcher $eventDispatcher): ImageService
     {
-        return new ImageService($this->lang, EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig, $this->translator, $this->paths());
+        return new ImageService(EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig, $this->paths(), $this);
     }
 
     /**
      * Same "avoid a 2nd touch of every manual `new CategoryService(...)`
      * call site" reasoning as this class's own other lazy container-resolve
-     * helpers (userRepository() etc.) -- only imageService()'s own callers
-     * need this collaborator.
+     * helpers -- only imageService()'s own callers need this collaborator.
      */
     private function paths(): Paths
     {
@@ -155,11 +157,6 @@ final readonly class CategoryService
         }
 
         return $paths;
-    }
-
-    private function userRepository(): UserRepository
-    {
-        return new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig);
     }
 
     /**
@@ -2024,7 +2021,7 @@ final readonly class CategoryService
                 ->id->value;
             $adminIds = array_map(
                 static fn (UserId $id): int => $id->value,
-                $this->userRepository()
+                $this->userRepository
                     ->findAdminIds()
             );
             $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));

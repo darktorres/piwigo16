@@ -44,15 +44,13 @@ namespace Piwigo\Tests\Integration {
 
     /**
      * Adversarial coverage for ExtensionLifecycle's real state-machine
-     * divergence across the 3 extension types (confirmed by direct read of
-     * plugins.class.php/themes.class.php/languages.class.php before writing
-     * this class -- see ExtensionLifecycle's own docblock). Every test id
+     * divergence across the 3 extension types -- see
+     * ExtensionLifecycle's own docblock. Every test id
      * used for plugin/theme actions is a synthetic, never-installed-on-disk
      * id with no 'parent' key set, so buildPluginMaintain()/
      * buildThemeMaintain() always fall back to the PluginMaintain/
      * ThemeMaintain base no-op classes and deltree() always receives a
-     * non-existent path (a real,
-     * safe no-op -- confirmed via direct read of deltree()) -- this suite
+     * non-existent path, a real safe no-op -- this suite
      * never touches the real plugins/themes/language directories.
      */
     final class ExtensionLifecycleTest extends IntegrationTestCase
@@ -334,7 +332,7 @@ namespace Piwigo\Tests\Integration {
         {
             // performAction()'s own top-level guard (only 'delete' is
             // checked here -- matches plugins.class.php::perform_action()'s
-            // exact original behavior, confirmed by direct read) calls
+            // exact original behavior) calls
             // HtmlService::fatalError(), `never`-typed and always throwing
             // a catchable ResponseReadyException regardless of
             // ErrorCollector::isActive() (see that method's own docblock).
@@ -1127,7 +1125,7 @@ PHP);
             // 'themes'`) for a different, unrelated reason (buildThemeMaintain()/
             // ExtensionScanner need the absolute form) -- composing root
             // with an already-absolute themesDir() double-prefixes the
-            // path, so checkThemeInstalled() (confirmed live) returns false
+            // path, so checkThemeInstalled() returns false
             // for every theme id under that setup, and
             // UserService::getDefaultTheme() always falls through to its
             // hard 'default' fallback, which can never match a real

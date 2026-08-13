@@ -14,6 +14,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -147,6 +148,7 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->containerGet(EventDispatcher::class),
             $this->containerGet(SessionService::class),
             $this->imageReadFacade,
+            $this->containerGet(Paths::class),
         );
     }
 
@@ -187,6 +189,47 @@ final class ExtensionContextTest extends IntegrationTestCase
         self::assertSame('fr_FR', $this->context->currentUser()->language->value);
 
         $this->conn->executeStatement("UPDATE user_infos SET language = 'en_UK' WHERE user_id = 1");
+    }
+
+    /**
+     * syncLanguageForRequest()'s whole point (P27.6, language_switch's own
+     * guest/generic path -- no individual user_infos row to persist a
+     * session-only visitor's language choice to) is the mirror image of
+     * setLanguage()'s own test above: the in-memory CurrentUser side takes
+     * effect, but user_infos itself never gets touched.
+     */
+    public function testSyncLanguageForRequestUpdatesCurrentUserWithoutPersisting(): void
+    {
+        $this->impersonate(1);
+
+        $before = $this->conn->createQueryBuilder()
+            ->select('language')
+            ->from('user_infos')
+            ->where('user_id = :id')
+            ->setParameter('id', 1)
+            ->executeQuery()
+            ->fetchOne();
+
+        $this->context->syncLanguageForRequest('fr_FR');
+
+        $after = $this->conn->createQueryBuilder()
+            ->select('language')
+            ->from('user_infos')
+            ->where('user_id = :id')
+            ->setParameter('id', 1)
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame('fr_FR', $this->context->currentUser()->language->value);
+        self::assertSame($before, $after);
+    }
+
+    public function testLanguagesReturnsEveryInstalledLanguageKeyedByCode(): void
+    {
+        $languages = $this->context->languages();
+
+        self::assertArrayHasKey('en_UK', $languages);
+        self::assertNotSame('', $languages['en_UK']);
     }
 
     public function testImagesIsInCaddieReflectsARealInsertAndRemoval(): void

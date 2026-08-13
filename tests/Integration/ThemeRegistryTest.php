@@ -106,6 +106,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
             $this->eventDispatcher,
             $this->containerGet(SessionService::class),
             $imageReadFacade,
+            $this->containerGet(Paths::class),
         );
     }
 

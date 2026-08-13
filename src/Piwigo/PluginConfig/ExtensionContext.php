@@ -11,8 +11,10 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Lang\LangService;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
@@ -66,6 +68,7 @@ final readonly class ExtensionContext
         private EventDispatcher $eventDispatcher,
         private SessionService $sessionService,
         private ImageReadFacade $imageReadFacade,
+        private Paths $paths,
     ) {}
 
     /**
@@ -134,6 +137,37 @@ final readonly class ExtensionContext
             'language' => $lang,
         ]);
         $this->currentUser->updateLanguage($langCode);
+    }
+
+    /**
+     * `setLanguage()`'s own in-memory-only half, exposed separately for a
+     * guest/generic visitor's language choice: `language_switch_16.3.0/
+     * language_switch.inc.php`'s own real behavior never writes to
+     * `user_infos` for a guest/generic session (there's no individual row
+     * to own the change) -- only `pwg_set_session_var('lang_switch', ...)`
+     * persists it, across requests, via the session; this method is what
+     * makes that session-stored choice observable for the *current*
+     * request too, the same way `setLanguage()`'s own `$user['language']
+     * = ...` follow-up does for a real user.
+     */
+    public function syncLanguageForRequest(string $lang): void
+    {
+        $this->currentUser->updateLanguage(LangCode::from($lang));
+    }
+
+    /**
+     * Every language installed under the core `language/` tree, keyed by
+     * code -- `LangService::getLanguages()`'s own real contract. Grounded
+     * in `language_switch`'s own real `new languages(); $languages->
+     * fs_languages` validation (is `$_GET['lang']` a real, installed
+     * language?) and its own `get_languages()` call for the flag-switcher
+     * UI (which languages to list at all).
+     *
+     * @return array<string, string>
+     */
+    public function languages(): array
+    {
+        return LangService::getLanguages($this->paths);
     }
 
     /**

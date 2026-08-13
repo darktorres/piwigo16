@@ -782,6 +782,7 @@ final class RequestBootstrap
             self::eventDispatcher(),
             self::sessionService(),
             self::imageReadFacade($conn),
+            self::paths(),
         );
     }
 

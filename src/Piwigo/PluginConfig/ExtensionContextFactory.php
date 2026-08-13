@@ -9,6 +9,7 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
@@ -40,6 +41,7 @@ final readonly class ExtensionContextFactory
         private EventDispatcher $eventDispatcher,
         private SessionService $sessionService,
         private ImageReadFacade $imageReadFacade,
+        private Paths $paths,
     ) {}
 
     public function build(PluginId|ThemeId $extensionId): ExtensionContext
@@ -57,6 +59,7 @@ final readonly class ExtensionContextFactory
             $this->eventDispatcher,
             $this->sessionService,
             $this->imageReadFacade,
+            $this->paths,
         );
     }
 }

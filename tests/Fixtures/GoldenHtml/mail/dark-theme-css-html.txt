@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="" dir="" style="width: 100%; height: 100%; background: #111;">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Piwigo Mail</title>
+
+    
+  <style type="text/css">a:hover{text-decoration: underline;}</style></head>
+
+  <body style="font-family: &quot;Verdana&quot;,&quot;Helvetica&quot;,&quot;Optima&quot;,sans-serif; font-size: 12px; margin: 0px; padding: 0px; width: 100%; height: 100%; color: #fff; background: #111;">
+    <table id="bodyTable" cellspacing="0" cellpadding="10" border="0" style="width: 100%; height: 100%; background: #111;">
+      <tr><td align="center" valign="top">
+
+        <table id="contentTable" cellspacing="0" cellpadding="0" border="0" style="width: 600px;">
+          <tr><td id="header" style="padding: 20px; background: #444; background-image: radial-gradient(ellipse at center,#555,#333); border: 1px solid #000; border-top: 4px solid #f36; text-align: center; text-shadow: 1px 1px 0px #000;">
+                        <div id="title" style="font-size: 26px; font-weight: bold; color: #eee;">Fixture Gallery</div>
+            <div id="subtitle" style="font-size: 20px; color: #c9224c;"> Dark theme CSS coverage</div>                      </td></tr>
+
+          <tr><td id="content" style="padding: 0 20px 20px 20px; font-family: &quot;Verdana&quot;,&quot;Helvetica&quot;,&quot;Optima&quot;,sans-serif; font-size: 13px; background: #111; border-width: 1px; border-style: solid; border-color: #666 #000; box-shadow: inset 0 0 20px #333;">
+            <div id="topSpacer" style="margin-bottom: 20px;"></div>
+            <p style="margin: .25em 0 .5em 0;"></p>                      </td></tr>
+
+          <tr><td id="footer" style="font-size: 10px; padding: 5px; background: #333; border: 1px solid #000; border-bottom: 2px solid #f36;">
+                  
+            Sent by <a href="http://vendor/bin/" style="color: #f36; text-decoration: none;">Fixture Gallery</a>
+            - Powered by <a href="https://upstream.example.invalid" class="Piwigo" style="color: #f36; text-decoration: none;">Piwigo</a>
+                        
+            - Contact
+            <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site" style="color: #f36; text-decoration: none;">Webmaster</a>
+                      </td></tr>
+        </table>
+
+      </td></tr>
+    </table>
+  </body>
+</html>

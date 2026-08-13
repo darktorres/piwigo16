@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="" dir="" style="width: 100%; height: 100%; background: #fff;">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Piwigo Mail</title>
+
+    
+  <style type="text/css">a:hover{text-decoration: underline;}</style></head>
+
+  <body style="font-family: &quot;Verdana&quot;,&quot;Helvetica&quot;,&quot;Optima&quot;,sans-serif; font-size: 12px; margin: 0px; padding: 0px; width: 100%; height: 100%; color: #111; background: #fff;">
+    <table id="bodyTable" cellspacing="0" cellpadding="10" border="0" style="width: 100%; height: 100%; background: #fff;">
+      <tr><td align="center" valign="top">
+
+        <table id="contentTable" cellspacing="0" cellpadding="0" border="0" style="width: 600px;">
+          <tr><td id="header" style="padding: 20px; background: #eee; background-image: radial-gradient(ellipse at center,#fefefe,#e5e5e5); border-top: 4px solid #f70; text-align: center; text-shadow: 1px 1px 0px #fff;">
+                        <div id="title" style="font-size: 26px; font-weight: bold;">Fixture Gallery</div>
+            <div id="subtitle" style="font-size: 20px; color: #e06900;">[Fixture Gallery] New comment awaiting validation</div>                      </td></tr>
+
+          <tr><td id="content" style="padding: 0 20px 20px 20px; font-family: &quot;Verdana&quot;,&quot;Helvetica&quot;,&quot;Optima&quot;,sans-serif; font-size: 13px; background: #fefefe; border-width: 1px; border-style: solid; border-color: #ddd #eee; box-shadow: inset 0 0 20px #eee;">
+            <div id="topSpacer" style="margin-bottom: 20px;"></div>
+            <p style="margin: .25em 0 .5em 0;">A new comment is waiting for validation.</p>
+
+<p style="margin: .25em 0 .5em 0; padding-top: 10px; font-size: 11px;">
+Connected user: <br>
+IP: <br>
+Browser: 
+</p>
+                      </td></tr>
+
+          <tr><td id="footer" style="font-size: 10px; padding: 5px; background: #eee; border-bottom: 2px solid #f70;">
+                  
+            Sent by <a href="http://vendor/bin/" style="color: #f70; text-decoration: none;">Fixture Gallery</a>
+            - Powered by <a href="https://upstream.example.invalid" class="Piwigo" style="color: #f70; text-decoration: none;">Piwigo</a>
+                        
+            - Contact
+            <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site" style="color: #f70; text-decoration: none;">Webmaster</a>
+                      </td></tr>
+        </table>
+
+      </td></tr>
+    </table>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+Fixture Gallery
+ Dark theme CSS coverage
+----
+
+
+
+----
+Sent by "Fixture Gallery" http://vendor/bin/
+Powered by "Piwigo" https://upstream.example.invalid
+Contact: fixture_admin@example.test

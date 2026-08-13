@@ -1,0 +1,29 @@
+Fixture Gallery
+ Subscribe to notification by mail
+----
+
+
+Notification
+Hello ,
+
+You have subscribed to receiving notifications by mail.
+
+
+
+Go to Fixture Gallery.
+See you soon,
+
+
+
+To unsubscribe, click on 
+To subscribe, click on 
+If you encounter problems or have any question, please send a message to 
+
+
+
+
+
+----
+Sent by "Fixture Gallery" http://vendor/bin/
+Powered by "Piwigo" https://upstream.example.invalid
+Contact: fixture_admin@example.test

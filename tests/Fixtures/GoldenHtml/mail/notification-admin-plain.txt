@@ -1,0 +1,16 @@
+Fixture Gallery
+[Fixture Gallery] New comment awaiting validation
+----
+
+A new comment is waiting for validation.
+
+-----------------------------
+Connected user: 
+IP: 
+Browser: 
+
+
+----
+Sent by "Fixture Gallery" http://vendor/bin/
+Powered by "Piwigo" https://upstream.example.invalid
+Contact: fixture_admin@example.test

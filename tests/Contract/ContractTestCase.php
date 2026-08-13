@@ -281,10 +281,8 @@ abstract class ContractTestCase extends IntegrationTestCase
      * PHP warning/notice/deprecation raised by the separate Apache/PHP
      * process ws.php runs in, invisible to PHPUnit's own in-process
      * failOnWarning/failOnDeprecation gate. Reads the SAME response the WS
-     * call itself returned -- unlike the now-deleted IntegrationTestCase::
-     * assertNoPhpErrors(), which drained ErrorCollector via a separate
-     * follow-up request and so could never see a prior request's
-     * (per-request, not static) buffer.
+     * call itself returned -- a separate follow-up request can't see this,
+     * since ErrorCollector's buffer is per-request, not static.
      * @param list<string> $headers
      */
     private static function assertNoPhpErrorHeaders(array $headers, string $method): void

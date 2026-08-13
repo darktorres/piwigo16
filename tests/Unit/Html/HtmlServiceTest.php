@@ -151,10 +151,7 @@ function htmlServiceTestRootPathOverride(): RootPathOverride
 // ("setStatusHeader sends a real HTTP/1.1 status line..." and its
 // siblings), just invisible to `pest --mutate`'s coverage collection
 // (the same subprocess-invisibility blind spot documented in
-// feedback_pest_mutate_invisible_to_subprocess_tests) -- spot-verified
-// live via hand-mutation against Line 726 specifically to confirm the
-// existing tests still catch it after this session's method renames,
-// not just trusted from the old comment.
+// feedback_pest_mutate_invisible_to_subprocess_tests).
 
 test('lang() throws when the container returns an unexpected type for Lang', function (): void {
     // Kills line 141's InstanceOfToTrue -- lang() is a private,
@@ -211,9 +208,8 @@ test('renderCommentContent bolds *word* only when a word character directly touc
     // where a real word character (letter/digit/underscore) directly
     // touches the asterisk on both sides -- a space (or start/end of
     // string) next to '*' is two non-word characters, no boundary, no
-    // match (confirmed empirically): "*bold*" surrounded by spaces is
-    // verifiably a silent no-op, only "word*bold*word" (no space)
-    // actually triggers it.
+    // match: "*bold*" surrounded by spaces is a silent no-op, only
+    // "word*bold*word" (no space) actually triggers it.
     $service = HtmlServiceTestFactory::build();
 
     expect(htmlServiceTestRenderCommentContent($service, 'a *hello* b'))
@@ -236,9 +232,8 @@ test('renderCommentContent converts newlines to br tags', function (): void {
 // calls, each preceded/followed by a (string) cast -- preg_replace() can
 // genuinely return null on a real PCRE backtrack-limit failure (same
 // technique already established in SearchServiceTest.php's own
-// "throws when preg_split() hits the backtrack limit" test). Confirmed
-// empirically (direct probe of the exact real pipeline): on the REAL code,
-// the cast coerces that null straight to '', so a failed stage silently
+// "throws when preg_split() hits the backtrack limit" test). On the
+// REAL code, the cast coerces that null straight to '', so a failed stage silently
 // degrades to an empty result instead of throwing -- the whole comment is
 // lost, not preserved, but no exception. Each of the 4 tests below isolates
 // exactly ONE preg_replace() call as the failure point (via
@@ -246,8 +241,8 @@ test('renderCommentContent converts newlines to br tags', function (): void {
 // that call's own pattern) and asserts this real, silent-degradation-to-''
 // behavior. RenderCommentContent::$commentContent is a native, non-nullable
 // `string` property -- removing any one of these casts lets a real null
-// reach it directly, throwing a TypeError instead (confirmed via
-// hand-mutation), which is what these tests actually catch.
+// reach it directly, throwing a TypeError instead, which is what these
+// tests actually catch.
 
 test('renderCommentContent silently drops to an empty string when the URL-linkify preg_replace() hits the backtrack limit', function (): void {
     $service = HtmlServiceTestFactory::build();
@@ -308,8 +303,7 @@ test('renderCommentContent silently drops to an empty string when the italic pre
  * pattern here is a static, compile-time-fixed, valid regex, and the
  * subject is always a real string -- preg_replace() only returns null
  * on a genuine PCRE error, unreachable for these patterns on any real
- * input. Confirmed live: the full suite in this file passes identically
- * with each cast removed.
+ * input.
  */
 test('nameCompare sorts case-insensitively', function (): void {
     $service = HtmlServiceTestFactory::build();
@@ -452,8 +446,7 @@ test('fatalError falls back to an empty class prefix, not a placeholder, for a r
     // Kills line 473's EmptyStringToNotEmpty ($class's `? ... : ''`
     // false branch). PHPUnit's own real invocation chain includes a
     // genuine plain-function frame (call_user_func_array, no enclosing
-    // class) a few levels above this call -- confirmed live via a
-    // throwaway debug_backtrace() dump of this exact call path.
+    // class) a few levels above this call.
     $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
@@ -469,9 +462,8 @@ test('fatalError renders an empty, not placeholder, file/line for a real frame w
     // `?? ''` fallbacks for 'file' and 'line'). PHPUnit's own real
     // invocation chain includes a genuine frame with neither key set
     // (a closure invoked through Pest\Factories\TestCaseMethodFactory
-    // without file/line context) a few levels above this call --
-    // confirmed live via a throwaway debug_backtrace() dump of this
-    // exact call path. Real code renders "... ()" (empty parens, no
+    // without file/line context) a few levels above this call. Real
+    // code renders "... ()" (empty parens, no
     // placeholder text before or inside them) for that one frame; no
     // other frame in this exact call chain has both file and line
     // empty, so this pattern can only appear here.
@@ -669,9 +661,9 @@ test('pwgNl2br passes through a real float zero unchanged, distinctly from int 0
 
 test('pwgNl2br casts a real non-zero int/float to string before calling nl2br()', function (): void {
     // Kills line 871's RemoveStringCast -- nl2br() requires a real
-    // string parameter under strict_types=1; confirmed live that
-    // dropping the cast throws a genuine TypeError for a non-string,
-    // non-early-returned value like a real int or float.
+    // string parameter under strict_types=1; dropping the cast throws
+    // a genuine TypeError for a non-string, non-early-returned value
+    // like a real int or float.
     $service = HtmlServiceTestFactory::build();
 
     expect($service->pwgNl2br(42))
@@ -687,8 +679,7 @@ test('pwgNl2br casts a real non-zero int/float to string before calling nl2br()'
  * which literal this disjunct compares against changes nothing
  * observable: an empty string either matches the mutated disjunct and
  * returns as-is, or falls through to nl2br(''), which returns the exact
- * same ''. Confirmed live: the full suite in this file passes
- * identically with the mutation applied.
+ * same ''.
  */
 test('pwgNl2br passes through arrays unchanged', function (): void {
     $service = HtmlServiceTestFactory::build();
@@ -957,9 +948,7 @@ test('tagAlphaCompare computes and caches both names, keyed by class name, for a
  * pwgTransliterate() result) -- so `is_string($transliterated[$name_b]
  * ?? null)` is always true and the ternary's own false branch (the
  * duplicate pwgTransliterate() call) can never run in real execution,
- * regardless of what condition/fallback feeds it. Live sed-verified
- * against the full suite with each mutation applied in turn: both pass
- * identically.
+ * regardless of what condition/fallback feeds it.
  */
 test('getTagsContentTitle pluralizes based on the number of tags', function (): void {
     $service = HtmlServiceTestFactory::build();
@@ -1674,8 +1663,8 @@ test('getCombinedCategoriesContentTitle folds every other category into combined
  * skips setting 'combined_categories' entirely; both mutants would set
  * it to an explicit empty array instead, for exactly the same reason
  * (count() is never negative, so `> -1` is logically identical to `>=
- * 0` for every real input). Confirmed live that UrlService::makeIndexUrl()
- * renders an identical URL string for ['category' => $cat] and
+ * 0` for every real input). UrlService::makeIndexUrl() renders an
+ * identical URL string for ['category' => $cat] and
  * ['category' => $cat, 'combined_categories' => []] -- an explicitly-
  * empty array is indistinguishable from an absent key in the built
  * query string.
@@ -2070,8 +2059,8 @@ test('pageForbidden computes the default alternate url via makeIndexUrl when non
 /**
  * Starts a real, disposable PHP built-in server bound to 127.0.0.1
  * serving $docRoot's index.php -- header() is a genuine, unobservable
- * no-op under Pest's own CLI SAPI (confirmed live: headers_list() stays
- * empty after a real header() call), so setStatusHeader()'s
+ * no-op under Pest's own CLI SAPI (headers_list() stays empty after a
+ * real header() call), so setStatusHeader()'s
  * SERVER_PROTOCOL fallback/validation logic (lines 611-613) and the
  * header() call itself (line 732) have no in-process side channel to
  * observe. A real HTTP request against a real running server, however,
@@ -2152,15 +2141,13 @@ function htmlServiceTestRawStatusLine(int $port, string $query): string
 
 /**
  * The three tests below (and their line-611/612/613/617 kill claims)
- * are individually confirmed live: each mutation was hand-applied to
- * this exact source line, this exact test group was re-run, and it
- * failed as expected, then the source was restored -- because
- * `pest --mutate`'s own scanner can't see failures raised inside a
- * proc_open() subprocess (the real `php -S` server these tests start),
- * the same "sed-mutate-and-run-directly" verification already
- * established for the `pest --mutate`-invisible subprocess tests in
- * HttpClientServiceTest.php. `pest --mutate` will keep reporting these
- * as UNTESTED even though they are, in fact, killed.
+ * are real kills, even though `pest --mutate`'s own scanner can't see
+ * failures raised inside a proc_open() subprocess (the real `php -S`
+ * server these tests start) -- the same subprocess-invisibility blind
+ * spot already established for the `pest --mutate`-invisible
+ * subprocess tests in HttpClientServiceTest.php. `pest --mutate` will
+ * keep reporting these as UNTESTED even though they are, in fact,
+ * killed.
  */
 test('setStatusHeader sends a real HTTP/1.1 status line, with the given code and reason phrase, for a genuine HTTP/1.1 request', function (): void {
     // Kills line 726's CoalesceRemoveLeft (would discard the real,
@@ -2242,15 +2229,12 @@ test('setStatusHeader falls back to HTTP/1.0 for a SERVER_PROTOCOL value that is
  * each mutation applied in turn: both pass identically.
  *
  * Also confirmed-equivalent: line 732's TrueToFalse (`header(...,
- * false, $code)` instead of `true`). Empirically confirmed live (two
- * consecutive real setStatusHeader() calls with the $replace parameter
- * hand-mutated to false, requested through this same real-server
- * technique): PHP treats a raw "HTTP/..." status-line header specially
- * -- the $replace parameter has no effect on it; the most recent such
- * call always wins regardless. A genuinely non-status-line header
- * (X-Test) confirmed the *technique itself* correctly detects a real
- * $replace=false difference (both values appear), ruling out a probe
- * artifact.
+ * false, $code)` instead of `true`). PHP treats a raw "HTTP/..."
+ * status-line header specially -- the $replace parameter has no effect
+ * on it; the most recent such call always wins regardless. A genuinely
+ * non-status-line header (X-Test) confirms the *technique itself*
+ * correctly detects a real $replace=false difference (both values
+ * appear), ruling out a probe artifact.
  */
 test('setStatusHeader actually calls header(), not a no-op, for a real request', function (): void {
     // Kills line 732's RemoveFunctionCall -- without a real header()

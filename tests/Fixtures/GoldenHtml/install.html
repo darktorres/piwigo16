@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-script-type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">
+
+<link rel="stylesheet" type="text/css" href="_data/combined/81xi3d.css">
+
+
+
+<!--[if IE 7]>
+  <link rel="stylesheet" type="text/css" href="themes/admin/default/fix-ie7.css">
+<![endif]-->
+
+<!-- BEGIN get_combined_scripts -->
+<script type="text/javascript" src="themes/default/js/jquery.min.js?v16.3.0"></script>
+<!-- END get_combined_scripts -->
+
+
+
+<script type="text/javascript">
+$(document).ready(function() {
+  $("a.externalLink").click(function() {
+    window.open($(this).attr("href"));
+    return false;
+  });
+
+  $("#admin_mail").keyup(function() {
+    $(".adminEmail").text($(this).val());
+  });
+});
+</script>
+
+<style type="text/css">
+body {
+  font-size:12px;
+}
+
+#content {
+  width: 800px;
+  margin: auto;
+  text-align: center;
+  padding:0;
+  background-color:transparent !important;
+  border:none;
+}
+
+#theHeader {
+  display: block;
+  background:url("themes/admin/default/images/piwigo-orange.svg") no-repeat scroll center 20px transparent;
+  height:100px;
+  background-size: 300px;
+}
+
+fieldset {
+  margin-top:20px;
+  background-color:#f1f1f1;
+}
+
+legend {
+  font-weight:bold;
+  letter-spacing:2px;
+}
+
+.content h2 {
+  display:block;
+  font-size:20px;
+  text-align:center;
+  /* margin-top:5px; */
+}
+
+table.table2 {
+  width: 100%;
+  border:0;
+}
+
+table.table2 td {
+  text-align: left;
+  padding: 5px 2px;
+}
+
+table.table2 td.fieldname {
+  font-weight:normal;
+}
+
+table.table2 td.fielddesc {
+  padding-left:10px;
+  font-style:italic;
+}
+
+input[type="submit"], input[type="button"], a.bigButton {
+  font-size:14px;
+  font-weight:bold;
+  letter-spacing:2px;
+  border:none;
+  background-color:#666666;
+  color:#fff;
+  padding:5px;
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  border-radius:5px;
+}
+
+input[type="submit"]:hover, input[type="button"]:hover, a.bigButton:hover {
+  background-color:#ff7700;
+  color:white;
+}
+
+input[type="text"], input[type="password"], select {
+  background-color:#ddd;
+  border:2px solid #ccc;
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  border-radius:5px;
+  padding:2px;
+}
+
+input[type="text"]:focus, input[type="password"]:focus, select:focus {
+  background-color:#fff;
+  border:2px solid #ff7700;
+}
+
+.sql_content, .infos a {
+  color: #ff3363;
+}
+
+.errors {
+  padding-bottom:5px;
+}
+
+</style>
+
+
+
+
+
+
+<title>Piwigo 16.3.0 - Installation</title>
+</head>
+
+<body>
+<div id="the_page">
+<div id="theHeader"></div>
+<div id="content" class="content">
+
+<h2>Version 16.3.0 - Installation</h2>
+
+
+
+<form method="POST" action="install.php?language=en_UK" name="install_form">
+
+<fieldset>
+  <legend>Basic configuration</legend>
+
+  <table class="table2">
+    <tr>
+      <td style="width: 30%">Default gallery language</td>
+      <td>
+    <select name="language" onchange="document.location = 'install.php?language='+this.options[this.selectedIndex].value;">
+    <option value="af_ZA">Afrikaans (Suid-Afrika)</option>
+<option value="ar_SA">Arbic (saudi)</option>
+<option value="az_AZ">Azərbaycanca (Azərbaycan)</option>
+<option value="id_ID">Bahasa Indonesia (Indonesia)</option>
+<option value="br_FR">Brezhoneg (Frañs)</option>
+<option value="es_AR">Castellano (Argentina)</option>
+<option value="ca_ES">Català (Catalunya/Spain)</option>
+<option value="da_DK">Dansk (Danmark)</option>
+<option value="de_DE">Deutsch (Deutschland)</option>
+<option value="dv_MV">Dhivehi (Maldives)</option>
+<option value="nl_NL">Dutch (Nederland)</option>
+<option value="en_UK" selected="selected">English (Great Britain)</option>
+<option value="en_GB">English (Great Britain)</option>
+<option value="en_US">English (United States)</option>
+<option value="es_ES">Español (España)</option>
+<option value="eo_EO">Esperanto (Esperantio)</option>
+<option value="et_EE">Estonian (Estonia)</option>
+<option value="eu_ES">Euskara (Euskadi)</option>
+<option value="fi_FI">Finnish (Suomi)</option>
+<option value="fr_FR">Français (France)</option>
+<option value="fr_CA">Français (Québec)</option>
+<option value="ga_IE">Gaeilge (éire)</option>
+<option value="gl_ES">Galego (Galiza)</option>
+<option value="ka_GE">Georgian (Georgia)</option>
+<option value="he_IL">Hebrew (Israel)</option>
+<option value="hr_HR">Hrvatski (Hrvatska)</option>
+<option value="it_IT">Italiano (Italia)</option>
+<option value="ja_JP">Japanese (Japan)</option>
+<option value="lv_LV">Latvian (Latvia)</option>
+<option value="lt_LT">Lietuvių (Lietuva)</option>
+<option value="lb_LU">Lëtzebuergesch (Luxembourg)</option>
+<option value="hu_HU">Magyar (Hungary)</option>
+<option value="ms_MY">Malay (Malaysia)</option>
+<option value="es_MX">México (Mexico)</option>
+<option value="nb_NO">Norwegian (Norway)</option>
+<option value="nn_NO">Norwegian nynorsk (Norway)</option>
+<option value="pl_PL">Polish (Polska)</option>
+<option value="pt_BR">Português (Brasil)</option>
+<option value="pt_PT">Português (Portugal)</option>
+<option value="ro_RO">Română (România)</option>
+<option value="ru_RU">Russian (Russia)</option>
+<option value="sk_SK">Slovenčina (Slovenská republika)</option>
+<option value="sl_SI">slovenščina (Slovenija)</option>
+<option value="sh_RS">Srpski (Srbija)</option>
+<option value="sv_SE">Swedish (Sverige)</option>
+<option value="vi_VN">Tiếng Việt (Việt Nam)</option>
+<option value="tr_TR">Turkish (Turkey)</option>
+<option value="wo_SN">Wolof (Sénégal)</option>
+<option value="is_IS">Íslenska (Ísland)</option>
+<option value="cs_CZ">Čeština (Česká Republika)</option>
+<option value="el_GR">Ελληνικά (Ελλάδα)</option>
+<option value="bg_BG">Български (България)</option>
+<option value="mk_MK">Македонски (Република Македонија)</option>
+<option value="mn_MN">Монгол (Монгол улс)</option>
+<option value="sr_RS">Српски (Србија)</option>
+<option value="uk_UA">Українська (Україна)</option>
+<option value="hy_AM">Հայերեն (Հայաստան)</option>
+<option value="ar_EG">العربية (مصر) (مصر)</option>
+<option value="fa_IR">پارسی (ایران)</option>
+<option value="kok_IN">कोंकणी (भारत)</option>
+<option value="bn_IN">বাংলা (ভারত)</option>
+<option value="gu_IN">ગુજરાતી (હિન્દુસ્તાન)</option>
+<option value="ta_IN">தமிழ் (இந்தியா)</option>
+<option value="kn_IN">ಕನ್ನಡ (ಭಾರತ)</option>
+<option value="th_TH">ภาษาไทย (ประเทศไทย)</option>
+<option value="km_KH">ភាសាខ្មែរ​ (ប្រទេសកម្ពុជា)</option>
+<option value="zh_TW">中文 (中國)</option>
+<option value="zh_HK">中文 (香港) (香港特別行政區)</option>
+<option value="zh_CN">简体中文 (中国)</option>
+<option value="ko_KR">한국어 (대한민국)</option>
+
+    </select>
+      </td>
+    </tr>
+  </table>
+</fieldset>
+
+<fieldset>
+  <legend>Database configuration</legend>
+
+  <table class="table2">
+    <tr>
+      <td style="width: 30%;" class="fieldname">Database type</td>
+      <td>
+        <select name="dbdriver" id="dbdriver" onchange="document.getElementById('dbport').placeholder = (this.value === 'pgsql') ? '5432' : '3306';">
+          <option value="mysqli" selected>MySQL / MariaDB</option>
+          <option value="pgsql">PostgreSQL</option>
+        </select>
+      </td>
+      <td class="fielddesc">MySQL/MariaDB or PostgreSQL, matching what your host provider gave you</td>
+    </tr>
+    <tr>
+      <td style="width: 30%;" class="fieldname">Host</td>
+      <td><input type="text" name="dbhost" value="localhost" required></td>
+      <td class="fielddesc">localhost or other, supplied by your host provider</td>
+    </tr>
+    <tr>
+      <td class="fieldname">Port</td>
+      <td><input type="number" name="dbport" id="dbport" value="" placeholder="3306" min="1" max="65535"></td>
+      <td class="fielddesc">leave empty to use the default port for your chosen database type</td>
+    </tr>
+    <tr>
+      <td class="fieldname">User</td>
+      <td><input type="text" name="dbuser" value="" required></td>
+      <td class="fielddesc">user login supplied by your host provider</td>
+    </tr>
+    <tr>
+      <td class="fieldname">Password</td>
+      <td><input type="password" name="dbpasswd" value=""></td>
+      <td class="fielddesc">user password supplied by your host provider</td>
+    </tr>
+    <tr>
+      <td class="fieldname">Database name</td>
+      <td><input type="text" name="dbname" value="" required></td>
+      <td class="fielddesc">also supplied by your hosting provider</td>
+    </tr>
+  </table>
+
+</fieldset>
+<fieldset>
+  <legend>Administration configuration</legend>
+
+  <table class="table2">
+    <tr>
+      <td style="width: 30%;" class="fieldname">Username</td>
+      <td><input type="text" name="admin_name" value="" required></td>
+      <td class="fielddesc">It will be shown to visitors. It is necessary for website administration</td>
+    </tr>
+    <tr>
+      <td class="fieldname">Password</td>
+      <td><input type="password" name="admin_pass1" value="" required></td>
+      <td class="fielddesc">Keep it confidential, it enables you to access the administration panel</td>
+    </tr>
+    <tr>
+      <td class="fieldname">Password [confirm]</td>
+      <td><input type="password" name="admin_pass2" value="" required></td>
+      <td class="fielddesc">verification</td>
+    </tr>
+    <tr>
+      <td class="fieldname">Email address</td>
+      <td><input type="text" name="admin_mail" id="admin_mail" value="" required></td>
+      <td class="fielddesc">Visitors will be able to use this email to contact the site administrator</td>
+    </tr>
+    <tr>
+      <td>Options</options>
+      <td colspan="2">
+        <label>
+          <input type="checkbox" name="newsletter_subscribe" checked="checked">
+          <span class="cluetip" title="Piwigo Announcement Newsletter|Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will be sent emails when a new release is available (sometimes including a security bug fix, it is important to know and upgrade) and when major events happen to the project. Only a few emails a year.">Subscribe <span class="adminEmail"></span> to Piwigo Announcements Newsletter</span>
+        </label>
+        <br>
+        <label>
+          <input type="checkbox" name="send_credentials_by_mail" checked="checked">
+          Send my connection settings by email
+        </label>
+      </td>
+    </tr>
+  </table>
+
+</fieldset>
+
+  <div style="text-align:center; margin:20px 0 10px 0">
+    <input class="submit" type="submit" name="install" value="Start installation">
+  </div>
+</form>
+</div> <div style="text-align: center">Need help? Ask your question on the <a href="https://upstream.example.invalid/forum">Piwigo message board</a>.</div>
+</div> 
+<!-- BEGIN get_combined_scripts -->
+<script type="text/javascript" src="themes/default/js/plugins/jquery.cluetip.js?v16.3.0"></script>
+<script type="text/javascript">//<![CDATA[
+
+jQuery().ready(function(){
+	jQuery('.cluetip').cluetip({
+		width: 300,
+		splitTitle: '|',
+		positionBy: 'bottomTop'
+	});
+});
+//]]></script>
+<!-- END get_combined_scripts -->
+
+</body>
+</html>

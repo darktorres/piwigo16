@@ -574,3 +574,33 @@ it("captures no-photo-yet-guest's and no-photo-yet-admin's golden HTML", functio
     goldenHtmlAssertOrWrite('no-photo-yet-guest', $guestResult['body']);
     goldenHtmlAssertOrWrite('no-photo-yet-admin', $adminResult['body']);
 })->group('golden-html-snapshot');
+
+it("captures install's golden HTML", function (): void {
+    // InstallWizard::render()'s own "already installed" gate
+    // (file_exists($paths->siteLocal . Env::testModeInstalledStamp()))
+    // reads the exact same flag file RequestBootstrap::bootEntryPoint()
+    // checks on every other route -- moving it out of the way here lets
+    // install.php's real step-1 welcome/language form render instead of
+    // its "Piwigo is already installed" fatalError() page. Safe for a
+    // plain GET: $this->step only becomes 2 (the real schema-migration +
+    // config.sql seeding path) on an explicit step-2 POST this test never
+    // sends, so the fixture DB itself is never touched -- confirmed by
+    // reading InstallWizard.php directly, not assumed.
+    $flagPath = dirname(__DIR__, 2) . '/local/.installed.test';
+    $backupPath = $flagPath . '.golden-html-backup';
+    if (! rename($flagPath, $backupPath)) {
+        throw new RuntimeException("Couldn't move {$flagPath} out of the way");
+    }
+
+    try {
+        $result = goldenHtmlCurl('', '/install.php');
+    } finally {
+        if (! rename($backupPath, $flagPath)) {
+            throw new RuntimeException("Couldn't restore {$flagPath} -- every other route now thinks Piwigo isn't installed");
+        }
+    }
+
+    expect($result['status'])->toBe(200, "install returned HTTP {$result['status']}, expected 200");
+
+    goldenHtmlAssertOrWrite('install', $result['body']);
+})->group('golden-html-snapshot');

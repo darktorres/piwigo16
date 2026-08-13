@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 final class WsUsersMutationTest extends ContractTestCase
@@ -284,8 +283,8 @@ final class WsUsersMutationTest extends ContractTestCase
     public function testAddPasswordConfirmationMismatchReturnsError(): void
     {
         $this->upsertConfig('double_password_type_in_admin', 'true');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $token = $this->getPwgToken();
 
@@ -301,7 +300,8 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame('The passwords do not match', $response['message']);
         } finally {
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'double_password_type_in_admin'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
@@ -622,8 +622,8 @@ final class WsUsersMutationTest extends ContractTestCase
     public function testSetMyInfoIgnoresThemeWhenUserCustomizationIsDisabled(): void
     {
         $this->upsertConfig('allow_user_customization', 'false');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $token = $this->getPwgToken();
             $before = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = 1');
@@ -638,7 +638,8 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame($before, $after);
         } finally {
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'allow_user_customization'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
@@ -655,8 +656,8 @@ final class WsUsersMutationTest extends ContractTestCase
         $this->conn->executeStatement(
             "UPDATE config SET value = 'false' WHERE param = 'activate_comments'"
         );
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $token = $this->getPwgToken();
             $before = $this->conn->fetchOne('SELECT show_nb_comments FROM user_infos WHERE user_id = 1');
@@ -671,7 +672,8 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame($before, $after, 'show_nb_comments must be silently dropped, not applied, while comments are disabled gallery-wide');
         } finally {
             $this->conn->executeStatement("UPDATE config SET value = 'true' WHERE param = 'activate_comments'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
@@ -693,8 +695,8 @@ final class WsUsersMutationTest extends ContractTestCase
         $originalDefaultUserId = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'default_user_id'");
 
         $this->upsertConfig('default_user_id', (string) $userId);
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $before = $this->conn->fetchAssociative(
                 'SELECT theme, language FROM user_infos WHERE user_id = ?',
@@ -743,7 +745,8 @@ final class WsUsersMutationTest extends ContractTestCase
                     [$originalDefaultUserId]
                 );
             }
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
@@ -1019,8 +1022,8 @@ final class WsUsersMutationTest extends ContractTestCase
 
         $originalSmtpHost = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'smtp_host'");
         $this->upsertConfig('smtp_host', '"127.0.0.1:1"');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $first = $this->callWs('pwg.users.generatePasswordLink', [
                 'user_id' => $userId,
@@ -1061,7 +1064,8 @@ final class WsUsersMutationTest extends ContractTestCase
                     [$originalSmtpHost]
                 );
             }
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
@@ -1176,7 +1180,8 @@ final class WsUsersMutationTest extends ContractTestCase
                 "UPDATE config SET value = ? WHERE param = 'webmaster_id'",
                 [$originalWebmasterId]
             );
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 

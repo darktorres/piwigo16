@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -31,7 +30,8 @@ final class WsImagesSetInfoTest extends ContractTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement("DELETE FROM config WHERE param = 'allow_html_descriptions'");
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
         parent::tearDown();
     }
 
@@ -307,8 +307,8 @@ final class WsImagesSetInfoTest extends ContractTestCase
         $original = $this->conn->fetchOne('SELECT comment FROM images WHERE id = 1');
 
         $this->upsertConfig('allow_html_descriptions', 'false');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $response = $this->callWs('pwg.images.setInfo', [
                 'image_id' => 1,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Cache\AbstractNamedCachePool;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\CachePools;
+use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Cache\EffectivePermissionsCachePool;
 use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Cache\TagCloudCachePool;
@@ -65,6 +66,16 @@ function cachePoolsTestPermissions(): PermissionsCachePool
     return new PermissionsCachePool(CacheFactory::create(namespace: 'piwigo.permissions', defaultLifetime: 30));
 }
 
+/**
+ * Same reasoning as cachePoolsTestTagCloud() above, for
+ * ConfigCachePool::class's own factory entry -- no defaultLifetime (no
+ * TTL, matching ConfigService's own explicit-clear-on-write design).
+ */
+function cachePoolsTestConfig(): ConfigCachePool
+{
+    return new ConfigCachePool(CacheFactory::create(namespace: 'piwigo.config'));
+}
+
 // Filesystem-forced throughout: the real behavior under test is namespace
 // isolation between pools, not adapter selection (already covered by
 // CacheFactoryTest) -- forcing one adapter keeps this deterministic
@@ -76,7 +87,6 @@ beforeEach(function (): void {
 afterEach(function (): void {
     $clear = static function (): void {
         foreach ([
-            CachePools::config(),
             CachePools::categoryTree(),
             CachePools::general(),
         ] as $pool) {
@@ -87,6 +97,8 @@ afterEach(function (): void {
         cachePoolsTestEffectivePermissions()
             ->clear();
         cachePoolsTestPermissions()
+            ->clear();
+        cachePoolsTestConfig()
             ->clear();
     };
     $clear();
@@ -139,12 +151,13 @@ test('permissions/effectivePermissions/categoryTree/tagCloud pools carry their o
 });
 
 test('config, tagCloud and general pools are each independently addressable', function (): void {
-    CachePools::config()->save(CachePools::config()->getItem('k')->set('config_value'));
+    cachePoolsTestConfig()->save(cachePoolsTestConfig()->getItem('k')->set('config_value'));
     cachePoolsTestTagCloud()
         ->save(cachePoolsTestTagCloud()->getItem('k')->set('tag_cloud_value'));
     CachePools::general()->save(CachePools::general()->getItem('k')->set('general_value'));
 
-    expect(CachePools::config()->getItem('k')->get())->toBe('config_value')
+    expect(cachePoolsTestConfig()->getItem('k')->get())
+        ->toBe('config_value')
         ->and(cachePoolsTestTagCloud()->getItem('k')->get())
         ->toBe('tag_cloud_value')
         ->and(CachePools::general()->getItem('k')->get())->toBe('general_value');

@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -253,8 +252,8 @@ final class WsCommentsTest extends ContractTestCase
         $this->conn->executeStatement(
             "UPDATE config SET value = 'false' WHERE param = 'activate_comments'"
         );
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $response = $this->wsAdmin('pwg.userComments.getList', [
                 'per_page' => 10,
@@ -269,7 +268,8 @@ final class WsCommentsTest extends ContractTestCase
             $this->conn->executeStatement(
                 "UPDATE config SET value = 'true' WHERE param = 'activate_comments'"
             );
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
@@ -435,8 +435,8 @@ final class WsCommentsTest extends ContractTestCase
         $this->conn->executeStatement(
             "UPDATE config SET value = 'true' WHERE param = 'comments_forall'"
         );
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $info = $this->ws('pwg.images.getInfo', [
                 'image_id' => 1,
@@ -492,7 +492,8 @@ final class WsCommentsTest extends ContractTestCase
             $this->conn->executeStatement(
                 "UPDATE config SET value = 'false' WHERE param = 'comments_forall'"
             );
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 }

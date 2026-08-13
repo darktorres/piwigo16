@@ -8,12 +8,13 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
+use LogicException;
 use mysqli;
 use mysqli_result;
 use mysqli_sql_exception;
 use Override;
 use PHPUnit\Framework\TestCase;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\CurrentLogger;
@@ -165,14 +166,15 @@ abstract class IntegrationTestCase extends TestCase
         // ConfigService::allRowsFromCacheOrDb()'s cache is real,
         // cross-process-persistent storage in this environment -- ext-apcu
         // isn't installed here, so
-        // CachePools::config() falls back to FilesystemAdapter, real files
+        // ConfigCachePool falls back to FilesystemAdapter, real files
         // under _data/cache/ visible to both this PHPUnit/Pest process and
         // any real Apache/FrankenPHP worker serving Browser-test HTTP
         // requests, not a per-process in-memory optimization. A test
         // writing config via raw SQL (bypassing ConfigService, so
         // confUpdateParam()'s own clear() never fires) would otherwise
         // leak a stale cached row into whichever test runs next.
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
     }
 
     #[Override]
@@ -261,6 +263,22 @@ abstract class IntegrationTestCase extends TestCase
         $repo = $em->getRepository(ConfigEntry::class);
 
         return $repo;
+    }
+
+    /**
+     * Shared resolver for every Integration/Contract subclass reaching
+     * ConfigCachePool directly (bypassing ConfigService, e.g. a raw fixture
+     * import or a raw-SQL write) -- setUp() above already guarantees
+     * Kernel::isBooted() by the time any subclass test method runs.
+     */
+    protected function configCachePool(): ConfigCachePool
+    {
+        $configCachePool = Kernel::container()->get(ConfigCachePool::class);
+        if (! $configCachePool instanceof ConfigCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . ConfigCachePool::class);
+        }
+
+        return $configCachePool;
     }
 
     protected function setUpConnectionFromEnv(): void
@@ -421,8 +439,8 @@ abstract class IntegrationTestCase extends TestCase
         // filesystem-backed cache (see setUp()'s own comment) would keep
         // serving whatever config rows it cached before this fixture
         // replaced them.
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         // FixtureNormalizer::apply() is the one shared implementation of
         // "what does a fresh reimport need corrected" -- also used by
         // tools/reimport-fixture.sh (via tools/normalize-fixture.php) for

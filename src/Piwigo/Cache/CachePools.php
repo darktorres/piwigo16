@@ -25,21 +25,6 @@ use Psr\Cache\CacheItemPoolInterface;
 final class CachePools
 {
     /**
-     * CurrentConfig's own properties are already an in-process static --
-     * this pool is for cross-*process* reuse (APCu/Redis/filesystem persist
-     * between requests; a plain PHP static doesn't). Real consumer: ConfigService::
-     * allRowsFromCacheOrDb(), caching the ~280-row param => value map that
-     * loadConfFromDb() would otherwise re-hydrate via Doctrine ORM on every
-     * request. No TTL -- ConfigService's own confUpdateParam()/
-     * confDeleteParam() clear this pool after every real write instead of
-     * relying on expiry.
-     */
-    public static function config(): CacheItemPoolInterface
-    {
-        return CacheFactory::create(namespace: 'piwigo.config');
-    }
-
-    /**
      * 300s TTL -- per-user per-album counts, cheaper to hold slightly
      * stale than to recompute the `COUNT(*) ... GROUP BY category_id`
      * rollup on every category listing.

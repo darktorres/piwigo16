@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\MenubarPageRenderer;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -33,12 +34,13 @@ final readonly class MenubarSubController implements AdminSubControllerInterface
         private CurrentTemplate $currentTemplate,
         private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private ConfigCachePool $configCachePool,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new MenubarPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $this->entityManager);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $this->entityManager, $this->configCachePool);
     }
 }

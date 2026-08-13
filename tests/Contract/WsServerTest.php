@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsError;
@@ -301,8 +300,8 @@ final class WsServerTest extends ContractTestCase
     public function testInvokeWhenGuestAccessIsDisabledReturnsAccessDeniedForANonSessionMethod(): void
     {
         $this->upsertConfig('guest_access', 'false');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $response = $this->ws('pwg.getVersion');
 
@@ -317,7 +316,8 @@ final class WsServerTest extends ContractTestCase
             self::assertSame('ok', $status['stat']);
         } finally {
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'guest_access'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
@@ -336,8 +336,8 @@ final class WsServerTest extends ContractTestCase
     public function testInvokeWhenWebServicesAreDisabledReturnsAForbiddenPage(): void
     {
         $this->upsertConfig('allow_web_services', 'false');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $url = $this->baseUrl . '/ws.php?format=json&' . http_build_query([
                 'method' => 'pwg.getVersion',
@@ -363,7 +363,8 @@ final class WsServerTest extends ContractTestCase
             self::assertNull(json_decode($body, true));
         } finally {
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'allow_web_services'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 

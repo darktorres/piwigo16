@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -62,7 +61,8 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
             ]);
         }
         $this->conn->executeStatement("UPDATE config SET value = 'true' WHERE param = 'activate_comments'");
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
         parent::tearDown();
     }
 
@@ -182,8 +182,8 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
     public function testAddCommentWhenCommentsAreDisabledReturnsError(): void
     {
         $this->conn->executeStatement("UPDATE config SET value = 'false' WHERE param = 'activate_comments'");
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         $response = $this->ws('pwg.images.addComment', [
             'image_id' => 1,
             'author' => 'ContractTest',

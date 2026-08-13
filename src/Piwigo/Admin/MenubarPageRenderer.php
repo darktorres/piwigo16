@@ -9,7 +9,7 @@ use Piwigo\Admin\Projection\MenubarPageContext;
 use Piwigo\Admin\Projection\MenubarSaveSuccessPageContext;
 use Piwigo\Admin\Request\MenubarSubmitRequest;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
@@ -28,7 +28,7 @@ use Piwigo\Template\CurrentTemplate;
  */
 final class MenubarPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, ConfigCachePool $configCachePool): void
     {
         $template = $currentTemplate->get();
 
@@ -96,7 +96,7 @@ final class MenubarPageRenderer
             // ConfigService::allRowsFromCacheOrDb() would keep serving the
             // pre-save layout to every request until some unrelated config
             // write happened to clear the pool.
-            CachePools::config()->clear();
+            $configCachePool->clear();
 
             $template->assignContext(new MenubarSaveSuccessPageContext($lang->t('Order of menubar items has been updated successfully.')));
         }

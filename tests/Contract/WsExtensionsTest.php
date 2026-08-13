@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
 
@@ -63,7 +62,8 @@ final class WsExtensionsTest extends ContractTestCase
     {
         $encoded = $value ? 'true' : 'false';
         $this->upsertConfig($param, $encoded);
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
     }
 
     /**

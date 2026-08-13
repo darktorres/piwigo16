@@ -581,8 +581,8 @@ final class WsCategoriesTest extends ContractTestCase
     public function testGetListPicksARandomRepresentativeWhenEnabledAndNoneIsSet(): void
     {
         $this->upsertConfig('allow_random_representative', 'true');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $catId = $this->createCategory('ct_randomrep_' . uniqid());
             $token = $this->getPwgToken();
@@ -608,7 +608,8 @@ final class WsCategoriesTest extends ContractTestCase
             self::assertSame(1, $entry['representative_picture_id'], 'only image in the category, so the random pick is deterministic');
         } finally {
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'allow_random_representative'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 

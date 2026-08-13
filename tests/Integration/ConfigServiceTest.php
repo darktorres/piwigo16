@@ -105,7 +105,7 @@ final class ConfigServiceTest extends IntegrationTestCase
 
     /**
      * ConfigService::allRowsFromCacheOrDb() caches the bulk load's
-     * param => value map in CachePools::config() -- this is the real test
+     * param => value map in ConfigCachePool -- this is the real test
      * of both halves of that design: a write that bypasses ConfigService
      * entirely (this codebase's real raw config writer, ConfigRepository::
      * upsert() called directly, matching Admin\MenubarPageRenderer's own
@@ -197,7 +197,7 @@ final class ConfigServiceTest extends IntegrationTestCase
      * own bulk-load cache (loadConfFromDb('session_length') is a
      * single-param, uncached lookup). This one primes that cache via a
      * null-param bulk loadConfFromDb() first, so it can only pass if
-     * confDeleteParam() itself also clears CachePools::config() -- same
+     * confDeleteParam() itself also clears ConfigCachePool -- same
      * mechanism as test_loadConfFromDb_caches_the_bulk_load_until_a_write_invalidates_it(),
      * but for the delete path instead of a write.
      */

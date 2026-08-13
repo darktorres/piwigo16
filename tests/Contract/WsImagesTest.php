@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 final class WsImagesTest extends ContractTestCase
@@ -140,12 +139,12 @@ final class WsImagesTest extends ContractTestCase
     {
         $this->upsertConfig('uniqueness_mode', '"filename"');
         // Raw SQL bypasses ConfigService::confUpdateParam()'s own cache
-        // clear -- CachePools::config() is a real FilesystemAdapter (no
+        // clear -- ConfigCachePool is a real FilesystemAdapter (no
         // ext-apcu here), files under _data/cache/ visible to both this
         // process and the Apache worker serving the WS call below, so a
         // stale cached row would otherwise survive the write.
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $response = $this->wsAdmin('pwg.images.exist', [
                 'filename_list' => 'fixture-photo-1.jpg,nonexistent-file.jpg',
@@ -159,7 +158,8 @@ final class WsImagesTest extends ContractTestCase
             $this->conn->executeStatement(
                 "DELETE FROM config WHERE param = 'uniqueness_mode'"
             );
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
@@ -202,7 +202,8 @@ final class WsImagesTest extends ContractTestCase
         $encodedRelDir = json_encode($relDir);
         self::assertIsString($encodedRelDir);
         $this->upsertConfig('upload_dir', $encodedRelDir);
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
         chmod($absDir, 0o555);
 
         try {
@@ -217,7 +218,8 @@ final class WsImagesTest extends ContractTestCase
         } finally {
             chmod($absDir, 0o755);
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'upload_dir'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
             rmdir($absDir);
         }
     }

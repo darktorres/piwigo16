@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use CURLFile;
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 final class WsUploadTest extends ContractTestCase
@@ -617,7 +616,7 @@ final class WsUploadTest extends ContractTestCase
         // touches image_category at all (confirmed live: a real upload
         // with lounge_active=true left zero image_category rows for the
         // new photo). Disabling it for this test's duration, same raw-
-        // write + CachePools::config()->clear() pattern
+        // write + ConfigCachePool->clear() pattern
         // BrowserTestHelpers::setConfigValue() already established for
         // Browser tests reaching across this same CLI-to-Apache boundary.
         //
@@ -637,8 +636,8 @@ final class WsUploadTest extends ContractTestCase
         $originalLoungeThreshold = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'lounge_activate_threshold'");
         $this->upsertConfig('lounge_active', 'false');
         $this->upsertConfig('lounge_activate_threshold', '999999999');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         // update_mode's 'name' param is matched against the stored `file`
         // column (confirmed live: UploadService::addUploadedFile() does
         // store the client-supplied $original_filename there, not a
@@ -684,7 +683,8 @@ final class WsUploadTest extends ContractTestCase
             } else {
                 $this->conn->executeStatement("DELETE FROM config WHERE param = 'lounge_activate_threshold'");
             }
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
 
         self::assertSame('ok', $response['stat'], (string) json_encode($response));
@@ -713,8 +713,8 @@ final class WsUploadTest extends ContractTestCase
     public function testUploadFormatOfWithAnUnauthorizedExtensionReturnsError(): void
     {
         $this->upsertConfig('enable_formats', 'true');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             // CurrentConfig::formatExtensions()'s default doesn't include
             // 'png' -- the extension pulled from the (fake) upload filename
@@ -729,15 +729,16 @@ final class WsUploadTest extends ContractTestCase
             self::assertSame(401, $response['err']);
         } finally {
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'enable_formats'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
     public function testUploadFormatOfAddsAFormatToAnExistingPhoto(): void
     {
         $this->upsertConfig('enable_formats', 'true');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         $formatId = null;
         try {
             $response = $this->uploadMultipart([
@@ -769,7 +770,8 @@ final class WsUploadTest extends ContractTestCase
                 ]);
             }
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'enable_formats'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 }

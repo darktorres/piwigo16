@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 use RuntimeException;
 
@@ -26,7 +25,8 @@ final class WsHistoryTest extends ContractTestCase
     {
         $this->conn->executeStatement('DELETE FROM history');
         $this->conn->executeStatement("DELETE FROM config WHERE param IN ('history_admin', 'history_guest')");
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
         parent::tearDown();
     }
 
@@ -36,7 +36,8 @@ final class WsHistoryTest extends ContractTestCase
     private function enableHistoryForAdmin(): void
     {
         $this->upsertConfig('history_admin', 'true');
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
     }
 
     /**
@@ -45,7 +46,8 @@ final class WsHistoryTest extends ContractTestCase
     private function enableHistoryForGuest(): void
     {
         $this->upsertConfig('history_guest', 'true');
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
     }
 
     public function testActivityGetListResponseMatchesSchema(): void
@@ -226,8 +228,8 @@ final class WsHistoryTest extends ContractTestCase
         // overrides the 'all' default; it must be stored quoted, same as
         // every other string config value this suite writes directly.
         $this->upsertConfig('activity_display_connections', '"none"');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             // wsAdmin() itself performs a real pwg.session.login, which
             // AuthService::login() records as a 'user'/'login' activity row
@@ -243,7 +245,8 @@ final class WsHistoryTest extends ContractTestCase
             self::assertSame([], $result['result_lines']);
         } finally {
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'activity_display_connections'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
@@ -257,8 +260,8 @@ final class WsHistoryTest extends ContractTestCase
     public function testActivityGetListAdminsOnlyKeepsAdminLoginsButExcludesNonAdminLogins(): void
     {
         $this->upsertConfig('activity_display_connections', '"admins_only"');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $adminId = $this->conn->fetchOne("SELECT id FROM users WHERE username = 'fixture_admin'");
             self::assertIsNumeric($adminId);
@@ -306,7 +309,8 @@ final class WsHistoryTest extends ContractTestCase
             self::assertNotContains((string) $regularUserId, $objectIds, 'admins_only must exclude a non-admin login');
         } finally {
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'activity_display_connections'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 
@@ -1324,8 +1328,8 @@ final class WsHistoryTest extends ContractTestCase
     {
         $this->enableHistoryForAdmin();
         $this->upsertConfig('nb_logs_page', '1');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             $this->wsAdmin('pwg.history.log', [
                 'image_id' => 1,
@@ -1350,7 +1354,8 @@ final class WsHistoryTest extends ContractTestCase
             self::assertContains($line['IMAGEID'], ['1', '2']);
         } finally {
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'nb_logs_page'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 

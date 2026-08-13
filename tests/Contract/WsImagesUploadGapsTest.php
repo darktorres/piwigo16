@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use CURLFile;
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -76,7 +75,8 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             ]);
         }
         $this->conn->executeStatement("DELETE FROM config WHERE param = 'uniqueness_mode'");
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
         parent::tearDown();
     }
 
@@ -151,8 +151,8 @@ final class WsImagesUploadGapsTest extends ContractTestCase
     public function testAddInFilenameUniquenessModeRejectsAKnownFilename(): void
     {
         $this->upsertConfig('uniqueness_mode', '"filename"');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         $response = $this->callWsAllowingServerError('pwg.images.add', [
             'original_sum' => md5($this->pngBytes() . uniqid()),
             'original_filename' => 'fixture-photo-1.jpg',

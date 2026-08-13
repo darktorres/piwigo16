@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -109,8 +108,8 @@ final class WsAlternateFormatsTest extends ContractTestCase
     public function testEmptyAvailablePermissionLevelsConfigFallsBackToTheDefaultSet(): void
     {
         $this->upsertConfig('available_permission_levels', '[]');
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         try {
             // max($available_permission_levels) would throw a ValueError on
             // a genuinely empty array -- WsDefaultMethods::register()'s own
@@ -131,7 +130,8 @@ final class WsAlternateFormatsTest extends ContractTestCase
             self::assertSame(8, $byName['level']['maxValue']);
         } finally {
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'available_permission_levels'");
-            CachePools::config()->clear();
+            $this->configCachePool()
+                ->clear();
         }
     }
 }

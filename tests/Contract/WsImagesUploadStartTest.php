@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use CURLFile;
 use Doctrine\DBAL\Connection;
 use Override;
-use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -63,7 +62,8 @@ final class WsImagesUploadStartTest extends ContractTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement("DELETE FROM config WHERE param = 'enable_formats'");
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
         parent::tearDown();
     }
 
@@ -88,7 +88,8 @@ final class WsImagesUploadStartTest extends ContractTestCase
     private function enableFormats(): void
     {
         $this->upsertConfig('enable_formats', 'true');
-        CachePools::config()->clear();
+        $this->configCachePool()
+            ->clear();
     }
 
     // ------------------------------------------------ buffer directory setup

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
-use Piwigo\Cache\CachePools;
+use LogicException;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\Projection\ConfigParamValue;
+use Piwigo\Core\Kernel;
 use Piwigo\Event\Lifecycle\LoadConf;
 use Piwigo\PluginConfig\EventDispatcher;
 use ReflectionNamedType;
@@ -337,7 +340,7 @@ final readonly class ConfigService
 
     /**
      * The single cache item allRowsFromCacheOrDb() stores the whole
-     * param => value map under -- CachePools::config() is a dedicated
+     * param => value map under -- ConfigCachePool is a dedicated
      * namespace with no other consumer, so one well-known key is enough.
      */
     private const string CACHE_ITEM_KEY = 'all_rows';
@@ -347,6 +350,28 @@ final readonly class ConfigService
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
     ) {}
+
+    /**
+     * Container resolve, not a constructor param -- ConfigService is
+     * constructed manually (`new ConfigService(...)`) at ~50 call sites
+     * (see this class's own docblock), no DI container involvement at
+     * most of them. Kernel::isBooted()-guarded fallback stays genuinely
+     * functional (not just non-throwing) pre-boot: pool identity carries
+     * no correctness risk (see AbstractNamedCachePool's own docblock).
+     */
+    private function configCachePool(): ConfigCachePool
+    {
+        if (Kernel::isBooted()) {
+            $configCachePool = Kernel::container()->get(ConfigCachePool::class);
+            if (! $configCachePool instanceof ConfigCachePool) {
+                throw new LogicException('Container returned an unexpected type for ' . ConfigCachePool::class);
+            }
+
+            return $configCachePool;
+        }
+
+        return new ConfigCachePool(CacheFactory::create(namespace: 'piwigo.config'));
+    }
 
     /**
      * Generic dynamic-key reader for conf rows that legitimately lack a
@@ -424,7 +449,7 @@ final readonly class ConfigService
      * The $param === null branch above is the expensive one -- a full
      * Doctrine ORM hydration of ~280 ConfigEntry entities on every request
      * that runs it (every real HTTP request, via RequestBootstrap::connect()).
-     * CachePools::config() caches the plain param => value map instead of
+     * configCachePool() caches the plain param => value map instead of
      * the ConfigEntry objects themselves -- hydrate() only ever needs the
      * raw string value, and a plain array sidesteps any Doctrine-entity-
      * serialization question entirely. No TTL: config data doesn't go
@@ -436,7 +461,7 @@ final readonly class ConfigService
      */
     private function allRowsFromCacheOrDb(): array
     {
-        $pool = CachePools::config();
+        $pool = $this->configCachePool();
         $item = $pool->getItem(self::CACHE_ITEM_KEY);
         if ($item->isHit()) {
             /** @var array<string, ?string> $cached */
@@ -464,8 +489,8 @@ final readonly class ConfigService
     public function confUpdateParam(string $param, array|string|int|float|bool|null $value, bool $updateGlobal = false): void
     {
         $this->repo->upsert($param, self::encode($param, $value));
-        CachePools::config()->clear();
-
+        $this->configCachePool()
+            ->clear();
         if ($updateGlobal) {
             $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
             if ($propertyName !== null) {
@@ -495,8 +520,8 @@ final readonly class ConfigService
         $params = is_array($params) ? $params : [$params];
         foreach ($params as $param) {
             $this->repo->deleteByParam($param);
-            CachePools::config()->clear();
-
+            $this->configCachePool()
+                ->clear();
             $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
             if ($propertyName === null) {
                 continue;

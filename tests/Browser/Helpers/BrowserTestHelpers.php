@@ -16,7 +16,7 @@ use Pest\Browser\Support\GuessLocator;
 use PgSql\Connection;
 use PHPUnit\Framework\ExpectationFailedException;
 use Piwigo\Cache\CacheFactory;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Cache\EffectivePermissionsCachePool;
 use Piwigo\Cache\PermissionsCachePool;
 use ReflectionMethod;
@@ -1198,7 +1198,7 @@ final class BrowserTestHelpers
             ));
         }
         self::dbClose($db);
-        CachePools::config()->clear();
+        new ConfigCachePool(CacheFactory::create(namespace: 'piwigo.config'))->clear();
     }
 
     /**
@@ -1575,7 +1575,7 @@ final class BrowserTestHelpers
         // set explicitly anyway so this helper is correct standalone.
         // Routed through setConfigValue() so the ON CONFLICT/cache-clear
         // logic exists in exactly one place -- that method already clears
-        // CachePools::config() per call.
+        // ConfigCachePool per call.
         foreach ([
             'use_standard_pages' => true,
             'standard_pages_selected_logo' => 'custom_logo',
@@ -1605,7 +1605,7 @@ final class BrowserTestHelpers
         self::dbQuery($db, "DELETE FROM config WHERE param IN ('standard_pages_selected_logo', 'standard_pages_selected_logo_path')");
         self::dbClose($db);
 
-        CachePools::config()->clear();
+        new ConfigCachePool(CacheFactory::create(namespace: 'piwigo.config'))->clear();
     }
 
     /**

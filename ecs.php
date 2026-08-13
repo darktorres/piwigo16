@@ -17,6 +17,11 @@ return ECSConfig::configure()
     ])
     ->withSkip([
         __DIR__ . '/_data',
+        // Generated analysis shims (bin/piwigo phpstan-latte:generate-shims)
+        // -- auto-generated signatures, regenerated wholesale; style churn
+        // here would just get overwritten (same reasoning as the standing
+        // "don't hand-edit auto-generated files" rule).
+        __DIR__ . '/tools/phpstan/Latte/Generated',
         __DIR__ . '/galleries',
         __DIR__ . '/language',
         __DIR__ . '/local',

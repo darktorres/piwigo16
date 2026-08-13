@@ -99,7 +99,8 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Piwigo\\Tests\\": "tests/"
+      "Piwigo\\Tests\\": "tests/",
+      "Piwigo\\Tools\\PhpStan\\": "tools/phpstan/"
     },
     "exclude-from-classmap": [
       "/tests/Fixtures/Migrations/"
@@ -110,6 +111,7 @@
     "lint:psr4": "@composer dump-autoload --optimize --strict-psr",
     "lint:latte": "@php tools/latte-lint.php",
     "precompile:templates": "@php bin/piwigo precompile:templates",
+    "generate:latte-shims": "@php bin/piwigo phpstan-latte:generate-shims",
     "analyse:phpstan": "@php vendor/bin/phpstan analyse",
     "analyse": [
       "@analyse:phpstan"

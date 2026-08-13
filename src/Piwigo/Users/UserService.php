@@ -7,6 +7,7 @@ namespace Piwigo\Users;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
@@ -14,7 +15,7 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\EffectivePermissionsCachePool;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -31,6 +32,7 @@ use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageFilterHelper;
@@ -116,6 +118,24 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     private function accessLevelChecker(): AccessLevelChecker
     {
         return new AccessLevelChecker($this->currentUser, $this->currentConfig);
+    }
+
+    /**
+     * Container resolve, not a constructor property -- UserService is
+     * constructed manually (`new UserService(...)`) at ~16 call sites, no
+     * DI container involvement at most of them; a required constructor
+     * param here would ripple to every one for a single caller
+     * (getUserData() below). Same reasoning as UrlService's own
+     * translator()/currentLogger()/etc private resolver methods.
+     */
+    private function effectivePermissionsCachePool(): EffectivePermissionsCachePool
+    {
+        $pool = Kernel::container()->get(EffectivePermissionsCachePool::class);
+        if (! $pool instanceof EffectivePermissionsCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . EffectivePermissionsCachePool::class);
+        }
+
+        return $pool;
     }
 
     /**
@@ -723,7 +743,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->permissionService,
             $this->categoryService,
             new PermissionRepository($this->entityManager),
-            CachePools::effectivePermissions()
+            $this->effectivePermissionsCachePool()
         )->getForUser($userId->value, $effective_status, $effective_level);
 
         $userdata['forbidden_categories'] = $effective->forbiddenCategories;

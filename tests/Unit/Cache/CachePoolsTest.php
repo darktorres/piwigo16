@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Cache\AbstractNamedCachePool;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\CachePools;
+use Piwigo\Cache\EffectivePermissionsCachePool;
 use Piwigo\Cache\TagCloudCachePool;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
@@ -45,6 +46,15 @@ function cachePoolsTestTagCloud(): TagCloudCachePool
     return new TagCloudCachePool(CacheFactory::create(namespace: 'piwigo.tag_cloud', defaultLifetime: 300));
 }
 
+/**
+ * Same reasoning as cachePoolsTestTagCloud() above, for
+ * EffectivePermissionsCachePool::class's own factory entry.
+ */
+function cachePoolsTestEffectivePermissions(): EffectivePermissionsCachePool
+{
+    return new EffectivePermissionsCachePool(CacheFactory::create(namespace: 'piwigo.effective_permissions', defaultLifetime: 30));
+}
+
 // Filesystem-forced throughout: the real behavior under test is namespace
 // isolation between pools, not adapter selection (already covered by
 // CacheFactoryTest) -- forcing one adapter keeps this deterministic
@@ -58,13 +68,14 @@ afterEach(function (): void {
         foreach ([
             CachePools::config(),
             CachePools::permissions(),
-            CachePools::effectivePermissions(),
             CachePools::categoryTree(),
             CachePools::general(),
         ] as $pool) {
             $pool->clear();
         }
         cachePoolsTestTagCloud()
+            ->clear();
+        cachePoolsTestEffectivePermissions()
             ->clear();
     };
     $clear();
@@ -104,7 +115,8 @@ test('permissions/effectivePermissions/categoryTree/tagCloud pools carry their o
     // lines would still build a distinctly-namespaced, fully functional
     // pool, indistinguishable from the namespace tests' own assertions.
     expect(cachePoolsTestDefaultLifetime(CachePools::permissions()))->toBe(30)
-        ->and(cachePoolsTestDefaultLifetime(CachePools::effectivePermissions()))->toBe(30)
+        ->and(cachePoolsTestDefaultLifetime(cachePoolsTestEffectivePermissions()))
+        ->toBe(30)
         ->and(cachePoolsTestDefaultLifetime(CachePools::categoryTree()))->toBe(300)
         ->and(cachePoolsTestDefaultLifetime(cachePoolsTestTagCloud()))
         ->toBe(300);

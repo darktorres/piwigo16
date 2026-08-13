@@ -22,8 +22,8 @@ final class PermissionCacheInvalidator
 {
     public static function invalidate(): void
     {
-        CachePools::permissions()->clear();
-        CachePools::effectivePermissions()->clear();
+        self::permissionsCachePool()->clear();
+        self::effectivePermissionsCachePool()->clear();
         self::currentConfigService()->get()->confDeleteParam('count_orphans');
     }
 
@@ -50,5 +50,45 @@ final class PermissionCacheInvalidator
         }
 
         return new CurrentConfigService();
+    }
+
+    /**
+     * Same "container resolve, not a constructor param" reasoning as
+     * currentConfigService() above -- but unlike that one, a pre-boot
+     * fallback here stays genuinely functional rather than deferring to
+     * an unconditional throw: pool identity carries no correctness risk
+     * (see AbstractNamedCachePool's own docblock), so a fresh, throwaway
+     * instance pointed at the same namespace still clears the real
+     * shared backing.
+     */
+    private static function permissionsCachePool(): PermissionsCachePool
+    {
+        if (Kernel::isBooted()) {
+            $permissionsCachePool = Kernel::container()->get(PermissionsCachePool::class);
+            if (! $permissionsCachePool instanceof PermissionsCachePool) {
+                throw new LogicException('Container returned an unexpected type for ' . PermissionsCachePool::class);
+            }
+
+            return $permissionsCachePool;
+        }
+
+        return new PermissionsCachePool(CacheFactory::create(namespace: 'piwigo.permissions', defaultLifetime: 30));
+    }
+
+    /**
+     * Same reasoning as permissionsCachePool() above.
+     */
+    private static function effectivePermissionsCachePool(): EffectivePermissionsCachePool
+    {
+        if (Kernel::isBooted()) {
+            $effectivePermissionsCachePool = Kernel::container()->get(EffectivePermissionsCachePool::class);
+            if (! $effectivePermissionsCachePool instanceof EffectivePermissionsCachePool) {
+                throw new LogicException('Container returned an unexpected type for ' . EffectivePermissionsCachePool::class);
+            }
+
+            return $effectivePermissionsCachePool;
+        }
+
+        return new EffectivePermissionsCachePool(CacheFactory::create(namespace: 'piwigo.effective_permissions', defaultLifetime: 30));
     }
 }

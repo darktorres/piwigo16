@@ -37,7 +37,7 @@ use Psr\Cache\CacheItemPoolInterface;
  * class's unfiltered (`$filterDays = null`) value. Merging them into one
  * cache entry would conflate two differently-scoped computations.
  *
- * 30s TTL ({@see \Piwigo\Cache\CachePools::effectivePermissions()}) keeps a
+ * 30s TTL ({@see \Piwigo\Cache\EffectivePermissionsCachePool}) keeps a
  * permission change visible well within one user session, while avoiding
  * recomputing this multi-query calculation on every request for the same
  * user.

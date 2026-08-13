@@ -15,7 +15,9 @@ use Pest\Browser\Playwright\Page;
 use Pest\Browser\Support\GuessLocator;
 use PgSql\Connection;
 use PHPUnit\Framework\ExpectationFailedException;
+use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\CachePools;
+use Piwigo\Cache\EffectivePermissionsCachePool;
 use ReflectionMethod;
 use ReflectionProperty;
 use RuntimeException;
@@ -1502,7 +1504,7 @@ final class BrowserTestHelpers
         self::dbClose($db);
 
         CachePools::permissions()->clear();
-        CachePools::effectivePermissions()->clear();
+        new EffectivePermissionsCachePool(CacheFactory::create(namespace: 'piwigo.effective_permissions', defaultLifetime: 30))->clear();
     }
 
     /**

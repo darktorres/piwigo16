@@ -6,8 +6,9 @@ namespace Piwigo\Tests\Integration;
 
 use LogicException;
 use Override;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\EffectivePermissionsCachePool;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
@@ -51,26 +52,50 @@ final class PermissionCacheInvalidatorTest extends IntegrationTestCase
         CurrentConfigServiceTestFactory::get()->set($this->configService);
     }
 
+    private function permissionsCachePool(): PermissionsCachePool
+    {
+        $pool = Kernel::container()->get(PermissionsCachePool::class);
+        if (! $pool instanceof PermissionsCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . PermissionsCachePool::class);
+        }
+
+        return $pool;
+    }
+
+    private function effectivePermissionsCachePool(): EffectivePermissionsCachePool
+    {
+        $pool = Kernel::container()->get(EffectivePermissionsCachePool::class);
+        if (! $pool instanceof EffectivePermissionsCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . EffectivePermissionsCachePool::class);
+        }
+
+        return $pool;
+    }
+
     public function testInvalidateClearsThePermissionsPool(): void
     {
-        $item = CachePools::permissions()->getItem('p14_invalidator_test_permissions');
+        $item = $this->permissionsCachePool()
+            ->getItem('p14_invalidator_test_permissions');
         $item->set('cached_value');
-        CachePools::permissions()->save($item);
+        $this->permissionsCachePool()
+            ->save($item);
 
         PermissionCacheInvalidator::invalidate();
 
-        self::assertFalse(CachePools::permissions()->getItem('p14_invalidator_test_permissions')->isHit());
+        self::assertFalse($this->permissionsCachePool()->getItem('p14_invalidator_test_permissions')->isHit());
     }
 
     public function testInvalidateClearsTheEffectivePermissionsPool(): void
     {
-        $item = CachePools::effectivePermissions()->getItem('p14_invalidator_test_effective');
+        $item = $this->effectivePermissionsCachePool()
+            ->getItem('p14_invalidator_test_effective');
         $item->set('cached_value');
-        CachePools::effectivePermissions()->save($item);
+        $this->effectivePermissionsCachePool()
+            ->save($item);
 
         PermissionCacheInvalidator::invalidate();
 
-        self::assertFalse(CachePools::effectivePermissions()->getItem('p14_invalidator_test_effective')->isHit());
+        self::assertFalse($this->effectivePermissionsCachePool()->getItem('p14_invalidator_test_effective')->isHit());
     }
 
     public function testInvalidateDeletesTheCountOrphansConfigParam(): void

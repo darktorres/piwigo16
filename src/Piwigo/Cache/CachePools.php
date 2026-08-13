@@ -52,18 +52,6 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- same reasoning as permissions() above. Holds the
-     * *effective* permission snapshot (forbidden categories, image access
-     * type/list, total image count, and last photo date), distinct from
-     * permissions() above, which only ever holds the narrower structural
-     * value.
-     */
-    public static function effectivePermissions(): CacheItemPoolInterface
-    {
-        return CacheFactory::create(namespace: 'piwigo.effective_permissions', defaultLifetime: 30);
-    }
-
-    /**
      * 300s TTL -- per-user per-album counts, cheaper to hold slightly
      * stale than to recompute the `COUNT(*) ... GROUP BY category_id`
      * rollup on every category listing.

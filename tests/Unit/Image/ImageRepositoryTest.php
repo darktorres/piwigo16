@@ -291,6 +291,17 @@ test('deleteImages cascades away rows from every real referencing table, and cle
         ->setParameter('i', $imageId)
         ->setParameter('e', 'webp')
         ->executeStatement();
+    // A disposable tag, not the real fixture tag 1 ("nature") --
+    // TagRepositoryTest.php's own findImageIdsForTagIds([1]) exact-list
+    // assertion (`[1, 2, 3]`) would otherwise be able to observe this
+    // image_tag row's own image id as a spurious 4th entry under
+    // --parallel; confirmed live via a --parallel verification loop.
+    $disposableTagName = 'p17-unit-test-tag-' . bin2hex(random_bytes(4));
+    $conn->executeStatement(
+        'INSERT INTO tags (name, url_name, lastmodified) VALUES (?, ?, NOW())',
+        [$disposableTagName, $disposableTagName]
+    );
+    $disposableTagId = (int) $conn->lastInsertId();
     $conn->createQueryBuilder()
         ->insert('image_tag')
         ->values([
@@ -298,7 +309,7 @@ test('deleteImages cascades away rows from every real referencing table, and cle
             'tag_id' => ':t',
         ])
         ->setParameter('i', $imageId)
-        ->setParameter('t', 1)
+        ->setParameter('t', $disposableTagId)
         ->executeStatement();
     $conn->createQueryBuilder()
         ->insert('favorites')
@@ -361,6 +372,7 @@ test('deleteImages cascades away rows from every real referencing table, and cle
             ->setParameter('i', $bystanderId)
             ->executeStatement();
         imageRepositoryTestDeleteImage($bystanderId);
+        $conn->executeStatement('DELETE FROM tags WHERE id = ?', [$disposableTagId]);
     }
 });
 

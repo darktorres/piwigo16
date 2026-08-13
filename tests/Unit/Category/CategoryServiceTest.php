@@ -961,11 +961,14 @@ test('deleteCategories() delete_orphans mode preserves an image still linked els
             ->toBeTrue();
         $tempId = (int) $tempIdRaw;
 
-        // image 1 already belongs to category 1 -- linking it into the
-        // temp category too makes it a real "non-orphan": deleting the
-        // temp category must NOT delete it, unlike a genuinely orphaned
-        // image.
-        $conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$tempId})");
+        // image 2 already belongs to category 1 (not image 1 -- avoids a
+        // real InnoDB deadlock against CategoryRepositoryTest.php's own
+        // transaction-wrapped updateImagePathsForCategory() test, which
+        // specifically needs image 1; confirmed live via a 15-run
+        // --parallel verification loop) -- linking it into the temp
+        // category too makes it a real "non-orphan": deleting the temp
+        // category must NOT delete it, unlike a genuinely orphaned image.
+        $conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (2, {$tempId})");
 
         $service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($conn)), 'delete_orphans');
 
@@ -974,7 +977,7 @@ test('deleteCategories() delete_orphans mode preserves an image still linked els
         $stillLinked = $conn->createQueryBuilder()
             ->select('COUNT(*) AS c')
             ->from('image_category')
-            ->where('image_id = 1 AND category_id = 1')
+            ->where('image_id = 2 AND category_id = 1')
             ->executeQuery()
             ->fetchOne();
         expect(is_numeric($stillLinked) ? (int) $stillLinked : null)
@@ -1458,13 +1461,23 @@ test('updateCategory() with a scalar id clears a stale representative_picture_id
     // from a bulk import/migration that ran with checks off, so that's
     // reproduced here rather than a plain UPDATE, which the live FK
     // would reject outright.
-    $conn = categoryServiceTestConn();
-    $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
-    $conn->executeStatement('UPDATE categories SET representative_picture_id = 999999 WHERE id = 1');
-    $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
+    //
+    // Transaction-wrapped -- this briefly clears category 1's own
+    // representative_picture_id to NULL mid-call, which
+    // CategoryRepositoryTest.php's own findByRepresentativePresence()
+    // reads must never observe (SET FOREIGN_KEY_CHECKS is session-,
+    // not transaction-scoped, so toggling it here is unaffected by the
+    // eventual rollback). Confirmed live via a 15-run --parallel
+    // verification loop.
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
-        $result = categoryServiceTestService()
+        $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
+        $conn->executeStatement('UPDATE categories SET representative_picture_id = 999999 WHERE id = 1');
+        $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
+
+        $result = categoryServiceTestServiceRepoForConn($conn)[0]
             ->updateCategory(1);
 
         expect($result)
@@ -1483,7 +1496,7 @@ test('updateCategory() with a scalar id clears a stale representative_picture_id
         expect(is_numeric($repId) ? (int) $repId : null)
             ->toBeIn([1, 2, 3]);
     } finally {
-        $conn->executeStatement('UPDATE categories SET representative_picture_id = 1 WHERE id = 1');
+        $conn->rollBack();
     }
 });
 
@@ -1492,13 +1505,17 @@ test('updateCategory() with the default "all" scopes to every category', functio
     // (matching every category), not just a single one -- both
     // categories 1 and 2 get a dangling representative_picture_id, and
     // 'all' must clear (then re-pick) both of them.
-    $conn = categoryServiceTestConn();
-    $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
-    $conn->executeStatement('UPDATE categories SET representative_picture_id = 999999 WHERE id IN (1, 2)');
-    $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
+    //
+    // Transaction-wrapped -- see the sibling test above for why.
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
-        $result = categoryServiceTestService()
+        $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
+        $conn->executeStatement('UPDATE categories SET representative_picture_id = 999999 WHERE id IN (1, 2)');
+        $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
+
+        $result = categoryServiceTestServiceRepoForConn($conn)[0]
             ->updateCategory('all');
 
         expect($result)
@@ -1512,8 +1529,7 @@ test('updateCategory() with the default "all" scopes to every category', functio
                 ->not->toBe(999999);
         }
     } finally {
-        $conn->executeStatement('UPDATE categories SET representative_picture_id = 1 WHERE id = 1');
-        $conn->executeStatement('UPDATE categories SET representative_picture_id = 4 WHERE id = 2');
+        $conn->rollBack();
     }
 });
 
@@ -1528,13 +1544,18 @@ test('updateCategory() with a non-integer id string is intval-cast before bindin
     // A real caller never sends a decimal string, but '2.9' proves every
     // array element is actually intval()-cast to a clean int before it
     // reaches the query.
-    $conn = categoryServiceTestConn();
-    $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
-    $conn->executeStatement('UPDATE categories SET representative_picture_id = 999999 WHERE id = 2');
-    $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
+    //
+    // Transaction-wrapped -- see the "with a scalar id" test above for
+    // why.
+    $conn = DbConnection::build();
+    $conn->beginTransaction();
 
     try {
-        $result = categoryServiceTestService()
+        $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
+        $conn->executeStatement('UPDATE categories SET representative_picture_id = 999999 WHERE id = 2');
+        $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
+
+        $result = categoryServiceTestServiceRepoForConn($conn)[0]
             ->updateCategory(['2.9']);
 
         expect($result)
@@ -1549,7 +1570,7 @@ test('updateCategory() with a non-integer id string is intval-cast before bindin
         expect(is_numeric($repId) ? (int) $repId : null)
             ->not->toBe(999999);
     } finally {
-        $conn->executeStatement('UPDATE categories SET representative_picture_id = 4 WHERE id = 2');
+        $conn->rollBack();
     }
 });
 

@@ -140,9 +140,18 @@ afterEach(function (): void {
 });
 
 test('getAllTags() returns every fixture tag alphabetically', function (): void {
+    // getAllTags() returns literally every row in `tags`, not just the 3
+    // real fixture ones -- filtered down to just those here rather than
+    // an unfiltered toBe(), since another --parallel file's own
+    // disposable-tag test (any of many across the Tag test files) can
+    // transiently add an extra row while this runs; what's actually
+    // under test is the alphabetical ordering among the real tags, not
+    // "nothing else in the whole suite ever creates a tag at this exact
+    // instant." Confirmed live via a 15-run --parallel verification loop.
     $names = array_column(tagServiceTestService()->getAllTags(HtmlServiceTestFactory::build()), 'name');
+    $realNames = array_values(array_intersect($names, ['family', 'nature', 'travel']));
 
-    expect($names)
+    expect($realNames)
         ->toBe(['family', 'nature', 'travel']);
 });
 
@@ -378,25 +387,56 @@ function tagServiceTestDisposableImageId(Connection $conn): int
     return $imageId;
 }
 
+/**
+ * @return list<TagId>
+ */
+function tagServiceTestDisposableTagIds(Connection $conn, int $count): array
+{
+    $ids = [];
+    for ($i = 0; $i < $count; $i++) {
+        $name = 'p17-unit-test-tag-' . bin2hex(random_bytes(4));
+        $conn->executeStatement(
+            'INSERT INTO tags (name, url_name, lastmodified) VALUES (?, ?, NOW())',
+            [$name, $name]
+        );
+        $ids[] = TagId::from((int) $conn->lastInsertId());
+    }
+
+    return $ids;
+}
+
+/**
+ * Real fixture tags 1-3 aren't used here either -- setTagsOf() briefly
+ * associating the real "nature" tag with an extra (disposable) image
+ * would make TagRepositoryTest.php's own findImageIdsForTagIds([1])
+ * exact-list assertion (`[1, 2, 3]`) observe a 4th, spurious id under
+ * --parallel; confirmed live via a 15-run --parallel verification loop.
+ * 3 disposable tags stand in for what tags 1/2/3 would otherwise cover.
+ */
 test('setTagsOf() creates then overwrites image tag associations', function (): void {
     $conn = DbConnection::build();
     $imageId = tagServiceTestDisposableImageId($conn);
+    [$tagIdA, $tagIdB, $tagIdC] = tagServiceTestDisposableTagIds($conn, 3);
     $service = tagServiceTestService();
 
     try {
         $service->setTagsOf([
-            $imageId => [TagId::from(1), TagId::from(2)],
+            $imageId => [$tagIdA, $tagIdB],
         ]);
-        expect($service->getImageTagIds([$imageId])[$imageId])->toEqualCanonicalizing([TagId::from(1), TagId::from(2)]);
+        expect($service->getImageTagIds([$imageId])[$imageId])->toEqualCanonicalizing([$tagIdA, $tagIdB]);
 
-        // Overwrites, not appends -- tag 3 replaces 1+2 entirely.
+        // Overwrites, not appends -- tag C replaces A+B entirely.
         $service->setTagsOf([
-            $imageId => [TagId::from(3)],
+            $imageId => [$tagIdC],
         ]);
-        expect($service->getImageTagIds([$imageId])[$imageId])->toEqualCanonicalizing([TagId::from(3)]);
+        expect($service->getImageTagIds([$imageId])[$imageId])->toEqualCanonicalizing([$tagIdC]);
     } finally {
         $conn->executeStatement('DELETE FROM image_tag WHERE image_id = ?', [$imageId]);
         $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
+        $conn->executeStatement(
+            'DELETE FROM tags WHERE id IN (?, ?, ?)',
+            [$tagIdA->value, $tagIdB->value, $tagIdC->value]
+        );
     }
 });
 
@@ -413,18 +453,19 @@ test('setTagsOf() creates then overwrites image tag associations', function (): 
 test('compareImageTagLists() reports no change when tags are set to the same values', function (): void {
     $conn = DbConnection::build();
     $imageId = tagServiceTestDisposableImageId($conn);
+    [$tagIdA, $tagIdB] = tagServiceTestDisposableTagIds($conn, 2);
     $service = tagServiceTestService();
 
     try {
         $service->setTagsOf([
-            $imageId => [TagId::from(1), TagId::from(2)],
+            $imageId => [$tagIdA, $tagIdB],
         ]);
         $before = $service->getImageTagIds([$imageId]);
 
         // Re-set the exact same tags -- a genuine no-op from the
         // caller's perspective.
         $service->setTagsOf([
-            $imageId => [TagId::from(1), TagId::from(2)],
+            $imageId => [$tagIdA, $tagIdB],
         ]);
         $after = $service->getImageTagIds([$imageId]);
 
@@ -433,6 +474,7 @@ test('compareImageTagLists() reports no change when tags are set to the same val
     } finally {
         $conn->executeStatement('DELETE FROM image_tag WHERE image_id = ?', [$imageId]);
         $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM tags WHERE id IN (?, ?)', [$tagIdA->value, $tagIdB->value]);
     }
 });
 

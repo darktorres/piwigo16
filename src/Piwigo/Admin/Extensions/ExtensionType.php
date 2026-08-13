@@ -78,20 +78,21 @@ enum ExtensionType: string
      * The file(s) whose presence in a scanned directory marks it as a real
      * extension of this type (also the files searched for by basename
      * inside a downloaded archive to locate the extension's root -- any one
-     * match is enough). Plugin/Theme carry both their legacy header-comment
-     * marker and the new PluginConfig\ExtensionInterface manifest filename,
-     * so a single archive can be located by either scan mechanism (P27.9,
-     * needed once a sibling-repo extension gets migrated to the new
-     * contract but its archive is still fetched through this same PEM-style
-     * download path).
+     * match is enough). Plugin/Theme carry only the new
+     * PluginConfig\ExtensionInterface manifest filename (P27.10: no legacy
+     * main.inc.php/themeconf.inc.php support anywhere in this codebase,
+     * not even as a fallback marker) -- a downloaded archive that only
+     * ships the legacy format simply isn't locatable here any more,
+     * matching Admin\Extensions\ExtensionScanner's own theme.json/
+     * plugin.json-only scan.
      *
      * @return list<string>
      */
     public function markerFilenames(): array
     {
         return match ($this) {
-            self::Plugin => ['main.inc.php', 'plugin.json'],
-            self::Theme => ['themeconf.inc.php', 'theme.json'],
+            self::Plugin => ['plugin.json'],
+            self::Theme => ['theme.json'],
             // languages.class.php (and its own extract_language_files())
             // both still check for 'common.lang.php', but this rewrite's
             // language/ tree already migrated every locale to gettext .po

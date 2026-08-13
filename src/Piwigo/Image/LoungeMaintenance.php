@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\Request\EmptyLoungeRequest;
 
 /**
@@ -31,7 +30,7 @@ final class LoungeMaintenance
     /**
      * Checks if the lounge needs to be emptied automatically.
      */
-    public static function needsEmptying(CurrentConfig $currentConfig): bool
+    public static function needsEmptying(CurrentConfig $currentConfig, EntityManagerInterface $entityManager): bool
     {
 
         if (! $currentConfig->loungeActive) {
@@ -44,7 +43,7 @@ final class LoungeMaintenance
         }
 
         // is the oldest photo in the lounge older than lounge maximum waiting time?
-        $dateAvailable = EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class)
+        $dateAvailable = $entityManager->getRepository(ImageEntity::class)
             ->findOldestLoungeAgeInfo();
         if ($dateAvailable === null) {
             return false;

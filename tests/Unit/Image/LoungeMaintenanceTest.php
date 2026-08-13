@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\LoungeMaintenance;
 
 /**
@@ -25,7 +27,7 @@ test('needsEmptying returns false when loungeActive is disabled', function (): v
     $currentConfig = new CurrentConfig();
     $currentConfig->loungeActive = false;
 
-    $result = LoungeMaintenance::needsEmptying($currentConfig);
+    $result = LoungeMaintenance::needsEmptying($currentConfig, EntityManagerFactory::build(DbConnection::build()));
 
     expect($result)
         ->toBeFalse();
@@ -36,7 +38,7 @@ test('needsEmptying returns false during an in-progress pwg.images.upload reques
     $currentConfig->loungeActive = true;
     $_REQUEST['method'] = 'pwg.images.upload';
 
-    $result = LoungeMaintenance::needsEmptying($currentConfig);
+    $result = LoungeMaintenance::needsEmptying($currentConfig, EntityManagerFactory::build(DbConnection::build()));
 
     expect($result)
         ->toBeFalse();
@@ -47,7 +49,7 @@ test('needsEmptying returns false during an in-progress pwg.images.uploadAsync r
     $currentConfig->loungeActive = true;
     $_REQUEST['method'] = 'pwg.images.uploadAsync';
 
-    $result = LoungeMaintenance::needsEmptying($currentConfig);
+    $result = LoungeMaintenance::needsEmptying($currentConfig, EntityManagerFactory::build(DbConnection::build()));
 
     expect($result)
         ->toBeFalse();

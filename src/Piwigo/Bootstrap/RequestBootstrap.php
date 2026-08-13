@@ -422,7 +422,7 @@ final class RequestBootstrap
             self::currentConfig()->orderByInsideCategory = $orderByInsideCategoryCustom;
         }
 
-        if (LoungeMaintenance::needsEmptying(self::currentConfig())) {
+        if (LoungeMaintenance::needsEmptying(self::currentConfig(), self::entityManager())) {
             new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), self::eventDispatcher(), self::currentConfig(), self::paths(), new CategoryService(self::lang(), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::currentUser(), self::filterState(), self::accessLevelChecker()), self::currentConfig(), self::eventDispatcher(), self::translator(), self::accessLevelChecker(), new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig())))
                 ->emptyLounge();
         }

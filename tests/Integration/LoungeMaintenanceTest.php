@@ -11,6 +11,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\LoungeMaintenance;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
@@ -84,7 +85,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
 
     public function testNeedsEmptyingIsFalseWhenLoungeActiveIsDisabled(): void
     {
-        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
+        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get(), EntityManagerFactory::build($this->conn)));
     }
 
     public function testNeedsEmptyingIsFalseWhenTheLoungeIsEmpty(): void
@@ -92,7 +93,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         $this->currentConfig()
             ->loungeActive = true;
 
-        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
+        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get(), EntityManagerFactory::build($this->conn)));
     }
 
     public function testNeedsEmptyingIsTrueOnceTheOldestLoungePhotoExceedsTheMaxDuration(): void
@@ -112,7 +113,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         );
         $this->conn->executeStatement('INSERT INTO lounge (image_id, category_id) VALUES (1, 1)');
 
-        self::assertTrue(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
+        self::assertTrue(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get(), EntityManagerFactory::build($this->conn)));
     }
 
     public function testNeedsEmptyingIsFalseWhenTheOldestLoungePhotoIsStillWithinTheMaxDuration(): void
@@ -125,7 +126,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         );
         $this->conn->executeStatement('INSERT INTO lounge (image_id, category_id) VALUES (1, 1)');
 
-        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
+        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get(), EntityManagerFactory::build($this->conn)));
     }
 
     public function testNeedsEmptyingSkipsTheCheckDuringAnActiveUploadRequest(): void
@@ -140,9 +141,9 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         $this->conn->executeStatement('INSERT INTO lounge (image_id, category_id) VALUES (1, 1)');
 
         $_REQUEST['method'] = 'pwg.images.upload';
-        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
+        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get(), EntityManagerFactory::build($this->conn)));
 
         $_REQUEST['method'] = 'pwg.images.uploadAsync';
-        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
+        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get(), EntityManagerFactory::build($this->conn)));
     }
 }

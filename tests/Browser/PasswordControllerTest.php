@@ -73,9 +73,8 @@ it('redirects straight to the gallery home when hitting action=reset with no key
     // PasswordController's own guard: a guest with no reset key and no
     // $_SESSION['valid_reset_password_code'] gets redirected away from the
     // reset form entirely rather than shown a broken/empty one, straight to
-    // UrlServiceInterface::getGalleryHomeUrl() -- confirmed live via a raw
-    // curl (independent of Pest/Playwright) that this fixture's own
-    // gallery_url/mount configuration resolves that to exactly the site
+    // UrlServiceInterface::getGalleryHomeUrl(), which this fixture's own
+    // gallery_url/mount configuration resolves to exactly the site
     // root, not a looser "somewhere else" check.
     $currentUrl = H::rawWebpage($page)->url();
     expect($currentUrl)
@@ -571,7 +570,7 @@ it('re-submitting the "lost" step while a code is already pending short-circuits
     // Not navigateOk()+click('submit'): __invoke()'s own
     // `if ($this->action === 'lost' and isset($_SESSION['reset_password_code']))
     // { $this->action = 'lost_code'; }` forces the *rendered* page to the
-    // code-entry form the moment a code is pending -- confirmed live, a
+    // code-entry form the moment a code is pending -- a
     // plain GET reload (with or without `?action=lost` in the URL) always
     // shows that form, never the email one again, so there is no real
     // <form> left to click('submit') on that would actually resubmit
@@ -614,8 +613,8 @@ it('locks a real user out of password reset after 3 wrong codes, then rejects a 
         // attempt -- slow enough, at least intermittently, to exceed
         // pest-plugin-browser's own ~1s-per-attempt retry-wrap ceiling
         // (same class of issue as InstallTest.php's own click('install'),
-        // see clickWithTimeout()'s docblock). Confirmed live: a plain
-        // click('submit') here silently double-submitted the 2nd wrong
+        // see clickWithTimeout()'s docblock). A plain
+        // click('submit') here silently double-submits the 2nd wrong
         // code, consuming 2 real attempts in one logical step and
         // triggering the lockout redirect a full step early.
         $page = $page->fill('username_or_email', $email);
@@ -680,8 +679,8 @@ it('sends a real verification-code email for a resolvable user with a real email
         // clickWithTimeout(): this submit resolves a real user_id and
         // dispatches a real MailService::mail() call -- slow enough to
         // exceed pest-plugin-browser's own ~1s-per-attempt retry-wrap
-        // ceiling (see PasswordControllerTest's own lockout test for a
-        // confirmed-live instance of this exact double-submit failure
+        // ceiling (see PasswordControllerTest's own lockout test for
+        // this exact double-submit failure
         // mode).
         $page = $page->fill('username_or_email', $email);
         H::clickWithTimeout($page, 'submit');
@@ -763,10 +762,9 @@ it('switches to a valid, different lang cookie and shows the French translation'
         // Not the French help_link: that's only ever assigned to
         // themes/standard_pages/template/password.latte's own {$HELP_LINK},
         // never referenced by the fixture gallery's real "default" theme
-        // password.latte (confirmed live by diffing the fr_FR response
-        // against a plain English one -- no help link appears in either,
-        // but every real page string does switch to its po-translated
-        // French wording).
+        // password.latte -- no help link appears on either theme's
+        // password.latte, but every real page string does switch to its
+        // po-translated French wording.
         expect($result['body'])->toContain('Mot de passe oublié ?');
     } finally {
         $db2 = passwordDbConnect();

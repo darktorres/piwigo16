@@ -51,20 +51,17 @@ use ReflectionMethod;
 use RuntimeException;
 
 // ---------------------------------------------------------------------
-// Mutation-testing gap closure (G1, when-i-run-the-mutable-cookie.md):
-// a fresh scoped rerun (2026-08-10) found 22 untested. 3 new real tests
-// closed above (countOrphans' MinusToPlus/TrueToFalse, getRowWithCondition's
-// AlwaysReturnNull) plus a 4th (encodeSlideshowParams' shared-key
-// non-scalar case) that, as a side effect, ALSO closed the sibling
-// array_filter() line's own UnwrapArrayFilter mutation (the $corrected
-// side) that the pre-existing "treats a non-scalar caller-supplied
-// value" test below could never reach. The mandatory scoped verify
-// rerun (per this plan's own step 3) surfaced 2 MORE mutations neither
-// original scan listed: countOrphans()'s own test newly covers a
+// Mutation-testing gap closure (G1, when-i-run-the-mutable-cookie.md).
+// 4 new real tests close 4 real gaps: countOrphans' MinusToPlus/
+// TrueToFalse, getRowWithCondition's AlwaysReturnNull, and
+// encodeSlideshowParams' shared-key non-scalar case, which as a side
+// effect also closes the sibling array_filter() line's own
+// UnwrapArrayFilter mutation (the $corrected side) that the
+// pre-existing "treats a non-scalar caller-supplied value" test below
+// could never reach. countOrphans()'s own test also newly covers a
 // previously-uncovered line (`--covered-only` can't mutate a line
 // nothing exercises), and emptyLounge()'s `$maxImageId = 0;` starting
-// value was in the original 22 but initially missed during triage --
-// both are documented inert below, not new gaps requiring more tests.
+// value is documented inert below, not a gap requiring a new test.
 //
 // 3 mutations were ALREADY documented by an earlier pass of this same
 // file (see each test's own docblock): the sibling "treats a non-scalar
@@ -76,7 +73,7 @@ use RuntimeException;
 // (RemoveMethodCall, a confirmed blank-line mutation-coverage blind
 // spot, same as feedback_pest_mutate_blank_line_blind_spot).
 //
-// The remaining ones, confirmed inert this pass (none needed a new test):
+// The remaining ones are inert (none need a new test):
 // - decodeSlideshowParams()'s 2x `(bool) preg_match_all(...)` if-conditions:
 //   already-coercing position, same established pattern as every other
 //   bool-cast-in-an-if-condition mutation across this campaign.
@@ -102,8 +99,8 @@ use RuntimeException;
 //   way, same "self-reassignment at a boundary" reasoning as
 //   ImageBackend.php's own dest_ratio==img_ratio finding.
 // - emptyLounge()'s `$idx + 1` lookahead index (IncrementInteger to
-//   `$idx + 2`): verified directly (not assumed) that
-//   associateImagesToCategories() re-queries findMaxRanksByCategory()
+//   `$idx + 2`): associateImagesToCategories() re-queries
+//   findMaxRanksByCategory()
 //   fresh on every call and assigns ranks sequentially regardless of
 //   batch size, and the EmptyLounge event's own row payload comes from
 //   the ORIGINAL, ungrouped lounge rows, not the internal per-category
@@ -123,7 +120,7 @@ use RuntimeException;
 // - emptyLounge()'s `$maxImageId = 0;` starting value (DecrementInteger/
 //   IncrementInteger to -1/1): only observable if some real lounge row's
 //   own image id were <= 1 -- this environment's real `images` table
-//   auto-increment counter is already at 700,000+ (confirmed live), and
+//   auto-increment counter is already at 700,000+, and
 //   AUTO_INCREMENT never reuses low values once advanced past them, so
 //   no realistically-inserted row can ever trigger this boundary.
 //
@@ -558,7 +555,7 @@ test('correctSlideshowParams treats a period exactly equal to the maximum as alr
  * `if ((bool) X)` and `if (X)` evaluate identically for every possible
  * X, a universal PHP semantics fact, not something specific to
  * preg_match_all()'s own return shape (int count, or false on a regex
- * engine error). Live sed-verified both against the full suite too.
+ * engine error).
  *
  * Also confirmed-equivalent: line 116's and line 123's DecrementInteger/
  * IncrementInteger (`count($matches[0])`/`count($matches[2])` instead of
@@ -611,9 +608,7 @@ test('encodeSlideshowParams accumulates every changed param into one string, not
  * per-entry is_scalar() before the value is ever used -- so removing
  * the upstream array_filter() cannot smuggle a non-scalar value into
  * the final $result string either way; it is caught by the downstream
- * guard instead. Live sed-verified with a genuinely non-scalar
- * $decodeParams entry (an array value) against the full suite: passes
- * identically with or without the filter.
+ * guard instead.
  *
  * Also confirmed-equivalent: line 143's UnwrapArrayFilter (same
  * mutation, applied to $defaults instead of $corrected). $defaults
@@ -621,7 +616,7 @@ test('encodeSlideshowParams accumulates every changed param into one string, not
  * 3-key shape (period: int, repeat: bool, play: bool) is always 100%
  * scalar by construction -- array_filter(..., is_scalar(...)) over an
  * already-all-scalar array is a structural no-op, for every possible
- * config state, not just a tested case. Live sed-verified too.
+ * config state, not just a tested case.
  *
  * Also confirmed-equivalent: line 155's RemoveStringCast (`. $value`
  * instead of `. (string) $value`). PHP's `.` (concatenation) operator
@@ -631,7 +626,7 @@ test('encodeSlideshowParams accumulates every changed param into one string, not
  * never still a raw bool (booleanToString() already turned any bool
  * into a 'true'/'false' string a few lines above), so it is always an
  * int, float, or string here, and `.` string-coerces all three exactly
- * like `(string)` would. Live sed-verified too.
+ * like `(string)` would.
  */
 test('encodeSlideshowParams treats a non-scalar caller-supplied value as unrepresentable and skips it, rather than encoding it', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
@@ -712,10 +707,10 @@ test('countPdfPages returns false for a missing file', function (): void {
 test('countPdfPages returns false when the path is readable but reading it produces no content (not a regular file)', function (): void {
     // is_readable() is true for a Unix domain socket special file, but
     // countPdfPages() also guards with is_file() before calling
-    // file_get_contents() -- confirmed live that file_get_contents() on a
-    // socket path raises a real PHP warning ("Failed to open stream: No
-    // such device or address"), not a clean false, so the is_file() guard
-    // is what actually keeps this deterministic and warning-free.
+    // file_get_contents() -- file_get_contents() on a socket path raises a
+    // real PHP warning ("Failed to open stream: No such device or
+    // address"), not a clean false, so the is_file() guard is what
+    // actually keeps this deterministic and warning-free.
 
     $sockPath = sys_get_temp_dir() . '/pwg-countpdfpages-test-' . bin2hex(random_bytes(8)) . '.sock';
     $socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
@@ -955,14 +950,14 @@ test('deleteElementFiles accumulates every registered format for an id, not just
 test('deleteElementFiles skips a remote row with `continue`, not `break` -- a local row after it in the same call is still processed', function (): void {
     // Kills line 211's ContinueToBreak. findPathsForFileDeletion() has
     // no ORDER BY, but a real WHERE id IN (a, b) lookup on an InnoDB
-    // PRIMARY KEY is confirmed (live-probed) to walk the clustered index
-    // in ascending id order in practice -- an adjacent, ascending pair
-    // (remote < local) so the remote row is genuinely visited FIRST,
-    // making `continue` vs `break` observable via whether the local row
-    // after it still gets processed. Randomized, not a hardcoded
-    // literal pair -- confirmed live: a fixed literal here previously
-    // hit a real Duplicate entry collision, and this test's own setup
-    // ran outside its try/finally, so the failure orphaned the row for
+    // PRIMARY KEY walks the clustered index in ascending id order in
+    // practice -- an adjacent, ascending pair (remote < local) so the
+    // remote row is genuinely visited FIRST, making `continue` vs
+    // `break` observable via whether the local row after it still gets
+    // processed. Randomized, not a hardcoded literal pair -- a fixed
+    // literal here previously hit a real Duplicate entry collision, and
+    // this test's own setup ran outside its try/finally, so the failure
+    // orphaned the row for
     // the rest of that run, cascading into unrelated tests' own
     // unbounded "every image" assertions elsewhere in the suite. The
     // whole arrange-and-insert step now lives inside try/finally too,
@@ -1388,8 +1383,7 @@ test('deleteElements() with an empty id list never fires begin_delete_elements a
 // confirmed dead code against the real schema, not merely untested:
 // `categories.representative_picture_id` carries a real
 // `fk_categories_representative_picture_id ... ON DELETE SET NULL`
-// constraint (tests/Fixtures/piwigo-17.0.sql), verified live against the
-// test database directly -- deleting a referenced `images` row already
+// constraint (tests/Fixtures/piwigo-17.0.sql) -- deleting a referenced `images` row already
 // nulls out every category's own `representative_picture_id` for it
 // synchronously, as part of that same DELETE statement, before
 // findRepresentedCategoryIds()'s own later `WHERE representative_picture_id
@@ -1631,8 +1625,8 @@ test('addMd5sum() computes and persists a real md5sum for a readable file, prefi
 test('addMd5sum() does not stop at the first unhashable id -- a later id in the same call is still processed', function (): void {
     // Kills line 530's ContinueToBreak. An adjacent, ascending pair
     // (unreadable < readable) so findPathsForMd5sum()'s real WHERE id
-    // IN (...) lookup -- confirmed live to walk an InnoDB PRIMARY KEY in
-    // ascending id order -- visits the unhashable row first. Randomized,
+    // IN (...) lookup walks an InnoDB PRIMARY KEY in ascending id order,
+    // visiting the unhashable row first. Randomized,
     // not a hardcoded literal pair -- see the sibling deleteElementFiles()
     // test above for why: a fixed literal here previously hit a real
     // Duplicate entry collision, with setup outside try/finally letting
@@ -1862,10 +1856,10 @@ function imageServiceTestSeedCurrentLogger(Logger $logger): void
  * untouched by this specific mutation). For a run of 2+ same-category
  * rows, this shifts the grouping flush one row earlier than intended,
  * splitting what should be ONE associateImagesToCategories() call into
- * two smaller ones. Live-probed with 3 real same-category lounge rows
- * against a fresh throwaway category: the persisted `rank` sequence
- * (1, 2, 3) came out byte-for-byte identical with the mutation applied
- * as without it. This holds structurally, not by coincidence: each
+ * two smaller ones. For 3 real same-category lounge rows against a
+ * fresh throwaway category, the persisted `rank` sequence (1, 2, 3)
+ * comes out byte-for-byte identical with the mutation applied as
+ * without it. This holds structurally, not by coincidence: each
  * split call re-queries findMaxRanksByCategory() fresh (the entity
  * manager is cleared after every massInsertImageCategory(), so a
  * second call always sees the first call's own just-inserted rows),
@@ -2026,9 +2020,8 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             // specific mutation UNTESTED regardless (the established
             // blank-line-mutation blind spot -- RemoveMethodCall leaves a
             // bare blank line its coverage tracking can't attribute back to
-            // this assertion) -- live sed-mutate-and-rerun directly
-            // confirms a real kill: this exact assertion fails
-            // ('"execid-..." is false') the moment the call is removed.
+            // this assertion) -- this exact assertion is a real kill:
+            // it fails ('"execid-..." is false') the moment the call is removed.
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('empty_lounge_running'))->toBeFalse();
             // findRawValue() transparently json_decode()s the stored value
             // back to the plain string it was originally encoded as.
@@ -2055,11 +2048,11 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
     // sibling test above proves invalidateUserCache: false leaves
     // 'count_orphans' untouched; this proves invalidateUserCache: true
     // genuinely deletes it, via PermissionCacheInvalidator::invalidate()'s
-    // own real confDeleteParam('count_orphans') call. Also live
-    // sed-mutate-and-rerun confirmed kills line 384's RemoveMethodCall
-    // (the invalidate() call itself, entirely removed) -- pest --mutate's
-    // own scanner reports it UNTESTED regardless (the same
-    // blank-line-mutation blind spot as line 387's sibling test).
+    // own real confDeleteParam('count_orphans') call. Also a real kill of
+    // line 384's RemoveMethodCall (the invalidate() call itself, entirely
+    // removed) -- pest --mutate's own scanner reports it UNTESTED
+    // regardless (the same blank-line-mutation blind spot as line 387's
+    // sibling test).
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
 
@@ -2231,7 +2224,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
  * not just a tested case (a repeated image id across two categories --
  * a real, valid `lounge` state, since its own PRIMARY KEY is
  * (image_id, category_id) -- is exactly the scenario that reaches this
- * equality point at all). Live sed-verified against the full suite too.
+ * equality point at all).
  *
  * Also confirmed-equivalent: line 359's IncrementInteger
  * (`$maxImageId = 1;` instead of `= 0;`). This default is only ever
@@ -2246,7 +2239,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
  * write happens in between, same synchronous call) -- so
  * `WHERE image_id <= 0` and `WHERE image_id <= 1` both delete exactly
  * zero rows, for every possible database state this branch can ever
- * observe. Live sed-verified against the full suite too.
+ * observe.
  *
  * Also confirmed-equivalent: line 347's ConcatRemoveRight
  * (`tryAcquireLoungeLock($execId . '-')` instead of
@@ -2260,8 +2253,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
  * snapshot, never by re-reading what this exact call just persisted).
  * No Unit-level call to emptyLounge() -- which invokes the method
  * directly, never through the real bootstrap flow that populates that
- * snapshot -- can observe this specific segment's content. Live
- * sed-verified against the full suite too.
+ * snapshot -- can observe this specific segment's content.
  */
 test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh, not yet stale', function (): void {
     // Kills line 335's DecrementInteger (`> 59` instead of `> 60`).

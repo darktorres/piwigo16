@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
@@ -39,8 +38,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Event\Location\LocBeginPicture;
 use Piwigo\Event\Location\LocEndPicture;
@@ -148,17 +145,14 @@ final readonly class PictureController implements ControllerInterface
         private Paths $paths,
     ) {}
 
-    private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
+    private function commentService(UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService($this->lang, EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
+        return new CommentService($this->lang, $this->entityManager->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
     }
 
     #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        // A single connection is used for the whole request, avoiding
-        // needless reconnects.
-        $conn = DbConnection::build();
         $this->sectionPopulator
             ->populate();
 
@@ -436,7 +430,7 @@ final readonly class PictureController implements ControllerInterface
                     // no break
                 case 'edit_comment':
 
-                    $commentService = $this->commentService($conn, $this->urlService);
+                    $commentService = $this->commentService($this->urlService);
                     // check_input_parameter()-equivalent validation already ran
                     // inside PictureRequest::fromArrays() (gated on action ===
                     // 'edit_comment') -- it would have thrown otherwise.
@@ -506,7 +500,7 @@ final readonly class PictureController implements ControllerInterface
                     new CsrfService($this->currentConfig)
                         ->checkOrFail($this->htmlService, $this->redirectService);
 
-                    $commentService = $this->commentService($conn, $this->urlService);
+                    $commentService = $this->commentService($this->urlService);
 
                     // check_input_parameter()-equivalent validation already ran
                     // inside PictureRequest::fromArrays() (gated on action ===
@@ -530,7 +524,7 @@ final readonly class PictureController implements ControllerInterface
                     new CsrfService($this->currentConfig)
                         ->checkOrFail($this->htmlService, $this->redirectService);
 
-                    $commentService = $this->commentService($conn, $this->urlService);
+                    $commentService = $this->commentService($this->urlService);
 
                     // check_input_parameter()-equivalent validation already ran
                     // inside PictureRequest::fromArrays() (gated on action ===
@@ -579,7 +573,7 @@ final readonly class PictureController implements ControllerInterface
 
         // don't increment if adding a comment
         if ($this->eventDispatcher->dispatchChange(new AllowIncrementElementHitCount($inc_hit_count, ImageId::from($image_id)))->incHitCount) {
-            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+            $this->entityManager->getRepository(ImageEntity::class)
                 ->incrementVisitCounter(ImageId::from($image_id));
         }
 
@@ -603,7 +597,7 @@ final readonly class PictureController implements ControllerInterface
             $ids[] = (string) $last_item;
         }
 
-        foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findByIds($ids) as $imageRow) {
+        foreach ($this->entityManager->getRepository(ImageEntity::class)->findByIds($ids) as $imageRow) {
             $row = $imageRow->toArray();
             if ($previous_item !== null and $imageRow->id->value === (int) $previous_item) {
                 $i = 'previous';
@@ -806,7 +800,7 @@ final readonly class PictureController implements ControllerInterface
                 $picture_id = $picture['current']['id'];
                 $formats = array_map(
                     static fn (ImageFormat $format): array => $format->toArray(),
-                    EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+                    $this->entityManager->getRepository(ImageEntity::class)
                         ->findFormatsForImage(ImageId::from($picture_id))
                 );
 

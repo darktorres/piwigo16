@@ -220,13 +220,12 @@ test('deleteElementDerivatives never attempts to iterate a failed glob() result'
     // false`). glob() never returns the literal `true`, only an array
     // or `false` -- so the mutant condition is ALWAYS true, meaning it
     // would still try to foreach() the `false` glob() failure result.
-    // foreach() over a non-iterable doesn't throw (confirmed live, a
-    // wrong initial assumption on this one) -- it raises its OWN
+    // foreach() over a non-iterable doesn't throw -- it raises its OWN
     // second, real E_WARNING and just skips the loop body, on top of
     // glob()'s own length-limit warning that fires either way. A
     // pattern longer than PHP's own glob() length limit (4096 chars)
     // is a real, reproducible way to make glob() actually return
-    // false, confirmed live via a throwaway probe.
+    // false.
     $warnings = [];
     set_error_handler(function (int $errno, string $errstr) use (&$warnings): bool {
         $warnings[] = $errstr;
@@ -329,8 +328,8 @@ test('clearDerivativeCache groups 2+ types into a single alternation pattern', f
  * single alternative with no '|' inside it (`implode('|', $one)` is
  * just that one element, unchanged) matches exactly the same set of
  * strings as the ungrouped value -- preg_match() only cares whether the
- * pattern matches, not how many groups wrap it. Live sed-verified with
- * both mutations applied against the full suite: both pass identically.
+ * pattern matches, not how many groups wrap it. Both mutations applied
+ * together pass the full suite identically.
  */
 test('clearDerivativeCache falls back to the custom-type pattern for a type name that is neither "all" nor a standard ImageStdParams type', function (): void {
     $derivDir = CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->derivativeDir . '2026';
@@ -369,7 +368,6 @@ test('deleteElementDerivatives rewrites the path to its pwg_representative form 
  * remainder meet. glob() (and the underlying OS path resolution it
  * uses) treats a doubled path separator as equivalent to a single one,
  * so the resulting pattern matches the exact same files either way.
- * Live sed-verified against the full suite: passes identically.
  */
 test('deleteElementDerivatives strips a leading "../" from the path', function (): void {
     $derivDir = CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->derivativeDir . '2026/07';
@@ -547,9 +545,9 @@ test('clearDerivativeCacheRecursive\'s own return value reports failure when an 
  * correctness of LATER is_dir()/file_exists()-family calls elsewhere in
  * the same request, and nothing in this class re-checks the just-
  * modified path afterward (rmdir()/unlink() themselves always hit the
- * real filesystem directly, never PHP's userland stat cache). Live
- * sed-verified each of the 3 against the full suite: all pass
- * identically. A cross-file interaction with another class's later
+ * real filesystem directly, never PHP's userland stat cache). All 3
+ * removed calls pass the full suite identically. A cross-file
+ * interaction with another class's later
  * stat call is the only way clearstatcache()'s absence could ever
  * matter, which is outside what a unit test of this class can observe.
  */

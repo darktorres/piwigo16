@@ -65,11 +65,13 @@ use Piwigo\Users\UserStatus;
  *   SearchServiceTest.php asserts "nature" maps to exactly images
  *   1/2/3; briefly tagging an arbitrary extra image "nature" here would
  *   reopen that same race.
- * - the 1000-id-threshold test uses image 4 instead of image 1 --
- *   TagRepositoryTest.php's own `findTagsForImage() returns every tag
- *   linked to that image` test asserts image 1's tag list is exactly
- *   [family, nature, travel]; image 4 has no tags of its own and no
- *   other file asserts an exact tag list for it.
+ * - the 1000-id-threshold test uses a disposable image (placed into
+ *   real category 1 via image_category, since countImagesPerTag()
+ *   requires that join) rather than any real fixture image --
+ *   TagRepositoryTest.php's own disposable-tag tests treat every real
+ *   fixture image (1, 4, 5) as a "known image" fixture of their own,
+ *   and this test's own 1000-row image_tag insert on a shared real
+ *   image was observed disturbing them even while transaction-wrapped.
  */
 function tagServiceTestRoot(): string
 {
@@ -571,6 +573,17 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
     try {
         [$service] = tagServiceTestServiceConn($conn);
 
+        // A disposable image, not real fixture image 4 -- TagRepositoryTest.php's
+        // own disposable-tag tests also treat image 4 as a "known real
+        // image" fixture, and even a properly transaction-wrapped insert
+        // here was still observed disturbing it under --parallel
+        // (confirmed live: findImageIdsForTagIds() lost image 4's own
+        // link mid-test). image_category is required too -- countImagesPerTag()
+        // INNER JOINs it, so an image with no category row is never
+        // counted regardless of its image_tag links.
+        $imageId = tagServiceTestDisposableImageId($conn);
+        $conn->executeStatement('INSERT INTO image_category (image_id, category_id) VALUES (?, 1)', [$imageId]);
+
         $suffix = bin2hex(random_bytes(4));
 
         $tagValues = [];
@@ -586,7 +599,6 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
         expect($bulkIds)
             ->toHaveCount(1000);
 
-        $imageId = 4;
         $imageTagValues = [];
         foreach ($bulkIds as $tagId) {
             $imageTagValues[] = "({$imageId}, {$tagId})";

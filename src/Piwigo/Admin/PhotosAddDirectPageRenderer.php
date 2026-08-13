@@ -295,7 +295,7 @@ final readonly class PhotosAddDirectPageRenderer
 
                 $add_to_album = $htmlRenderer->getCatDisplayNameCache($uppercats, null);
             } else {
-                $htmlRenderer->fatalError('[Hacking attempt] the album id = "' . ($album_id ?? '') . '" is not valid');
+                $htmlRenderer->pageNotFound($this->redirectService, $this->lang->t('Requested album does not exist'));
             }
         } else {
             // we need to know the category in which the last photo was added

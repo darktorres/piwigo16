@@ -57,12 +57,20 @@ it('preselects a valid album= and shows its display name', function (): void {
     $page->assertNoJavaScriptErrors();
 });
 
-it('rejects a nonexistent album= as a hacking attempt', function (): void {
+it('renders a real 404 "Page not found" response for a nonexistent album=', function (): void {
     $page = H::loginAsAdmin($this);
 
+    // pageNotFound() -> RedirectService::redirectHtml() throws a real
+    // ResponseReadyException with the given status code baked into the
+    // response (a meta-refresh HTML body, NOT a Location header) -- a
+    // genuine 404. H::httpStatus/H::httpBody are unauthenticated-only, so
+    // this stays on H::rawGet with an explicit status/body check, same
+    // pattern as PictureCoiPageRendererTest's identical admin-authenticated
+    // pageNotFound() situation.
     $result = H::rawGet($page, '/admin.php?page=photos_add&album=999999999');
 
-    expect($result['body'])->toContain('Hacking attempt');
+    expect($result['status'])->toBe(404);
+    expect($result['body'])->toContain('Page not found');
 });
 
 it('falls back to filename-based original detection when formats= targets a nonexistent photo', function (): void {

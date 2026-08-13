@@ -92,9 +92,7 @@ final class ExtendForTemplatesPageRenderer
          * short opaque handle string as Template::getExtent()'s own
          * $handle arg, literally hardcoded in the template source, so
          * $this->extents has to stay keyed by that exact string for an
-         * override to actually be found. Verified against every real
-         * getExtent() call site in themes/ and template-extension/, not
-         * assumed. */
+         * override to actually be found. */
         $eligible_templates = [
             '----------' => 'N/A',
             'about.latte' => 'about.latte',

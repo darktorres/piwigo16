@@ -154,8 +154,7 @@ final readonly class TagsController implements ControllerInterface
             // flush last letter -- CHANGE_COLUMN is never set on $letter
             // at this point: every place it gets set is immediately
             // followed by an unconditional $letter reset within the same
-            // loop iteration, before the loop can exit (confirmed via
-            // PHPStan's own unset.offset finding, not assumed), so the
+            // loop iteration, before the loop can exit, so the
             // legacy file's own defensive unset() here was dead code.
             if (count($letter['tags']) > 0) {
                 $letter['TITLE'] = $current_letter;

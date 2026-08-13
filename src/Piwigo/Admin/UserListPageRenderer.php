@@ -28,8 +28,8 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/user_list.php (page slug "user_list") -- add users and
- * manage the users list. Confirmed via direct read: no write logic of its
- * own (user create/delete/status-change go through the WS API, not this
+ * manage the users list. No write logic of its own (user create/delete/
+ * status-change go through the WS API, not this
  * page); only defines one page-local helper, webmasterIdIsLocal().
  */
 final class UserListPageRenderer

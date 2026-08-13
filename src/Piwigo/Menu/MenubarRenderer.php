@@ -141,7 +141,7 @@ final class MenubarRenderer
 
         $categoryCountCategories = null;
         if ($block !== null) {
-            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, $translator, $lang, $currentConfig, $eventDispatcher), $urlService, $filterState, $currentUser, $lang);
+            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, $translator, $lang, $currentConfig, $eventDispatcher, EntityManagerFactory::build($conn)), $urlService, $filterState, $currentUser, $lang);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
                 'NB_PICTURE' => $currentUser->get()

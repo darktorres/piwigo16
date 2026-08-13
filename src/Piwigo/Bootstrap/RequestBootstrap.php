@@ -668,7 +668,7 @@ final class RequestBootstrap
         }
 
         if (self::currentConfig()->filterPages !== [] and (bool) PageFilterHelper::getFilterPageValue(self::currentConfig(), 'used')) {
-            new FilterService(self::filterState(), self::sessionService(), self::translator(), self::lang(), self::currentConfig(), self::eventDispatcher(), $conn)
+            new FilterService(self::filterState(), self::sessionService(), self::translator(), self::lang(), self::currentConfig(), self::eventDispatcher(), EntityManagerFactory::build($conn))
                 ->initializeFromRequest(self::pageState(), self::currentUser());
         } else {
             self::filterState()->set(false);

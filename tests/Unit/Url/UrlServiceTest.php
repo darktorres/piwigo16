@@ -25,7 +25,6 @@ use Piwigo\Url\RootPathOverride;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\User;
 use ReflectionMethod;
-use ReflectionProperty;
 use RuntimeException;
 
 /**
@@ -2075,36 +2074,6 @@ test('getQueryStringDiff does not prefix a purely-numeric query key', function (
 
     expect($service->getQueryStringDiff())
         ->toBe('?0=foo&amp;a=1');
-});
-
-test('getUserFavorites returns early for a guest without ever touching the database connection', function (): void {
-    // Same AccessControl::current()-needs-a-booted-Kernel reasoning as the
-    // sibling "returns an empty array for a guest" test above.
-    KernelContainerOverride::with(
-        [
-            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
-        ],
-        static function (): void {
-            CurrentUserTestFactory::get()->set(User::fromUserArray([
-                'id' => 2,
-                'status' => 'guest',
-            ]));
-
-            $service = UrlServiceTestFactory::build();
-
-            expect($service->getUserFavorites())
-                ->toBe([]);
-
-            // The lazily-built Connection property must still be null -- proof
-            // the DB-touching code past the guest guard never ran. A value
-            // assertion alone can't distinguish this from a real query that
-            // just happens to also find zero rows for this user id.
-            $conn = new ReflectionProperty($service, 'conn')
-                ->getValue($service);
-            expect($conn)
-                ->toBeNull();
-        }
-    );
 });
 
 test('filterState() returns the container-shared instance once Kernel has booted', function (): void {

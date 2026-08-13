@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Filter;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
@@ -15,8 +15,6 @@ use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Filter\Request\RecentFilterRequest;
@@ -45,7 +43,7 @@ final class FilterService implements FilterUpdaterInterface
         private readonly Lang $lang,
         private readonly CurrentConfig $currentConfig,
         private readonly EventDispatcher $eventDispatcher,
-        private ?Connection $conn = null,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -153,7 +151,6 @@ final class FilterService implements FilterUpdaterInterface
                     'date' => date('Ymd'),
                 ];
 
-                $categoryConn = $this->conn ??= DbConnection::build();
                 // getComputedCategories() does not mutate its $userdata
                 // argument -- it returns the computed 'last_photo_date'
                 // alongside the categories, re-synced onto CurrentUser (via
@@ -163,8 +160,8 @@ final class FilterService implements FilterUpdaterInterface
                 $accessLevelChecker = new AccessLevelChecker($currentUser, $this->currentConfig);
                 $computedCategories = new CategoryService(
                     $this->lang,
-                    new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig),
-                    new PermissionService(new PermissionRepository(EntityManagerFactory::build($categoryConn)), EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig), $currentUser, $this->filterState, $accessLevelChecker),
+                    new CategoryRepository($this->entityManager, $this->currentConfig),
+                    new PermissionService(new PermissionRepository($this->entityManager), $this->entityManager->getRepository(GroupEntity::class), new CategoryRepository($this->entityManager, $this->currentConfig), $currentUser, $this->filterState, $accessLevelChecker),
                     $this->currentConfig,
                     $this->eventDispatcher,
                     $this->translator,
@@ -187,7 +184,7 @@ final class FilterService implements FilterUpdaterInterface
 
                 $visible_image_ids = array_map(
                     strval(...),
-                    EntityManagerFactory::build($categoryConn)->getRepository(ImageEntity::class)
+                    $this->entityManager->getRepository(ImageEntity::class)
                         ->findIdsVisibleInCategoriesRecentlyAvailable($visibleCategoriesCsv, $recentPeriodExpr)
                 );
                 $filter['visible_images'] = implode(',', $visible_image_ids);

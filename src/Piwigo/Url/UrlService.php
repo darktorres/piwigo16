@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Url;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityEntity;
@@ -27,8 +27,6 @@ use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
@@ -81,7 +79,7 @@ final class UrlService implements UrlServiceInterface
         private readonly CurrentUser $currentUser,
         private readonly Lang $lang,
         private readonly EventDispatcher $eventDispatcher,
-        private ?Connection $conn = null,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -689,11 +687,10 @@ final class UrlService implements UrlServiceInterface
             /** @var array{cat_url_name?: string, cat_permalink?: string} $hit_by */
             $hit_by = [];
 
-            $categoryConn = DbConnection::build();
             $categoryService = new CategoryService(
                 $this->lang,
-                new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($categoryConn)), EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()),
+                new CategoryRepository($this->entityManager, $this->currentConfig),
+                new PermissionService(new PermissionRepository($this->entityManager), $this->entityManager->getRepository(GroupEntity::class), new CategoryRepository($this->entityManager, $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()),
                 $this->currentConfig,
                 $this->eventDispatcher,
                 $this->translator(),
@@ -746,7 +743,7 @@ final class UrlService implements UrlServiceInterface
                     }
 
                     if ((bool) count($maybe_permalinks)) {
-                        $cat_id = $categoryService->findCategoryIdFromPermalinks($maybe_permalinks, $perma_index, new PermalinkRepository(EntityManagerFactory::build($categoryConn)));
+                        $cat_id = $categoryService->findCategoryIdFromPermalinks($maybe_permalinks, $perma_index, new PermalinkRepository($this->entityManager));
                         // get_cat_id_from_permalinks() always sets $perma_index
                         // whenever it returns non-null (see its own docblock) --
                         // PHPStan can't correlate a by-ref out-param with the
@@ -824,8 +821,7 @@ final class UrlService implements UrlServiceInterface
                 $this->htmlRenderer->badRequest($redirectService, 'at least one tag required');
             }
 
-            $tagConn = DbConnection::build();
-            $page['tags'] = new TagService($this->lang, EntityManagerFactory::build($tagConn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($tagConn)), EntityManagerFactory::build($tagConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), $this->sessionService())
+            $page['tags'] = new TagService($this->lang, $this->entityManager->getRepository(TagEntity::class), new PermissionService(new PermissionRepository($this->entityManager), $this->entityManager->getRepository(GroupEntity::class), new CategoryRepository($this->entityManager, $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), $this->sessionService())
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
@@ -1083,7 +1079,7 @@ final class UrlService implements UrlServiceInterface
         $currentUserId = $this->currentUser->get()
             ->id;
 
-        $imageIds = new UserRepository(EntityManagerFactory::build($this->conn ??= DbConnection::build()), $this->eventDispatcher, $this->currentConfig)
+        $imageIds = new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
             ->findFavoriteImageIds($currentUserId);
 
         $favorites = [];

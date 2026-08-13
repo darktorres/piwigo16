@@ -7,6 +7,8 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -46,7 +48,7 @@ test('updateCatsWithFilteredData leaves cats untouched when the filter is disabl
             'nb_images' => 5,
         ],
     ];
-    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
+    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher(), EntityManagerFactory::build(DbConnection::build()));
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -77,7 +79,7 @@ test('updateCatsWithFilteredData overwrites the aggregate fields for a matched c
             'untouched' => 'kept',
         ],
     ];
-    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
+    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher(), EntityManagerFactory::build(DbConnection::build()));
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -105,7 +107,7 @@ test('updateCatsWithFilteredData skips a category id with no matching filter ent
             'nb_images' => 5,
         ],
     ];
-    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
+    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher(), EntityManagerFactory::build(DbConnection::build()));
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -131,7 +133,7 @@ test('updateCatsWithFilteredData skips a category row with a non-int/string id',
             'nb_images' => 5,
         ],
     ];
-    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
+    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher(), EntityManagerFactory::build(DbConnection::build()));
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -157,7 +159,7 @@ test('updateCatsWithFilteredData matches a string category id', function (): voi
             'nb_images' => 5,
         ],
     ];
-    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
+    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher(), EntityManagerFactory::build(DbConnection::build()));
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -185,7 +187,7 @@ test('updateCatsWithFilteredData continues past a non-int/string id to still pro
             'nb_images' => 7,
         ],
     ];
-    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
+    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher(), EntityManagerFactory::build(DbConnection::build()));
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -213,7 +215,7 @@ test('updateCatsWithFilteredData continues past a non-matching filter entry to s
             'nb_images' => 7,
         ],
     ];
-    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
+    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher(), EntityManagerFactory::build(DbConnection::build()));
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -233,7 +235,7 @@ test('updateCatsWithFilteredData fills a missing aggregate field with null', fun
             'nb_images' => 5,
         ],
     ];
-    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
+    $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher(), EntityManagerFactory::build(DbConnection::build()));
 
     $service->updateCatsWithFilteredData($cats);
 

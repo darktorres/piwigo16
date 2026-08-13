@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Support;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -13,6 +14,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\WsContext;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
@@ -42,6 +45,7 @@ final class UrlServiceTestFactory
             self::resolve(CurrentUser::class) ?? new CurrentUser(new CurrentConfig()),
             self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
+            self::resolve(EntityManagerInterface::class) ?? EntityManagerFactory::build(DbConnection::build()),
         );
     }
 

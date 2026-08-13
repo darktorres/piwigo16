@@ -1586,6 +1586,15 @@ test('moveCategories() into a private parent cascades private status', function 
             "UPDATE categories SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1', status = 'public' WHERE id = 2"
         );
         $conn->executeStatement('DELETE FROM categories WHERE id = ' . $privateParentId);
+        // The setCatStatus(..., 'private') cascade above ran
+        // deleteInconsistentAccess() against category 2's *new* parent
+        // (the disposable private category just created, with zero
+        // group_access rows of its own) as the reference -- that sweeps
+        // away the real fixture's own (group_id=1, cat_id=2) row too,
+        // same as the two setCatStatus() tests above. INSERT IGNORE
+        // restores it unconditionally, safe whether or not it actually
+        // got removed.
+        $conn->executeStatement('INSERT IGNORE INTO group_access (group_id, cat_id) VALUES (1, 2)');
     }
 });
 
@@ -1639,7 +1648,8 @@ test('setRepresentativeImageForCategories() updates both categories', function (
 test('getImageIdsOutsideCategories() excludes the given category', function (): void {
     // category 1 owns images 1-3, category 2 owns images 4-5 -- excluding
     // category 1 leaves only category 2's images.
-    $ids = categoryServiceTestService()->getImageIdsOutsideCategories([1]);
+    $ids = categoryServiceTestService()
+        ->getImageIdsOutsideCategories([1]);
     sort($ids);
 
     expect($ids)

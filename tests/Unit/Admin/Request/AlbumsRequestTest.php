@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Request\AlbumsRequest;
+use Piwigo\Common\Enum\AlbumSortOrder;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Validation\InputValidator;
 
@@ -56,11 +57,36 @@ test('fromArrays detects simpleAutoOrder/recursiveAutoOrder and parses id/order'
         ->and($request->recursiveAutoOrder)
         ->toBeFalse()
         ->and($request->order)
-        ->toBe('name ASC')
+        ->toBe(AlbumSortOrder::NameAsc)
         ->and($request->id)
         ->toBe('-1')
         ->and($request->rawId)
         ->toBe('-1');
+});
+
+test('fromArrays defaults order to null when absent', function (): void {
+    $request = AlbumsRequest::fromArrays([], [], new InputValidator());
+
+    expect($request->order)
+        ->toBeNull();
+});
+
+test('fromArrays defaults order to null for a value outside the 8 legal cases', function (): void {
+    $request = AlbumsRequest::fromArrays([], [
+        'order' => 'not-a-real-order',
+    ], new InputValidator());
+
+    expect($request->order)
+        ->toBeNull();
+});
+
+test('fromArrays defaults order to null when present but not a string', function (): void {
+    $request = AlbumsRequest::fromArrays([], [
+        'order' => ['name ASC'],
+    ], new InputValidator());
+
+    expect($request->order)
+        ->toBeNull();
 });
 
 test('fromArrays does not validate id when neither auto-order flag is set', function (): void {

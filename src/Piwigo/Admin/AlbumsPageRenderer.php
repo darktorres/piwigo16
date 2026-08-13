@@ -71,21 +71,10 @@ final class AlbumsPageRenderer
 
         $open_cat = $albumsRequest->parentId;
 
-        $sort_orders = [
-            'name ASC',
-            'name DESC',
-            'date_creation DESC',
-            'date_creation ASC',
-            'date_available DESC',
-            'date_available ASC',
-            'natural_order DESC',
-            'natural_order ASC',
-        ];
-
         if ($albumsRequest->simpleAutoOrder || $albumsRequest->recursiveAutoOrder) {
 
             $post_order = $albumsRequest->order;
-            if (! is_string($post_order) || ! in_array($post_order, $sort_orders, true)) {
+            if ($post_order === null) {
                 $htmlRenderer
                     ->fatalError('Invalid sort order');
             }
@@ -104,7 +93,7 @@ final class AlbumsPageRenderer
             $categories = [];
             $sort = [];
 
-            [$order_by_field, $order_by_asc] = explode(' ', $post_order);
+            [$order_by_field, $order_by_asc] = explode(' ', $post_order->value);
 
             $order_by_date = false;
             // Only ever read below when $order_by_date is true (where it's

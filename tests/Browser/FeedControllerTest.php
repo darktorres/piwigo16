@@ -15,7 +15,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * literal `date_available` value (`GROUP BY date_available`) -- with
  * PIWIGO_TEST_NOW frozen, every image ever uploaded through this suite's
  * own test-mode requests already shares one identical `date_available`
- * (confirmed live: this fixture's own 5 seeded photos all carry
+ * (this fixture's own 5 seeded photos all carry
  * '2026-08-01 00:00:00', matching Env::now()'s frozen value read by
  * Admin\Upload\UploadService::addUploadedFile()). In practice though, the
  * live dev DB this suite runs against also carries stray rows from

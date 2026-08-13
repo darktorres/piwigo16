@@ -25,10 +25,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * project's test suite before this file).
  *
  * Unlike AdminExtendedSmokeTest.php's "clean (no errors)" checks, every
- * test here also asserts on real, specific rendered content -- verified by
- * hand against this exact fixture's live server (curl, logged in as
- * fixture_admin) before being written, not guessed from source reading
- * alone. Several of these pages' real content depends on this fork's own
+ * test here also asserts on real, specific rendered content. Several of
+ * these pages' real content depends on this fork's own
  * unconditionally-unreachable PEM domain (AppInfo::DOMAIN ===
  * 'upstream.example.invalid', see that class's own docblock) --
  * "Connection to server unavailable." is therefore a real, deterministic,
@@ -94,7 +92,7 @@ it('theme page reports a missing admin.inc.php for a real, scanned theme', funct
     // fixture (themes/default/themeconf.inc.php exists), so it clears the
     // "theme not found" gate above and reaches the 2nd real branch:
     // neither bundled theme (default/standard_pages) ships its own
-    // admin/admin.inc.php (confirmed via a real filesystem search), so
+    // admin/admin.inc.php, so
     // this is the furthest of ThemeSubController's 3 branches reachable
     // without a theme this fork doesn't ship.
     $page = H::loginAsAdmin($this);
@@ -159,7 +157,7 @@ it('theme page includes a real admin.inc.php for a theme that ships one', functi
     try {
         $page = H::loginAsAdmin($this);
 
-        // H::rawGet(), not navigateOk()+content() -- confirmed live:
+        // H::rawGet(), not navigateOk()+content():
         // ThemeSubController::handle() echoes this marker via include_once
         // *before* the surrounding admin template's own <!DOCTYPE html> is
         // ever emitted, which really is present in the raw HTTP response
@@ -232,9 +230,9 @@ it('maintenance sys ajax endpoint returns real activity log JSON instead of the 
 it('batch manager unit mode shows the caddie prefilter active by default with an empty caddie', function (): void {
     // Not assertSee('No filter, add one'): BatchManagerSubController::
     // resolveSessionFilter() defaults an unset/empty session filter to
-    // `['prefilter' => 'caddie']` (confirmed via a real screenshot -- the
-    // rendered page shows "Predefined filter: Caddie" / "Empty caddie" /
-    // "List 0", not an unfiltered state), so a fresh navigation here
+    // `['prefilter' => 'caddie']` (the rendered page shows "Predefined
+    // filter: Caddie" / "Empty caddie" / "List 0", not an unfiltered
+    // state), so a fresh navigation here
     // ALWAYS has a real, active filter -- the .noFilter div's "No filter,
     // add one" text is genuinely CSS `display:none` by default
     // (themes/admin/default/theme.css) and is only ever toggled visible
@@ -262,8 +260,7 @@ it('batch manager unit mode renders the real per-photo edit grid for a category 
     // rendering), never exercised by the empty-filter test above.
     // Category 1 ("Sample Album") holds fixture images 1-3 (Photo
     // 1/2/3, files fixture-photo-1..3.jpg) per this fixture's own
-    // image_category rows -- verified against this exact URL's
-    // real rendered output before writing this assertion, not guessed.
+    // image_category rows.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit&filter=cat-1');
 
@@ -287,15 +284,13 @@ it('admin popuphelp renders real help content inside the popup page chrome', fun
     $page->assertPresent('body#thePopuphelpPage');
 
     // Not assertSee(): themes/admin/default/theme.css's own global `h2 {
-    // ... display: none; }` rule (confirmed via a real screenshot -- the
+    // ... display: none; }` rule (the
     // heading takes up zero rendered height, "Options management for..."
     // starts right at the top of the viewport) makes this exact heading
     // genuinely CSS-invisible in the real rendered page, so
     // isVisible()-gated assertSee() fails deterministically (100%
     // reproducible in isolation, unrelated to system load) even though
-    // the correct help content is really present in the DOM -- confirmed
-    // by direct comparison against an authenticated curl fetch of this
-    // same URL, which returns this exact heading in the raw HTML. A
+    // the correct help content is really present in the DOM. A
     // content() check verifies the real, intended thing (the correct
     // help topic loaded) without depending on this unrelated theme quirk.
     expect($page->content())
@@ -315,8 +310,7 @@ it('admin popuphelp content_only output returns the bare help fragment with no p
         // body-less fragment) into a full <html><head></head><body>...
         // document, so this page ALWAYS shows a <body> tag in content()
         // regardless of what AdminPopuphelpController actually returned
-        // (confirmed via a direct authenticated curl fetch of this same
-        // URL: the real raw response is the bare fragment with no
+        // (the real raw response is the bare fragment with no
         // <html>/<body> at all). 'thePopuphelpPage' is the real,
         // source-level distinguishing signal instead: the controller only
         // sets that body id -- via $this->pageState->setBodyId(...)
@@ -359,9 +353,9 @@ function pluginSubRemoveFixturePlugin(string $pluginId): void
 {
     // Real file_exists() guards, not a bare @unlink() -- @ only suppresses
     // the ini display_errors output, not Pest/PHPUnit's own conversion of
-    // a real E_WARNING into a test WARNING outcome (confirmed live: some
+    // a real E_WARNING into a test WARNING outcome, and some
     // callers of this helper never write ct_settings.php at all, e.g. the
-    // "admin popuphelp" test, which only writes main.inc.php).
+    // "admin popuphelp" test, which only writes main.inc.php.
     $dir = pluginSubPluginsPath() . $pluginId;
     if (file_exists($dir . '/main.inc.php')) {
         unlink($dir . '/main.inc.php');
@@ -379,7 +373,7 @@ it('plugin page includes a real settings file from an active on-disk plugin', fu
     // ahead of PluginSectionRequest's plugin-specific check) is a faithful
     // port of legacy Piwigo's own /^[a-z]+[a-z_\/-]*(\.php)?$/i -- no
     // digits anywhere in the value. A bare uniqid() plugin id would trip
-    // it (real 401/hacking-attempt page, confirmed live), so the digits
+    // it (real 401/hacking-attempt page), so the digits
     // get mapped to letters here instead of dropping uniqueness.
     $pluginId = 'ct-pluginsub-active-' . strtr(uniqid(), '0123456789', 'abcdefghij');
     pluginSubWriteFixturePlugin($pluginId);
@@ -390,7 +384,7 @@ it('plugin page includes a real settings file from an active on-disk plugin', fu
     try {
         $page = H::loginAsAdmin($this);
 
-        // H::rawGet(), not navigateOk()+content() -- confirmed live:
+        // H::rawGet(), not navigateOk()+content():
         // PluginSubController::handle() echoes this marker via
         // include_once *before* the surrounding admin template's own
         // <!DOCTYPE html> is ever emitted, which really is present in the

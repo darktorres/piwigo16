@@ -83,7 +83,7 @@ function pluginsInstalledPluginsPath(): string
  * plugins/ root -- same real-fs-fixture technique PluginLoaderTest.php
  * uses against an injectable throwaway root, but this suite has no such
  * injection point available (ExtensionScanner/PluginLoader both hardcode
- * the live, container-bound Paths->plugins, see this file's own top docblock), so the
+ * the live, container-bound Paths->plugins), so the
  * write targets the real path instead. Every caller below removes it via
  * pluginsInstalledRemoveFixturePlugin() in a finally block, keeping the
  * exposure window scoped to a single it() -- Pest's Browser suite runs
@@ -285,7 +285,7 @@ it('clears a stale $_SESSION[incompatible_plugins] entry once the on-disk plugin
     // this is the only reachable way to control/observe this suite's
     // server-side $_SESSION content: getIncompatibleExtensions() itself
     // can never populate a real, non-'~~expire~~' entry without live PEM
-    // connectivity (see this file's own top docblock), but the branch
+    // connectivity, but the branch
     // under test here (render()'s own consumption of whatever ends up in
     // $_SESSION['incompatible_plugins']) doesn't care how that entry got
     // there.

@@ -2,14 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Bootstrap\CoreDomainAccessor;
-use Piwigo\Bootstrap\ExtendedDomainAccessor;
 use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Bootstrap\RequestBootstrap;
-use Piwigo\Config\ConfigEntry;
-use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
@@ -62,34 +57,12 @@ return [
 
     // message class => handler factory
     'handlers' => [
-        // ConfigService is built directly here (same EntityManagerFactory
-        // recipe as ReindexImagesJob's MetadataService below), not via the
-        // CurrentConfigService shim -- every handler factory in this map
-        // is invoked eagerly when the bus is built, not lazily per
-        // dispatch, so a shim that throws when nothing has activated it
-        // yet would break every job type's construction, not just this
-        // one's.
+        // BatchUploadHandler resolves UploadService itself via
+        // Bootstrap\AdminAccessor::uploadService() (see that handler's
+        // own docblock) -- urlService is its only real remaining
+        // constructor dependency.
         BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(
-            new Lang(
-                new Translator(RequestBootstrap::currentConfig()),
-                PresentationAccessor::htmlService(),
-                Paths::fromRoot(dirname(__DIR__)),
-                new InstallationFlag(),
-            ),
             PresentationAccessor::urlService(),
-            InfrastructureAccessor::currentLogger(),
-            InfrastructureAccessor::storageRegistry(),
-            RequestBootstrap::eventDispatcher(),
-            new ConfigService(EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class), RequestBootstrap::eventDispatcher(), new CurrentConfig()),
-            InfrastructureAccessor::entityManager(),
-            ExtendedDomainAccessor::activityService(),
-            ExtendedDomainAccessor::metadataService(),
-            CoreDomainAccessor::imageService(),
-            RequestBootstrap::currentConfig(),
-            InfrastructureAccessor::wsContext(),
-            RequestBootstrap::currentUser(),
-            Paths::fromRoot(dirname(__DIR__)),
-            InfrastructureAccessor::dbCredentials()
         ),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),

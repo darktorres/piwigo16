@@ -12,10 +12,10 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Bootstrap\AdminAccessor;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -35,7 +35,6 @@ use Piwigo\Controller\Admin\Request\ConfigurationRequest;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AdminContext;
-use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -45,20 +44,16 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsContext;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbCredentials;
 use Piwigo\Group\GroupService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
-use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\WatermarkParams;
 use Piwigo\Mail\MailService;
-use Piwigo\Metadata\MetadataService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
@@ -120,7 +115,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
-        private readonly CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
         private readonly AdminContext $adminContext,
         private readonly CoreTabs $coreTabs,
@@ -131,8 +125,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
         private readonly ActivityService $activityService,
-        private readonly MetadataService $metadataService,
-        private readonly ImageService $imageService,
         private readonly UserService $userService,
         private readonly GroupService $groupService,
         private readonly PasswordService $passwordService,
@@ -141,9 +133,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly MailService $mailService,
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
-        private readonly WsContext $wsContext,
         private readonly Paths $paths,
-        private readonly DbCredentials $dbCredentials,
     ) {}
 
     /**
@@ -948,7 +938,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = $this->pageState->errors;
 
-        new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths, $this->dbCredentials)
+        AdminAccessor::uploadService()
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         $this->pageState->errors = array_values($page_errors);

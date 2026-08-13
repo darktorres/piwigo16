@@ -40,7 +40,6 @@ use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
-use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Url\RootPathOverride;
@@ -441,7 +440,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $expectedMd5 = md5_file($source);
         self::assertIsString($expectedMd5);
 
-        $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'holiday.png');
+        $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile($source, $this->urlService, 'holiday.png');
         $id = $imageId;
         self::assertGreaterThan(0, $id);
         $this->imageIdsToDelete[] = $id;
@@ -475,7 +474,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
 
-        $result = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile(
+        $result = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile(
             $source,
             $this->urlService,
             'dup.jpg',
@@ -511,7 +510,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function testAddUploadedFileUpdatesAnExistingPhotoInPlace(): void
     {
-        $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
+        $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get());
 
         $firstSource = $this->marker . '/first.png';
         $this->makeImage($firstSource, 'png', 40, 30);
@@ -560,7 +559,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
+            new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -578,7 +577,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function testAddUploadedFileUpdatesTheLevelWhenGivenOnTheUpdateBranch(): void
     {
-        $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
+        $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get());
 
         $first = $this->marker . '/lvl-first.png';
         $this->makeImage($first, 'png', 20, 20);
@@ -604,7 +603,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function testAddUploadedFileDispatchesTheCorrectExtensionForEachRasterImageType(): void
     {
-        $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
+        $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get());
         $cases = [
             'png' => 'png',
             'jpeg' => 'jpg',
@@ -651,7 +650,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/archive.zip';
         file_put_contents($source, "PK\x03\x04" . str_repeat('x', 32));
 
-        $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'archive.zip');
+        $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile($source, $this->urlService, 'archive.zip');
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -688,7 +687,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/big.jpg';
         $this->makeImage($source, 'jpeg', 200, 150);
 
-        $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'big.jpg');
+        $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile($source, $this->urlService, 'big.jpg');
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -724,7 +723,7 @@ final class UploadServiceTest extends IntegrationTestCase
     {
         CurrentConfigTestFactory::get()->uploadFormAllTypes = true;
 
-        EventDispatcherTestFactory::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
+        EventDispatcherTestFactory::get()->addTypedHandler(UploadFile::class, $this->newService()->uploadFilePdf(...));
 
         try {
             $png = $this->marker . '/pdf-source.png';
@@ -736,7 +735,7 @@ final class UploadServiceTest extends IntegrationTestCase
                 self::markTestSkipped('ImageMagick convert failed to build a PDF fixture: ' . implode("\n", $out));
             }
 
-            $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile($pdf, $this->urlService, 'document.pdf');
+            $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile($pdf, $this->urlService, 'document.pdf');
             $id = $imageId;
             $this->imageIdsToDelete[] = $id;
 
@@ -763,7 +762,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'fake.png');
+            new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile($source, $this->urlService, 'fake.png');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -795,7 +794,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'payload.exe');
+            new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile($source, $this->urlService, 'payload.exe');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -819,7 +818,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'notes.txt');
+            new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile($source, $this->urlService, 'notes.txt');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -847,7 +846,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/threshold.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'threshold.png');
+        $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile($source, $this->urlService, 'threshold.png');
         $this->imageIdsToDelete[] = $imageId;
 
         // addUploadedFileAddToCategories()'s own COUNT(*) check (running
@@ -864,7 +863,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/associate.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
+        $imageId = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get())->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -903,7 +902,7 @@ final class UploadServiceTest extends IntegrationTestCase
             self::markTestSkipped('ImageMagick convert failed to build a multi-page TIFF fixture: ' . implode("\n", $out));
         }
 
-        $result = $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $tiff);
+        $result = $this->uploadFileExt($this->newService()->uploadFileTiff(...), null, $tiff);
 
         self::assertIsString($result);
         $representativePath = $this->marker . '/pwg_representative/multi.' . $result;
@@ -920,7 +919,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->formatExtensions = ['tif'];
 
         try {
-            $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
+            $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get());
             $source = $this->marker . '/orphan-format.tif';
             file_put_contents($source, 'not a real tiff, just needs bytes on disk');
 
@@ -955,7 +954,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->formatExtensions = ['tif'];
 
         try {
-            $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
+            $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get());
 
             $sourceV1 = $this->marker . '/format-v1.tif';
             file_put_contents($sourceV1, str_repeat('a', 128));
@@ -996,7 +995,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $heic = $this->marker . '/photo.heic';
         file_put_contents($heic, 'not a genuine heic payload -- only the .heic extension needs to dispatch here');
 
-        $result = $this->uploadFileExt(UploadService::uploadFileHeic(...), null, $heic);
+        $result = $this->uploadFileExt($this->newService()->uploadFileHeic(...), null, $heic);
 
         self::assertTrue($result === null || $result === 'jpg');
 
@@ -1016,7 +1015,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function testUploadFileVideoPassesThroughAnAlreadySetRepresentativeExt(): void
     {
-        $result = $this->uploadFileExt(UploadService::uploadFileVideo(...), 'already-set', $this->marker . '/whatever.mp4');
+        $result = $this->uploadFileExt($this->newService()->uploadFileVideo(...), 'already-set', $this->marker . '/whatever.mp4');
 
         self::assertSame('already-set', $result);
     }
@@ -1052,7 +1051,7 @@ final class UploadServiceTest extends IntegrationTestCase
             self::markTestSkipped('ffmpeg failed to synthesize the test video fixture: ' . implode("\n", $out));
         }
 
-        $result = $this->uploadFileExt(UploadService::uploadFileVideo(...), null, $video);
+        $result = $this->uploadFileExt($this->newService()->uploadFileVideo(...), null, $video);
 
         self::assertSame('jpg', $result);
         $posterPath = $this->marker . '/pwg_representative/clip.jpg';
@@ -1094,7 +1093,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $fake = $this->marker . '/broken.mp4';
         file_put_contents($fake, "this is not a video file, just plain text with a video-like extension\n");
 
-        $result = $this->uploadFileExt(UploadService::uploadFileVideo(...), null, $fake);
+        $result = $this->uploadFileExt($this->newService()->uploadFileVideo(...), null, $fake);
 
         self::assertNull($result);
         self::assertFileDoesNotExist($this->marker . '/pwg_representative/broken.jpg');
@@ -1104,7 +1103,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     private function newService(): UploadService
     {
-        return new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
+        return new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get());
     }
 
     /**
@@ -1142,13 +1141,17 @@ final class UploadServiceTest extends IntegrationTestCase
     }
 
     /**
-     * Real gap: saveUploadFormConfig()'s own massUpdateValues() call writes
-     * through a completely separate, throwaway EntityManager
-     * (EntityManagerFactory::build(DbConnection::build())), never touching
-     * $this->entityManager's own identity map -- only the explicit
-     * `$this->entityManager->clear()` call right after evicts any
-     * already-cached, now-stale ConfigEntry so a later find() re-queries
-     * instead of returning the pre-write copy.
+     * saveUploadFormConfig()'s own massUpdateValues() call now writes
+     * through $this->entityManager's own connection directly (Finding 1's
+     * fix retired the throwaway EntityManagerFactory::build(DbConnection::
+     * build()) this used to go through), but that doesn't make the
+     * explicit `$this->entityManager->clear()` call right after redundant:
+     * massUpdateValues() is a raw connection-level bulk UPDATE
+     * (ConfigRepository's own BatchWriter), which bypasses the ORM
+     * identity map regardless of which EntityManager's connection issues
+     * it -- clear() is still what evicts the already-cached, now-stale
+     * ConfigEntry so a later find() re-queries instead of returning the
+     * pre-write copy.
      */
     public function testSaveUploadFormConfigClearsTheInjectedEntityManagersIdentityMapAfterASuccessfulWrite(): void
     {
@@ -1457,11 +1460,11 @@ final class UploadServiceTest extends IntegrationTestCase
         set_error_handler(static fn (): bool => true);
         try {
             foreach ([
-                [UploadService::uploadFilePdf(...), 'document.PDF'],
-                [UploadService::uploadFileHeic(...), 'photo.HEIC'],
-                [UploadService::uploadFileTiff(...), 'photo.TIFF'],
-                [UploadService::uploadFilePsd(...), 'layered.PSD'],
-                [UploadService::uploadFileEps(...), 'vector.EPS'],
+                [$this->newService()->uploadFilePdf(...), 'document.PDF'],
+                [$this->newService()->uploadFileHeic(...), 'photo.HEIC'],
+                [$this->newService()->uploadFileTiff(...), 'photo.TIFF'],
+                [$this->newService()->uploadFilePsd(...), 'layered.PSD'],
+                [$this->newService()->uploadFileEps(...), 'vector.EPS'],
             ] as [$handler, $filename]) {
                 $threw = null;
                 try {
@@ -1488,7 +1491,7 @@ final class UploadServiceTest extends IntegrationTestCase
         try {
             $threw = null;
             try {
-                $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $dir . '/photo.tif');
+                $this->uploadFileExt($this->newService()->uploadFileTiff(...), null, $dir . '/photo.tif');
             } catch (ImageProcessingException $e) {
                 $threw = $e;
             }
@@ -1566,30 +1569,30 @@ final class UploadServiceTest extends IntegrationTestCase
             $this->makeSamplePng($pdfPng);
             $pdf = $dir . '/dirbogus.pdf';
             $this->convertSample($pdfPng, $pdf);
-            self::assertNull($this->uploadFileExt(UploadService::uploadFilePdf(...), null, $pdf), 'a bogus configured ext_imagick dir must genuinely be prepended to the exec() command, not silently dropped in favor of a bare PATH lookup');
+            self::assertNull($this->uploadFileExt($this->newService()->uploadFilePdf(...), null, $pdf), 'a bogus configured ext_imagick dir must genuinely be prepended to the exec() command, not silently dropped in favor of a bare PATH lookup');
 
             $heic = $dir . '/dirbogus.heic';
             $this->makeFakeHeic($heic);
-            self::assertNull($this->uploadFileExt(UploadService::uploadFileHeic(...), null, $heic));
+            self::assertNull($this->uploadFileExt($this->newService()->uploadFileHeic(...), null, $heic));
 
             $epsPng = $dir . '/dirbogus-eps-src.png';
             $this->makeSamplePng($epsPng);
             $eps = $dir . '/dirbogus.eps';
             $this->convertSample($epsPng, $eps);
-            self::assertNull($this->uploadFileExt(UploadService::uploadFileEps(...), null, $eps));
+            self::assertNull($this->uploadFileExt($this->newService()->uploadFileEps(...), null, $eps));
 
             $tiffPng = $dir . '/dirbogus-tiff-src.png';
             $this->makeSamplePng($tiffPng);
             $tiff = $dir . '/dirbogus.tiff';
             $this->convertSample($tiffPng, $tiff);
-            $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $tiff);
+            $this->uploadFileExt($this->newService()->uploadFileTiff(...), null, $tiff);
             self::assertFileDoesNotExist($dir . '/pwg_representative/dirbogus.' . $this->currentConfig->tiffRepresentativeExt);
 
             $psdPng = $dir . '/dirbogus-psd-src.png';
             $this->makeSamplePng($psdPng);
             $psd = $dir . '/dirbogus.psd';
             $this->convertSample($psdPng, $psd);
-            $this->uploadFileExt(UploadService::uploadFilePsd(...), null, $psd);
+            $this->uploadFileExt($this->newService()->uploadFilePsd(...), null, $psd);
             self::assertFileDoesNotExist($dir . '/pwg_representative/dirbogus.png');
         } finally {
             CurrentConfigTestFactory::get()->extImagickDir = '';
@@ -1618,30 +1621,30 @@ final class UploadServiceTest extends IntegrationTestCase
             $this->makeSamplePng($pdfPng);
             $pdf = $dir . '/dirreal.pdf';
             $this->convertSample($pdfPng, $pdf);
-            self::assertSame('jpg', $this->uploadFileExt(UploadService::uploadFilePdf(...), null, $pdf), 'the configured dir must be prepended before the command name, not appended after it, or the resulting shell word never resolves to a real executable');
+            self::assertSame('jpg', $this->uploadFileExt($this->newService()->uploadFilePdf(...), null, $pdf), 'the configured dir must be prepended before the command name, not appended after it, or the resulting shell word never resolves to a real executable');
 
             $heic = $dir . '/dirreal.heic';
             $this->makeFakeHeic($heic);
-            self::assertSame('jpg', $this->uploadFileExt(UploadService::uploadFileHeic(...), null, $heic));
+            self::assertSame('jpg', $this->uploadFileExt($this->newService()->uploadFileHeic(...), null, $heic));
 
             $epsPng = $dir . '/dirreal-eps-src.png';
             $this->makeSamplePng($epsPng);
             $eps = $dir . '/dirreal.eps';
             $this->convertSample($epsPng, $eps);
-            self::assertSame('png', $this->uploadFileExt(UploadService::uploadFileEps(...), null, $eps));
+            self::assertSame('png', $this->uploadFileExt($this->newService()->uploadFileEps(...), null, $eps));
 
             $tiffPng = $dir . '/dirreal-tiff-src.png';
             $this->makeSamplePng($tiffPng);
             $tiff = $dir . '/dirreal.tiff';
             $this->convertSample($tiffPng, $tiff);
-            $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $tiff);
+            $this->uploadFileExt($this->newService()->uploadFileTiff(...), null, $tiff);
             self::assertFileExists($dir . '/pwg_representative/dirreal.' . $this->currentConfig->tiffRepresentativeExt);
 
             $psdPng = $dir . '/dirreal-psd-src.png';
             $this->makeSamplePng($psdPng);
             $psd = $dir . '/dirreal.psd';
             $this->convertSample($psdPng, $psd);
-            $this->uploadFileExt(UploadService::uploadFilePsd(...), null, $psd);
+            $this->uploadFileExt($this->newService()->uploadFilePsd(...), null, $psd);
             self::assertFileExists($dir . '/pwg_representative/dirreal.png');
         } finally {
             CurrentConfigTestFactory::get()->extImagickDir = '';
@@ -1671,7 +1674,7 @@ final class UploadServiceTest extends IntegrationTestCase
             self::markTestSkipped('ImageMagick convert failed to build a multi-page PDF fixture: ' . implode("\n", $out));
         }
 
-        $result = $this->uploadFileExt(UploadService::uploadFilePdf(...), null, $pdf);
+        $result = $this->uploadFileExt($this->newService()->uploadFilePdf(...), null, $pdf);
 
         self::assertSame('jpg', $result, 'the [0] page selector must limit conversion to a single page, not fall through to a per-page-suffixed filename that never matches the expected path');
         $representativePath = $this->marker . '/pwg_representative/multi-page.jpg';
@@ -1691,7 +1694,7 @@ final class UploadServiceTest extends IntegrationTestCase
     {
         $method = new ReflectionMethod(UploadService::class, 'getOptimalDimensionsForRepresentative');
         /** @var array{0: int, 1: int} $dims */
-        $dims = $method->invoke(null);
+        $dims = $method->invoke($this->newService());
         [$maxW, $maxH] = $dims;
 
         $logDir = $this->marker . '/heic-geometry-logs';
@@ -1706,7 +1709,7 @@ final class UploadServiceTest extends IntegrationTestCase
             $heic = $this->marker . '/geometry-check.heic';
             $this->makeFakeHeic($heic);
 
-            $this->uploadFileExt(UploadService::uploadFileHeic(...), null, $heic);
+            $this->uploadFileExt($this->newService()->uploadFileHeic(...), null, $heic);
 
             $logged = file_get_contents($logDir . '/heic-geometry.log');
             self::assertIsString($logged);
@@ -1750,7 +1753,7 @@ final class UploadServiceTest extends IntegrationTestCase
                 throw new RuntimeException('filesize (baseline) failed');
             }
 
-            $result = $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $tiff);
+            $result = $this->uploadFileExt($this->newService()->uploadFileTiff(...), null, $tiff);
             self::assertSame('jpg', $result);
             $producedPath = $dir . '/pwg_representative/tiff-quality.jpg';
             $producedSize = filesize($producedPath);
@@ -1826,7 +1829,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->uploadDir = 'upload/';
 
         try {
-            $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, Paths::fromRoot($root), DbCredentialsTestFactory::get());
+            $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, Paths::fromRoot($root), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get());
 
             $message = $service->readyForUploadMessage();
 
@@ -1895,52 +1898,5 @@ final class UploadServiceTest extends IntegrationTestCase
         } finally {
             umask($originalUmask);
         }
-    }
-
-    /**
-     * Real gap: currentLogger()/imageStdParams()/currentConfig()'s own
-     * "Container returned an unexpected type" guards -- normally
-     * unreachable through Kernel::boot()'s real public API, but directly
-     * exercisable via KernelContainerOverride::withWrongTypeFor(), the
-     * same test-only seam this project's own Bootstrap\*Accessor suites
-     * already use for the identical pattern.
-     */
-    public function testThe3StaticContainerAccessorsThrowWhenTheContainerReturnsAnUnexpectedType(): void
-    {
-        KernelContainerOverride::withWrongTypeFor(CurrentLogger::class, static function (): void {
-            $method = new ReflectionMethod(UploadService::class, 'currentLogger');
-            $threw = null;
-            try {
-                $method->invoke(null);
-            } catch (LogicException $e) {
-                $threw = $e;
-            }
-            self::assertNotNull($threw);
-            self::assertStringContainsString('Container returned an unexpected type for ' . CurrentLogger::class, $threw->getMessage());
-        });
-
-        KernelContainerOverride::withWrongTypeFor(ImageStdParams::class, static function (): void {
-            $method = new ReflectionMethod(UploadService::class, 'imageStdParams');
-            $threw = null;
-            try {
-                $method->invoke(null);
-            } catch (LogicException $e) {
-                $threw = $e;
-            }
-            self::assertNotNull($threw);
-            self::assertStringContainsString('Container returned an unexpected type for ' . ImageStdParams::class, $threw->getMessage());
-        });
-
-        KernelContainerOverride::withWrongTypeFor(CurrentConfig::class, static function (): void {
-            $method = new ReflectionMethod(UploadService::class, 'currentConfig');
-            $threw = null;
-            try {
-                $method->invoke(null);
-            } catch (LogicException $e) {
-                $threw = $e;
-            }
-            self::assertNotNull($threw);
-            self::assertStringContainsString('Container returned an unexpected type for ' . CurrentConfig::class, $threw->getMessage());
-        });
     }
 }

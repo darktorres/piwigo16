@@ -5,31 +5,24 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Projection\PhotosAddDirectPageContext;
 use Piwigo\Admin\Projection\PhotosAddDirectUploadFormPageContext;
 use Piwigo\Admin\Request\PhotosAddDirectRequest;
-use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Bootstrap\AdminAccessor;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsContext;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndPhotoAddDirect;
 use Piwigo\Image\DerivativeImage;
@@ -37,10 +30,8 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
@@ -63,24 +54,15 @@ final readonly class PhotosAddDirectPageRenderer
         private Lang $lang,
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
-        private CurrentLogger $currentLogger,
-        private StorageRegistry $storageRegistry,
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
-        private ConfigService $configService,
-        private EntityManagerInterface $entityManager,
         private HtmlRenderingInterface $htmlRenderer,
-        private ActivityService $activityService,
-        private MetadataService $metadataService,
         private ImageService $imageService,
         private PreferencesService $preferencesService,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
-        private WsContext $wsContext,
-        private Paths $paths,
-        private DbCredentials $dbCredentials,
     ) {}
 
     /**
@@ -224,7 +206,7 @@ final readonly class PhotosAddDirectPageRenderer
 
         $htmlRenderer = $this->htmlRenderer;
 
-        $uploadService = new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths, $this->dbCredentials);
+        $uploadService = AdminAccessor::uploadService();
 
         $f_add_action = self::baseUrl($this->urlService);
         $chunk_size = $this->currentConfig->uploadFormChunkSize;

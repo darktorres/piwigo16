@@ -28,6 +28,7 @@ use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Admin\ThemesNewPageRenderer;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
+use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Admin\UserPermPageRenderer;
 use Piwigo\Core\Kernel;
 
@@ -262,6 +263,25 @@ final class AdminAccessor
         $service = Kernel::container()->get(PictureCoiPageRenderer::class);
         if (! $service instanceof PictureCoiPageRenderer) {
             throw new LogicException('Container returned an unexpected type for ' . PictureCoiPageRenderer::class);
+        }
+        return $service;
+    }
+
+    /**
+     * Real callers: Admin\PhotosAddDirectPageRenderer,
+     * Controller\Admin\ConfigurationSubController,
+     * Controller\Admin\PhotosAddSubController -- each used to construct
+     * its own fresh UploadService from already-injected dependencies it
+     * duplicated solely for that purpose; all 3 now resolve this same
+     * container-shared instance instead, matching
+     * Job\Handler\BatchUploadHandler's own equivalent use of this
+     * accessor.
+     */
+    public static function uploadService(): UploadService
+    {
+        $service = Kernel::container()->get(UploadService::class);
+        if (! $service instanceof UploadService) {
+            throw new LogicException('Container returned an unexpected type for ' . UploadService::class);
         }
         return $service;
     }

@@ -25,6 +25,7 @@ use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Admin\ThemesNewPageRenderer;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
+use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Admin\UserPermPageRenderer;
 use Piwigo\Bootstrap\AdminAccessor;
 use Piwigo\Core\Kernel;
@@ -32,7 +33,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
- * Piwigo\Bootstrap\AdminAccessor -- every one of its 24 typed accessors'
+ * Piwigo\Bootstrap\AdminAccessor -- every one of its 25 typed accessors'
  * own "Container returned an unexpected type" \LogicException guard had
  * zero coverage: the happy path (container really does resolve the real
  * class) is already exercised indirectly through the many
@@ -50,7 +51,7 @@ afterEach(function (): void {
 test('every accessor returns its real, correctly-typed instance from a real container, without throwing', function (): void {
     // The wrong-type tests below all prove the guard *fires* correctly --
     // none of them prove it *doesn't* fire for the real, correctly-typed
-    // case, which is what every one of these 26 `! $x instanceof Y`
+    // case, which is what every one of these 25 `! $x instanceof Y`
     // checks actually gates day to day. A real, fully-booted container
     // (not a KernelContainerOverride swap) is the only way to observe
     // that -- some of these definitions transitively need Piwigo\Core\Paths,
@@ -67,7 +68,7 @@ test('every accessor returns its real, correctly-typed instance from a real cont
     // array literal could even finish building) -- an explicit
     // toBeInstanceOf() per accessor would just be re-asserting what PHP
     // itself already enforces. What's actually under test is that every
-    // one of the 24 calls below completes without hitting its internal
+    // one of the 25 calls below completes without hitting its internal
     // "Container returned an unexpected type" guard (see this test's own
     // docblock); an uncaught LogicException from any of them fails the
     // test on its own.
@@ -96,10 +97,11 @@ test('every accessor returns its real, correctly-typed instance from a real cont
         AdminAccessor::albumNotificationPageRenderer(),
         AdminAccessor::themesStandardPagesPageRenderer(),
         AdminAccessor::pictureCoiPageRenderer(),
+        AdminAccessor::uploadService(),
     ];
 
     expect($instances)
-        ->toHaveCount(24);
+        ->toHaveCount(25);
 });
 
 test('categoryAdminService throws when the container returns an unexpected type', function (): void {
@@ -269,3 +271,10 @@ test('pictureCoiPageRenderer throws when the container returns an unexpected typ
         static fn (): PictureCoiPageRenderer => AdminAccessor::pictureCoiPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . PictureCoiPageRenderer::class);
+
+test('uploadService throws when the container returns an unexpected type', function (): void {
+    KernelContainerOverride::withWrongTypeFor(
+        UploadService::class,
+        static fn (): UploadService => AdminAccessor::uploadService()
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . UploadService::class);

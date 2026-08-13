@@ -13,7 +13,6 @@ use DOMElement;
 use DOMNode;
 use DOMXPath;
 use Exception;
-use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Image\ImageProcessingException;
@@ -26,9 +25,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -36,7 +33,6 @@ use Piwigo\Core\WsContext;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Location\LocEndAddFormat;
 use Piwigo\Event\Location\LocEndAddUploadedFile;
@@ -69,16 +65,17 @@ use Piwigo\Ws\WsErrorResponse;
  * `escapeshellarg($ext_imagick_dir) . ImageBackend::getExtImagickCommand()`
  * dir-prefix pattern as ImageBackend.php/ImageExtImagick.php.
  *
- * The 6 upload_file_* representative-generation handlers are `public
- * static` (not instance methods, unlike the rest of this class) because
- * they're registered as PluginConfig event handlers (in
- * include/common.inc.php's "default event handlers" block).
- * EventDispatcher::addEventHandler() dedupes by `$a === $b` on the
- * callable, which for an array callable compares the bound object by
- * identity; an instance-method callable ([$this, 'method']) would
- * silently re-register (and double-fire) a new "distinct" handler on
- * every `new UploadService()`. A `[self::class, 'method']` static
- * callable compares equal across any number of registrations.
+ * The 6 upload_file_* representative-generation handlers are ordinary
+ * instance methods, registered once (`RequestBootstrap.php`) against the
+ * container-shared instance. This class is now resolved from the
+ * container everywhere -- including its own 4 real call sites, which
+ * used to each construct a fresh instance -- so
+ * `EventDispatcher::callablesEqual()`'s closure-identity dedup (compares
+ * a first-class-callable closure's `getClosureThis()`) always sees the
+ * *same* bound object regardless of caller, the same way it already did
+ * for every other instance-method event handler in this codebase.
+ * `__construct()` is 100% `readonly` properties, so sharing one instance
+ * carries no mutable-state risk.
  */
 final class UploadService
 {
@@ -90,11 +87,6 @@ final class UploadService
      * UPLOAD_UNIQUENESS_LOCK_TIMEOUT_SECONDS.
      */
     private const int DUP_DETECT_LOCK_TIMEOUT_SECONDS = 30;
-
-    /**
-     * @see UploadService::imageStdParams()
-     */
-    private static ?ImageStdParams $imageStdParamsFallback = null;
 
     public function __construct(
         private readonly Lang $lang,
@@ -111,6 +103,7 @@ final class UploadService
         private readonly CurrentUser $currentUser,
         private readonly Paths $paths,
         private readonly DbCredentials $dbCredentials,
+        private readonly ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -246,7 +239,7 @@ final class UploadService
         }
 
         if (count($errors) === 0) {
-            EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class)
+            $this->entityManager->getRepository(ConfigEntry::class)
                 ->massUpdateValues($updates);
             $this->entityManager->clear();
             return true;
@@ -303,6 +296,17 @@ final class UploadService
         $dup_detect_lock_name = null;
 
         if (! isset($image_id) and $this->currentConfig->uploadDetectDuplicate) {
+            // Deliberately its own connection, not $this->entityManager's
+            // shared one: GET_LOCK()/RELEASE_LOCK() are session-scoped to
+            // whichever connection acquired them, and this exact object
+            // (not a fresh resolve) is threaded through to every
+            // AdvisorySessionLock::release() call below and past the
+            // upload_id/finfo() check further down -- reusing the
+            // long-lived shared connection would tie this lock's lifetime
+            // to however Doctrine happens to manage that connection
+            // outside this method's own control, a real correctness risk
+            // for no real construction-cost benefit ($this->entityManager
+            // is already built regardless).
             $dup_detect_lock_conn = DbConnection::build();
             // GET_LOCK() names are capped at 64 characters -- hashed (with the
             // database name folded into the hashed input for the same
@@ -662,7 +666,6 @@ final class UploadService
         }
 
         if (isset($categories) and count($categories) > 0) {
-            $imageConn = DbConnection::build();
             $imageService = $this->imageService;
 
             if ($this->currentConfig->loungeActive) {
@@ -847,11 +850,11 @@ final class UploadService
         return $add_status;
     }
 
-    public static function uploadFilePdf(UploadFile $event): UploadFile
+    public function uploadFilePdf(UploadFile $event): UploadFile
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = self::currentLogger();
+        $logger = $this->currentLogger->get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -873,14 +876,14 @@ final class UploadService
             return $event;
         }
 
-        $ext = self::currentConfig()->pdfRepresentativeExt;
-        $jpg_quality = self::currentConfig()->pdfJpgQuality;
+        $ext = $this->currentConfig->pdfRepresentativeExt;
+        $jpg_quality = $this->currentConfig->pdfJpgQuality;
 
         // move the uploaded file to pwg_representative sub-directory
         $representative_file_path = ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = self::currentConfig()->extImagickDir;
+        $ext_imagick_dir = $this->currentConfig->extImagickDir;
         // [SEC-16] escapeshellarg() on the dir prefix and both real paths
         // below -- same pattern established in ImageBackend.php/
         // ImageExtImagick.php; the original never escaped an embedded
@@ -912,11 +915,11 @@ final class UploadService
         return $event;
     }
 
-    public static function uploadFileHeic(UploadFile $event): UploadFile
+    public function uploadFileHeic(UploadFile $event): UploadFile
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = self::currentLogger();
+        $logger = $this->currentLogger->get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -944,9 +947,9 @@ final class UploadService
         $representative_file_path = ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        [$w, $h] = self::getOptimalDimensionsForRepresentative();
+        [$w, $h] = $this->getOptimalDimensionsForRepresentative();
 
-        $ext_imagick_dir = self::currentConfig()->extImagickDir;
+        $ext_imagick_dir = $this->currentConfig->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . ImageBackend::getExtImagickCommand();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
@@ -972,11 +975,11 @@ final class UploadService
         return $event;
     }
 
-    public static function uploadFileTiff(UploadFile $event): UploadFile
+    public function uploadFileTiff(UploadFile $event): UploadFile
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = self::currentLogger();
+        $logger = $this->currentLogger->get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1002,13 +1005,13 @@ final class UploadService
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
         $representative_file_path .= StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
 
-        $conf_tiff_representative_ext = self::currentConfig()->tiffRepresentativeExt;
+        $conf_tiff_representative_ext = $this->currentConfig->tiffRepresentativeExt;
         $representative_ext = $conf_tiff_representative_ext;
         $representative_file_path .= $representative_ext;
 
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = self::currentConfig()->extImagickDir;
+        $ext_imagick_dir = $this->currentConfig->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . ImageBackend::getExtImagickCommand();
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
@@ -1060,11 +1063,11 @@ final class UploadService
         return $event;
     }
 
-    public static function uploadFileVideo(UploadFile $event): UploadFile
+    public function uploadFileVideo(UploadFile $event): UploadFile
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = self::currentLogger();
+        $logger = $this->currentLogger->get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1108,7 +1111,7 @@ final class UploadService
         $logger->info(__METHOD__ . ', Poster at ' . (string) $second . 's');
 
         // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
-        $ffmpeg_dir = self::currentConfig()->ffmpegDir;
+        $ffmpeg_dir = $this->currentConfig->ffmpegDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above (same
         // dir-prefix pattern applied to the ffmpeg/avconv binaries here).
         $ffmpeg = escapeshellarg($ffmpeg_dir) . 'ffmpeg';
@@ -1149,11 +1152,11 @@ final class UploadService
         return $event;
     }
 
-    public static function uploadFilePsd(UploadFile $event): UploadFile
+    public function uploadFilePsd(UploadFile $event): UploadFile
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = self::currentLogger();
+        $logger = $this->currentLogger->get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1184,7 +1187,7 @@ final class UploadService
 
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = self::currentConfig()->extImagickDir;
+        $ext_imagick_dir = $this->currentConfig->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . ImageBackend::getExtImagickCommand();
 
@@ -1231,11 +1234,11 @@ final class UploadService
         return $event;
     }
 
-    public static function uploadFileEps(UploadFile $event): UploadFile
+    public function uploadFileEps(UploadFile $event): UploadFile
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = self::currentLogger();
+        $logger = $this->currentLogger->get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1266,7 +1269,7 @@ final class UploadService
 
         // convert -density 300 image.eps -resize 2048x2048 image.png
 
-        $ext_imagick_dir = self::currentConfig()->extImagickDir;
+        $ext_imagick_dir = $this->currentConfig->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . ImageBackend::getExtImagickCommand();
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
@@ -1340,90 +1343,6 @@ final class UploadService
         }
 
         FilesystemHelper::secureDirectory($directory);
-    }
-
-    /**
-     * The `uploadFileXxx()` event handlers below must stay static:
-     * EventDispatcher::callablesEqual()'s closure-identity dedup only
-     * correctly no-ops repeat registrations for a static method's
-     * closure, while an instance method's closure would double-register
-     * across this class's own non-singleton `new UploadService(...)`
-     * sites. Because of that, they can't read the constructor-injected
-     * `$this->currentLogger` that `needResize()` uses below -- this
-     * resolves the container-shared instance directly instead, falling
-     * back to a fresh, no-op `severity => OFF` Logger when the container
-     * isn't booted.
-     */
-    private static function currentLogger(): Logger
-    {
-        if (Kernel::isBooted()) {
-            $currentLogger = Kernel::container()->get(CurrentLogger::class);
-            if (! $currentLogger instanceof CurrentLogger) {
-                throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
-            }
-
-            return $currentLogger->get();
-        }
-
-        return new Logger([
-            'severity' => Logger::OFF,
-        ]);
-    }
-
-    /**
-     * Same "must stay static, resolves the container-shared instance
-     * directly" reasoning as currentLogger() above --
-     * getOptimalDimensionsForRepresentative() (the sole caller) is itself
-     * a `private static` helper reached only from the static
-     * uploadFileXxx() handlers. The not-booted fallback is memoized (a
-     * `private static` property here, populated via a real
-     * loadFromDb() read on first not-booted access): ImageStdParams is
-     * "load once, read/write many times" per request, so a fresh
-     * instance per call would silently lose writes between calls.
-     */
-    private static function imageStdParams(): ImageStdParams
-    {
-        if (Kernel::isBooted()) {
-            $instance = Kernel::container()->get(ImageStdParams::class);
-            if (! $instance instanceof ImageStdParams) {
-                throw new LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
-            }
-
-            return $instance;
-        }
-
-        if (! self::$imageStdParamsFallback instanceof ImageStdParams) {
-            self::$imageStdParamsFallback = new ImageStdParams();
-            self::$imageStdParamsFallback->loadFromDb();
-        }
-
-        return self::$imageStdParamsFallback;
-    }
-
-    /**
-     * Same "must stay static" reasoning as currentLogger()/
-     * imageStdParams() above -- the `uploadFileXxx()` event handlers'
-     * remaining CurrentConfig reads (pdfRepresentativeExt()/
-     * pdfJpgQuality()/extImagickDir()/tiffRepresentativeExt()/
-     * ffmpegDir()) can't read the constructor-injected
-     * `$this->currentConfig` that needResize() uses below. The
-     * not-booted fallback is a fresh `new CurrentConfig()` per call
-     * (unlike imageStdParams()'s eager DB-hit fallback): CurrentConfig
-     * has no DB read at construction, so there's no shared state to lose
-     * between calls.
-     */
-    private static function currentConfig(): CurrentConfig
-    {
-        if (Kernel::isBooted()) {
-            $instance = Kernel::container()->get(CurrentConfig::class);
-            if (! $instance instanceof CurrentConfig) {
-                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
-            }
-
-            return $instance;
-        }
-
-        return new CurrentConfig();
     }
 
     private function needResize(string $image_filepath, int $max_width, int $max_height): bool
@@ -1633,10 +1552,10 @@ final class UploadService
      *
      * @return int[] [width, height]
      */
-    private static function getOptimalDimensionsForRepresentative(): array
+    private function getOptimalDimensionsForRepresentative(): array
     {
-        $enabled = self::imageStdParams()->getDefinedTypeMap();
-        $disabled = self::imageStdParams()->getDisabledTypeMap();
+        $enabled = $this->imageStdParams->getDefinedTypeMap();
+        $disabled = $this->imageStdParams->getDisabledTypeMap();
 
         $w = $h = 2000; // safe default values
 

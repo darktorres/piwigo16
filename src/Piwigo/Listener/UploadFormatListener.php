@@ -11,14 +11,21 @@ use Piwigo\Event\Picture\UploadFile;
 /**
  * Extracted from `Bootstrap\RequestBootstrap::finalize()`'s own 6
  * `UploadFile` registrations -- all real, all the same event, each
- * delegating to one of `UploadService`'s static per-format handlers.
+ * delegating to one of `UploadService`'s per-format handlers.
  * `addTypedHandler()` already supports multiple handlers per event, so
- * this is one listener with 6 methods, not 6 separate classes; no
- * constructor dependencies are needed since every target method is
- * static.
+ * this is one listener with 6 methods, not 6 separate classes.
+ * `UploadService` is a real constructor dependency (not a static call) --
+ * `RequestBootstrap` passes its own container-resolved instance so
+ * `EventDispatcher::callablesEqual()`'s closure-identity dedup sees the
+ * same bound object as every other real `UploadService` consumer, see
+ * that class's own docblock.
  */
 final readonly class UploadFormatListener implements ListenerInterface
 {
+    public function __construct(
+        private UploadService $uploadService,
+    ) {}
+
     #[Override]
     public function subscribedEvents(): array
     {
@@ -36,31 +43,31 @@ final readonly class UploadFormatListener implements ListenerInterface
 
     public function onPdf(UploadFile $event): UploadFile
     {
-        return UploadService::uploadFilePdf($event);
+        return $this->uploadService->uploadFilePdf($event);
     }
 
     public function onHeic(UploadFile $event): UploadFile
     {
-        return UploadService::uploadFileHeic($event);
+        return $this->uploadService->uploadFileHeic($event);
     }
 
     public function onTiff(UploadFile $event): UploadFile
     {
-        return UploadService::uploadFileTiff($event);
+        return $this->uploadService->uploadFileTiff($event);
     }
 
     public function onVideo(UploadFile $event): UploadFile
     {
-        return UploadService::uploadFileVideo($event);
+        return $this->uploadService->uploadFileVideo($event);
     }
 
     public function onPsd(UploadFile $event): UploadFile
     {
-        return UploadService::uploadFilePsd($event);
+        return $this->uploadService->uploadFilePsd($event);
     }
 
     public function onEps(UploadFile $event): UploadFile
     {
-        return UploadService::uploadFileEps($event);
+        return $this->uploadService->uploadFileEps($event);
     }
 }

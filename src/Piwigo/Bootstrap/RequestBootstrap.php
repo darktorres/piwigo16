@@ -13,6 +13,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
+use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\ApiKeyRepository;
@@ -687,13 +688,20 @@ final class RequestBootstrap
         // genuinely dead code isn't worth contorting the new mechanism
         // for.
         self::registerListener(new HtmlRenderingListener(self::htmlService(), self::currentConfig()));
-        // checkForSpam() is an instance method (unlike UploadFormatListener's
-        // static upload_file handlers below) -- CommentService is built
+        // checkForSpam() is an instance method (matching UploadFormatListener's
+        // own now-instance upload_file handlers below, both container-shared
+        // instances rather than static calls) -- CommentService is built
         // here, reusing the request's own shared Connection, and handed
         // to the listener rather than autowired fresh.
         self::registerListener(new CommentSpamListener(new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessLevelChecker())));
         self::registerListener(new SiteCleanupListener(EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)));
-        self::registerListener(new UploadFormatListener());
+        // self::uploadService() resolves the container-shared instance --
+        // see that method's own docblock for why every real UploadService
+        // consumer (this listener included) now resolves the same object
+        // instead of constructing its own, which is what makes
+        // EventDispatcher::callablesEqual()'s closure-identity dedup work
+        // correctly across repeated registrations.
+        self::registerListener(new UploadFormatListener(self::uploadService()));
         self::eventDispatcher()->dispatchNotify(new Init());
 
         // CurrentUser's/PageState's own `??=` guards are already
@@ -1410,6 +1418,26 @@ final class RequestBootstrap
         }
 
         return $htmlService;
+    }
+
+    /**
+     * bootEventHandlers()'s own sole caller -- registers its 6
+     * uploadFileXxx() handlers against this container-shared instance so
+     * EventDispatcher::callablesEqual()'s closure-identity dedup sees the
+     * same bound object as every other real UploadService consumer
+     * (Admin\PhotosAddDirectPageRenderer, Job\Handler\BatchUploadHandler,
+     * Controller\Admin\ConfigurationSubController,
+     * Controller\Admin\PhotosAddSubController), which now all resolve
+     * this same instance instead of constructing their own.
+     */
+    private static function uploadService(): UploadService
+    {
+        $uploadService = Kernel::container()->get(UploadService::class);
+        if (! $uploadService instanceof UploadService) {
+            throw new LogicException('Container returned an unexpected type for ' . UploadService::class);
+        }
+
+        return $uploadService;
     }
 
     /**

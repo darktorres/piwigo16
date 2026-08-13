@@ -4,27 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Override;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PhotosAddApplicationsPageRenderer;
 use Piwigo\Admin\PhotosAddDirectPageRenderer;
 use Piwigo\Admin\PhotosAddFtpPageRenderer;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Admin\Upload\UploadService;
-use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentLogger;
+use Piwigo\Bootstrap\AdminAccessor;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Paths;
-use Piwigo\Core\WsContext;
-use Piwigo\Db\DbCredentials;
-use Piwigo\Image\ImageService;
-use Piwigo\Metadata\MetadataService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -41,21 +29,9 @@ final readonly class PhotosAddSubController implements AdminSubControllerInterfa
 {
     public function __construct(
         private Lang $lang,
-        private CurrentLogger $currentLogger,
-        private StorageRegistry $storageRegistry,
         private EventDispatcher $eventDispatcher,
         private CurrentTemplate $currentTemplate,
-        private ConfigService $configService,
-        private EntityManagerInterface $entityManager,
         private PhotosAddDirectPageRenderer $photosAddDirectPageRenderer,
-        private ActivityService $activityService,
-        private MetadataService $metadataService,
-        private ImageService $imageService,
-        private CurrentConfig $currentConfig,
-        private WsContext $wsContext,
-        private CurrentUser $currentUser,
-        private Paths $paths,
-        private DbCredentials $dbCredentials,
     ) {}
 
     #[Override]
@@ -66,7 +42,7 @@ final readonly class PhotosAddSubController implements AdminSubControllerInterfa
         // getUploadFormConfig()'s return value is unused here -- see this
         // class's own docblock: the upload pipeline lives in UploadService,
         // not this sub-controller.
-        new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths, $this->dbCredentials)
+        AdminAccessor::uploadService()
             ->getUploadFormConfig();
 
         // admin.php's own shared check_input_parameter('section', ...,

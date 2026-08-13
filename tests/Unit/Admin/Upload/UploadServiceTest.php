@@ -49,12 +49,12 @@ function upload_service_test_marker(): string
 }
 
 /**
- * UploadService takes CurrentLogger via constructor injection; its 6
- * `uploadFile*` static event handlers read it through the `getStatic()`
- * shim instead -- see that class's own docblock: their real callers
- * include the still-static Ws\Pwg* dispatch layer. Both paths resolve the
- * same container-shared instance once Kernel::boot() has run, so this one
- * helper seeds both.
+ * UploadService takes CurrentLogger via constructor injection -- since
+ * Finding 1's fix, the 6 `uploadFile*` handlers are ordinary instance
+ * methods reading the same `$this->currentLogger` as every other method
+ * on the class, not a separate static resolver. This helper just
+ * resolves the one container-shared CurrentLogger instance for the
+ * `->set()` call in beforeEach() below.
  */
 function upload_service_test_current_logger(): CurrentLogger
 {
@@ -122,7 +122,7 @@ function upload_service_test_make(): UploadService
         throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
     }
 
-    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcherTestFactory::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
+    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcherTestFactory::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get());
 }
 
 beforeEach(function (): void {
@@ -1255,12 +1255,18 @@ test('addFormat throws for an unauthorized format extension', function (): void 
 });
 
 test('the 6 upload_file_* representative-generation handlers pass an already-set representative_ext straight through', function (): void {
-    expect(upload_service_test_upload(UploadService::uploadFilePdf(...), 'already-set', '/tmp/whatever.pdf'))->toBe('already-set');
-    expect(upload_service_test_upload(UploadService::uploadFileHeic(...), 'already-set', '/tmp/whatever.heic'))->toBe('already-set');
-    expect(upload_service_test_upload(UploadService::uploadFileTiff(...), 'already-set', '/tmp/whatever.tif'))->toBe('already-set');
-    expect(upload_service_test_upload(UploadService::uploadFileVideo(...), 'already-set', '/tmp/whatever.mp4'))->toBe('already-set');
-    expect(upload_service_test_upload(UploadService::uploadFilePsd(...), 'already-set', '/tmp/whatever.psd'))->toBe('already-set');
-    expect(upload_service_test_upload(UploadService::uploadFileEps(...), 'already-set', '/tmp/whatever.eps'))->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFilePdf(...), 'already-set', '/tmp/whatever.pdf'))
+        ->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileHeic(...), 'already-set', '/tmp/whatever.heic'))
+        ->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileTiff(...), 'already-set', '/tmp/whatever.tif'))
+        ->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileVideo(...), 'already-set', '/tmp/whatever.mp4'))
+        ->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFilePsd(...), 'already-set', '/tmp/whatever.psd'))
+        ->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileEps(...), 'already-set', '/tmp/whatever.eps'))
+        ->toBe('already-set');
 });
 
 test('the 6 upload_file_* representative-generation handlers no-op for a non-matching file extension', function (): void {
@@ -1272,11 +1278,16 @@ test('the 6 upload_file_* representative-generation handlers no-op for a non-mat
     $path = upload_service_test_marker() . '/plain.txt';
     file_put_contents($path, 'not a representative-worthy file');
 
-    expect(upload_service_test_upload(UploadService::uploadFilePdf(...), null, $path))->toBeNull();
-    expect(upload_service_test_upload(UploadService::uploadFileHeic(...), null, $path))->toBeNull();
-    expect(upload_service_test_upload(UploadService::uploadFilePsd(...), null, $path))->toBeNull();
-    expect(upload_service_test_upload(UploadService::uploadFileEps(...), null, $path))->toBeNull();
-    expect(upload_service_test_upload(UploadService::uploadFileVideo(...), null, $path))->toBeNull();
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFilePdf(...), null, $path))
+        ->toBeNull();
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileHeic(...), null, $path))
+        ->toBeNull();
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFilePsd(...), null, $path))
+        ->toBeNull();
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileEps(...), null, $path))
+        ->toBeNull();
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileVideo(...), null, $path))
+        ->toBeNull();
 });
 
 /**
@@ -1312,7 +1323,7 @@ test('uploadFileVideo recognizes every one of its 17 ffmpeg-tested extensions', 
             'wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg',
             'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv',
         ] as $ext) {
-            expect(fn (): ?string => upload_service_test_upload(UploadService::uploadFileVideo(...), null, $dir . '/video.' . $ext))
+            expect(fn (): ?string => upload_service_test_upload(upload_service_test_make()->uploadFileVideo(...), null, $dir . '/video.' . $ext))
                 ->toThrow(ImageProcessingException::class);
         }
     } finally {
@@ -1325,7 +1336,7 @@ test('uploadFileVideo matches a video extension case-insensitively', function ()
     $dir = upload_service_video_readonly_dir();
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn (): ?string => upload_service_test_upload(UploadService::uploadFileVideo(...), null, $dir . '/video.WMV'))
+        expect(fn (): ?string => upload_service_test_upload(upload_service_test_make()->uploadFileVideo(...), null, $dir . '/video.WMV'))
             ->toThrow(ImageProcessingException::class);
     } finally {
         restore_error_handler();
@@ -1336,7 +1347,7 @@ test('uploadFileVideo matches a video extension case-insensitively', function ()
 test('uploadFileVideo returns null for a non-matching extension without even attempting to prepare a directory', function (): void {
     $dir = upload_service_video_readonly_dir();
     try {
-        expect(upload_service_test_upload(UploadService::uploadFileVideo(...), null, $dir . '/video.txt'))->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFileVideo(...), null, $dir . '/video.txt'))->toBeNull();
     } finally {
         chmod($dir, 0o777);
     }
@@ -1354,7 +1365,7 @@ test('uploadFileVideo logs the exact file_path/representative_ext it was called 
 
     try {
         $path = upload_service_test_marker() . '/whatever.mp4';
-        upload_service_test_upload(UploadService::uploadFileVideo(...), 'already-set', $path);
+        upload_service_test_upload(upload_service_test_make()->uploadFileVideo(...), 'already-set', $path);
 
         $logged = file_get_contents($logDir . '/video.log');
         expect($logged)
@@ -1375,11 +1386,16 @@ test('the 5 ext_imagick-only handlers return the incoming representative_ext unm
     // PDF/HEIC/TIFF/PSD/EPS fixture or exec() call is reached.
     CurrentConfigTestFactory::get()->graphicsLibrary = 'gd';
     try {
-        expect(upload_service_test_upload(UploadService::uploadFilePdf(...), null, '/tmp/whatever.pdf'))->toBeNull();
-        expect(upload_service_test_upload(UploadService::uploadFileHeic(...), null, '/tmp/whatever.heic'))->toBeNull();
-        expect(upload_service_test_upload(UploadService::uploadFileTiff(...), null, '/tmp/whatever.tif'))->toBeNull();
-        expect(upload_service_test_upload(UploadService::uploadFilePsd(...), null, '/tmp/whatever.psd'))->toBeNull();
-        expect(upload_service_test_upload(UploadService::uploadFileEps(...), null, '/tmp/whatever.eps'))->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFilePdf(...), null, '/tmp/whatever.pdf'))
+            ->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFileHeic(...), null, '/tmp/whatever.heic'))
+            ->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFileTiff(...), null, '/tmp/whatever.tif'))
+            ->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFilePsd(...), null, '/tmp/whatever.psd'))
+            ->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFileEps(...), null, '/tmp/whatever.eps'))
+            ->toBeNull();
     } finally {
         CurrentConfigTestFactory::get()->graphicsLibrary = 'auto';
     }
@@ -1393,7 +1409,7 @@ function upload_service_optimal_dimensions(): array
     $method = new ReflectionMethod(UploadService::class, 'getOptimalDimensionsForRepresentative');
 
     /** @var array{0: int, 1: int} */
-    return $method->invoke(null);
+    return $method->invoke(upload_service_test_make());
 }
 
 test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from a real defined type', function (): void {
@@ -1526,7 +1542,7 @@ test('uploadFileTiff converts a real TIFF into a representative image via the ex
     upload_service_make_sample_png($png);
     upload_service_convert_sample($png, $tiff);
 
-    $result = upload_service_test_upload(UploadService::uploadFileTiff(...), null, $tiff);
+    $result = upload_service_test_upload(upload_service_test_make()->uploadFileTiff(...), null, $tiff);
 
     expect($result)
         ->not->toBeNull();
@@ -1544,7 +1560,7 @@ test('uploadFilePdf converts a real PDF into a representative jpg via the ext_im
     upload_service_make_sample_png($png);
     upload_service_convert_sample($png, $pdf);
 
-    $result = upload_service_test_upload(UploadService::uploadFilePdf(...), null, $pdf);
+    $result = upload_service_test_upload(upload_service_test_make()->uploadFilePdf(...), null, $pdf);
 
     expect($result)
         ->toBe('jpg');
@@ -1562,7 +1578,7 @@ test('uploadFilePsd converts a real PSD into a representative png via the ext_im
     upload_service_make_sample_png($png);
     upload_service_convert_sample($png, $psd);
 
-    $result = upload_service_test_upload(UploadService::uploadFilePsd(...), null, $psd);
+    $result = upload_service_test_upload(upload_service_test_make()->uploadFilePsd(...), null, $psd);
 
     expect($result)
         ->toBe('png');
@@ -1580,7 +1596,7 @@ test('uploadFileEps converts a real EPS into a representative png via the ext_im
     upload_service_make_sample_png($png);
     upload_service_convert_sample($png, $eps);
 
-    $result = upload_service_test_upload(UploadService::uploadFileEps(...), null, $eps);
+    $result = upload_service_test_upload(upload_service_test_make()->uploadFileEps(...), null, $eps);
 
     expect($result)
         ->toBe('png');
@@ -1605,7 +1621,7 @@ test('uploadFileTiff appends the -quality 98 flag and converts to jpg when tiffR
         upload_service_make_sample_png($png);
         upload_service_convert_sample($png, $tiff);
 
-        $result = upload_service_test_upload(UploadService::uploadFileTiff(...), null, $tiff);
+        $result = upload_service_test_upload(upload_service_test_make()->uploadFileTiff(...), null, $tiff);
 
         expect($result)
             ->toBe('jpg');
@@ -1652,7 +1668,7 @@ test('uploadFileHeic converts a real image into a representative jpg via the ext
     $heic = $dir . '/photo.heic';
     upload_service_make_fake_heic($heic);
 
-    $result = upload_service_test_upload(UploadService::uploadFileHeic(...), null, $heic);
+    $result = upload_service_test_upload(upload_service_test_make()->uploadFileHeic(...), null, $heic);
 
     expect($result)
         ->toBe('jpg');
@@ -1678,7 +1694,7 @@ test('uploadFileHeic logs its exact ImageMagick exec string, including the resiz
         $heic = $dir . '/photo-logged.heic';
         upload_service_make_fake_heic($heic);
 
-        upload_service_test_upload(UploadService::uploadFileHeic(...), null, $heic);
+        upload_service_test_upload(upload_service_test_make()->uploadFileHeic(...), null, $heic);
 
         $logged = file_get_contents($logDir . '/heic.log');
         expect($logged)
@@ -1708,29 +1724,34 @@ test('the 5 ext_imagick handlers leave an already-set representative_ext untouch
     upload_service_make_sample_png($pdfPng);
     $pdf = $dir . '/isset-guard.pdf';
     upload_service_convert_sample($pdfPng, $pdf);
-    expect(upload_service_test_upload(UploadService::uploadFilePdf(...), 'already-set', $pdf))->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFilePdf(...), 'already-set', $pdf))
+        ->toBe('already-set');
 
     $heic = $dir . '/isset-guard.heic';
     upload_service_make_fake_heic($heic);
-    expect(upload_service_test_upload(UploadService::uploadFileHeic(...), 'already-set', $heic))->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileHeic(...), 'already-set', $heic))
+        ->toBe('already-set');
 
     $tiffPng = $dir . '/isset-guard-src2.png';
     upload_service_make_sample_png($tiffPng);
     $tiff = $dir . '/isset-guard.tiff';
     upload_service_convert_sample($tiffPng, $tiff);
-    expect(upload_service_test_upload(UploadService::uploadFileTiff(...), 'already-set', $tiff))->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileTiff(...), 'already-set', $tiff))
+        ->toBe('already-set');
 
     $psdPng = $dir . '/isset-guard-src3.png';
     upload_service_make_sample_png($psdPng);
     $psd = $dir . '/isset-guard.psd';
     upload_service_convert_sample($psdPng, $psd);
-    expect(upload_service_test_upload(UploadService::uploadFilePsd(...), 'already-set', $psd))->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFilePsd(...), 'already-set', $psd))
+        ->toBe('already-set');
 
     $epsPng = $dir . '/isset-guard-src4.png';
     upload_service_make_sample_png($epsPng);
     $eps = $dir . '/isset-guard.eps';
     upload_service_convert_sample($epsPng, $eps);
-    expect(upload_service_test_upload(UploadService::uploadFileEps(...), 'already-set', $eps))->toBe('already-set');
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileEps(...), 'already-set', $eps))
+        ->toBe('already-set');
 });
 
 /**
@@ -1747,29 +1768,34 @@ test('the 5 ext_imagick handlers skip a real, otherwise-convertible file when th
         upload_service_make_sample_png($pdfPng);
         $pdf = $dir . '/library-guard.pdf';
         upload_service_convert_sample($pdfPng, $pdf);
-        expect(upload_service_test_upload(UploadService::uploadFilePdf(...), null, $pdf))->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFilePdf(...), null, $pdf))
+            ->toBeNull();
 
         $heic = $dir . '/library-guard.heic';
         upload_service_make_fake_heic($heic);
-        expect(upload_service_test_upload(UploadService::uploadFileHeic(...), null, $heic))->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFileHeic(...), null, $heic))
+            ->toBeNull();
 
         $tiffPng = $dir . '/library-guard-src2.png';
         upload_service_make_sample_png($tiffPng);
         $tiff = $dir . '/library-guard.tiff';
         upload_service_convert_sample($tiffPng, $tiff);
-        expect(upload_service_test_upload(UploadService::uploadFileTiff(...), null, $tiff))->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFileTiff(...), null, $tiff))
+            ->toBeNull();
 
         $psdPng = $dir . '/library-guard-src3.png';
         upload_service_make_sample_png($psdPng);
         $psd = $dir . '/library-guard.psd';
         upload_service_convert_sample($psdPng, $psd);
-        expect(upload_service_test_upload(UploadService::uploadFilePsd(...), null, $psd))->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFilePsd(...), null, $psd))
+            ->toBeNull();
 
         $epsPng = $dir . '/library-guard-src4.png';
         upload_service_make_sample_png($epsPng);
         $eps = $dir . '/library-guard.eps';
         upload_service_convert_sample($epsPng, $eps);
-        expect(upload_service_test_upload(UploadService::uploadFileEps(...), null, $eps))->toBeNull();
+        expect(upload_service_test_upload(upload_service_test_make()->uploadFileEps(...), null, $eps))
+            ->toBeNull();
     } finally {
         CurrentConfigTestFactory::get()->graphicsLibrary = 'auto';
     }
@@ -1791,32 +1817,37 @@ test('the 5 ext_imagick handlers reject a real, otherwise-convertible file whose
     $mislabeledPdf = $dir . '/ext-guard-pdf.txt';
     upload_service_convert_sample($pdfPng, $mislabeledPdf . '.pdf');
     rename($mislabeledPdf . '.pdf', $mislabeledPdf);
-    expect(upload_service_test_upload(UploadService::uploadFilePdf(...), null, $mislabeledPdf))->toBeNull();
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFilePdf(...), null, $mislabeledPdf))
+        ->toBeNull();
 
     $mislabeledHeic = $dir . '/ext-guard.txt';
     upload_service_make_fake_heic($mislabeledHeic);
-    expect(upload_service_test_upload(UploadService::uploadFileHeic(...), null, $mislabeledHeic))->toBeNull();
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileHeic(...), null, $mislabeledHeic))
+        ->toBeNull();
 
     $tiffPng = $dir . '/ext-guard-src2.png';
     upload_service_make_sample_png($tiffPng);
     $mislabeledTiff = $dir . '/ext-guard-tiff.txt';
     upload_service_convert_sample($tiffPng, $mislabeledTiff . '.tiff');
     rename($mislabeledTiff . '.tiff', $mislabeledTiff);
-    expect(upload_service_test_upload(UploadService::uploadFileTiff(...), null, $mislabeledTiff))->toBeNull();
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileTiff(...), null, $mislabeledTiff))
+        ->toBeNull();
 
     $psdPng = $dir . '/ext-guard-src3.png';
     upload_service_make_sample_png($psdPng);
     $mislabeledPsd = $dir . '/ext-guard-psd.txt';
     upload_service_convert_sample($psdPng, $mislabeledPsd . '.psd');
     rename($mislabeledPsd . '.psd', $mislabeledPsd);
-    expect(upload_service_test_upload(UploadService::uploadFilePsd(...), null, $mislabeledPsd))->toBeNull();
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFilePsd(...), null, $mislabeledPsd))
+        ->toBeNull();
 
     $epsPng = $dir . '/ext-guard-src4.png';
     upload_service_make_sample_png($epsPng);
     $mislabeledEps = $dir . '/ext-guard-eps.txt';
     upload_service_convert_sample($epsPng, $mislabeledEps . '.eps');
     rename($mislabeledEps . '.eps', $mislabeledEps);
-    expect(upload_service_test_upload(UploadService::uploadFileEps(...), null, $mislabeledEps))->toBeNull();
+    expect(upload_service_test_upload(upload_service_test_make()->uploadFileEps(...), null, $mislabeledEps))
+        ->toBeNull();
 });
 
 test('the 5 ext_imagick handlers log the exact file_path/representative_ext they were called with', function (): void {
@@ -1830,11 +1861,11 @@ test('the 5 ext_imagick handlers log the exact file_path/representative_ext they
         ]));
 
     try {
-        upload_service_test_upload(UploadService::uploadFilePdf(...), 'pdf-ext', '/whatever/document.pdf');
-        upload_service_test_upload(UploadService::uploadFileHeic(...), 'heic-ext', '/whatever/photo.heic');
-        upload_service_test_upload(UploadService::uploadFileTiff(...), 'tiff-ext', '/whatever/photo.tiff');
-        upload_service_test_upload(UploadService::uploadFilePsd(...), 'psd-ext', '/whatever/layered.psd');
-        upload_service_test_upload(UploadService::uploadFileEps(...), 'eps-ext', '/whatever/vector.eps');
+        upload_service_test_upload(upload_service_test_make()->uploadFilePdf(...), 'pdf-ext', '/whatever/document.pdf');
+        upload_service_test_upload(upload_service_test_make()->uploadFileHeic(...), 'heic-ext', '/whatever/photo.heic');
+        upload_service_test_upload(upload_service_test_make()->uploadFileTiff(...), 'tiff-ext', '/whatever/photo.tiff');
+        upload_service_test_upload(upload_service_test_make()->uploadFilePsd(...), 'psd-ext', '/whatever/layered.psd');
+        upload_service_test_upload(upload_service_test_make()->uploadFileEps(...), 'eps-ext', '/whatever/vector.eps');
 
         $logged = file_get_contents($logDir . '/handlers.log');
         expect($logged)
@@ -1867,7 +1898,7 @@ test('uploadFilePdf actually applies pdfJpgQuality to the generated representati
     try {
         $lowPdf = $dir . '/quality-low.pdf';
         upload_service_convert_sample($png, $lowPdf);
-        upload_service_test_upload(UploadService::uploadFilePdf(...), null, $lowPdf);
+        upload_service_test_upload(upload_service_test_make()->uploadFilePdf(...), null, $lowPdf);
         $lowSize = filesize($dir . '/pwg_representative/quality-low.jpg');
     } finally {
         CurrentConfigTestFactory::get()->pdfJpgQuality = 90;
@@ -1877,7 +1908,7 @@ test('uploadFilePdf actually applies pdfJpgQuality to the generated representati
     try {
         $highPdf = $dir . '/quality-high.pdf';
         upload_service_convert_sample($png, $highPdf);
-        upload_service_test_upload(UploadService::uploadFilePdf(...), null, $highPdf);
+        upload_service_test_upload(upload_service_test_make()->uploadFilePdf(...), null, $highPdf);
         $highSize = filesize($dir . '/pwg_representative/quality-high.jpg');
     } finally {
         CurrentConfigTestFactory::get()->pdfJpgQuality = 90;

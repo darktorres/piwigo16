@@ -38,6 +38,7 @@ use Piwigo\Permission\PermissionCriteria;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -171,6 +172,19 @@ test('currentUser() throws when the container returns an unexpected type for Cur
     // CurrentUser::class resolves to something other than a CurrentUser
     // instance, something that never legitimately happens through
     // Kernel::boot()'s own public API.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction:
+    // imageServiceTestInsertImage() INSERTs an `images` row, and
+    // `images` carries a FULLTEXT index (images_ft_name_comment/
+    // images_ft_author) whose auxiliary-index maintenance can deadlock
+    // against another --parallel worker's own concurrent images INSERT
+    // when held open for a whole test's duration -- same mechanism,
+    // same fix, as TagServiceTest.php's 'getTagIds() creates a new tag
+    // for a plain name when allowed' (reproduced live there:
+    // DeadlockException). Every other test below using
+    // imageServiceTestInsertImage() (or its own raw INSERT/UPDATE/DELETE
+    // against images/categories/tags) is exempt for the same reason.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/curruserwrongtype.jpg');
     $service = imageServiceTestNewService($repo, $conn);
@@ -221,6 +235,10 @@ test('filterState() throws when the container returns an unexpected type for Fil
     // bound to the real container definition here (only FilterState::class
     // is overridden), so currentUser() itself still resolves normally and
     // this isolates filterState()'s own guard specifically.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/filterstatewrongtype.jpg');
     $service = imageServiceTestNewService($repo, $conn);
@@ -312,6 +330,10 @@ test('countOrphans computes the real difference (not sum) between all images and
     // this real fixture has real categorized images too) -- comfortably
     // distinguishable from the real subtraction even with a handful of
     // concurrent images appearing/disappearing elsewhere mid-test.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $orphanId = imageServiceTestInsertImage($conn, 'upload/2026/07/orphan-for-count.jpg');
 
@@ -349,6 +371,10 @@ test('getRowWithCondition returns the real image row when one genuinely matches,
     // both the real code and this mutation identically. A real,
     // just-inserted image id proves the delegate genuinely forwards
     // findRowWithCondition()'s own found-row result.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/row-with-condition.jpg');
 
@@ -799,6 +825,9 @@ function imageServiceTestInsertImage(Connection $conn, string $path, ?string $re
 }
 
 test('deleteElementFiles deletes the original, its representative, and its formats for local rows; skips remote rows without touching disk', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -873,6 +902,10 @@ test('deleteElementFiles accumulates every registered format for an id, not just
     // unobservable (there was nothing to wipe yet). Two format rows for
     // the SAME image id force a second loop iteration that would wipe
     // the first format back to [] under the mutant, losing it.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -934,6 +967,10 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     // unbounded "every image" assertions elsewhere in the suite. The
     // whole arrange-and-insert step now lives inside try/finally too,
     // so any failure (setup or assertion alike) still cleans up.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -973,6 +1010,10 @@ test('deleteElementFiles treats an explicitly-empty-string representative_ext th
     // produce (originalToRepresentative() with a '' ext leaves a
     // trailing dot and no extension) proves whether that extra
     // files[]-entry / unlink attempt genuinely happened.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -1011,6 +1052,10 @@ test('deleteElementFiles stops removing a row\'s remaining files (`break`, not `
     // (exact message content) together with line 236's BreakToContinue
     // (a representative file AFTER the failing original in the same
     // row's own $files list is left untouched, not also removed).
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -1072,6 +1117,10 @@ test('deleteElementFiles adds representative_ext to the derivative-cache lookup 
     // pattern), one at the path it targets when absent (the plain
     // pattern) -- real code must remove exactly the first and leave the
     // second untouched.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -1110,6 +1159,9 @@ test('deleteElementFiles adds representative_ext to the derivative-cache lookup 
 });
 
 test('deleteElementFiles stops at the first file it cannot remove and does not report that id or any id after it', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -1157,6 +1209,9 @@ test('deleteElementFiles stops at the first file it cannot remove and does not r
 });
 
 test('deleteElements() returns 0 without touching the database when physical deletion removes zero files', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -1206,6 +1261,10 @@ test('deleteElements() with physical deletion removing zero files never fires de
     // mutants wrongly falls through to, is dispatching DeleteElements($ids)
     // with an empty $ids and calling activityLogger->record(), neither of
     // which real code ever does once physical deletion removed nothing.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -1259,6 +1318,10 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
     // RemoveMethodCall (delete_elements), and line 294's RemoveMethodCall
     // (activityLogger->record()) together -- each is a real,
     // independently observable side effect of one call.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/notifydelete.jpg');
     $urlService = new ImageServiceTestFakeUrlService();
@@ -1366,6 +1429,10 @@ test('associateImagesToCategories() treats a numeric-string image id as already 
     // as a brand new association and attempt a duplicate INSERT, which
     // the real (image_id, category_id) PRIMARY KEY rejects outright --
     // turning this test into an uncaught exception under the mutation.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/existingassoc.jpg');
     $rankColumn = $conn->getDatabasePlatform()
@@ -1398,6 +1465,9 @@ test('associateImagesToCategories() treats a numeric-string image id as already 
 });
 
 test('moveImagesToCategories() returns false for an empty image list, and treats a non-array $categories as none', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/mover.jpg');
     $conn->createQueryBuilder()
@@ -1451,8 +1521,18 @@ test('associateImagesToCategories() initializes a brand new category\'s starting
     // is exactly the "needs a random representative" case
     // categoryService()->updateCategory() resolves -- proving line 445
     // genuinely ran.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why. The category INSERT
+    // below also gives `rank` an explicit, high value rather than
+    // leaving it to the schema's own NULL default -- see
+    // ImageRepositoryTest.php's own 'findRepresentedCategoryIds...' for
+    // why that matters.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $conn->executeStatement("INSERT INTO categories (name) VALUES ('mutation-sweep-fresh-category')");
+    $categoriesRank = $conn->getDatabasePlatform()
+        ->quoteSingleIdentifier('rank');
+    $conn->executeStatement("INSERT INTO categories (name, {$categoriesRank}) VALUES ('mutation-sweep-fresh-category', 999)");
     $categoryId = (int) $conn->lastInsertId();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/freshcategoryrank.jpg');
 
@@ -1489,6 +1569,10 @@ test('moveImagesToCategories() actually associates images to a real, non-empty c
     // test above only ever reaches this guard with $categories coerced
     // to [] (a non-array input), never with a genuine non-empty array
     // that must actually trigger associateImagesToCategories().
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/moverreal.jpg');
 
@@ -1515,6 +1599,10 @@ test('addMd5sum() computes and persists a real md5sum for a readable file, prefi
     // anything) together -- a wrong path fails is_readable() (md5sum
     // stays null), and a skipped persist call also leaves it null, so
     // only real, correct code produces the real hash on the real row.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -1550,6 +1638,10 @@ test('addMd5sum() does not stop at the first unhashable id -- a later id in the 
     // Duplicate entry collision, with setup outside try/finally letting
     // the failure orphan the row and cascade into unrelated tests
     // elsewhere in the suite.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -1578,6 +1670,9 @@ test('addMd5sum() does not stop at the first unhashable id -- a later id in the 
 });
 
 test('addMd5sum() skips ids whose file cannot be hashed and still counts them among the ids it considered', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
@@ -1666,6 +1761,10 @@ test('getImageInfos() returns the real row for an existing image id, not null', 
     // row back; the mutant's flipped condition takes the null branch
     // instead and never calls findById() at all, always returning null
     // for ANY existing id.
+    //
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/realgetinfos.jpg');
 
@@ -1780,6 +1879,9 @@ function imageServiceTestSeedCurrentLogger(Logger $logger): void
  * same-category run length.
  */
 test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end messages exactly, and empties every real lounge row into image_category', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
 
@@ -2339,6 +2441,9 @@ test('countPdfPages() returns false when the path passes is_file()/is_readable()
 });
 
 test('updateFormatFilesize() delegates straight through to the repository', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/updformatfilesize.jpg');
     $formatId = $repo->insertFormat(ImageId::from($imageId), 'webp', null);
@@ -2358,6 +2463,9 @@ test('updateFormatFilesize() delegates straight through to the repository', func
 });
 
 test('getIdsByFilenameInCategory() delegates straight through to the repository', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/filenameincat.jpg');
     $conn->createQueryBuilder()
@@ -2385,6 +2493,9 @@ test('getIdsByFilenameInCategory() delegates straight through to the repository'
 });
 
 test('getIdsVisibleInCategoriesRecentlyAvailable() delegates straight through to the repository', function (): void {
+    // Exempt from tests/Pest.php's blanket per-test transaction -- see
+    // 'currentUser() throws...' above for why.
+    DbTransactionTestOverride::rollback();
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/recentlyavailable.jpg');
     $conn->executeStatement('UPDATE images SET date_available = NOW() WHERE id = ?', [$imageId]);

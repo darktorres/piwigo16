@@ -89,15 +89,13 @@ namespace Piwigo\Tests\Integration {
      * SessionService::generateKey(30)'s real random_bytes() CSPRNG can't be
      * seeded to force a collision against a pre-inserted row either.
      * generatePasswordLink()'s strtotime() failure guard is left uncovered
-     * as genuinely unreachable, not just impractical: empirically (`php
-     * -r`), every int $duration extreme enough to make
-     * strtotime('now -' . $duration . ' second') return false is *also*
-     * extreme enough that the earlier `(clone Env::now())->modify('+' .
-     * $duration . ' seconds')` call (both config-typed `int` durations
-     * this method reads always reach that line first) throws
-     * DateMalformedStringException before execution ever gets this far --
-     * confirmed across the full magnitude range where either function's
-     * behavior changes, no int value threads the gap between the two.
+     * as genuinely unreachable, not just impractical: every int $duration
+     * extreme enough to make strtotime('now -' . $duration . ' second')
+     * return false is *also* extreme enough that the earlier `(clone
+     * Env::now())->modify('+' . $duration . ' seconds')` call (both
+     * config-typed `int` durations this method reads always reach that
+     * line first) throws DateMalformedStringException before execution
+     * ever gets this far -- no int value threads the gap between the two.
      */
     final class AuthServiceTest extends IntegrationTestCase
     {
@@ -387,20 +385,19 @@ namespace Piwigo\Tests\Integration {
                 // logUser(); see the lang-cookie-sync test above for why
                 // that needs the same no-op error handler.
                 //
-                // Real bug, found live: autoLogin() sets $_SESSION[
-                // 'connected_with'] = 'pwg_ui' BEFORE calling logUser(),
-                // and logUser() itself only calls session_regenerate_id()
-                // (which preserves the current $_SESSION content) when a
-                // session is ALREADY active -- otherwise it calls
-                // session_start(), which *reloads* $_SESSION from the
-                // persisted (DB-backed) store, clobbering the in-memory
-                // 'connected_with' write made moments earlier. A real HTTP
-                // request's bootstrap chain always has an active session
-                // by the time autoLogin() runs, so this never bites in
-                // production -- but this CLI test process starts with no
-                // active session, so it must start one first to match that
-                // real precondition (confirmed live: without this,
-                // connected_with reads back null every time).
+                // autoLogin() sets $_SESSION['connected_with'] = 'pwg_ui'
+                // BEFORE calling logUser(), and logUser() itself only calls
+                // session_regenerate_id() (which preserves the current
+                // $_SESSION content) when a session is ALREADY active --
+                // otherwise it calls session_start(), which *reloads*
+                // $_SESSION from the persisted (DB-backed) store,
+                // clobbering the in-memory 'connected_with' write made
+                // moments earlier. A real HTTP request's bootstrap chain
+                // always has an active session by the time autoLogin()
+                // runs, so this never bites in production -- but this CLI
+                // test process starts with no active session, so it must
+                // start one first to match that real precondition: without
+                // this, connected_with reads back null every time.
                 if (session_status() !== \PHP_SESSION_ACTIVE) {
                     set_error_handler(static fn (): bool => true);
                     try {
@@ -554,8 +551,8 @@ namespace Piwigo\Tests\Integration {
             // this time with the correct password -- is old enough to be
             // fast-rejected by the user-scoped lockout block itself.
             //
-            // Real bug, found live: pwgLogin()'s IP-scoped lockout check
-            // runs FIRST, before the username is even resolved, and only
+            // pwgLogin()'s IP-scoped lockout check runs FIRST, before the
+            // username is even resolved, and only
             // when $_SERVER['REMOTE_ADDR'] is non-empty (see
             // test_pwg_login_locks_out_the_username_after_max_attempts_
             // even_with_the_correct_password()'s own docblock: this CLI

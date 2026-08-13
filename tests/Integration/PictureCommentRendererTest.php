@@ -85,9 +85,9 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // common.po wording (which differs slightly from the raw English
         // literal passed to Lang::t()) -- whether common.lang happens to
         // already be loaded otherwise depends on which other Integration
-        // test file ran earlier in this shared process, confirmed live.
-        // Loading it explicitly here makes that assertion deterministic
-        // regardless of run order.
+        // test file ran earlier in this shared process. Loading it
+        // explicitly here makes that assertion deterministic regardless
+        // of run order.
         LangTestFactory::get()->load('common.lang');
 
         $this->conn = DbConnection::build();

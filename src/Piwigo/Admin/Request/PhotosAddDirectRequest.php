@@ -20,12 +20,18 @@ use Piwigo\Validation\InputValidator;
  * skipped when the feature is disabled, exactly like the original,
  * not just when the param happens to be present.
  *
- * `postLevel` stays `mixed` -- the original never validated it either,
- * passing it straight through to a template array with a bare
- * `?? 0` default.
+ * `postLevel` is never validated either, passed straight through to a
+ * template array with a bare `?? 0` default --
+ * `array<array-key, mixed>|string|int|null` (not a bare `mixed`) is
+ * the real shape that default plus real `$_POST` data can ever
+ * produce: a literal `int` `0` when absent, or whatever `$_POST['level']`
+ * itself holds (always `string`/`array` from real POST data).
  */
 final readonly class PhotosAddDirectRequest
 {
+    /**
+     * @param array<array-key, mixed>|string|int|null $postLevel
+     */
     private function __construct(
         public bool $batchPresent,
         public string $batch,
@@ -34,7 +40,7 @@ final readonly class PhotosAddDirectRequest
         public string $formatsId,
         public bool $albumPresent,
         public ?int $albumId,
-        public mixed $postLevel,
+        public array|string|int|null $postLevel,
         public bool $hideWarningsPresent,
     ) {}
 
@@ -85,6 +91,9 @@ final readonly class PhotosAddDirectRequest
             $album_id = is_numeric($get['album']) ? (int) $get['album'] : null;
         }
 
+        $raw_level = $post['level'] ?? 0;
+        $post_level = is_string($raw_level) || is_array($raw_level) || is_int($raw_level) ? $raw_level : null;
+
         return new self(
             $batch_present,
             $batch,
@@ -93,7 +102,7 @@ final readonly class PhotosAddDirectRequest
             $formats_id,
             $album_present,
             $album_id,
-            $post['level'] ?? 0,
+            $post_level,
             isset($get['hide_warnings']),
         );
     }

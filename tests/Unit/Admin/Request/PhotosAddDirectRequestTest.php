@@ -138,6 +138,24 @@ test('fromArrays passes postLevel through raw from POST', function (): void {
         ->toBe('8');
 });
 
+test('fromArrays keeps a malformed array postLevel value verbatim', function (): void {
+    $request = PhotosAddDirectRequest::fromArrays([], [
+        'level' => ['8'],
+    ], true, new InputValidator());
+
+    expect($request->postLevel)
+        ->toBe(['8']);
+});
+
+test('fromArrays nulls postLevel when present but outside array/string/int', function (): void {
+    $request = PhotosAddDirectRequest::fromArrays([], [
+        'level' => 8.5,
+    ], true, new InputValidator());
+
+    expect($request->postLevel)
+        ->toBeNull();
+});
+
 test('fromArrays reports hideWarningsPresent when present', function (): void {
     $request = PhotosAddDirectRequest::fromArrays([
         'hide_warnings' => '1',

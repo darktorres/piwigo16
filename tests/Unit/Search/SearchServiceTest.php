@@ -937,6 +937,12 @@ test('getRegularSearchResults() filters by filetypes', function (): void {
     // each builds its own indexed `:filetype{$i}` clause/param pair, so
     // this is what actually exercises the loop's own per-index param
     // naming, not just its single-element degenerate case.
+    //
+    // Filtered down to known-real ids rather than an unfiltered toBe(),
+    // since another --parallel worker's own FULLTEXT-deadlock-exempted
+    // disposable image (tagServiceTestDisposableImageId()'s own path
+    // also ends in .jpg) can transiently match this same filetypes
+    // scope too.
     $search = [
         'fields' => [
             'filetypes' => ['png', 'jpg'],
@@ -946,7 +952,7 @@ test('getRegularSearchResults() filters by filetypes', function (): void {
     $results = searchServiceTestService()
         ->getRegularSearchResults($search);
 
-    $items = $results['items'];
+    $items = array_values(array_intersect($results['items'], [1, 2, 3, 4, 5]));
     sort($items);
     expect($items)
         ->toBe([1, 2, 3, 4, 5])
@@ -1582,10 +1588,15 @@ test('getQuickSearchResultsNoCache() wildcarded empty author matches authored im
 });
 
 test('getQuickSearchResultsNoCache() plain empty author matches unauthored images', function (): void {
+    // Filtered down to known-real ids rather than an unfiltered toBe(),
+    // since `author` defaults to NULL -- another --parallel worker's own
+    // FULLTEXT-deadlock-exempted disposable image (author never set
+    // explicitly) can transiently match this same empty-author scope.
     $results = searchServiceTestService()
         ->getQuickSearchResultsNoCache('author:', []);
 
-    $items = $results['items'];
+    $itemIds = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $results['items']);
+    $items = array_values(array_intersect($itemIds, [1, 2, 3, 4, 5]));
     sort($items);
     expect($items)
         ->toBe([1, 2, 3, 4, 5]);
@@ -1626,10 +1637,17 @@ test('getQuickSearchResultsNoCache() filters by size scope', function (): void {
 
 test('getQuickSearchResultsNoCache() filters by hits scope', function (): void {
     // every fixture image's hit counter is 0.
+    //
+    // Filtered down to known-real ids rather than an unfiltered toBe(),
+    // since `hit` defaults to 0 (not NULL) -- another --parallel
+    // worker's own FULLTEXT-deadlock-exempted disposable image (hit
+    // counter never set explicitly) can transiently match this same
+    // hits:0 scope too.
     $results = searchServiceTestService()
         ->getQuickSearchResultsNoCache('hits:0', []);
 
-    $items = $results['items'];
+    $itemIds = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $results['items']);
+    $items = array_values(array_intersect($itemIds, [1, 2, 3, 4, 5]));
     sort($items);
     expect($items)
         ->toBe([1, 2, 3, 4, 5]);

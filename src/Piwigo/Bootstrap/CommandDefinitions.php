@@ -8,6 +8,7 @@ use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
 use Piwigo\Command\BackupCreateCommand;
 use Piwigo\Command\BackupRestoreCommand;
 use Piwigo\Command\CacheClearCommand;
+use Piwigo\Command\LintLatteCommand;
 use Piwigo\Command\MaintenanceOrphanTagsCommand;
 use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Command\MaintenancePurgeHistoryCommand;
@@ -45,6 +46,7 @@ final class CommandDefinitions
             MaintenancePurgeFailedLoginsCommand::class,
             MigrateCommand::class,
             SchemaDumpCommand::class,
+            LintLatteCommand::class,
         ];
     }
 }

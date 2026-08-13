@@ -7,6 +7,7 @@ use Piwigo\Bootstrap\CommandDefinitions;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ShutdownHandler;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -14,7 +15,6 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserStatus;
 use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 
 /**
@@ -28,8 +28,24 @@ use Symfony\Component\Console\Command\Command;
  * list. The "must return an array" guard no longer applies --
  * `CommandDefinitions::all(): array` is return-type-hinted, so PHP itself
  * makes a non-array return impossible.
+ *
+ * A real `Paths` is required below (unlike this file's own history before
+ * `LintLatteCommand` landed, when every real command's dependency graph
+ * happened to bottom out without ever needing one) -- `buildApplication()`
+ * resolves every `CommandDefinitions::all()` entry to add it to the
+ * `Application`, and `LintLatteCommand` transitively needs a real
+ * `Piwigo\Core\Paths` (via `PiwigoExtension` -> `Template` -> `Lang` ->
+ * ... ), which has no container binding at all when `$paths` is null
+ * (confirmed live: PHP-DI's own "has no value defined or guessable"
+ * failure on `Paths::$root`). Real production always passes a real
+ * `Paths` here (`bin/piwigo` itself does) -- this was only ever a
+ * no-args convenience for tests that didn't need one, not a genuine
+ * "commands must never need Paths" constraint.
  */
 beforeEach(function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-cli-bootstrap-test-' . bin2hex(random_bytes(8));
+    $this->root = $root;
+    mkdir($root, 0o777, true);
     Kernel::reset();
 });
 
@@ -41,27 +57,37 @@ afterEach(function (): void {
     // matching ShutdownHandlerTest.php's own established convention.
     ShutdownHandler::reset();
     pcntl_signal(SIGTERM, SIG_DFL);
+    if (is_dir($this->root)) {
+        exec('rm -rf ' . escapeshellarg($this->root));
+    }
 });
 
 test('CommandDefinitions entries resolve to registered command names', function (): void {
-    $application = CliBootstrap::buildApplication();
+    $application = CliBootstrap::buildApplication(Paths::fromRoot($this->root));
 
     $commandClasses = CommandDefinitions::all();
     expect($commandClasses)
         ->not->toBe([]);
 
+    // Matched by class, not by re-deriving the name from AsCommand's own
+    // attribute instance -- `AsCommand`'s constructor rewrites `$name` for
+    // a `hidden: true` command into a `|`-prefixed internal encoding
+    // (confirmed live: "lint:latte:inner" becomes "|lint:latte:inner"),
+    // so `$application->has($attribute->name)` would wrongly fail for any
+    // hidden command even though it's genuinely registered and runnable
+    // (`Application::all()` includes hidden commands -- only `list`'s own
+    // output filters them, confirmed via `Command::isHidden()`).
+    $registeredClasses = array_map(get_class(...), $application->all());
+
     foreach ($commandClasses as $commandClass) {
         expect(is_subclass_of($commandClass, Command::class))->toBeTrue();
-
-        $attribute = new ReflectionClass($commandClass)
-            ->getAttributes(AsCommand::class)[0]->newInstance();
-        expect($application->has($attribute->name))
-            ->toBeTrue();
+        expect($registeredClasses)
+            ->toContain($commandClass);
     }
 });
 
 test('the built Application also exposes the Console built-in commands', function (): void {
-    $application = CliBootstrap::buildApplication();
+    $application = CliBootstrap::buildApplication(Paths::fromRoot($this->root));
 
     expect($application->has('list'))
         ->toBeTrue()
@@ -72,7 +98,7 @@ test('the built Application also exposes the Console built-in commands', functio
 test('buildApplication attaches a real CurrentUser (guest) globally', function (): void {
     CurrentUserTestFactory::get()->reset();
 
-    CliBootstrap::buildApplication();
+    CliBootstrap::buildApplication(Paths::fromRoot($this->root));
 
     expect(CurrentUserTestFactory::get()->get()->status)->toBe(UserStatus::Guest);
 
@@ -80,7 +106,7 @@ test('buildApplication attaches a real CurrentUser (guest) globally', function (
 });
 
 test('buildApplication initializes CurrentConfigService with a real, resolved ConfigService', function (): void {
-    CliBootstrap::buildApplication();
+    CliBootstrap::buildApplication(Paths::fromRoot($this->root));
 
     expect(fn (): ConfigService => CurrentConfigServiceTestFactory::get()->get())->not->toThrow(LogicException::class);
 });
@@ -96,7 +122,7 @@ test('run() installs the shutdown handler, builds the Application and executes t
     // call, not some earlier test in the same worker process.
     pcntl_signal(SIGTERM, SIG_DFL);
 
-    $exitCode = CliBootstrap::run(['piwigo', 'list', '--quiet']);
+    $exitCode = CliBootstrap::run(['piwigo', 'list', '--quiet'], Paths::fromRoot($this->root));
 
     expect(pcntl_signal_get_handler(SIGTERM))
         ->not->toBe(SIG_DFL);

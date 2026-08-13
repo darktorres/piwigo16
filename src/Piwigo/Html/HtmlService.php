@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Html;
 
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
@@ -22,8 +23,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Event\Picture\GetThumbnailTitle;
 use Piwigo\Event\Picture\RenderElementDescription;
@@ -52,10 +51,15 @@ use Piwigo\Users\CurrentUser;
  *
  * Constructor collaborators are CurrentConfig, EventDispatcher,
  * ProcessCache, ErrorCollector, CurrentUser, CurrentTemplate, PageState,
- * and Translator, plus an optional, lazy-defaulted CategoryRepository
- * (getCatDisplayNameCache()'s own need) -- this class still has hundreds
- * of real `new HtmlService(...)` construction sites, and a DB-backed
- * repository isn't worth forcing on every one of them.
+ * Translator, CategoryRepository (getCatDisplayNameCache()'s own need),
+ * and EntityManagerInterface (getCatDisplayNameFromId()'s own throwaway
+ * CategoryService construction) -- despite the "hundreds of real
+ * `new HtmlService(...)` construction sites" this class used to be
+ * built for defensively, there's really only one outside this class's
+ * own container-resolved production path
+ * (Admin\Extensions\ExtensionScanner.php) and one shared test factory
+ * (Tests\Support\HtmlServiceTestFactory), so requiring these two more
+ * collaborators doesn't meaningfully widen the blast radius.
  *
  * `Lang` is NOT a required constructor param, despite being a shim this
  * class reads -- it stays a lazily-resolved private helper below (same
@@ -121,14 +125,9 @@ final readonly class HtmlService implements HtmlRenderingInterface
         private CurrentTemplate $currentTemplate,
         private PageState $pageState,
         private Translator $translator,
-        private ?CategoryRepository $categoryRepo = null,
+        private CategoryRepository $categoryRepo,
+        private EntityManagerInterface $entityManager,
     ) {}
-
-    private function categoryRepo(): CategoryRepository
-    {
-        return $this->categoryRepo
-            ?? new CategoryRepository(EntityManagerFactory::build(DbConnection::build()), $this->currentConfig);
-    }
 
     /**
      * Container resolve, not a constructor property -- Lang's own
@@ -266,7 +265,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
         if ($this->processCache->has('cat_names')) {
             $cat_names_raw = $this->processCache->get('cat_names');
         } else {
-            $cat_names_raw = $this->categoryRepo()
+            $cat_names_raw = $this->categoryRepo
                 ->findAllIdNamePermalink();
             $this->processCache->set('cat_names', $cat_names_raw);
         }
@@ -338,15 +337,15 @@ final readonly class HtmlService implements HtmlRenderingInterface
         // -- HtmlService can never depend on CategoryService: CategoryService
         // needs UrlServiceInterface, which needs HtmlRenderingInterface,
         // which HtmlService implements -- a real cycle. Reuses this class's
-        // own lazy categoryRepo() rather than building a second repository.
-        $categoryConn = DbConnection::build();
+        // own categoryRepo/entityManager rather than building a second
+        // repository/EntityManager.
         $cat_info = new CategoryService(
             $this->lang(),
-            $this->categoryRepo(),
+            $this->categoryRepo,
             new PermissionService(
-                new PermissionRepository(EntityManagerFactory::build($categoryConn)),
-                EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class),
-                new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig),
+                new PermissionRepository($this->entityManager),
+                $this->entityManager->getRepository(GroupEntity::class),
+                new CategoryRepository($this->entityManager, $this->currentConfig),
                 $this->currentUser,
                 $this->filterState(),
                 $this->accessLevelChecker()

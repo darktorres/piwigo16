@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Admin\PluginLoader;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AppInfo;
@@ -104,6 +105,7 @@ final class ExtensionScanner
             // nameCompare() itself is a pure strcmp()-on-strtolower()
             // comparator that touches none of them, so bare/throwaway
             // instances are harmless here.
+            $extensionScannerConn = DbConnection::build();
             @uasort($found, new HtmlService(
                 new CurrentConfig(),
                 new EventDispatcher(),
@@ -113,6 +115,8 @@ final class ExtensionScanner
                 new CurrentTemplate(),
                 new PageState(),
                 new Translator(new CurrentConfig()),
+                new CategoryRepository(EntityManagerFactory::build($extensionScannerConn), new CurrentConfig()),
+                EntityManagerFactory::build($extensionScannerConn),
             )->nameCompare(...));
         }
 

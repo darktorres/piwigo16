@@ -2165,7 +2165,8 @@ test('setStatusHeader sends a real HTTP/1.1 status line, with the given code and
     file_put_contents(
         $docRoot . '/index.php',
         '<?php require ' . var_export(dirname(__DIR__, 3) . '/vendor/autoload.php', true) . ';'
-        . '(new \Piwigo\Html\HtmlService(new \Piwigo\Config\CurrentConfig(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\ProcessCache(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir())), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Template\CurrentTemplate(), new \Piwigo\Core\PageState(), new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig())))->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
+        . '$em = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build());'
+        . '(new \Piwigo\Html\HtmlService(new \Piwigo\Config\CurrentConfig(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\ProcessCache(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir())), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Template\CurrentTemplate(), new \Piwigo\Core\PageState(), new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Category\CategoryRepository($em, new \Piwigo\Config\CurrentConfig()), $em))->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
     );
 
     [$proc, $port] = htmlServiceTestStartStatusHeaderServer($docRoot);
@@ -2199,7 +2200,8 @@ test('setStatusHeader falls back to HTTP/1.0 for a SERVER_PROTOCOL value that is
         $docRoot . '/index.php',
         '<?php require ' . var_export(dirname(__DIR__, 3) . '/vendor/autoload.php', true) . ';'
         . '$_SERVER[\'SERVER_PROTOCOL\'] = \'HTTP/9.9\';'
-        . '(new \Piwigo\Html\HtmlService(new \Piwigo\Config\CurrentConfig(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\ProcessCache(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir())), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Template\CurrentTemplate(), new \Piwigo\Core\PageState(), new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig())))->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
+        . '$em = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build());'
+        . '(new \Piwigo\Html\HtmlService(new \Piwigo\Config\CurrentConfig(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\ProcessCache(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir())), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Template\CurrentTemplate(), new \Piwigo\Core\PageState(), new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Category\CategoryRepository($em, new \Piwigo\Config\CurrentConfig()), $em))->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
     );
 
     [$proc, $port] = htmlServiceTestStartStatusHeaderServer($docRoot);
@@ -2245,7 +2247,8 @@ test('setStatusHeader actually calls header(), not a no-op, for a real request',
     file_put_contents(
         $docRoot . '/index.php',
         '<?php require ' . var_export(dirname(__DIR__, 3) . '/vendor/autoload.php', true) . ';'
-        . '(new \Piwigo\Html\HtmlService(new \Piwigo\Config\CurrentConfig(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\ProcessCache(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir())), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Template\CurrentTemplate(), new \Piwigo\Core\PageState(), new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig())))->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
+        . '$em = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build());'
+        . '(new \Piwigo\Html\HtmlService(new \Piwigo\Config\CurrentConfig(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\ProcessCache(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir())), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Template\CurrentTemplate(), new \Piwigo\Core\PageState(), new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Category\CategoryRepository($em, new \Piwigo\Config\CurrentConfig()), $em))->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
     );
 
     [$proc, $port] = htmlServiceTestStartStatusHeaderServer($docRoot);

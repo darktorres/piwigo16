@@ -11,24 +11,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Site;
 
-use LogicException;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
-use Piwigo\Core\FilterState;
-use Piwigo\Core\Kernel;
-use Piwigo\Core\Lang;
-use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionEntity;
-use Piwigo\Session\SessionService;
 use Piwigo\Site\Projection\ElementUpdateAttributes;
-use Piwigo\Users\CurrentUser;
 
 // provides data for site synchronization from the local file system
 final class LocalSiteReader
@@ -46,91 +33,12 @@ final class LocalSiteReader
     public function __construct(
         public string $site_url,
         private readonly CurrentConfig $currentConfig,
-        private readonly ?MetadataService $metadataService = null,
+        private readonly MetadataService $metadataService,
     ) {
         // flip_file_ext/flip_picture_ext are pure per-instance derived
         // state (never DB-persisted), computed once per instance here.
         $this->flip_file_ext = array_flip($this->currentConfig->fileExtensions);
         $this->flip_picture_ext = array_flip($this->currentConfig->pictureExtensions);
-    }
-
-    /**
-     * Optional-with-lazy-default -- only the 2 metadata-sync methods below
-     * reach this dependency, and both real callers construct this class
-     * with just a site URL.
-     */
-    private function metadataService(): MetadataService
-    {
-        return $this->metadataService
-            ?? new MetadataService($this->lang(), new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), new CurrentLogger(), $this->eventDispatcher(), $this->currentConfig, new CurrentUser($this->currentConfig), $this->sessionService(), new FilterState(), $this->paths());
-    }
-
-    /**
-     * No pre-boot fallback (unlike eventDispatcher()/sessionService()
-     * below) -- there is no sensible default to construct when the
-     * container isn't booted, so this throws instead.
-     */
-    private function paths(): Paths
-    {
-        $paths = Kernel::container()->get(Paths::class);
-        if (! $paths instanceof Paths) {
-            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
-        }
-
-        return $paths;
-    }
-
-    /**
-     * Container resolve, not a constructor property -- used only inside
-     * metadataService()'s own lazy-default fallback above. A required
-     * constructor param here would break this class's own "both real
-     * callers construct with just a site URL" simplicity.
-     */
-    private function lang(): Lang
-    {
-        $lang = Kernel::container()->get(Lang::class);
-        if (! $lang instanceof Lang) {
-            throw new LogicException('Container returned an unexpected type for ' . Lang::class);
-        }
-
-        return $lang;
-    }
-
-    /**
-     * Gracefully falls back to a new EventDispatcher() when
-     * Kernel::boot() hasn't run yet -- unlike lang()/paths() above,
-     * which have no safe default and always throw.
-     */
-    private function eventDispatcher(): EventDispatcher
-    {
-        if (Kernel::isBooted()) {
-            $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
-            if (! $eventDispatcher instanceof EventDispatcher) {
-                throw new LogicException('Container returned an unexpected type for ' . EventDispatcher::class);
-            }
-
-            return $eventDispatcher;
-        }
-
-        return new EventDispatcher();
-    }
-
-    /**
-     * Same reasoning as eventDispatcher() above -- SessionService::get()
-     * has its own identical pre-boot fallback too.
-     */
-    private function sessionService(): SessionService
-    {
-        if (Kernel::isBooted()) {
-            $sessionService = Kernel::container()->get(SessionService::class);
-            if (! $sessionService instanceof SessionService) {
-                throw new LogicException('Container returned an unexpected type for ' . SessionService::class);
-            }
-
-            return $sessionService;
-        }
-
-        return new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig());
     }
 
     /**
@@ -245,7 +153,7 @@ final class LocalSiteReader
      */
     public function getMetadataAttributes(): array
     {
-        return $this->metadataService()
+        return $this->metadataService
             ->getSyncMetadataAttributes();
     }
 
@@ -259,7 +167,7 @@ final class LocalSiteReader
      */
     public function getElementMetadata(array $infos): array|false
     {
-        return $this->metadataService()
+        return $this->metadataService
             ->getSyncMetadata($infos);
     }
 

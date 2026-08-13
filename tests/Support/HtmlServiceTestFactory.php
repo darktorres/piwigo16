@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Support;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -12,6 +13,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -34,6 +37,8 @@ final class HtmlServiceTestFactory
 {
     public static function build(?CategoryRepository $categoryRepo = null): HtmlService
     {
+        $entityManager = self::resolve(EntityManagerInterface::class) ?? EntityManagerFactory::build(DbConnection::build());
+
         return new HtmlService(
             self::resolve(CurrentConfig::class) ?? new CurrentConfig(),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
@@ -43,7 +48,8 @@ final class HtmlServiceTestFactory
             self::resolve(CurrentTemplate::class) ?? new CurrentTemplate(),
             self::resolve(PageState::class) ?? new PageState(),
             self::resolve(Translator::class) ?? new Translator(new CurrentConfig()),
-            $categoryRepo,
+            $categoryRepo ?? self::resolve(CategoryRepository::class) ?? new CategoryRepository($entityManager, new CurrentConfig()),
+            $entityManager,
         );
     }
 

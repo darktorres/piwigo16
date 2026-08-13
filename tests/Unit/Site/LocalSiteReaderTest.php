@@ -3,9 +3,24 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Lang\Translator;
+use Piwigo\Metadata\MetadataRepository;
+use Piwigo\Metadata\MetadataService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Site\Projection\ElementUpdateAttributes;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Users\CurrentUser;
 
 /**
  * LocalSiteReader is otherwise exercised end-to-end by
@@ -19,8 +34,9 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  * getElementUpdateAttributes(). getMetadataAttributes() and
  * getElementMetadata() (the two MetadataService-delegating methods)
  * are already fully covered by that same browser flow and are not
- * exercised again here -- this file never touches the lazy-constructed
- * default MetadataService, so no DB access is needed.
+ * exercised again here -- this file never touches the bare, throwaway
+ * MetadataService it constructs to satisfy LocalSiteReader's required
+ * constructor collaborator, so no DB access is needed.
  *
  * Mutation-sweep notes (pest --mutate --class='Piwigo\Site\LocalSiteReader'):
  * three mutants on getElements() are true equivalent mutants under any
@@ -79,6 +95,28 @@ function requireCurrentConfig(mixed $currentConfig): CurrentConfig
     return $currentConfig;
 }
 
+/**
+ * LocalSiteReader now takes MetadataService as a required constructor
+ * collaborator -- this file never touches it (see this file's own
+ * docblock above), so a bare, DB-free, Kernel-free instance is enough.
+ */
+function lsrTestMetadataService(): MetadataService
+{
+    $currentConfig = new CurrentConfig();
+
+    return new MetadataService(
+        new Lang(new Translator($currentConfig), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
+        new MetadataRepository(EntityManagerFactory::build(DbConnection::build())),
+        new CurrentLogger(),
+        new EventDispatcher(),
+        $currentConfig,
+        new CurrentUser($currentConfig),
+        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $currentConfig),
+        new FilterState(),
+        Paths::fromRoot(sys_get_temp_dir()),
+    );
+}
+
 function lsrRrmdir(string $dir): void
 {
     if (! is_dir($dir)) {
@@ -120,11 +158,11 @@ afterEach(function (): void {
 });
 
 test('open returns true for an existing directory and false for a missing one', function (): void {
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
     expect($reader->open())
         ->toBeTrue();
 
-    $missing = new LocalSiteReader($this->root . '/does-not-exist', $this->currentConfig);
+    $missing = new LocalSiteReader($this->root . '/does-not-exist', $this->currentConfig, lsrTestMetadataService());
     expect($missing->open())
         ->toBeFalse();
 });
@@ -133,7 +171,7 @@ test('getElements skips the . and .. readdir entries', function (): void {
     // An otherwise-empty directory only ever yields '.' and '..' from
     // readdir(), so a non-empty result here (rather than a fatal loop)
     // proves the skip branch ran without needing extra fixture files.
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
 
     expect($reader->getElements($this->root))
         ->toBe([]);
@@ -144,7 +182,7 @@ test('getElements looks up a representative extension for a non-picture file_ext
     file_put_contents($this->root . '/holiday-report.pdf', 'pdf-bytes');
     file_put_contents($this->root . '/pwg_representative/holiday-report.png', 'png-bytes');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
     $elements = $reader->getElements($this->root);
 
     expect($elements)
@@ -158,7 +196,7 @@ test('getElements looks up a representative extension for a non-picture file_ext
 test('getElements looks up a representative extension for a non-picture file_ext element and finds none', function (): void {
     file_put_contents($this->root . '/podcast-episode.mp3', 'mp3-bytes');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
     $elements = $reader->getElements($this->root);
 
     expect($elements)
@@ -172,7 +210,7 @@ test('getElements looks up a representative extension for a non-picture file_ext
 test('getElements does not look up a representative extension for a picture-extension element', function (): void {
     file_put_contents($this->root . '/family-photo.jpg', 'jpg-bytes');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
     $elements = $reader->getElements($this->root);
 
     expect($elements)
@@ -191,7 +229,7 @@ test('getElements attaches per-format sizes under pwg_format when enable_formats
     file_put_contents($this->root . '/pwg_format/scan.cr2', str_repeat('x', 2048));
     file_put_contents($this->root . '/pwg_format/scan.tif', str_repeat('y', 5120));
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
     $elements = $reader->getElements($this->root);
 
     expect($elements)
@@ -210,7 +248,7 @@ test('getElements attaches an empty formats array when enable_formats is on but 
     requireCurrentConfig($this->currentConfig)->isFormatsEnabled = true;
     file_put_contents($this->root . '/scan.jpg', 'jpg-bytes');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
     $elements = $reader->getElements($this->root);
 
     expect($elements)
@@ -226,13 +264,13 @@ test('getElementUpdateAttributes finds a representative extension for a non-pict
     mkdir($this->root . '/pwg_representative');
     file_put_contents($this->root . '/pwg_representative/document.gif', 'gif-bytes');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
 
     expect($reader->getElementUpdateAttributes($this->root . '/document.pdf'))->toEqual(new ElementUpdateAttributes('gif'));
 });
 
 test('getElementUpdateAttributes returns a null representative extension for a picture element', function (): void {
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
 
     expect($reader->getElementUpdateAttributes($this->root . '/photo.png'))->toEqual(new ElementUpdateAttributes(null));
 });
@@ -241,7 +279,7 @@ test('getRepresentativeExt returns the first matching picture extension found un
     mkdir($this->root . '/pwg_representative');
     file_put_contents($this->root . '/pwg_representative/movie.jpg', 'jpg-bytes');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
 
     expect($reader->getRepresentativeExt($this->root, 'movie'))
         ->toBe('jpg');
@@ -250,7 +288,7 @@ test('getRepresentativeExt returns the first matching picture extension found un
 test('getRepresentativeExt returns null when no representative file exists for any picture extension', function (): void {
     mkdir($this->root . '/pwg_representative');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
 
     expect($reader->getRepresentativeExt($this->root, 'movie'))
         ->toBeNull();
@@ -261,7 +299,7 @@ test('getFormats returns the on-disk size in kilobytes for each matching format 
     file_put_contents($this->root . '/pwg_format/negative.tif', str_repeat('a', 4096));
     file_put_contents($this->root . '/pwg_format/negative.psd', str_repeat('b', 1024));
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
 
     expect($reader->getFormats($this->root, 'negative'))
         ->toBe([
@@ -271,7 +309,7 @@ test('getFormats returns the on-disk size in kilobytes for each matching format 
 });
 
 test('getFormats returns an empty array when the pwg_format directory does not exist', function (): void {
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
 
     expect($reader->getFormats($this->root, 'negative'))
         ->toBe([]);
@@ -290,7 +328,7 @@ test('getElements does not look up a representative extension for a picture-exte
     file_put_contents($this->root . '/family-photo.jpg', 'jpg-bytes');
     file_put_contents($this->root . '/pwg_representative/family-photo.png', 'png-bytes');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
     $elements = $reader->getElements($this->root);
 
     expect($elements)
@@ -304,7 +342,7 @@ test('getElements does not look up a representative extension for a picture-exte
 test('getElements lower-cases the file extension before matching it against the configured extension lists', function (): void {
     file_put_contents($this->root . '/vacation.JPG', 'jpg-bytes');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
     $elements = $reader->getElements($this->root);
 
     expect($elements)
@@ -343,7 +381,7 @@ test('getElements recurses into ordinary subdirectories -- including names that 
     mkdir($this->root . '/thumbnail');
     file_put_contents($this->root . '/thumbnail/hidden-4.jpg', 'h4-bytes');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
     $elements = $reader->getElements($this->root);
 
     expect($elements)
@@ -369,7 +407,7 @@ test('getElements returns keys in sorted order regardless of the on-disk readdir
     file_put_contents($this->root . '/mango.jpg', 'm-bytes');
     file_put_contents($this->root . '/apple.jpg', 'a-bytes');
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
     $elements = $reader->getElements($this->root);
 
     expect(array_keys($elements))
@@ -388,7 +426,7 @@ test('getFormats floors a non-multiple-of-1024 file size to kilobytes', function
     mkdir($this->root . '/pwg_format');
     file_put_contents($this->root . '/pwg_format/negative.tif', str_repeat('a', 2047));
 
-    $reader = new LocalSiteReader($this->root, $this->currentConfig);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig, lsrTestMetadataService());
 
     expect($reader->getFormats($this->root, 'negative'))
         ->toBe([

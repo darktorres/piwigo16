@@ -10,10 +10,8 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Config\FilterViewsSelection;
-use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
@@ -40,8 +38,8 @@ use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
@@ -52,6 +50,7 @@ use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Search\SearchServiceTestFatalSignalHtmlRenderer;
 use Piwigo\Tests\Unit\Search\SearchServiceTestNotAnInflector;
+use Piwigo\Users\PreferencesService;
 use Piwigo\Users\User;
 use Piwigo\Users\UserService;
 
@@ -161,6 +160,26 @@ function searchServiceTestUserService(): UserService
     return $userService;
 }
 
+function searchServiceTestTagService(): TagService
+{
+    $tagService = Kernel::container()->get(TagService::class);
+    if (! $tagService instanceof TagService) {
+        throw new LogicException('Container returned an unexpected type for ' . TagService::class);
+    }
+
+    return $tagService;
+}
+
+function searchServiceTestPreferencesService(): PreferencesService
+{
+    $preferencesService = Kernel::container()->get(PreferencesService::class);
+    if (! $preferencesService instanceof PreferencesService) {
+        throw new LogicException('Container returned an unexpected type for ' . PreferencesService::class);
+    }
+
+    return $preferencesService;
+}
+
 /**
  * Same dependency graph as beforeEach()'s own default service below,
  * with a caller-supplied HtmlRenderingInterface (for observing the
@@ -198,11 +217,10 @@ function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): Sea
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
         EventDispatcherTestFactory::get(),
         CurrentUserTestFactory::get(),
-        LangTestFactory::get(),
         CurrentConfigTestFactory::get(),
-        new CurrentLogger(),
-        new DeploymentPolicy(),
-        CurrentPathsTestFactory::get(),
+        searchServiceTestTagService(),
+        searchServiceTestUserService(),
+        searchServiceTestPreferencesService(),
     );
 }
 

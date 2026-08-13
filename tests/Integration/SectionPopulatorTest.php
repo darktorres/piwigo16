@@ -60,6 +60,7 @@ use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\PreferencesService;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -151,7 +152,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
         $this->tagService = new TagService(LangTestFactory::get(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), $this->sessionService);
         $this->userService = new UserService(LangTestFactory::get(), new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), $em->getRepository(GroupEntity::class), new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get());
-        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), LangTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), new DeploymentPolicy(), CurrentPathsTestFactory::get(), $this->tagService);
+        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $this->tagService, $this->userService, new PreferencesService(new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()));
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger([

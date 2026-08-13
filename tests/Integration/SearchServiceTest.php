@@ -16,9 +16,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryService;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfig;
-    use Piwigo\Config\DeploymentPolicy;
     use Piwigo\Config\FilterViewsSelection;
-    use Piwigo\Core\CurrentLogger;
     use Piwigo\Core\FilterState;
     use Piwigo\Core\HtmlRenderingInterface;
     use Piwigo\Core\Kernel;
@@ -43,14 +41,15 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Search\SearchService;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
+    use Piwigo\Tag\TagService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
-    use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\PageStateTestFactory;
     use Piwigo\Tests\Support\TranslatorTestFactory;
+    use Piwigo\Users\PreferencesService;
     use Piwigo\Users\User;
     use Piwigo\Users\UserService;
     use RuntimeException;
@@ -371,11 +370,10 @@ namespace Piwigo\Tests\Integration {
                 new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 EventDispatcherTestFactory::get(),
                 CurrentUserTestFactory::get(),
-                LangTestFactory::get(),
                 CurrentConfigTestFactory::get(),
-                new CurrentLogger(),
-                new DeploymentPolicy(),
-                CurrentPathsTestFactory::get(),
+                $this->tagService(),
+                $this->userService(),
+                $this->preferencesService(),
             );
         }
 
@@ -399,6 +397,26 @@ namespace Piwigo\Tests\Integration {
             }
 
             return $userService;
+        }
+
+        private function tagService(): TagService
+        {
+            $tagService = Kernel::container()->get(TagService::class);
+            if (! $tagService instanceof TagService) {
+                throw new LogicException('Container returned an unexpected type for ' . TagService::class);
+            }
+
+            return $tagService;
+        }
+
+        private function preferencesService(): PreferencesService
+        {
+            $preferencesService = Kernel::container()->get(PreferencesService::class);
+            if (! $preferencesService instanceof PreferencesService) {
+                throw new LogicException('Container returned an unexpected type for ' . PreferencesService::class);
+            }
+
+            return $preferencesService;
         }
 
         /**
@@ -429,11 +447,10 @@ namespace Piwigo\Tests\Integration {
                 new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 EventDispatcherTestFactory::get(),
                 CurrentUserTestFactory::get(),
-                LangTestFactory::get(),
                 CurrentConfigTestFactory::get(),
-                new CurrentLogger(),
-                new DeploymentPolicy(),
-                CurrentPathsTestFactory::get(),
+                $this->tagService(),
+                $this->userService(),
+                $this->preferencesService(),
             );
         }
 

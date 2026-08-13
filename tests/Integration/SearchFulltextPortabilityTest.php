@@ -35,6 +35,8 @@ use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -43,6 +45,7 @@ use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -111,11 +114,10 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             EventDispatcherTestFactory::get(),
             CurrentUserTestFactory::get(),
-            LangTestFactory::get(),
             CurrentConfigTestFactory::get(),
-            new CurrentLogger(),
-            new DeploymentPolicy(),
-            CurrentPathsTestFactory::get(),
+            new TagService(LangTestFactory::get(), $this->em->getRepository(TagEntity::class), new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker), new ActivityService($this->em->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get())),
+            $userService,
+            new PreferencesService(new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()),
         );
     }
 

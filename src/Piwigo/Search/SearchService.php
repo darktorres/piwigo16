@@ -7,34 +7,22 @@ namespace Piwigo\Search;
 use Doctrine\DBAL\ArrayParameterType;
 use Exception;
 use LogicException;
-use Piwigo\Activity\ActivityEntity;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\InstallationFlag;
-use Piwigo\Core\Kernel;
-use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
-use Piwigo\Core\Paths;
-use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Search\QsearchGetScopes;
 use Piwigo\Event\Search\QsearchPre;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Template\RenderCategoryName;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -45,11 +33,9 @@ use Piwigo\Search\Event\QsearchResults;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\Projection\Search;
 use Piwigo\Session\SessionService;
-use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use RuntimeException;
 
@@ -80,13 +66,6 @@ use RuntimeException;
  */
 final readonly class SearchService
 {
-    /**
-     * $tagService/$userService/$preferencesService are optional-with-
-     * lazy-default (same reasoning as Mail\MailService's own
-     * $webmasterMailProvider): several Controller/Ws/Admin call sites
-     * still construct this class without them, and each is only reached
-     * on the tags/default-language/saveSearch paths.
-     */
     public function __construct(
         private AccessLevelChecker $accessLevelChecker,
         private SearchRepository $repo,
@@ -97,49 +76,11 @@ final readonly class SearchService
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private CurrentUser $currentUser,
-        private Lang $lang,
         private readonly CurrentConfig $currentConfig,
-        private CurrentLogger $currentLogger,
-        private DeploymentPolicy $deploymentPolicy,
-        private Paths $paths,
-        private ?TagService $tagService = null,
-        private ?UserService $userService = null,
-        private ?PreferencesService $preferencesService = null,
+        private TagService $tagService,
+        private UserService $userService,
+        private PreferencesService $preferencesService,
     ) {}
-
-    /**
-     * DRY-extraction helper (Arch\StructuralTest's own "does not repeat
-     * the same multi-dependency service construction chain" rule) --
-     * $this->tagService is optional-with-lazy-default (see constructor's
-     * own docblock); this class is `readonly`, so the lazily-built
-     * instance can't be cached back onto the property (a second write
-     * to an already-initialized readonly property is a hard error), it's
-     * simply recomputed on demand by every caller.
-     */
-    private function tagService(): TagService
-    {
-        return $this->tagService ?? new TagService($this->lang, EntityManagerFactory::build(DbConnection::build())->getRepository(TagEntity::class), $this->permissionService, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $this->sessionService);
-    }
-
-    /**
-     * Container resolve, not a constructor property -- used only inside
-     * this class's own one `new UserService(...)` fallback below (matching
-     * $this->tagService's own optional-with-lazy-default shape). Falls
-     * back to a fresh, unmemoized instance when Kernel::boot() hasn't run.
-     */
-    private function processCache(): ProcessCache
-    {
-        if (Kernel::isBooted()) {
-            $processCache = Kernel::container()->get(ProcessCache::class);
-            if (! $processCache instanceof ProcessCache) {
-                throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
-            }
-
-            return $processCache;
-        }
-
-        return new ProcessCache();
-    }
 
     public static function getSearchIdPattern(int|string $candidate): ?string
     {
@@ -543,8 +484,7 @@ final readonly class SearchService
         $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
         if (isset($searchFields['tags']) && $tagsWords !== [] && ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $tagService = $this->tagService();
-            $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags(array_map(TagId::from(...), $tagsWords), $tagsMode), is_numeric(...))));
+            $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($this->tagService->getImageIdsForTags(array_map(TagId::from(...), $tagsWords), $tagsMode), is_numeric(...))));
         }
 
         // custom search
@@ -803,7 +743,7 @@ final readonly class SearchService
         // SearchRepository's own generic findIdsByClause() -- cross-domain
         // sub-lookups, not a genuine search-domain query shape.
         $searchesTags = in_array('tags', $searchFields, true);
-        $tagService = $searchesTags ? $this->tagService() : null;
+        $tagService = $searchesTags ? $this->tagService : null;
 
         foreach ($words as $wordIndex => $word) {
             $fieldClauses = [];
@@ -1564,8 +1504,7 @@ final readonly class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $userService = $this->userService ?? new UserService($this->lang, new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), $this->processCache(), $this->paths);
-        $langCode = substr($userService->getDefaultLanguage(), 0, 2);
+        $langCode = substr($this->userService->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector' . ucfirst($langCode);
         if (class_exists($className)) {
             $inflector = new $className();
@@ -1766,8 +1705,7 @@ final readonly class SearchService
 
         if (! $this->accessLevelChecker->isAGuest() && ! $this->accessLevelChecker->isGeneric()) {
             $rulesFields = $rules['fields'] ?? [];
-            $preferencesService = $this->preferencesService ?? new PreferencesService(new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), $this->currentUser);
-            $preferencesService->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
+            $this->preferencesService->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
         }
 
         $url = $urlService->makeIndexUrl([

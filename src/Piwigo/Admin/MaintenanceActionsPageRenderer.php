@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Imagick;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageBackend;
@@ -79,6 +80,7 @@ final readonly class MaintenanceActionsPageRenderer
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private Paths $paths,
+        private EntityManagerInterface $entityManager,
         private ?PersistentCache $persistentCache = null,
     ) {}
 
@@ -92,7 +94,7 @@ final readonly class MaintenanceActionsPageRenderer
         $this->filesystemIntegrityChecker->fsQuickCheck();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->entityManager, $this->persistentCache)
             ->dispatch($action);
 
         $pwg_token = new CsrfService($this->currentConfig)

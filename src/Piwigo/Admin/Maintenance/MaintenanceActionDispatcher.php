@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
@@ -21,8 +22,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageEntity;
@@ -68,13 +67,13 @@ final readonly class MaintenanceActionDispatcher
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private Paths $paths,
+        private EntityManagerInterface $entityManager,
         private ?PersistentCache $persistentCache = null,
     ) {}
 
     public function dispatch(string $action): void
     {
         $register_activity = true;
-        $conn = DbConnection::build();
         $db_maintenance = $this->dbMaintenanceRepository;
 
         switch ($action) {
@@ -123,7 +122,7 @@ final readonly class MaintenanceActionDispatcher
 
                 $this->filesystemIntegrityChecker->imagesIntegrity();
                 $this->categoryService
-                    ->updatePath(EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class));
+                    ->updatePath($this->entityManager->getRepository(SiteEntity::class));
                 $this->rateService
                     ->updateRatingScore();
                 PermissionCacheInvalidator::invalidate();
@@ -177,7 +176,7 @@ final readonly class MaintenanceActionDispatcher
 
             case 'c13y':
 
-                $integrityRepo = EntityManagerFactory::build($conn)->getRepository(IntegrityIgnoredAnomalyEntity::class);
+                $integrityRepo = $this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class);
                 $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
                 $c13y->maintenance();
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Reinitialize check integrity'), $this->lang->t('action successfully performed.')));
@@ -185,7 +184,7 @@ final readonly class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService)
+                $rows = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService)
                     ->emptyLounge();
                 $this->pageState->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;

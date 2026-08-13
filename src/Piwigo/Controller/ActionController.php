@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\ImageId;
@@ -14,8 +15,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\LocActionBeforeHttpHeaders;
 use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
@@ -73,14 +72,13 @@ final readonly class ActionController implements ControllerInterface
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private Paths $paths,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
-
-        $conn = DbConnection::build();
 
         $actionRequest = ActionRequest::fromGlobals($this->currentConfig->isFormatsEnabled, $this->inputValidator);
 
@@ -90,7 +88,7 @@ final readonly class ActionController implements ControllerInterface
                 return $this->doError(400, 'Invalid request - format');
             }
 
-            $format = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+            $format = $this->entityManager->getRepository(ImageEntity::class)
                 ->findFormatById($actionRequest->formatId);
 
             if ($format === null) {
@@ -108,7 +106,7 @@ final readonly class ActionController implements ControllerInterface
             $get_part = $actionRequest->part;
         }
 
-        $elementImage = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+        $elementImage = $this->entityManager->getRepository(ImageEntity::class)
             ->findById($image_id);
         if ($elementImage === null) {
             return $this->doError(404, 'Requested id not found');

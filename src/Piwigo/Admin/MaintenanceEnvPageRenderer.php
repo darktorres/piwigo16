@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
@@ -77,6 +78,7 @@ final readonly class MaintenanceEnvPageRenderer
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private Paths $paths,
+        private EntityManagerInterface $entityManager,
         private ?PersistentCache $persistentCache = null,
     ) {}
 
@@ -85,7 +87,7 @@ final readonly class MaintenanceEnvPageRenderer
         $template = $this->currentTemplate->get();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->entityManager, $this->persistentCache)
             ->dispatch($action);
 
         $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();

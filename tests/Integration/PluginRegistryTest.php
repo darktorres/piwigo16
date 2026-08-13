@@ -9,6 +9,7 @@ use LogicException;
 use Override;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Kernel;
@@ -106,6 +107,7 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->containerGet(SessionService::class),
             $imageReadFacade,
             $this->containerGet(Paths::class),
+            $this->containerGet(ConfigService::class),
         );
     }
 

@@ -8,7 +8,9 @@ use LogicException;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\NotificationConfig;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
@@ -69,6 +71,7 @@ final readonly class ExtensionContext
         private SessionService $sessionService,
         private ImageReadFacade $imageReadFacade,
         private Paths $paths,
+        private ConfigService $configService,
     ) {}
 
     /**
@@ -168,6 +171,39 @@ final readonly class ExtensionContext
     public function languages(): array
     {
         return LangService::getLanguages($this->paths);
+    }
+
+    /**
+     * Generic, arbitrary-key config read -- narrower than
+     * `ConfigService::confGetParam()`'s own real return type (never
+     * `NotificationConfig`, which that method only ever returns for a
+     * *named* `CurrentConfig` property; an extension's own key is
+     * intentionally never one of those). Grounded in a real, recurring
+     * need across more than one bundled extension: `elegant`'s own
+     * `admin/upgrade.inc.php` self-healing check and `modus`'s own
+     * `theme_activate()` both read+write a `$conf['<own id>']` blob keyed
+     * by their own literal id -- the same key a real, already-installed
+     * site's `config` table would already hold from before this fork's
+     * own migration, so using the extension's own id here (not an
+     * auto-namespaced one, unlike `session()`) is what stays compatible
+     * with that existing data.
+     *
+     * @param array<mixed>|string|int|float|bool|null $default
+     * @return array<mixed>|string|int|float|bool|null
+     */
+    public function getSetting(string $key, array|string|int|float|bool|null $default = null): array|string|int|float|bool|null
+    {
+        $value = $this->configService->confGetParam($key, $default);
+
+        return $value instanceof NotificationConfig ? $default : $value;
+    }
+
+    /**
+     * @param array<mixed>|string|int|float|bool|null $value
+     */
+    public function setSetting(string $key, array|string|int|float|bool|null $value): void
+    {
+        $this->configService->confUpdateParam($key, $value);
     }
 
     /**

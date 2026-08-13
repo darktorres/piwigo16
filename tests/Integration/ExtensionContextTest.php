@@ -10,6 +10,7 @@ use Override;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\PluginId;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Kernel;
@@ -149,6 +150,7 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->containerGet(SessionService::class),
             $this->imageReadFacade,
             $this->containerGet(Paths::class),
+            $this->containerGet(ConfigService::class),
         );
     }
 
@@ -230,6 +232,38 @@ final class ExtensionContextTest extends IntegrationTestCase
 
         self::assertArrayHasKey('en_UK', $languages);
         self::assertNotSame('', $languages['en_UK']);
+    }
+
+    /**
+     * getSetting()/setSetting() (P27.6, `elegant`'s own real
+     * admin/upgrade.inc.php self-healing config check +
+     * `modus`'s own theme_activate() need) round-trip against the real
+     * config table by an arbitrary, unnamed key -- not one of
+     * CurrentConfig's own named properties.
+     */
+    public function testGetSettingReturnsTheDefaultWhenNoRowExistsYet(): void
+    {
+        self::assertNull($this->context->getSetting('p27-6-test-setting-does-not-exist'));
+        self::assertSame('fallback', $this->context->getSetting('p27-6-test-setting-does-not-exist', 'fallback'));
+    }
+
+    public function testSetSettingThenGetSettingRoundTripsARealArbitraryKey(): void
+    {
+        $key = 'p27-6-test-setting';
+
+        try {
+            $this->context->setSetting($key, [
+                'p_main_menu' => 'on',
+                'p_pict_descr' => 'off',
+            ]);
+
+            self::assertSame([
+                'p_main_menu' => 'on',
+                'p_pict_descr' => 'off',
+            ], $this->context->getSetting($key));
+        } finally {
+            $this->conn->executeStatement('DELETE FROM config WHERE param = ?', [$key]);
+        }
     }
 
     public function testImagesIsInCaddieReflectsARealInsertAndRemoval(): void

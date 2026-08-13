@@ -6,6 +6,7 @@ namespace Piwigo\PluginConfig;
 
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Lang;
@@ -42,6 +43,7 @@ final readonly class ExtensionContextFactory
         private SessionService $sessionService,
         private ImageReadFacade $imageReadFacade,
         private Paths $paths,
+        private ConfigService $configService,
     ) {}
 
     public function build(PluginId|ThemeId $extensionId): ExtensionContext
@@ -60,6 +62,7 @@ final readonly class ExtensionContextFactory
             $this->sessionService,
             $this->imageReadFacade,
             $this->paths,
+            $this->configService,
         );
     }
 }

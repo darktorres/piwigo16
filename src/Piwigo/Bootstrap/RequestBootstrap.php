@@ -770,6 +770,11 @@ final class RequestBootstrap
      */
     private static function extensionContextFactory(Connection $conn): ExtensionContextFactory
     {
+        $configService = Kernel::container()->get(ConfigService::class);
+        if (! $configService instanceof ConfigService) {
+            throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
+        }
+
         return new ExtensionContextFactory(
             self::currentTemplate(),
             self::currentConfig(),
@@ -783,6 +788,7 @@ final class RequestBootstrap
             self::sessionService(),
             self::imageReadFacade($conn),
             self::paths(),
+            $configService,
         );
     }
 

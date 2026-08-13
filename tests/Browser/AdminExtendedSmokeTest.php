@@ -67,11 +67,6 @@ $routes = [
     'admin photos_add (applications)' => '/admin.php?page=photos_add&section=applications',
     'admin photos_add (ftp)' => '/admin.php?page=photos_add&section=ftp',
     'admin photos_add (invalid tab)' => '/admin.php?page=photos_add&section=bogus',
-    // PhotosAddSubController's own backward-compatibility alias
-    // ('ploader' -> 'applications', predating the current tab-name
-    // scheme) -- not exercised by the "(applications)" route above,
-    // which uses the real tab name directly.
-    'admin photos_add (ploader alias)' => '/admin.php?page=photos_add&section=ploader',
     // Albums pages: cat_list is the one page in this group with no
     // prior Browser coverage anywhere (albums/album/cat_options already
     // covered by AdminSmokeTest/AlbumTreeTest/ConsoleCleanTest/

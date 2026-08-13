@@ -55,11 +55,6 @@ final readonly class PhotosAddSubController implements AdminSubControllerInterfa
         $section = $request->getQueryParams()['section'] ?? null;
         $tab = is_string($section) ? $section : 'direct';
 
-        // backward compatibility
-        if ($tab === 'ploader') {
-            $tab = 'applications';
-        }
-
         if (! in_array($tab, ['direct', 'applications', 'ftp'], true)) {
             $tab = 'direct';
         }

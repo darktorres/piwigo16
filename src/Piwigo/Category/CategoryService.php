@@ -80,7 +80,7 @@ use Piwigo\Users\UserRepository;
  * {@see createVirtualCategory()} need it to log activity, but
  * constructor-injecting `ActivityLoggerInterface` (this class's usual
  * cross-layer-dependency fix elsewhere, e.g. {@see imageService()}) would
- * force all ~45 real `new CategoryService(...)` call sites to supply one
+ * force all 33 real `new CategoryService(...)` call sites to supply one
  * -- the vast majority pure-read (menu rendering, gallery browsing) and
  * never touch activity logging. Instead, only those 4 write methods take
  * `ActivityLoggerInterface` as an explicit parameter.
@@ -101,7 +101,7 @@ final readonly class CategoryService
      * Container resolve, not a constructor property -- used only inside
      * getComputedCategories()'s own internal RecentIconResolver::getIcon()
      * call below. A required constructor param here would ripple across
-     * this class's own ~21 real construction sites for the sake of this
+     * this class's own 33 real construction sites for the sake of this
      * one internal read. Falls back to a fresh, unmemoized instance when
      * Kernel::boot() hasn't run, matching ProcessCache::getStatic()/
      * setStatic()'s own identical pre-boot fallback.
@@ -127,10 +127,10 @@ final readonly class CategoryService
      * own `categoryService()` helper does for same-layer `CategoryService`,
      * is a real `deptrac analyse` violation here specifically because
      * Activity crosses layers). Unlike `ImageService`/`TagService` (each
-     * constructed fresh per write operation), `CategoryService` has ~45
+     * constructed fresh per write operation), `CategoryService` has 33
      * real construction sites, the vast majority pure-read (menu
      * rendering, gallery browsing) that never touch activity logging --
-     * constructor-injecting `ActivityLoggerInterface` would force all 45
+     * constructor-injecting `ActivityLoggerInterface` would force all 33
      * to supply one. Instead, only the 4 methods that actually log
      * activity ({@see deleteSite()}, {@see deleteCategories()},
      * {@see moveCategories()}, {@see createVirtualCategory()}) take it as
@@ -735,7 +735,7 @@ final readonly class CategoryService
      *
      * `FilterUpdaterInterface` is an explicit parameter here, not a
      * constructor dependency, for the same reason as
-     * `ActivityLoggerInterface` above (~45 real construction sites, the
+     * `ActivityLoggerInterface` above (33 real construction sites, the
      * vast majority pure-read and never touching filtered-category data;
      * this is the one method that does).
      *

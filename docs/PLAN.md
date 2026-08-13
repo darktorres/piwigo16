@@ -716,17 +716,23 @@ below are now resolved:
 - **A repo-wide legacy sweep round 2** (`global` cleanup outside
   `src/Piwigo/`, `die()`/`exit()` request-lifecycle architecture,
   `LegacyRenderCapture` void-renderer → return-string conversion,
-  DbPatch/VersionUpgrade raw-SQL-to-DBAL bound parameters) — all done
-  except one workstream: the `header()`+`echo`+`exit()`/`: never`-return
-  request-lifecycle architecture (`RedirectServiceInterface`,
-  bootstrap-phase short-circuits) is investigated and designed in outline
-  only, not started — this is architecturally deeper than a cleanup item
-  (would mean changing `RedirectServiceInterface`'s contract from
-  `: never` to `: ResponseInterface`), deliberately deferred to its own
-  planning pass. Blocks 3 controllers
-  (`PopuphelpController`/`AdminPopuphelpController`/`PictureController`)
-  from finishing their `LegacyRenderCapture` → return-string conversion;
-  10 of 13 controllers converted, these 3 wait on this.
+  DbPatch/VersionUpgrade raw-SQL-to-DBAL bound parameters) — all done,
+  including the controller conversion this bullet previously described as
+  blocked: `LegacyRenderCapture.php` no longer exists, and
+  `PopuphelpController`/`AdminPopuphelpController`/`PictureController`
+  (the 3 this bullet named) already return `ResponseInterface` and throw
+  `ResponseReadyException` rather than using a void-renderer/`exit()`
+  pattern. The one workstream still genuinely open is deeper than that
+  controller-by-controller cleanup: the `header()`+`echo`+`exit()`/
+  `: never`-return request-lifecycle architecture
+  (`RedirectServiceInterface`'s own contract, bootstrap-phase
+  short-circuits) is investigated and designed in outline only, not
+  started — would mean changing `RedirectServiceInterface`'s contract
+  from `: never` to `: ResponseInterface`, deliberately deferred to its
+  own planning pass. `RedirectServiceInterface` already throws
+  `ResponseReadyException` internally today rather than a raw `exit()`,
+  so this redesign is about the wider bootstrap-short-circuit contract,
+  not an unconverted caller.
 - **`maintenance:repair-db`** — now built, see P12 above.
 - **Install/upgrade legacy constants + a real `PWG_CHARSET` bug** — found
   and fixed.
@@ -907,8 +913,9 @@ sites outside `src/Piwigo/` fixed, `Ws/PwgImages.php`'s 5 raw `die()`
 JSON calls retargeted onto its own typed `PwgError` path (fixed a real
 latent bug — the old `die()` always emitted JSON even when the client
 requested `format=rest`), `LegacyRenderCapture`'s void-renderer pattern
-converted to return-string for 10 of 13 controllers (3 remain, blocked on
-the request-lifecycle redesign noted above), 44 of ~144
+converted to return-string for 10 of 13 controllers at the time (the
+remaining 3 finished separately since — see the P23 gap-list entry
+above, now closed), 44 of ~144
 DbPatch/VersionUpgrade files given real bound-parameter DML at the time
 (2 real double-escaping bugs found and fixed along the way) — superseded
 the next day: the entire `DbPatch`/`VersionUpgrade` subsystem (153

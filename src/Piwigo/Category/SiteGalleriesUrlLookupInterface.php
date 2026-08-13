@@ -7,7 +7,7 @@ namespace Piwigo\Category;
 /**
  * Seam {@see CategoryService::getFulldirs()}/{@see CategoryService::updatePath()}/
  * {@see CategoryService::getGalleriesUrlForCategory()} take as an explicit
- * per-call parameter (not constructor-injected -- CategoryService has ~45
+ * per-call parameter (not constructor-injected -- CategoryService has 33
  * real construction sites, the vast majority never needing this, same
  * "only the methods that actually need it take it explicitly" reasoning
  * already established for {@see \Piwigo\Core\ActivityLoggerInterface} in

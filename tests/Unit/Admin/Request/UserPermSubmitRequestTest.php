@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Request\UserPermSubmitRequest;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Validation\InputValidator;
 
 test('fromArrays reports not submitted and empty lists for an empty POST', function (): void {
@@ -49,13 +50,15 @@ test('fromArrays rejects a non-digit cat_false element', function (): void {
         ->toThrow(RuntimeException::class);
 });
 
-test('fromArrays passes user_id through from GET', function (): void {
+test('fromArrays parses user_id to a UserId when present', function (): void {
     $request = UserPermSubmitRequest::fromArrays([
         'user_id' => '42',
     ], [], new InputValidator());
 
     expect($request->userId)
-        ->toBe('42');
+        ->toBeInstanceOf(UserId::class)
+        ->and($request->userId?->value)
+        ->toBe(42);
 });
 
 test('fromArrays returns a null user_id when absent', function (): void {
@@ -63,4 +66,20 @@ test('fromArrays returns a null user_id when absent', function (): void {
 
     expect($request->userId)
         ->toBeNull();
+});
+
+test('fromArrays collapses a non-positive user_id to null', function (): void {
+    $request = UserPermSubmitRequest::fromArrays([
+        'user_id' => '0',
+    ], [], new InputValidator());
+
+    expect($request->userId)
+        ->toBeNull();
+});
+
+test('fromArrays rejects a non-digit user_id', function (): void {
+    expect(fn (): UserPermSubmitRequest => UserPermSubmitRequest::fromArrays([
+        'user_id' => '1; DROP TABLE',
+    ], [], new InputValidator()))
+        ->toThrow(RuntimeException::class);
 });

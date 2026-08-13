@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Request;
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Validation\InputValidator;
 
@@ -11,11 +12,10 @@ use Piwigo\Validation\InputValidator;
  * Validated `$_GET`/`$_POST` shape for UserPermPageRenderer::render()
  * (page slug "user_perm"). `cat_true`/
  * `cat_false`'s own `InputValidator::validate()` calls only run when
- * `$_POST` is non-empty, matching the original exactly. `userId` stays
- * `mixed` (raw `$_GET['user_id']`) -- its own `is_numeric(...) ?:
- * fatalError('user_id URL parameter is missing')` hard rejection stays at
- * the call site (a direct `HtmlRenderingInterface::fatalError()` side
- * effect), same precedent as SearchQueryRequest/UserActivityRequest.
+ * `$_POST` is non-empty, matching the original exactly. `user_id`'s own
+ * `InputValidator::validate()` call fatal-errors on any malformed value
+ * before construction, same "presence + digit ID" shape as
+ * `GroupPermSubmitRequest`'s `group_id`.
  */
 final readonly class UserPermSubmitRequest
 {
@@ -29,7 +29,7 @@ final readonly class UserPermSubmitRequest
         public array $catFalse,
         public bool $isFalsify,
         public bool $isTrueify,
-        public mixed $userId,
+        public ?UserId $userId,
     ) {}
 
     public static function fromGlobals(InputValidator $inputValidator): self
@@ -71,13 +71,16 @@ final readonly class UserPermSubmitRequest
             }
         }
 
+        $inputValidator
+            ->validate('user_id', $get, false, ValidationPattern::ID);
+
         return new self(
             $isSubmitted,
             $cat_true,
             $cat_false,
             isset($post['falsify']),
             isset($post['trueify']),
-            $get['user_id'] ?? null,
+            UserId::tryFrom($get['user_id'] ?? null),
         );
     }
 }

@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Request;
 
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET` shape for SearchController::__invoke() (replaces
- * search.php). `cat_id`/`tag_id` are
- * pattern-validated (`InputValidator::validate()`) here, but the
- * original's own stricter `is_string(...) ?: fatalError('[Hacking
- * attempt] ...')` hard rejection stays at the call site rather than being
- * replicated in this DTO -- that call goes through
+ * search.php). `cat_id` is pattern-validated (`InputValidator::validate()`)
+ * then parsed into a `?CategoryId`; a `hasCatId = true` with `catId ===
+ * null` means the value was syntactically digits but non-positive (`0`),
+ * which the controller routes to `pageNotFound()` rather than
+ * `fatalError()`. `tag_id` stays a raw comma-separated string -- it's
+ * exploded into free-text search tokens, never validated as real tag-id
+ * references, and the original's own stricter `is_string(...) ?:
+ * fatalError('[Hacking attempt] ...')` hard rejection stays at the call
+ * site rather than being replicated in this DTO -- that call goes through
  * `PresentationAccessor::htmlService()` directly (an L3Presentation
  * side-effecting call), which a Request DTO should stay pure of, same
  * precedent as UserActivityRequest::filterValue().
@@ -23,7 +28,7 @@ final readonly class SearchQueryRequest
     private function __construct(
         public string $q,
         public bool $hasCatId,
-        public mixed $catId,
+        public ?CategoryId $catId,
         public bool $hasTagId,
         public mixed $tagId,
     ) {}
@@ -53,6 +58,6 @@ final readonly class SearchQueryRequest
                 ->validate('tag_id', $source, false, '/^\d+(,\d+)*$/');
         }
 
-        return new self($q, $hasCatId, $source['cat_id'] ?? null, $hasTagId, $source['tag_id'] ?? null);
+        return new self($q, $hasCatId, CategoryId::tryFrom($source['cat_id'] ?? null), $hasTagId, $source['tag_id'] ?? null);
     }
 }

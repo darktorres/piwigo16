@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Controller\Request\SearchQueryRequest;
 use Piwigo\Validation\InputValidator;
 
@@ -21,7 +22,7 @@ test('fromArray reads q verbatim when present', function (): void {
         ->toBe('sunset');
 });
 
-test('fromArray reports hasCatId and passes through a valid digit-only cat_id', function (): void {
+test('fromArray reports hasCatId and parses a valid digit-only cat_id to a CategoryId', function (): void {
     $request = SearchQueryRequest::fromArray([
         'cat_id' => '42',
     ], new InputValidator());
@@ -29,7 +30,9 @@ test('fromArray reports hasCatId and passes through a valid digit-only cat_id', 
     expect($request->hasCatId)
         ->toBeTrue()
         ->and($request->catId)
-        ->toBe('42');
+        ->toBeInstanceOf(CategoryId::class)
+        ->and($request->catId?->value)
+        ->toBe(42);
 });
 
 test('fromArray reports hasCatId false when cat_id is absent', function (): void {
@@ -37,6 +40,17 @@ test('fromArray reports hasCatId false when cat_id is absent', function (): void
 
     expect($request->hasCatId)
         ->toBeFalse()
+        ->and($request->catId)
+        ->toBeNull();
+});
+
+test('fromArray reports hasCatId true but a null catId for a non-positive cat_id', function (): void {
+    $request = SearchQueryRequest::fromArray([
+        'cat_id' => '0',
+    ], new InputValidator());
+
+    expect($request->hasCatId)
+        ->toBeTrue()
         ->and($request->catId)
         ->toBeNull();
 });

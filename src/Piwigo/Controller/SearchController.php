@@ -128,26 +128,24 @@ final readonly class SearchController implements ControllerInterface
 
         $cat_ids = [];
         if ($searchQuery->hasCatId) {
-            $cat_id_value = $searchQuery->catId;
-            if (! is_string($cat_id_value)) {
+            $catId = $searchQuery->catId;
+            if ($catId === null) {
                 $this->htmlRenderer
-                    ->fatalError('[Hacking attempt] the input parameter "cat_id" is not valid');
+                    ->pageNotFound($this->redirectService, $this->lang->t('Requested album does not exist'));
             }
-
-            $cat_id = $cat_id_value;
 
             $forbidden_categories = $this->currentUser->get()
                 ->forbiddenCategories;
             $forbidden_categories_csv = $forbidden_categories !== '' ? $forbidden_categories : '0';
 
             $category_accessible = $this->categoryService
-                ->existsAndNotForbidden((int) $cat_id, $forbidden_categories_csv);
+                ->existsAndNotForbidden($catId->value, $forbidden_categories_csv);
             if (! $category_accessible) {
                 $this->htmlRenderer
                     ->pageNotFound($this->redirectService, $this->lang->t('Requested album does not exist'));
             }
 
-            $cat_ids = [$cat_id];
+            $cat_ids = [(string) $catId->value];
         }
 
         if (count($cat_ids) > 0 or in_array('cat', $fields, true)) {

@@ -209,25 +209,13 @@ final readonly class PermissionService
     }
 
     /**
-     * Grants direct user-category access. Thin wrapper around
-     * addPermissionOnCategory(), which is also called from
-     * category-creation code for its own permission-inheritance step --
-     * not duplicated here.
-     *
-     * @param list<int> $catIds
-     */
-    public function grantUserAccess(int $userId, array $catIds): void
-    {
-        $this->addPermissionOnCategory($catIds, $userId);
-    }
-
-    /**
      * Grants users direct access to categories -- but only to categories
      * that are actually private; a request naming a public category is
      * silently a no-op for that category.
      *
      * Lives here (not Piwigo\Admin) because real callers span
-     * L2aCoreDomain (this class itself, via grantUserAccess()) and
+     * L2aCoreDomain (category-creation code, for its own
+     * permission-inheritance step) and
      * L4Integration (Piwigo\Admin\Category\CategoryAdminService,
      * Piwigo\Controller\Admin\SiteUpdateSubController) -- L2a code may not
      * depend on L4, so this must live at the L2a domain owner instead of

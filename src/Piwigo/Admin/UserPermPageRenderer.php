@@ -25,7 +25,7 @@ use Piwigo\Validation\InputValidator;
  * Ported from admin/user_perm.php (page slug "user_perm"). Its raw
  * `DELETE FROM user_access` query was already extracted into
  * Piwigo\Permission\PermissionRepository::deleteUserAccess() (called via
- * PermissionService::removeUserAccess()/grantUserAccess()), mirroring
+ * PermissionService::removeUserAccess()), mirroring
  * GroupService::addAccess()/removeAccess()'s
  * equivalent shape for the group-level case.
  */
@@ -80,7 +80,7 @@ final readonly class UserPermPageRenderer
             $permissionService->removeUserAccess($user_id, $subcats);
         } elseif ($userPermSubmit->isTrueify
             and count($cat_false) > 0) {
-            $permissionService->grantUserAccess($user_id, $cat_false);
+            $permissionService->addPermissionOnCategory($cat_false, $user_id);
         }
 
         // retrieve category ids authorized to the groups the user belongs to

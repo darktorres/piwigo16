@@ -162,16 +162,16 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([2], $this->userAccessCatIdsFor(2));
         }
 
-        public function testGrantUserAccessDelegatesToAddPermissionOnCategory(): void
+        public function testAddPermissionOnCategoryWithAScalarUserIdNormalizesItToAList(): void
         {
-            // grantUserAccess()'s own $userId param is a plain scalar int,
-            // not a list -- this also exercises addPermissionOnCategory()'s
-            // own `$userIds = [$userIds];` scalar-to-array normalization
-            // (the sibling normalization for $categoryIds is already
-            // covered by other callers that pass a bare int there).
+            // A plain scalar int $userIds -- exercises
+            // addPermissionOnCategory()'s own `$userIds = [$userIds];`
+            // scalar-to-array normalization (the sibling normalization for
+            // $categoryIds is already covered by other callers that pass a
+            // bare int there).
             $this->conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
 
-            $this->service->grantUserAccess(4, [1]);
+            $this->service->addPermissionOnCategory([1], 4);
 
             self::assertSame([1], $this->userAccessCatIdsFor(4));
         }

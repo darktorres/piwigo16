@@ -129,7 +129,7 @@ it('trueifies then falsifies direct user_access for a private album', function (
     try {
         // user_access has no rows at all in this fixture (see this
         // file's own docblock) -- trueify grants user 4 direct access to
-        // category 2 via PermissionService::grantUserAccess().
+        // category 2 via PermissionService::addPermissionOnCategory().
         $trueifyResult = H::adminPost($page, '/admin.php?page=user_perm&user_id=4', [
             'pwg_token' => H::pwgToken($page),
             'cat_false' => ['2'],

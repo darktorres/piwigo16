@@ -12,7 +12,7 @@ use Piwigo\Core\TemplatePageContext;
  * {@see \Piwigo\Admin\UpdatesExtPageRenderer::render()}. `ADMIN_PAGE_TITLE`
  * is included here even though the original assigned it *after*
  * `updates_ext.latte` was already parsed -- `updates_ext.latte`
- * itself never reads `$ADMIN_PAGE_TITLE` (confirmed by direct read), so
+ * itself never reads `$ADMIN_PAGE_TITLE`, so
  * moving its assignment earlier doesn't change that parse's output, and
  * it's still set before the page header (the only real reader) parses
  * later in the request.

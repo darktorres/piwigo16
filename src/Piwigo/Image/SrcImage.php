@@ -176,7 +176,7 @@ final class SrcImage
         $path = is_string($infos['path']) ? $infos['path'] : '';
         $file = is_string($infos['file'] ?? null) ? $infos['file'] : null;
         $ext = strtolower(StringHelper::getExtension($path));
-        $infos['file_ext'] = @strtolower(StringHelper::getExtension($file));
+        $infos['file_ext'] = strtolower(StringHelper::getExtension($file));
         $infos['path_ext'] = $ext;
         // representative_ext is a nullable DB column; empty()'s silent
         // handling of a missing/non-string key is preserved via `?? null`.

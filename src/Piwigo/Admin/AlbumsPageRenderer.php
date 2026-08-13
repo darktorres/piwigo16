@@ -211,7 +211,7 @@ final class AlbumsPageRenderer
         // administration, it's quite reliable but not as much as on gallery side.
         $forbidden_categories = $currentUser->get()
             ->forbiddenCategories;
-        $is_forbidden = array_fill_keys(@explode(',', $forbidden_categories), 1);
+        $is_forbidden = array_fill_keys(explode(',', $forbidden_categories), 1);
 
         $nb_photos_in = $categoryService->getPhotoCountsByCategory();
 

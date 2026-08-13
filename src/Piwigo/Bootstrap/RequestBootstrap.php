@@ -254,20 +254,9 @@ final class RequestBootstrap
         // every other consumer reads from instead.
         self::pageState()->requestStart = $requestStart;
 
-        // @set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
-        //
-        // addslashes to vars if magic_quotes_gpc is off this is a security
-        // precaution to prevent someone trying to break out of a SQL statement.
-        //
-        // The magic quote feature has been disabled since php 5.4
-        // but function get_magic_quotes_gpc was always replying false.
-        // Since php 8 the function get_magic_quotes_gpc is also removed
-        // but we stil want to sanitize user input variables.
-        if (! function_exists('get_magic_quotes_gpc') or ! @get_magic_quotes_gpc()) {
-            array_walk_recursive($_GET, self::sanitizeMysqlKv(...));
-            array_walk_recursive($_POST, self::sanitizeMysqlKv(...));
-            array_walk_recursive($_COOKIE, self::sanitizeMysqlKv(...));
-        }
+        array_walk_recursive($_GET, self::sanitizeMysqlKv(...));
+        array_walk_recursive($_POST, self::sanitizeMysqlKv(...));
+        array_walk_recursive($_COOKIE, self::sanitizeMysqlKv(...));
         if (! in_array($_SERVER['PATH_INFO'] ?? null, [null, false, 0, '0', '', []], true) && is_string($_SERVER['PATH_INFO'])) {
             $_SERVER['PATH_INFO'] = addslashes($_SERVER['PATH_INFO']);
         }

@@ -66,7 +66,7 @@ final readonly class CoreUpdateService
 
         if ((bool) preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION)
           and is_string($result = @HttpClientService::fetch(AppInfo::URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $this->currentConfig))) {
-            $allVersions = @explode("\n", $result);
+            $allVersions = explode("\n", $result);
             $newVersion = trim($allVersions[0]);
             $_SESSION['need_update' . AppInfo::VERSION] = version_compare(AppInfo::VERSION, $newVersion, '<');
         }

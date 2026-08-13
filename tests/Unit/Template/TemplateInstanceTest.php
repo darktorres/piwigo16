@@ -1688,8 +1688,8 @@ test('loadThemeconf short-circuits on realpath() failure without ever attempting
     // mutation on that guard is invisible to a return-value assertion
     // alone. The REAL observable difference is a genuine "Failed to open
     // stream" warning from attempting `include $dir . '/themeconf.inc.php'`
-    // against a directory that was never realpath()-resolved -- confirmed
-    // live via hand-mutation. Capture warnings directly to prove the guard
+    // against a directory that was never realpath()-resolved. Capture
+    // warnings directly to prove the guard
     // actually prevents that attempt.
     $t = TemplateTestFactory::build();
 

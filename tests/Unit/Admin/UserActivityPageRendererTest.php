@@ -67,12 +67,11 @@ use Piwigo\Validation\InputValidator;
  * for one more branch.
  *
  * This test owns piwigo_activity for its own duration: no other Unit
- * test file writes there (confirmed via grep), but the table itself
+ * test file writes there, but the table itself
  * accumulates real side-effect rows from Browser/Integration runs
  * elsewhere in this same shared dev DB (theme activation logs "system"/
- * "activate", image deletion logs "photo"/"delete") -- confirmed live,
- * TWICE in one session, silently drifting this test's exact-aggregate
- * assertions each time. The test now snapshots whatever is really there
+ * "activate", image deletion logs "photo"/"delete"), silently drifting
+ * this test's exact-aggregate assertions each time. The test now snapshots whatever is really there
  * first (debris included, not this test's call to judge what's
  * canonical), replaces it with the exact known 19-row fixture dataset
  * its own assertions are written against, and restores the original
@@ -247,8 +246,8 @@ test('render() lists real activity aggregated by user and skips the additional-f
     // This test owns piwigo_activity for its own duration -- every
     // aggregate it asserts on (nb_users aside) sums over the WHOLE table,
     // and no Unit test file writes there today to coordinate a targeted
-    // row instead. Confirmed live, twice in one session: a real
-    // Browser/Integration run elsewhere in this same shared dev DB left
+    // row instead. A real
+    // Browser/Integration run elsewhere in this same shared dev DB can leave
     // stray system/activate + photo/delete rows behind (real side
     // effects of theme activation/image deletion), silently drifting
     // this test's exact-count assertions. Snapshot whatever is really
@@ -299,7 +298,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
         // TabsheetBeforeSelect handler once per request, BEFORE any page
         // renderer runs, populating uniqid='users' with 'user_list'/
         // 'user_activity' entries. Without this, $tabsheet->selected stays
-        // null (a real TypeError, confirmed live) -- same real dependency
+        // null, a real TypeError -- same real dependency
         // every other Tabsheet::select()-calling renderer has.
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));

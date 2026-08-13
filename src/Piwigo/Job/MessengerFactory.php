@@ -18,6 +18,7 @@ use Symfony\Component\Messenger\MessageBus;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
 use Symfony\Component\Messenger\Middleware\SendMessageMiddleware;
+use Symfony\Component\Messenger\RoutableMessageBus;
 use Symfony\Component\Messenger\Transport\Receiver\MessageCountAwareInterface;
 use Symfony\Component\Messenger\Transport\Sender\SendersLocator;
 use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
@@ -142,6 +143,33 @@ final class MessengerFactory
         }
 
         return new MessageBus([new HandleMessageMiddleware(new HandlersLocator($handlersMap))]);
+    }
+
+    /**
+     * `Symfony\Component\Messenger\Command\ConsumeMessagesCommand`'s own
+     * $routableBus param -- this app has a single message bus with no
+     * multi-bus routing (see sendingBus()/receivingBus()'s own single-bus
+     * shape), so every consumed Envelope always falls back to
+     * receivingBus() rather than being routed by a real BusNameStamp
+     * lookup. The empty locator makes RoutableMessageBus::getMessageBus()
+     * always miss, guaranteeing the fallback path.
+     */
+    public static function routableBus(Paths $paths): RoutableMessageBus
+    {
+        return new RoutableMessageBus(self::containerOf([]), self::receivingBus($paths));
+    }
+
+    /**
+     * ConsumeMessagesCommand's own $receiverLocator param -- maps this
+     * app's one real receiver name ('async', matching sendingBus()'s own
+     * sender-locator key) to the same transport instance a real worker
+     * consumes from.
+     */
+    public static function receiverLocator(TransportInterface $transport): ContainerInterface
+    {
+        return self::containerOf([
+            'async' => static fn (): TransportInterface => $transport,
+        ]);
     }
 
     /**

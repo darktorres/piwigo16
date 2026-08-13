@@ -73,6 +73,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Job\MessengerFactory;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
 use Piwigo\Mail\MailRecipientRepository;
@@ -105,6 +106,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Psr16Cache;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\Messenger\Command\ConsumeMessagesCommand;
 use function DI\factory;
 use function DI\get;
 
@@ -421,5 +424,25 @@ return [
     // entry.
     MigrateCommand::class => factory(
         static fn (DependencyFactory $df): MigrateCommand => new MigrateCommand($df),
+    ),
+
+    // [Finding 6] Makes the async Job/Messenger pipeline reachable (a real
+    // worker to run it) without changing any existing behavior -- nothing
+    // dispatches a job yet, so this is purely additive. $routableBus/
+    // $receiverLocator come from MessengerFactory's own construction
+    // logic, matching every other Messenger* entry point already built
+    // there (transport()/sendingBus()/receivingBus()); a fresh Symfony
+    // EventDispatcher is this command's own internal SIGINT/worker-stop
+    // signal plumbing, unrelated to this app's PluginConfig\EventDispatcher.
+    // 'async' as the sole default receiver name means `bin/piwigo
+    // messenger:consume` (no receiver argument) just works.
+    ConsumeMessagesCommand::class => factory(
+        static fn (Connection $connection, Paths $paths): ConsumeMessagesCommand => new ConsumeMessagesCommand(
+            MessengerFactory::routableBus($paths),
+            MessengerFactory::receiverLocator(MessengerFactory::transport($connection, $paths)),
+            new EventDispatcher(),
+            null,
+            ['async'],
+        ),
     ),
 ];

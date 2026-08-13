@@ -41,11 +41,22 @@ use Symfony\Component\Console\Command\Command;
  * `Paths` here (`bin/piwigo` itself does) -- this was only ever a
  * no-args convenience for tests that didn't need one, not a genuine
  * "commands must never need Paths" constraint.
+ *
+ * Same reasoning, one step further: `ConsumeMessagesCommand`'s own
+ * container.php factory eagerly reads a real `config/messenger.php`
+ * relative to `$paths->root` (`MessengerFactory::transport()`/
+ * `routableBus()` both call `config()`, which is a plain `require`) --
+ * unlike `Paths` itself (a value LintLatteCommand's chain merely holds
+ * onto), this needs a real file to exist at that root, so the throwaway
+ * temp root below gets its own `config/messenger.php` copied in from the
+ * real one. Real production's `Paths::fromRoot()` root always has this
+ * file for free; this is a test-fixture gap, not a production one.
  */
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-cli-bootstrap-test-' . bin2hex(random_bytes(8));
     $this->root = $root;
-    mkdir($root, 0o777, true);
+    mkdir($root . '/config', 0o777, true);
+    copy(dirname(__DIR__, 3) . '/config/messenger.php', $root . '/config/messenger.php');
     Kernel::reset();
 });
 

@@ -11,6 +11,9 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Exception\InvalidArgumentException;
+use Symfony\Component\Messenger\Exception\NoHandlerForMessageException;
+use Symfony\Component\Messenger\Stamp\BusNameStamp;
 
 /**
  * transport()/sendingBus()/receivingBus()'s own real wiring is already
@@ -174,4 +177,57 @@ test('config() reads config/messenger.php relative to CurrentPathsTestFactory::g
         rmdir($root . '/config');
         rmdir($root);
     }
+});
+
+/**
+ * routableBus()/receiverLocator() back ConsumeMessagesCommand's own
+ * $routableBus/$receiverLocator constructor params (see
+ * config/container.php's own ConsumeMessagesCommand::class factory) --
+ * the real end-to-end consume path (transport -> receiver -> this bus ->
+ * a real handler) is Docker/FrankenPHP-worker territory, out of this
+ * Unit tier's reach, so these confirm the 2 factory methods' own
+ * structural wiring instead: routableBus()'s busLocator is genuinely
+ * empty (always defers to the fallback bus) and that fallback bus is
+ * genuinely receivingBus() (a real bus that only fails with "no
+ * handler", never "no fallback bus configured").
+ */
+test('routableBus() falls back to a real receivingBus() for an Envelope with no BusNameStamp', function (): void {
+    $routableBus = MessengerFactory::routableBus(CurrentPathsTestFactory::get());
+
+    // stdClass has no registered handler in config/messenger.php's real
+    // 'handlers' map -- HandleMessageMiddleware's own
+    // NoHandlerForMessageException proves a real MessageBus (not null)
+    // received and processed this dispatch, rather than RoutableMessageBus
+    // itself throwing its "no fallback bus configured"
+    // InvalidArgumentException.
+    expect(static fn (): Envelope => $routableBus->dispatch(new Envelope(new stdClass())))
+        ->toThrow(NoHandlerForMessageException::class);
+});
+
+test('routableBus()\'s bus locator never matches a real bus name, always deferring to the fallback', function (): void {
+    $routableBus = MessengerFactory::routableBus(CurrentPathsTestFactory::get());
+
+    // RoutableMessageBus::dispatch()'s own $stamps param is unused --
+    // the real BusNameStamp lookup reads $envelope->last(BusNameStamp::class)
+    // directly, so the stamp must be attached via the Envelope's own
+    // constructor, not passed as dispatch()'s 2nd argument.
+    expect(static fn (): Envelope => $routableBus->dispatch(new Envelope(new stdClass(), [new BusNameStamp('anything')])))
+        ->toThrow(InvalidArgumentException::class, 'Bus named "anything" does not exist.');
+});
+
+test('receiverLocator() maps the sole \'async\' key to the given transport instance', function (): void {
+    $connection = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
+    $transport = MessengerFactory::transport($connection, CurrentPathsTestFactory::get());
+
+    $locator = MessengerFactory::receiverLocator($transport);
+
+    expect($locator->has('async'))
+        ->toBeTrue()
+        ->and($locator->get('async'))
+        ->toBe($transport)
+        ->and($locator->has('missing'))
+        ->toBeFalse();
 });

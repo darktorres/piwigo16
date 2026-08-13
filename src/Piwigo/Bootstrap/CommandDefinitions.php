@@ -20,6 +20,7 @@ use Piwigo\Command\PrecompileTemplatesCommand;
 use Piwigo\Command\SchemaDumpCommand;
 use Piwigo\Command\UserListCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Messenger\Command\ConsumeMessagesCommand;
 
 /**
  * bin/piwigo's registered command list, resolved via the DI container
@@ -29,6 +30,12 @@ use Symfony\Component\Console\Command\Command;
  *
  * The 4 Maintenance*Command classes autowire DbMaintenanceRepository with
  * zero new container entries.
+ *
+ * [Finding 6] ConsumeMessagesCommand needs its own explicit
+ * config/container.php factory entry (RoutableMessageBus/receiver
+ * locator aren't autowireable) -- makes the async Job/Messenger
+ * pipeline reachable via a real worker, purely additive since nothing
+ * dispatches a job yet.
  */
 final class CommandDefinitions
 {
@@ -53,6 +60,7 @@ final class CommandDefinitions
             PrecompileTemplatesCommand::class,
             PhpStanLatteShimsCommand::class,
             PhpStanLatteCompileCommand::class,
+            ConsumeMessagesCommand::class,
         ];
     }
 }

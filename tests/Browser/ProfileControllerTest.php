@@ -23,7 +23,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * re-renders profile.php with the error message and the user_infos row
  * untouched.
  *
- * FIXED AT THE SOURCE (previously worked around here): tests/Fixtures/
+ * FIXED AT THE SOURCE: tests/Fixtures/
  * piwigo-17.0.sql ships an entirely empty `themes` table by design (a
  * real fresh install never activates AppInfo::DEFAULT_TEMPLATE --
  * ExtensionLifecycle::performThemeAction()'s own $id === 'default' guard
@@ -32,8 +32,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * <select> rendered with zero <option>s and saveFromPost()'s own
  * `in_array($post['theme'], array_keys(getPwgThemes()), true)` guard
  * always failed -- turning every profile.php submission into a real 500
- * "[Hacking attempt] incorrect theme value" fatalError(), reproduced
- * directly with raw curl independent of this file. Not specific to
+ * "[Hacking attempt] incorrect theme value" fatalError(). Not specific to
  * ProfileController (the same saveFromPost() is also reached from
  * Controller\Admin\ConfigurationSubController's "default" tab). Fixed by
  * making getPwgThemes() itself always include AppInfo::DEFAULT_TEMPLATE
@@ -121,9 +120,9 @@ it('saves nb_image_page/recent_period and redirects to the gallery home on succe
 
     // ProfileFormHandler::saveFromPost()'s own redirect target is the
     // form's hidden 'redirect' field, populated from
-    // ProfileController::__invoke()'s $this->urlService->makeIndexUrl() --
-    // confirmed live (independent of this assertion) that this fixture's
-    // own mount/URL config resolves that to exactly the site root.
+    // ProfileController::__invoke()'s $this->urlService->makeIndexUrl(),
+    // which this fixture's
+    // own mount/URL config resolves to exactly the site root.
     $currentUrl = H::rawWebpage($page)->url();
     expect($currentUrl)
         ->toBe(H::baseUrl() . '/');
@@ -167,7 +166,7 @@ it('rejects an empty nb_image_page and leaves the stored settings untouched', fu
 
     // The rendered text is the real language/en_UK/common.po translation,
     // not the literal Lang::t() source-code key (the msgid/msgstr differ
-    // for this string, confirmed by reading the .po file directly).
+    // for this string).
     $page->assertSee('The number of photos per page must be a non-zero integer');
     $currentUrl = H::rawWebpage($page)->url();
     expect($currentUrl)
@@ -420,14 +419,13 @@ it('changes both the email address and password given the correct current passwo
  *
  *  - a real `Cookie: lang[]=x; lang[]=y` header is the only way a real
  *    HTTP request can make $_COOKIE['lang'] a PHP array rather than a
- *    string (confirmed live against a throwaway PHP built-in server before
- *    writing the first test below -- PHP's cookie parser honors bracket
- *    notation in cookie names exactly like it does for GET/POST), matching
+ *    string -- PHP's cookie parser honors bracket
+ *    notation in cookie names exactly like it does for GET/POST, matching
  *    Integration\AuthServiceTest's own identical rationale for the sibling
  *    guard in AuthService::logUser();
  *  - sending a plain `Cookie: lang=...` value ALONGSIDE the session cookie
  *    needs curl's CURLOPT_COOKIE specifically, not a manual `Cookie:` entry
- *    in CURLOPT_HTTPHEADER -- confirmed live (same throwaway server) that a
+ *    in CURLOPT_HTTPHEADER -- a
  *    manual header REPLACES rather than merges with the cookie engine's own
  *    Cookie header, comma-joining and corrupting both instead of sending
  *    two real `; `-separated pairs, which would silently drop the session
@@ -539,7 +537,7 @@ function profileSetUserLanguage(string $language): void
     $escapedUsername = H::dbEscape($db, PROFILE_TEST_USER);
     // MySQL's own multi-table UPDATE...INNER JOIN...SET syntax has no
     // Postgres equivalent -- UPDATE...SET...FROM...WHERE is the real
-    // portable form, confirmed live against this exact join shape.
+    // portable form.
     $sql = $db instanceof mysqli
         ? "UPDATE user_infos ui INNER JOIN users u ON u.id = ui.user_id SET ui.language = '{$escapedLanguage}' WHERE u.username = '{$escapedUsername}'"
         : "UPDATE user_infos ui SET language = '{$escapedLanguage}' FROM users u WHERE u.id = ui.user_id AND u.username = '{$escapedUsername}'";
@@ -549,10 +547,8 @@ function profileSetUserLanguage(string $language): void
 
 it('switches the interface language via a valid, different lang cookie and persists it to user_infos', function (): void {
     $db = H::connect();
-    // Same fixture gap/workaround shape as this file's own
-    // profileEnsureDefaultThemeRegistered(): the fixture's languages
-    // table only ever seeds 'en_UK' (confirmed by reading
-    // tests/Fixtures/piwigo-17.0.sql directly), but LangService::getLanguages()
+    // The fixture's languages
+    // table only ever seeds 'en_UK', but LangService::getLanguages()
     // requires a real DB row (AND a real `language/<code>/` directory,
     // already present on disk for fr_FR) before it counts as a known
     // language -- without this insert, ProfileController's own
@@ -681,14 +677,14 @@ it('previews the guest-default values in the rendered form on reset-to-default, 
  * `if (is_string($username_for_update) ...)` body -- the "this login is
  * already used" conflict check, the successful-rename field/data update,
  * and the username-change notification email) is PROVABLY UNREACHABLE
- * through either of this class's real production callers, confirmed by
- * reading both call sites directly rather than assumed from a coverage
+ * through either of this class's real production callers, verified
+ * by reading both call sites directly rather than assumed from a coverage
  * report:
  *
  *  - ProfileController (this file's own subject, profile.php) never runs
  *    behind admin.php/admin/popuphelp.php's own AdminContext::mark() call
- *    -- confirmed via `grep -rln 'AdminContext::mark' src/ public/`, which
- *    finds exactly those 2 entry shells and nowhere else -- so
+ *    -- those 2 entry shells are the only real callers of AdminContext::mark()
+ *    anywhere in this codebase -- so
  *    saveFromPost()'s own `if (! \Piwigo\Core\AdminContext::isActive())
  *    { unset($post['username']); }` (~L112-114) unconditionally strips
  *    'username' from every profile.php submission before the
@@ -700,7 +696,7 @@ it('previews the guest-default values in the rendered form on reset-to-default, 
  *    `unset($post['username'], ...)` (~L99-107) strips it there too,
  *    regardless of AdminContext.
  *
- * `grep -rn 'ProfileFormHandler\|saveFromPost' src/Piwigo/` confirms there
+ * There
  * is no 3rd real caller in this fork able to supply the one combination
  * (a NON-special user, WITH AdminContext active) this block needs --
  * there is no "admin renames another member's account" page wired

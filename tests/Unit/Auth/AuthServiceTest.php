@@ -251,7 +251,7 @@ test('hasAlreadyLoggedIn() is true for a user with no login activity history', f
     )->toBeTrue();
 });
 
-test('logUser() treats a non-string lang cookie as a hacking attempt', function (): void {
+test('logUser() rejects a non-string lang cookie as an invalid request parameter', function (): void {
     // A real request can never send a scalar $_COOKIE['lang'] as an
     // array (only a crafted 'lang[]=x&lang[]=y' request could), but
     // $_COOKIE is untyped -- logUser() defends against it before
@@ -278,10 +278,10 @@ test('logUser() treats a non-string lang cookie as a hacking attempt', function 
     expect($response->getStatusCode())
         ->toBe(500)
         ->and((string) $response->getBody())
-        ->toContain('[Hacking attempt] the input parameter "lang" is not valid');
+        ->toContain('Invalid request parameter "lang"');
 });
 
-test('logUser() treats an unrecognised language code as a hacking attempt', function (): void {
+test('logUser() rejects an unrecognised language code as an unrecognized parameter value', function (): void {
     authServiceTestSetCurrentUserToFixtureAdmin();
     $_COOKIE['lang'] = 'zz_NOT_A_REAL_LANGUAGE';
 
@@ -303,7 +303,7 @@ test('logUser() treats an unrecognised language code as a hacking attempt', func
     expect($response->getStatusCode())
         ->toBe(500)
         ->and((string) $response->getBody())
-        ->toContain('[Hacking attempt] the input parameter "zz_NOT_A_REAL_LANGUAGE" is not valid');
+        ->toContain('Unrecognized value for parameter "lang"');
 });
 
 test('logUser() syncs the language preference and clears the lang cookie when it differs', function (): void {

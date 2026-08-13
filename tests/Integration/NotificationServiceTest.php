@@ -13,7 +13,7 @@ namespace Piwigo\Tests\Integration {
     use Override;
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Cache\CacheFactory;
-    use Piwigo\Cache\CachePools;
+    use Piwigo\Cache\NotificationsCachePool;
     use Piwigo\Cache\TranslationsCachePool;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Config\ConfigLoader;
@@ -112,13 +112,14 @@ namespace Piwigo\Tests\Integration {
                 UrlServiceTestFactory::build(),
                 new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
                 CurrentUserTestFactory::get(),
+                new NotificationsCachePool(CacheFactory::create(namespace: 'piwigo.notifications', defaultLifetime: 30)),
             );
         }
 
         #[Override]
         protected function tearDown(): void
         {
-            CachePools::notifications()->clear();
+            new NotificationsCachePool(CacheFactory::create(namespace: 'piwigo.notifications', defaultLifetime: 30))->clear();
 
             parent::tearDown();
         }
@@ -290,7 +291,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * getRecentPostDates() caches its result via CachePools::notifications()
+         * getRecentPostDates() caches its result via NotificationsCachePool
          * -- proven the same way TagServiceTest/ForbiddenCategoriesCacheTest
          * prove their own pool wiring: mutate the underlying data after the
          * first (caching) call, then show a 2nd call with the same params

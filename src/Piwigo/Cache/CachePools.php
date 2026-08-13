@@ -121,13 +121,4 @@ final class CachePools
     {
         return CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30);
     }
-
-    /**
-     * 30s TTL -- same reasoning as permissions() above. Used by
-     * Notification\NotificationService::getRecentPostDates().
-     */
-    public static function notifications(): CacheItemPoolInterface
-    {
-        return CacheFactory::create(namespace: 'piwigo.notifications', defaultLifetime: 30);
-    }
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Notification;
 
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\NotificationsCachePool;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -32,6 +32,7 @@ final readonly class NotificationService
         private UrlServiceInterface $urlService,
         private Translator $translator,
         private CurrentUser $currentUser,
+        private NotificationsCachePool $notificationsCachePool,
     ) {}
 
     /**
@@ -186,7 +187,7 @@ final readonly class NotificationService
         $userId = (string) $this->currentUser->get()
             ->id->value;
 
-        $pool = CachePools::notifications();
+        $pool = $this->notificationsCachePool;
         $cacheItem = $pool->getItem('recent_posts_' . $userId . '_' . $maxDates . '_' . $maxElements . '_' . $maxCats);
         if ($cacheItem->isHit()) {
             $cached = $cacheItem->get();

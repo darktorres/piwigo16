@@ -3,8 +3,23 @@
 declare(strict_types=1);
 
 use PgSql\Connection;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\NotificationsCachePool;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
+
+/**
+ * Matches config/container.php's own NotificationsCachePool::class
+ * factory entry's literal namespace/TTL exactly -- built directly here,
+ * not container-resolved: this Browser suite exercises the real app over
+ * HTTP, with no Kernel::boot() of its own in this test process, and a
+ * throwaway instance pointed at the same namespace clears the identical
+ * shared backing (see AbstractNamedCachePool's own docblock -- pool
+ * identity carries no correctness risk).
+ */
+function feedControllerTestNotificationsCachePool(): NotificationsCachePool
+{
+    return new NotificationsCachePool(CacheFactory::create(namespace: 'piwigo.notifications', defaultLifetime: 30));
+}
 
 /**
  * Piwigo\Controller\FeedController (feed.php) -- generates the RSS2 gallery
@@ -213,7 +228,8 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
         ->not->toBe([]);
     H::dbQuery($db, sprintf("UPDATE images SET date_available = '%s'", FEED_FIXED_DATE));
     H::dbClose($db);
-    CachePools::notifications()->clear();
+    feedControllerTestNotificationsCachePool()
+        ->clear();
 
     try {
         $result = feedRawGet();
@@ -281,7 +297,8 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
             }
         }
         H::dbClose($db);
-        CachePools::notifications()->clear();
+        feedControllerTestNotificationsCachePool()
+            ->clear();
     }
 });
 

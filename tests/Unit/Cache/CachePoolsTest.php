@@ -6,6 +6,7 @@ use Piwigo\Cache\AbstractNamedCachePool;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\EffectivePermissionsCachePool;
+use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Cache\TagCloudCachePool;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
@@ -55,6 +56,15 @@ function cachePoolsTestEffectivePermissions(): EffectivePermissionsCachePool
     return new EffectivePermissionsCachePool(CacheFactory::create(namespace: 'piwigo.effective_permissions', defaultLifetime: 30));
 }
 
+/**
+ * Same reasoning as cachePoolsTestTagCloud() above, for
+ * PermissionsCachePool::class's own factory entry.
+ */
+function cachePoolsTestPermissions(): PermissionsCachePool
+{
+    return new PermissionsCachePool(CacheFactory::create(namespace: 'piwigo.permissions', defaultLifetime: 30));
+}
+
 // Filesystem-forced throughout: the real behavior under test is namespace
 // isolation between pools, not adapter selection (already covered by
 // CacheFactoryTest) -- forcing one adapter keeps this deterministic
@@ -67,7 +77,6 @@ afterEach(function (): void {
     $clear = static function (): void {
         foreach ([
             CachePools::config(),
-            CachePools::permissions(),
             CachePools::categoryTree(),
             CachePools::general(),
         ] as $pool) {
@@ -77,18 +86,24 @@ afterEach(function (): void {
             ->clear();
         cachePoolsTestEffectivePermissions()
             ->clear();
+        cachePoolsTestPermissions()
+            ->clear();
     };
     $clear();
     putenv('PIWIGO_CACHE_ADAPTER');
 });
 
 test('each named pool is isolated from the others', function (): void {
-    $item = CachePools::permissions()->getItem('shared_key');
+    $item = cachePoolsTestPermissions()
+        ->getItem('shared_key');
     $item->set('permissions_value');
-    CachePools::permissions()->save($item);
+    cachePoolsTestPermissions()
+        ->save($item);
 
-    expect(CachePools::permissions()->getItem('shared_key')->isHit())->toBeTrue()
-        ->and(CachePools::permissions()->getItem('shared_key')->get())->toBe('permissions_value')
+    expect(cachePoolsTestPermissions()->getItem('shared_key')->isHit())
+        ->toBeTrue()
+        ->and(cachePoolsTestPermissions()->getItem('shared_key')->get())
+        ->toBe('permissions_value')
         ->and(CachePools::categoryTree()->getItem('shared_key')->isHit())->toBeFalse()
         ->and(CachePools::general()->getItem('shared_key')->isHit())->toBeFalse();
 });
@@ -114,7 +129,8 @@ test('permissions/effectivePermissions/categoryTree/tagCloud pools carry their o
     // defaultLifetime -- a mutated 30<->29/31 or 300<->299/301 on these
     // lines would still build a distinctly-namespaced, fully functional
     // pool, indistinguishable from the namespace tests' own assertions.
-    expect(cachePoolsTestDefaultLifetime(CachePools::permissions()))->toBe(30)
+    expect(cachePoolsTestDefaultLifetime(cachePoolsTestPermissions()))
+        ->toBe(30)
         ->and(cachePoolsTestDefaultLifetime(cachePoolsTestEffectivePermissions()))
         ->toBe(30)
         ->and(cachePoolsTestDefaultLifetime(CachePools::categoryTree()))->toBe(300)

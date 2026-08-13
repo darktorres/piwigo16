@@ -40,18 +40,6 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- short enough that a permission change (revoking a
-     * category, editing a group) becomes visible well within one user
-     * session, long enough to avoid recomputing
-     * PermissionService::getForbiddenCategories()'s multi-query
-     * calculation on every single request for the same user.
-     */
-    public static function permissions(): CacheItemPoolInterface
-    {
-        return CacheFactory::create(namespace: 'piwigo.permissions', defaultLifetime: 30);
-    }
-
-    /**
      * 300s TTL -- per-user per-album counts, cheaper to hold slightly
      * stale than to recompute the `COUNT(*) ... GROUP BY category_id`
      * rollup on every category listing.
@@ -89,7 +77,9 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- same reasoning as permissions() above. Used by
+     * 30s TTL -- short enough that a permission change becomes visible
+     * well within one user session, long enough to avoid recomputing on
+     * every single request for the same user. Used by
      * Search\SearchFilterRenderer's several filter-row/count caches and
      * Search\SearchService::getQuickSearchResults(): a uniform 30s TTL,
      * not a longer "search content changes slowly" value, since

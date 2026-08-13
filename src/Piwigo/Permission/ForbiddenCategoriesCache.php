@@ -8,8 +8,7 @@ use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * Per-user cached wrapper around PermissionService::getForbiddenCategories(),
- * wiring CachePools::permissions(). 30s TTL ({@see
- * \Piwigo\Cache\CachePools::permissions()}) means a permission change
+ * wiring {@see \Piwigo\Cache\PermissionsCachePool}. 30s TTL means a permission change
  * (revoking a category, editing a group) becomes visible well within one
  * user session, long enough to avoid recomputing the multi-query
  * calculation on every request for the same user.

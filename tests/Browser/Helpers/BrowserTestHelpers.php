@@ -18,6 +18,7 @@ use PHPUnit\Framework\ExpectationFailedException;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\EffectivePermissionsCachePool;
+use Piwigo\Cache\PermissionsCachePool;
 use ReflectionMethod;
 use ReflectionProperty;
 use RuntimeException;
@@ -1488,7 +1489,7 @@ final class BrowserTestHelpers
      * Permission\ImageVisibilityChecker::isVisibleToUser() reads
      * `CurrentUser::forbiddenCategories`
      * (Permission\EffectiveForbiddenCategoriesCache, cached in
-     * Cache\CachePools::permissions()/effectivePermissions()), never live
+     * Cache\PermissionsCachePool/EffectivePermissionsCachePool), never live
      * category status directly -- so this helper clears those pools
      * directly after flipping status. Uses the app's own
      * FilesystemAdapter-backed cache directory (no ext-apcu in this
@@ -1503,7 +1504,7 @@ final class BrowserTestHelpers
         self::dbQuery($db, sprintf("UPDATE categories SET status = '%s' WHERE id = %d", $status, $categoryId));
         self::dbClose($db);
 
-        CachePools::permissions()->clear();
+        new PermissionsCachePool(CacheFactory::create(namespace: 'piwigo.permissions', defaultLifetime: 30))->clear();
         new EffectivePermissionsCachePool(CacheFactory::create(namespace: 'piwigo.effective_permissions', defaultLifetime: 30))->clear();
     }
 

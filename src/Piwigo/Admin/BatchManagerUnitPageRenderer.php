@@ -8,8 +8,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Admin\Projection\BatchManagerUnitPageContext;
 use Piwigo\Admin\Request\BatchManagerUnitRequest;
-use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\ValueObject\ImageId;
@@ -72,6 +72,7 @@ final readonly class BatchManagerUnitPageRenderer
         private HtmlService $htmlRenderer,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
+        private PermissionsCachePool $permissionsCachePool,
     ) {}
 
     /**
@@ -343,7 +344,7 @@ final readonly class BatchManagerUnitPageRenderer
                     ),
                     explode(
                         ',',
-                        new ForbiddenCategoriesCache($this->permissionService, CachePools::permissions())
+                        new ForbiddenCategoriesCache($this->permissionService, $this->permissionsCachePool)
                             ->getForUser($user->id->value, $user->status->value)
                     )
                 );

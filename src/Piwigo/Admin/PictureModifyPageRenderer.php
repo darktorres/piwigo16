@@ -9,8 +9,8 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Projection\PictureModifyPageContext;
 use Piwigo\Admin\Request\PictureModifyRequest;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
@@ -81,6 +81,7 @@ final readonly class PictureModifyPageRenderer
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private Paths $paths,
+        private PermissionsCachePool $permissionsCachePool,
     ) {}
 
     public function render(string $adminPhotoBaseUrl): void
@@ -401,7 +402,7 @@ final readonly class PictureModifyPageRenderer
                 $authorized_category_ids,
                 explode(
                     ',',
-                    new ForbiddenCategoriesCache($this->permissionService, CachePools::permissions())
+                    new ForbiddenCategoriesCache($this->permissionService, $this->permissionsCachePool)
                         ->getForUser($this->currentUser->get()->id->value, $this->currentUser->get()->status->value)
                 )
             );

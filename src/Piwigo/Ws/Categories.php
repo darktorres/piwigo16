@@ -17,6 +17,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Category\CategoryAdminListCriteria;
 use Piwigo\Category\CategoryListCriteria;
 use Piwigo\Category\CategoryRepository;
@@ -74,6 +75,7 @@ final readonly class Categories
         private PageState $pageState,
         private ImageStdParams $imageStdParams,
         private WsHelper $wsHelper,
+        private PermissionsCachePool $permissionsCachePool,
     ) {}
 
     /**
@@ -419,7 +421,7 @@ final readonly class Categories
             // categories that are either locked or private and not permitted
             //
             // calculate_permissions does not consider empty categories as forbidden
-            $forbidden_categories = new ForbiddenCategoriesCache($this->permissionService, CachePools::permissions())
+            $forbidden_categories = new ForbiddenCategoriesCache($this->permissionService, $this->permissionsCachePool)
                 ->getForUser($user_id, $currentUser->status->value);
             $forbiddenCategoryIds = self::csvToIntList($forbidden_categories);
             // Deliberately NOT CategoryTreeCache: that pool is keyed only

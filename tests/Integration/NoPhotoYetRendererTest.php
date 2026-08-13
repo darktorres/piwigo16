@@ -80,8 +80,8 @@ namespace Piwigo\Tests\Integration {
      *     image_format, comments, favorites, caddie, lounge, rate,
      *     categories.representative_picture_id and history.image_id, is
      *     shared with every other Browser test file in the same suite run,
-     *     and (confirmed live) already holds far more rows than the
-     *     committed 5-image fixture ships. A byte-exact restore across that
+     *     and already holds far more rows than the committed 5-image
+     *     fixture ships. A byte-exact restore across that
      *     many FK-linked tables is not something that can safely be authored
      *     AND verified here (verifying it would mean actually running it
      *     against that same shared table), so it's deliberately left
@@ -167,11 +167,10 @@ namespace Piwigo\Tests\Integration {
 
         private function seedFlag(string $value): void
         {
-            // Real bug found live -- `ON DUPLICATE KEY
-            // UPDATE` is MySQL-only syntax ("syntax error at or near
-            // 'DUPLICATE'"). Postgres's portable equivalent is `ON CONFLICT
-            // (<unique/PK column>) DO UPDATE SET ... = EXCLUDED. ...` --
-            // `param` is config's own primary key.
+            // `ON DUPLICATE KEY UPDATE` is MySQL-only syntax. Postgres's
+            // portable equivalent is `ON CONFLICT (<unique/PK column>) DO
+            // UPDATE SET ... = EXCLUDED. ...` -- `param` is config's own
+            // primary key.
             $onConflict = $this->dbDriver === 'pgsql'
                 ? 'ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value'
                 : 'ON DUPLICATE KEY UPDATE value = VALUES(value)';
@@ -282,8 +281,8 @@ namespace Piwigo\Tests\Integration {
             // test's rollback of the images-table deletion above. Checked only
             // after rollBack(): $this->conn's own transaction (still open
             // above, opened before that separate connection's write) reads
-            // under a consistent snapshot that predates it, confirmed live --
-            // a read through the same still-open transaction cannot see it.
+            // under a consistent snapshot that predates it, so a read
+            // through the same still-open transaction cannot see it.
             self::assertSame('"false"', $this->readFlag());
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'no_photo_yet'");
         }

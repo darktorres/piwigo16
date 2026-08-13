@@ -39,19 +39,17 @@ use Piwigo\Tests\Support\PageStateTestFactory;
  * whether the local MTA accepts-then-bounces or outright rejects) -- but
  * pointing `smtp_host` at a real closed local port (127.0.0.1:1, nothing
  * ever listens there) makes Symfony Mailer's EsmtpTransport fail the
- * *connection* itself, deterministically and near-instantly (confirmed via
- * a standalone sanity script: ECONNREFUSED in ~60ms, not a hang), which
- * MailService::mail() surfaces as a deterministic `false` return. This
- * lets the large "delivery failed" branches of sendMailNotifications()/
- * doSubscribeUnsubscribeNotificationByMail() finally be exercised for
- * real, without needing a mock transport (none is injected -- both
- * methods call `new MailService()` directly).
+ * *connection* itself, deterministically and near-instantly (ECONNREFUSED
+ * in ~60ms, not a hang), which MailService::mail() surfaces as a
+ * deterministic `false` return. This lets the large "delivery failed"
+ * branches of sendMailNotifications()/doSubscribeUnsubscribeNotificationByMail()
+ * finally be exercised for real, without needing a mock transport (none is
+ * injected -- both methods call `new MailService()` directly).
  *
  * That forced failure always goes through MailService::mail()'s own
  * `trigger_error(..., E_USER_WARNING)` (its calling condition,
  * `! (bool) ini_get('display_errors')`, is true in this CLI test process:
- * `display_errors` reads back as `''` here, confirmed via
- * `php -r "var_dump(ini_get('display_errors'));"`) -- phpunit.xml's
+ * `display_errors` reads back as `''` here) -- phpunit.xml's
  * failOnWarning="true" would otherwise fail these tests on that expected,
  * production-code-deliberate warning, so every call that can reach a real
  * send is `@`-suppressed, matching ArrayHelperTest's established
@@ -63,9 +61,9 @@ use Piwigo\Tests\Support\PageStateTestFactory;
  * not chased here: every other test in this class (and MailServiceTest's
  * own Integration suite) forces delivery *failure* via a closed local SMTP
  * port specifically because a deterministic *success* would need a real,
- * reachable mail transport -- no test anywhere in this codebase attempts
- * that (confirmed via a full-repo grep), by the same established design
- * this class's own docblock already documents for the failure trick.
+ * reachable mail transport, which no test anywhere in this codebase
+ * attempts, by the same established design this class's own docblock
+ * already documents for the failure trick.
  *
  * Both call sites construct `new MailService()` directly (no injectable
  * mailer, unlike MailService::mailGroup()'s own recipient-repo seam), so
@@ -109,8 +107,8 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // po's "No mail to be sent."). Without this, whether admin.lang
         // happens to already be loaded (and by which language) depends on
         // which other Integration test file ran earlier in this shared
-        // process -- confirmed live. Loading it explicitly here makes
-        // every assertion deterministic regardless of run order.
+        // process. Loading it explicitly here makes every assertion
+        // deterministic regardless of run order.
         LangTestFactory::get()->load('admin.lang');
 
         $conn = DbConnection::build();
@@ -137,8 +135,8 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertIsArray($row);
         // enabled is a genuine boolean column -- a raw (unmapped) fetch
         // returns a native PHP bool for it on Postgres, but a numeric 1/0
-        // on MySQL (confirmed live, same as categories.visible/commentable
-        // elsewhere). (int) normalizes either representation.
+        // on MySQL, same as categories.visible/commentable elsewhere.
+        // (int) normalizes either representation.
         $lastSend = $row['last_send'];
         $this->user1OriginalRow = [
             'check_key' => $row['check_key'],
@@ -344,9 +342,9 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // Not expectNotToPerformAssertions(): this file's own setUp()
         // already performs real assertions (assertInstanceOf/assertIsArray
         // type-narrowing guards), which PHPUnit counts against *every*
-        // test in the class -- confirmed live, that combination is what
-        // PHPUnit's risky-test detector flags ("not expected to perform
-        // assertions but performed N").
+        // test in the class -- that combination is what PHPUnit's
+        // risky-test detector flags ("not expected to perform assertions
+        // but performed N").
         $this->sender->assignVarsNbmMailContent($this->fakeUser());
     }
 
@@ -619,8 +617,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // enabled is a genuine boolean column -- a bare `1` literal in the
         // SQL text itself (unlike a bound parameter, which the driver
         // coerces implicitly) is rejected outright by Postgres ("column
-        // ... is of type boolean but expression is of type integer",
-        // confirmed live).
+        // ... is of type boolean but expression is of type integer").
         $enabledLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
         $this->conn->executeStatement(
             "INSERT INTO user_mail_notification (user_id, check_key, enabled, last_send) VALUES (?, ?, {$enabledLiteral}, NULL)",

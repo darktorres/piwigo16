@@ -317,12 +317,11 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             'INSERT INTO image_category (image_id, category_id) VALUES (?, ?)',
             [$newImageId, $newId]
         );
-        // Real bug, found live: without this, render()'s own representative-
-        // picture resolution (CategoryCatsRenderer, the class under test)
+        // Without this, render()'s own representative-picture resolution
         // has no cached representative, no explicit representative_picture_id,
         // allowRandomRepresentative() is off by default, and this category
         // has no sub-categories -- every resolution branch fails, so the
-        // category is legitimately, correctly skipped and logged as "no
+        // category would be legitimately skipped and logged as "no
         // image_id found", not rendered at all. createVirtualCategory()
         // itself never sets this (no images exist yet at creation time),
         // and a raw image_category insert (unlike a real upload flow)

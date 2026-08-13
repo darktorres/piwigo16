@@ -1126,8 +1126,8 @@ final class WsHistoryTest extends ContractTestCase
      * priority handler chained after it -- exactly the "a plugin can still
      * override history search behavior by registering its own GetHistory
      * handler at a higher priority" scenario historyGet()'s own docblock
-     * describes. A real plugin file + `plugins` activation row
-     * (PluginLoader::loadPlugins() include_once()s it on every real
+     * describes. A real plugin + `plugins` activation row
+     * (PluginConfig\PluginRegistry::bootActive() boots it on every real
      * request, including ws.php) is the same established technique as
      * tests/Browser/PictureControllerTest.php's own 'user_comment_check'
      * misbehaving-plugin test -- EventDispatcher's own singleton lives in
@@ -1154,8 +1154,6 @@ final class WsHistoryTest extends ContractTestCase
         $imageId = (int) $this->conn->lastInsertId();
 
         $pluginId = 'pwgtest-gethistory-override';
-        $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
-        $mainFile = $pluginDir . '/main.inc.php';
 
         try {
             $this->enableHistoryForAdmin();
@@ -1173,21 +1171,8 @@ final class WsHistoryTest extends ContractTestCase
             self::assertIsArray($beforeResult);
             self::assertNotEmpty($beforeResult['lines']);
 
-            if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
-                throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
-            }
-            file_put_contents($mainFile, <<<PHP
-                <?php
-
-                declare(strict_types=1);
-
-                /*
-                Plugin Name: WsHistoryTest -- get_history Override
-                Version: 1.0.0
-                Description: Test-only fixture plugin (tests/Contract/WsHistoryTest.php).
-                */
-
-                \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addEventHandler(
+            $this->writeFixturePlugin($pluginId, <<<PHP
+                \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addEventHandler(
                     \\Piwigo\\Event\\Ws\\GetHistory::class,
                     static function (\\Piwigo\\Event\\Ws\\GetHistory \$event): mixed {
                         \$fields = \$event->search['fields'] ?? null;
@@ -1199,7 +1184,6 @@ final class WsHistoryTest extends ContractTestCase
                     },
                     51
                 );
-
                 PHP);
 
             $this->conn->executeStatement(
@@ -1228,8 +1212,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertSame(500, $status, 'a plugin GetHistory handler returning a non-GetHistory instance must fatal (fail loud), not silently degrade');
         } finally {
             $this->conn->executeStatement('DELETE FROM plugins WHERE id = ?', [$pluginId]);
-            @unlink($mainFile);
-            @rmdir($pluginDir);
+            $this->removeFixturePlugin($pluginId);
             $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
     }
@@ -1632,5 +1615,84 @@ final class WsHistoryTest extends ContractTestCase
         self::assertIsString($body);
         self::assertSame(500, $status);
         self::assertStringContainsString('Internal Server Error', $body);
+    }
+
+    /**
+     * Writes a real `plugin.json` + PSR-4-autoloadable `ExtensionInterface`
+     * class -- the P27 plugin/theme contract's own fixture shape,
+     * replacing the legacy `main.inc.php` raw-include mechanism
+     * `Admin\PluginLoader::loadPlugins()` used to run (retired in P27.4,
+     * replaced by `PluginConfig\PluginRegistry::bootActive()`, which has
+     * no knowledge of `main.inc.php` at all). `$bootBodySource` is
+     * spliced verbatim into the fixture class's own `boot()` method body.
+     * The namespace is derived from random bytes, not `$pluginId` (which
+     * can start with a digit -- not a legal leading character for a PHP
+     * identifier).
+     */
+    private function writeFixturePlugin(string $pluginId, string $bootBodySource): void
+    {
+        $dir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+        if (! is_dir($dir . '/src')) {
+            mkdir($dir . '/src', 0o777, true);
+        }
+
+        $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+        file_put_contents($dir . '/plugin.json', json_encode([
+            'id' => $pluginId,
+            'name' => $pluginId,
+            'version' => '1.0.0',
+            'description' => 'Test-only fixture plugin (tests/Contract/WsHistoryTest.php).',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\Plugin',
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/src/Plugin.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+
+            final class Plugin implements ExtensionInterface
+            {
+                public function boot(ExtensionContext \$context): void
+                {
+                    {$bootBodySource}
+                }
+
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+
+                public function subscribedEvents(): array
+                {
+                    return [];
+                }
+            }
+
+            PHP);
+    }
+
+    private function removeFixturePlugin(string $pluginId): void
+    {
+        $dir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+        @unlink($dir . '/src/Plugin.php');
+        @rmdir($dir . '/src');
+        @unlink($dir . '/plugin.json');
+        if (is_dir($dir)) {
+            rmdir($dir);
+        }
     }
 }

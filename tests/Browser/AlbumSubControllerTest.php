@@ -15,19 +15,81 @@ function albumSubPluginsPath(): string
     return dirname(__DIR__, 2) . '/plugins/';
 }
 
-function albumSubWriteFixturePlugin(string $pluginId, string $mainIncPhpSource): void
+/**
+ * Writes a real `plugin.json` + PSR-4-autoloadable `ExtensionInterface`
+ * class -- the P27 plugin/theme contract's own fixture shape, replacing
+ * the legacy `main.inc.php` raw-include mechanism `Admin\PluginLoader::
+ * loadPlugins()` used to run (retired in P27.4, replaced by
+ * `PluginConfig\PluginRegistry::bootActive()`, which has no knowledge of
+ * `main.inc.php` at all). `$bootBodySource` is spliced verbatim into the
+ * fixture class's own `boot()` method body -- the same "runs once, early
+ * in the request" timing the old top-level `main.inc.php` code had.
+ * The namespace is derived from random bytes, not `$pluginId` (which can
+ * start with a digit after its own `uniqid()` suffix -- not a legal
+ * leading character for a PHP identifier).
+ */
+function albumSubWriteFixturePlugin(string $pluginId, string $bootBodySource): void
 {
     $dir = albumSubPluginsPath() . $pluginId;
-    if (! is_dir($dir)) {
-        mkdir($dir, 0o777, true);
+    if (! is_dir($dir . '/src')) {
+        mkdir($dir . '/src', 0o777, true);
     }
-    file_put_contents($dir . '/main.inc.php', $mainIncPhpSource);
+
+    $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+    file_put_contents($dir . '/plugin.json', json_encode([
+        'id' => $pluginId,
+        'name' => $pluginId,
+        'version' => '1.0.0',
+        'description' => 'Test-only fixture plugin (tests/Browser/AlbumSubControllerTest.php).',
+        'license' => 'MIT',
+        'minPiwigo' => '16.3.0',
+        'main' => $namespace . '\\Plugin',
+        'autoload' => [
+            'psr-4' => [
+                $namespace . '\\' => 'src/',
+            ],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+    file_put_contents($dir . '/src/Plugin.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use Piwigo\\PluginConfig\\ExtensionContext;
+        use Piwigo\\PluginConfig\\ExtensionInterface;
+
+        final class Plugin implements ExtensionInterface
+        {
+            public function boot(ExtensionContext \$context): void
+            {
+                {$bootBodySource}
+            }
+
+            public function install(): void {}
+            public function activate(): void {}
+            public function deactivate(): void {}
+            public function uninstall(): void {}
+            public function update(string \$oldVersion, string \$newVersion): void {}
+
+            public function subscribedEvents(): array
+            {
+                return [];
+            }
+        }
+
+        PHP);
 }
 
 function albumSubRemoveFixturePlugin(string $pluginId): void
 {
     $dir = albumSubPluginsPath() . $pluginId;
-    @unlink($dir . '/main.inc.php');
+    @unlink($dir . '/src/Plugin.php');
+    @rmdir($dir . '/src');
+    @unlink($dir . '/plugin.json');
     if (is_dir($dir)) {
         rmdir($dir);
     }
@@ -50,16 +112,6 @@ it('fatal-errors instead of silently swallowing a real render_category_name hook
     // cleanup, so it can't break the login flow or the delete WS call.
     $pluginId = 'ct-albumsub-hook-' . uniqid();
     $pluginSource = <<<'PHP'
-    <?php
-
-    declare(strict_types=1);
-
-    /*
-    Plugin Name: Album Sub Controller Test -- render_category_name Hook
-    Version: 1.0.0
-    Description: Test-only fixture plugin (tests/Browser/AlbumSubControllerTest.php).
-    */
-
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Template\RenderCategoryName::class,
         static fn (mixed $event): mixed => null

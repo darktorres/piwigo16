@@ -80,16 +80,28 @@ function pluginsInstalledPluginsPath(): string
 
 /**
  * Writes a throwaway plugin directly under the live, Apache-shared
- * plugins/ root -- same real-fs-fixture technique PluginLoaderTest.php
- * uses against an injectable throwaway root, but this suite has no such
- * injection point available (ExtensionScanner/PluginLoader both hardcode
- * the live, container-bound Paths->plugins), so the
- * write targets the real path instead. Every caller below removes it via
+ * plugins/ root -- this Browser suite has no injectable throwaway root
+ * available the way tests/Integration/PluginRegistryTest.php's own
+ * buildRegistry() does (a real, separate Apache-served process handles
+ * every request here, not this same PHP process, so there's no
+ * Paths::class to swap), so the write targets the real path instead.
+ * Every caller below removes it via
  * pluginsInstalledRemoveFixturePlugin() in a finally block, keeping the
  * exposure window scoped to a single it() -- Pest's Browser suite runs
  * this file's tests sequentially in one process (no --parallel in
  * composer.json's test:browser script), so there is no other test able to
  * observe it mid-flight.
+ *
+ * Writes ONLY main.inc.php -- ExtensionScanner::scanPlugin() still reads
+ * this file's own header-comment block directly (PluginsInstalledPageRenderer
+ * isn't retargeted onto PluginRegistry until P27.5), but nothing
+ * include_once()s it anymore (Admin\PluginLoader::loadPlugins() was
+ * retired in P27.4, replaced by PluginConfig\PluginRegistry::
+ * bootActive(), which has no knowledge of main.inc.php at all), so any
+ * executable body written here is inert. Use this for a fixture that
+ * only needs to be *visible* in the admin listing -- for one whose code
+ * needs to actually run per-request too, use
+ * pluginsInstalledWriteHookedFixturePlugin() instead.
  */
 function pluginsInstalledWriteFixturePlugin(string $pluginId, string $mainIncPhpSource): void
 {
@@ -100,10 +112,91 @@ function pluginsInstalledWriteFixturePlugin(string $pluginId, string $mainIncPhp
     file_put_contents($dir . '/main.inc.php', $mainIncPhpSource);
 }
 
+/**
+ * Same live-fs-fixture technique, but for a plugin whose code needs to
+ * actually execute per-request: writes main.inc.php (so ExtensionScanner
+ * still lists it in the admin UI, per pluginsInstalledWriteFixturePlugin()'s
+ * own docblock) AND a real plugin.json + PSR-4-autoloadable
+ * ExtensionInterface class (so PluginConfig\PluginRegistry::bootActive()
+ * -- the only mechanism that still executes anything, post-P27.4 --
+ * actually boots it). $bootBodySource is spliced verbatim into the
+ * fixture class's own boot() method body. The namespace is derived from
+ * random bytes, not $pluginId (which can start with a digit -- not a
+ * legal leading character for a PHP identifier).
+ */
+function pluginsInstalledWriteHookedFixturePlugin(string $pluginId, string $mainIncPhpHeaderSource, string $bootBodySource): void
+{
+    pluginsInstalledWriteFixturePlugin($pluginId, $mainIncPhpHeaderSource);
+
+    $dir = pluginsInstalledPluginsPath() . $pluginId;
+    if (! is_dir($dir . '/src')) {
+        mkdir($dir . '/src', 0o777, true);
+    }
+
+    $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+    file_put_contents($dir . '/plugin.json', json_encode([
+        'id' => $pluginId,
+        'name' => $pluginId,
+        'version' => '1.0.0',
+        'description' => 'Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).',
+        'license' => 'MIT',
+        'minPiwigo' => '16.3.0',
+        'main' => $namespace . '\\Plugin',
+        'autoload' => [
+            'psr-4' => [
+                $namespace . '\\' => 'src/',
+            ],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+    file_put_contents($dir . '/src/Plugin.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use Piwigo\\PluginConfig\\ExtensionContext;
+        use Piwigo\\PluginConfig\\ExtensionInterface;
+
+        final class Plugin implements ExtensionInterface
+        {
+            public function boot(ExtensionContext \$context): void
+            {
+                {$bootBodySource}
+            }
+
+            public function install(): void {}
+            public function activate(): void {}
+            public function deactivate(): void {}
+            public function uninstall(): void {}
+            public function update(string \$oldVersion, string \$newVersion): void {}
+
+            public function subscribedEvents(): array
+            {
+                return [];
+            }
+        }
+
+        PHP);
+}
+
 function pluginsInstalledRemoveFixturePlugin(string $pluginId): void
 {
     $dir = pluginsInstalledPluginsPath() . $pluginId;
-    @unlink($dir . '/main.inc.php');
+    if (is_file($dir . '/main.inc.php')) {
+        unlink($dir . '/main.inc.php');
+    }
+    if (is_file($dir . '/src/Plugin.php')) {
+        unlink($dir . '/src/Plugin.php');
+    }
+    if (is_dir($dir . '/src')) {
+        rmdir($dir . '/src');
+    }
+    if (is_file($dir . '/plugin.json')) {
+        unlink($dir . '/plugin.json');
+    }
     if (is_dir($dir)) {
         rmdir($dir);
     }
@@ -123,7 +216,7 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
     // have come from the deprecated get_admin_plugin_menu_links hook path,
     // never from PluginsInstalledPageRenderer::render()'s own
     // hasSettings-driven default.
-    pluginsInstalledWriteFixturePlugin($hooksId, <<<'PHP'
+    pluginsInstalledWriteHookedFixturePlugin($hooksId, <<<'PHP'
     <?php
 
     declare(strict_types=1);
@@ -133,7 +226,8 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
     Version: 1.0.0
     Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
     */
-
+    PHP
+        , <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Admin\GetAdminPluginMenuLinks::class,
         static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): \Piwigo\Event\Admin\GetAdminPluginMenuLinks {
@@ -162,9 +256,10 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
     PHP);
 
     $db = pluginsInstalledDb();
-    // Only the hook-registering plugin needs a DB row -- PluginLoader::
-    // loadPlugins() only include_once's an active plugin's main.inc.php,
-    // and only that file needs to actually run for the hook to register.
+    // Only the hook-registering plugin needs a DB row --
+    // PluginRegistry::bootActive() only boots an active plugin's
+    // ExtensionInterface class, and only that class needs to actually
+    // run for the hook to register.
     H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $hooksId)));
 
     try {
@@ -200,7 +295,7 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
 it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and still resolves the well-formed one', function (): void {
     $hooksId = 'pwgtest-plugins-installed-malformed-hooks';
 
-    pluginsInstalledWriteFixturePlugin($hooksId, <<<'PHP'
+    pluginsInstalledWriteHookedFixturePlugin($hooksId, <<<'PHP'
     <?php
 
     declare(strict_types=1);
@@ -210,7 +305,8 @@ it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and
     Version: 1.0.0
     Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
     */
-
+    PHP
+        , <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Admin\GetAdminPluginMenuLinks::class,
         static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): \Piwigo\Event\Admin\GetAdminPluginMenuLinks {
@@ -289,7 +385,7 @@ it('clears a stale $_SESSION[incompatible_plugins] entry once the on-disk plugin
     // under test here (render()'s own consumption of whatever ends up in
     // $_SESSION['incompatible_plugins']) doesn't care how that entry got
     // there.
-    pluginsInstalledWriteFixturePlugin($pluginId, <<<'PHP'
+    pluginsInstalledWriteHookedFixturePlugin($pluginId, <<<'PHP'
     <?php
 
     declare(strict_types=1);
@@ -299,7 +395,8 @@ it('clears a stale $_SESSION[incompatible_plugins] entry once the on-disk plugin
     Version: 1.0.0
     Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
     */
-
+    PHP
+        , <<<'PHP'
     if (isset($_GET['pwgtest_pipr_seed']) && is_string($_GET['pwgtest_pipr_seed'])) {
         $_SESSION['incompatible_plugins'] = [
             'pwgtest-plugins-installed-session' => $_GET['pwgtest_pipr_seed'],
@@ -341,7 +438,7 @@ it('clears a stale $_SESSION[incompatible_plugins] entry once the on-disk plugin
 it('leaves a $_SESSION[incompatible_plugins] entry untouched when its recorded version still matches the on-disk plugin', function (): void {
     $pluginId = 'pwgtest-plugins-installed-session';
 
-    pluginsInstalledWriteFixturePlugin($pluginId, <<<'PHP'
+    pluginsInstalledWriteHookedFixturePlugin($pluginId, <<<'PHP'
     <?php
 
     declare(strict_types=1);
@@ -351,7 +448,8 @@ it('leaves a $_SESSION[incompatible_plugins] entry untouched when its recorded v
     Version: 1.0.0
     Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
     */
-
+    PHP
+        , <<<'PHP'
     if (isset($_GET['pwgtest_pipr_seed']) && is_string($_GET['pwgtest_pipr_seed'])) {
         $_SESSION['incompatible_plugins'] = [
             'pwgtest-plugins-installed-session' => $_GET['pwgtest_pipr_seed'],

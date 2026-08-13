@@ -12,7 +12,6 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
-use Piwigo\Admin\PluginLoader;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\ApiKeyRepository;
@@ -25,6 +24,8 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\Projection\HeaderMessagesPageContext;
+use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\Email;
@@ -55,7 +56,9 @@ use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ServerTiming;
+use Piwigo\Core\ThemeEntity;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Core\WsContext;
@@ -83,6 +86,12 @@ use Piwigo\Listener\SiteCleanupListener;
 use Piwigo\Listener\UploadFormatListener;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\ExtensionContextFactory;
+use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\PluginEntity;
+use Piwigo\PluginConfig\PluginMigrationEntity;
+use Piwigo\PluginConfig\PluginRegistry;
+use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Template\CurrentTemplate;
@@ -356,7 +365,35 @@ final class RequestBootstrap
         self::imageStdParams();
 
         session_start();
-        PluginLoader::loadPlugins(self::loadedPlugins(), self::eventDispatcher(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState(), self::paths());
+        $pluginRegistry = self::pluginRegistry($conn);
+        $pluginRegistry->bootActive();
+
+        // Repopulates Admin\LoadedPlugins from the registry's own already-
+        // scanned manifests -- Admin\PluginLoader::loadPlugins() used to
+        // own this directly; PluginRegistry (P27.3, PluginConfig\, L3
+        // Presentation) can't take Admin\LoadedPlugins (Admin\,
+        // L4Integration) as a constructor param itself without an L3->L4
+        // deptrac violation, so this glue stays here. Guarded on the same
+        // enablePlugins flag bootActive() itself checks -- found live via
+        // a real Integration test: getActiveIds() is a plain DB query
+        // with no such guard of its own, so without this check here too,
+        // a disabled-plugins request would still report every active
+        // plugin as "loaded" despite bootActive() never having
+        // constructed or booted a single instance.
+        self::loadedPlugins()->set([]);
+        if (self::currentConfig()->enablePlugins) {
+            foreach ($pluginRegistry->getActiveIds() as $activePluginId) {
+                $manifest = $pluginRegistry->getManifest($activePluginId);
+                if ($manifest === null) {
+                    continue;
+                }
+                self::loadedPlugins()->add($activePluginId, [
+                    'id' => $activePluginId,
+                    'state' => 'active',
+                    'version' => $manifest->version,
+                ]);
+            }
+        }
 
         if (self::currentConfig()->piwigoInstalledVersion === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -555,6 +592,16 @@ final class RequestBootstrap
             if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'ws' and DeviceHelper::mobileTheme(self::sessionService(), self::currentConfig())) {
                 $theme = ThemeId::from(self::currentConfig()->mobileTheme);
             }
+            // PluginConfig\ThemeRegistry::bootCurrent() (P27.4) -- only the
+            // classic (public-gallery) theme, never the admin theme above:
+            // themes/admin/ is a separate, non-manifest-scanned directory
+            // tree (Admin\Extensions\ExtensionType::scanDirectory()'s own
+            // Theme case already scans $currentConfig->themesPath, the same
+            // tree ThemeRegistry scans -- themes/admin/ was never part of
+            // that catalog to begin with). Right after resolving $theme,
+            // before Template is constructed, so a theme's subscribedEvents()
+            // are live before anything in the same request could fire them.
+            self::themeRegistry($conn)->bootCurrent($theme);
             $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes', $theme);
         }
 
@@ -616,9 +663,9 @@ final class RequestBootstrap
         $pageState->headerNotes = array_merge($pageState->headerNotes, self::currentConfig()->headerNotes);
 
         // Default event handlers -- extracted into Piwigo\Listener\*
-        // classes (P27.0). Must stay after PluginLoader::loadPlugins()
-        // (in connect() above) so a plugin's own 'upload_file' handler
-        // (if any) keeps first crack in the trigger_change() chain.
+        // classes (P27.0). Must stay after PluginRegistry::bootActive()
+        // (in connect() above, P27.4) so a plugin's own 'upload_file'
+        // handler (if any) keeps first crack in the trigger_change() chain.
         // The 2 dead 'pwg_image_resize' registrations this block used to
         // carry (UploadImageResize/UploadThumbnailResize -- no function
         // by that name exists anywhere in this codebase, neither event is
@@ -667,6 +714,97 @@ final class RequestBootstrap
     private static function passwordService(Connection $conn): PasswordService
     {
         return new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), self::deploymentPolicy());
+    }
+
+    /**
+     * Resolves the container-shared instance -- this class already has
+     * direct Kernel::container() access (arch-tested to Bootstrap/ only).
+     */
+    private static function redirectService(): RedirectServiceInterface
+    {
+        $redirectService = Kernel::container()->get(RedirectServiceInterface::class);
+        if (! $redirectService instanceof RedirectServiceInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . RedirectServiceInterface::class);
+        }
+
+        return $redirectService;
+    }
+
+    /**
+     * Narrow, purpose-built read facade for PluginConfig\ExtensionContext
+     * (P27.2) -- reuses the request's own shared Connection, same
+     * "no extra physical DB connection" discipline as every other
+     * repository accessor here. Piwigo\Category\CategoryRepository isn't
+     * a Doctrine EntityRepository subclass (a plain service wrapping
+     * EntityManagerInterface directly), unlike CaddieRepository/
+     * ImageRepository, hence the different construction shape for that
+     * one argument.
+     */
+    private static function imageReadFacade(Connection $conn): ImageReadFacade
+    {
+        return new ImageReadFacade(
+            EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class),
+            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
+            new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()),
+        );
+    }
+
+    /**
+     * Builds a fresh ExtensionContextFactory (P27.3) -- cheap, pure
+     * composition of already-resolved accessors, no I/O of its own, so
+     * building one per registry-construction call site (pluginRegistry()/
+     * themeRegistry() below) rather than caching a single shared instance
+     * across connect()/finalize() isn't worth the extra state to avoid.
+     */
+    private static function extensionContextFactory(Connection $conn): ExtensionContextFactory
+    {
+        return new ExtensionContextFactory(
+            self::currentTemplate(),
+            self::currentConfig(),
+            self::currentUser(),
+            self::userService(),
+            self::lang(),
+            self::urlService(),
+            self::redirectService(),
+            self::adminContext(),
+            self::eventDispatcher(),
+            self::sessionService(),
+            self::imageReadFacade($conn),
+        );
+    }
+
+    /**
+     * PluginConfig\PluginRegistry::bootActive() (P27.4) replaces
+     * Admin\PluginLoader::loadPlugins() at the exact same position in
+     * connect() -- reuses the request's own shared Connection for every
+     * repository it needs, same discipline as every other accessor here.
+     */
+    private static function pluginRegistry(Connection $conn): PluginRegistry
+    {
+        return new PluginRegistry(
+            EntityManagerFactory::build($conn)->getRepository(PluginEntity::class),
+            EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
+            self::eventDispatcher(),
+            self::extensionContextFactory($conn),
+            self::currentConfig(),
+            self::paths(),
+        );
+    }
+
+    /**
+     * PluginConfig\ThemeRegistry::bootCurrent() (P27.4) -- called once
+     * per request in finalize(), right after the classic (non-admin)
+     * theme is resolved and before Template is constructed.
+     */
+    private static function themeRegistry(Connection $conn): ThemeRegistry
+    {
+        return new ThemeRegistry(
+            EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class),
+            self::eventDispatcher(),
+            self::extensionContextFactory($conn),
+            self::currentConfig(),
+            self::paths(),
+        );
     }
 
     /**
@@ -732,11 +870,11 @@ final class RequestBootstrap
     }
 
     /**
-     * Resolves the container-shared instance so that `PluginLoader::
-     * loadPlugins()`'s writes are visible to every other consumer holding
-     * the same shared instance -- `PluginLoader` itself stays static and
-     * lives outside `Bootstrap/`, so the instance is threaded through as an
-     * explicit parameter rather than resolved from inside `PluginLoader`.
+     * Resolves the container-shared instance so that connect()'s own
+     * PluginRegistry::getActiveIds()/getManifest()-driven population
+     * (P27.4, replacing Admin\PluginLoader::loadPlugins()'s former writes)
+     * is visible to every other consumer holding the same shared
+     * instance.
      */
     private static function loadedPlugins(): LoadedPlugins
     {
@@ -1027,11 +1165,9 @@ final class RequestBootstrap
     }
 
     /**
-     * Resolves the container-shared instance. Public: PluginLoader::
-     * loadPlugins() genuinely needs the full AccessControl (real
-     * checkStatus()/accessDenied() enforcement, passed through to
-     * third-party PluginMaintain subclasses); public/admin.php and
-     * public/random.php need the same full class for their own
+     * Resolves the container-shared instance. Public: public/admin.php
+     * and public/random.php need the full AccessControl (real
+     * checkStatus()/accessDenied() enforcement) for their own
      * checkStatus() calls, reaching it via this accessor after their own
      * RequestBootstrap::bootEntryPoint() call has already run -- the same
      * established "real entry-shell caller reaches a RequestBootstrap

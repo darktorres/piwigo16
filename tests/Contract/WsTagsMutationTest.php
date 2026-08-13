@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Db\DbConnection;
-use RuntimeException;
 
 /**
  * Ws\Tags::delete()'s own `else { return ['id' => []]; }` branch (when
@@ -466,38 +465,23 @@ final class WsTagsMutationTest extends ContractTestCase
      * name. The default handler (StringHelper::str2url(), registered at
      * RequestBootstrap's own priority 50) always returns a real
      * RenderTagUrl, so reaching this for real needs a second,
-     * higher-priority handler chained after it -- a real plugin file +
-     * `plugins` activation row (PluginLoader::loadPlugins()
-     * include_once()s it on every real request), the same established
-     * technique as tests/Contract/WsHistoryTest.php's own 'get_history'
-     * override test: EventDispatcher's singleton lives in the real
-     * Apache-served process, not this Pest process, so it can't be reached
-     * by registering a handler here directly. Scoped to a unique marker
-     * tag name so it's a complete no-op for every other concurrent request
+     * higher-priority handler chained after it -- a real plugin +
+     * `plugins` activation row (PluginConfig\PluginRegistry::bootActive()
+     * boots it on every real request), the same established technique as
+     * tests/Contract/WsHistoryTest.php's own 'get_history' override test:
+     * EventDispatcher's singleton lives in the real Apache-served
+     * process, not this Pest process, so it can't be reached by
+     * registering a handler here directly. Scoped to a unique marker tag
+     * name so it's a complete no-op for every other concurrent request
      * against this shared dev server while active.
      */
     public function testRenameThrowsWhenARenderTagUrlHandlerReturnsSomethingOtherThanARenderTagUrlInstance(): void
     {
         $renameMarker = 'ct_tag_url_fallback_rename_' . uniqid();
         $pluginId = 'pwgtest-tags-render-url-fallback';
-        $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
-        $mainFile = $pluginDir . '/main.inc.php';
 
-        if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
-            throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
-        }
-        file_put_contents($mainFile, <<<PHP
-            <?php
-
-            declare(strict_types=1);
-
-            /*
-            Plugin Name: WsTagsMutationTest -- render_tag_url Non-Instance Override
-            Version: 1.0.0
-            Description: Test-only fixture plugin (tests/Contract/WsTagsMutationTest.php).
-            */
-
-            \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
+        $this->writeFixturePlugin($pluginId, <<<PHP
+            \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
                 \\Piwigo\\Event\\Tag\\RenderTagUrl::class,
                 static function (\\Piwigo\\Event\\Tag\\RenderTagUrl \$event): mixed {
                     if (\$event->tagName === '{$renameMarker}') {
@@ -508,7 +492,6 @@ final class WsTagsMutationTest extends ContractTestCase
                 },
                 51
             );
-
             PHP);
 
         $this->conn->executeStatement(
@@ -539,8 +522,7 @@ final class WsTagsMutationTest extends ContractTestCase
             self::assertSame(500, $status);
         } finally {
             $this->conn->executeStatement('DELETE FROM plugins WHERE id = ?', [$pluginId]);
-            @unlink($mainFile);
-            @rmdir($pluginDir);
+            $this->removeFixturePlugin($pluginId);
         }
     }
 
@@ -553,24 +535,9 @@ final class WsTagsMutationTest extends ContractTestCase
     {
         $duplicateMarker = 'ct_tag_url_fallback_duplicate_' . uniqid();
         $pluginId = 'pwgtest-tags-render-url-fallback-dup';
-        $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
-        $mainFile = $pluginDir . '/main.inc.php';
 
-        if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
-            throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
-        }
-        file_put_contents($mainFile, <<<PHP
-            <?php
-
-            declare(strict_types=1);
-
-            /*
-            Plugin Name: WsTagsMutationTest -- render_tag_url Non-Instance Override (duplicate)
-            Version: 1.0.0
-            Description: Test-only fixture plugin (tests/Contract/WsTagsMutationTest.php).
-            */
-
-            \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
+        $this->writeFixturePlugin($pluginId, <<<PHP
+            \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
                 \\Piwigo\\Event\\Tag\\RenderTagUrl::class,
                 static function (\\Piwigo\\Event\\Tag\\RenderTagUrl \$event): mixed {
                     if (\$event->tagName === '{$duplicateMarker}') {
@@ -581,7 +548,6 @@ final class WsTagsMutationTest extends ContractTestCase
                 },
                 51
             );
-
             PHP);
 
         $this->conn->executeStatement(
@@ -608,8 +574,7 @@ final class WsTagsMutationTest extends ContractTestCase
             self::assertSame(500, $status);
         } finally {
             $this->conn->executeStatement('DELETE FROM plugins WHERE id = ?', [$pluginId]);
-            @unlink($mainFile);
-            @rmdir($pluginDir);
+            $this->removeFixturePlugin($pluginId);
         }
     }
 
@@ -640,5 +605,84 @@ final class WsTagsMutationTest extends ContractTestCase
         unset($ch);
 
         return $status;
+    }
+
+    /**
+     * Writes a real `plugin.json` + PSR-4-autoloadable `ExtensionInterface`
+     * class -- the P27 plugin/theme contract's own fixture shape,
+     * replacing the legacy `main.inc.php` raw-include mechanism
+     * `Admin\PluginLoader::loadPlugins()` used to run (retired in P27.4,
+     * replaced by `PluginConfig\PluginRegistry::bootActive()`, which has
+     * no knowledge of `main.inc.php` at all). `$bootBodySource` is
+     * spliced verbatim into the fixture class's own `boot()` method body.
+     * The namespace is derived from random bytes, not `$pluginId` (which
+     * can start with a digit -- not a legal leading character for a PHP
+     * identifier).
+     */
+    private function writeFixturePlugin(string $pluginId, string $bootBodySource): void
+    {
+        $dir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+        if (! is_dir($dir . '/src')) {
+            mkdir($dir . '/src', 0o777, true);
+        }
+
+        $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+        file_put_contents($dir . '/plugin.json', json_encode([
+            'id' => $pluginId,
+            'name' => $pluginId,
+            'version' => '1.0.0',
+            'description' => 'Test-only fixture plugin (tests/Contract/WsTagsMutationTest.php).',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\Plugin',
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/src/Plugin.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+
+            final class Plugin implements ExtensionInterface
+            {
+                public function boot(ExtensionContext \$context): void
+                {
+                    {$bootBodySource}
+                }
+
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+
+                public function subscribedEvents(): array
+                {
+                    return [];
+                }
+            }
+
+            PHP);
+    }
+
+    private function removeFixturePlugin(string $pluginId): void
+    {
+        $dir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+        @unlink($dir . '/src/Plugin.php');
+        @rmdir($dir . '/src');
+        @unlink($dir . '/plugin.json');
+        if (is_dir($dir)) {
+            rmdir($dir);
+        }
     }
 }

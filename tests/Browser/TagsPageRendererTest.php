@@ -163,19 +163,84 @@ function tagsPagePluginsPath(): string
     return dirname(__DIR__, 2) . '/plugins/';
 }
 
-function tagsPageWriteFixturePlugin(string $pluginId, string $mainIncPhpSource): void
+/**
+ * Writes a real `plugin.json` + PSR-4-autoloadable `ExtensionInterface`
+ * class -- the P27 plugin/theme contract's own fixture shape, replacing
+ * the legacy `main.inc.php` raw-include mechanism `Admin\PluginLoader::
+ * loadPlugins()` used to run (retired in P27.4, replaced by
+ * `PluginConfig\PluginRegistry::bootActive()`, which has no knowledge of
+ * `main.inc.php` at all). `$bootBodySource` is spliced verbatim into the
+ * fixture class's own `boot()` method body. The namespace is derived
+ * from random bytes, not `$pluginId` (which can start with a digit --
+ * not a legal leading character for a PHP identifier).
+ */
+function tagsPageWriteFixturePlugin(string $pluginId, string $bootBodySource): void
 {
     $dir = tagsPagePluginsPath() . $pluginId;
-    if (! is_dir($dir)) {
-        mkdir($dir, 0o777, true);
+    if (! is_dir($dir . '/src')) {
+        mkdir($dir . '/src', 0o777, true);
     }
-    file_put_contents($dir . '/main.inc.php', $mainIncPhpSource);
+
+    $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+    file_put_contents($dir . '/plugin.json', json_encode([
+        'id' => $pluginId,
+        'name' => $pluginId,
+        'version' => '1.0.0',
+        'description' => 'Test-only fixture plugin (tests/Browser/TagsPageRendererTest.php).',
+        'license' => 'MIT',
+        'minPiwigo' => '16.3.0',
+        'main' => $namespace . '\\Plugin',
+        'autoload' => [
+            'psr-4' => [
+                $namespace . '\\' => 'src/',
+            ],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+    file_put_contents($dir . '/src/Plugin.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use Piwigo\\PluginConfig\\ExtensionContext;
+        use Piwigo\\PluginConfig\\ExtensionInterface;
+
+        final class Plugin implements ExtensionInterface
+        {
+            public function boot(ExtensionContext \$context): void
+            {
+                {$bootBodySource}
+            }
+
+            public function install(): void {}
+            public function activate(): void {}
+            public function deactivate(): void {}
+            public function uninstall(): void {}
+            public function update(string \$oldVersion, string \$newVersion): void {}
+
+            public function subscribedEvents(): array
+            {
+                return [];
+            }
+        }
+
+        PHP);
+}
+
+function tagsPageFixturePluginClassPath(string $pluginId): string
+{
+    return tagsPagePluginsPath() . $pluginId . '/src/Plugin.php';
 }
 
 function tagsPageRemoveFixturePlugin(string $pluginId): void
 {
     $dir = tagsPagePluginsPath() . $pluginId;
-    @unlink($dir . '/main.inc.php');
+    @unlink($dir . '/src/Plugin.php');
+    @rmdir($dir . '/src');
+    @unlink($dir . '/plugin.json');
     if (is_dir($dir)) {
         rmdir($dir);
     }
@@ -190,16 +255,6 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
     // tags sharing this same live plugins/ install for the duration of
     // this it()).
     tagsPageWriteFixturePlugin($pluginId, <<<'PHP'
-    <?php
-
-    declare(strict_types=1);
-
-    /*
-    Plugin Name: Tags Page Test -- Alt Names Hook
-    Version: 1.0.0
-    Description: Test-only fixture plugin (tests/Browser/TagsPageRendererTest.php).
-    */
-
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Tag\GetTagAltNames::class,
         static function (\Piwigo\Event\Tag\GetTagAltNames $event): \Piwigo\Event\Tag\GetTagAltNames {
@@ -211,7 +266,7 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
         }
     );
     PHP);
-    $pluginSourcePath = tagsPagePluginsPath() . $pluginId . '/main.inc.php';
+    $pluginSourcePath = tagsPageFixturePluginClassPath($pluginId);
     file_put_contents(
         $pluginSourcePath,
         str_replace('__TAGS_PAGE_ALT_NAMES_TARGET__', $tagName, (string) file_get_contents($pluginSourcePath))

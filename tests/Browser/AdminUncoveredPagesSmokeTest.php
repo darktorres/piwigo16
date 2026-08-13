@@ -339,26 +339,85 @@ function pluginSubPluginsPath(): string
     return dirname(__DIR__, 2) . '/plugins/';
 }
 
+/**
+ * `PluginSubController::handle()` checks `Admin\LoadedPlugins` (P27.4:
+ * populated from `PluginConfig\PluginRegistry::getActiveIds()`/
+ * `getManifest()`, which skips any active DB row with no valid
+ * `plugin.json` -- see `Bootstrap\RequestBootstrap::connect()`'s own
+ * `if ($manifest === null) { continue; }`), so a bare `main.inc.php`
+ * placeholder (this helper's pre-P27.4 shape) no longer makes a plugin
+ * "active" for its purposes -- a real manifest + PSR-4 class is required
+ * even though neither call site below needs any actual boot() behavior.
+ * `ct_settings.php` is unrelated to the plugin/theme contract entirely --
+ * `PluginSubController` `include_once`s it by raw path, independent of
+ * ExtensionScanner/PluginRegistry.
+ */
 function pluginSubWriteFixturePlugin(string $pluginId): void
 {
     $dir = pluginSubPluginsPath() . $pluginId;
-    if (! is_dir($dir)) {
-        mkdir($dir, 0o777, true);
+    if (! is_dir($dir . '/src')) {
+        mkdir($dir . '/src', 0o777, true);
     }
-    file_put_contents($dir . '/main.inc.php', "<?php\n");
+
+    $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+    file_put_contents($dir . '/plugin.json', json_encode([
+        'id' => $pluginId,
+        'name' => $pluginId,
+        'version' => '1.0.0',
+        'description' => 'Test-only fixture plugin (tests/Browser/AdminUncoveredPagesSmokeTest.php).',
+        'license' => 'MIT',
+        'minPiwigo' => '16.3.0',
+        'main' => $namespace . '\\Plugin',
+        'autoload' => [
+            'psr-4' => [
+                $namespace . '\\' => 'src/',
+            ],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+    file_put_contents($dir . '/src/Plugin.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use Piwigo\\PluginConfig\\ExtensionContext;
+        use Piwigo\\PluginConfig\\ExtensionInterface;
+
+        final class Plugin implements ExtensionInterface
+        {
+            public function boot(ExtensionContext \$context): void {}
+
+            public function install(): void {}
+            public function activate(): void {}
+            public function deactivate(): void {}
+            public function uninstall(): void {}
+            public function update(string \$oldVersion, string \$newVersion): void {}
+
+            public function subscribedEvents(): array
+            {
+                return [];
+            }
+        }
+
+        PHP);
+
     file_put_contents($dir . '/ct_settings.php', "<?php\necho '<!--CT_PLUGINSUB_INCLUDED-->';\n");
 }
 
 function pluginSubRemoveFixturePlugin(string $pluginId): void
 {
-    // Real file_exists() guards, not a bare @unlink() -- @ only suppresses
-    // the ini display_errors output, not Pest/PHPUnit's own conversion of
-    // a real E_WARNING into a test WARNING outcome, and some
-    // callers of this helper never write ct_settings.php at all, e.g. the
-    // "admin popuphelp" test, which only writes main.inc.php.
     $dir = pluginSubPluginsPath() . $pluginId;
-    if (file_exists($dir . '/main.inc.php')) {
-        unlink($dir . '/main.inc.php');
+    if (file_exists($dir . '/src/Plugin.php')) {
+        unlink($dir . '/src/Plugin.php');
+    }
+    if (is_dir($dir . '/src')) {
+        rmdir($dir . '/src');
+    }
+    if (file_exists($dir . '/plugin.json')) {
+        unlink($dir . '/plugin.json');
     }
     if (file_exists($dir . '/ct_settings.php')) {
         unlink($dir . '/ct_settings.php');

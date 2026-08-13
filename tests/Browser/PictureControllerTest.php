@@ -45,6 +45,82 @@ function pictureDbConnect(): mysqli|Connection
     return H::connect();
 }
 
+/**
+ * Writes a real `plugin.json` + PSR-4-autoloadable `ExtensionInterface`
+ * class -- the P27 plugin/theme contract's own fixture shape, replacing
+ * the legacy `main.inc.php` raw-include mechanism `Admin\PluginLoader::
+ * loadPlugins()` used to run (retired in P27.4, replaced by
+ * `PluginConfig\PluginRegistry::bootActive()`, which has no knowledge of
+ * `main.inc.php` at all). `$bootBodySource` is spliced verbatim into the
+ * fixture class's own `boot()` method body -- the same "runs once, early
+ * in the request" timing the old top-level `main.inc.php` code had.
+ * The namespace is derived from random bytes, not `$pluginId` (which can
+ * start with a digit -- not a legal leading character for a PHP
+ * identifier).
+ */
+function pictureWriteFixturePlugin(string $pluginDir, string $bootBodySource): void
+{
+    if (! is_dir($pluginDir . '/src')) {
+        mkdir($pluginDir . '/src', 0o777, true);
+    }
+
+    $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+    file_put_contents($pluginDir . '/plugin.json', json_encode([
+        'id' => basename($pluginDir),
+        'name' => basename($pluginDir),
+        'version' => '1.0.0',
+        'description' => 'Test-only fixture plugin (tests/Browser/PictureControllerTest.php).',
+        'license' => 'MIT',
+        'minPiwigo' => '16.3.0',
+        'main' => $namespace . '\\Plugin',
+        'autoload' => [
+            'psr-4' => [
+                $namespace . '\\' => 'src/',
+            ],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+    file_put_contents($pluginDir . '/src/Plugin.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use Piwigo\\PluginConfig\\ExtensionContext;
+        use Piwigo\\PluginConfig\\ExtensionInterface;
+
+        final class Plugin implements ExtensionInterface
+        {
+            public function boot(ExtensionContext \$context): void
+            {
+                {$bootBodySource}
+            }
+
+            public function install(): void {}
+            public function activate(): void {}
+            public function deactivate(): void {}
+            public function uninstall(): void {}
+            public function update(string \$oldVersion, string \$newVersion): void {}
+
+            public function subscribedEvents(): array
+            {
+                return [];
+            }
+        }
+
+        PHP);
+}
+
+function pictureRemoveFixturePlugin(string $pluginDir): void
+{
+    @unlink($pluginDir . '/src/Plugin.php');
+    @rmdir($pluginDir . '/src');
+    @unlink($pluginDir . '/plugin.json');
+    @rmdir($pluginDir);
+}
+
 function pictureHitCount(int $imageId): int
 {
     $db = pictureDbConnect();
@@ -1660,32 +1736,19 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
     // the `user_comment_check` event (its own contract explicitly
     // requires one of those 3 strings back), not reachable through normal
     // request input alone. Reaching it for real needs a real plugin --
-    // Admin\PluginLoader::loadPlugins() include_once()s
-    // plugins/{id}/main.inc.php for every DB-active row on every request,
-    // the same real mechanism a genuine misbehaving 3rd-party plugin would
-    // use. Content-marker-gated (only ever intervenes for THIS test's own
-    // unique comment content) so it's a complete no-op for every other
+    // PluginConfig\PluginRegistry::bootActive() (P27.4, replacing
+    // Admin\PluginLoader::loadPlugins()) boots every DB-active plugin's
+    // main class on every request, the same real mechanism a genuine
+    // misbehaving 3rd-party plugin would use. Content-marker-gated (only
+    // ever intervenes for THIS test's own unique comment content) so it's
+    // a complete no-op for every other
     // concurrent request against this shared dev server while active, and
     // both the DB row and the plugin file are removed again in `finally`.
     $pluginId = 'pwgtest-picture-bogus-comment-action';
     $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
     $marker = 'PWGTEST_BOGUS_ACTION_MARKER_' . uniqid();
 
-    if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
-        throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
-    }
-    $mainFile = $pluginDir . '/main.inc.php';
-    file_put_contents($mainFile, <<<PHP
-        <?php
-
-        declare(strict_types=1);
-
-        /*
-        Plugin Name: PictureController Test -- Bogus Comment Action
-        Version: 1.0.0
-        Description: Test-only fixture plugin (tests/Browser/PictureControllerTest.php).
-        */
-
+    pictureWriteFixturePlugin($pluginDir, <<<PHP
         \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
             \\Piwigo\\Event\\User\\UserCommentCheck::class,
             static function (\\Piwigo\\Event\\User\\UserCommentCheck \$event): \\Piwigo\\Event\\User\\UserCommentCheck {
@@ -1697,16 +1760,15 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
                 return \$event;
             }
         );
-
         PHP);
 
     $pluginDb = pictureDbConnect();
     H::dbQuery($pluginDb, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
     H::dbClose($pluginDb);
     // The DB `config` cache pool has no bearing on plugin *loading* itself
-    // (PluginLoader::loadPlugins() always re-queries active plugins fresh,
-    // no cache layer of its own) -- no cache-clear needed here, unlike the
-    // config-param tests elsewhere in this suite.
+    // (PluginConfig\PluginRegistry::bootActive() always re-queries active
+    // plugins fresh, no cache layer of its own) -- no cache-clear needed
+    // here, unlike the config-param tests elsewhere in this suite.
 
     // canManageComment('edit', ...) requires user_can_edit_comment=true for
     // a non-admin to manage their OWN comment at all (false by default in
@@ -1793,8 +1855,7 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
         $cleanupDb = pictureDbConnect();
         H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
         H::dbClose($cleanupDb);
-        @unlink($mainFile);
-        @rmdir($pluginDir);
+        pictureRemoveFixturePlugin($pluginDir);
         H::restoreConfig($configSnapshot);
     }
 });
@@ -2166,21 +2227,7 @@ it('short-circuits the default element-content renderer when an earlier render_e
     $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
     $marker = 'PWGTEST_ELEMENT_CONTENT_MARKER_' . uniqid();
 
-    if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
-        throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
-    }
-    $mainFile = $pluginDir . '/main.inc.php';
-    file_put_contents($mainFile, <<<PHP
-        <?php
-
-        declare(strict_types=1);
-
-        /*
-        Plugin Name: PictureController Test -- Element Content Hook
-        Version: 1.0.0
-        Description: Test-only fixture plugin (tests/Browser/PictureControllerTest.php).
-        */
-
+    pictureWriteFixturePlugin($pluginDir, <<<PHP
         \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
             \\Piwigo\\Event\\Picture\\RenderElementContent::class,
             static function (\\Piwigo\\Event\\Picture\\RenderElementContent \$event): \\Piwigo\\Event\\Picture\\RenderElementContent {
@@ -2193,15 +2240,15 @@ it('short-circuits the default element-content renderer when an earlier render_e
             },
             10
         );
-
         PHP);
 
     $pluginDb = pictureDbConnect();
     H::dbQuery($pluginDb, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
     H::dbClose($pluginDb);
-    // No cache-clear needed: PluginLoader::loadPlugins() always re-queries
-    // active plugins fresh on every request, same as this file's own
-    // "logs a PHP warning..." test above already established.
+    // No cache-clear needed: PluginConfig\PluginRegistry::bootActive()
+    // (P27.4) always re-queries active plugins fresh on every request,
+    // same as this file's own "logs a PHP warning..." test above already
+    // established.
 
     try {
         $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
@@ -2222,7 +2269,6 @@ it('short-circuits the default element-content renderer when an earlier render_e
         $cleanupDb = pictureDbConnect();
         H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
         H::dbClose($cleanupDb);
-        @unlink($mainFile);
-        @rmdir($pluginDir);
+        pictureRemoveFixturePlugin($pluginDir);
     }
 });

@@ -15,7 +15,7 @@ test('get() throws before anything has ever been initialised', function (): void
     expect($loadedPlugins->isInitialized())
         ->toBeFalse();
     expect(fn (): array => $loadedPlugins->get())
-        ->toThrow(LogicException::class, 'LoadedPlugins not initialised -- call Piwigo\Admin\PluginLoader::loadPlugins() first.');
+        ->toThrow(LogicException::class, 'LoadedPlugins not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() first.');
 });
 
 test('set() initialises the map and get()/isInitialized() reflect it', function (): void {

@@ -30,6 +30,80 @@ function bmDbConnect(): mysqli|Connection
     return H::connect();
 }
 
+/**
+ * Writes a real `plugin.json` + PSR-4-autoloadable `ExtensionInterface`
+ * class -- the P27 plugin/theme contract's own fixture shape, replacing
+ * the legacy `main.inc.php` raw-include mechanism `Admin\PluginLoader::
+ * loadPlugins()` used to run (retired in P27.4, replaced by
+ * `PluginConfig\PluginRegistry::bootActive()`, which has no knowledge of
+ * `main.inc.php` at all). `$bootBodySource` is spliced verbatim into the
+ * fixture class's own `boot()` method body.
+ */
+function bmWriteFixturePlugin(string $pluginDir, string $bootBodySource): void
+{
+    if (! is_dir($pluginDir . '/src')) {
+        mkdir($pluginDir . '/src', 0o777, true);
+    }
+
+    $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+    file_put_contents($pluginDir . '/plugin.json', json_encode([
+        'id' => basename($pluginDir),
+        'name' => basename($pluginDir),
+        'version' => '1.0.0',
+        'description' => 'Test-only fixture plugin (tests/Browser/BatchManagerSubControllerTest.php).',
+        'license' => 'MIT',
+        'minPiwigo' => '16.3.0',
+        'main' => $namespace . '\\Plugin',
+        'autoload' => [
+            'psr-4' => [
+                $namespace . '\\' => 'src/',
+            ],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+    file_put_contents($pluginDir . '/src/Plugin.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use Piwigo\\PluginConfig\\ExtensionContext;
+        use Piwigo\\PluginConfig\\ExtensionInterface;
+
+        final class Plugin implements ExtensionInterface
+        {
+            public function boot(ExtensionContext \$context): void
+            {
+                {$bootBodySource}
+            }
+
+            public function install(): void {}
+            public function activate(): void {}
+            public function deactivate(): void {}
+            public function uninstall(): void {}
+            public function update(string \$oldVersion, string \$newVersion): void {}
+
+            public function subscribedEvents(): array
+            {
+                return [];
+            }
+        }
+
+        PHP);
+}
+
+function bmRemoveFixturePlugin(string $pluginDir): void
+{
+    @unlink($pluginDir . '/src/Plugin.php');
+    @rmdir($pluginDir . '/src');
+    @unlink($pluginDir . '/plugin.json');
+    if (is_dir($pluginDir)) {
+        rmdir($pluginDir);
+    }
+}
+
 function bmCaddieCount(int $userId): int
 {
     $db = bmDbConnect();
@@ -1062,32 +1136,18 @@ it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilte
     // FilterResolver::resolvePrefilter() returns null. Unreachable
     // through any real, unhooked request -- reaching it needs a real
     // plugin, same mechanism a genuine misbehaving 3rd-party plugin
-    // would use (PluginLoader::loadPlugins() include_once()s every
-    // DB-active plugin's main.inc.php on every request). Gated on this
-    // test's own unique marker prefilter value, so it's a complete no-op
-    // for every other concurrent request against this shared dev server
-    // while active (matches PictureControllerTest.php's own "bogus
-    // comment action" fixture-plugin test).
+    // would use (PluginConfig\PluginRegistry::bootActive() boots every
+    // DB-active plugin's ExtensionInterface class on every request).
+    // Gated on this test's own unique marker prefilter value, so it's a
+    // complete no-op for every other concurrent request against this
+    // shared dev server while active (matches PictureControllerTest.php's
+    // own "bogus comment action" fixture-plugin test).
     $marker = 'pwgtest_bogus_prefilter_' . uniqid();
     $pluginId = 'pwgtest-batch-manager-bogus-prefilter';
     $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
 
-    if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
-        throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
-    }
-    $mainFile = $pluginDir . '/main.inc.php';
-    file_put_contents($mainFile, <<<PHP
-        <?php
-
-        declare(strict_types=1);
-
-        /*
-        Plugin Name: BatchManagerSubController Test -- Bogus Prefilter Non-Array Hook
-        Version: 1.0.0
-        Description: Test-only fixture plugin (tests/Browser/BatchManagerSubControllerTest.php).
-        */
-
-        \\Piwigo\\Core\\Kernel::container()->get(\\Piwigo\\PluginConfig\\EventDispatcher::class)->addTypedHandler(
+    bmWriteFixturePlugin($pluginDir, <<<PHP
+        \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
             \\Piwigo\\Event\\Admin\\PerformBatchManagerPrefilters::class,
             static function (\\Piwigo\\Event\\Admin\\PerformBatchManagerPrefilters \$event): mixed {
                 if (\$event->prefilter === '{$marker}') {
@@ -1097,7 +1157,6 @@ it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilte
                 return \$event;
             }
         );
-
         PHP);
 
     $pluginDb = bmDbConnect();
@@ -1124,8 +1183,7 @@ it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilte
         $cleanupDb = bmDbConnect();
         H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
         H::dbClose($cleanupDb);
-        @unlink($mainFile);
-        @rmdir($pluginDir);
+        bmRemoveFixturePlugin($pluginDir);
     }
 });
 
@@ -1137,22 +1195,8 @@ it('fatal-errors instead of silently swallowing a batch_manager_perform_filters 
     $pluginId = 'pwgtest-batch-manager-bogus-filters';
     $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
 
-    if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
-        throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
-    }
-    $mainFile = $pluginDir . '/main.inc.php';
-    file_put_contents($mainFile, <<<PHP
-        <?php
-
-        declare(strict_types=1);
-
-        /*
-        Plugin Name: BatchManagerSubController Test -- Bogus Filters Non-Array Hook
-        Version: 1.0.0
-        Description: Test-only fixture plugin (tests/Browser/BatchManagerSubControllerTest.php).
-        */
-
-        \\Piwigo\\Core\\Kernel::container()->get(\\Piwigo\\PluginConfig\\EventDispatcher::class)->addTypedHandler(
+    bmWriteFixturePlugin($pluginDir, <<<PHP
+        \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
             \\Piwigo\\Event\\Admin\\BatchManagerPerformFilters::class,
             static function (\\Piwigo\\Event\\Admin\\BatchManagerPerformFilters \$event): mixed {
                 if ((\$event->bulkManagerFilter['prefilter'] ?? null) === '{$marker}') {
@@ -1162,7 +1206,6 @@ it('fatal-errors instead of silently swallowing a batch_manager_perform_filters 
                 return \$event;
             }
         );
-
         PHP);
 
     $pluginDb = bmDbConnect();
@@ -1189,8 +1232,7 @@ it('fatal-errors instead of silently swallowing a batch_manager_perform_filters 
         $cleanupDb = bmDbConnect();
         H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
         H::dbClose($cleanupDb);
-        @unlink($mainFile);
-        @rmdir($pluginDir);
+        bmRemoveFixturePlugin($pluginDir);
     }
 });
 

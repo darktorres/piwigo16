@@ -10,12 +10,12 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Mail\MailService;
 use Piwigo\Mail\Projection\NbmSubscribeActionMailContext;
-use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -181,7 +181,10 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
         $emails = [];
 
         $emails['cat-group-info'] = $this->mailCaptureBeforeSend(
-            ['name' => 'Fixture Recipient', 'email' => 'golden-html-recipient@example.test'],
+            [
+                'name' => 'Fixture Recipient',
+                'email' => 'golden-html-recipient@example.test',
+            ],
             [
                 'subject' => '[Fixture Gallery] Visit album Sample Album',
                 'theme' => 'clear',
@@ -210,7 +213,10 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
             galleryUrl: $this->rootUrl,
         ));
         $emails['notification-by-mail'] = $this->mailCaptureBeforeSend(
-            ['name' => 'Fixture Recipient', 'email' => 'golden-html-nbm@example.test'],
+            [
+                'name' => 'Fixture Recipient',
+                'email' => 'golden-html-nbm@example.test',
+            ],
             [
                 'subject' => '[Fixture Gallery] Subscribe to notification by mail',
                 'email_format' => 'text/html',
@@ -220,7 +226,10 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
         );
 
         $emails['dark-theme-css'] = $this->mailCaptureBeforeSend(
-            ['name' => 'Fixture Recipient', 'email' => 'golden-html-dark-theme@example.test'],
+            [
+                'name' => 'Fixture Recipient',
+                'email' => 'golden-html-dark-theme@example.test',
+            ],
             [
                 'subject' => '[Fixture Gallery] Dark theme CSS coverage',
                 'theme' => 'dark',

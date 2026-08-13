@@ -121,16 +121,13 @@ function fixturePlugin(string $root, string $id, string $version, string $eid, s
 {
     $dir = $root . 'plugins/' . $id;
     mkdir($dir, 0o777, true);
-    file_put_contents($dir . '/main.inc.php', <<<PHP
-        <?php
-        /*
-        Plugin Name: {$name}
-        Version: {$version}
-        Description: Fixture plugin for ExtensionUpdateCheckerTest.
-        Author: Fixture Author
-        Plugin URI: https://upstream.example.invalid/extension_view.php?eid={$eid}
-        */
-        PHP);
+    file_put_contents($dir . '/plugin.json', json_encode([
+        'name' => $name,
+        'version' => $version,
+        'description' => 'Fixture plugin for ExtensionUpdateCheckerTest.',
+        'author' => 'Fixture Author',
+        'homepage' => "https://upstream.example.invalid/extension_view.php?eid={$eid}",
+    ], JSON_THROW_ON_ERROR));
 }
 
 // PHPStan can't see across the beforeEach()/test() closure boundary that
@@ -170,16 +167,13 @@ function fixtureTheme(string $root, string $id, string $version, string $eid, st
 {
     $dir = $root . 'themes/' . $id;
     mkdir($dir, 0o777, true);
-    file_put_contents($dir . '/themeconf.inc.php', <<<PHP
-        <?php
-        /*
-        Theme Name: {$name}
-        Version: {$version}
-        Description: Fixture theme for ExtensionUpdateCheckerTest.
-        Author: Fixture Author
-        Theme URI: https://upstream.example.invalid/extension_view.php?eid={$eid}
-        */
-        PHP);
+    file_put_contents($dir . '/theme.json', json_encode([
+        'name' => $name,
+        'version' => $version,
+        'description' => 'Fixture theme for ExtensionUpdateCheckerTest.',
+        'author' => 'Fixture Author',
+        'homepage' => "https://upstream.example.invalid/extension_view.php?eid={$eid}",
+    ], JSON_THROW_ON_ERROR));
     file_put_contents($dir . '/screenshot.png', 'fixture');
 }
 

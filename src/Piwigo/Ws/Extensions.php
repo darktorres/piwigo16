@@ -34,7 +34,6 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Template\CurrentTemplate;
@@ -156,7 +155,6 @@ final readonly class Extensions
             $this->pemCatalog,
             $urlService,
             $this->configService,
-            EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
             $this->activityService,
             $this->userService,
             $this->htmlRenderer,
@@ -213,7 +211,6 @@ final readonly class Extensions
             $this->pemCatalog,
             $urlService,
             $this->configService,
-            EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
             $this->activityService,
             $this->userService,
             $this->htmlRenderer,
@@ -284,8 +281,7 @@ final readonly class Extensions
         $conn = DbConnection::build();
         $repo = new ExtensionRepository(EntityManagerFactory::build($conn));
         $pemCatalog = $this->pemCatalog;
-        $pluginMigrationRepo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
-        $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $pluginMigrationRepo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
+        $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
 
         if ($type === ExtensionType::Plugin) {
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);

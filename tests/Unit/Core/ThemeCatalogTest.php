@@ -40,14 +40,14 @@ function themeCatalogTestRrmdir(string $dir): void
     rmdir($dir);
 }
 
-test('checkThemeInstalled returns true when the theme directory has a real themeconf.inc.php', function (): void {
+test('checkThemeInstalled returns true when the theme directory has a real theme.json', function (): void {
     $root = themeCatalogTestRoot();
 
     try {
         $currentConfig = new CurrentConfig();
         $currentConfig->themesDir = 'themes';
         mkdir($root . 'themes/my_theme', 0o777, true);
-        file_put_contents($root . 'themes/my_theme/themeconf.inc.php', '<?php');
+        file_put_contents($root . 'themes/my_theme/theme.json', '{}');
 
         $result = ThemeCatalog::checkThemeInstalled('my_theme', Paths::fromRoot($root), $currentConfig);
 
@@ -58,7 +58,7 @@ test('checkThemeInstalled returns true when the theme directory has a real theme
     }
 });
 
-test('checkThemeInstalled returns false when the theme directory has no themeconf.inc.php', function (): void {
+test('checkThemeInstalled returns false when the theme directory has no theme.json', function (): void {
     $root = themeCatalogTestRoot();
 
     try {

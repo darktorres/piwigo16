@@ -92,16 +92,21 @@ function pluginsInstalledPluginsPath(): string
  * composer.json's test:browser script), so there is no other test able to
  * observe it mid-flight.
  *
- * Writes ONLY main.inc.php -- ExtensionScanner::scanPlugin() still reads
- * this file's own header-comment block directly (PluginsInstalledPageRenderer
- * isn't retargeted onto PluginRegistry until P27.5), but nothing
- * include_once()s it anymore (Admin\PluginLoader::loadPlugins() was
- * retired in P27.4, replaced by PluginConfig\PluginRegistry::
- * bootActive(), which has no knowledge of main.inc.php at all), so any
- * executable body written here is inert. Use this for a fixture that
- * only needs to be *visible* in the admin listing -- for one whose code
- * needs to actually run per-request too, use
+ * Writes ONLY plugin.json (P27.10: ExtensionScanner::scanPlugin() reads
+ * plugin.json exclusively, no legacy main.inc.php support at all) -- no
+ * PSR-4-autoloadable class, so PluginConfig\PluginRegistry::bootActive()
+ * can never actually boot it even if a caller inserts a DB row for it;
+ * any "executable" content is inert either way. Use this for a fixture
+ * that only needs to be *visible* in the admin listing -- for one whose
+ * code needs to actually run per-request too, use
  * pluginsInstalledWriteHookedFixturePlugin() instead.
+ *
+ * $mainIncPhpSource keeps its original name/shape (a legacy
+ * `main.inc.php`-style header-comment block: "Plugin Name:"/"Version:"/
+ * "Description:"/"Has Settings:" lines) so none of this file's own real
+ * call sites needed to change when the underlying fixture format moved
+ * from main.inc.php to plugin.json -- parsed here with the exact same
+ * regexes ExtensionScanner::scanPlugin() itself used pre-P27.10.
  */
 function pluginsInstalledWriteFixturePlugin(string $pluginId, string $mainIncPhpSource): void
 {
@@ -109,25 +114,50 @@ function pluginsInstalledWriteFixturePlugin(string $pluginId, string $mainIncPhp
     if (! is_dir($dir)) {
         mkdir($dir, 0o777, true);
     }
-    file_put_contents($dir . '/main.inc.php', $mainIncPhpSource);
+
+    file_put_contents($dir . '/plugin.json', json_encode(pluginsInstalledParseHeaderFields($pluginId, $mainIncPhpSource), JSON_THROW_ON_ERROR));
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function pluginsInstalledParseHeaderFields(string $pluginId, string $mainIncPhpSource): array
+{
+    $manifest = [
+        'name' => $pluginId,
+    ];
+    if (preg_match('|Plugin Name:\s*(.+)|', $mainIncPhpSource, $val) === 1) {
+        $manifest['name'] = trim($val[1]);
+    }
+    if (preg_match('|Version:\s*([\w.-]+)|', $mainIncPhpSource, $val) === 1) {
+        $manifest['version'] = trim($val[1]);
+    }
+    if (preg_match('|Description:\s*(.+)|', $mainIncPhpSource, $val) === 1) {
+        $manifest['description'] = trim($val[1]);
+    }
+    if (preg_match('/Has Settings:\s*([Tt]rue|[Ww]ebmaster)/', $mainIncPhpSource, $val) === 1) {
+        $manifest['hasSettings'] = strtolower($val[1]) === 'webmaster' ? 'webmaster' : true;
+    }
+
+    return $manifest;
 }
 
 /**
  * Same live-fs-fixture technique, but for a plugin whose code needs to
- * actually execute per-request: writes main.inc.php (so ExtensionScanner
- * still lists it in the admin UI, per pluginsInstalledWriteFixturePlugin()'s
- * own docblock) AND a real plugin.json + PSR-4-autoloadable
- * ExtensionInterface class (so PluginConfig\PluginRegistry::bootActive()
- * -- the only mechanism that still executes anything, post-P27.4 --
- * actually boots it). $bootBodySource is spliced verbatim into the
- * fixture class's own boot() method body. The namespace is derived from
- * random bytes, not $pluginId (which can start with a digit -- not a
- * legal leading character for a PHP identifier).
+ * actually execute per-request: writes a real, schema-valid plugin.json
+ * (merging in $mainIncPhpHeaderSource's own parsed name/version/
+ * description/hasSettings, per pluginsInstalledWriteFixturePlugin()'s
+ * own docblock -- a single write, not two conflicting ones) + a
+ * PSR-4-autoloadable ExtensionInterface class (so PluginConfig\
+ * PluginRegistry::bootActive() -- the only mechanism that still executes
+ * anything, post-P27.4 -- actually boots it). $bootBodySource is spliced
+ * verbatim into the fixture class's own boot() method body. The
+ * namespace is derived from random bytes, not $pluginId (which can
+ * start with a digit -- not a legal leading character for a PHP
+ * identifier).
  */
 function pluginsInstalledWriteHookedFixturePlugin(string $pluginId, string $mainIncPhpHeaderSource, string $bootBodySource): void
 {
-    pluginsInstalledWriteFixturePlugin($pluginId, $mainIncPhpHeaderSource);
-
     $dir = pluginsInstalledPluginsPath() . $pluginId;
     if (! is_dir($dir . '/src')) {
         mkdir($dir . '/src', 0o777, true);
@@ -135,9 +165,8 @@ function pluginsInstalledWriteHookedFixturePlugin(string $pluginId, string $main
 
     $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
 
-    file_put_contents($dir . '/plugin.json', json_encode([
+    $manifest = pluginsInstalledParseHeaderFields($pluginId, $mainIncPhpHeaderSource) + [
         'id' => $pluginId,
-        'name' => $pluginId,
         'version' => '1.0.0',
         'description' => 'Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).',
         'license' => 'MIT',
@@ -148,7 +177,9 @@ function pluginsInstalledWriteHookedFixturePlugin(string $pluginId, string $main
                 $namespace . '\\' => 'src/',
             ],
         ],
-    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+    ];
+
+    file_put_contents($dir . '/plugin.json', json_encode($manifest, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
 
     file_put_contents($dir . '/src/Plugin.php', <<<PHP
         <?php

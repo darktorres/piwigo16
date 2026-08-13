@@ -327,8 +327,13 @@ final class InstallServiceTest extends IntegrationTestCase
         $themesDir = sys_get_temp_dir() . '/piwigo-install-service-themes-' . bin2hex(random_bytes(6)) . '/';
         mkdir($themesDir . $themeId, 0777, true);
         file_put_contents(
-            $themesDir . $themeId . '/themeconf.inc.php',
-            "<?php\n/*\nTheme Name: Default Template Test Fixture\nVersion: 3.1.4\nDescription: synthetic fixture for InstallServiceTest\nAuthor: p17-test\n*/\n"
+            $themesDir . $themeId . '/theme.json',
+            json_encode([
+                'name' => 'Default Template Test Fixture',
+                'version' => '3.1.4',
+                'description' => 'synthetic fixture for InstallServiceTest',
+                'author' => 'p17-test',
+            ], JSON_THROW_ON_ERROR)
         );
         $this->currentConfig()
             ->themesDir = $themesDir;
@@ -342,7 +347,7 @@ final class InstallServiceTest extends IntegrationTestCase
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM themes')));
         } finally {
             $this->conn->executeStatement('DELETE FROM themes');
-            unlink($themesDir . $themeId . '/themeconf.inc.php');
+            unlink($themesDir . $themeId . '/theme.json');
             rmdir($themesDir . $themeId);
             rmdir($themesDir);
         }

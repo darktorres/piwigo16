@@ -162,7 +162,10 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
     {
         $dir = $this->fixtureRoot . 'themes/' . $id;
         mkdir($dir, 0o777, true);
-        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: {$name}\nVersion: 1.0\n*/\n");
+        file_put_contents($dir . '/theme.json', json_encode([
+            'name' => $name,
+            'version' => '1.0',
+        ], JSON_THROW_ON_ERROR));
         // Avoids ExtensionScanner::scanTheme()'s hidden PreferencesService
         // DB fallback branch for a missing screenshot.png -- same reasoning
         // as tests/Unit/Admin/ThemesInstalledPageRendererTest.php's own

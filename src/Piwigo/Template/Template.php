@@ -1178,6 +1178,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Loads the configuration file from a theme directory and returns it.
      *
+     * No legacy `themeconf.inc.php` support -- every theme in this
+     * codebase (bundled core themes and P27.6-ported extensions alike)
+     * is `theme.json`-only, by design (P27.10: full legacy-file
+     * retirement, not a dual fallback).
+     *
      * @return array<string, mixed>
      */
     public function loadThemeconf(string $dir): array
@@ -1186,22 +1191,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if ($real_dir === false) {
             // Theme directory doesn't actually exist on disk -- don't cache
             // under a coerced-to-0 array key (every broken $dir would
-            // collide on the same cache slot) or attempt to include a
-            // bogus root-relative path.
+            // collide on the same cache slot).
             return [];
         }
         $dir = $real_dir;
         $cache_key = 'themeconf:' . $dir;
         if (! $this->processCache->has($cache_key)) {
-            $themeconf = [];
-            // themeconf.inc.php may set this to push extra template
-            // variables, instead of reaching for $this/$template directly
-            // (this file is included from many distinct Template instances,
-            // not only the global $template). assign() on an empty array is
-            // a no-op, so no need to guard the common case where it's unset.
-            $theme_template_vars = [];
-            include $dir . '/themeconf.inc.php';
-            $this->assign($theme_template_vars);
+            $themeconf = $this->loadThemeJson($dir);
             // Put themeconf in cache
             $this->processCache->set($cache_key, $themeconf);
 
@@ -1218,6 +1214,99 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $cached = $this->processCache->get($cache_key);
 
         return $cached;
+    }
+
+    /**
+     * Reads `theme.json`, mapped onto the same `$themeconf` shape
+     * `setTheme()` already reads (`use_standard_pages`/`parent`/
+     * `load_parent_css`/`load_parent_local_head`/`local_head`/
+     * `colorscheme`/`icon_dir`/`img_dir`/`mime_icon_dir`) -- a plain file read
+     * + `json_decode()`, not `PluginConfig\ThemeManifest`/`ThemeRegistry`:
+     * those are the same L3Presentation layer as this class but pull in
+     * DB/EntityManager dependencies this purely-file-based lookup has no
+     * reason to need. A malformed/missing `theme.json` degrades to `[]`
+     * (matching `loadThemeconf()`'s own pre-P27.10 not-found behavior),
+     * not a thrown exception.
+     *
+     * `icon_dir`/`img_dir`/`mime_icon_dir` (`ThemeManifest::$iconDir`/
+     * `$imgDir`/`$mimeIconDir`) are real, live-read fields (Html\
+     * HtmlService reads `icon_dir` via `themeConf()`, Image\SrcImage
+     * reads `mime_icon_dir`) but deliberately have **no** convention-
+     * based default computed here -- unset when the manifest doesn't
+     * declare them, exactly like `parent`/`local_head`/`colorscheme`
+     * above, so a child theme with no icon assets of its own correctly
+     * inherits its parent's value via `setTheme()`'s parent-then-child
+     * merge (`themes/admin/clear`/`themes/admin/roma` both rely on this
+     * for `themes/admin/default`'s own explicit value -- a hardcoded
+     * `'themes/<id>/icon'` default here would silently break that
+     * inheritance for both).
+     *
+     * `standard_pages` gets one hardcoded exception: its own
+     * `STD_PGS_SELECTED_SKIN`/`STD_PGS_SELECTED_LOGO`/`GALLERY_TITLE`
+     * template vars are genuinely dynamic (live `CurrentConfig` reads at
+     * request time), not expressible as static `theme.json` data --
+     * `standard_pages` is Piwigo-core internal infrastructure, not a
+     * real plugin-author extensibility surface (`setTheme()` already
+     * hardcodes substituting it in for `identification`/`register`/
+     * `password`/`profile` pages), so a small special case here matches
+     * that same already-established precedent rather than inventing a
+     * new dynamic-config mechanism for a single, non-extensible caller.
+     *
+     * @return array<string, mixed>
+     */
+    private function loadThemeJson(string $dir): array
+    {
+        if (! file_exists($dir . '/theme.json')) {
+            return [];
+        }
+
+        $contents = file_get_contents($dir . '/theme.json');
+        if ($contents === false) {
+            return [];
+        }
+
+        $data = json_decode($contents, true);
+        if (! is_array($data)) {
+            return [];
+        }
+
+        $themeId = basename($dir);
+
+        $themeconf = [
+            'use_standard_pages' => is_bool($data['useStandardPages'] ?? null) ? $data['useStandardPages'] : false,
+            'load_parent_css' => is_bool($data['loadParentCss'] ?? null) ? $data['loadParentCss'] : false,
+        ];
+        if (is_string($data['parent'] ?? null)) {
+            $themeconf['parent'] = $data['parent'];
+        }
+        if (is_string($data['localHead'] ?? null)) {
+            $themeconf['local_head'] = $data['localHead'];
+        }
+        if (is_string($data['colorscheme'] ?? null)) {
+            $themeconf['colorscheme'] = $data['colorscheme'];
+        }
+        if (is_string($data['iconDir'] ?? null)) {
+            $themeconf['icon_dir'] = $data['iconDir'];
+        }
+        if (is_string($data['imgDir'] ?? null)) {
+            $themeconf['img_dir'] = $data['imgDir'];
+        }
+        if (is_string($data['mimeIconDir'] ?? null)) {
+            $themeconf['mime_icon_dir'] = $data['mimeIconDir'];
+        }
+        if (is_bool($data['loadParentLocalHead'] ?? null)) {
+            $themeconf['load_parent_local_head'] = $data['loadParentLocalHead'];
+        }
+
+        if ($themeId === 'standard_pages') {
+            $this->assign([
+                'STD_PGS_SELECTED_SKIN' => $this->currentConfig->standardPagesSelectedSkin,
+                'STD_PGS_SELECTED_LOGO' => $this->currentConfig->standardPagesSelectedLogo,
+                'GALLERY_TITLE' => $this->currentConfig->galleryTitle,
+            ]);
+        }
+
+        return $themeconf;
     }
 
     /**

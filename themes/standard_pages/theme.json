@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/darktorres/piwigo17/17.x-rewrite/docs/schemas/theme.schema.json",
+  "id": "standard_pages",
+  "name": "standard_pages",
+  "version": "16.3.0",
+  "description": "Piwigo's built-in standard-pages companion theme (identification/register/password/profile).",
+  "license": "GPL-2.0-or-later",
+  "minPiwigo": "16.3.0",
+  "main": "Piwigo\\Theme\\StandardPages\\Theme",
+  "autoload": {
+    "psr-4": {
+      "Piwigo\\Theme\\StandardPages\\": "src/"
+    }
+  },
+  "parent": "default",
+  "loadParentCss": false,
+  "imgDir": "themes/standard_pages/images"
+}

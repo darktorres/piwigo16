@@ -25,8 +25,8 @@ use Piwigo\Validation\InputValidator;
  * cleanly) against a themes directory pointed at an empty temp dir (so
  * ExtensionScanner::scan() finds zero real themes) reaches it directly.
  * The "missing file" fatalError() branch and the real include_once happy
- * path both need a real theme directory with a marker `themeconf.inc.php`
- * on disk, not attempted here.
+ * path both need a real theme directory with a marker `theme.json` on
+ * disk, not attempted here.
  */
 function themeSubControllerTestRoot(): string
 {

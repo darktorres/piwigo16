@@ -26,8 +26,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Html\HtmlService;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\PluginConfig\EventDispatcher;
-    use Piwigo\PluginConfig\PluginMigrationEntity;
-    use Piwigo\PluginConfig\PluginMigrationRepository;
     use Piwigo\PluginConfig\PluginRegistry;
     use Piwigo\PluginConfig\ThemeRegistry;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -63,8 +61,6 @@ namespace Piwigo\Tests\Integration {
         private static bool $fixtureReady = false;
 
         private ExtensionRepository $repo;
-
-        private PluginMigrationRepository $pluginMigrationRepo;
 
         private ExtensionLifecycle $lifecycle;
 
@@ -112,8 +108,6 @@ namespace Piwigo\Tests\Integration {
 
             $this->conn = DbConnection::build();
             $this->repo = new ExtensionRepository(EntityManagerFactory::build($this->conn));
-            $pluginMigrationRepo = EntityManagerFactory::build($this->conn)->getRepository(PluginMigrationEntity::class);
-            $this->pluginMigrationRepo = $pluginMigrationRepo;
             $currentLogger = new CurrentLogger();
             $currentLogger->set(new Logger([
                 'severity' => Logger::OFF,
@@ -134,7 +128,7 @@ namespace Piwigo\Tests\Integration {
             $this->themeRegistry = $themeRegistry;
             $this->createdPluginIds = [];
             $this->createdThemeIds = [];
-            $this->lifecycle = new ExtensionLifecycle(LangTestFactory::get(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, CurrentPathsTestFactory::get(), $currentConfig), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, CurrentPathsTestFactory::get(), $currentUser, new EventDispatcher(), $pluginRegistry, $themeRegistry);
+            $this->lifecycle = new ExtensionLifecycle(LangTestFactory::get(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, CurrentPathsTestFactory::get(), $currentConfig), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $activityService, $userService, $htmlService, $currentConfig, CurrentPathsTestFactory::get(), $currentUser, new EventDispatcher(), $pluginRegistry, $themeRegistry);
 
             $currentConfig->enableExtensionsInstall = true;
             $currentConfig->phpExtensionInUrls = false;
@@ -860,11 +854,11 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * Writes a real themes/<id>/themeconf.inc.php -- the file
+         * Writes a real themes/<id>/theme.json -- the file
          * ExtensionScanner::scanTheme()/ThemeCatalog::checkThemeInstalled()
          * both genuinely check for on disk, no fake-able seam.
          *
-         * @param array{name?: string, parent?: string, mobile?: bool} $conf
+         * @param array{name?: string, parent?: string} $conf
          */
         private function writeThemeConf(string $id, array $conf = []): void
         {
@@ -875,15 +869,14 @@ namespace Piwigo\Tests\Integration {
             if (! is_dir($dir)) {
                 mkdir($dir, 0o777, true);
             }
-            $name = $conf['name'] ?? $id;
-            $lines = "<?php\n/*\nTheme Name: {$name}\nVersion: 1.0\n*/\n";
+            $data = [
+                'name' => $conf['name'] ?? $id,
+                'version' => '1.0',
+            ];
             if (isset($conf['parent'])) {
-                $lines .= "\$theme_conf['parent'] = '{$conf['parent']}';\n";
+                $data['parent'] = $conf['parent'];
             }
-            if (isset($conf['mobile']) && $conf['mobile']) {
-                $lines .= "\$theme_conf['mobile'] = true;\n";
-            }
-            file_put_contents($dir . '/themeconf.inc.php', $lines);
+            file_put_contents($dir . '/theme.json', json_encode($data, JSON_THROW_ON_ERROR));
         }
 
         private function removeThemeDir(string $id): void

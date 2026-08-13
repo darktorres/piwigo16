@@ -100,6 +100,10 @@
       "type": "boolean",
       "description": "Whether the parent theme's CSS loads before this theme's own CSS. Default: false."
     },
+    "loadParentLocalHead": {
+      "type": "boolean",
+      "description": "Whether the parent theme's own localHead fragment also loads. Default: same as loadParentCss (no bundled theme sets this separately today)."
+    },
     "assets": {
       "type": "object",
       "additionalProperties": {
@@ -121,6 +125,21 @@
     "useStandardPages": {
       "type": "boolean",
       "description": "Whether this theme opts into the standard_pages auth-page redirect. No bundled theme sets this today; reserved for third-party themes. Default: false."
+    },
+    "iconDir": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Root-relative path to this theme's icon assets (e.g. 'themes/default/icon'). Omit to inherit the parent theme's value -- most themes with a parent leave this unset."
+    },
+    "imgDir": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Root-relative path to this theme's image assets (e.g. 'themes/default/images'). Omit to inherit the parent theme's value."
+    },
+    "mimeIconDir": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Root-relative path to this theme's per-mimetype icon assets (e.g. 'themes/default/icon/mimetypes/'). Omit to inherit the parent theme's value."
     }
   }
 }

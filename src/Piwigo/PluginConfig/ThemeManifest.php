@@ -29,6 +29,16 @@ use InvalidArgumentException;
  * `CurrentConfig::mobileTheme` admin config that none of the 3 bundled
  * themes actually declare; "which installed theme serves mobile" stays a
  * pure admin/config pairing, not a manifest field with zero real caller.
+ *
+ * `iconDir`/`imgDir`/`mimeIconDir`/`loadParentLocalHead` (P27.10, real
+ * `theme.schema.json` fields a `theme.json` file can declare) are
+ * deliberately **not** mirrored as properties here -- `Template::
+ * loadThemeJson()` is the one and only real reader, via its own direct
+ * `json_decode()` (this class's own docblock already explains why: a
+ * purely file-based lookup with no reason to pull in `ThemeRegistry`'s
+ * DB/EntityManager dependencies), so a `ThemeManifest` property for
+ * either would have zero real callers -- a `shipmonk.deadProperty.
+ * neverRead` violation, confirmed live when first added.
  */
 final readonly class ThemeManifest
 {

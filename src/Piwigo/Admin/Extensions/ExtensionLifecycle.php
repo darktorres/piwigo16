@@ -7,11 +7,9 @@ namespace Piwigo\Admin\Extensions;
 use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PluginLoader;
-use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -19,7 +17,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\PluginConfig\PluginMigrationRepository;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Users\CurrentUser;
@@ -53,11 +50,14 @@ use RuntimeException;
  *   ever gates a top-level 'delete' call -- doesn't re-run pointlessly).
  *
  * A successful plugin 'install'/'update' also records a plugin_migrations
- * row via $pluginMigrationRepo -- a minimal, auto-recorded history ledger
- * (plugin_id, version, timestamp), not a real migration runner. Written
- * via an upsert (see PluginMigrationRepository::record()) because
- * 'restore' (uninstall then re-activate) can legitimately re-run 'install'
- * at the same version the plugin was already at.
+ * row -- a minimal, auto-recorded history ledger (plugin_id, version,
+ * timestamp), not a real migration runner. This class does not do the
+ * recording itself: PluginConfig\PluginRegistry::install()/update() both
+ * already call their own injected PluginMigrationRepository::record()
+ * internally (an upsert, since 'restore' -- uninstall then re-activate --
+ * can legitimately re-run 'install' at the same version the plugin was
+ * already at), so a second, ExtensionLifecycle-owned repository/call site
+ * would just double-write the same ledger entry.
  *
  * The business-rule layer (existence checks, last-theme/mobile-theme/
  * parent-theme guards, default-theme reassignment, activity logging)
@@ -98,7 +98,6 @@ final readonly class ExtensionLifecycle
         private PemCatalog $pemCatalog,
         private UrlServiceInterface $urlService,
         private ConfigService $configService,
-        private PluginMigrationRepository $pluginMigrationRepo,
         private ActivityService $activityService,
         private UserService $userService,
         private HtmlRenderingInterface $htmlRenderer,
@@ -192,36 +191,31 @@ final readonly class ExtensionLifecycle
                 $errors[0] = $extraction->status;
 
                 if ($errors[0] === 'ok') {
-                    $newFsEntry = new ExtensionScanner()
-                        ->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$id] ?? null;
-
-                    if ($newFsEntry !== null) {
-                        // Legacy path: ExtensionScanner's own main.inc.php
-                        // header scan sees the freshly-extracted files --
-                        // no plugin.json exists for this id at all, so
-                        // PluginRegistry has nothing to update against.
-                        $newVersion = $this->stringOrDefault($newFsEntry['version'] ?? null, '0');
-                        $activityDetails['to_version'] = $newVersion;
-
-                        if ($newVersion !== 'auto') {
-                            $this->repo->updateVersion(ExtensionType::Plugin, $id, $newVersion);
-                            $this->pluginMigrationRepo->record(PluginId::from($id), $newVersion, Env::now()->format('Y-m-d H:i:s'));
-                        }
-                    } else {
-                        // New-contract path: force a fresh manifest scan
-                        // (PluginRegistry::load() is memoized per-request,
-                        // so without reload() it would still see whatever
-                        // it scanned before this extraction ever ran) then
-                        // let PluginRegistry derive + persist its own
-                        // version bump from the just-extracted plugin.json.
-                        $this->pluginRegistry->reload();
-                        try {
-                            $this->pluginRegistry->update($id);
-                            $activityDetails['to_version'] = $this->pluginRegistry->getManifest($id)?->version;
-                        } catch (RuntimeException $e) {
-                            $errors[] = $e->getMessage();
-                            $activityDetails['result'] = 'error';
-                        }
+                    // P27.10 retired ExtensionScanner's own legacy
+                    // main.inc.php header scan entirely -- it now only ever
+                    // recognizes a plugin.json (the same marker
+                    // PluginRegistry itself scans, just without its
+                    // stricter opis/json-schema validation), so there is no
+                    // longer a real "legacy, no-plugin.json" case reachable
+                    // here to branch on: PemCatalog::extractArchive()'s own
+                    // marker search (ExtensionType::markerFilenames(),
+                    // plugin.json-only since the same phase) already can't
+                    // even locate a main.inc.php-only archive's root in the
+                    // first place, so $errors[0] would already be
+                    // 'archive_error', never reaching this branch at all.
+                    // Force a fresh manifest scan (PluginRegistry::load()
+                    // is memoized per-request, so without reload() it would
+                    // still see whatever it scanned before this extraction
+                    // ever ran) then let PluginRegistry derive + persist
+                    // its own version bump from the just-extracted
+                    // plugin.json -- the one real path left.
+                    $this->pluginRegistry->reload();
+                    try {
+                        $this->pluginRegistry->update($id);
+                        $activityDetails['to_version'] = $this->pluginRegistry->getManifest($id)?->version;
+                    } catch (RuntimeException $e) {
+                        $errors[] = $e->getMessage();
+                        $activityDetails['result'] = 'error';
                     }
                 } else {
                     $activityDetails['result'] = 'error';
@@ -573,13 +567,18 @@ final readonly class ExtensionLifecycle
     }
 
     /**
-     * "Does this plugin exist on disk at all" -- widened, this phase, to
-     * accept EITHER scan mechanism: ExtensionScanner's legacy
-     * main.inc.php header scan ($fsEntry) OR PluginRegistry's plugin.json
-     * manifest scan. A bare $fsEntry === null check alone would silently
-     * no-op every lifecycle action on a real, installable new-contract
-     * plugin (the 7 bundled extensions, P27.6), since none of them ship
-     * a main.inc.php at all.
+     * "Does this plugin exist on disk at all" -- accepts either of
+     * ExtensionScanner's own plugin.json fs scan ($fsEntry, passed in by
+     * the caller from whatever it scanned earlier in the same request) or
+     * a fresh PluginRegistry::getManifest() lookup here. Both ultimately
+     * read the same plugin.json marker (P27.10 retired ExtensionScanner's
+     * legacy main.inc.php header scan entirely), but a bare
+     * $fsEntry === null check alone would still wrongly no-op every
+     * lifecycle action whenever the caller's own $fsEntry snapshot is
+     * stale relative to a plugin.json that only started existing after
+     * that scan ran (e.g. right after PemCatalog::extractArchive()
+     * finishes, earlier in the very same 'install' call this method
+     * itself gates).
      *
      * @param array<string, mixed>|null $fsEntry
      */

@@ -48,11 +48,10 @@ final class WsPluginsTest extends ContractTestCase
      * plugins/ directory has no real plugin subdirectories (confirmed
      * live: only the bare index.php stub), so $fs_plugins was always
      * empty. A real, throwaway plugin directory (with the exact
-     * "Plugin Name:"/"Version:"/"Description:" header
-     * ExtensionScanner::scanPlugin() parses from main.inc.php's first 2KB)
-     * exercises the real scan + merge-with-DB-state logic; never
-     * installed in the DB, so 'state' must resolve to the 'uninstalled'
-     * fallback.
+     * name/version/description fields ExtensionScanner::scanPlugin()
+     * reads from plugin.json) exercises the real scan + merge-with-DB-state
+     * logic; never installed in the DB, so 'state' must resolve to the
+     * 'uninstalled' fallback.
      */
     public function testGetListIncludesARealPluginDirectoryFromDisk(): void
     {
@@ -60,15 +59,12 @@ final class WsPluginsTest extends ContractTestCase
         $dir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
         self::assertTrue(mkdir($dir, 0775, true));
         $this->pluginDirsToRemove[] = $dir;
-        file_put_contents($dir . '/main.inc.php', <<<PHP
-        <?php
-        /*
-        Plugin Name: CT Fake Plugin
-        Version: 1.2.3
-        Description: A throwaway plugin directory for Contract test coverage.
-        Author: Contract Tests
-        */
-        PHP);
+        file_put_contents($dir . '/plugin.json', json_encode([
+            'name' => 'CT Fake Plugin',
+            'version' => '1.2.3',
+            'description' => 'A throwaway plugin directory for Contract test coverage.',
+            'author' => 'Contract Tests',
+        ], JSON_THROW_ON_ERROR));
 
         $response = $this->wsAdmin('pwg.plugins.getList');
 

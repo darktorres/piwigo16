@@ -28,7 +28,6 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Template\CurrentTemplate;
@@ -89,8 +88,7 @@ final readonly class LanguagesNewPageRenderer
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build(DbConnection::build()));
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
-        $plugin_migration_repo = EntityManagerFactory::build(DbConnection::build())->getRepository(PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
 
         $languages_dir = $this->paths->root . 'language';
         if (! is_writable($languages_dir)) {

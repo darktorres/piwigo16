@@ -79,13 +79,18 @@ final class PluginsInstalledPageRenderer
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService, $lang, $paths, $currentUser, $eventDispatcher, $currentConfig);
 
-        // ExtensionScanner only recognizes the legacy main.inc.php header-
-        // comment format -- a new-contract plugin (plugin.json only, no
-        // main.inc.php) is invisible to it, so a fresh install's own
-        // bundled plugins would otherwise never appear here at all (P27.5's
-        // own deferred gap, closed here). Merge in any manifest not already
-        // covered by the fs scan, in the same array shape the loop below
-        // already reads.
+        // P27.5's own original gap here: ExtensionScanner used to recognize
+        // only the legacy main.inc.php header-comment format, so a
+        // new-contract plugin (plugin.json only) was invisible to it. Since
+        // P27.10 retired that legacy scan entirely, ExtensionScanner::
+        // scanPlugin() reads plugin.json directly -- the same marker file
+        // $pluginRegistry->getAllManifests() itself scans, just without its
+        // stricter opis/json-schema validation, so every id the registry
+        // can find, the fs scan above already finds first (a schema-valid
+        // plugin.json is by construction also a valid one for the fs
+        // scan's own looser read). This merge is very likely fully
+        // redundant now -- kept as-is rather than removed in the same pass
+        // that made it redundant, pending its own dedicated verification.
         foreach ($pluginRegistry->getAllManifests() as $manifestId => $manifest) {
             if (isset($fs_plugins[$manifestId])) {
                 continue;

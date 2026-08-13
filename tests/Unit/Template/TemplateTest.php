@@ -231,12 +231,18 @@ test('setTheme lets a parent theme\'s own load_parent_css/load_parent_local_head
     mkdir($childDir, 0o777, true);
     file_put_contents($parentDir . '/local_head.tpl', 'x');
     file_put_contents(
-        $parentDir . '/themeconf.inc.php',
-        "<?php\n\$themeconf = ['local_head' => 'local_head.tpl'];\n"
+        $parentDir . '/theme.json',
+        json_encode([
+            'localHead' => 'local_head.tpl',
+        ], JSON_THROW_ON_ERROR),
     );
     file_put_contents(
-        $childDir . '/themeconf.inc.php',
-        "<?php\n\$themeconf = ['parent' => 'gap-parent', 'load_parent_css' => false, 'load_parent_local_head' => false, 'local_head' => ''];\n"
+        $childDir . '/theme.json',
+        json_encode([
+            'parent' => 'gap-parent',
+            'loadParentCss' => false,
+            'loadParentLocalHead' => false,
+        ], JSON_THROW_ON_ERROR),
     );
 
     $t = TemplateTestFactory::build();
@@ -273,13 +279,22 @@ test('setTheme does not recurse into a non-string parent themeconf value', funct
     // enough to trigger the recursive setTheme() call even when parent
     // isn't a string, appending a second, unintended themes entry with a
     // non-string 'id'. A non-string parent value proves the real `and`
-    // (not `or`) is what prevents that recursion.
+    // (not `or`) is what prevents that recursion. Since P27.10,
+    // loadThemeJson() itself already drops a non-string 'parent' before
+    // setTheme() ever sees it (a schema-invalid theme.json a real
+    // ThemeRegistry scan would reject outright) -- this fixture writes the
+    // raw JSON directly (bypassing schema validation, which loadThemeJson()
+    // never applies) specifically to prove setTheme()'s own guard is a
+    // real second layer, not dead code now that the first layer also
+    // filters this case.
     $root = sys_get_temp_dir() . '/piwigo-template-test-' . bin2hex(random_bytes(8));
     $childDir = $root . '/gap-child-nonstring-parent';
     mkdir($childDir, 0o777, true);
     file_put_contents(
-        $childDir . '/themeconf.inc.php',
-        "<?php\n\$themeconf = ['parent' => 123];\n"
+        $childDir . '/theme.json',
+        json_encode([
+            'parent' => 123,
+        ], JSON_THROW_ON_ERROR),
     );
 
     $t = TemplateTestFactory::build();
@@ -295,11 +310,13 @@ test('setTheme does not recurse into a non-string parent themeconf value', funct
 
 // --- loadThemeconf caching ---------------------------------------------------
 
-test('loadThemeconf caches the computed themeconf so a second call for the same directory does not re-include a changed file', function (): void {
+test('loadThemeconf caches the computed themeconf so a second call for the same directory does not re-read a changed file', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-template-test-' . bin2hex(random_bytes(8));
     $themeDir = $root . '/cache-theme';
     mkdir($themeDir, 0o777, true);
-    file_put_contents($themeDir . '/themeconf.inc.php', "<?php\n\$themeconf = ['marker' => 'first'];\n");
+    file_put_contents($themeDir . '/theme.json', json_encode([
+        'colorscheme' => 'first',
+    ], JSON_THROW_ON_ERROR));
 
     $t = TemplateTestFactory::build();
 
@@ -307,11 +324,13 @@ test('loadThemeconf caches the computed themeconf so a second call for the same 
     // If loadThemeconf() genuinely cached the first computed result under
     // this exact directory's cache key, a changed file on disk must never
     // be observed by a second call for the same directory.
-    file_put_contents($themeDir . '/themeconf.inc.php', "<?php\n\$themeconf = ['marker' => 'second'];\n");
+    file_put_contents($themeDir . '/theme.json', json_encode([
+        'colorscheme' => 'second',
+    ], JSON_THROW_ON_ERROR));
     $second = $t->loadThemeconf($themeDir);
 
-    expect($first['marker'])->toBe('first');
-    expect($second['marker'])->toBe('first');
+    expect($first['colorscheme'])->toBe('first');
+    expect($second['colorscheme'])->toBe('first');
 
     template_test_rrmdir($root);
 });

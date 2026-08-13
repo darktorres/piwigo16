@@ -28,7 +28,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndThemesInstalled;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Template\CurrentTemplate;
@@ -90,8 +89,7 @@ final readonly class ThemesInstalledPageRenderer
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build($conn));
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
-        $plugin_migration_repo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
 
         $themesAction = ThemesInstalledActionRequest::fromGlobals();
         if ($themesAction->action !== null and $themesAction->themeId !== null and $this->accessControl->isWebmaster()) {
@@ -117,13 +115,18 @@ final readonly class ThemesInstalledPageRenderer
         // instead.
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
 
-        // ExtensionScanner only recognizes the legacy themeconf.inc.php
-        // header-comment format -- a new-contract theme (theme.json only,
-        // no themeconf.inc.php) is invisible to it, so a fresh install's
-        // own bundled themes would otherwise never appear here at all
-        // (P27.5's own deferred gap, closed here). Merge in any manifest
-        // not already covered by the fs scan, in the same array shape
-        // buildTplTheme() already reads.
+        // P27.5's own original gap here: ExtensionScanner used to recognize
+        // only the legacy themeconf.inc.php header-comment format, so a
+        // new-contract theme (theme.json only) was invisible to it. Since
+        // P27.10 retired that legacy scan entirely, ExtensionScanner::
+        // scanTheme() reads theme.json directly -- the same marker file
+        // $this->themeRegistry->getAllManifests() itself scans, just
+        // without its stricter opis/json-schema validation, so every id
+        // the registry can find, the fs scan above already finds first (a
+        // schema-valid theme.json is by construction also a valid one for
+        // the fs scan's own looser read). This merge is very likely fully
+        // redundant now -- kept as-is rather than removed in the same pass
+        // that made it redundant, pending its own dedicated verification.
         foreach ($this->themeRegistry->getAllManifests() as $manifestId => $manifest) {
             if (isset($fs_themes[$manifestId])) {
                 continue;

@@ -57,8 +57,8 @@ use RuntimeException;
  *    the 2nd branch is reached for real.
  *
  * 2) The standard_pages_used_by accumulation (~lines 186-191): needs a
- *    real theme on disk whose themeconf.inc.php declares
- *    'use_standard_pages' => true, which tests/Browser's own docblock
+ *    real theme on disk whose theme.json declares
+ *    'useStandardPages' => true, which tests/Browser's own docblock
  *    explains is out of scope there (the live themes/ tree only has
  *    themes/default, which declares no such key, and
  *    ExtensionType::Theme->scanDirectory() hardcodes CurrentConfig::
@@ -420,12 +420,14 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     {
         $dir = $fixtureRoot . 'themes/' . $id;
         mkdir($dir, 0o777, true);
-        $lines = "<?php\n/*\nTheme Name: {$name}\nVersion: 1.0\n*/\n";
+        $data = [
+            'name' => $name,
+            'version' => '1.0',
+        ];
         if ($useStandardPages !== null) {
-            $flag = $useStandardPages ? 'true' : 'false';
-            $lines .= "\$theme_conf['use_standard_pages'] = {$flag};\n";
+            $data['useStandardPages'] = $useStandardPages;
         }
-        file_put_contents($dir . '/themeconf.inc.php', $lines);
+        file_put_contents($dir . '/theme.json', json_encode($data, JSON_THROW_ON_ERROR));
         // Avoids ExtensionScanner::scanTheme()'s hidden PreferencesService DB
         // fallback branch for a missing screenshot.png -- same reasoning as
         // tests/Unit/Admin/ThemesInstalledPageRendererTest.php's own

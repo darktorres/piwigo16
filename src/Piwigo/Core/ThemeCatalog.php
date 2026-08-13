@@ -92,6 +92,11 @@ final class ThemeCatalog
 
     /**
      * check if a theme is installed (directory exists)
+     *
+     * Checks for the PluginConfig\ExtensionInterface `theme.json`
+     * manifest -- the only marker a real theme directory has in this
+     * codebase (P27.10: no legacy `themeconf.inc.php` support anywhere,
+     * not even as a fallback).
      */
     public static function checkThemeInstalled(string $themeId, Paths $paths, CurrentConfig $currentConfig): bool
     {
@@ -103,8 +108,8 @@ final class ThemeCatalog
         // correctly pre-fix only because public/themes is itself a symlink
         // back to the real themes/, not because the CWD-relative read was
         // actually safe).
-        $themes_dir = $paths->root . $currentConfig->themesDir;
+        $theme_dir = $paths->root . $currentConfig->themesDir . '/' . $themeId;
 
-        return file_exists($themes_dir . '/' . $themeId . '/themeconf.inc.php');
+        return file_exists($theme_dir . '/theme.json');
     }
 }

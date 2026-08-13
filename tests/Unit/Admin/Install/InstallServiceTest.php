@@ -313,8 +313,11 @@ test('activateCoreThemes() does not activate the non-selectable default placehol
     $themesDir = installServiceTestFixtureRoot('themes-default');
     mkdir($themesDir . $themeId, 0o777, true);
     file_put_contents(
-        $themesDir . $themeId . '/themeconf.inc.php',
-        "<?php\n/*\nTheme Name: Default Template Test Fixture\nVersion: 3.1.4\n*/\n"
+        $themesDir . $themeId . '/theme.json',
+        json_encode([
+            'name' => 'Default Template Test Fixture',
+            'version' => '3.1.4',
+        ], JSON_THROW_ON_ERROR)
     );
     // Sidesteps ExtensionScanner::scanTheme()'s own PreferencesService
     // dependency (only reached when a theme has no screenshot.png), which
@@ -373,7 +376,9 @@ test('activateCorePlugins() scans but auto-activates nothing, even when a real f
     $pluginId = 'p17_unit_install_test_plugin';
     $root = installServiceTestFixtureRoot('plugins');
     mkdir($root . 'plugins/' . $pluginId, 0o777, true);
-    file_put_contents($root . 'plugins/' . $pluginId . '/main.inc.php', "<?php\n/*\nPlugin Name: P17 Unit Install Test Plugin\n*/\n");
+    file_put_contents($root . 'plugins/' . $pluginId . '/plugin.json', json_encode([
+        'name' => 'P17 Unit Install Test Plugin',
+    ], JSON_THROW_ON_ERROR));
 
     try {
         InstallService::activateCorePlugins(LangTestFactory::get(), Paths::fromRoot($root), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());

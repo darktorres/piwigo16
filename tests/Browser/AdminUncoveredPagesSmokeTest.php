@@ -89,7 +89,7 @@ it('theme page rejects a theme id that ExtensionScanner never found on disk', fu
 
 it('theme page reports a missing admin.inc.php for a real, scanned theme', function (): void {
     // 'default' is a genuine ExtensionScanner-recognized theme in this
-    // fixture (themes/default/themeconf.inc.php exists), so it clears the
+    // fixture (themes/default/theme.json exists), so it clears the
     // "theme not found" gate above and reaches the 2nd real branch:
     // neither bundled theme (default/standard_pages) ships its own
     // admin/admin.inc.php, so
@@ -107,17 +107,17 @@ it('theme page reports a missing admin.inc.php for a real, scanned theme', funct
 /**
  * Closes ThemeSubController's 3rd, remaining branch (the real
  * `include_once $filename;`, line ~47): needs a theme with BOTH a
- * themeconf.inc.php (so ExtensionScanner::scan() finds it -- a pure
- * filesystem scan, `is_dir()` + `file_exists()` read via file(), never
- * `include`d itself, so its content only needs to parse via a plain
- * regex, not be valid PHP) AND its own admin/admin.inc.php, which
- * neither bundled theme ships (see the test above). Same throwaway-
- * fixture-under-the-live-root technique as the plugin fixture tests
- * above -- unlike ThemesInstalledPageRendererTest.php's own documented
- * reason for avoiding this (a real activate/deactivate/delete STATE
- * transition, visible to every other test that lists installed/active
- * themes), this never touches the `theme` config row or any DB table at
- * all -- ExtensionScanner::scan() is a pure filesystem read, so a
+ * theme.json (so ExtensionScanner::scan() finds it -- a pure filesystem
+ * scan, `is_dir()` + `file_exists()` + a tolerant `json_decode()`, never
+ * `include`d itself, so its content only needs to be valid JSON, not
+ * valid PHP) AND its own admin/admin.inc.php, which neither bundled
+ * theme ships (see the test above). Same throwaway-fixture-under-the-
+ * live-root technique as the plugin fixture tests above -- unlike
+ * ThemesInstalledPageRendererTest.php's own documented reason for
+ * avoiding this (a real activate/deactivate/delete STATE transition,
+ * visible to every other test that lists installed/active themes), this
+ * never touches the `theme` config row or any DB table at all --
+ * ExtensionScanner::scan() is a pure filesystem read, so a
  * same-it()-scoped, finally-cleaned-up directory carries none of that
  * cross-test state risk.
  */
@@ -133,7 +133,9 @@ function themeSubWriteFixtureTheme(string $themeId): void
     if (! is_dir($adminDir)) {
         mkdir($adminDir, 0o777, true);
     }
-    file_put_contents($dir . '/themeconf.inc.php', "<?php\n// Theme Name: " . $themeId . "\n");
+    file_put_contents($dir . '/theme.json', json_encode([
+        'name' => $themeId,
+    ], JSON_THROW_ON_ERROR));
     file_put_contents($adminDir . '/admin.inc.php', "<?php\necho '<!--CT_THEMESUB_INCLUDED-->';\n");
 }
 
@@ -144,7 +146,7 @@ function themeSubRemoveFixtureTheme(string $themeId): void
     if (is_dir($dir . '/admin')) {
         rmdir($dir . '/admin');
     }
-    @unlink($dir . '/themeconf.inc.php');
+    @unlink($dir . '/theme.json');
     if (is_dir($dir)) {
         rmdir($dir);
     }

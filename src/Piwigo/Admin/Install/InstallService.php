@@ -34,7 +34,6 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\Users\CurrentUser;
 use RuntimeException;
 
@@ -88,7 +87,6 @@ final class InstallService
             new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $paths, $currentConfig),
             $urlService,
             $currentConfigService->get(),
-            EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
             ExtendedDomainAccessor::activityService(),
             CoreDomainAccessor::userService(),
             PresentationAccessor::htmlService(),

@@ -83,15 +83,23 @@ function template_instance_test_rrmdir(string $dir): void
 }
 
 /**
- * Writes a minimal, real themeconf.inc.php fixture -- exercised through a
- * genuine `include` (loadThemeconf()'s own contract), matching the bare
- * `$themeconf = [...]` assignment shape every real themes/*\/themeconf.inc.php
- * in this repo uses. Always carries a 'local_head' key (defaulting to '')
- * unless the caller overrides it -- setTheme()'s own local_head branch
- * reads $themeconf['local_head'] directly (not via `??`) in its
- * is_string() clause, so an actually-missing key would trigger a real
- * "Undefined array key" warning (failOnWarning=true) for every setTheme()
- * test that isn't specifically exercising that gap.
+ * Writes a minimal, real theme.json fixture -- exercised through a
+ * genuine `json_decode()` (loadThemeconf()'s own post-P27.10 contract),
+ * matching the schema-shaped fields every real themes/*\/theme.json in
+ * this repo uses. Callers pass the same snake_case keys `Template::
+ * loadThemeJson()`'s own returned `$themeconf` array uses (`parent`,
+ * `use_standard_pages`, `load_parent_css`, `load_parent_local_head`,
+ * `local_head`, `colorscheme`, `marker` -- the last one a test-only
+ * stand-in written into the real `iconDir` field, since `loadThemeJson()`
+ * only ever copies a fixed allowlist of known fields through, unlike the
+ * old `include`-based mechanism's arbitrary-key passthrough; `iconDir`
+ * is unclaimed by any of these tests' own real assertions) -- translated
+ * here to the camelCase `theme.json` shape. Always carries a 'local_head'
+ * key (defaulting to '') unless the caller overrides it -- setTheme()'s
+ * own local_head branch reads $themeconf['local_head'] directly (not via
+ * `??`) in its is_string() clause, so an actually-missing key would
+ * trigger a real "Undefined array key" warning (failOnWarning=true) for
+ * every setTheme() test that isn't specifically exercising that gap.
  *
  * @param array<string, mixed> $vars
  */
@@ -103,9 +111,33 @@ function template_instance_test_write_themeconf(string $dir, array $vars): void
     $vars += [
         'local_head' => '',
     ];
+
+    $json = [];
+    if (array_key_exists('marker', $vars)) {
+        $json['iconDir'] = $vars['marker'];
+    }
+    if (array_key_exists('parent', $vars)) {
+        $json['parent'] = $vars['parent'];
+    }
+    if (array_key_exists('use_standard_pages', $vars)) {
+        $json['useStandardPages'] = $vars['use_standard_pages'];
+    }
+    if (array_key_exists('load_parent_css', $vars)) {
+        $json['loadParentCss'] = $vars['load_parent_css'];
+    }
+    if (array_key_exists('load_parent_local_head', $vars)) {
+        $json['loadParentLocalHead'] = $vars['load_parent_local_head'];
+    }
+    if ($vars['local_head'] !== '') {
+        $json['localHead'] = $vars['local_head'];
+    }
+    if (array_key_exists('colorscheme', $vars)) {
+        $json['colorscheme'] = $vars['colorscheme'];
+    }
+
     file_put_contents(
-        $dir . '/themeconf.inc.php',
-        "<?php\n\$themeconf = " . var_export($vars, true) . ";\n",
+        $dir . '/theme.json',
+        json_encode($json, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT) . "\n",
     );
 }
 
@@ -432,7 +464,7 @@ test('setTheme loads themeconf from exactly root/theme, joined with a literal sl
 
     $t->setTheme($root, ThemeId::from('concat-theme'), 'template');
 
-    expect($t->getThemeconf('marker'))
+    expect($t->getThemeconf('icon_dir'))
         ->toBe('root-slash-theme');
 });
 
@@ -455,7 +487,7 @@ test('setTheme recognizes every whitelisted auth-page basename for the standard-
             $t = TemplateTestFactory::build();
             $t->setTheme($root, ThemeId::from('wl-theme'), 'template');
 
-            expect($t->getThemeconf('marker'))
+            expect($t->getThemeconf('icon_dir'))
                 ->toBe('swapped');
         }
     } finally {
@@ -483,7 +515,7 @@ test('setTheme does not swap themes when the current page is not a whitelisted a
         template_instance_test_restore_server_keys($saved);
     }
 
-    expect($t->getThemeconf('marker'))
+    expect($t->getThemeconf('icon_dir'))
         ->toBe('not-swapped');
 });
 
@@ -511,7 +543,7 @@ test('setTheme never swaps away from the "default" theme itself even on a whitel
         template_instance_test_restore_server_keys($saved);
     }
 
-    expect($t->getThemeconf('marker'))
+    expect($t->getThemeconf('icon_dir'))
         ->toBe('default-marker');
 });
 
@@ -536,7 +568,7 @@ test('setTheme swaps themes when the theme itself opts into standard pages, even
         template_instance_test_restore_server_keys($saved);
     }
 
-    expect($t->getThemeconf('marker'))
+    expect($t->getThemeconf('icon_dir'))
         ->toBe('swapped');
 });
 
@@ -560,7 +592,7 @@ test('setTheme does not swap themes when neither the theme nor the global config
         template_instance_test_restore_server_keys($saved);
     }
 
-    expect($t->getThemeconf('marker'))
+    expect($t->getThemeconf('icon_dir'))
         ->toBe('not-swapped');
 });
 
@@ -694,7 +726,7 @@ test('setTheme merges themeconf directly into the flat "themeconf" template var,
     $t->setTheme($root, ThemeId::from('merge-theme'), 'template');
 
     $tc = template_instance_test_assoc($t->getTemplateVars('themeconf'));
-    expect($tc['marker'] ?? null)->toBe('flat-merge-check')
+    expect($tc['icon_dir'] ?? null)->toBe('flat-merge-check')
         ->and($tc)
         ->not->toHaveKey(0);
 });
@@ -1680,17 +1712,14 @@ test('loadThemeconf returns an empty array for a theme directory that does not e
     expect($t->loadThemeconf(CurrentPathsTestFactory::get()->root . '/no-such-theme-dir'))->toBe([]);
 });
 
-test('loadThemeconf short-circuits on realpath() failure without ever attempting the include', function (): void {
+test('loadThemeconf short-circuits on realpath() failure without ever attempting the theme.json read', function (): void {
     // Real gap: the sibling test above only asserts the RETURN value, which
     // stays [] whether the realpath()===false guard fires correctly OR is
-    // broken entirely -- $themeconf starts as [] and a failed include()
-    // never repopulates it either way, so a FalseToTrue/RemoveEarlyReturn
-    // mutation on that guard is invisible to a return-value assertion
-    // alone. The REAL observable difference is a genuine "Failed to open
-    // stream" warning from attempting `include $dir . '/themeconf.inc.php'`
-    // against a directory that was never realpath()-resolved. Capture
-    // warnings directly to prove the guard
-    // actually prevents that attempt.
+    // broken entirely -- $themeconf starts as [] regardless. The REAL
+    // observable difference is a genuine warning from attempting
+    // file_get_contents($dir . '/theme.json') against a directory that was
+    // never realpath()-resolved. Capture warnings directly to prove the
+    // guard actually prevents that attempt.
     $t = TemplateTestFactory::build();
 
     $capturedWarnings = [];
@@ -1712,13 +1741,15 @@ test('loadThemeconf short-circuits on realpath() failure without ever attempting
         ->toBe([]);
 });
 
-test('loadThemeconf includes themeconf.inc.php, returns its $themeconf, and assigns its $theme_template_vars', function (): void {
+test('loadThemeconf reads theme.json and maps its known fields onto the $themeconf shape', function (): void {
     $t = TemplateTestFactory::build();
     $dir = CurrentPathsTestFactory::get()->root . '/theme-real';
     mkdir($dir, 0o777, true);
     file_put_contents(
-        $dir . '/themeconf.inc.php',
-        '<?php $themeconf = ["name" => "Real Theme"]; $theme_template_vars = ["theme_var" => "assigned-value"];'
+        $dir . '/theme.json',
+        json_encode([
+            'colorscheme' => 'Real Theme Scheme',
+        ], JSON_THROW_ON_ERROR),
     );
 
     $result = $t->loadThemeconf($dir);
@@ -1726,13 +1757,43 @@ test('loadThemeconf includes themeconf.inc.php, returns its $themeconf, and assi
     // A bare AlwaysReturnNull mutation on the final `return $cached;`, or a
     // RemoveMethodCall dropping the ProcessCache::setStatic() a few lines above
     // it (which would leave the trailing ProcessCache::get() reading back
-    // nothing), both collapse $result to null instead of the real array.
+    // nothing), both collapse $result to something other than the real array.
     expect($result)
         ->toBe([
-            'name' => 'Real Theme',
-        ])
-        ->and($t->getTemplateVars('theme_var'))
-        ->toBe('assigned-value');
+            'use_standard_pages' => false,
+            'load_parent_css' => false,
+            'colorscheme' => 'Real Theme Scheme',
+        ]);
+});
+
+test('loadThemeconf assigns standard_pages\' own dynamic template vars, never a general themeconf-driven assign', function (): void {
+    // The old include-based mechanism let ANY theme push arbitrary
+    // $theme_template_vars via assign() -- gone by design post-P27.10
+    // (Template::assign() is private, no plugin/theme reaches it except
+    // this one hardcoded core exception). Only a theme directory literally
+    // named 'standard_pages' gets its own live CurrentConfig reads
+    // assigned; every other theme.json read never touches assign() at all.
+    // standardPagesSelectedSkin/Logo are private(set) on CurrentConfig (no
+    // test seam to override them directly), so this asserts against their
+    // real defaults rather than custom values -- galleryTitle IS a plain
+    // mutable public property, exercised with a custom value for a
+    // genuine round-trip proof.
+    CurrentConfigTestFactory::get()->galleryTitle = 'sel-title';
+    $t = TemplateTestFactory::build();
+    $dir = CurrentPathsTestFactory::get()->root . '/standard_pages';
+    mkdir($dir, 0o777, true);
+    file_put_contents($dir . '/theme.json', json_encode([
+        'colorscheme' => 'dark',
+    ], JSON_THROW_ON_ERROR));
+
+    $t->loadThemeconf($dir);
+
+    expect($t->getTemplateVars('STD_PGS_SELECTED_SKIN'))
+        ->toBe(CurrentConfigTestFactory::get()->standardPagesSelectedSkin)
+        ->and($t->getTemplateVars('STD_PGS_SELECTED_LOGO'))
+        ->toBe(CurrentConfigTestFactory::get()->standardPagesSelectedLogo)
+        ->and($t->getTemplateVars('GALLERY_TITLE'))
+        ->toBe('sel-title');
 });
 
 test('loadThemeconf caches per-directory: a second, different theme dir is not served the first dir\'s cached result', function (): void {
@@ -1745,20 +1806,20 @@ test('loadThemeconf caches per-directory: a second, different theme dir is not s
     $dirB = CurrentPathsTestFactory::get()->root . '/theme-b';
     mkdir($dirA, 0o777, true);
     mkdir($dirB, 0o777, true);
-    file_put_contents($dirA . '/themeconf.inc.php', '<?php $themeconf = ["which" => "A"];');
-    file_put_contents($dirB . '/themeconf.inc.php', '<?php $themeconf = ["which" => "B"];');
+    file_put_contents($dirA . '/theme.json', json_encode([
+        'colorscheme' => 'A',
+    ], JSON_THROW_ON_ERROR));
+    file_put_contents($dirB . '/theme.json', json_encode([
+        'colorscheme' => 'B',
+    ], JSON_THROW_ON_ERROR));
 
     $resultA = $t->loadThemeconf($dirA);
     $resultB = $t->loadThemeconf($dirB);
 
-    expect($resultA)
-        ->toBe([
-            'which' => 'A',
-        ])
-        ->and($resultB)
-        ->toBe([
-            'which' => 'B',
-        ]);
+    expect($resultA['colorscheme'] ?? null)
+        ->toBe('A')
+        ->and($resultB['colorscheme'] ?? null)
+        ->toBe('B');
 });
 
 test('loadThemeconf caches under the exact "themeconf:" . $dir key shape, not a bare or reversed variant', function (): void {
@@ -1773,7 +1834,9 @@ test('loadThemeconf caches under the exact "themeconf:" . $dir key shape, not a 
     $t = TemplateTestFactory::build();
     $dir = CurrentPathsTestFactory::get()->root . '/theme-format';
     mkdir($dir, 0o777, true);
-    file_put_contents($dir . '/themeconf.inc.php', '<?php $themeconf = ["real" => true];');
+    file_put_contents($dir . '/theme.json', json_encode([
+        'colorscheme' => 'real-value',
+    ], JSON_THROW_ON_ERROR));
     $realDir = (string) realpath($dir);
     $processCache = Kernel::container()->get(ProcessCache::class);
     if (! $processCache instanceof ProcessCache) {
@@ -1788,8 +1851,6 @@ test('loadThemeconf caches under the exact "themeconf:" . $dir key shape, not a 
 
     $result = $t->loadThemeconf($dir);
 
-    expect($result)
-        ->toBe([
-            'real' => true,
-        ]);
+    expect($result['colorscheme'] ?? null)
+        ->toBe('real-value');
 });

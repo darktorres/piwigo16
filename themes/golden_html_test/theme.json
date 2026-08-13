@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/darktorres/piwigo17/17.x-rewrite/docs/schemas/theme.schema.json",
+  "id": "golden_html_test",
+  "name": "golden_html_test",
+  "version": "1.0.0",
+  "description": "Not a real theme -- exists only so Template::setTheme()'s standard_pages fallback has something real to load before it swaps to themes/standard_pages. See tests/Browser/GoldenHtmlSnapshotTest.php.",
+  "license": "GPL-2.0-or-later",
+  "minPiwigo": "16.3.0",
+  "main": "Piwigo\\Theme\\GoldenHtmlTest\\Theme",
+  "autoload": {
+    "psr-4": {
+      "Piwigo\\Theme\\GoldenHtmlTest\\": "src/"
+    }
+  }
+}

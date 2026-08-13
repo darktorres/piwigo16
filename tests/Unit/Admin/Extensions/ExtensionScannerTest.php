@@ -31,74 +31,45 @@ use Piwigo\Users\User;
 // whatever's actually installed, not re-duplicated here. CurrentPaths is
 // seeded against this repo's own real root (not a disposable temp dir) so
 // the real language/ tree is genuinely reachable.
-// [Mutation] Remaining untested mutations after mutation testing, all
-// checked per-instance via hand-mutation (not assumed by category
-// alone), triaged into 3 groups:
-//
-// 1. RemoveBooleanCast on `if ((bool) preg_match(...))` (~20 sites across
-//    scanPlugin()/scanTheme()/scanLanguage()'s header-parsing blocks) --
-//    genuinely inert everywhere it appears in this file: an `if()`
-//    condition already coerces its operand to bool on its own, a
-//    universal PHP semantics fact independent of what preg_match() itself
-//    returns (int|false, both already truthy/falsy the same way with or
-//    without the cast). Same finding as this campaign's own
-//    ImageImagick.php/ImageExtImagick.php/SrcImage.php batches.
-//
-// 2. A `$data === false` / `return null;` guard (constructor-style, after
-//    file_get_contents()/file() -- scanPlugin() lines 125-126, scanTheme()
-//    lines 212-213, scanLanguage() lines 336-337) IS already covered by
-//    this file's own "cannot be read" tests for each type: hand-mutating
-//    FalseToTrue (`=== false` -> `=== true`) or RemoveEarlyReturn (drops
-//    `return null;`) both make that test fail for real (an uncaught
-//    TypeError -- strict_types=1 means preg_match()'s string-typed $data
-//    param can't silently coerce a bool `false`), per running
-//    each "cannot be read" test filtered, standalone, against the
-//    hand-mutated source. `pest --mutate` doesn't credit an uncaught
-//    fatal-error crash as "tested" the way it credits a normal assertion
-//    failure -- a real, if narrower, blind spot alongside the
-//    already-documented subprocess-coverage one.
-//
-// 3. Individually-checked inert mutations, each per
-//    hand-mutation + a full filtered rerun (not inferred from the others):
-//    - Line 64 BooleanOrToBooleanAnd (the '.'/'..' directory-entry
-//      guard): '.' and '..' both already fail the very next line's
-//      `^[a-zA-Z0-9-_]+$` id regex (a period isn't in that character
-//      class), so whether this check uses `||` or the always-false `&&`,
-//      both entries end up skipped via the regex guard instead -- same
-//      observable result either way.
-//    - Lines 133/221 UnwrapTrim (`trim($val[1])` on the Version header):
-//      the Version regex's own capture group is `[\w.-]+`, which
-//      structurally excludes whitespace -- unlike Plugin/Theme
-//      Name/Description/Author's `(.+)` capture, $val[1] here can never
-//      contain anything trim() would strip in the first place.
-//    - Line 326 UnwrapStrtolower (`strtolower($targetCharset ?? ...)`):
-//      CharsetHelper::convertCharset()'s own destCharset comparisons
-//      against literal lowercase strings ('utf-8'/'iso-8859-1') would
-//      indeed miss a same-charset fast path for a mixed-case caller value
-//      without this -- but the resulting fallback through
-//      iconv()/mb_convert_encoding() is itself case-insensitive for
-//      charset names, producing byte-identical output either way
-//      (per a direct probe comparing the "fast path identity"
-//      output against the "iconv utf-8 -> UTF-8" output for the same
-//      string).
-//    - Line 339 EmptyStringToNotEmpty (`implode('', $lines)` in
-//      scanLanguage()): unlike scanTheme()'s own analogous implode() --
-//      which DOES have a real, dedicated multi-line test -- this file's
-//      "X-Piwigo-Language-Name"/"X-Piwigo-Country" regexes aren't
-//      line-anchored, so a garbage separator inserted between file()
-//      lines lands adjacent to, not inside, whichever line actually
-//      carries a header, leaving the header's own regex match unaffected.
-//    - Line 378 EmptyStringToNotEmpty (`$uri === ''` in
-//      extractExtensionId()): mathematically redundant given the very
-//      next `||` clause -- an empty string can never contain the
-//      non-empty 'extension_view.php?eid=' marker substring, so
-//      `!str_contains($uri, ...)` is already true whenever $uri === ''
-//      would have been, making the first clause's own literal value
-//      unable to change the overall result for any input.
-//    - Line 81 RemoveFunctionCall (`closedir($dir)`): pure resource
-//      cleanup with no return value used and no observable effect on
-//      $found or any thrown exception -- a leaked directory handle isn't
-//      something any black-box test in this suite can detect.
+// [Mutation] Remaining untested mutations, checked per-instance via
+// hand-mutation (not assumed by category alone). P27.10 dropped
+// scanPlugin()/scanTheme()'s entire regex/header-comment-parsing
+// mechanism (main.inc.php/themeconf.inc.php -> plugin.json/theme.json),
+// so most of the plugin/theme-specific findings this block used to
+// document (Version-header trim, multi-line theme_conf glue, the
+// 2048-byte read window, case-insensitive "webmaster") no longer have
+// any code to be mutations *of* -- removed along with the tests that
+// exercised them, not left describing dead lines. Findings that still
+// apply, post-rewrite:
+// - `if ((bool) preg_match(...))` in scanLanguage()'s own header parsing
+//   (the only remaining preg_match() call in this class) -- inert for
+//   the same universal-PHP-if()-coercion reason as the campaign's own
+//   ImageImagick.php/ImageExtImagick.php/SrcImage.php batches.
+// - A `$data === false`-shaped guard after file_get_contents()/file() in
+//   scanPlugin()/scanTheme()/scanLanguage() is covered by this file's own
+//   "cannot be read"/"no plugin.json"/"no theme.json" tests per type.
+// - BooleanOrToBooleanAnd on the '.'/'..' directory-entry guard: both
+//   already fail the very next line's `^[a-zA-Z0-9-_]+$` id regex (a
+//   period isn't in that character class), so `||` vs. the always-false
+//   `&&` produces the same observable result either way.
+// - UnwrapStrtolower (`strtolower($targetCharset ?? ...)`, scanLanguage()):
+//   CharsetHelper::convertCharset()'s own iconv()/mb_convert_encoding()
+//   fallback is itself case-insensitive for charset names, producing
+//   byte-identical output either way (per a direct probe comparing the
+//   "fast path identity" output against the "iconv utf-8 -> UTF-8"
+//   output for the same string).
+// - EmptyStringToNotEmpty (`implode('', $lines)` in scanLanguage()): the
+//   "X-Piwigo-Language-Name"/"X-Piwigo-Country" regexes aren't
+//   line-anchored, so a garbage separator inserted between file() lines
+//   lands adjacent to, not inside, whichever line actually carries a
+//   header, leaving the header's own regex match unaffected.
+// - EmptyStringToNotEmpty (`$uri === ''` in extractExtensionId()):
+//   mathematically redundant given the very next `||` clause -- an empty
+//   string can never contain the non-empty 'extension_view.php?eid='
+//   marker substring, so `!str_contains($uri, ...)` is already true
+//   whenever $uri === '' would have been.
+// - RemoveFunctionCall (`closedir($dir)`): pure resource cleanup with no
+//   observable effect any black-box test in this suite can detect.
 
 beforeEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
@@ -141,13 +112,12 @@ test('scan skips a language directory with no common.po', function (): void {
 
 // Below: real coverage-gap closure for scan()/scanPlugin()/scanTheme()/
 // scanLanguage()'s remaining untested branches (guard-failure returns,
-// the Lang::load() description success path, the webmaster-gated
-// hasSettings flag, and every optional theme header field). Unlike the
-// two tests above, these don't touch the real git-tracked plugins/
-// themes/language trees at all -- Paths::fromRoot() (unlike
-// ExtensionType::scanDirectory()'s own hardcoded composition) genuinely
-// accepts *any* root directory, so a disposable temp root is a real,
-// safe injection point here (CurrentConfig::setThemesDir() likewise
+// the webmaster-gated hasSettings flag, and every optional theme
+// manifest field). Unlike the two tests above, these don't touch the
+// real git-tracked plugins/themes/language trees at all -- Paths::fromRoot()
+// (unlike ExtensionType::scanDirectory()'s own hardcoded composition)
+// genuinely accepts *any* root directory, so a disposable temp root is a
+// real, safe injection point here (CurrentConfig::setThemesDir() likewise
 // accepts an absolute override -- same technique
 // ExtensionUpdateCheckerTest/ThemesInstalledPageRendererTest/
 // InstallServiceTest already rely on). scanTheme()'s only real DB
@@ -176,51 +146,43 @@ function extensionScannerFixtureRoot(): string
     return $root;
 }
 
+/**
+ * @param array<string, mixed> $data
+ */
+function extensionScannerWriteJson(string $path, array $data): void
+{
+    file_put_contents($path, json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
+}
+
 function extensionScannerFixturePlugin(string $root, string $id): void
 {
     $dir = $root . 'plugins/' . $id;
     mkdir($dir, 0o777, true);
-    file_put_contents($dir . '/main.inc.php', <<<PHP
-        <?php
-        /*
-        Plugin Name: Full Fixture Plugin
-        Version: 2.3.4
-        Plugin URI: https://example.com/extension_view.php?eid=777
-        Author: Fixture Author
-        Author URI: https://example.com/author
-        Has Settings: webmaster
-        */
-        PHP);
-    // Lang::load('description.txt', $path.'/', ['return' => true]) appends
-    // its own 'language/' + AppInfo::DEFAULT_LANGUAGE ('en_UK', since no
-    // DefaultLanguageProvider is installed in this bare Unit test) --
-    // see Lang::load()'s own $dirname/$languages composition.
-    mkdir($dir . '/language/en_UK', 0o777, true);
-    file_put_contents($dir . '/language/en_UK/description.txt', 'A fixture plugin description for coverage.');
+    extensionScannerWriteJson($dir . '/plugin.json', [
+        'name' => 'Full Fixture Plugin',
+        'version' => '2.3.4',
+        'homepage' => 'https://example.com/extension_view.php?eid=777',
+        'description' => 'A fixture plugin description for coverage.',
+        'author' => 'Fixture Author',
+        'authorUri' => 'https://example.com/author',
+        'hasSettings' => 'webmaster',
+    ]);
 }
 
 function extensionScannerFixtureTheme(string $root, string $id): void
 {
     $dir = $root . 'themes/' . $id;
     mkdir($dir . '/admin', 0o777, true);
-    file_put_contents($dir . '/themeconf.inc.php', <<<PHP
-        <?php
-        /*
-        Theme Name: Full Fixture Theme
-        Version: 3.1.4
-        Theme URI: https://example.com/extension_view.php?eid=999
-        Author: Fixture Theme Author
-        Author URI: https://example.com/theme-author
-        */
-        \$theme_conf = array(
-            'parent' => 'parent_theme_id',
-            'activable' => true,
-            'mobile' => true,
-            'use_standard_pages' => true,
-        );
-        PHP);
-    mkdir($dir . '/language/en_UK', 0o777, true);
-    file_put_contents($dir . '/language/en_UK/description.txt', 'A fixture theme description for coverage.');
+    extensionScannerWriteJson($dir . '/theme.json', [
+        'name' => 'Full Fixture Theme',
+        'version' => '3.1.4',
+        'homepage' => 'https://example.com/extension_view.php?eid=999',
+        'description' => 'A fixture theme description for coverage.',
+        'author' => 'Fixture Theme Author',
+        'authorUri' => 'https://example.com/theme-author',
+        'parent' => 'parent_theme_id',
+        'useStandardPages' => true,
+    ]);
     // Presence is all scanTheme() checks (file_exists()) -- providing this
     // is what keeps this test off the PreferencesService/DB fallback
     // branch (see this section's own header comment).
@@ -256,7 +218,7 @@ test('scan returns an empty array when the scan directory itself does not exist'
     }
 });
 
-test('scan skips a plugin directory with no main.inc.php', function (): void {
+test('scan skips a plugin directory with no plugin.json', function (): void {
     $root = extensionScannerFixtureRoot();
     try {
         mkdir($root . 'plugins/no_main_plugin', 0o777, true);
@@ -271,40 +233,23 @@ test('scan skips a plugin directory with no main.inc.php', function (): void {
     }
 });
 
-test('scan trims trailing whitespace from every regex-captured plugin header value', function (): void {
-    // The "full fixture plugin"
-    // header block has no trailing whitespace on any line, so trim()
-    // never actually had anything to strip -- these patterns' `.+`
-    // capture is greedy up to the newline, so trailing spaces before it
-    // land in the captured group and only trim() removes them.
+test('scan skips a plugin directory whose plugin.json is not valid JSON', function (): void {
+    // json_decode() failure -- scanPlugin()'s own `! is_array($data)`
+    // guard, the JSON-read counterpart of the old header-regex mechanism's
+    // "no matching header" default-filling path (which no longer applies
+    // at all: a malformed manifest here degrades to "not found", not a
+    // partially-defaulted entry).
     $root = extensionScannerFixtureRoot();
     try {
-        $dir = $root . 'plugins/padded_header_plugin';
+        $dir = $root . 'plugins/malformed_plugin';
         mkdir($dir, 0o777, true);
-        // Trailing tabs (not spaces) after each value -- unambiguous and
-        // won't get silently stripped by an editor/tool trimming trailing
-        // whitespace the way a trailing space could.
-        file_put_contents($dir . '/main.inc.php', "<?php\n/*\n"
-            . "Plugin Name: Padded Plugin\t\n"
-            . "Version: 1.2.3\t\n"
-            . "Plugin URI: https://example.com/padded\t\n"
-            . "Description: Padded description\t\n"
-            . "Author: Padded Author\t\n"
-            . "Author URI: https://example.com/padded-author\t\n"
-            . "*/\n");
+        file_put_contents($dir . '/plugin.json', '{not valid json');
 
         $found = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($found)
-            ->toHaveKey('padded_header_plugin');
-        $plugin = $found['padded_header_plugin'];
-        expect($plugin['name'])->toBe('Padded Plugin')
-            ->and($plugin['version'])->toBe('1.2.3')
-            ->and($plugin['uri'])->toBe('https://example.com/padded')
-            ->and($plugin['description'])->toBe('Padded description')
-            ->and($plugin['author'])->toBe('Padded Author')
-            ->and($plugin['author uri'])->toBe('https://example.com/padded-author');
+            ->not->toHaveKey('malformed_plugin');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -345,7 +290,9 @@ test('scan skips a directory entry with an invalid id but keeps scanning the res
         for ($i = 0; $i < 20; $i++) {
             $id = 'valid_plugin_' . $i;
             mkdir($root . 'plugins/' . $id, 0o777, true);
-            file_put_contents($root . 'plugins/' . $id . '/main.inc.php', "<?php\n/*\nPlugin Name: Valid {$i}\n*/\n");
+            extensionScannerWriteJson($root . 'plugins/' . $id . '/plugin.json', [
+                'name' => "Valid {$i}",
+            ]);
         }
         foreach (['bad!one', 'bad!two', 'bad!three'] as $badId) {
             mkdir($root . 'plugins/' . $badId, 0o777, true);
@@ -364,15 +311,15 @@ test('scan skips a directory entry with an invalid id but keeps scanning the res
     }
 });
 
-test('scan defaults name/version/uri/description/author for a plugin whose main.inc.php has no matching headers', function (): void {
+test('scan defaults name/version/uri/description/author for a plugin whose plugin.json declares no matching fields', function (): void {
     // Every other plugin test uses
-    // a fully-populated header block, so nothing ever exercised the
-    // initial $plugin = [...] default values themselves (name falls back
-    // to the directory id, version to '0', the rest to '').
+    // a fully-populated manifest, so nothing ever exercised the initial
+    // $plugin = [...] default values themselves (name falls back to the
+    // directory id, version to '0', the rest to '').
     $root = extensionScannerFixtureRoot();
     try {
         mkdir($root . 'plugins/headerless_plugin', 0o777, true);
-        file_put_contents($root . 'plugins/headerless_plugin/main.inc.php', "<?php\n// no header block at all\n");
+        extensionScannerWriteJson($root . 'plugins/headerless_plugin/plugin.json', []);
 
         $found = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
@@ -395,29 +342,25 @@ test('scan defaults name/version/uri/description/author for a plugin whose main.
     }
 });
 
-test('scan skips a plugin whose main.inc.php cannot be read', function (): void {
+test('scan skips a plugin whose plugin.json cannot be read', function (): void {
     $root = extensionScannerFixtureRoot();
-    $mainFile = $root . 'plugins/unreadable_plugin/main.inc.php';
+    $manifestFile = $root . 'plugins/unreadable_plugin/plugin.json';
     try {
         mkdir($root . 'plugins/unreadable_plugin', 0o777, true);
-        file_put_contents($mainFile, "<?php\n/*\nPlugin Name: Unreadable\n*/\n");
+        extensionScannerWriteJson($manifestFile, [
+            'name' => 'Unreadable',
+        ]);
         // A real, unreadable file (0000, torres owns it but no read bit
         // for anyone) -- file_get_contents() genuinely returns false here,
         // not a mock, matching UploadServiceTest::sanitizeSvgIfNeeded's
         // own established permission-denied convention (torres is a
         // non-root user in this environment, per `id`, so
-        // owning a file does not bypass its own permission bits). A
-        // directory standing in for main.inc.php was tried first and
-        // rejected: file_get_contents() against a directory returns ''
-        // (an E_NOTICE, not E_WARNING) on this PHP version, not false --
-        // it would silently fall through to a defaulted, non-null return
-        // instead of exercising this guard at all, per direct
-        // `php -r` experimentation before writing this test.
+        // owning a file does not bypass its own permission bits).
         // file_exists() (scanPlugin()'s own earlier guard) stays true
         // regardless of the chmod -- only the later read fails -- so this
-        // genuinely exercises scanPlugin()'s own `$data === false` guard,
-        // not the guard above it.
-        chmod($mainFile, 0o000);
+        // genuinely exercises scanPlugin()'s own `$contents === false`
+        // guard, not the guard above it.
+        chmod($manifestFile, 0o000);
 
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
@@ -425,7 +368,7 @@ test('scan skips a plugin whose main.inc.php cannot be read', function (): void 
                 ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
         } finally {
             restore_error_handler();
-            chmod($mainFile, 0o644);
+            chmod($manifestFile, 0o644);
         }
 
         expect($found)
@@ -486,38 +429,6 @@ test('scan reports hasSettings=false for a webmaster-gated plugin when the curre
     }
 });
 
-test('scan trims trailing whitespace from every regex-captured theme header value', function (): void {
-    $root = extensionScannerFixtureRoot();
-    try {
-        $dir = $root . 'themes/padded_header_theme';
-        mkdir($dir . '/admin', 0o777, true);
-        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\n"
-            . "Theme Name: Padded Theme\t\n"
-            . "Version: 4.5.6\t\n"
-            . "Theme URI: https://example.com/padded-theme\t\n"
-            . "Description: Padded theme description\t\n"
-            . "Author: Padded Theme Author\t\n"
-            . "Author URI: https://example.com/padded-theme-author\t\n"
-            . "*/\n");
-        file_put_contents($dir . '/screenshot.png', 'fixture');
-
-        $found = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
-
-        expect($found)
-            ->toHaveKey('padded_header_theme');
-        $theme = $found['padded_header_theme'];
-        expect($theme['name'])->toBe('Padded Theme')
-            ->and($theme['version'])->toBe('4.5.6')
-            ->and($theme['uri'])->toBe('https://example.com/padded-theme')
-            ->and($theme['description'])->toBe('Padded theme description')
-            ->and($theme['author'])->toBe('Padded Theme Author')
-            ->and($theme['author uri'])->toBe('https://example.com/padded-theme-author');
-    } finally {
-        FilesystemHelper::deltree($root);
-    }
-});
-
 test('scan escapes special HTML characters in every string field it returns', function (): void {
     // "IMPORTANT SECURITY!" pass (scanPlugin()'s/scanTheme()'s/
     // scanLanguage()'s own htmlspecialchars() call) -- never actually
@@ -526,9 +437,9 @@ test('scan escapes special HTML characters in every string field it returns', fu
     try {
         $dir = $root . 'plugins/xss_plugin';
         mkdir($dir, 0o777, true);
-        file_put_contents($dir . '/main.inc.php', "<?php\n/*\n"
-            . "Plugin Name: <script>alert(1)</script> & \"Quoted\"\n"
-            . "*/\n");
+        extensionScannerWriteJson($dir . '/plugin.json', [
+            'name' => '<script>alert(1)</script> & "Quoted"',
+        ]);
 
         $found = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
@@ -541,11 +452,11 @@ test('scan escapes special HTML characters in every string field it returns', fu
     }
 });
 
-test('scan defaults id/name/version/uri/description/author for a theme whose themeconf.inc.php has no matching headers', function (): void {
+test('scan defaults id/name/version/uri/description/author for a theme whose theme.json declares no matching fields', function (): void {
     $root = extensionScannerFixtureRoot();
     try {
         mkdir($root . 'themes/headerless_theme/admin', 0o777, true);
-        file_put_contents($root . 'themes/headerless_theme/themeconf.inc.php', "<?php\n// no header block at all\n");
+        extensionScannerWriteJson($root . 'themes/headerless_theme/theme.json', []);
         file_put_contents($root . 'themes/headerless_theme/screenshot.png', 'fixture');
 
         $found = new ExtensionScanner()
@@ -576,17 +487,18 @@ test('scan defaults id/name/version/uri/description/author for a theme whose the
     }
 });
 
-test('scan skips a theme whose themeconf.inc.php cannot be read', function (): void {
+test('scan skips a theme whose theme.json cannot be read', function (): void {
     $root = extensionScannerFixtureRoot();
-    $themeConfFile = $root . 'themes/unreadable_theme/themeconf.inc.php';
+    $manifestFile = $root . 'themes/unreadable_theme/theme.json';
     try {
         mkdir($root . 'themes/unreadable_theme', 0o777, true);
-        file_put_contents($themeConfFile, "<?php\n/*\nTheme Name: Unreadable\n*/\n");
+        extensionScannerWriteJson($manifestFile, [
+            'name' => 'Unreadable',
+        ]);
         // Same real chmod(0000)-unreadable-file technique as the plugin
-        // main.inc.php test above (see its own comment for why a
-        // directory standing in for the file doesn't work), for
-        // scanTheme()'s own `$lines === false` guard.
-        chmod($themeConfFile, 0o000);
+        // plugin.json test above, for scanTheme()'s own
+        // `$contents === false` guard.
+        chmod($manifestFile, 0o000);
 
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
@@ -594,7 +506,7 @@ test('scan skips a theme whose themeconf.inc.php cannot be read', function (): v
                 ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
         } finally {
             restore_error_handler();
-            chmod($themeConfFile, 0o644);
+            chmod($manifestFile, 0o644);
         }
 
         expect($found)
@@ -604,7 +516,7 @@ test('scan skips a theme whose themeconf.inc.php cannot be read', function (): v
     }
 });
 
-test('scan extracts every optional theme header field from a fully-populated theme', function (): void {
+test('scan extracts every optional theme manifest field from a fully-populated theme', function (): void {
     $root = extensionScannerFixtureRoot();
     try {
         extensionScannerFixtureTheme($root, 'full_fixture_theme');
@@ -626,8 +538,13 @@ test('scan extracts every optional theme header field from a fully-populated the
             // value.
             ->and($theme['extension'])->toBe('999')
             ->and($theme['parent'])->toBe('parent_theme_id')
-            ->and($theme['activable'])->toBeTrue()
-            ->and($theme['mobile'])->toBeTrue()
+            // ThemeManifest has no 'activable' field at all (never set),
+            // and 'mobile' is always false (no manifest equivalent either,
+            // see ThemeManifest's own docblock) -- both real, permanent
+            // differences from the old header-comment format, not gaps.
+            ->and($theme)
+            ->not->toHaveKey('activable')
+            ->and($theme['mobile'])->toBeFalse()
             ->and($theme['use_standard_pages'])->toBeTrue()
             // Real string, not a bool -- htmlspecialchars() escaping (the
             // "IMPORTANT SECURITY!" pass) turns '&' into '&amp;', so this
@@ -785,7 +702,9 @@ test('scan rejects a plugin directory that is a symlink even when its target is 
     try {
         $targetDir = $root . 'plugins/real_target_plugin';
         mkdir($targetDir, 0o777, true);
-        file_put_contents($targetDir . '/main.inc.php', "<?php\n/*\nPlugin Name: Real Target\n*/\n");
+        extensionScannerWriteJson($targetDir . '/plugin.json', [
+            'name' => 'Real Target',
+        ]);
         symlink($targetDir, $linkPath);
 
         $found = new ExtensionScanner()
@@ -805,51 +724,24 @@ test('scan rejects a plugin directory that is a symlink even when its target is 
     }
 });
 
-test('scan only reads the first 2048 bytes of a plugin main.inc.php header block', function (): void {
-    // file_get_contents()'s own
-    // offset (0) and length (2048) arguments -- every other plugin
-    // fixture's header block sits well within that window, so nothing
-    // ever told the exact (offset=0, length=2048) read from an
-    // off-by-one on either argument. Pads the file so a 10-char value
-    // straddles byte 2047/2048: only the real, exact window captures
-    // precisely the first 8 of its characters.
-    $root = extensionScannerFixtureRoot();
-    try {
-        $dir = $root . 'plugins/byte_boundary_plugin';
-        mkdir($dir, 0o777, true);
-        $prefix = "<?php\n/*\n";
-        $label = 'Plugin Name: ';
-        $valueStart = 2040;
-        $padding = str_repeat('X', $valueStart - strlen($prefix) - strlen($label));
-        $value = '0123456789';
-        file_put_contents($dir . '/main.inc.php', $prefix . $padding . $label . $value . "\n*/\n");
-
-        $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
-
-        expect($found)
-            ->toHaveKey('byte_boundary_plugin')
-            ->and($found['byte_boundary_plugin']['name'])->toBe('01234567');
-    } finally {
-        FilesystemHelper::deltree($root);
-    }
-});
-
-test('scan gates hasSettings on a case-insensitive "webmaster" marker, not just the lowercase literal', function (): void {
-    // strtolower($val[1]) === 'webmaster'
-    // -- every existing webmaster-gated fixture already writes the header
-    // in lowercase ("Has Settings: webmaster"), which can't tell a real
-    // strtolower() from a removed one. The regex's own [Ww]ebmaster class
-    // allows a capitalized "Webmaster" too; only a case-insensitive
-    // comparison correctly keeps it gated for a non-webmaster user.
+test('scan only gates hasSettings on the exact literal string "webmaster", not any other truthy string value', function (): void {
+    // $hasSettingsRaw === 'webmaster' -- a real, deliberate difference from
+    // the old case-insensitive [Ww]ebmaster header regex: plugin.json's own
+    // schema restricts 'hasSettings' to `true` or the literal lowercase
+    // string "webmaster" (opis/json-schema's enum, case-sensitive by
+    // design), so scanPlugin() correctly treats any other string (however
+    // truthy) as neither -- hasSettings stays false, not gated-true.
     $root = extensionScannerFixtureRoot();
     try {
         $dir = $root . 'plugins/capitalized_webmaster_plugin';
         mkdir($dir, 0o777, true);
-        file_put_contents($dir . '/main.inc.php', "<?php\n/*\nPlugin Name: Capitalized\nHas Settings: Webmaster\n*/\n");
+        extensionScannerWriteJson($dir . '/plugin.json', [
+            'name' => 'Capitalized',
+            'hasSettings' => 'Webmaster',
+        ]);
         CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 3,
-            'status' => 'normal',
+            'status' => 'webmaster',
         ]));
 
         $found = new ExtensionScanner()
@@ -863,7 +755,7 @@ test('scan gates hasSettings on a case-insensitive "webmaster" marker, not just 
     }
 });
 
-test('scan skips a theme directory with no themeconf.inc.php', function (): void {
+test('scan skips a theme directory with no theme.json', function (): void {
     // `!is_dir($path) || !file_exists(...)`
     // -- unlike the equivalent plugin test, nothing exercised a theme
     // directory that exists but is missing its own marker file.
@@ -881,122 +773,22 @@ test('scan skips a theme directory with no themeconf.inc.php', function (): void
     }
 });
 
-test('scan falls back to the header Description when Lang::load() returns an empty plugin description.txt', function (): void {
-    // is_string($desc) && $desc !== ''
-    // -- every plugin fixture with a description.txt writes real,
-    // non-empty content, so nothing ever exercised the empty-string case
-    // (an empty description.txt genuinely returns '' from Lang::load(),
-    // not false -- it's a plain file_get_contents() read under the
-    // 'return' option).
-    $root = extensionScannerFixtureRoot();
-    try {
-        $dir = $root . 'plugins/empty_desc_plugin';
-        mkdir($dir, 0o777, true);
-        file_put_contents($dir . '/main.inc.php', "<?php\n/*\nPlugin Name: Empty Desc\nDescription: Header fallback description\n*/\n");
-        mkdir($dir . '/language/en_UK', 0o777, true);
-        file_put_contents($dir . '/language/en_UK/description.txt', '');
-
-        $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
-
-        expect($found)
-            ->toHaveKey('empty_desc_plugin')
-            ->and($found['empty_desc_plugin']['description'])->toBe('Header fallback description');
-    } finally {
-        FilesystemHelper::deltree($root);
-    }
-});
-
-test('scan trims whitespace from a lang-loaded plugin description', function (): void {
-    // trim($desc) -- the shared
-    // extensionScannerFixturePlugin() helper's description.txt content has
-    // no surrounding whitespace, so trim() never had anything to strip.
-    $root = extensionScannerFixtureRoot();
-    try {
-        $dir = $root . 'plugins/padded_desc_plugin';
-        mkdir($dir, 0o777, true);
-        file_put_contents($dir . '/main.inc.php', "<?php\n/*\nPlugin Name: Padded Desc\n*/\n");
-        mkdir($dir . '/language/en_UK', 0o777, true);
-        file_put_contents($dir . '/language/en_UK/description.txt', "  Padded lang-loaded description  \n");
-
-        $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
-
-        expect($found)
-            ->toHaveKey('padded_desc_plugin')
-            ->and($found['padded_desc_plugin']['description'])->toBe('Padded lang-loaded description');
-    } finally {
-        FilesystemHelper::deltree($root);
-    }
-});
-
-test('scan falls back to the header Description when Lang::load() returns an empty theme description.txt', function (): void {
-    $root = extensionScannerFixtureRoot();
-    try {
-        $dir = $root . 'themes/empty_desc_theme';
-        mkdir($dir, 0o777, true);
-        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: Empty Desc Theme\nDescription: Theme header fallback description\n*/\n");
-        mkdir($dir . '/language/en_UK', 0o777, true);
-        file_put_contents($dir . '/language/en_UK/description.txt', '');
-        file_put_contents($dir . '/screenshot.png', 'fixture');
-
-        $found = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
-
-        expect($found)
-            ->toHaveKey('empty_desc_theme')
-            ->and($found['empty_desc_theme']['description'])->toBe('Theme header fallback description');
-    } finally {
-        FilesystemHelper::deltree($root);
-    }
-});
-
-test('scan trims whitespace from a lang-loaded theme description', function (): void {
-    $root = extensionScannerFixtureRoot();
-    try {
-        $dir = $root . 'themes/padded_desc_theme';
-        mkdir($dir, 0o777, true);
-        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: Padded Desc Theme\n*/\n");
-        mkdir($dir . '/language/en_UK', 0o777, true);
-        file_put_contents($dir . '/language/en_UK/description.txt', "  Padded theme lang-loaded description  \n");
-        file_put_contents($dir . '/screenshot.png', 'fixture');
-
-        $found = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
-
-        expect($found)
-            ->toHaveKey('padded_desc_theme')
-            ->and($found['padded_desc_theme']['description'])->toBe('Padded theme lang-loaded description');
-    } finally {
-        FilesystemHelper::deltree($root);
-    }
-});
-
-test('scan reports activable/mobile/use_standard_pages as false, not just non-empty, for an explicitly false theme_conf', function (): void {
-    // SqlDialect::getBoolean($val[1])
-    // -- the only "fully populated" theme fixture in this file sets all 3
-    // flags to true, and SqlDialect::getBoolean()'s own (bool) cast
-    // fallback treats *any* non-"false" non-empty string as true --
-    // including $val[0] (the entire regex match, e.g. "'activable' =>
-    // false", which is non-empty and isn't literally the word "false")
-    // -- so a true-only fixture can't tell $val[1] (the captured
-    // "true"/"false" word alone) apart from $val[0]; only an
-    // explicitly-false fixture can.
+test('scan reports use_standard_pages as an explicitly present false, not just absent, when the manifest says so', function (): void {
+    // is_bool($data['useStandardPages'] ?? null) -- the only
+    // "fully populated" theme fixture in this file sets it to true, and
+    // the "headerless" defaults test never sets the key at all -- neither
+    // tells an explicit `false` (a real, present key -- setTheme()'s own
+    // fallback to $currentConfig->useStandardPages should NOT kick in)
+    // apart from a key that's simply missing (where that fallback SHOULD
+    // kick in).
     $root = extensionScannerFixtureRoot();
     try {
         $dir = $root . 'themes/false_flags_theme';
         mkdir($dir, 0o777, true);
-        file_put_contents($dir . '/themeconf.inc.php', <<<PHP
-            <?php
-            /*
-            Theme Name: False Flags Theme
-            */
-            \$theme_conf = array(
-                'activable' => false,
-                'mobile' => false,
-                'use_standard_pages' => false,
-            );
-            PHP);
+        extensionScannerWriteJson($dir . '/theme.json', [
+            'name' => 'False Flags Theme',
+            'useStandardPages' => false,
+        ]);
         file_put_contents($dir . '/screenshot.png', 'fixture');
 
         $found = new ExtensionScanner()
@@ -1005,8 +797,8 @@ test('scan reports activable/mobile/use_standard_pages as false, not just non-em
         expect($found)
             ->toHaveKey('false_flags_theme');
         $theme = $found['false_flags_theme'];
-        expect($theme['activable'])->toBeFalse()
-            ->and($theme['mobile'])->toBeFalse()
+        expect($theme)
+            ->toHaveKey('use_standard_pages')
             ->and($theme['use_standard_pages'])->toBeFalse();
     } finally {
         FilesystemHelper::deltree($root);
@@ -1024,7 +816,9 @@ test('scan omits admin_uri for a theme with no admin/admin.inc.php', function ()
     try {
         $dir = $root . 'themes/no_admin_theme';
         mkdir($dir, 0o777, true);
-        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: No Admin Theme\n*/\n");
+        extensionScannerWriteJson($dir . '/theme.json', [
+            'name' => 'No Admin Theme',
+        ]);
         file_put_contents($dir . '/screenshot.png', 'fixture');
 
         $found = new ExtensionScanner()
@@ -1051,7 +845,9 @@ test('scan prefixes admin_uri with the real root url, not just the relative admi
     try {
         $dir = $root . 'themes/admin_uri_theme';
         mkdir($dir . '/admin', 0o777, true);
-        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: Admin Uri Theme\n*/\n");
+        extensionScannerWriteJson($dir . '/theme.json', [
+            'name' => 'Admin Uri Theme',
+        ]);
         file_put_contents($dir . '/admin/admin.inc.php', '<?php // fixture admin page, only its existence matters');
         file_put_contents($dir . '/screenshot.png', 'fixture');
 
@@ -1065,35 +861,6 @@ test('scan prefixes admin_uri with the real root url, not just the relative admi
         expect($found)
             ->toHaveKey('admin_uri_theme')
             ->and($found['admin_uri_theme']['admin_uri'])->toBe('https://example.com/piwigo/admin.php?page=theme&amp;theme=admin_uri_theme');
-    } finally {
-        FilesystemHelper::deltree($root);
-    }
-});
-
-test('scan reconstructs a multi-line theme_conf value by rejoining file() lines without inserting a separator', function (): void {
-    // implode('', $lines) -- every
-    // other theme fixture's header/config values sit entirely on a single
-    // physical line, so nothing tells a real empty-glue join from a
-    // non-empty one: inserted glue text lands strictly *between* file()
-    // lines, and every `.+`-based header pattern already stops at its own
-    // line's trailing \n regardless of what follows it. The 'parent'
-    // field's own pattern instead uses `[^"\']+`, which -- unlike `.` --
-    // DOES cross real newlines, so a value deliberately split across 2
-    // file() lines (inside its own quotes) is the one place a wrong
-    // separator actually lands inside the captured group itself.
-    $root = extensionScannerFixtureRoot();
-    try {
-        $dir = $root . 'themes/multiline_parent_theme';
-        mkdir($dir, 0o777, true);
-        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: Multiline Parent Theme\n*/\n\$theme_conf = array(\n    'parent' => 'parent_theme\n_id',\n);\n");
-        file_put_contents($dir . '/screenshot.png', 'fixture');
-
-        $found = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
-
-        expect($found)
-            ->toHaveKey('multiline_parent_theme')
-            ->and($found['multiline_parent_theme']['parent'])->toBe("parent_theme\n_id");
     } finally {
         FilesystemHelper::deltree($root);
     }

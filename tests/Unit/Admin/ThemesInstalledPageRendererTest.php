@@ -25,7 +25,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Session\SessionEntity;
@@ -342,8 +341,8 @@ function fsThemeEntry(array $overrides = []): array
 /**
  * Same "lazy DBAL connection, never actually queried" reasoning as
  * ExtensionUpdateCheckerTest's own extensionUpdateChecker() helper --
- * ExtensionRepository/ConfigService/PluginMigrationRepository only satisfy
- * ExtensionLifecycle's constructor type here, never exercised by
+ * ExtensionRepository/ConfigService only satisfy ExtensionLifecycle's
+ * constructor type here, never exercised by
  * missingParentTheme()/getChildrenThemes(). CurrentConfig/CurrentUser ARE
  * exercised by those 2 methods, which thread $this->currentConfig/
  * $this->currentUser into ExtensionScanner::scan()'s own params -- both
@@ -360,7 +359,6 @@ function themesInstalledLifecycle(): ExtensionLifecycle
     $conn = DbConnection::build();
     $repo = new ExtensionRepository(EntityManagerFactory::build($conn));
     $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-    $pluginMigrationRepo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
 
     $currentLogger = new CurrentLogger();
     $currentLogger->set(new Logger([
@@ -375,7 +373,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
         throw new LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, CurrentPathsTestFactory::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), new EventDispatcher(), $pluginRegistry, $themeRegistry);
+    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, CurrentPathsTestFactory::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), new EventDispatcher(), $pluginRegistry, $themeRegistry);
 }
 
 /**
@@ -411,8 +409,8 @@ function themesInstalledLifecycleUserService(): UserService
 }
 
 /**
- * Writes a real themes/<id>/themeconf.inc.php (+ a screenshot.png stub,
- * see this file's own top-of-file docblock for why) under the disposable
+ * Writes a real themes/<id>/theme.json (+ a screenshot.png stub, see
+ * this file's own top-of-file docblock for why) under the disposable
  * fixture root -- same file shape as
  * tests/Integration/ExtensionLifecycleTest.php's own writeThemeConf(),
  * just rooted at a throwaway temp dir instead of the live themes/ tree.
@@ -423,12 +421,14 @@ function writeThemesInstalledFixtureTheme(string $fixtureRoot, string $id, array
 {
     $dir = $fixtureRoot . 'themes/' . $id;
     mkdir($dir, 0o777, true);
-    $name = $conf['name'] ?? $id;
-    $lines = "<?php\n/*\nTheme Name: {$name}\nVersion: 1.0\n*/\n";
+    $data = [
+        'name' => $conf['name'] ?? $id,
+        'version' => '1.0',
+    ];
     if (isset($conf['parent'])) {
-        $lines .= "\$theme_conf['parent'] = '{$conf['parent']}';\n";
+        $data['parent'] = $conf['parent'];
     }
-    file_put_contents($dir . '/themeconf.inc.php', $lines);
+    file_put_contents($dir . '/theme.json', json_encode($data, JSON_THROW_ON_ERROR));
     file_put_contents($dir . '/screenshot.png', 'x');
 }
 

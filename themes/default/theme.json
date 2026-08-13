@@ -12,5 +12,8 @@
       "Piwigo\\Theme\\DefaultTheme\\": "src/"
     }
   },
-  "localHead": "local_head.latte"
+  "localHead": "local_head.latte",
+  "iconDir": "themes/default/icon",
+  "imgDir": "themes/default/images",
+  "mimeIconDir": "themes/default/icon/mimetypes/"
 }

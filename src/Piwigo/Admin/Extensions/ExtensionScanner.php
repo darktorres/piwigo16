@@ -17,7 +17,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\SqlDialect;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -33,10 +32,18 @@ use Piwigo\Users\UserStatus;
  * languages.class.php). The common skeleton (directory iteration, name-
  * regex validation, marker-file check, name/version/uri/author/author_uri/
  * PEM-extension-id extraction, htmlspecialchars() pass) is ~95% identical
- * across the 3 legacy methods; real per-type differences (extra theme
- * header fields, language charset conversion, plugin's webmaster-gated
- * hasSettings flag) are handled per-type below rather than forced into a
- * false-generic shape.
+ * across the 3 methods; real per-type differences (language charset
+ * conversion, plugin's webmaster-gated hasSettings flag) are handled
+ * per-type below rather than forced into a false-generic shape.
+ *
+ * Plugin/Theme read `plugin.json`/`theme.json` (P27.10: no legacy
+ * `main.inc.php`/`themeconf.inc.php` header-comment scanning anywhere in
+ * this codebase, not even as a fallback -- a plain, tolerant
+ * `json_decode()`, not a schema-validated `PluginConfig\PluginManifest`/
+ * `ThemeManifest::fromArray()` read; see `scanPlugin()`/`scanTheme()`'s
+ * own docblocks for why). Language reads `common.po` (gettext), never
+ * touched by P27.10 -- it was already migrated off the old
+ * `common.lang.php` convention before this phase.
  */
 final class ExtensionScanner
 {
@@ -51,6 +58,15 @@ final class ExtensionScanner
      *
      * @return array<string, array<string, mixed>> keyed by extension id
      *   (directory name)
+     *
+     * $lang is vestigial (P27.10 dropped scanPlugin()/scanTheme()'s own
+     * description.txt load along with the rest of the legacy header-
+     * comment format they read it for) -- kept on this public signature
+     * rather than removed, matching the same "stable seam" precedent
+     * PemCatalog's own P27.9 redesign already established: ~20 real
+     * call sites construct this method's arguments today, and a bare
+     * unused parameter costs nothing to keep vs. a 20-file blast radius
+     * to drop.
      */
     public function scan(ExtensionType $type, UrlServiceInterface $urlService, Lang $lang, Paths $paths, CurrentUser $currentUser, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, ?string $targetCharset = null): array
     {
@@ -69,8 +85,8 @@ final class ExtensionScanner
             }
 
             $entry = match ($type) {
-                ExtensionType::Plugin => $this->scanPlugin($lang, $file, $paths, $currentUser),
-                ExtensionType::Theme => $this->scanTheme($lang, $file, $urlService, $paths, $eventDispatcher, $currentConfig, $currentUser),
+                ExtensionType::Plugin => $this->scanPlugin($file, $paths, $currentUser),
+                ExtensionType::Theme => $this->scanTheme($file, $urlService, $paths, $eventDispatcher, $currentConfig, $currentUser),
                 ExtensionType::Language => $this->scanLanguage($file, $targetCharset, $paths),
             };
 
@@ -104,60 +120,50 @@ final class ExtensionScanner
     }
 
     /**
+     * Reads `plugin.json` -- P27.10 dropped `main.inc.php` header-comment
+     * scanning entirely, no legacy fallback. A plain, tolerant
+     * `json_decode()` (not `PluginConfig\PluginManifest::fromArray()` +
+     * full `opis/json-schema` validation): this is a display-listing
+     * read, not an activation gate -- real validation already happens
+     * inside `PluginConfig\PluginRegistry::install()`/`activate()`
+     * (P27.3), and a malformed `plugin.json` here should degrade to
+     * "not found" rather than break a whole admin listing page.
+     *
      * @return array{name: string, version: string, uri: string, description: string, author: string, hasSettings: bool, 'author uri'?: string, extension?: string}|null
      */
-    private function scanPlugin(Lang $lang, string $pluginId, Paths $paths, CurrentUser $currentUser): ?array
+    private function scanPlugin(string $pluginId, Paths $paths, CurrentUser $currentUser): ?array
     {
         $path = PluginLoader::pluginsPath($paths) . $pluginId;
-        if (! is_dir($path) || is_link($path) || ! file_exists($path . '/main.inc.php')) {
+        if (! is_dir($path) || is_link($path) || ! file_exists($path . '/plugin.json')) {
+            return null;
+        }
+
+        $contents = file_get_contents($path . '/plugin.json');
+        $data = $contents !== false ? json_decode($contents, true) : null;
+        if (! is_array($data)) {
             return null;
         }
 
         $plugin = [
-            'name' => $pluginId,
-            'version' => '0',
-            'uri' => '',
-            'description' => '',
-            'author' => '',
+            'name' => is_string($data['name'] ?? null) ? $data['name'] : $pluginId,
+            'version' => is_string($data['version'] ?? null) ? $data['version'] : '0',
+            'uri' => is_string($data['homepage'] ?? null) ? $data['homepage'] : '',
+            'description' => is_string($data['description'] ?? null) ? $data['description'] : '',
+            'author' => is_string($data['author'] ?? null) ? $data['author'] : '',
             'hasSettings' => false,
         ];
-        $data = file_get_contents($path . '/main.inc.php', false, null, 0, 2048);
-        if ($data === false) {
-            return null;
+
+        $hasSettingsRaw = $data['hasSettings'] ?? false;
+        if ($hasSettingsRaw === true) {
+            $plugin['hasSettings'] = true;
+        } elseif ($hasSettingsRaw === 'webmaster' && $currentUser->get()->status === UserStatus::Webmaster) {
+            $plugin['hasSettings'] = true;
         }
 
-        if ((bool) preg_match('|Plugin Name:\s*(.+)|', $data, $val)) {
-            $plugin['name'] = trim($val[1]);
+        if (is_string($data['authorUri'] ?? null) && $data['authorUri'] !== '') {
+            $plugin['author uri'] = $data['authorUri'];
         }
-        if ((bool) preg_match('|Version:\s*([\w.-]+)|', $data, $val)) {
-            $plugin['version'] = trim($val[1]);
-        }
-        if ((bool) preg_match('|Plugin URI:\s*(https?:\/\/.+)|', $data, $val)) {
-            $plugin['uri'] = trim($val[1]);
-        }
-        $desc = $lang->load('description.txt', $path . '/', [
-            'return' => true,
-        ]);
-        if (is_string($desc) && $desc !== '') {
-            $plugin['description'] = trim($desc);
-        } elseif ((bool) preg_match('|Description:\s*(.+)|', $data, $val)) {
-            $plugin['description'] = trim($val[1]);
-        }
-        if ((bool) preg_match('|Author:\s*(.+)|', $data, $val)) {
-            $plugin['author'] = trim($val[1]);
-        }
-        if ((bool) preg_match('|Author URI:\s*(https?:\/\/.+)|', $data, $val)) {
-            $plugin['author uri'] = trim($val[1]);
-        }
-        if ((bool) preg_match('/Has Settings:\s*([Tt]rue|[Ww]ebmaster)/', $data, $val)) {
-            if (strtolower($val[1]) === 'webmaster') {
-                if ($currentUser->get()->status === UserStatus::Webmaster) {
-                    $plugin['hasSettings'] = true;
-                }
-            } else {
-                $plugin['hasSettings'] = true;
-            }
-        }
+
         $extension = $this->extractExtensionId($plugin['uri']);
         if ($extension !== null) {
             $plugin['extension'] = $extension;
@@ -175,6 +181,14 @@ final class ExtensionScanner
     }
 
     /**
+     * Reads `theme.json` -- P27.10 dropped `themeconf.inc.php` header-
+     * comment scanning entirely, no legacy fallback. Same plain, tolerant
+     * `json_decode()` rationale as `scanPlugin()` above (a display-listing
+     * read, not `ThemeRegistry`'s own schema-validated activation gate).
+     * `activable` is never set here (no `ThemeManifest` equivalent, see
+     * below) -- stays declared `?:` for callers that already read it
+     * defensively.
+     *
      * @return array{
      *   id: string,
      *   name: string,
@@ -192,67 +206,50 @@ final class ExtensionScanner
      *   admin_uri?: string,
      * }|null
      */
-    private function scanTheme(Lang $lang, string $themeId, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser): ?array
+    private function scanTheme(string $themeId, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser): ?array
     {
         $path = ExtensionType::Theme->scanDirectory($paths, $currentConfig) . $themeId;
-        if (! is_dir($path) || ! file_exists($path . '/themeconf.inc.php')) {
+        if (! is_dir($path) || ! file_exists($path . '/theme.json')) {
+            return null;
+        }
+
+        $contents = file_get_contents($path . '/theme.json');
+        $data = $contents !== false ? json_decode($contents, true) : null;
+        if (! is_array($data)) {
             return null;
         }
 
         $theme = [
             'id' => $themeId,
-            'name' => $themeId,
-            'version' => '0',
-            'uri' => '',
-            'description' => '',
-            'author' => '',
+            'name' => is_string($data['name'] ?? null) ? $data['name'] : $themeId,
+            'version' => is_string($data['version'] ?? null) ? $data['version'] : '0',
+            'uri' => is_string($data['homepage'] ?? null) ? $data['homepage'] : '',
+            'description' => is_string($data['description'] ?? null) ? $data['description'] : '',
+            'author' => is_string($data['author'] ?? null) ? $data['author'] : '',
+            // ThemeManifest deliberately has no 'mobile' field (see its own
+            // docblock) -- "which installed theme serves mobile" stays a
+            // pure admin/config pairing, never a manifest-declared fact.
             'mobile' => false,
         ];
-        $lines = file($path . '/themeconf.inc.php');
-        if ($lines === false) {
-            return null;
-        }
-        $data = implode('', $lines);
 
-        if ((bool) preg_match('|Theme Name:\s*(.+)|', $data, $val)) {
-            $theme['name'] = trim($val[1]);
-        }
-        if ((bool) preg_match('|Version:\s*([\w.-]+)|', $data, $val)) {
-            $theme['version'] = trim($val[1]);
-        }
-        if ((bool) preg_match('|Theme URI:\s*(https?:\/\/.+)|', $data, $val)) {
-            $theme['uri'] = trim($val[1]);
-        }
-        $desc = $lang->load('description.txt', $path . '/', [
-            'return' => true,
-        ]);
-        if (is_string($desc) && $desc !== '') {
-            $theme['description'] = trim($desc);
-        } elseif ((bool) preg_match('|Description:\s*(.+)|', $data, $val)) {
-            $theme['description'] = trim($val[1]);
-        }
-        if ((bool) preg_match('|Author:\s*(.+)|', $data, $val)) {
-            $theme['author'] = trim($val[1]);
-        }
-        if ((bool) preg_match('|Author URI:\s*(https?:\/\/.+)|', $data, $val)) {
-            $theme['author uri'] = trim($val[1]);
+        if (is_string($data['authorUri'] ?? null) && $data['authorUri'] !== '') {
+            $theme['author uri'] = $data['authorUri'];
         }
         $extension = $this->extractExtensionId($theme['uri']);
         if ($extension !== null) {
             $theme['extension'] = $extension;
         }
-        if ((bool) preg_match('/["\']parent["\'][^"\']+["\']([^"\']+)["\']/', $data, $val)) {
-            $theme['parent'] = $val[1];
+        if (is_string($data['parent'] ?? null)) {
+            $theme['parent'] = $data['parent'];
         }
-        if ((bool) preg_match('/["\']activable["\'].*?(true|false)/i', $data, $val)) {
-            $theme['activable'] = SqlDialect::getBoolean($val[1]);
+        if (is_bool($data['useStandardPages'] ?? null)) {
+            $theme['use_standard_pages'] = $data['useStandardPages'];
         }
-        if ((bool) preg_match('/["\']mobile["\'].*?(true|false)/i', $data, $val)) {
-            $theme['mobile'] = SqlDialect::getBoolean($val[1]);
-        }
-        if ((bool) preg_match('/["\']use_standard_pages["\'].*?(true|false)/i', $data, $val)) {
-            $theme['use_standard_pages'] = SqlDialect::getBoolean($val[1]);
-        }
+        // ThemeManifest has no 'activable' field either -- no bundled or
+        // ported theme has ever needed it, and ThemesInstalledPageRenderer's
+        // own registry-merge fallback already defaults an unset key to
+        // "activable" (P27.5), matching a real theme.json-scanned entry's
+        // behavior here exactly.
 
         $screenshotPath = $path . '/screenshot.png';
         if (file_exists($screenshotPath)) {

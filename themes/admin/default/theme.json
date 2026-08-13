@@ -1,0 +1,6 @@
+{
+  "name": "default",
+  "iconDir": "themes/default/icon",
+  "mimeIconDir": "themes/default/icon/mimetypes/",
+  "colorscheme": "dark"
+}

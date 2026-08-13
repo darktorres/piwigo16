@@ -62,7 +62,6 @@ use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\HttpClientService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionHandler;
 use Piwigo\Session\SessionService;
@@ -564,7 +563,6 @@ final class InstallWizard
             new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $this->paths, $this->currentConfig),
             $urlService,
             $configService,
-            EntityManagerFactory::build($languageActivationConn)->getRepository(PluginMigrationEntity::class),
             ExtendedDomainAccessor::activityService(),
             CoreDomainAccessor::userService(),
             PresentationAccessor::htmlService(),

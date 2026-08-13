@@ -24,7 +24,10 @@ use Piwigo\Validation\InputValidator;
  * check; absent (or a non-positive value `CategoryId` itself rejects,
  * e.g. `0`) becomes `null` instead of the original's `-1` sentinel --
  * real category ids start at 1, so both collapse to the same "nothing
- * selected" no-op at the consumer.
+ * selected" no-op at the consumer. `rawId` is deliberately kept
+ * separate from `id`, not collapsed into it: `id` defaults to `''`
+ * when absent, `rawId` defaults to `null` -- `AlbumsPageRenderer.php`'s
+ * own `$open_cat_value` `match` expression relies on that distinction.
  */
 final readonly class AlbumsRequest
 {
@@ -34,7 +37,7 @@ final readonly class AlbumsRequest
         public bool $recursiveAutoOrder,
         public ?AlbumSortOrder $order,
         public string $id,
-        public mixed $rawId,
+        public ?string $rawId,
     ) {}
 
     public static function fromGlobals(InputValidator $inputValidator): self
@@ -59,8 +62,9 @@ final readonly class AlbumsRequest
         if ($simpleAutoOrder || $recursiveAutoOrder) {
             $inputValidator
                 ->validate('id', $post, false, '/^-?\d+$/');
-            $rawId = $post['id'] ?? null;
-            $id = is_string($rawId) ? $rawId : '';
+            $raw_id = $post['id'] ?? null;
+            $id = is_string($raw_id) ? $raw_id : '';
+            $rawId = is_string($raw_id) ? $raw_id : null;
         }
 
         return new self(

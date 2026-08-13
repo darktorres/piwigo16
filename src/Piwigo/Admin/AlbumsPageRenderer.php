@@ -143,7 +143,7 @@ final class AlbumsPageRenderer
         // that check even quoted (JS `"" == -1` is false).
         $open_cat_value = match (true) {
             $open_cat instanceof CategoryId => (string) $open_cat->value,
-            is_int($open_cat) || is_string($open_cat) => (string) $open_cat,
+            is_string($open_cat) => $open_cat,
             default => '-1',
         };
 

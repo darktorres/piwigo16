@@ -2314,6 +2314,15 @@ final readonly class CategoryService
     }
 
     /**
+     * Stays `array<string, mixed>` by design, despite `CategoryListForWsRow`
+     * existing: `Ws\Categories::getList()`, the one real caller, extensively
+     * mutates each row in place to build the WS JSON response (adding
+     * synthetic keys like `nb_images`/`total_nb_images`/`url`/
+     * `user_representative_picture_id` that have no corresponding
+     * `CategoryListForWsRow` property at all) -- a typed return would break
+     * that caller outright, same "Ws response encoder" rationale as
+     * `Ws\PwgCore.php`'s own already-documented protocol shape.
+     *
      * @return PaginatedResult<array<string, mixed>>
      */
     public function getListForWs(
@@ -2332,6 +2341,11 @@ final readonly class CategoryService
     }
 
     /**
+     * Same "Ws response encoder" rationale as getListForWs() above --
+     * `Ws\Categories::getAdminList()`, the one real caller, extensively
+     * mutates each row in place too (`nb_images`/`name_raw`/`fullname`/
+     * `comment_raw`/etc., none of which exist on `CategoryAdminListForWsRow`).
+     *
      * @return PaginatedResult<array<string, mixed>>
      */
     public function getAdminListForWs(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult

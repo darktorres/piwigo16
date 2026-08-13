@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Image;
 
 use Error;
 use Exception;
+use LogicException;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentThemeConfProvider;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -41,22 +42,28 @@ use stdClass;
  * with and without an installed HtmlRenderingInterface) plus its live
  * getimagesize() re-read.
  *
- * SrcImage resolves htmlRenderer, urlService, and imageRepository fresh
- * from the container on every call, with no independently-settable static
- * wrapper for any of the three -- a fake/real collaborator for them is
- * installed via KernelContainerOverride::with(), not direct Reflection
- * into a static property. themeConfProvider is the one exception:
- * CurrentThemeConfProvider is a real, dedicated, independently settable
- * wrapper (works whether or not Kernel is booted), so
- * srcImageTestSetThemeConfProvider() below still behaves like a direct
- * setter.
+ * SrcImage resolves htmlRenderer, urlService, imageRepository, and
+ * themeConfProvider all the same way -- fresh from the container on
+ * every call, no independently-settable static wrapper of its own. A
+ * fake/real collaborator for the first three is installed via
+ * KernelContainerOverride::with(); CurrentThemeConfProvider is the one
+ * exception, since its own set()/get()/reset() already exist as a real,
+ * dedicated, independently settable wrapper around the container-shared
+ * instance -- srcImageTestSetThemeConfProvider() below resolves that
+ * same container-shared instance and calls set()/reset() on it directly,
+ * requiring Kernel already booted, same as themeConf() itself.
  */
 function srcImageTestSetThemeConfProvider(?ThemeConfProviderInterface $provider): void
 {
+    $instance = Kernel::container()->get(CurrentThemeConfProvider::class);
+    if (! $instance instanceof CurrentThemeConfProvider) {
+        throw new LogicException('Container returned an unexpected type for ' . CurrentThemeConfProvider::class);
+    }
+
     if ($provider instanceof ThemeConfProviderInterface) {
-        CurrentThemeConfProvider::current()->set($provider);
+        $instance->set($provider);
     } else {
-        CurrentThemeConfProvider::current()->reset();
+        $instance->reset();
     }
 }
 
@@ -102,9 +109,13 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
+    // No explicit srcImageTestSetThemeConfProvider(null) needed here --
+    // CurrentThemeConfProvider is now only ever reachable through the
+    // container (no more static $fallback to leak across tests), so
+    // Kernel::reset() below already guarantees the next test's own
+    // Kernel::boot() gets a brand-new instance with $provider === null.
     CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
-    srcImageTestSetThemeConfProvider(null);
 });
 
 test('themeConf() throws a RuntimeException when no ThemeConfProviderInterface has been installed yet', function (): void {
@@ -297,9 +308,12 @@ test('constructor finds a real per-extension mimetype icon, and getUrl() embelli
             Paths::class => Paths::fromRoot($root),
             UrlServiceInterface::class => new SrcImageTestFakeUrlService(),
         ], function (): void {
-            // Must be seeded AFTER the container above is built -- CurrentThemeConfProvider::current()
-            // resolves a different instance once Kernel is booted than the
-            // pre-boot memoized fallback it returns beforehand.
+            // Must be seeded AFTER the container above is built --
+            // srcImageTestSetThemeConfProvider() resolves
+            // CurrentThemeConfProvider straight from the container, so
+            // calling it before KernelContainerOverride::with() rebuilds
+            // that container would seed an instance the override then
+            // immediately discards.
             srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 
             $src = new SrcImage([
@@ -786,10 +800,11 @@ test('eventDispatcher() throws when the container returns an unexpected type for
     // reasoning as the other 3 collaborator guards' own sibling tests
     // above, so the whole construction has to run inside the override.
     // The theme-conf provider must be seeded INSIDE the override's own
-    // closure -- CurrentThemeConfProvider::current() resolves a different
-    // instance once Kernel is booted than the pre-boot memoized fallback
-    // it returns beforehand (see the mimetype-icon test's own comment
-    // further above).
+    // closure -- srcImageTestSetThemeConfProvider() resolves
+    // CurrentThemeConfProvider from whichever container is currently
+    // installed, so seeding it before withWrongTypeFor() rebuilds the
+    // container would seed an instance the override then discards (see
+    // the mimetype-icon test's own comment further above).
     expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(EventDispatcher::class, function (): void {
         srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 

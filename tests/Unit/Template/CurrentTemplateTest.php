@@ -144,9 +144,7 @@ test('CurrentTemplateTestFactory::get throws when the container returns an unexp
     // unreachable through the public API. KernelContainerOverride rebinds
     // CurrentTemplate::class to a plain stdClass (see its own docblock),
     // matching the same pattern used throughout
-    // tests/Unit/Bootstrap/*AccessorTest.php and
-    // CurrentThemeConfProviderTest.php's own identical "current() throws"
-    // test for this exact guard shape.
+    // tests/Unit/Bootstrap/*AccessorTest.php for this exact guard shape.
     // KernelContainerOverride::with()'s own finally leaves Kernel reset
     // (not booted) once the override callback returns -- restore this
     // file's own beforeEach() boot afterward, same as the "falls back to

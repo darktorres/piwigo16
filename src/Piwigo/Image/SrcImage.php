@@ -59,7 +59,16 @@ final class SrcImage
 
     private static function themeConf(string $key): string
     {
-        return CurrentThemeConfProvider::current()->get()->themeConf($key);
+        if (! Kernel::isBooted()) {
+            throw new RuntimeException('SrcImage: no theme-conf provider set (Template not constructed yet?)');
+        }
+        $provider = Kernel::container()->get(CurrentThemeConfProvider::class);
+        if (! $provider instanceof CurrentThemeConfProvider) {
+            throw new RuntimeException('SrcImage: no theme-conf provider set (Template not constructed yet?)');
+        }
+
+        return $provider->get()
+            ->themeConf($key);
     }
 
     private static function urlService(): UrlServiceInterface

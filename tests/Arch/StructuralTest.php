@@ -258,7 +258,6 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Html/HtmlService.php',
         '/src/Piwigo/Page/PageHeaderRenderer.php',
-        '/src/Piwigo/Core/CurrentThemeConfProvider.php',
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Auth/AccessControl.php',

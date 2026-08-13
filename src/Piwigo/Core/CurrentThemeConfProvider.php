@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use LogicException;
 use RuntimeException;
 
 /**
@@ -25,26 +24,16 @@ use RuntimeException;
  * layering and the test seam independent of `CurrentTemplate`, even
  * though `RequestBootstrap::finalize()` seeds both with the same request
  * `Template` instance in practice.
+ *
+ * No `current()` service-locator method -- `SrcImage::themeConf()` (the
+ * one real caller) resolves this class from the DI container directly,
+ * matching its sibling collaborator methods
+ * (`urlService()`/`currentConfig()`). `RequestBootstrap::finalize()`
+ * (the other real caller, for `set()`) already did the same.
  */
 final class CurrentThemeConfProvider
 {
-    private static ?self $fallback = null;
-
     private ?ThemeConfProviderInterface $provider = null;
-
-    public static function current(): self
-    {
-        if (Kernel::isBooted()) {
-            $instance = Kernel::container()->get(self::class);
-            if (! $instance instanceof self) {
-                throw new LogicException('Container returned an unexpected type for ' . self::class);
-            }
-
-            return $instance;
-        }
-
-        return self::$fallback ??= new self();
-    }
 
     public function get(): ThemeConfProviderInterface
     {

@@ -11,7 +11,7 @@ use Piwigo\Common\ValueObject\UserId;
 /**
  * {@see \Piwigo\Activity\ActivityRepository::findPaginated()}'s own row
  * shape -- every {@see \Piwigo\Activity\ActivityEntity} column except its
- * auto-increment `activityId` -- {@see \Piwigo\Ws\Core::getActivityList()}'s
+ * auto-increment `activityId` -- {@see \Piwigo\Ws\Activity\GetListHandler}'s
  * real (and only) consumer, its `history.log`/`activity.search`-style WS
  * listing.
  */

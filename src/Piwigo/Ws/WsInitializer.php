@@ -12,6 +12,7 @@ use Piwigo\Event\Ws\GetHistory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Event\WsAddMethods;
 use Piwigo\Ws\Event\WsInvokeAllowed;
+use Piwigo\Ws\History\GetHistoryListener;
 use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\Protocol\RestEncoder;
 use Piwigo\Ws\Protocol\RestRequestHandler;
@@ -41,7 +42,7 @@ final class WsInitializer
     public function __construct(
         private readonly EventDispatcher $eventDispatcher,
         private readonly WsDefaultMethods $wsDefaultMethods,
-        private readonly Core $pwgCore,
+        private readonly GetHistoryListener $getHistoryListener,
         private readonly UrlServiceInterface $urlService,
         private readonly WsHelper $wsHelper,
         private readonly AccessControl $accessControl,
@@ -58,9 +59,9 @@ final class WsInitializer
         $this->eventDispatcher->addTypedHandler(WsAddMethods::class, $this->wsDefaultMethods->register(...));
         $this->eventDispatcher->addTypedHandler(WsInvokeAllowed::class, $this->wsHelper->isInvokeAllowed(...));
         // Registers unconditionally, once per WS request -- must run before
-        // Core::historySearch() dispatches its GetHistory event, since
-        // historyGet() needs to already be listening.
-        $this->eventDispatcher->addTypedHandler(GetHistory::class, $this->pwgCore->historyGet(...));
+        // History\SearchHandler dispatches its GetHistory event, since
+        // GetHistoryListener needs to already be listening.
+        $this->eventDispatcher->addTypedHandler(GetHistory::class, $this->getHistoryListener);
 
         $requestFormat = 'rest';
         $responseFormat = WsFormatRequest::fromGlobals()->responseFormat;

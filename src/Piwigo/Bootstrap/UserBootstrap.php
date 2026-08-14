@@ -46,7 +46,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\Core;
+use Piwigo\Ws\Session\LoginHandler;
 use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\WsInitializer;
 
@@ -271,11 +271,11 @@ final readonly class UserBootstrap
                 'password' => $userBootstrapRequest->password,
             ];
 
-            $pwgCore = Kernel::container()->get(Core::class);
-            if (! $pwgCore instanceof Core) {
-                throw new LogicException('Container returned an unexpected type for ' . Core::class);
+            $loginHandler = Kernel::container()->get(LoginHandler::class);
+            if (! $loginHandler instanceof LoginHandler) {
+                throw new LogicException('Container returned an unexpected type for ' . LoginHandler::class);
             }
-            $login = $pwgCore->sessionLogin($credentials, $service);
+            $login = $loginHandler($credentials, $service);
 
             if ($login !== true) {
                 $service->sendResponse($login);

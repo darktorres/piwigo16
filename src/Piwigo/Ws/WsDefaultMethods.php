@@ -17,6 +17,7 @@ use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Ws\Activity\GetListHandler as ActivityGetListHandler;
 use Piwigo\Ws\Categories\AddHandler as CategoriesAddHandler;
 use Piwigo\Ws\Categories\CalculateOrphansHandler;
 use Piwigo\Ws\Categories\DeleteHandler as CategoriesDeleteHandler;
@@ -32,6 +33,11 @@ use Piwigo\Ws\Categories\SetRepresentativeHandler;
 use Piwigo\Ws\Comments\DeleteHandler as CommentsDeleteHandler;
 use Piwigo\Ws\Comments\GetListHandler as CommentsGetListHandler;
 use Piwigo\Ws\Comments\ValidateHandler as CommentsValidateHandler;
+use Piwigo\Ws\Core\CaddieAddHandler;
+use Piwigo\Ws\Core\GetCacheSizeHandler;
+use Piwigo\Ws\Core\GetInfosHandler;
+use Piwigo\Ws\Core\GetMissingDerivativesHandler;
+use Piwigo\Ws\Core\GetVersionHandler;
 use Piwigo\Ws\Event\WsAddMethods;
 use Piwigo\Ws\Extensions\CheckUpdatesHandler;
 use Piwigo\Ws\Extensions\IgnoreUpdateHandler;
@@ -47,9 +53,15 @@ use Piwigo\Ws\Groups\DuplicateHandler as GroupsDuplicateHandler;
 use Piwigo\Ws\Groups\GetListHandler as GroupsGetListHandler;
 use Piwigo\Ws\Groups\MergeHandler as GroupsMergeHandler;
 use Piwigo\Ws\Groups\SetInfoHandler as GroupsSetInfoHandler;
+use Piwigo\Ws\History\LogHandler as HistoryLogHandler;
+use Piwigo\Ws\History\SearchHandler as HistorySearchHandler;
 use Piwigo\Ws\Permissions\AddHandler as PermissionsAddHandler;
 use Piwigo\Ws\Permissions\GetListHandler as PermissionsGetListHandler;
 use Piwigo\Ws\Permissions\RemoveHandler as PermissionsRemoveHandler;
+use Piwigo\Ws\Rates\DeleteHandler as RatesDeleteHandler;
+use Piwigo\Ws\Session\GetStatusHandler as SessionGetStatusHandler;
+use Piwigo\Ws\Session\LoginHandler as SessionLoginHandler;
+use Piwigo\Ws\Session\LogoutHandler as SessionLogoutHandler;
 use Piwigo\Ws\Tags\AddHandler as TagsAddHandler;
 use Piwigo\Ws\Tags\DeleteHandler as TagsDeleteHandler;
 use Piwigo\Ws\Tags\DuplicateHandler as TagsDuplicateHandler;
@@ -79,19 +91,23 @@ final readonly class WsDefaultMethods
 {
     // Each Pwg* class used by register() is injected as a constructor
     // property; the property list here and the instance-method callbacks
-    // registered below must stay in sync -- register() calls these as real
-    // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
+    // registered below must stay in sync -- addMethod() calls these as real
+    // instance methods (e.g. $this->pwgImages->addComment(...)), not static
     // ClassName::method() calls. `pwg.userComments.*`/`pwg.permissions.*`/
     // `pwg.plugins.*`/`pwg.themes.performAction`/`pwg.extensions.*`/
-    // `pwg.groups.*`/`pwg.tags.*`/`pwg.categories.*`/`pwg.users.*`
-    // (Comments.php/Permissions.php/Extensions.php/Groups.php/Tags.php/
-    // Categories.php/Users.php, Group 19's first 7 migrated domains) no
-    // longer have a callback-based registration or a constructor
-    // property here -- their methods register via
-    // MethodDefinition/handlerClass instead, resolved from the container
-    // at invocation time.
+    // `pwg.groups.*`/`pwg.tags.*`/`pwg.categories.*`/`pwg.users.*`/
+    // `pwg.getVersion`/`pwg.getInfos`/`pwg.getCacheSize`/
+    // `pwg.getMissingDerivatives`/`pwg.caddie.add`/`pwg.rates.delete`/
+    // `pwg.session.*`/`pwg.activity.getList`/`pwg.history.log`/
+    // `pwg.history.search` (Comments.php/Permissions.php/Extensions.php/
+    // Groups.php/Tags.php/Categories.php/Users.php/Core.php, Group 19's
+    // first 8 migrated domains) no longer have a callback-based
+    // registration or a constructor property here -- their methods
+    // register via MethodDefinition/handlerClass instead, resolved from
+    // the container at invocation time. `pwg.activity.downloadLog`
+    // stays on the legacy addMethod()/plain-string-callback path
+    // permanently -- see its own registration below for why.
     public function __construct(
-        private Core $pwgCore,
         private Images $pwgImages,
         private CurrentConfig $currentConfig,
         private AccessControl $accessControl,
@@ -186,77 +202,51 @@ final readonly class WsDefaultMethods
             ],
         ];
 
-        $service->addMethod(
-            'pwg.getVersion',
-            $this->pwgCore->getVersion(...),
-            null,
-            'Returns the Piwigo version.'
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.getVersion',
+            handlerClass: GetVersionHandler::class,
+            description: 'Returns the Piwigo version.',
+        ));
 
-        $service->addMethod(
-            'pwg.getInfos',
-            $this->pwgCore->getInfos(...),
-            null,
-            'Returns general informations.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.getInfos',
+            handlerClass: GetInfosHandler::class,
+            description: 'Returns general informations.',
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.getCacheSize',
-            $this->pwgCore->getCacheSize(...),
-            null,
-            'Returns general informations.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.getCacheSize',
+            handlerClass: GetCacheSizeHandler::class,
+            description: 'Returns general informations.',
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.activity.getList',
-            $this->pwgCore->getActivityList(...),
-            [
-                'page' => [
-                    'default' => null,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'offset' => [
-                    'default' => 0,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'uid' => [
-                    'default' => null,
-                    'type' => WsParamType::ID,
-                ],
-                'date_min' => [
-                    'default' => null,
-                ],
-                'date_max' => [
-                    'default' => null,
-                ],
-                'id' => [
-                    'default' => null,
-                    'type' => WsParamType::ID,
-                ],
-                'object' => [
-                    'default' => null,
-                ],
-                'action' => [
-                    'default' => null,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.activity.getList',
+            handlerClass: ActivityGetListHandler::class,
+            description: 'Returns general informations.',
+            params: [
+                ParamDefinition::optional('page', null, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('offset', 0, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('uid', null, WsParamType::ID),
+                ParamDefinition::optional('date_min'),
+                ParamDefinition::optional('date_max'),
+                ParamDefinition::optional('id', null, WsParamType::ID),
+                ParamDefinition::optional('object'),
+                ParamDefinition::optional('action'),
             ],
-            'Returns general informations.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
         $service->addMethod(
             'pwg.activity.downloadLog',
             // 'ws_activity_downloadLog' is not a defined function -- this
             // registration fatals with "call to undefined function" if
-            // ever invoked.
+            // ever invoked. Permanently dead -- Group 19's Core batch
+            // leaves this on the legacy addMethod() path, not a Handler
+            // (see tests/Contract/WsHistoryTest.php's own regression
+            // coverage for this exact behavior).
             'ws_activity_downloadLog',
             null,
             'Returns general informations.',
@@ -265,20 +255,15 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.caddie.add',
-            $this->pwgCore->caddieAdd(...),
-            [
-                'image_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.caddie.add',
+            handlerClass: CaddieAddHandler::class,
+            description: 'Adds elements to the caddie. Returns the number of elements added.',
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
             ],
-            'Adds elements to the caddie. Returns the number of elements added.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
         // pwg.categories.* (Group 19's sixth migrated domain) registers via
         // MethodDefinition/handlerClass -- Categories.php is gone, each
@@ -315,34 +300,19 @@ final readonly class WsDefaultMethods
             ],
         ));
 
-        $service->addMethod(
-            'pwg.getMissingDerivatives',
-            $this->pwgCore->getMissingDerivatives(...),
-            array_merge([
-                'types' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'info' => 'square, thumb, 2small, xsmall, small, medium, large, xlarge, xxlarge, 3xlarge, 4xlarge',
-                ],
-                'ids' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'max_urls' => [
-                    'default' => 200,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'prev_page' => [
-                    'default' => null,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-            ], $f_params),
-            'Returns a list of derivatives to build.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.getMissingDerivatives',
+            handlerClass: GetMissingDerivativesHandler::class,
+            description: 'Returns a list of derivatives to build.',
+            params: [
+                ParamDefinition::optional('types', null, flags: WsParamFlag::FORCE_ARRAY, info: 'square, thumb, 2small, xsmall, small, medium, large, xlarge, xxlarge, 3xlarge, 4xlarge'),
+                ParamDefinition::optional('ids', null, WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optional('max_urls', 200, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('prev_page', null, WsParamType::INT | WsParamType::POSITIVE),
+                ...self::sharedImageFilterParams(),
+            ],
+            requiresAuth: true,
+        ));
 
         $service->addMethod(
             'pwg.images.addComment',
@@ -523,56 +493,41 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.rates.delete',
-            $this->pwgCore->ratesDelete(...),
-            [
-                'user_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'anonymous_id' => [
-                    'default' => null,
-                ],
-                'image_id' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::ID,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.rates.delete',
+            handlerClass: RatesDeleteHandler::class,
+            description: 'Deletes all rates for a user.',
+            params: [
+                ParamDefinition::required('user_id', WsParamType::ID),
+                ParamDefinition::optional('anonymous_id'),
+                ParamDefinition::optionalFlag('image_id', WsParamType::ID),
             ],
-            'Deletes all rates for a user.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.session.getStatus',
-            $this->pwgCore->sessionGetStatus(...),
-            null,
-            'Gets information about the current session. Also provides a token useable with admin methods.'
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.session.getStatus',
+            handlerClass: SessionGetStatusHandler::class,
+            description: 'Gets information about the current session. Also provides a token useable with admin methods.',
+        ));
 
-        $service->addMethod(
-            'pwg.session.login',
-            $this->pwgCore->sessionLogin(...),
-            [
-                'username' => [],
-                'password' => [
-                    'default' => null,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.session.login',
+            handlerClass: SessionLoginHandler::class,
+            description: 'Tries to login the user.',
+            params: [
+                ParamDefinition::required('username'),
+                ParamDefinition::optional('password'),
             ],
-            'Tries to login the user.',
-            options: [
-                'post_only' => true,
-            ]
-        );
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.session.logout',
-            $this->pwgCore->sessionLogout(...),
-            null,
-            'Ends the current session.'
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.session.logout',
+            handlerClass: SessionLogoutHandler::class,
+            description: 'Ends the current session.',
+        ));
 
         // pwg.tags.* (Group 19's fifth migrated domain) registers via
         // MethodDefinition/handlerClass -- Tags.php is gone, each method
@@ -1632,79 +1587,39 @@ final readonly class WsDefaultMethods
             ],
         ));
 
-        $service->addMethod(
-            'pwg.history.log',
-            $this->pwgCore->historyLog(...),
-            [
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'cat_id' => [
-                    'type' => WsParamType::ID,
-                    'default' => null,
-                ],
-                'section' => [
-                    'default' => null,
-                ],
-                'tags_string' => [
-                    'default' => null,
-                ],
-                'is_download' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.history.log',
+            handlerClass: HistoryLogHandler::class,
+            description: 'Log visit in history',
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID),
+                ParamDefinition::optional('cat_id', null, WsParamType::ID),
+                ParamDefinition::optional('section'),
+                ParamDefinition::optional('tags_string'),
+                ParamDefinition::optional('is_download', false, WsParamType::BOOL),
             ],
-            'Log visit in history'
-        );
+        ));
 
-        $service->addMethod(
-            'pwg.history.search',
-            $this->pwgCore->historySearch(...),
-            [
-                'start' => [
-                    'default' => null,
-                ],
-                'end' => [
-                    'default' => null,
-                ],
-                'types' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'default' => [
-                        'none',
-                        'picture',
-                        'high',
-                        'other',
-                    ],
-                ],
-                'user_id' => [
-                    'default' => -1,
-                ],
-                'image_id' => [
-                    'default' => null,
-                    'type' => WsParamType::ID,
-                ],
-                'filename' => [
-                    'default' => null,
-                ],
-                'ip' => [
-                    'default' => null,
-                ],
-                'display_thumbnail' => [
-                    'default' => 'display_thumbnail_classic',
-                ],
-                'pageNumber' => [
-                    'default' => null,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-            ],
-            'Gives an history of who has visited the galery and the actions done in it. Receives parameter.
+        $service->register(new MethodDefinition(
+            name: 'pwg.history.search',
+            handlerClass: HistorySearchHandler::class,
+            description: 'Gives an history of who has visited the galery and the actions done in it. Receives parameter.
           <br> <strong>Types </strong> can be : \'none\', \'picture\', \'high\', \'other\'
           <br> <strong>Date format</strong> is yyyy-mm-dd
           <br> <strong>display_thumbnail</strong> can be : \'no_display_thumbnail\', \'display_thumbnail_classic\', \'display_thumbnail_hoverbox\'',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            params: [
+                ParamDefinition::optional('start'),
+                ParamDefinition::optional('end'),
+                ParamDefinition::optional('types', ['none', 'picture', 'high', 'other'], flags: WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optional('user_id', -1),
+                ParamDefinition::optional('image_id', null, WsParamType::ID),
+                ParamDefinition::optional('filename'),
+                ParamDefinition::optional('ip'),
+                ParamDefinition::optional('display_thumbnail', 'display_thumbnail_classic'),
+                ParamDefinition::optional('pageNumber', null, WsParamType::INT | WsParamType::POSITIVE),
+            ],
+            requiresAuth: true,
+        ));
 
         $service->addMethod(
             'pwg.images.filteredSearch.create',

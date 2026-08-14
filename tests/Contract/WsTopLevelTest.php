@@ -11,7 +11,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
-use Piwigo\Ws\Core;
+use Piwigo\Ws\Core\GetMissingDerivativesHandler;
 use Piwigo\Ws\Server;
 
 final class WsTopLevelTest extends ContractTestCase
@@ -124,7 +124,7 @@ final class WsTopLevelTest extends ContractTestCase
      * getCacheSize()'s own per-type `msizes` loop: `$added_size =
      * @$msizes[DerivativeUrlCodec::derivativeToUrl($size_type)]; $added_size
      * = is_int($added_size) ? $added_size : 0;` -- the method's own
-     * docblock (see Core::getCacheSize()) explains this undefined-key
+     * docblock (see Ws\Core\GetCacheSizeHandler) explains this undefined-key
      * fallback is a *real* runtime guard: FilesystemHelper::
      * getCacheSizeDerivatives() only returns a key for a derivative size
      * that genuinely has cached files on disk, so a defined type with no
@@ -262,7 +262,7 @@ final class WsTopLevelTest extends ContractTestCase
      * would risk corrupting every other Contract file's own state (the
      * images table cascades into image_category/image_tag/comments/rate/
      * favorites/lounge/image_format/caddie -- see each table's own
-     * ON DELETE CASCADE). Instead, this calls Core::getMissingDerivatives()
+     * ON DELETE CASCADE). Instead, this calls GetMissingDerivativesHandler
      * directly (bypassing the WS/HTTP layer entirely) inside a transaction
      * on the exact same Doctrine Connection its own container-resolved
      * ImageService/ImageRepository will use
@@ -283,7 +283,7 @@ final class WsTopLevelTest extends ContractTestCase
      *
      * A real Paths is required, not a bare boot: self::imageService() is
      * called unconditionally before the $image_count === 0 check below (see
-     * Core::getMissingDerivatives()'s own body), so it always resolves
+     * GetMissingDerivativesHandler's own body), so it always resolves
      * ImageService -> Lang -> Paths, whose value the container can't
      * guess without one.
      */
@@ -317,9 +317,9 @@ final class WsTopLevelTest extends ContractTestCase
                     'f_min_date_created' => null,
                     'f_max_date_created' => null,
                 ];
-                $pwgCore = Kernel::container()->get(Core::class);
-                self::assertInstanceOf(Core::class, $pwgCore);
-                $result = $pwgCore->getMissingDerivatives($params, $service);
+                $handler = Kernel::container()->get(GetMissingDerivativesHandler::class);
+                self::assertInstanceOf(GetMissingDerivativesHandler::class, $handler);
+                $result = $handler($params, $service);
 
                 self::assertSame([], $result);
             } finally {

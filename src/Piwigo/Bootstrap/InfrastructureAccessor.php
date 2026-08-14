@@ -8,9 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\WsContext;
-use Piwigo\Db\DbCredentials;
-use Piwigo\Storage\StorageRegistry;
 
 /**
  * Typed accessor to the container-resolved `EntityManagerInterface` --
@@ -31,8 +28,14 @@ use Piwigo\Storage\StorageRegistry;
  *
  * `config/messenger.php` (outside `src/Piwigo`, and deliberately outside
  * the `Kernel::container()` arch-test boundary too, per its own
- * docblock) is the only caller, using all 4 methods to build its handler
- * factories' object graphs.
+ * docblock) is the only caller, using both methods to build its handler
+ * factories' object graphs. `storageRegistry()`/`wsContext()`/
+ * `dbCredentials()` used to exist alongside these for the same reason --
+ * all 3 confirmed genuinely dead (zero real callers anywhere) once
+ * `BatchUploadHandler`'s own constructor collapsed to `UploadService` +
+ * `urlService()` (Finding 1's container-sharing fix absorbed the
+ * `WsContext`/`StorageRegistry`/`DbCredentials` construction those 3
+ * resolvers used to feed it) and removed.
  */
 final class InfrastructureAccessor
 {
@@ -58,51 +61,5 @@ final class InfrastructureAccessor
             throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
         return $currentLogger;
-    }
-
-    /**
-     * Same rationale as currentLogger() above -- StorageRegistry's own
-     * `get()` method needs a real, container-shared instance to call it
-     * on, which a still-static caller (config/messenger.php) can't obtain
-     * via constructor injection.
-     */
-    public static function storageRegistry(): StorageRegistry
-    {
-        $storageRegistry = Kernel::container()->get(StorageRegistry::class);
-        if (! $storageRegistry instanceof StorageRegistry) {
-            throw new LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
-        }
-        return $storageRegistry;
-    }
-
-    /**
-     * Same rationale as currentLogger()/storageRegistry() above -- gives a
-     * still-static caller (e.g. Admin\Install\InstallService's own
-     * genuinely-static-context install flow) the real, container-shared
-     * WsContext instance.
-     */
-    public static function wsContext(): WsContext
-    {
-        $wsContext = Kernel::container()->get(WsContext::class);
-        if (! $wsContext instanceof WsContext) {
-            throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
-        }
-        return $wsContext;
-    }
-
-    /**
-     * Same rationale as wsContext() above -- gives config/messenger.php's
-     * still-static handler factories the real, container-shared
-     * DbCredentials instance. No Kernel::isBooted()-false fallback needed
-     * here: this file's own handler factories only ever run after the bus
-     * (and therefore the container) is already built.
-     */
-    public static function dbCredentials(): DbCredentials
-    {
-        $dbCredentials = Kernel::container()->get(DbCredentials::class);
-        if (! $dbCredentials instanceof DbCredentials) {
-            throw new LogicException('Container returned an unexpected type for ' . DbCredentials::class);
-        }
-        return $dbCredentials;
     }
 }

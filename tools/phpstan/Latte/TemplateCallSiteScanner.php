@@ -5,17 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Tools\PhpStan\Latte;
 
 use FilesystemIterator;
-use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
-use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
-use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
-use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -91,44 +87,7 @@ final class TemplateCallSiteScanner
                 continue;
             }
 
-            $visitor = new class() extends NodeVisitorAbstract {
-                /**
-                 * @var list<array{class: string, method: string, node: MethodCall}>
-                 */
-                public array $calls = [];
-
-                /**
-                 * @var list<string>
-                 */
-                private array $classStack = [];
-
-                public function enterNode(Node $node): ?Node
-                {
-                    if ($node instanceof ClassLike) {
-                        $this->classStack[] = isset($node->namespacedName)
-                            ? $node->namespacedName->toString()
-                            : ($node->name?->toString() ?? '(anonymous)');
-                    }
-                    if ($node instanceof MethodCall && $node->name instanceof Identifier && $this->classStack !== []) {
-                        $this->calls[] = [
-                            'class' => $this->classStack[count($this->classStack) - 1],
-                            'method' => $node->name->name,
-                            'node' => $node,
-                        ];
-                    }
-
-                    return null;
-                }
-
-                public function leaveNode(Node $node): ?Node
-                {
-                    if ($node instanceof ClassLike) {
-                        array_pop($this->classStack);
-                    }
-
-                    return null;
-                }
-            };
+            $visitor = new TemplateCallSiteVisitor();
 
             $traverser = new NodeTraverser();
             $traverser->addVisitor(new NameResolver());

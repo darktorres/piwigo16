@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Latte\Engine;
+use Latte\Feature;
 use Piwigo\Template\Latte\PiwigoExtension;
 
 /**
@@ -31,6 +32,14 @@ final readonly class LatteEngine
         $this->engine->setCacheDirectory($cacheDirectory);
         $this->engine->setAutoRefresh($autoRefresh);
         $this->engine->addExtension($extension);
+        // P31's mechanical conversion left every paired-tag block's own
+        // source indentation as literal output whitespace; the tree is
+        // now consistently reformatted (see the two preceding commits),
+        // so Dedent can strip it. ScopedLoopVariables stops {foreach}
+        // loop variables leaking into the surrounding scope after
+        // {/foreach} (a Smarty-era default this rewrite never relied on).
+        $this->engine->setFeature(Feature::Dedent);
+        $this->engine->setFeature(Feature::ScopedLoopVariables);
     }
 
     /**

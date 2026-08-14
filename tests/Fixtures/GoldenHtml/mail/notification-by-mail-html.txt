@@ -22,11 +22,11 @@
   <h2 style="margin: .5em 0 .25em 0; font-size: 20px;">Notification</h2>
   <p style="margin: .25em 0 .5em 0;">Hello Fixture Recipient,</p>
 
-    <p style="margin: .25em 0 .5em 0;">You have subscribed to receiving notifications by mail.</p>
+  <p style="margin: .25em 0 .5em 0;">You have subscribed to receiving notifications by mail.</p>
 
 
 
-    <p style="margin: .25em 0 .5em 0;">Go to <a href="" style="color: #f70; text-decoration: none;">Fixture Gallery</a>.</p>
+  <p style="margin: .25em 0 .5em 0;">Go to <a href="" style="color: #f70; text-decoration: none;">Fixture Gallery</a>.</p>
   <p style="margin: .25em 0 .5em 0;">See you soon,</p>
   <p style="margin: .25em 0 .5em 0; text-align: center;">Fixture Gallery</p>
   <hr style="border-width: 0 0 1px 0; border-color: #ddd; border-style: solid; margin: 1em;">

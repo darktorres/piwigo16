@@ -20,11 +20,11 @@
                 <div id="topSpacer" style="margin-bottom: 20px;"></div>
 <p style="margin: .25em 0 .5em 0;">A new comment is waiting for validation.</p>
 
-  <p style="margin: .25em 0 .5em 0; padding-top: 10px; font-size: 11px;">
-    Connected user: <br>
-    IP: <br>
-    Browser: 
-  </p>
+<p style="margin: .25em 0 .5em 0; padding-top: 10px; font-size: 11px;">
+  Connected user: <br>
+  IP: <br>
+  Browser: 
+</p>
 </td></tr>
 
 <tr><td id="footer" style="font-size: 10px; padding: 5px; background: #eee; border-bottom: 2px solid #f70;">

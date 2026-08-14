@@ -5,11 +5,11 @@ Fixture Gallery
   Notification
   Hello Fixture Recipient,
 
-    You have subscribed to receiving notifications by mail.
+  You have subscribed to receiving notifications by mail.
 
 
 
-    Go to Fixture Gallery.
+  Go to Fixture Gallery.
   See you soon,
   Fixture Gallery
   

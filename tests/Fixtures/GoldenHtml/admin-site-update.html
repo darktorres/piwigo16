@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
-      <meta name="apple-itunes-app" content="app-id=472225196">
+    <meta name="apple-itunes-app" content="app-id=472225196">
     <meta charset="utf-8">
     <title>Fixture Gallery :: Piwigo Administration</title>
     <link
@@ -72,7 +72,7 @@
         <li><a href="admin.php?page=photos_add"><i
               class="icon-plus-circled"
             ></i>Add</a></li>
-          <li><a href="admin.php?page=rating"><i
+        <li><a href="admin.php?page=rating"><i
                 class="icon-star"
               ></i>Rating</a></li>
         <li><a href="admin.php?page=tags"><i
@@ -131,7 +131,7 @@
       ></i></dt>
     <dd>
       <ul>
-          <li><a href="admin.php?page=site_update&amp;site=1"><i
+        <li><a href="admin.php?page=site_update&amp;site=1"><i
                 class="icon-exchange"
               ></i>Synchronize</a></li>
         <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
@@ -140,15 +140,15 @@
         <li><a href="admin.php?page=maintenance"><i
               class="icon-tools"
             ></i>Maintenance</a></li>
-          <li><a href="admin.php?page=comments"><i
+        <li><a href="admin.php?page=comments"><i
                 class="icon-chat"
               ></i>Comments
-                <span
+            <span
                   class="adminMenubarCounter"
                   title="1 waiting for validation"
                 >1</span>
-              </a></li>
-          <li><a href="admin.php?page=updates"><i
+            </a></li>
+        <li><a href="admin.php?page=updates"><i
                 class="icon-arrows-cw"
               ></i>Updates</a></li>
       </ul>
@@ -184,24 +184,24 @@
       class="admin-object-id"
     ></span></h1>
 
-      <div id="tabsheet">
-    <ul class="tabsheet">
-        <li
+  <div id="tabsheet">
+  <ul class="tabsheet">
+    <li
           class="selected_tab"
         >
-          <a
+      <a
             href="admin.php?page=site_update&site=1"
           ><span><span class="icon-exchange"></span>Synchronization</span></a>
-        </li>
-        <li
+    </li>
+    <li
           class="normal_tab"
         >
-          <a
+      <a
             href="admin.php?page=site_manager"
           ><span><span class="icon-flow-branch"></span>Site manager</span></a>
-        </li>
-    </ul>
-  </div>
+    </li>
+  </ul>
+</div>
 
     <ul class="HelpActions">
       <li><a
@@ -226,21 +226,21 @@
 
 
 
-  <form action="" method="post" id="update">
-    <input type="hidden" name="pwg_token" value="c4e0356b7d4798613a1787f20914eb39f7021c735b60d28e4719b60160ecd567">
+<form action="" method="post" id="update">
+  <input type="hidden" name="pwg_token" value="ceb2d18cf171d2914197f9158255cd1c2d464a3da0d83da3ffd125bc6c23e0f5">
 
-    <fieldset id="syncFiles">
-      <legend><span
+  <fieldset id="syncFiles">
+    <legend><span
           class="icon-docs icon-blue"
         ></span>synchronize files structure with database</legend>
-      <ul>
-        <li><label><input
+    <ul>
+      <li><label><input
               type="radio"
               name="sync"
               value=""
               
             > nothing</label></li>
-        <li><label><input
+      <li><label><input
               type="radio"
               name="sync"
               value="dirs"
@@ -249,26 +249,26 @@
               
             > directories only</label></li>
 
-        <li><label><input
+      <li><label><input
               type="radio"
               name="sync"
               value="files"
               
             > directories + files</label>
-          <ul style="display:none;padding-left:3em">
-            <li><label><input
+        <ul style="display:none;padding-left:3em">
+          <li><label><input
                   type="checkbox"
                   name="display_info"
                   value="1"
                   
                 > display maximal information (added albums and photos, deleted albums and photos)</label></li>
-            <li><label><input
+          <li><label><input
                   type="checkbox"
                   name="add_to_caddie"
                   value="1"
                   
                 > add new photos to caddie</label></li>
-            <li><label>Who can see these photos? <select
+          <li><label>Who can see these photos? <select
                   name="privacy_level"
                 ><option value="8">Admins</option>
 <option value="4">Admins, Family</option>
@@ -276,64 +276,64 @@
 <option value="1">Admins, Family, Friends, Contacts</option>
 <option value="0" selected="selected">Everybody</option>
 </select></label></li>
-          </ul>
-        </li>
-      </ul>
-    </fieldset>
+        </ul>
+      </li>
+    </ul>
+  </fieldset>
 
-    <fieldset id="syncMetadata">
-      <legend><span
+  <fieldset id="syncMetadata">
+    <legend><span
           class="icon-hdd icon-red"
         ></span>synchronize database photos with files metadata</legend>
-      <label><input
+    <label><input
           type="checkbox"
           name="sync_meta"
           
           checked="checked"
           
         > Synchronize metadata (filesize, width, height, date_creation, latitude, longitude)</label>
-      <ul style="padding-left:3em">
-        <li>
-          <label><input
+    <ul style="padding-left:3em">
+      <li>
+        <label><input
               type="checkbox"
               name="meta_all"
               
             > even already synchronized photos</label>
-        </li>
-        <li>
-          <label><input
+      </li>
+      <li>
+        <label><input
               type="checkbox"
               name="meta_empty_overrides"
               
             > overrides existing values with empty ones</label>
-        </li>
-      </ul>
-    </fieldset>
+      </li>
+    </ul>
+  </fieldset>
 
-    <fieldset id="syncSimulate">
-      <legend><span
+  <fieldset id="syncSimulate">
+    <legend><span
           class="icon-chart-bar icon-green"
         ></span>Simulation</legend>
-      <ul><li><label><input
+    <ul><li><label><input
               type="checkbox"
               name="simulate"
               value="1"
               checked="checked"
             > only perform a simulation (nothing will be changed in the database)</label></li></ul>
-    </fieldset>
+  </fieldset>
 
-    <fieldset id="catSubset">
-      <legend><span
+  <fieldset id="catSubset">
+    <legend><span
           class="icon-filter icon-purple"
         ></span>reduce to single existing albums</legend>
-      <ul>
-        <li>
-          <select class="categoryList" name="cat" size="10">
-            
-          </select>
-        </li>
+    <ul>
+      <li>
+        <select class="categoryList" name="cat" size="10">
+          
+        </select>
+      </li>
 
-        <li><label><input
+      <li><label><input
               type="checkbox"
               name="subcats-included"
               value="1"
@@ -341,20 +341,20 @@
               checked="checked"
               
             > Search in sub-albums</label></li>
-      </ul>
-    </fieldset>
+    </ul>
+  </fieldset>
 
-    <div class="savebar-footer">
-      <div class="savebar-footer-start"></div>
-      <div class="savebar-footer-end">
+  <div class="savebar-footer">
+    <div class="savebar-footer-start"></div>
+    <div class="savebar-footer-end">
 
-        <div class="savebar-footer-block">
-          <button class="buttonLike" type="submit" name="submit"><i
+      <div class="savebar-footer-block">
+        <button class="buttonLike" type="submit" name="submit"><i
               class="icon-exchange"
             ></i> Synchronize</button>
-        </div>
       </div>
-    </form>
+    </div>
+  </form>
 
 </div>
 </div>
@@ -368,14 +368,14 @@
       href="https://upstream.example.invalid"
       title="Visit Piwigo project website"
     ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-      <span
+    <span
         id="whats_new_notification"
         class="icon-blue tiptip"
         onclick="show_user_whats_new()"
         title="What&apos;s new in version 17?"
       >
-        <i class="icon-bell"></i>
-      </span>
+      <i class="icon-bell"></i>
+    </span>
   </div>
   <div id="pageInfos">
 
@@ -386,49 +386,49 @@
   </div></div>
 </div>
 
-  <div id="whats_new">
-    <div id="whats_new_popin">
-      <a
+<div id="whats_new">
+  <div id="whats_new_popin">
+    <a
         class="icon-cancel close_whats_new"
         onClick="hide_user_whats_new()"
       ></a>
-      <h3>What's new in version 17?</h3>
-      <div>
-        <div class="whats_new_block_container">
-          <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a
+    <h3>What's new in version 17?</h3>
+    <div>
+      <div class="whats_new_block_container">
+        <div class="whats_new_block icon-blue whats_new_block_w_60">
+          <h4><a
                 href="https://upstream.example.invalid/releases/17.0.0"
                 target="_blank"
               >Brand new login &amp; preferences with Standard pages !</a></h4>
-          </div>
-          <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a
+        </div>
+        <div class="whats_new_block icon-purple whats_new_block_w_40">
+          <h4><a
                 href="https://upstream.example.invalid/releases/17.0.0"
                 target="_blank"
               >Two factor authentication is here</a></h4>
-          </div>
         </div>
-        <div class="whats_new_block_container">
-          <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a
+      </div>
+      <div class="whats_new_block_container">
+        <div class="whats_new_block icon-green whats_new_block_w_100">
+          <h4><a
                 href="https://upstream.example.invalid/releases/17.0.0"
                 target="_blank"
               >UI redesigns that make a difference</a></h4>
-          </div>
         </div>
       </div>
-      <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i
+    </div>
+    <div class="whats_new_buttons">
+      <button onClick="hide_user_whats_new()"><i
             class="icon-thumbs-up"
           ></i> Ok, got it!</button>
-        <a
+      <a
           class="buttonLike"
           href="https://upstream.example.invalid/releases/17.0.0"
           target="_blank"
         ><i class="icon-book"></i> Read the release note</a>
-      </div>
     </div>
   </div>
+</div>
 
 <style>
 
@@ -522,7 +522,7 @@ function show_user_whats_new() {
 //]]></script>
 <!-- END get_combined -->
 
-  <script type="module" src="dist/vitals.js"></script>
+<script type="module" src="dist/vitals.js"></script>
 
 </body>
 </html>

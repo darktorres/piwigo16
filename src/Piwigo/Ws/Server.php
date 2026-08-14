@@ -16,6 +16,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
@@ -47,7 +48,7 @@ final class Server
     public ?string $responseFormat = null;
 
     /**
-     * @var array<string, array{callback: string|array<int, string>|Closure, description: string, signature: array<string, array<string, mixed>>, options: array<string, mixed>}>
+     * @var array<string, array{callback: string|array<int, string>|Closure|null, handlerClass: class-string<WsAction>|null, description: string, signature: array<string, array<string, mixed>>, options: array<string, mixed>}>
      */
     private array $methods = [];
 
@@ -239,7 +240,55 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
 
         $this->methods[$methodName] = [
             'callback' => $callback,
+            'handlerClass' => null,
             'description' => $description,
+            'signature' => $signature,
+            'options' => $options,
+        ];
+    }
+
+    /**
+     * Typed registration path (Group 19) -- stores $def normalized into
+     * the same internal $methods shape addMethod() builds, so invoke()'s
+     * existing signature-validation loop runs unchanged for
+     * handler-based methods too. Coexists with addMethod() until every
+     * WS method has migrated off the legacy callback path.
+     */
+    public function register(MethodDefinition $def): void
+    {
+        $signature = [];
+        foreach ($def->params as $param) {
+            $data = [
+                'flags' => $param->flags,
+                'type' => $param->type,
+            ];
+            if ($param->hasDefault) {
+                $data['default'] = $param->default;
+            }
+            if ($param->maxValue !== null) {
+                $data['maxValue'] = $param->maxValue;
+            }
+            if ($param->info !== '') {
+                $data['info'] = $param->info;
+            }
+            $signature[$param->name] = $data;
+        }
+
+        $options = [];
+        if ($def->requiresAuth) {
+            $options['admin_only'] = true;
+        }
+        if ($def->postOnly) {
+            $options['post_only'] = true;
+        }
+        if ($def->hidden) {
+            $options['hidden'] = true;
+        }
+
+        $this->methods[$def->name] = [
+            'callback' => null,
+            'handlerClass' => $def->handlerClass,
+            'description' => $def->description,
             'signature' => $signature,
             'options' => $options,
         ];
@@ -464,11 +513,25 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         }
 
         if (! $is_error) {
-            // every real registration (ws.php, and this class's own
-            // reflection methods) passes a genuinely callable function
-            // name or [class, method] pair
-            assert(is_callable($method['callback']));
-            $result = call_user_func_array($method['callback'], [$params, &$this]);
+            $handlerClass = $method['handlerClass'];
+            if ($handlerClass !== null) {
+                $handler = Kernel::container()->get($handlerClass);
+                assert($handler instanceof WsAction);
+                try {
+                    $result = $handler($params, $this);
+                } catch (WsParamException $e) {
+                    return new WsErrorResponse(403, $e->getMessage());
+                }
+                if ($result instanceof WsResult) {
+                    $result = $result->toArray();
+                }
+            } else {
+                // every real registration (ws.php, and this class's own
+                // reflection methods) passes a genuinely callable function
+                // name or [class, method] pair
+                assert(is_callable($method['callback']));
+                $result = call_user_func_array($method['callback'], [$params, &$this]);
+            }
         }
 
         return $result;

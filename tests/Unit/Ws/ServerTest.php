@@ -17,9 +17,14 @@ use Piwigo\Core\WsParamType;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
+use Piwigo\Tests\Unit\Ws\ServerTestFakeWsAction;
+use Piwigo\Tests\Unit\Ws\ServerTestFakeWsActionReturnsResult;
+use Piwigo\Tests\Unit\Ws\ServerTestFakeWsActionThrows;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
+use Piwigo\Ws\MethodDefinition;
+use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
@@ -504,6 +509,102 @@ test('invoke calls the real registered callback with the checked params and a re
                 'name' => 'Alps',
             ],
             'sameService' => true,
+        ]);
+});
+
+// --------------------------------------------------------------- register/handlerClass dispatch (Group 19)
+
+test('register stores a handlerClass-based method with a normalized signature/options', function (): void {
+    $server = pwgServerTestServer();
+
+    $server->register(new MethodDefinition(
+        name: 'test.handlerClass',
+        handlerClass: ServerTestFakeWsAction::class,
+        description: 'A handler-based test method',
+        params: [
+            ParamDefinition::required('category_id', WsParamType::ID),
+            ParamDefinition::optional('name', 'x', info: 'a name'),
+        ],
+        requiresAuth: true,
+    ));
+
+    expect($server->hasMethod('test.handlerClass'))
+        ->toBeTrue()
+        ->and($server->getMethodDescription('test.handlerClass'))
+        ->toBe('A handler-based test method')
+        ->and($server->getMethodOptions('test.handlerClass'))
+        ->toBe([
+            'admin_only' => true,
+        ])
+        ->and($server->getMethodSignature('test.handlerClass'))
+        ->toBe([
+            'category_id' => [
+                'flags' => 0,
+                'type' => WsParamType::ID,
+            ],
+            'name' => [
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => 0,
+                'default' => 'x',
+                'info' => 'a name',
+            ],
+        ]);
+});
+
+test('invoke resolves a handlerClass-registered method from the container and calls it', function (): void {
+    $server = pwgServerTestServer();
+    $server->register(new MethodDefinition(
+        name: 'test.handlerClass',
+        handlerClass: ServerTestFakeWsAction::class,
+        params: [
+            ParamDefinition::required('name'),
+        ],
+    ));
+
+    $result = $server->invoke('test.handlerClass', [
+        'name' => 'Alps',
+    ]);
+
+    expect($result)
+        ->toBe([
+            'echo' => [
+                'name' => 'Alps',
+            ],
+            'sameService' => true,
+        ]);
+});
+
+test('invoke converts a WsParamException thrown by a handlerClass into a 403 WsErrorResponse', function (): void {
+    $server = pwgServerTestServer();
+    $server->register(new MethodDefinition(
+        name: 'test.handlerClass',
+        handlerClass: ServerTestFakeWsActionThrows::class,
+    ));
+
+    $result = $server->invoke('test.handlerClass', []);
+
+    expect($result)
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
+        expect($result->code())
+            ->toBe(403)
+            ->and($result->message())
+            ->toBe('Bad params');
+    }
+});
+
+test('invoke unwraps a WsResult returned by a handlerClass via toArray()', function (): void {
+    $server = pwgServerTestServer();
+    $server->register(new MethodDefinition(
+        name: 'test.handlerClass',
+        handlerClass: ServerTestFakeWsActionReturnsResult::class,
+    ));
+
+    $result = $server->invoke('test.handlerClass', []);
+
+    expect($result)
+        ->toBe([
+            'wrapped' => true,
         ]);
 });
 

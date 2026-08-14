@@ -1,5 +1,6 @@
 {
   "name": "roma",
   "parent": "default",
-  "colorscheme": "dark"
+  "colorscheme": "dark",
+  "loadParentCss": true
 }

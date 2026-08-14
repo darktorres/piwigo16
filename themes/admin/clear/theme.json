@@ -1,5 +1,6 @@
 {
   "name": "clear",
   "parent": "default",
-  "colorscheme": "clear"
+  "colorscheme": "clear",
+  "loadParentCss": true
 }

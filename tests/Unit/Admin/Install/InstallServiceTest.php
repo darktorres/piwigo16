@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\InstallService;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -80,7 +82,7 @@ function installServiceTestFixtureRoot(string $label): string
 function installServiceTestLang(): Lang
 {
     return new Lang(
-        new Translator(new CurrentConfig()),
+        new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         HtmlServiceTestFactory::build(),
         Paths::fromRoot(sys_get_temp_dir()),
         new InstallationFlag(),

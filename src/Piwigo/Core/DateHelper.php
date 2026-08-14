@@ -8,6 +8,8 @@ use DateInterval;
 use DateTime;
 use IntlDateFormatter;
 use LogicException;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Lang\Translator;
 
@@ -37,7 +39,7 @@ final class DateHelper
     /**
      * Same container-resolve reasoning as self::lang() above, but unlike
      * Lang, Translator has a safe pre-boot fallback: a fresh, memoized
-     * `new Translator(new CurrentConfig())`.
+     * `new Translator(new CurrentConfig(), ...)`.
      */
     private static function translator(): Translator
     {
@@ -50,7 +52,7 @@ final class DateHelper
             return $translator;
         }
 
-        return self::$translatorFallback ??= new Translator(new CurrentConfig());
+        return self::$translatorFallback ??= new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     }
 
     public static function dateDiff(DateTime $date1, DateTime $date2): DateInterval

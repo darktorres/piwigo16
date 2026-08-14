@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\InstallationFlag;
@@ -27,7 +29,7 @@ use Piwigo\Tests\Support\HtmlServiceTestFactory;
  */
 function category_service_pure_helpers_test_lang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 test('compareByGlobalRank sorts naturally by the global_rank string', function (): void {

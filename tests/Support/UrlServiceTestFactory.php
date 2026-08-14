@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Support;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -43,7 +45,7 @@ final class UrlServiceTestFactory
             self::resolve(DeploymentPolicy::class) ?? new DeploymentPolicy(),
             self::resolve(WsContext::class) ?? new WsContext(),
             self::resolve(CurrentUser::class) ?? new CurrentUser(new CurrentConfig()),
-            self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
+            self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
             self::resolve(EntityManagerInterface::class) ?? EntityManagerFactory::build(DbConnection::build()),
         );

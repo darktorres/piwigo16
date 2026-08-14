@@ -12,7 +12,9 @@ namespace Piwigo\Tests\Integration {
     use LogicException;
     use Override;
     use Piwigo\Auth\AccessLevelChecker;
+    use Piwigo\Cache\CacheFactory;
     use Piwigo\Cache\CachePools;
+    use Piwigo\Cache\TranslationsCachePool;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfig;
@@ -108,7 +110,7 @@ namespace Piwigo\Tests\Integration {
                 new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
                 HtmlServiceTestFactory::build(),
                 UrlServiceTestFactory::build(),
-                new Translator(CurrentConfigTestFactory::get()),
+                new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
                 CurrentUserTestFactory::get(),
             );
         }

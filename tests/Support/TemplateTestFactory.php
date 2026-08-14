@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Support;
 
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
@@ -53,7 +55,7 @@ final class TemplateTestFactory
 
         return new Template(
             $currentConfig,
-            self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
+            self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
             self::resolve(AdminContext::class) ?? new AdminContext(),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
             self::resolve(ErrorCollector::class) ?? new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir())),

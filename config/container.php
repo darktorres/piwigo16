@@ -24,8 +24,18 @@ use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Bootstrap\RouteDefinitions;
 use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\CalendarNavCachePool;
+use Piwigo\Cache\CategoryTreeCachePool;
+use Piwigo\Cache\ConfigCachePool;
+use Piwigo\Cache\EffectivePermissionsCachePool;
+use Piwigo\Cache\NotificationsCachePool;
+use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Cache\SearchResultsCachePool;
+use Piwigo\Cache\SectionImageIdsCachePool;
+use Piwigo\Cache\TagCloudCachePool;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Comment\CommentEntity;
@@ -291,11 +301,27 @@ return [
     }),
 
     // Non-obvious construction (adapter selection reads env vars --
-    // Config::cacheAdapter() doesn't exist). No named pools yet
-    // (config/permissions/category_tree/tag_cloud/general/rate_limiter) --
-    // none have a real consumer today; each gets its own entry only when
-    // one is genuinely needed.
+    // Config::cacheAdapter() doesn't exist). The generic, unnamespaced
+    // pool -- general()/rate_limiter() have no real consumer today; the
+    // 10 real named pools each get their own distinct type below instead
+    // (PHP-DI can't disambiguate 10 same-typed CacheItemPoolInterface
+    // bindings by constructor type alone -- see AbstractNamedCachePool's
+    // own docblock).
     CacheItemPoolInterface::class => factory(static fn (): CacheItemPoolInterface => CacheFactory::create()),
+
+    // Each named pool's own namespace/TTL, matching CachePools::X()'s
+    // former per-method configuration -- see each pool class's own
+    // docblock for its caching rationale.
+    CalendarNavCachePool::class => factory(static fn (): CalendarNavCachePool => new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30))),
+    CategoryTreeCachePool::class => factory(static fn (): CategoryTreeCachePool => new CategoryTreeCachePool(CacheFactory::create(namespace: 'piwigo.category_tree', defaultLifetime: 300))),
+    ConfigCachePool::class => factory(static fn (): ConfigCachePool => new ConfigCachePool(CacheFactory::create(namespace: 'piwigo.config'))),
+    EffectivePermissionsCachePool::class => factory(static fn (): EffectivePermissionsCachePool => new EffectivePermissionsCachePool(CacheFactory::create(namespace: 'piwigo.effective_permissions', defaultLifetime: 30))),
+    NotificationsCachePool::class => factory(static fn (): NotificationsCachePool => new NotificationsCachePool(CacheFactory::create(namespace: 'piwigo.notifications', defaultLifetime: 30))),
+    PermissionsCachePool::class => factory(static fn (): PermissionsCachePool => new PermissionsCachePool(CacheFactory::create(namespace: 'piwigo.permissions', defaultLifetime: 30))),
+    SearchResultsCachePool::class => factory(static fn (): SearchResultsCachePool => new SearchResultsCachePool(CacheFactory::create(namespace: 'piwigo.search_results', defaultLifetime: 30))),
+    SectionImageIdsCachePool::class => factory(static fn (): SectionImageIdsCachePool => new SectionImageIdsCachePool(CacheFactory::create(namespace: 'piwigo.section_image_ids', defaultLifetime: 30))),
+    TagCloudCachePool::class => factory(static fn (): TagCloudCachePool => new TagCloudCachePool(CacheFactory::create(namespace: 'piwigo.tag_cloud', defaultLifetime: 300))),
+    TranslationsCachePool::class => factory(static fn (): TranslationsCachePool => new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
 
     // PSR-16 wraps the same PSR-6 pool instance (container-shared by
     // default) rather than building a second one -- symfony/cache adapters

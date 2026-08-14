@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
@@ -32,7 +34,7 @@ use Piwigo\Tests\Support\TranslatorTestFactory;
 // option here; a throwaway instance is built directly instead.
 function filterServiceTestLang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 test('updateCatsWithFilteredData leaves cats untouched when the filter is disabled', function (): void {

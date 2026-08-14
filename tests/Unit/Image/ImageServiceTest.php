@@ -10,6 +10,8 @@ use PHPUnit\Framework\Assert;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -675,7 +677,7 @@ function imageServiceTestLang(): Lang
     }
 
     return new Lang(
-        new Translator(new CurrentConfig()),
+        new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         HtmlServiceTestFactory::build(),
         Paths::fromRoot(sys_get_temp_dir()),
         new InstallationFlag(),

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Support;
 
 use LogicException;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Lang\Translator;
@@ -31,6 +33,6 @@ final class TranslatorTestFactory
             return $translator;
         }
 
-        return self::$fallback ??= new Translator(new CurrentConfig());
+        return self::$fallback ??= new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     }
 }

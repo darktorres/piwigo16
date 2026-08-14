@@ -36,6 +36,8 @@ use Piwigo\Bootstrap\CoreDomainAccessor;
 use Piwigo\Bootstrap\ExtendedDomainAccessor;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\PresentationAccessor;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -358,7 +360,7 @@ final class InstallWizard
         $filterState = new FilterState();
         $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $filterState, $accessLevelChecker);
 
-        return new UserService($this->lang, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), new ProcessCache(), $this->paths, EntityManagerFactory::build($conn), $permissionService, new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)), $this->passwordService($conn));
+        return new UserService($this->lang, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), new ProcessCache(), $this->paths, EntityManagerFactory::build($conn), $permissionService, new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)), $this->passwordService($conn));
     }
 
     /**

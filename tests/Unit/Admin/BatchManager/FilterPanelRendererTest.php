@@ -6,6 +6,8 @@ use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
@@ -104,7 +106,7 @@ function filterPanelTestImageService(): ImageService
         $permissionService,
         new CurrentConfig(),
         new EventDispatcher(),
-        new Translator(new CurrentConfig()),
+        new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         $accessLevelChecker,
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
     );

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Gettext\Headers;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DefaultLanguageProviderInterface;
@@ -254,7 +256,7 @@ function langTestMake(
     ?InstallationFlag $installationFlag = null,
 ): Lang {
     return new Lang(
-        $translator ?? new Translator(new CurrentConfig()),
+        $translator ?? new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         $htmlRenderer ?? HtmlServiceTestFactory::build(),
         Paths::fromRoot($root ?? sys_get_temp_dir()),
         $installationFlag ?? new InstallationFlag(),
@@ -333,7 +335,7 @@ test('has reflects the loaded data set', function (): void {
 });
 
 test('attachGlobals seeds from Translator\'s already-mirrored strings', function (): void {
-    $translator = new Translator(new CurrentConfig());
+    $translator = new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     $translator->loadArray([
         'greeting' => 'hi',
     ]);
@@ -346,7 +348,7 @@ test('attachGlobals seeds from Translator\'s already-mirrored strings', function
 });
 
 test('attachGlobals takes a one-time snapshot -- a later Translator mirror change is not retroactively visible', function (): void {
-    $translator = new Translator(new CurrentConfig());
+    $translator = new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     $translator->loadArray([
         'greeting' => 'hi',
     ]);
@@ -527,7 +529,7 @@ test('attachGlobals silently drops a mirrored key that PHP auto-casts to an int 
     // makes impossible to satisfy for a literal numeric-string key, so
     // $mirror is seeded directly via reflection here instead of going
     // through that type-checked method.
-    $translator = new Translator(new CurrentConfig());
+    $translator = new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     $mirror = [
         '42' => 'forty-two',
         'greeting' => 'hi',

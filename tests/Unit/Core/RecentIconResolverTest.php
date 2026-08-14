@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
@@ -27,7 +29,7 @@ function recentIconResolverTestLang(): Lang
 {
     $currentConfig = new CurrentConfig();
 
-    return new Lang(new Translator($currentConfig), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 test('getIcon returns false for an empty date string', function (): void {

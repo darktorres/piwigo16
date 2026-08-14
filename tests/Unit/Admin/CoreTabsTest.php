@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
@@ -39,7 +41,7 @@ function coreTabsUrlService(): UrlServiceInterface
  */
 function coreTabsLang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 /**

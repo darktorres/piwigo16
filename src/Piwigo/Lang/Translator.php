@@ -8,7 +8,7 @@ use Gettext\Loader\PoLoader;
 use Gettext\Translation;
 use Gettext\Translations;
 use Gettext\Translator as GettextTranslator;
-use Piwigo\Cache\CachePools;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Psr\Cache\CacheItemInterface;
 
@@ -50,6 +50,7 @@ final class Translator
 
     public function __construct(
         private readonly CurrentConfig $currentConfig,
+        private readonly TranslationsCachePool $translationsCachePool,
     ) {
         $this->inner = new GettextTranslator();
     }
@@ -108,7 +109,7 @@ final class Translator
      * load_language()'s $lang_info population, e.g. X-Piwigo-Parent/
      * X-Piwigo-Zero-Plural -- don't have to parse the same file twice.
      *
-     * Cached via CachePools::translations() -- raw PO parsing plus two full
+     * Cached via $translationsCachePool -- raw PO parsing plus two full
      * passes over every translation entry (toDictionaryEntry() and
      * mirror()) cost ~18-19% of a bootstrap request's server-side time with
      * no caching at all, per a real Xdebug profile. Cache
@@ -127,7 +128,7 @@ final class Translator
         }
 
         $mtime = filemtime($poFile);
-        $pool = $mtime !== false ? CachePools::translations() : null;
+        $pool = $mtime !== false ? $this->translationsCachePool : null;
         $item = $pool?->getItem(md5($poFile . '_' . $mtime));
 
         if ($item instanceof CacheItemInterface && $item->isHit()) {

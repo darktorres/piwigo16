@@ -11,7 +11,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Activity\ActivityEntity;
     use Piwigo\Activity\ActivityService;
     use Piwigo\Auth\AccessLevelChecker;
+    use Piwigo\Cache\CacheFactory;
     use Piwigo\Cache\CachePools;
+    use Piwigo\Cache\TranslationsCachePool;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
     use Piwigo\Common\ValueObject\ImageId;
@@ -94,7 +96,7 @@ namespace Piwigo\Tests\Integration {
 
             $this->conn = DbConnection::build();
             $tagServiceAccessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig);
-            $tagServiceCategoryService = new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $tagServiceAccessLevelChecker), $currentConfig, new EventDispatcher(), new Translator($currentConfig), $tagServiceAccessLevelChecker, new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), $currentConfig));
+            $tagServiceCategoryService = new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $tagServiceAccessLevelChecker), $currentConfig, new EventDispatcher(), new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $tagServiceAccessLevelChecker, new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), $currentConfig));
             $tagServiceImageService = new ImageService(EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), $currentConfig, CurrentPathsTestFactory::get(), $tagServiceCategoryService);
             $this->service = new TagService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $currentLogger, $tagServiceImageService);
         }

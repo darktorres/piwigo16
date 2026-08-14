@@ -12,6 +12,8 @@ use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
@@ -413,7 +415,7 @@ function themesInstalledLifecycleUserService(): UserService
         CurrentPathsTestFactory::get(),
         EntityManagerFactory::build($conn),
         $permissionService,
-        new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
+        new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
         new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
     );
 }

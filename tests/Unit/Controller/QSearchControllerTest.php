@@ -10,6 +10,8 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\LangCode;
@@ -89,7 +91,7 @@ function qSearchTestRrmdir(string $dir): void
 
 function qSearchTestLang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 function qSearchTestUserService(): UserService
@@ -116,7 +118,7 @@ function qSearchTestUserService(): UserService
         Paths::fromRoot(sys_get_temp_dir()),
         EntityManagerFactory::build($conn),
         $permissionService,
-        new CategoryService(qSearchTestLang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
+        new CategoryService(qSearchTestLang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
         new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
     );
 }

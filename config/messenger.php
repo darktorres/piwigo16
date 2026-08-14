@@ -67,7 +67,7 @@ return [
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),
         ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(
             new Lang(
-                new Translator(RequestBootstrap::currentConfig()),
+                new Translator(RequestBootstrap::currentConfig(), InfrastructureAccessor::translationsCachePool()),
                 PresentationAccessor::htmlService(),
                 Paths::fromRoot(dirname(__DIR__)),
                 new InstallationFlag(),

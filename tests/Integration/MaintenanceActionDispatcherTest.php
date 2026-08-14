@@ -18,7 +18,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\PasswordRepository;
     use Piwigo\Auth\PasswordService;
     use Piwigo\Bootstrap\RedirectService;
+    use Piwigo\Cache\CacheFactory;
     use Piwigo\Cache\PersistentFileCache;
+    use Piwigo\Cache\TranslationsCachePool;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
     use Piwigo\Common\ValueObject\LangCode;
@@ -282,7 +284,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
             $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
-            $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new Translator(CurrentConfigTestFactory::get()), new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn)), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), LangTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn));
+            $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn)), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), LangTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn));
         }
 
         #[Override]
@@ -676,7 +678,7 @@ namespace Piwigo\Tests\Integration {
                 $configService,
                 new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()),
                 new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
-                new Translator(CurrentConfigTestFactory::get()),
+                new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
                 new EventDispatcher(),
                 PageStateTestFactory::get(),
                 CurrentTemplateTestFactory::get(),

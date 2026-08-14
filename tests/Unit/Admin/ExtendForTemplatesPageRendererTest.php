@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Piwigo\Admin\ExtendForTemplatesPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\LangCode;
@@ -120,7 +122,7 @@ function extendForTemplatesTestCategoryService(): CategoryService
         ),
         new CurrentConfig(),
         new EventDispatcher(),
-        new Translator(new CurrentConfig()),
+        new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         new AccessLevelChecker($currentUser, new CurrentConfig()),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
     );

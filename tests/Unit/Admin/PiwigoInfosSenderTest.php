@@ -13,6 +13,8 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
@@ -79,7 +81,7 @@ afterEach(function (): void {
 // reasoning as every other collaborator in this file.
 function piwigoInfosSenderTestLang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 test('send returns immediately without touching the DB or network when telemetry is disabled', function (): void {
@@ -161,7 +163,7 @@ test('send returns immediately without touching the DB or network when telemetry
         Paths::fromRoot(sys_get_temp_dir()),
         EntityManagerFactory::build(),
         $userServicePermissionService,
-        new CategoryService(piwigoInfosSenderTestLang(), new CategoryRepository(EntityManagerFactory::build(), $userServiceCurrentConfig), $userServicePermissionService, $userServiceCurrentConfig, new EventDispatcher(), new Translator($userServiceCurrentConfig), $userServiceAccessLevelChecker, new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), $userServiceCurrentConfig)),
+        new CategoryService(piwigoInfosSenderTestLang(), new CategoryRepository(EntityManagerFactory::build(), $userServiceCurrentConfig), $userServicePermissionService, $userServiceCurrentConfig, new EventDispatcher(), new Translator($userServiceCurrentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $userServiceAccessLevelChecker, new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), $userServiceCurrentConfig)),
         new PasswordService(new PasswordRepository(EntityManagerFactory::build()), new DeploymentPolicy()),
     );
     $permissionService = new PermissionService(
@@ -178,7 +180,7 @@ test('send returns immediately without touching the DB or network when telemetry
         $permissionService,
         new CurrentConfig(),
         new EventDispatcher(),
-        new Translator(new CurrentConfig()),
+        new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
         new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), new CurrentConfig()),
     );

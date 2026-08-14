@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
@@ -53,7 +55,7 @@ function categoryTreeCacheTestService(): CategoryService
         ),
         $currentConfig,
         new EventDispatcher(),
-        new Translator($currentConfig),
+        new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         new AccessLevelChecker($currentUser, $currentConfig),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
     );

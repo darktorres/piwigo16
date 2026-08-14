@@ -8,7 +8,9 @@ use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\CachePools;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ImageId;
@@ -119,7 +121,7 @@ function tagServiceTestServiceConn(?Connection $conn = null): array
         ),
         $currentConfig,
         EventDispatcherTestFactory::get(),
-        new Translator($currentConfig),
+        new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         $tagServiceAccessLevelChecker,
         new UserRepository(EntityManagerFactory::build($conn), EventDispatcherTestFactory::get(), $currentConfig)
     );

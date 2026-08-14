@@ -7,6 +7,8 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
@@ -96,7 +98,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         PageStateTestFactory::get()->reset();
         $this->filterState = new FilterState();
         $this->sessionService = new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
-        $this->translator = new Translator(CurrentConfigTestFactory::get());
+        $this->translator = new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     }
 
     #[Override]

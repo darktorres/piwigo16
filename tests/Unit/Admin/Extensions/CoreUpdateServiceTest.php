@@ -14,6 +14,8 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
@@ -89,7 +91,7 @@ function core_update_service_test_user_service(): UserService
         Paths::fromRoot(sys_get_temp_dir()),
         EntityManagerFactory::build($conn),
         $permissionService,
-        new CategoryService(core_update_service_test_lang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
+        new CategoryService(core_update_service_test_lang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
         new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
     );
 }
@@ -101,7 +103,7 @@ function core_update_service_test_user_service(): UserService
 // is enough" reasoning as $activityService/$userService above.
 function core_update_service_test_lang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 /**
@@ -118,7 +120,7 @@ function core_update_service_test_mail_service(): MailService
         new CurrentConfig(),
         Paths::fromRoot(sys_get_temp_dir()),
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
-        new Translator(new CurrentConfig()),
+        new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         new EventDispatcher(),
         new CurrentUser(new CurrentConfig()),
         UrlServiceTestFactory::build(),

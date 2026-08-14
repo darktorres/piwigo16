@@ -6,6 +6,8 @@ namespace Piwigo\Admin\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\PluginLoader;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -112,7 +114,7 @@ final class ExtensionScanner
                 new CurrentUser(new CurrentConfig()),
                 new CurrentTemplate(),
                 new PageState(),
-                new Translator(new CurrentConfig()),
+                new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
                 new CategoryRepository($entityManager, new CurrentConfig()),
                 $entityManager,
             )->nameCompare(...));

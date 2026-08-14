@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Support;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -47,7 +49,7 @@ final class HtmlServiceTestFactory
             self::resolve(CurrentUser::class) ?? new CurrentUser(new CurrentConfig()),
             self::resolve(CurrentTemplate::class) ?? new CurrentTemplate(),
             self::resolve(PageState::class) ?? new PageState(),
-            self::resolve(Translator::class) ?? new Translator(new CurrentConfig()),
+            self::resolve(Translator::class) ?? new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
             $categoryRepo ?? self::resolve(CategoryRepository::class) ?? new CategoryRepository($entityManager, new CurrentConfig()),
             $entityManager,
         );

@@ -8,6 +8,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
@@ -562,7 +564,7 @@ final readonly class MetadataService
         // SearchService::getElements()'s own established precedent for a
         // one-method-only TagService dependency, avoiding touching every
         // existing `new MetadataService(...)` call site for zero benefit.
-        $tagServiceCategoryService = new CategoryService($this->lang, new CategoryRepository($entityManager, $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig), new AccessLevelChecker($this->currentUser, $this->currentConfig), new UserRepository($entityManager, $this->eventDispatcher, $this->currentConfig));
+        $tagServiceCategoryService = new CategoryService($this->lang, new CategoryRepository($entityManager, $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), new AccessLevelChecker($this->currentUser, $this->currentConfig), new UserRepository($entityManager, $this->eventDispatcher, $this->currentConfig));
         $tagServiceImageService = new ImageService($entityManager->getRepository(ImageEntity::class), new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $tagServiceCategoryService);
         $tagService = new TagService($this->lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $tagServiceImageService);
 

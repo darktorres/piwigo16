@@ -12,6 +12,8 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\LangCode;
@@ -124,7 +126,7 @@ function userActivitySubControllerTestActivityService(): ActivityService
 
 function userActivitySubControllerTestLang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 function userActivitySubControllerTestUserService(ActivityService $activityService): UserService
@@ -151,7 +153,7 @@ function userActivitySubControllerTestUserService(ActivityService $activityServi
         Paths::fromRoot(sys_get_temp_dir()),
         EntityManagerFactory::build($conn),
         $permissionService,
-        new CategoryService(userActivitySubControllerTestLang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
+        new CategoryService(userActivitySubControllerTestLang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
         new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
     );
 }
@@ -189,7 +191,7 @@ function userActivitySubControllerTestCategoryService(): CategoryService
         ),
         new CurrentConfig(),
         new EventDispatcher(),
-        new Translator(new CurrentConfig()),
+        new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         new AccessLevelChecker($currentUser, new CurrentConfig()),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
     );

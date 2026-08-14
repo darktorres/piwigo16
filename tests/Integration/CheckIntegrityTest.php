@@ -10,6 +10,8 @@ use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -142,7 +144,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get());
+        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get());
     }
 
     public function testCheckReportsNoHeaderNoteWhenZeroAnomaliesAreFound(): void

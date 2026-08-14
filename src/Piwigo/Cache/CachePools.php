@@ -95,21 +95,6 @@ final class CachePools
     }
 
     /**
-     * No TTL -- same reasoning as config() above: invalidation happens via a
-     * changing cache key (Translator::load()'s key folds in the .po file's
-     * own mtime, so an edited file busts its own entry automatically), not
-     * time-based expiry. Real consumer: Piwigo\Lang\Translator::load(),
-     * caching PoLoader's parsed-and-derived result -- raw PO parsing plus
-     * two full passes over every translation entry cost ~18-19% of a
-     * bootstrap request's server-side time with no caching at all, per a
-     * real Xdebug profile.
-     */
-    public static function translations(): CacheItemPoolInterface
-    {
-        return CacheFactory::create(namespace: 'piwigo.translations');
-    }
-
-    /**
      * No TTL, and the namespace itself carries the invalidation: callers
      * append a hash derived from the entity source files' own mtimes (see
      * Piwigo\Db\EntityManagerFactory::build()), so an edited entity class

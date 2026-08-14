@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Gettext\Translation;
 use Gettext\Translations;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
@@ -11,7 +13,7 @@ beforeEach(function (): void {
     // Each test constructs its own fresh instance directly -- no
     // reset()-between-tests machinery needed (same test-isolation shape
     // as CoreTabsTest/SectionContextRegistryTest's own precedent).
-    $this->translator = new Translator(CurrentConfigTestFactory::get());
+    $this->translator = new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     $this->poFile = sys_get_temp_dir() . '/piwigo-po-test-' . bin2hex(random_bytes(8)) . '.po';
 });
 
@@ -242,7 +244,7 @@ test('restoreFrom() copies a snapshot instance\'s translation state onto this in
         'later_key' => 'later value',
     ]);
 
-    $restored = new Translator(CurrentConfigTestFactory::get());
+    $restored = new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     $restored->restoreFrom($snapshot);
 
     expect($restored->translate('original_key'))
@@ -424,7 +426,7 @@ test('toDictionaryEntry skips only the empty-original entry, not the rest of the
     $translations->add($normal);
 
     $method = new ReflectionMethod(Translator::class, 'toDictionaryEntry');
-    $result = $method->invoke(new Translator(CurrentConfigTestFactory::get()), $translations);
+    $result = $method->invoke(new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $translations);
     if (! is_array($result)) {
         throw new RuntimeException('expected toDictionaryEntry() to return an array');
     }
@@ -444,7 +446,7 @@ test('toDictionaryEntry skips only the empty-original entry, not the rest of the
 // toDictionaryEntry()'s own return shape via Reflection instead.
 test('toDictionaryEntry defaults the domain entry to an empty string when the PO file declares none', function (): void {
     $method = new ReflectionMethod(Translator::class, 'toDictionaryEntry');
-    $result = $method->invoke(new Translator(CurrentConfigTestFactory::get()), Translations::create());
+    $result = $method->invoke(new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), Translations::create());
     if (! is_array($result)) {
         throw new RuntimeException('expected toDictionaryEntry() to return an array');
     }
@@ -780,17 +782,17 @@ test('load does not mirror a plural original when msgstr[1] is explicitly empty'
 
 // load()'s own docblock documents the whole caching mechanism: the cache
 // key folds in the PO file's own mtime, so a second load() of the SAME
-// (path, mtime) pair should reuse the CachePools::translations() pool
-// entry instead of reparsing -- none of that (pool selection at line 129,
-// the null-safe getItem() and cache-key concatenation at line 130, the
-// isHit() check at line 132, the cached-mirror foreach at line 143, the
-// early return at line 147, the item!==null save guard at line 161, and
-// the actual pool->save() call at line 168) is exercised by any test
-// above, since none of them ever inspect a SECOND, independent Translator
-// instance's state after re-loading the exact same (path, mtime) pair.
+// (path, mtime) pair should reuse the TranslationsCachePool entry instead
+// of reparsing -- none of that (pool selection at line 129, the null-safe
+// getItem() and cache-key concatenation at line 130, the isHit() check at
+// line 132, the cached-mirror foreach at line 143, the early return at
+// line 147, the item!==null save guard at line 161, and the actual
+// pool->save() call at line 168) is exercised by any test above, since
+// none of them ever inspect a SECOND, independent Translator instance's
+// state after re-loading the exact same (path, mtime) pair.
 // This test forces a genuine cache round trip through the real,
-// filesystem-backed CachePools::translations() pool (this repo has no
-// ext-apcu, so CacheFactory auto-detects the filesystem adapter): load()
+// filesystem-backed TranslationsCachePool (this repo has no ext-apcu, so
+// CacheFactory auto-detects the filesystem adapter): load()
 // once (a real cache miss, since $this->poFile's own random suffix is
 // unique to this test run), then overwrite the file with DIFFERENT
 // content while forcing filemtime() back to the exact value the first
@@ -830,7 +832,7 @@ test('load reuses a cached parse across independent Translator instances for the
         PO);
     touch($this->poFile, $mtime);
 
-    $second = new Translator(CurrentConfigTestFactory::get());
+    $second = new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     $second->load('en', $this->poFile);
 
     expect($second->translate('CacheKey'))
@@ -877,7 +879,7 @@ test("load's cache key busts on a real mtime change, not just staying pinned to 
         PO);
     touch($this->poFile, $firstMtime + 1000);
 
-    $second = new Translator(CurrentConfigTestFactory::get());
+    $second = new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     $second->load('en', $this->poFile);
 
     expect($second->translate('BustKey'))
@@ -934,7 +936,7 @@ test("load's cache key needs a real separator between the file path and mtime, n
     try {
         $this->translator->load('en', $fileA);
 
-        $second = new Translator(CurrentConfigTestFactory::get());
+        $second = new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
         $second->load('en', $fileB);
 
         expect($second->translate('CollideKey'))

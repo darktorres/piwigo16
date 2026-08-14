@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\InstallationFlag;
@@ -104,7 +106,7 @@ function lsrTestMetadataService(): MetadataService
     $currentConfig = new CurrentConfig();
 
     return new MetadataService(
-        new Lang(new Translator($currentConfig), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
+        new Lang(new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
         new MetadataRepository(EntityManagerFactory::build(DbConnection::build())),
         new CurrentLogger(),
         new EventDispatcher(),

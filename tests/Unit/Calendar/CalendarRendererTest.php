@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\Enum\Section;
@@ -104,7 +106,7 @@ test('render() returns a no-op result for a non-categories section with no items
             CurrentUserTestFactory::get(),
             CurrentConfigTestFactory::get(),
             new EventDispatcher(),
-            new Translator(new CurrentConfig()),
+            new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
             calendarRendererTestImageStdParams(),
             new PageState(),
             new PermissionService(

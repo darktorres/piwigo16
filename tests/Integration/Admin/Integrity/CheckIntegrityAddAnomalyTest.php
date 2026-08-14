@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\InstallationFlag;
@@ -30,14 +32,14 @@ use Piwigo\Tests\Support\PageStateTestFactory;
 // a throwaway instance is built directly instead.
 function checkIntegrityAddAnomalyTestLang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 function checkIntegrityAddAnomalyNew(): CheckIntegrity
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
 
-    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get());
+    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get());
 }
 
 test('addAnomaly records a new anomaly with is_callable computed from a real function name', function (): void {

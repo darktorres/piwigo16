@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Db\DbCredentials;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Image\OrderByClause;
 use Piwigo\Image\PhotoSortField;
 
@@ -39,10 +40,13 @@ test('fromToken returns null for an unrecognized token', function (): void {
 });
 
 test('column returns the real column or function name for every field', function (): void {
-    // Random/Rank both read DbCredentials::fromEnv()->driver internally
-    // (no Connection available in this plain enum method -- see
-    // column()'s own docblock) -- driver-aware here so this test passes
-    // regardless of which platform .env.test currently points at.
+    // Rank reads DbCredentials::fromEnv()->driver internally (no
+    // Connection available in this plain enum method -- see column()'s
+    // own docblock) -- driver-aware here so this test passes regardless
+    // of which platform .env.test currently points at. Random delegates
+    // to SqlDialect::randomFunction() itself, so the expectation reuses
+    // that same real call rather than re-deriving its RAND()/RANDOM()/
+    // Env::testModeIsActive()-seeded-RAND(timestamp) branching by hand.
     $pgsql = DbCredentials::fromEnv()->driver === 'pgsql';
 
     expect(PhotoSortField::Id->column())->toBe('id')
@@ -52,7 +56,7 @@ test('column returns the real column or function name for every field', function
         ->and(PhotoSortField::RatingScore->column())->toBe('rating_score')
         ->and(PhotoSortField::DateCreation->column())->toBe('date_creation')
         ->and(PhotoSortField::DateAvailable->column())->toBe('date_available')
-        ->and(PhotoSortField::Random->column())->toBe($pgsql ? 'RANDOM()' : 'RAND()')
+        ->and(PhotoSortField::Random->column())->toBe(SqlDialect::randomFunction())
         ->and(PhotoSortField::Rank->column())->toBe($pgsql ? '"rank"' : '`rank`');
 });
 

@@ -11,6 +11,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Db\SqlDialect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
@@ -225,8 +226,12 @@ test('stdImageSqlOrder skips the table prefix for the random field', function ()
         'order' => 'random',
     ], 'i.');
 
+    // PhotoSortField::Random->column() delegates to
+    // SqlDialect::randomFunction(), which returns a seeded RAND(timestamp)
+    // under Env::testModeIsActive() rather than a bare RAND() -- reuse
+    // that same real call instead of hardcoding the unseeded string.
     expect($result)
-        ->toBe('RAND() ');
+        ->toBe(SqlDialect::randomFunction() . ' ');
 });
 
 test('stdImageSqlOrder silently ignores an unrecognized token', function (): void {

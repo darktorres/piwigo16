@@ -27,6 +27,14 @@ use Piwigo\Ws\Extensions\PluginsGetListHandler;
 use Piwigo\Ws\Extensions\PluginsPerformActionHandler;
 use Piwigo\Ws\Extensions\ThemesPerformActionHandler;
 use Piwigo\Ws\Extensions\UpdateHandler;
+use Piwigo\Ws\Groups\AddHandler as GroupsAddHandler;
+use Piwigo\Ws\Groups\AddUserHandler as GroupsAddUserHandler;
+use Piwigo\Ws\Groups\DeleteHandler as GroupsDeleteHandler;
+use Piwigo\Ws\Groups\DeleteUserHandler as GroupsDeleteUserHandler;
+use Piwigo\Ws\Groups\DuplicateHandler as GroupsDuplicateHandler;
+use Piwigo\Ws\Groups\GetListHandler as GroupsGetListHandler;
+use Piwigo\Ws\Groups\MergeHandler as GroupsMergeHandler;
+use Piwigo\Ws\Groups\SetInfoHandler as GroupsSetInfoHandler;
 use Piwigo\Ws\Permissions\AddHandler as PermissionsAddHandler;
 use Piwigo\Ws\Permissions\GetListHandler as PermissionsGetListHandler;
 use Piwigo\Ws\Permissions\RemoveHandler as PermissionsRemoveHandler;
@@ -38,16 +46,15 @@ final readonly class WsDefaultMethods
     // registered below must stay in sync -- register() calls these as real
     // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
     // ClassName::method() calls. `pwg.userComments.*`/`pwg.permissions.*`/
-    // `pwg.plugins.*`/`pwg.themes.performAction`/`pwg.extensions.*`
-    // (Comments.php/Permissions.php/Extensions.php, Group 19's first 3
-    // migrated domains) no longer have a callback-based registration or a
-    // constructor property here -- their methods register via
-    // MethodDefinition/handlerClass instead, resolved from the container
-    // at invocation time.
+    // `pwg.plugins.*`/`pwg.themes.performAction`/`pwg.extensions.*`/
+    // `pwg.groups.*` (Comments.php/Permissions.php/Extensions.php/
+    // Groups.php, Group 19's first 4 migrated domains) no longer have a
+    // callback-based registration or a constructor property here -- their
+    // methods register via MethodDefinition/handlerClass instead, resolved
+    // from the container at invocation time.
     public function __construct(
         private Categories $pwgCategories,
         private Core $pwgCore,
-        private Groups $pwgGroups,
         private Tags $pwgTags,
         private Users $pwgUsers,
         private Images $pwgImages,
@@ -1438,172 +1445,112 @@ final readonly class WsDefaultMethods
             requiresAuth: true,
         ));
 
-        $service->addMethod(
-            'pwg.groups.getList',
-            $this->pwgGroups->getList(...),
-            [
-                'group_id' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'name' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'Use "%" as wildcard.',
-                ],
-                'per_page' => [
-                    'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxUsersPerPage,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'page' => [
-                    'default' => 0,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'order' => [
-                    'default' => 'name',
-                    'info' => 'id, name, nb_users, is_default',
-                ],
+        // pwg.groups.* (Group 19's fourth migrated domain) registers via
+        // MethodDefinition/handlerClass -- Groups.php is gone, each method
+        // is its own container-resolved WsAction.
+        $service->register(new MethodDefinition(
+            name: 'pwg.groups.getList',
+            handlerClass: GroupsGetListHandler::class,
+            description: 'Retrieves a list of all groups. The list can be filtered.',
+            params: [
+                ParamDefinition::optionalFlag('group_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('name', info: 'Use "%" as wildcard.'),
+                ParamDefinition::optional('per_page', 100, WsParamType::INT | WsParamType::POSITIVE, maxValue: $this->currentConfig->wsMaxUsersPerPage),
+                ParamDefinition::optional('page', 0, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('order', 'name', info: 'id, name, nb_users, is_default'),
             ],
-            'Retrieves a list of all groups. The list can be filtered.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.groups.add',
-            $this->pwgGroups->add(...),
-            [
-                'name' => [],
-                'is_default' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.groups.add',
+            handlerClass: GroupsAddHandler::class,
+            description: 'Creates a group and returns the new group record.',
+            params: [
+                ParamDefinition::required('name'),
+                ParamDefinition::optional('is_default', false, WsParamType::BOOL),
             ],
-            'Creates a group and returns the new group record.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.groups.delete',
-            $this->pwgGroups->delete(...),
-            [
-                'group_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.groups.delete',
+            handlerClass: GroupsDeleteHandler::class,
+            description: 'Deletes a or more groups. Users and photos are not deleted.',
+            params: [
+                ParamDefinition::required('group_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Deletes a or more groups. Users and photos are not deleted.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.groups.setInfo',
-            $this->pwgGroups->setInfo(...),
-            [
-                'group_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'name' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'is_default' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::BOOL,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.groups.setInfo',
+            handlerClass: GroupsSetInfoHandler::class,
+            description: 'Updates a group. Leave a field blank to keep the current value.',
+            params: [
+                ParamDefinition::required('group_id', WsParamType::ID),
+                ParamDefinition::optionalFlag('name'),
+                ParamDefinition::optionalFlag('is_default', WsParamType::BOOL),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Updates a group. Leave a field blank to keep the current value.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.groups.addUser',
-            $this->pwgGroups->addUser(...),
-            [
-                'group_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'user_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.groups.addUser',
+            handlerClass: GroupsAddUserHandler::class,
+            description: 'Adds one or more users to a group.',
+            params: [
+                ParamDefinition::required('group_id', WsParamType::ID),
+                ParamDefinition::required('user_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Adds one or more users to a group.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.groups.deleteUser',
-            $this->pwgGroups->deleteUser(...),
-            [
-                'group_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'user_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.groups.deleteUser',
+            handlerClass: GroupsDeleteUserHandler::class,
+            description: 'Removes one or more users from a group.',
+            params: [
+                ParamDefinition::required('group_id', WsParamType::ID),
+                ParamDefinition::required('user_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Removes one or more users from a group.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.groups.merge',
-            $this->pwgGroups->merge(...),
-            [
-                'destination_group_id' => [
-                    'type' => WsParamType::ID,
-                    'info' => 'Is not necessarily part of groups to merge',
-                ],
-                'merge_group_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.groups.merge',
+            handlerClass: GroupsMergeHandler::class,
+            description: 'Merge groups in one other group',
+            params: [
+                ParamDefinition::required('destination_group_id', WsParamType::ID, info: 'Is not necessarily part of groups to merge'),
+                ParamDefinition::required('merge_group_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Merge groups in one other group',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.groups.duplicate',
-            $this->pwgGroups->duplicate(...),
-            [
-                'group_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'copy_name' => [],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.groups.duplicate',
+            handlerClass: GroupsDuplicateHandler::class,
+            description: 'Create a copy of a group',
+            params: [
+                ParamDefinition::required('group_id', WsParamType::ID),
+                ParamDefinition::required('copy_name'),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Create a copy of a group',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         $service->addMethod(
             'pwg.users.getList',

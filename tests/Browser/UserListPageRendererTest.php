@@ -58,6 +58,16 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
         // Dismiss it via the app's own real dismiss function first, same
         // as a real user clicking "Ok, got it!".
         $adminPage->script("if (typeof hide_user_whats_new === 'function') { hide_user_whats_new(); }");
+        // The user grid's rows are populated by an async AJAX call
+        // (user_list.js's own $(document).ready() handler), not present
+        // in the server-rendered HTML at all -- clicking
+        // pagination-per-page-50 before that call resolves races against
+        // the page's own layout still settling. $username (this session's
+        // own login, just registered by the wsCall() above) is guaranteed
+        // newest-registered of anyone, so it reliably appears in the
+        // still-default 5-per-page view the instant the grid actually
+        // renders, making it a real readiness signal to wait on here.
+        $adminPage->assertSee($username);
         // The user grid defaults to 5 per page (sorted newest-registered
         // first) -- the users table is shared, ever-growing state across
         // this whole Browser suite run, so fixture_admin (seeded with the

@@ -1,57 +1,77 @@
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
+  <div class="titrePage">
+    <ul class="categoryActions">
+      {if $display_mode == 'letters'}
+        <li><a
+            href="{$U_CLOUD|noescape}"
+            title="{='show tag cloud'|translate}"
+            class="pwg-state-default pwg-button"
+          >
+            <span class="pwg-icon pwg-icon-cloud"></span><span
+              class="pwg-button-text"
+            >{='cloud'|translate}</span>
+          </a></li>
+      {/if}
+      {if $display_mode == 'cloud'}
+        <li><a
+            href="{$U_LETTERS|noescape}"
+            title="{='group by letters'|translate}"
+            class="pwg-state-default pwg-button"
+            rel="nofollow"
+          >
+            <span class="pwg-icon pwg-icon-letters"></span><span
+              class="pwg-button-text"
+            >{='letters'|translate}</span>
+          </a></li>
+      {/if}
+    </ul>
+    <h2><a
+        href="{$U_HOME|noescape}"
+      >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Tags'|translate}</h2>
+  </div>
 
-<div class="titrePage">
-	<ul class="categoryActions">
-{if $display_mode == 'letters'}
-		<li><a href="{$U_CLOUD|noescape}" title="{='show tag cloud'|translate}" class="pwg-state-default pwg-button">
-			<span class="pwg-icon pwg-icon-cloud"></span><span class="pwg-button-text">{='cloud'|translate}</span>
-		</a></li>
-{/if}
-{if $display_mode == 'cloud'}
-		<li><a href="{$U_LETTERS|noescape}" title="{='group by letters'|translate}" class="pwg-state-default pwg-button" rel="nofollow">
-			<span class="pwg-icon pwg-icon-letters"></span><span class="pwg-button-text">{='letters'|translate}</span>
-		</a></li>
-{/if}
-	</ul>
-	<h2><a href="{$U_HOME|noescape}">{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Tags'|translate}</h2>
-</div>
+  {include 'infos_errors.latte'}
 
-{include 'infos_errors.latte'}
+  {if $display_mode == 'cloud' and isset($tags)}
+    <div id="fullTagCloud">
+      {foreach $tags as $tag}
+        <span><a
+            href="{$tag['URL']|noescape}"
+            class="tagLevel{$tag['level']}"
+            title="{$tag['counter']|translate_dec:'%d photo','%d photos'}"
+          >{$tag['name']}</a></span>
+      {/foreach}
+    </div>
+  {/if}
 
-
-{if $display_mode == 'cloud' and isset($tags)}
-<div id="fullTagCloud">
-	{foreach $tags as $tag}
-	<span><a href="{$tag['URL']|noescape}" class="tagLevel{$tag['level']}" title="{$tag['counter']|translate_dec:'%d photo','%d photos'}">{$tag['name']}</a></span>
-	{/foreach}
-</div>
-{/if}
-
-{if $display_mode == 'letters' and isset($letters)}
-<table>
-	<tr>
-		<td valign="top">
-	{foreach $letters as $letter}
-<fieldset class="tagLetter">
-	<legend class="tagLetterLegend">{$letter['TITLE']}</legend>
-	<table class="tagLetterContent">
-		{foreach $letter['tags'] as $tag}
-		<tr class="tagLine">
-			<td><a href="{$tag['URL']|noescape}" title="{$tag['name']}">{$tag['name']}</a></td>
-			<td class="nbEntries">{$tag['counter']|translate_dec:'%d photo','%d photos'}</td>
-		</tr>
-		{/foreach}
-	</table>
-</fieldset>
-		{if isset($letter['CHANGE_COLUMN']) }
-		</td>
-		<td valign="top">
-		{/if}
-	{/foreach}
-		</td>
-	</tr>
-</table>
-{/if}
-
+  {if $display_mode == 'letters' and isset($letters)}
+    <table>
+      <tr>
+        <td valign="top">
+          {foreach $letters as $letter}
+            <fieldset class="tagLetter">
+              <legend class="tagLetterLegend">{$letter['TITLE']}</legend>
+              <table class="tagLetterContent">
+                {foreach $letter['tags'] as $tag}
+                  <tr class="tagLine">
+                    <td><a
+                        href="{$tag['URL']|noescape}"
+                        title="{$tag['name']}"
+                      >{$tag['name']}</a></td>
+                    <td
+                      class="nbEntries"
+                    >{$tag['counter']|translate_dec:'%d photo','%d photos'}</td>
+                  </tr>
+                {/foreach}
+              </table>
+            </fieldset>
+            {if isset($letter['CHANGE_COLUMN'])}
+              </td>
+              <td valign="top">{/if}
+          {/foreach}
+        </td>
+      </tr>
+    </table>
+  {/if}
 </div> <!-- content -->

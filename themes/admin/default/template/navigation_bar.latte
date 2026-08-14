@@ -1,34 +1,42 @@
 <div class="pagination-container">
   {if isset($navbar['URL_FIRST'])}
-  <a href="{$navbar['URL_PREV']|noescape}" class='pagination-arrow left' rel="prev">
-    <span class="icon-left-open"></span>
-  </a>
+    <a
+      href="{$navbar['URL_PREV']|noescape}"
+      class='pagination-arrow left'
+      rel="prev"
+    >
+      <span class="icon-left-open"></span>
+    </a>
   {else}
-  <a class='pagination-arrow left unavailable'>
-    <span class="icon-left-open"></span>
-  </a>
+    <a class='pagination-arrow left unavailable'>
+      <span class="icon-left-open"></span>
+    </a>
   {/if}
 
   {var $prev_page = 0}
   <div class="pagination-item-container">
-  {foreach $navbar['pages'] as $page => $url}
-    {if $page > $prev_page+1}<span>...</span>{/if}
-    {if $page == $navbar['CURRENT_PAGE']}
-    <a class="actual">{$page}</a>
-    {else}
-    <a href="{$url|noescape}">{$page}</a>
-    {/if}
-    {var $prev_page = $page}
-  {/foreach}
+    {foreach $navbar['pages'] as $page => $url}
+      {if $page > $prev_page + 1}<span>...</span>{/if}
+      {if $page == $navbar['CURRENT_PAGE']}
+        <a class="actual">{$page}</a>
+      {else}
+        <a href="{$url|noescape}">{$page}</a>
+      {/if}
+      {var $prev_page = $page}
+    {/foreach}
   </div>
 
   {if isset($navbar['URL_NEXT'])}
-  <a href="{$navbar['URL_NEXT']|noescape}" class='pagination-arrow rigth' rel="next">
-    <span class="icon-left-open"></span>
-  </a>
+    <a
+      href="{$navbar['URL_NEXT']|noescape}"
+      class='pagination-arrow rigth'
+      rel="next"
+    >
+      <span class="icon-left-open"></span>
+    </a>
   {else}
-  <a class='pagination-arrow rigth unavailable'>
-    <span class="icon-left-open"></span>
-  </a>
+    <a class='pagination-arrow rigth unavailable'>
+      <span class="icon-left-open"></span>
+    </a>
   {/if}
 </div>

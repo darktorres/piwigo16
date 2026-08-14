@@ -68,62 +68,77 @@ const tiptip_locked_album = "{='Locked album'|translate|escapeJavascript|noescap
 
 <div class="cat-move-order-popin">
   <div class="order-popin-container">
-    <a class="close-popin icon-cancel" onClick="$('.cat-move-order-popin').fadeOut()"> </a>
-    <div class="popin-title"><span class="icon-sort-name-up icon-purple"></span><span class="popin-title-text">{='apply automatic sort order'|translate}</span></div>
+    <a
+      class="close-popin icon-cancel"
+      onClick="$('.cat-move-order-popin').fadeOut()"
+    ></a>
+    <div class="popin-title"><span
+        class="icon-sort-name-up icon-purple"
+      ></span><span
+        class="popin-title-text"
+      >{='apply automatic sort order'|translate}</span></div>
     <div class="album-name icon-sitemap"></div>
     <form action="{$F_ACTION|noescape}" method="post">
       <input type="hidden" name="id" value="-1">
       <div class="choice-container">
         <label class="font-checkbox">
-          <span class="icon-dot-circled"> </span>
+          <span class="icon-dot-circled"></span>
           <input type="radio" value="name ASC" name="order" checked>
           {='Album name, A &rarr; Z'|translate|noescape}
         </label>
 
         <label class="font-checkbox">
-          <span class="icon-dot-circled"> </span>
+          <span class="icon-dot-circled"></span>
           <input type="radio" value="name DESC" name="order">
           {='Album name, Z &rarr; A'|translate|noescape}
         </label>
 
         <label class="font-checkbox">
-          <span class="icon-dot-circled"> </span>
+          <span class="icon-dot-circled"></span>
           <input type="radio" value="natural_order ASC" name="order">
           {='Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100'|translate|noescape}
         </label>
 
         <label class="font-checkbox">
-          <span class="icon-dot-circled"> </span>
+          <span class="icon-dot-circled"></span>
           <input type="radio" value="natural_order DESC" name="order">
           {='Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1'|translate|noescape}
         </label>
 
         <label class="font-checkbox">
-          <span class="icon-dot-circled"> </span>
+          <span class="icon-dot-circled"></span>
           <input type="radio" value="date_creation DESC" name="order">
           {='Date created, new &rarr; old'|translate|noescape}
         </label>
 
         <label class="font-checkbox">
-          <span class="icon-dot-circled"> </span>
+          <span class="icon-dot-circled"></span>
           <input type="radio" value="date_creation ASC" name="order">
           {='Date created, old &rarr; new'|translate|noescape}
         </label>
 
         <label class="font-checkbox">
-          <span class="icon-dot-circled"> </span>
+          <span class="icon-dot-circled"></span>
           <input type="radio" value="date_available DESC" name="order">
           {='Date posted, new &rarr; old'|translate|noescape}
         </label>
 
         <label class="font-checkbox">
-          <span class="icon-dot-circled"> </span>
+          <span class="icon-dot-circled"></span>
           <input type="radio" value="date_available ASC" name="order">
           {='Date posted, old &rarr; new'|translate|noescape}
         </label>
       </div>
-      <input type="submit" name="simpleAutoOrder" value="{='Apply to direct sub-albums'|translate}"/>
-      <input type="submit" name="recursiveAutoOrder" value="{='Apply to the whole hierarchy'|translate}"/>
+      <input
+        type="submit"
+        name="simpleAutoOrder"
+        value="{='Apply to direct sub-albums'|translate}"
+      />
+      <input
+        type="submit"
+        name="recursiveAutoOrder"
+        value="{='Apply to the whole hierarchy'|translate}"
+      />
     </form>
   </div>
 </div>
@@ -147,9 +162,17 @@ const tiptip_locked_album = "{='Locked album'|translate|escapeJavascript|noescap
       <div class="search-album-input-container" style="position:relative">
         <span class="icon-search search-icon"></span>
         <span class="icon-cancel search-cancel"></span>
-        <input id="cat_search_input" class='search-input' type="text" placeholder="{="Search"|translate}">
+        <input
+          id="cat_search_input"
+          class='search-input'
+          type="text"
+          placeholder="{="Search"|translate}"
+        >
       </div>
-      <span class="search-album-help icon-help-circled" title="{='Enter a term to search for album'|translate}"></span>
+      <span
+        class="search-album-help icon-help-circled"
+        title="{='Enter a term to search for album'|translate}"
+      ></span>
     </div>
   </div>
 </div>
@@ -166,31 +189,47 @@ const tiptip_locked_album = "{='Locked album'|translate|escapeJavascript|noescap
     </div>
 
     <div class="AddAlbumInputContainer">
-      <label class="user-property-label AddAlbumLabelUsername">{='Album name'|translate}
+      <label
+        class="user-property-label AddAlbumLabelUsername"
+      >{='Album name'|translate}
         <input class="user-property-input" />
       </label>
     </div>
 
     <div class="AddAlbumInputContainer">
-      <label class="user-property-label AddAlbumLabelUsername">{='Position'|translate}
+      <label
+        class="user-property-label AddAlbumLabelUsername"
+      >{='Position'|translate}
 
-      <div class="AddAlbumPositionSelect">
-        <div class="AddAlbumRadioInput">
-          <input type="radio" id="place-start"
-          name="position" value="first" {if $POS_PREF == 'first'} checked {/if}>
-          <label for="place-start">{='Place first'|translate}</label>
-        </div>
-        <div class="AddAlbumRadioInput">
-          <input type="radio" id="place-end"
-          name="position" value="last" {if $POS_PREF == 'last'} checked {/if}>
-          <label for="place-end">{='Place last'|translate}</label>
+        <div class="AddAlbumPositionSelect">
+          <div class="AddAlbumRadioInput">
+            <input
+              type="radio"
+              id="place-start"
+              name="position"
+              value="first"
+              {if $POS_PREF == 'first'}
+              checked
+              {/if}
+            >
+            <label for="place-start">{='Place first'|translate}</label>
+          </div>
+          <div class="AddAlbumRadioInput">
+            <input
+              type="radio"
+              id="place-end"
+              name="position"
+              value="last"
+              {if $POS_PREF == 'last'}
+              checked
+              {/if}
+            >
+            <label for="place-end">{='Place last'|translate}</label>
+          </div>
         </div>
       </div>
-    </div>
 
-
-    <div class="AddAlbumErrors icon-cancel">
-    </div>
+    <div class="AddAlbumErrors icon-cancel"></div>
 
     <div class="AddAlbumFormValidation">
       <div class="AddAlbumSubmit">
@@ -216,13 +255,14 @@ const tiptip_locked_album = "{='Locked album'|translate|escapeJavascript|noescap
     </div>
 
     <div class="RenameAlbumInputContainer">
-      <label class="user-property-label RenameAlbumLabelUsername">{='Rename album'|translate}
+      <label
+        class="user-property-label RenameAlbumLabelUsername"
+      >{='Rename album'|translate}
         <input class="user-property-input" />
       </label>
     </div>
 
-    <div class="RenameAlbumErrors icon-cancel">
-    </div>
+    <div class="RenameAlbumErrors icon-cancel"></div>
 
     <div class="RenameAlbumFormValidation">
       <div class="RenameAlbumSubmit">
@@ -244,15 +284,26 @@ const tiptip_locked_album = "{='Locked album'|translate|escapeJavascript|noescap
 
     <div class="DeleteAlbumInputContainer">
       <ul class="deleteAlbumOptions">
-        <li id="IMAGES_ASSOCIATED_OUTSIDE"><label class=""><input type="radio" name="photo_deletion_mode" value="force_delete"><span class="innerText"></span></label></li>
-        <li id="IMAGES_BECOMING_ORPHAN"><label class=""><input type="radio" name="photo_deletion_mode" value="delete_orphans"><span class="innerText"></span></label></li>
-        <li id="IMAGES_RECURSIVE"><label class=""><input type="radio" name="photo_deletion_mode" value="no_delete" checked="checked">{='delete only album, not photos'|translate}</label></li>
+        <li id="IMAGES_ASSOCIATED_OUTSIDE"><label class=""><input
+              type="radio"
+              name="photo_deletion_mode"
+              value="force_delete"
+            ><span class="innerText"></span></label></li>
+        <li id="IMAGES_BECOMING_ORPHAN"><label class=""><input
+              type="radio"
+              name="photo_deletion_mode"
+              value="delete_orphans"
+            ><span class="innerText"></span></label></li>
+        <li id="IMAGES_RECURSIVE"><label class=""><input
+              type="radio"
+              name="photo_deletion_mode"
+              value="no_delete"
+              checked="checked"
+            >{='delete only album, not photos'|translate}</label></li>
       </ul>
     </div>
 
-
-    <div class="DeleteAlbumErrors icon-cancel">
-    </div>
+    <div class="DeleteAlbumErrors icon-cancel"></div>
 
     <div class="DeleteAlbumFormValidation">
       <div class="DeleteAlbumSubmit">
@@ -266,11 +317,14 @@ const tiptip_locked_album = "{='Locked album'|translate|escapeJavascript|noescap
   </div>
 </div>
 
-<div class='tree'> </div>
+<div class='tree'></div>
 
 <div class="album-search-result-container" style="display: none;">
   <div class="search-album-result"></div>
-  <div class="search-album-elem limit-album-reached" style="display: none;"></div>
+  <div
+    class="search-album-elem limit-album-reached"
+    style="display: none;"
+  ></div>
 
   <div class="search-album-noresult">
     {='No albums found'|translate}

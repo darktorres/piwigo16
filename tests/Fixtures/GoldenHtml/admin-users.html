@@ -1,130 +1,214 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-<meta name="apple-itunes-app" content="app-id=472225196">
-<meta charset="utf-8">
-<title>Fixture Gallery :: Piwigo Administration</title>
-<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
-<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+  <head>
+      <meta name="apple-itunes-app" content="app-id=472225196">
+    <meta charset="utf-8">
+    <title>Fixture Gallery :: Piwigo Administration</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="themes/default/icon/piwigo.org-icon 1.svg"
+    >
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="themes/admin/default/fonts/open-sans/open-sans.css"
+    >
 
 
-<!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/binpdh.css">
+    <!-- BEGIN get_combined -->
+    <link rel="stylesheet" type="text/css" href="_data/combined/binpdh.css">
 
-<script type="text/javascript" src="_data/combined/5piu0q.js"></script>
-<!-- END get_combined -->
+    <script type="text/javascript" src="_data/combined/5piu0q.js"></script>
+    <!-- END get_combined -->
 
-</head>
+  </head>
 
-<body id="theAdminPage">
+  <body id="theAdminPage">
+    <div id="the_page">
 
-<div id="the_page">
+      <div id="pwgHead">
+        <a
+          href="/piwigo17-4/"
+          class="visit-gallery tiptip"
+          title="Visit the gallery"
+        ><i class="icon-left-open"></i>Visit</a>
+        <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-
-<div id="pwgHead">
-  <a href="/piwigo17-4/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
-  <div class="pwgHead-gallery-title">Fixture Gallery</div>
-
-  <div id="headActions">
-    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+        <div id="headActions">
+          <span class="admin-head-username"><i
+              class="icon-user"
+            ></i>fixture_admin</span>
 <a href="admin.php?page=user_list&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
-    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
-    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
-  </div>
-</div>
+          <a
+            class="tiptip"
+            href="admin.php?page=help"
+            title="Instructions to use Piwigo"
+          ><i
+              class="icon-help-circled"
+            ></i><span>Help Me</span></a>
+          <a href="index.php?act=logout"><i
+              class="icon-logout"
+            ></i><span>Logout</span></a>
+        </div>
+      </div>
 
-<div style="clear:both;"></div>
+      <div style="clear:both;"></div>
 
 
-<div id="pwgMain">
-
+      <div id="pwgMain">
 
 <div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+        class="icon-television"
+      ></i> Dashboard</a></div>
 
-	<dl>
-		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
-			<ul>
-				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
-        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
-				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
-				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
-				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
-			</ul>
-		</dd>
-  </dl>
   <dl>
-		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dt><i class="icon-picture"></i><span>Photos&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
     <dd>
       <ul>
-        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
-        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+        <li><a href="admin.php?page=photos_add"><i
+              class="icon-plus-circled"
+            ></i>Add</a></li>
+          <li><a href="admin.php?page=rating"><i
+                class="icon-star"
+              ></i>Rating</a></li>
+        <li><a href="admin.php?page=tags"><i
+              class="icon-tags"
+            ></i>Tags</a></li>
+        <li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i
+              class="icon-clock"
+            ></i>Recent photos</a></li>
+        <li><a href="admin.php?page=batch_manager"><i
+              class="icon-th"
+            ></i>Batch Manager</a></li>
       </ul>
     </dd>
   </dl>
   <dl>
-		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-sitemap"></i><span>Albums&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
-        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
-				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+        <li><a href="admin.php?page=albums"><i
+              class="icon-folder-open"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i
+              class="icon-pencil"
+            ></i>Properties</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
-  </dl>
-  <dl>
-		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-users"></i><span>Users&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
-				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
-				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
-				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
-          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
-        </a></li>
-        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+        <li><a href="admin.php?page=user_list"><i
+              class="icon-user-add"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i
+              class="icon-group"
+            ></i>Groups</a></li>
+        <li><a href="admin.php?page=notification_by_mail"><i
+              class="icon-mail-1"
+            ></i>Notification</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><a href="admin.php?page=plugins" class="admin-main"><i
+          class="icon-puzzle"
+        ></i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+    <dt><i class="icon-wrench"></i><span>Tools&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
-        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
-				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
-        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+          <li><a href="admin.php?page=site_update&amp;site=1"><i
+                class="icon-exchange"
+              ></i>Synchronize</a></li>
+        <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
+              class="icon-signal"
+            ></i>History</a></li>
+        <li><a href="admin.php?page=maintenance"><i
+              class="icon-tools"
+            ></i>Maintenance</a></li>
+          <li><a href="admin.php?page=comments"><i
+                class="icon-chat"
+              ></i>Comments
+                <span
+                  class="adminMenubarCounter"
+                  title="1 waiting for validation"
+                >1</span>
+              </a></li>
+          <li><a href="admin.php?page=updates"><i
+                class="icon-arrows-cw"
+              ></i>Updates</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i
+        class="icon-cog"
+      ></i><span>Configuration&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i
+              class="icon-cog-alt"
+            ></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i
+              class="icon-menu"
+            ></i>Menus</a></li>
+        <li><a href="admin.php?page=languages"><i
+              class="icon-language"
+            ></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i
+              class="icon-brush"
+            ></i>Themes</a></li>
       </ul>
     </dd>
   </dl>
 </div> <!-- menubar -->
 
 <div id="content" class="content">
+  <h1>Users<span
+      class="admin-object-id"
+    ></span></h1>
 
-  <h1>Users<span class="admin-object-id"></span></h1>
+      <div id="tabsheet">
+    <ul class="tabsheet">
+        <li
+          class="selected_tab"
+        >
+          <a
+            href="admin.php?page=user_list"
+          ><span><span class="icon-menu"></span>List</span></a>
+        </li>
+        <li
+          class="normal_tab"
+        >
+          <a
+            href="admin.php?page=user_activity"
+          ><span><span class="icon-pulse"></span>Activity</span></a>
+        </li>
+    </ul>
+  </div>
 
-  <div id="tabsheet">
-<ul class="tabsheet">
-  <li class="selected_tab">
-    <a href="admin.php?page=user_list"><span><span class="icon-menu"></span>List</span></a>
-  </li>
-  <li class="normal_tab">
-    <a href="admin.php?page=user_activity"><span><span class="icon-pulse"></span>Activity</span></a>
-  </li>
-</ul>
-</div>
 
-
-<div class="eiw">
+  <div class="eiw">
 
 
 
-
-</div> 
+  </div> 
 
    
 
@@ -139,49 +223,87 @@
   <p>Selection mode</p>
 </div>
 
-
 <div id="user-table">
   <div id="user-table-content">
     <div class="user-manager-header">
-
       <div class="UserViewSelector">
-        <input type="radio" name="layout" class="switchLayout" id="displayCompact" /><label for="displayCompact"><span class="icon-th-large firstIcon tiptip" title="Compact View"></span></label><input type="radio" name="layout" class="switchLayout tiptip" id="displayLine" checked/><label for="displayLine"><span class="icon-th-list tiptip" title="Line View"></span></label><input type="radio" name="layout" class="switchLayout" id="displayTile" /><label for="displayTile"><span class="icon-pause lastIcon tiptip" title="Tile View"></span></label>
+        <input
+          type="radio"
+          name="layout"
+          class="switchLayout"
+          id="displayCompact"
+          
+        /><label for="displayCompact"><span
+            class="icon-th-large firstIcon tiptip"
+            title="Compact View"
+          ></span></label><input
+          type="radio"
+          name="layout"
+          class="switchLayout tiptip"
+          id="displayLine"
+          
+          checked
+          
+        /><label for="displayLine"><span
+            class="icon-th-list tiptip"
+            title="Line View"
+          ></span></label><input
+          type="radio"
+          name="layout"
+          class="switchLayout"
+          id="displayTile"
+          
+        /><label for="displayTile"><span
+            class="icon-pause lastIcon tiptip"
+            title="Tile View"
+          ></span></label>
       </div>
 
       <div style="display:flex;justify-content:space-between; flex-grow:1;">
         <div style="display:flex; align-items: center;">
-          <div class="not-in-selection-mode user-header-button add-user-button" style="margin: auto;">
+          <div
+            class="not-in-selection-mode user-header-button add-user-button"
+            style="margin: auto;"
+          >
             <label class="head-button-2 icon-plus-circled">
               <p>Add a user</p>
             </label>
           </div>
 
-          <div class="not-in-selection-mode user-header-button" style="margin: auto;">
-            <label class="head-button-2 icon-user-secret edit-guest-user-button">
+          <div
+            class="not-in-selection-mode user-header-button"
+            style="margin: auto;"
+          >
+            <label
+              class="head-button-2 icon-user-secret edit-guest-user-button"
+            >
               <p>Edit guest user</p>
             </label>
           </div>
           <div id="AddUserSuccess">
             <label class="icon-ok">
-              <span>New user added</span><span class="icon-pencil edit-now">Edit</span>
+              <span>New user added</span><span
+                class="icon-pencil edit-now"
+              >Edit</span>
             </label>
           </div>
           <div class="in-selection-mode">
             <div id="checkActions">
               <span>Select</span>
               <a href="#" id="selectAllPage">The whole page</a>
-              <a href="#" id="selectSet">The whole set</a><span class="loading" style="display:none"><img src="themes/default/images/ajax-loader-small.gif"></span>
+              <a href="#" id="selectSet">The whole set</a><span
+                class="loading"
+                style="display:none"
+              ><img src="themes/default/images/ajax-loader-small.gif"></span>
               <a href="#" id="selectNone">None</a>
               <a href="#" id="selectInvert">Invert</a>
               <span id="selectedMessage"></span>
             </div>
           </div>
         </div>
-        <div style="display:flex; width: 270px;">
-        </div>
+        <div style="display:flex; width: 270px;"></div>
       </div>
-      <div class="not-in-selection-mode" style="width: 264px; height:2px">
-      </div>
+      <div class="not-in-selection-mode" style="width: 264px; height:2px"></div>
     </div>
     <div class="filtered-users"></div>
     <div class="advanced-filter-btn icon-filter">
@@ -189,56 +311,110 @@
       <span class="filter-counter"></span>
     </div>
     <div id='search-user'>
-        <div class='search-info'> </div>
-          <input id="user_search2" class='search-input2' type='text' placeholder="Search"> 
-          <span class='icon-search search-icon'> </span>
-          <span class="icon-cancel search-cancel"></span>
-          <input autocomplete="one-time-code" id="user_search" class='search-input' type='text' placeholder="Search">
-        </div>
+      <div class='search-info'></div>
+      <input
+        id="user_search2"
+        class='search-input2'
+        type='text'
+        placeholder="Search"
+      >
+      <span class='icon-search search-icon'></span>
+      <span
+        class="icon-cancel search-cancel"
+        
+      ></span>
+      <input
+        autocomplete="one-time-code"
+        id="user_search"
+        class='search-input'
+        type='text'
+        placeholder="Search"
+        
+      >
+    </div>
     <div class="advanced-filter">
       <div class="advanced-filter-header">
-        <span class="advanced-filter-title">Advanced filters</span>
+        <span
+          class="advanced-filter-title"
+        >Advanced filters</span>
         <span class="advanced-filter-close icon-cancel"></span>
       </div>
       <div class="advanced-filter-container">
-      <div class="advanced-filter-status advanced-filter-item">
-          <label class="advanced-filter-item-label">Status</label>
-          <div class="advanced-filter-select-container advanced-filter-item-container">
-            <select class="user-action-select advanced-filter-select" name="filter_status">
+        <div class="advanced-filter-status advanced-filter-item">
+          <label
+            class="advanced-filter-item-label"
+          >Status</label>
+          <div
+            class="advanced-filter-select-container advanced-filter-item-container"
+          >
+            <select
+              class="user-action-select advanced-filter-select"
+              name="filter_status"
+            >
               <option value="" label="" selected></option>
-                  <option value="webmaster">Webmaster (1)</option>
+                  <option
+                    value="webmaster"
+                  >Webmaster (1)</option>
                   <option value="admin" disabled>Administrator</option>
-                  <option value="normal">Basic (2)</option>
+                  <option
+                    value="normal"
+                  >Basic (2)</option>
                   <option value="generic" disabled>Generic</option>
                   <option value="guest" disabled>Guest</option>
             </select>
           </div>
         </div>
         <div class="advanced-filter-level advanced-filter-item">
-          <label class="advanced-filter-item-label">Privacy level</label>
-          <div class="advanced-filter-select-container advanced-filter-item-container">
-            <select class="user-action-select advanced-filter-select" name="filter_level" size="1">
+          <label
+            class="advanced-filter-item-label"
+          >Privacy level</label>
+          <div
+            class="advanced-filter-select-container advanced-filter-item-container"
+          >
+            <select
+              class="user-action-select advanced-filter-select"
+              name="filter_level"
+              size="1"
+            >
               <option value="" label="" selected></option>
-                  <option value="0">--- (2)</option>
+                  <option
+                    value="0"
+                  >--- (2)</option>
                   <option value="1" disabled>Contacts</option>
                   <option value="2" disabled>Friends</option>
                   <option value="4" disabled>Family</option>
-                  <option value="8">Admins (1)</option>
+                  <option
+                    value="8"
+                  >Admins (1)</option>
             </select>
           </div>
         </div>
         <div class="advanced-filter-group advanced-filter-item">
           <label class="advanced-filter-item-label">Group</label>
-          <div class="advanced-filter-select-container advanced-filter-item-container">
-            <select class="user-action-select advanced-filter-select" name="filter_group">
+          <div
+            class="advanced-filter-select-container advanced-filter-item-container"
+          >
+            <select
+              class="user-action-select advanced-filter-select"
+              name="filter_group"
+            >
               <option value="" label="" selected></option>
-                <option value="1" >
+                <option
+                  value="1"
+                  
+                >
                   Editors (2)
                 </option>
-                <option value="3" >
+                <option
+                  value="3"
+                  
+                >
                   Guests (1)
                 </option>
-                <option value="2" >
+                <option
+                  value="2"
+                  
+                >
                   Reviewers (1)
                 </option>
             </select>
@@ -246,27 +422,31 @@
         </div>
         <div class="advanced-filter-date advanced-filter-item">
           <div class="advanced-filter-date-title" style="display:flex">
-            <span class="advanced-filter-item-label">Registered</span>
+            <span
+              class="advanced-filter-item-label"
+            >Registered</span>
             <span class='dates-infos'></span>
           </div>
           <div class="dates-select-bar">
-              <div class="slider-bar-wrapper">
-                <div class="slider-bar-container"></div>
-              </div>
+            <div class="slider-bar-wrapper">
+              <div class="slider-bar-container"></div>
             </div>
+          </div>
         </div>
       </div>
     </div>
     <div class="user-container-header">
       <!-- edit / select -->
-      <div class="user-header-col user-header-select no-flex-grow">
-      </div>
+      <div class="user-header-col user-header-select no-flex-grow"></div>
       <!-- icon -->
-      <div class="user-header-col user-header-initials no-flex-grow">
-      </div>
+      <div class="user-header-col user-header-initials no-flex-grow"></div>
       <!-- username -->
       <div class="user-header-col user-header-username">
-        <span id="usr-list-user">Username <span id="icon-usr-list-user" class="icon-up" style="display: none;"></span></span>
+        <span id="usr-list-user">Username <span
+            id="icon-usr-list-user"
+            class="icon-up"
+            style="display: none;"
+          ></span></span>
       </div>
       <!-- status -->
       <div class="user-header-col user-header-status">
@@ -278,20 +458,25 @@
       </div>
       <!-- registration date -->
       <div class="user-header-col user-header-registration">
-        <span id="usr-list-registered">Registered <span id="icon-usr-list-registered" class="icon-up"></span></span>
+        <span id="usr-list-registered">Registered <span
+            id="icon-usr-list-registered"
+            class="icon-up"
+          ></span></span>
       </div>
-       <!-- groups -->
-       <div class="user-header-col user-header-groups">
-       <span>Groups</span>
-     </div>
+      <!-- groups -->
+      <div class="user-header-col user-header-groups">
+        <span>Groups</span>
+      </div>
     </div>
     <div class="user-update-spinner icon-spin6 animate-spin"></div>
-    <div class="user-container-wrapper">
-    </div>
+    <div class="user-container-wrapper"></div>
     <!-- Pagination -->
     <div class="user-pagination">
       <div class="pagination-per-page">
-        <span class="thumbnailsActionsShow" style="font-weight: bold;">Display</span>
+        <span
+          class="thumbnailsActionsShow"
+          style="font-weight: bold;"
+        >Display</span>
         <a id="pagination-per-page-5">5</a>
         <a id="pagination-per-page-10">10</a>
         <a id="pagination-per-page-25">25</a>
@@ -302,46 +487,66 @@
         <div class="pagination-arrow left">
           <span class="icon-left-open"></span>
         </div>
-        <div class="pagination-item-container">
-        </div>
-        <div class="user-update-spinner icon-spin6 animate-spin"></div> 
+        <div class="pagination-item-container"></div>
+        <div class="user-update-spinner icon-spin6 animate-spin"></div>
         <div class="pagination-arrow rigth">
           <span class="icon-left-open"></span>
         </div>
       </div>
     </div>
   </div>
-  <div id="selection-mode-block" class="in-selection-mode tag-selection" style="width: 250px; min-width:250px;display: block;position:relative">
+  <div
+    id="selection-mode-block"
+    class="in-selection-mode tag-selection"
+    style="width: 250px; min-width:250px;display: block;position:relative"
+  >
     <div class="user-selection-content">
       <div class="selection-mode-ul">
         <p>Your selection</p>
-        <div class="user-selected-list">
-        </div>
+        <div class="user-selected-list"></div>
         <div class="selection-other-users"></div>
       </div>
       <fieldset id="action">
         <legend>Action</legend>
 
-        <div id="forbidAction">No users selected, no actions possible.</div>
+        <div
+          id="forbidAction"
+        >No users selected, no actions possible.</div>
         <div id="permitActionUserList" style="display:block">
-
           <div class="user-action-select-container">
             <select class="user-action-select" name="selectAction">
               <option value="-1">Choose an action</option>
               <optgroup label="Actions">
-                <option value="delete" class="icon-trash">Delete selected users</option>
+                <option
+                  value="delete"
+                  class="icon-trash"
+                >Delete selected users</option>
                 <option value="status">Status</option>
-                <option value="group_associate">associate to group</option>
-                <option value="group_dissociate">dissociate from group</option>
-                <option value="enabled_high">Allow download</option>
+                <option
+                  value="group_associate"
+                >associate to group</option>
+                <option
+                  value="group_dissociate"
+                >dissociate from group</option>
+                <option
+                  value="enabled_high"
+                >Allow download</option>
                 <option value="level">Privacy level</option>
-                <option value="nb_image_page">Number of photos per page</option>
+                <option
+                  value="nb_image_page"
+                >Number of photos per page</option>
                 <option value="theme">Theme</option>
                 <option value="language">Language</option>
-                <option value="recent_period">Recent period</option>
+                <option
+                  value="recent_period"
+                >Recent period</option>
                 <option value="expand">Expand all albums</option>
-                <option value="show_nb_comments">Show number of comments</option>
-                <option value="show_nb_hits">Show number of hits</option>
+                  <option
+                    value="show_nb_comments"
+                  >Show number of comments</option>
+                <option
+                  value="show_nb_hits"
+                >Show number of hits</option>
               </optgroup>
             </select>
           </div>
@@ -350,7 +555,9 @@
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
-              <span class="user-list-checkbox-label">Are you sure?</span>
+              <span
+                class="user-list-checkbox-label"
+              >Are you sure?</span>
             </div>
           </div>
 
@@ -396,7 +603,11 @@
               </span>
               <span class="user-list-checkbox-label">Yes</span>
             </span>
-            <span class="user-list-checkbox" data-selected="1" name="enabled_high_no">
+            <span
+              class="user-list-checkbox"
+              data-selected="1"
+              name="enabled_high_no"
+            >
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
@@ -418,8 +629,10 @@
           </div>
 
           <div id="action_nb_image_page" class="bulkAction">
-            <div class="user-property-label photos-select-bar">Photos per page
-              <br/>
+            <div
+              class="user-property-label photos-select-bar"
+            >Photos per page
+              <br />
               <span class="nb-img-page-infos"></span>
               <div class="slider-bar-wrapper">
                 <div class="slider-bar-container"></div>
@@ -429,7 +642,6 @@
           </div>
 
           <div id="action_theme" class="bulkAction">
-
             <div class="user-action-select-container">
               <select class="user-action-select" name="theme" size="1">
                 <option value="default" selected="selected">Default</option>
@@ -448,7 +660,9 @@
           </div>
 
           <div id="action_recent_period" class="bulkAction">
-            <div class="user-property-label period-select-bar">Recent period
+            <div
+              class="user-property-label period-select-bar"
+            >Recent period
               <br />
               <span class="recent_period_infos"></span>
               <div class="slider-bar-wrapper">
@@ -479,7 +693,11 @@
               </span>
               <span class="user-list-checkbox-label">Yes</span>
             </span>
-            <span class="user-list-checkbox" data-selected="1" name="show_nb_comments_no">
+            <span
+              class="user-list-checkbox"
+              data-selected="1"
+              name="show_nb_comments_no"
+            >
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
@@ -494,7 +712,11 @@
               </span>
               <span class="user-list-checkbox-label">Yes</span>
             </span>
-            <span class="user-list-checkbox" data-selected="1" name="show_nb_hits_no">
+            <span
+              class="user-list-checkbox"
+              data-selected="1"
+              name="show_nb_hits_no"
+            >
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
@@ -503,10 +725,21 @@
           </div>
 
           <p id="applyActionBlock" style="display:none" class="actionButtons">
-            <input id="applyAction" class="submit" type="submit" value="Apply action" name="submit"> <span id="applyOnDetails"></span></input>
-            <span id="applyActionLoading" style="display:none"><img src="themes/default/images/ajax-loader-small.gif"></span>
+            <input
+              id="applyAction"
+              class="submit"
+              type="submit"
+              value="Apply action"
+              name="submit"
+            > <span id="applyOnDetails"></span>
+            <span id="applyActionLoading" style="display:none"><img
+                src="themes/default/images/ajax-loader-small.gif"
+              ></span>
             <br />
-            <span class="infos icon-ok icon-green" style="display:inline-block;display:none;max-width:100%;margin:0;margin-top:30px;min-height:0;">Users modified</span>
+            <span
+              class="infos icon-ok icon-green"
+              style="display:inline-block;display:none;max-width:100%;margin:0;margin-top:30px;min-height:0;"
+            >Users modified</span>
           </p>
         </div> 
       </fieldset>
@@ -517,15 +750,22 @@
 <!-- User container template -->
 <div id="template">
   <div class="user-container">
-  <!-- edit-v1 -->
-    <div class="user-col user-container-select tmp-select in-selection-mode user-first-col no-flex-grow">
-      <div class="user-container-checkbox user-list-checkbox" name="select_container">
+    <!-- edit-v1 -->
+    <div
+      class="user-col user-container-select tmp-select in-selection-mode user-first-col no-flex-grow"
+    >
+      <div
+        class="user-container-checkbox user-list-checkbox"
+        name="select_container"
+      >
         <span class="select-checkbox">
           <i class="icon-ok"></i>
         </span>
       </div>
     </div>
-    <div class="user-col user-container-edit tmp-edit not-in-selection-mode user-first-col no-flex-grow">
+    <div
+      class="user-col user-container-edit tmp-edit not-in-selection-mode user-first-col no-flex-grow"
+    >
       <span class="icon-pencil"></span>
     </div>
     <div class="user-col user-container-initials no-flex-grow">
@@ -545,7 +785,9 @@
     <div class="user-col user-container-registration">
       <div>
         <div class="user-container-registration-info-wrapper">
-          <span class="user-container-registration-date-since"><!-- date_since --></span>
+          <span
+            class="user-container-registration-date-since"
+          ><!-- date_since --></span>
         </div>
       </div>
     </div>
@@ -562,15 +804,17 @@
 </div>
 
 <div id="UserList" class="UserListPopIn">
-
   <div class="UserListPopInContainer">
-
     <a class="icon-cancel CloseUserList"></a>
     <div class="summary-properties-update-container">
       <div class="summary-properties-container">
         <div class="summary-container">
           <div class="edit-user-icons">
-            <span class="icon-king tiptip" id="who_is_the_king" title="plg is the king ?"></span>
+            <span
+              class="icon-king tiptip"
+              id="who_is_the_king"
+              title="plg is the king ?"
+            ></span>
             <span class="delete-user-button icon-trash-1"></span>
           </div>
           <div class="user-property-initials">
@@ -579,64 +823,109 @@
             </div>
           </div>
           <div class="user-property-username">
-            <span class="edit-username-title"><!-- Name (Jessy Pinkman) --></span>
-            <span class="edit-username-specifier"><!-- You specifire (you) --></span>
+            <span
+              class="edit-username-title"
+            ><!-- Name (Jessy Pinkman) --></span>
+            <span
+              class="edit-username-specifier"
+            ><!-- You specifire (you) --></span>
             <span class="edit-username icon-pencil"></span>
           </div>
           <div class="user-property-password-container">
             <div class="user-property-password edit-password">
-              <p class="user-property-button button-edit-password-icon head-button-2"><span class="icon-key user-edit-icon"> </span>Password</p>
+              <p
+                class="user-property-button button-edit-password-icon head-button-2"
+              ><span
+                  class="icon-key user-edit-icon"
+                ></span>Password</p>
             </div>
             <div class="user-property-permissions">
-              <a href="#" ><p class="user-property-button head-button-2"> <span class="icon-lock user-edit-icon"> </span>Permissions</p></a>
+              <a href="#"><p class="user-property-button head-button-2"> <span
+                    class="icon-lock user-edit-icon"
+                  ></span>Permissions</p></a>
             </div>
             <div class="user-stats">
               <div class="user-property-history">
-                <a href="" ><p class="user-property-button head-button-2"> <span class="icon-signal user-edit-icon"> </span>Visit history</p></a>
+                <a href=""><p class="user-property-button head-button-2"> <span
+                      class="icon-signal user-edit-icon"
+                    ></span>Visit history</p></a>
               </div>
             </div>
           </div>
           <div class="user-property-register-visit">
             <div>
-              <span class="edit-user-register-label">Registered</span>
-              <span class="user-property-register"><!-- Registered date XX/XX/XXXX --></span>
+              <span
+                class="edit-user-register-label"
+              >Registered</span>
+              <span
+                class="user-property-register"
+              ><!-- Registered date XX/XX/XXXX --></span>
             </div>
             <div>
-              <span class="edit-user-lastvisit-label">Last visit</span>
-              <span class="user-property-last-visit"><!-- Last Visit date XX/XX/XXXX --></span>
+              <span
+                class="edit-user-lastvisit-label"
+              >Last visit</span>
+              <span
+                class="user-property-last-visit"
+              ><!-- Last Visit date XX/XX/XXXX --></span>
             </div>
           </div>
         </div>
         <div class="edit-user-tab">
           <div class="edit-user-tab-title">
-            <p class="edit-user-tabsheet selected tiptip" id="name_tab_properties" title="Properties">Properties</p>
-            <p class="edit-user-tabsheet tiptip" id="name_tab_preferences" title="Preferences">Preferences</p>
+            <p
+              class="edit-user-tabsheet selected tiptip"
+              id="name_tab_properties"
+              title="Properties"
+            >Properties</p>
+            <p
+              class="edit-user-tabsheet tiptip"
+              id="name_tab_preferences"
+              title="Preferences"
+            >Preferences</p>
           </div>
           <div class="edit-user-slides">
             <!-- Pop in tabs 1 Properties -->
             <div class="properties-container" id="tab_properties">
               <div class="user-property-email">
                 <p class="user-property-label">Email Address</p>
-                <input type="text" class="user-property-input" value="contact@jessy-pinkman.com" disabled="false" />
+                <input
+                  type="text"
+                  class="user-property-input"
+                  value="contact@jessy-pinkman.com"
+                  disabled="false"
+                />
               </div>
               <div class="user-property-status">
                 <p class="user-property-label">Status
-                  <span class="icon-help-circled" title="<div class='tooltip-status-content'>
+                  <span
+                    class="icon-help-circled"
+                    title="<div class='tooltip-status-content'>
                     <div class='tooltip-status-row'><span class='tooltip-col1'>Webmaster</span><span class='tooltip-col2'>Has access to all administration functionnalities. Can manage both configuration and content.</span></div>
                     <div class='tooltip-status-row'><span class='tooltip-col1'>Administrator</span><span class='tooltip-col2'>Has access to administration. Can only manage content: photos/albums/users/tags/groups.</span></div>
                     <div class='tooltip-status-row'><span class='tooltip-col1'>Basic</span><span class='tooltip-col2'>No access to administration, can see private content with appropriate permissions.</span></div>
                     <div class='tooltip-status-row'><span class='tooltip-col1'>Generic</span><span class='tooltip-col2'>Can be shared by several individuals without conflict (they cannot change the password).</span></div>
                     <div class='tooltip-status-row'><span class='tooltip-col1'>Guest</span><span class='tooltip-col2'>Equivalent to deactivation. The user is still in the list, but can no longer log in.</span></div>
-                  </div">
-                  </span>
+                  </div"
+                  ></span>
                 </p>
                 <div class="user-property-select-container">
                   <select name="status" class="user-property-select">
-                    <option value="webmaster">Webmaster</option>
-                    <option value="admin">Administrator</option>
-                    <option value="normal">Basic</option>
-                    <option value="generic">Generic</option>
-                    <option value="guest">Guest (Deactivated)</option>
+                    <option
+                      value="webmaster"
+                    >Webmaster</option>
+                    <option
+                      value="admin"
+                    >Administrator</option>
+                    <option
+                      value="normal"
+                    >Basic</option>
+                    <option
+                      value="generic"
+                    >Generic</option>
+                    <option
+                      value="guest"
+                    >Guest (Deactivated)</option>
                   </select>
                 </div>
               </div>
@@ -655,24 +944,37 @@
               <div class="user-property-group-container">
                 <p class="user-property-label">Groups</p>
                 <div class="user-property-select-container user-property-group">
-                  <select class="user-property-select" data-selectize="groups"
-                    placeholder="Select groups or type them" name="group_id[]" multiple
-                    style="box-sizing:border-box;"></select>
+                  <select
+                    class="user-property-select"
+                    data-selectize="groups"
+                    placeholder="Select groups or type them"
+                    name="group_id[]"
+                    multiple
+                    style="box-sizing:border-box;"
+                  ></select>
                   <p class="user-property-group-text">
                   </p>
                 </div>
               </div>
 
-              <div class="user-list-checkbox" name="hd_enabled" style="margin-bottom: 35px;">
+              <div
+                class="user-list-checkbox"
+                name="hd_enabled"
+                style="margin-bottom: 35px;"
+              >
                 <span class="select-checkbox">
                   <i class="icon-ok"></i>
                 </span>
-                <span class="user-list-checkbox-label">Allow download</span>
+                <span
+                  class="user-list-checkbox-label"
+                >Allow download</span>
               </div>
             </div>
             <!-- Pop in tabs 2 Preferences -->
             <div class="preferencies-container" id="tab_preferences">
-              <div class="user-property-label photos-select-bar">Photos per page
+              <div
+                class="user-property-label photos-select-bar"
+              >Photos per page
                 <span class="nb-img-page-infos"></span>
                 <div class="slider-bar-wrapper">
                   <div class="slider-bar-container"></div>
@@ -697,7 +999,9 @@
                   </select>
                 </div>
               </div>
-              <div class="user-property-label period-select-bar">Recent period
+              <div
+                class="user-property-label period-select-bar"
+              >Recent period
                 <span class="recent_period_infos"></span>
                 <div class="slider-bar-wrapper">
                   <div class="slider-bar-container"></div>
@@ -709,33 +1013,44 @@
                   <span class="select-checkbox">
                     <i class="icon-ok"></i>
                   </span>
-                  <span class="user-list-checkbox-label">Expand all albums</span>
+                  <span
+                    class="user-list-checkbox-label"
+                  >Expand all albums</span>
                 </div>
                 <div class="user-list-checkbox" name="show_nb_comments">
                   <span class="select-checkbox">
                     <i class="icon-ok"></i>
                   </span>
-                  <span class="user-list-checkbox-label">Show number of comments</span>
+                  <span
+                    class="user-list-checkbox-label"
+                  >Show number of comments</span>
                 </div>
                 <div class="user-list-checkbox" name="show_nb_hits">
                   <span class="select-checkbox">
                     <i class="icon-ok"></i>
                   </span>
-                  <span class="user-list-checkbox-label">Show number of hits</span>
+                  <span
+                    class="user-list-checkbox-label"
+                  >Show number of hits</span>
                 </div>
               </div>
-
             </div>
-             <!-- Pop in tabs 3 Notifications WIP-->
+            <!-- Pop in tabs 3 Notifications WIP-->
           </div>
         </div>
       </div>
       <div class="update-container">
-        <span class="close-update-button icon-cancel-circled">Close</span>
+        <span
+          class="close-update-button icon-cancel-circled"
+        >Close</span>
         <p>
-          <span class="update-user-success icon-green icon-ok">User updated</span>
+          <span
+            class="update-user-success icon-green icon-ok"
+          >User updated</span>
           <span class="update-user-fail icon-cancel"></span>
-          <span class="update-user-button"><i class='icon-floppy'></i>Update</span>
+          <span class="update-user-button"><i
+              class='icon-floppy'
+            ></i>Update</span>
         </p>
       </div>
     </div>
@@ -743,15 +1058,19 @@
 
   <div class="user-property-username-change">
     <div class="user-property-username-change-content">
-      
       <div class="user-property-username-change-input">
         <div class="summary-input-container">
-          <input class="user-property-input user-property-input-username" value=""
-            placeholder="Username" />
+          <input
+            class="user-property-input user-property-input-username"
+            value=""
+            placeholder="Username"
+          />
         </div>
         <div class="group-button">
           <span class="edit-username-cancel">Cancel</span>
-          <span class="icon-floppy edit-username-validate">Validate</span>
+          <span
+            class="icon-floppy edit-username-validate"
+          >Validate</span>
         </div>
       </div>
 
@@ -760,19 +1079,26 @@
           <span class="icon-ok"></span>
           <span>Username successfully modified</span>
         </div>
-        <p class="edit-username-success-ok"><span class="icon-button icon-ok" id="close_username_success">Ok</span></p>
+        <p class="edit-username-success-ok"><span
+            class="icon-button icon-ok"
+            id="close_username_success"
+          >Ok</span></p>
       </div>
-
     </div>
   </div>
   <div class="user-property-password-change">
     <div class="user-property-password-change-content">
-
       <div class="user-property-password-choice">
         <div class="password-choice-content">
-          <p class="head-button-2" id="copy_password_link"><span class="icon-link-1"></span> Copy the password link</p>
-          <p class="head-button-2" id="send_password_link"><span class="icon-mail-alt"></span> Resend password link</p>
-          <p class="head-button-2" id="edit_modal_password"><span class="icon-pencil"></span> Change password</p>
+          <p class="head-button-2" id="copy_password_link"><span
+              class="icon-link-1"
+            ></span> Copy the password link</p>
+          <p class="head-button-2" id="send_password_link"><span
+              class="icon-mail-alt"
+            ></span> Resend password link</p>
+          <p class="head-button-2" id="edit_modal_password"><span
+              class="icon-pencil"
+            ></span> Change password</p>
         </div>
         <p class="edit-password-cancel">Cancel</p>
       </div>
@@ -780,75 +1106,129 @@
       <div class="user-property-password-change-inputs" style="display: none;">
         <div class="summary-input-container">
           <div class="user-property-input-icon" style="margin-bottom: 10px;">
-            <input class="user-property-input user-property-input-password" value=""
-              placeholder="New password" type="password" id="edit_user_password" />
+            <input
+              class="user-property-input user-property-input-password"
+              value=""
+              placeholder="New password"
+              type="password"
+              id="edit_user_password"
+            />
             <span class="icon-eye icon-show-password"></span>
           </div>
           <div class="user-property-input-icon">
-            <input class="user-property-input user-property-input-password-conf" value=""
-              placeholder="Confirm Password" type="password" id="edit_user_conf_password" />
+            <input
+              class="user-property-input user-property-input-password-conf"
+              value=""
+              placeholder="Confirm Password"
+              type="password"
+              id="edit_user_conf_password"
+            />
             <span class="icon-eye icon-show-password"></span>
           </div>
         </div>
         <div class="EditUserGenPassword">
-          <span class="icon-dice-solid"></span><span>Generate random password</span>
+          <span
+            class="icon-dice-solid"
+          ></span><span>Generate random password</span>
         </div>
-        <div class="EditUserErrors icon-cancel">
-        </div>
+        <div class="EditUserErrors icon-cancel"></div>
         <div class="group-button">
           <span class="edit-password-cancel">Cancel</span>
-          <span class="icon-floppy edit-password-validate">Validate</span>
+          <span
+            class="icon-floppy edit-password-validate"
+          >Validate</span>
         </div>
       </div>
 
-      <div class="edit-password-success" id="edit_password_success_change" style="display: none;">
+      <div
+        class="edit-password-success"
+        id="edit_password_success_change"
+        style="display: none;"
+      >
         <div class="update-password-success icon-green">
-          <span class="icon-ok" id="password_msg_success">Password updated</span>
+          <span
+            class="icon-ok"
+            id="password_msg_success"
+          >Password updated</span>
         </div>
-        <p class="user-property-button head-button-2" id="copy_password"><span class="icon-docs button-copy-pass">Copy password</span></p>
-        <p class="edit-password-success-ok"><span class="icon-button icon-ok" id="close_password_success">Ok</span></p>
+        <p class="user-property-button head-button-2" id="copy_password"><span
+            class="icon-docs button-copy-pass"
+          >Copy password</span></p>
+        <p class="edit-password-success-ok"><span
+            class="icon-button icon-ok"
+            id="close_password_success"
+          >Ok</span></p>
       </div>
 
-      <div class="edit-password-success" id="edit_password_result_mail" style="display: none;">
+      <div
+        class="edit-password-success"
+        id="edit_password_result_mail"
+        style="display: none;"
+      >
         <div class="update-password-success icon-green" id="result_send_mail">
           <span class="icon-ok" id="icon_password_msg_result_mail"></span>
           <span id="password_msg_result_mail">text</span>
         </div>
-        <p class="edit-password-success-ok"><span class="icon-button icon-ok" id="close_password_mail_close">Ok</span></p>
+        <p class="edit-password-success-ok"><span
+            class="icon-button icon-ok"
+            id="close_password_mail_close"
+          >Ok</span></p>
       </div>
 
-      <div class="edit-password-success" id="edit_password_result_mail_copy" style="display: none;">
+      <div
+        class="edit-password-success"
+        id="edit_password_result_mail_copy"
+        style="display: none;"
+      >
         <div class="edit-password-success-reset-link">
-          <input class="edit-password-success-input" id="result_send_mail_copy_input" />
+          <input
+            class="edit-password-success-input"
+            id="result_send_mail_copy_input"
+          />
           <span class="icon-docs" id="result_send_mail_copy_btn"></span>
         </div>
-        <div class="update-password-success icon-green" id="result_send_mail_copy">
+        <div
+          class="update-password-success icon-green"
+          id="result_send_mail_copy"
+        >
           <span class="icon-ok" id="result_send_mail_copy_icon"></span>
           <span id="result_send_mail_copy_msg">Copied link</span>
         </div>
-        <p class="edit-password-success-ok"><span class="icon-button icon-ok" id="close_password_mail_send_close">Ok</span></p>
+        <p class="edit-password-success-ok"><span
+            class="icon-button icon-ok"
+            id="close_password_mail_send_close"
+          >Ok</span></p>
       </div>
-      
     </div>
   </div>
   <div class="user-property-main-user-change">
     <div class="user-property-main-user-content">
       <div class="user-property-main-user-content-header">
         <span class="icon-king main-user-icon"></span>
-        <span class="main-user-title">Changing the main user</span>
+        <span
+          class="main-user-title"
+        >Changing the main user</span>
       </div>
 
       <div class="user-property-main-user-body">
         <div class="main-user-proceed">
-          <span class="main-user-proceed-desc">You are about to set %s as main user instead of %s, do you wish to continue?</span>
+          <span
+            class="main-user-proceed-desc"
+          >You are about to set %s as main user instead of %s, do you wish to continue?</span>
           <div class="main-user-proceed-footer">
-            <span class="user-property-main-user-cancel">Cancel</span>
-            <span class="head-button-2 main-user-btn-proceed"><span class="icon-right">Yes, let's proceed</span></span>
+            <span
+              class="user-property-main-user-cancel"
+            >Cancel</span>
+            <span class="head-button-2 main-user-btn-proceed"><span
+                class="icon-right"
+              >Yes, let's proceed</span></span>
           </div>
         </div>
 
         <div class="main-user-rewrite" style="display: none;">
-          <span class="main-user-rewrite-desc">To be sure, please rewrite the word “%s” below :</span>
+          <span
+            class="main-user-rewrite-desc"
+          >To be sure, please rewrite the word “%s” below :</span>
           <div class="main-user-rewrite-footer">
             <input type="text" id="main_user_rewrite" />
             <span id="main_user_rewrite_icon"></span>
@@ -856,30 +1236,38 @@
         </div>
 
         <div class="main-user-validate" style="display: none;">
-          <span class="main-user-validate-desc">You can now change the main user from %s to %s.</span>
+          <span
+            class="main-user-validate-desc"
+          >You can now change the main user from %s to %s.</span>
           <div class="main-user-validate-footer">
-            <span class="user-property-main-user-cancel">Cancel</span>
-            <span class="main-user-btn-validate"><span class="icon-floppy"></span> Validate</span>
+            <span
+              class="user-property-main-user-cancel"
+            >Cancel</span>
+            <span class="main-user-btn-validate"><span
+                class="icon-floppy"
+              ></span> Validate</span>
           </div>
         </div>
 
         <div class="main-user-success" style="display: none;">
           <div class="update-main-user-success icon-green">
             <span class="icon-ok"></span>
-            <span class="main-user-success-desc">%s is the new main user</span>
+            <span
+              class="main-user-success-desc"
+            >%s is the new main user</span>
           </div>
-          <span class="user-property-main-user-close"><span class="icon-button icon-ok" id="main_user_success_close">Ok</span></span>
+          <span class="user-property-main-user-close"><span
+              class="icon-button icon-ok"
+              id="main_user_success_close"
+            >Ok</span></span>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
 <div id="GuestUserList" class="UserListPopIn">
-
   <div class="GuestUserListPopInContainer">
-
     <a class="icon-cancel CloseUserList CloseGuestUserList"></a>
     <div id="guest-msg" class="messages">
       <span class="eiw-icon icon-info-circled-1"></span>
@@ -890,53 +1278,87 @@
         <div class="summary-container">
           <div class="user-property-initials">
             <div>
-              <span class="icon-blue"><i class="icon-user-secret"> </i></span>
+              <span class="icon-blue"><i class="icon-user-secret"></i></span>
             </div>
           </div>
           <div class="user-property-username">
-            <span class="edit-username-title"><!-- name -> Jessy Pinkman --></span>
-            <span class="edit-username-specifier"><!-- you specifier(you) --></span>
+            <span
+              class="edit-username-title"
+            ><!-- name -> Jessy Pinkman --></span>
+            <span
+              class="edit-username-specifier"
+            ><!-- you specifier(you) --></span>
           </div>
           <div class="user-property-username-change">
             <div class="summary-input-container">
-              <input class="user-property-input user-property-input-username" value="" placeholder="Username" />
+              <input
+                class="user-property-input user-property-input-username"
+                value=""
+                placeholder="Username"
+              />
             </div>
             <span class="icon-ok edit-username-validate"></span>
             <span class="icon-cancel-circled edit-username-cancel"></span>
           </div>
           <div class="user-property-password-container">
             <div class="user-property-password edit-password">
-              <p class="user-property-button head-button-2 unavailable"><span class="icon-key user-edit-icon"></span>Change Password</p>
+              <p class="user-property-button head-button-2 unavailable"><span
+                  class="icon-key user-edit-icon"
+                ></span>Change Password</p>
             </div>
             <div class="user-property-password-change">
               <div class="summary-input-container">
-              <input class="user-property-input user-property-input-password" value="" placeholder="Password" />
+                <input
+                  class="user-property-input user-property-input-password"
+                  value=""
+                  placeholder="Password"
+                />
               </div>
               <span class="icon-ok edit-password-validate"></span>
               <span class="icon-cancel-circled edit-password-cancel"></span>
             </div>
             <div class="user-property-permissions">
-              <a href="admin.php?page=user_perm&user_id=2"><p class="user-property-button head-button-2"><span class="icon-lock user-edit-icon"></span>Permissions</p></a>
+              <a href="admin.php?page=user_perm&user_id=2"><p
+                  class="user-property-button head-button-2"
+                ><span
+                    class="icon-lock user-edit-icon"
+                  ></span>Permissions</p></a>
             </div>
           </div>
         </div>
-        
+
         <div class="guest-edit-user-tab">
           <div class="guest-edit-user-tab-title">
-            <p class="guest-edit-user-tabsheet selected tiptip" id="name_guest_tab_properties" title="Properties">Properties</p>
-            <p class="guest-edit-user-tabsheet tiptip" id="name_guest_tab_preferences" title="Preferences">Preferences</p>
+            <p
+              class="guest-edit-user-tabsheet selected tiptip"
+              id="name_guest_tab_properties"
+              title="Properties"
+            >Properties</p>
+            <p
+              class="guest-edit-user-tabsheet tiptip"
+              id="name_guest_tab_preferences"
+              title="Preferences"
+            >Preferences</p>
           </div>
 
           <div class="guest-edit-user-slides">
             <div class="properties-container" id="guest_tab_properties">
               <div class="user-property-email">
                 <p class="user-property-label">Email Address</p>
-                <input type="text" class="user-property-input" value="N/A" readonly />
+                <input
+                  type="text"
+                  class="user-property-input"
+                  value="N/A"
+                  readonly
+                />
               </div>
               <div class="user-property-status">
                 <p class="user-property-label">Status</p>
                 <div class="user-property-select-container notClickableBefore">
-                  <select name="status" class="user-property-select notClickable">
+                  <select
+                    name="status"
+                    class="user-property-select notClickable"
+                  >
                     <option value="guest">Guest</option>
                   </select>
                 </div>
@@ -956,9 +1378,14 @@
               <div class="user-property-group-container">
                 <p class="user-property-label">Groups</p>
                 <div class="user-property-select-container user-property-group">
-                  <select class="user-property-select" data-selectize="groups"
-                    placeholder="Select groups or type them" name="group_id[]" multiple
-                    style="box-sizing:border-box;"></select>
+                  <select
+                    class="user-property-select"
+                    data-selectize="groups"
+                    placeholder="Select groups or type them"
+                    name="group_id[]"
+                    multiple
+                    style="box-sizing:border-box;"
+                  ></select>
                 </div>
               </div>
 
@@ -966,12 +1393,16 @@
                 <span class="select-checkbox">
                   <i class="icon-ok"></i>
                 </span>
-                <span class="user-list-checkbox-label">Allow download</span>
+                <span
+                  class="user-list-checkbox-label"
+                >Allow download</span>
               </div>
             </div>
 
             <div class="preferences-container" id="guest_tab_preferences">
-              <div class="user-property-label photos-select-bar">Photos per page
+              <div
+                class="user-property-label photos-select-bar"
+              >Photos per page
                 <span class="nb-img-page-infos"></span>
                 <div class="slider-bar-wrapper">
                   <div class="slider-bar-container"></div>
@@ -996,7 +1427,9 @@
                   </select>
                 </div>
               </div>
-              <div class="user-property-label period-select-bar">Recent period
+              <div
+                class="user-property-label period-select-bar"
+              >Recent period
                 <span class="recent_period_infos">
                   <!-- 7 days -->
                 </span>
@@ -1009,35 +1442,45 @@
                 <span class="select-checkbox">
                   <i class="icon-ok"></i>
                 </span>
-                <span class="user-list-checkbox-label">Expand all albums</span>
+                <span
+                  class="user-list-checkbox-label"
+                >Expand all albums</span>
               </div>
               <div class="user-list-checkbox" name="show_nb_comments">
                 <span class="select-checkbox">
                   <i class="icon-ok"></i>
                 </span>
-                <span class="user-list-checkbox-label">Show number of comments</span>
+                <span
+                  class="user-list-checkbox-label"
+                >Show number of comments</span>
               </div>
               <div class="user-list-checkbox" name="show_nb_hits">
                 <span class="select-checkbox">
                   <i class="icon-ok"></i>
                 </span>
-                <span class="user-list-checkbox-label">Show number of hits</span>
+                <span
+                  class="user-list-checkbox-label"
+                >Show number of hits</span>
               </div>
             </div>
           </div>
         </div>
-        
       </div>
 
       <div class="update-container">
-        <span class="close-update-button icon-cancel-circled">Close</span>
+        <span
+          class="close-update-button icon-cancel-circled"
+        >Close</span>
         <p>
-          <span class="update-user-success icon-green">User updated</span>
+          <span
+            class="update-user-success icon-green"
+          >User updated</span>
           <span class="update-user-fail  icon-cancel"></span>
-          <span class="update-user-button"><i class='icon-floppy'></i>Update</span>
+          <span class="update-user-button"><i
+              class='icon-floppy'
+            ></i>Update</span>
         </p>
       </div>
-
     </div>
   </div>
 </div>
@@ -1046,129 +1489,172 @@
   <div class="AddUserPopInContainer">
     <a class="icon-cancel CloseUserList CloseAddUser"></a>
     <div class="AddUserScrollableContent">
-    <div class="AddIconContainer">
-      <span class="AddIcon icon-blue icon-plus-circled"></span>
-    </div>
-    <div class="AddIconTitle">
-      <span>Add a new user</span>
-    </div>
-
-    <div id="AddUserFieldContainer">
-      <div class="AddUserInputContainer">
-        <label class="user-property-label AddUserLabelUsername">Username
-          <input class="user-property-input" />
-        </label>
+      <div class="AddIconContainer">
+        <span class="AddIcon icon-blue icon-plus-circled"></span>
+      </div>
+      <div class="AddIconTitle">
+        <span>Add a new user</span>
       </div>
 
-      <div class="AddUserInputContainer">
-        <label class="user-property-label AddUserLabelEmail">Email
-          <input class="user-property-input" />
-        </label>
-      </div>
+      <div id="AddUserFieldContainer">
+        <div class="AddUserInputContainer">
+          <label
+            class="user-property-label AddUserLabelUsername"
+          >Username
+            <input class="user-property-input" />
+          </label>
+        </div>
 
-      <div class="AddUserInputContainer">
-        <div class="user-property-status">
-          <label class="user-property-label">Status
-            <span class="icon-help-circled" title="
+        <div class="AddUserInputContainer">
+          <label
+            class="user-property-label AddUserLabelEmail"
+          >Email
+            <input class="user-property-input" />
+          </label>
+        </div>
+
+        <div class="AddUserInputContainer">
+          <div class="user-property-status">
+            <label class="user-property-label">Status
+              <span
+                class="icon-help-circled"
+                title="
             <div class='tooltip-status-content'>
               <div class='tooltip-status-row'><span class='tooltip-col1'>Webmaster</span><span class='tooltip-col2'>Has access to all administration functionnalities. Can manage both configuration and content.</span></div>
               <div class='tooltip-status-row'><span class='tooltip-col1'>Administrator</span><span class='tooltip-col2'>Has access to administration. Can only manage content: photos/albums/users/tags/groups.</span></div>
               <div class='tooltip-status-row'><span class='tooltip-col1'>Basic</span><span class='tooltip-col2'>No access to administration, can see private content with appropriate permissions.</span></div>
               <div class='tooltip-status-row'><span class='tooltip-col1'>Generic</span><span class='tooltip-col2'>Can be shared by several individuals without conflict (they cannot change the password).</span></div>
               <div class='tooltip-status-row'><span class='tooltip-col1'>Guest</span><span class='tooltip-col2'>Equivalent to deactivation. The user is still in the list, but can no longer log in.</span></div>
-            </div">
+            </div"
+              ></span>
+            </label>
+            <div class="user-property-select-container">
+              <select name="status" class="user-property-select">
+                <option
+                  value="webmaster"
+                >Webmaster</option>
+                <option value="admin">Administrator</option>
+                <option
+                  value="normal"
+                >Basic</option>
+                <option
+                  value="generic"
+                >Generic</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="add_user_password" style="display: none;">
+          <div class="AddUserGenPassword">
+            <label
+              for="add_user_pass"
+              class="user-property-label AddUserLabelPassword"
+            >Password</label>
+            <span
+              class="icon-dice-solid"
+            > Generate random password</span>
+          </div>
+          <div class="user-property-input-icon" style="margin-bottom: 5px;">
+            <input
+              id="add_user_pass"
+              class="user-property-input user-property-input-password"
+              value=""
+              placeholder="Password"
+              type="password"
+            />
+            <span class="icon-eye icon-show-password"></span>
+          </div>
+
+          <label
+            for="add_user_confpass"
+            class="user-property-label AddUserLabelPasswordConf"
+          >Confirm Password</label>
+          <div class="user-property-input-icon" style="margin-bottom: 5px;">
+            <input
+              id="add_user_confpass"
+              class="user-property-input user-property-input-password-conf"
+              value=""
+              placeholder="Confirm Password"
+              type="password"
+            />
+            <span class="icon-eye icon-show-password"></span>
+          </div>
+        </div>
+
+        <div class="AddUserInputContainer">
+          <div class="user-property-level">
+            <p class="user-property-label">Privacy level</p>
+            <div class="user-property-select-container">
+              <select name="privacy" class="user-property-select">
+                <option value="0">---</option>
+                <option value="1">Contacts</option>
+                <option value="2">Friends</option>
+                <option value="4">Family</option>
+                <option value="8">Admins</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="AddUserInputContainer">
+          <div class="user-property-group-container">
+            <p class="user-property-label">Groups</p>
+            <div class="user-property-select-container user-property-group">
+              <select
+                class="user-property-select"
+                data-selectize="groups"
+                placeholder="Select groups or type them"
+                name="group_id[]"
+                multiple
+                style="box-sizing:border-box;"
+              ></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="AddUserInputContainer">
+          <div class="user-list-checkbox" name="hd_enabled">
+            <span class="select-checkbox">
+              <i class="icon-ok"></i>
             </span>
-          </label>
-          <div class="user-property-select-container">
-            <select name="status" class="user-property-select">
-              <option value="webmaster">Webmaster</option>
-              <option value="admin">Administrator</option>
-              <option value="normal">Basic</option>
-              <option value="generic">Generic</option>
-            </select>
+            <span
+              class="user-list-checkbox-label"
+            >Allow download</span>
+          </div>
+        </div>
+
+        <div class="AddUserErrors  icon-cancel"></div>
+
+        <div class="AddUserSubmitContainer">
+          <div class="AddUserCancel">
+            <span>Cancel</span>
+          </div>
+
+          <div class="AddUserSubmit">
+            <span class="icon-plus"></span><span>Add User</span>
           </div>
         </div>
       </div>
 
-      <div id="add_user_password" style="display: none;">
-        <div class="AddUserGenPassword">
-          <label for="add_user_pass" class="user-property-label AddUserLabelPassword">Password</label>
-          <span class="icon-dice-solid"> Generate random password</span>
+      <div id="AddUserSuccessContainer" style="display: none;">
+        <p
+          class="icon-green border-green icon-ok AddUserResult"
+          id="AddUserUpdated"
+        > <span id="AddUserUpdatedText">User updated</span></p>
+        <p class="AddUserTextField" id="AddUserTextField"></p>
+        <div
+          class="AddUserPasswordInputContainer"
+          id="AddUserPasswordInputContainer"
+        >
+          <input class="AddUserPasswordInput" id="AddUserPasswordLink" />
+          <span class="icon-docs" id="AddUserCopyPassword"></span>
         </div>
-        <div class="user-property-input-icon" style="margin-bottom: 5px;">
-          <input id="add_user_pass" class="user-property-input user-property-input-password" value=""
-            placeholder="Password" type="password" />
-          <span class="icon-eye icon-show-password"></span>
-        </div>
-
-        <label for="add_user_confpass" class="user-property-label AddUserLabelPasswordConf">Confirm Password</label>
-        <div class="user-property-input-icon" style="margin-bottom: 5px;">
-          <input id="add_user_confpass" class="user-property-input user-property-input-password-conf" value=""
-            placeholder="Confirm Password" type="password" />
-          <span class="icon-eye icon-show-password"></span>
-        </div>
-      </div>
-
-      <div class="AddUserInputContainer">
-        <div class="user-property-level">
-          <p class="user-property-label">Privacy level</p>
-          <div class="user-property-select-container">
-            <select name="privacy" class="user-property-select">
-              <option value="0">---</option>
-              <option value="1">Contacts</option>
-              <option value="2">Friends</option>
-              <option value="4">Family</option>
-              <option value="8">Admins</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="AddUserInputContainer">
-        <div class="user-property-group-container">
-          <p class="user-property-label">Groups</p>
-          <div class="user-property-select-container user-property-group">
-            <select class="user-property-select" data-selectize="groups"
-              placeholder="Select groups or type them" name="group_id[]" multiple
-              style="box-sizing:border-box;"></select>
-          </div>
-        </div>
-      </div>
-
-      <div class="AddUserInputContainer">
-        <div class="user-list-checkbox" name="hd_enabled">
-          <span class="select-checkbox">
-            <i class="icon-ok"></i>
-          </span>
-          <span class="user-list-checkbox-label">Allow download</span>
-        </div>
-      </div>
-
-      <div class="AddUserErrors  icon-cancel">
-      </div>
-
-      <div class="AddUserSubmitContainer">
-        <div class="AddUserCancel">
-          <span>Cancel</span>
-        </div>
-
-        <div class="AddUserSubmit">
-          <span class="icon-plus"></span><span>Add User</span>
-        </div>
+        <p class="icon-button" id="AddUserButton"><span
+            class="icon-ok"
+          ></span> Ok</p>
       </div>
     </div>
-
-    <div id="AddUserSuccessContainer" style="display: none;">
-      <p class="icon-green border-green icon-ok AddUserResult" id="AddUserUpdated"> <span id="AddUserUpdatedText">User updated</span></p>
-      <p class="AddUserTextField" id="AddUserTextField"></p>
-      <div class="AddUserPasswordInputContainer" id="AddUserPasswordInputContainer">
-        <input class="AddUserPasswordInput" id="AddUserPasswordLink" />
-        <span class="icon-docs" id="AddUserCopyPassword"></span>
-      </div>
-      <p class="icon-button" id="AddUserButton"><span class="icon-ok"></span> Ok</p>
-    </div>
-    </div>
-
   </div>
 </div>
 
@@ -3279,43 +3765,72 @@ Advanced filter
 
 <div id="footer">
   <div>
-    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What&apos;s new in version 17?">
-      <i class="icon-bell"></i>
-    </span>
+    <a
+      class="externalLink tiptip piwigo-logo"
+      href="https://upstream.example.invalid"
+      title="Visit Piwigo project website"
+    ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+      <span
+        id="whats_new_notification"
+        class="icon-blue tiptip"
+        onclick="show_user_whats_new()"
+        title="What&apos;s new in version 17?"
+      >
+        <i class="icon-bell"></i>
+      </span>
   </div>
   <div id="pageInfos">
 
     Contact
-    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+    <a
+      href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
+    >Webmaster</a>
   </div></div>
 </div>
 
-<div id="whats_new">
+  <div id="whats_new">
     <div id="whats_new_popin">
-      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <a
+        class="icon-cancel close_whats_new"
+        onClick="hide_user_whats_new()"
+      ></a>
       <h3>What's new in version 17?</h3>
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Brand new login &amp; preferences with Standard pages !</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Brand new login &amp; preferences with Standard pages !</a></h4>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Two factor authentication is here</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Two factor authentication is here</a></h4>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">UI redesigns that make a difference</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >UI redesigns that make a difference</a></h4>
           </div>
         </div>
       </div>
       <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
-        <a class="buttonLike" href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+        <button onClick="hide_user_whats_new()"><i
+            class="icon-thumbs-up"
+          ></i> Ok, got it!</button>
+        <a
+          class="buttonLike"
+          href="https://upstream.example.invalid/releases/17.0.0"
+          target="_blank"
+        ><i class="icon-book"></i> Read the release note</a>
       </div>
     </div>
-</div>
+  </div>
 
 <style>
 
@@ -3412,7 +3927,7 @@ nb_days = "%d days";
 //per page is too long for the popin
 nb_photos = "%d photos";
 nb_photos_per_page = "%d photos per page";
-pwg_token = '680b6e58c574a395df08a9707c176bd94eb7467ef2f56e6afe6a6dc5a4ca5217';
+pwg_token = '53ab1cde3e2457d5dc3c6e763d3ffd793293062c94c428c6f52063d1b1128d91';
 has_group = "";
 
 let register_dates_str = '2026-08';
@@ -3595,7 +4110,7 @@ function show_user_whats_new() {
 //]]></script>
 <!-- END get_combined -->
 
-<script type="module" src="dist/vitals.js"></script>
+  <script type="module" src="dist/vitals.js"></script>
 
 </body>
 </html>

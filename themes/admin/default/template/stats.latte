@@ -27,20 +27,21 @@ moment.locale("{$langCode}");
 
 <div class="stat-compare-mode">
   <label class="switch">
-      <input type="checkbox" id="toggleCompareMode">
-      <span class="slider round" checked="false"></span>
+    <input type="checkbox" id="toggleCompareMode">
+    <span class="slider round" checked="false"></span>
   </label>
   {='Compare mode'|translate}
 </div>
 
-<div id="data"
+<div
+  id="data"
   data-hours='{$lastHours|json_encode}'
   data-days='{$lastDays|json_encode}'
   data-months='{$lastMonths|json_encode}'
   data-years='{$lastYears|json_encode}'
   data-compare-years='{$compareYears|json_encode}'
   data-month-stats='{$monthStats|json_encode}'
-  ></div>
+></div>
 <div class="stat-legend-container">
   <div class="stat-data-selector">
     <input type="radio" id="hours-selector" name="stat-data-type">
@@ -48,12 +49,20 @@ moment.locale("{$langCode}");
     <input type="radio" id="days-selector" name="stat-data-type" checked>
     <label for="days-selector" data-value="days">{='Day'|translate}</label>
     <input type="radio" id="months-selector" name="stat-data-type">
-    <label for="months-selector" data-value="months">{='Month'|translate}</label>
+    <label
+      for="months-selector"
+      data-value="months"
+    >{='Month'|translate}</label>
     <input type="radio" id="years-selector" name="stat-data-type">
     <label for="years-selector" data-value="years">{='Year'|translate}</label>
   </div>
 </div>
 
 <div class="stat-graph-container">
-  <canvas id="stat-graph" width="400" height="150" role="img"><p>Your browser does not support the canvas element.</p></canvas>
+  <canvas
+    id="stat-graph"
+    width="400"
+    height="150"
+    role="img"
+  ><p>Your browser does not support the canvas element.</p></canvas>
 </div>

@@ -1,22 +1,31 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Content-script-type" content="text/javascript">
-<meta http-equiv="Content-Style-Type" content="text/css">
-<link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">
+  <head>
+    <meta
+      http-equiv="Content-Type"
+      content="text/html; charset=utf-8"
+    >
+    <meta http-equiv="Content-script-type" content="text/javascript">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="themes/default/icon/favicon.ico"
+    >
 
-<link rel="stylesheet" type="text/css" href="_data/combined/81xi3d.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/81xi3d.css">
 
-<!--[if IE 7]>
+    <!--[if IE 7]>
   <link rel="stylesheet" type="text/css" href="themes/admin/default/fix-ie7.css">
 <![endif]-->
 
-<!-- BEGIN get_combined_scripts -->
-<script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
-<!-- END get_combined_scripts -->
+    <!-- BEGIN get_combined_scripts -->
+    <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
+    <!-- END get_combined_scripts -->
 
-<script type="text/javascript">
+    <script
+      type="text/javascript"
+    >
 $(document).ready(function() {
   $("a.externalLink").click(function() {
     window.open($(this).attr("href"));
@@ -29,7 +38,9 @@ $(document).ready(function() {
 });
 </script>
 
-<style type="text/css">
+    <style
+      type="text/css"
+    >
 body {
   font-size:12px;
 }
@@ -130,30 +141,32 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
 
 
 
+    <title>Piwigo 17.0.0 - Installation</title>
+  </head>
 
-<title>Piwigo 17.0.0 - Installation</title>
-</head>
-
-<body>
-<div id="the_page">
-<div id="theHeader"></div>
-<div id="content" class="content">
-
-<h2>Version 17.0.0 - Installation</h2>
+  <body>
+    <div id="the_page">
+      <div id="theHeader"></div>
+      <div id="content" class="content">
+        <h2>Version 17.0.0 - Installation</h2>
 
 
 
-<form method="POST" action="install.php?language=en_UK" name="install_form">
+          <form method="POST" action="install.php?language=en_UK" name="install_form">
+            <fieldset>
+              <legend>Basic configuration</legend>
 
-<fieldset>
-  <legend>Basic configuration</legend>
-
-  <table class="table2">
-    <tr>
-      <td style="width: 30%">Default gallery language</td>
-      <td>
-    <select name="language" onchange="document.location = 'install.php?language='+this.options[this.selectedIndex].value;">
-    <option value="af_ZA">Afrikaans (Suid-Afrika)</option>
+              <table class="table2">
+                <tr>
+                  <td
+                    style="width: 30%"
+                  >Default gallery language</td>
+                  <td>
+                    <select
+                      name="language"
+                      onchange="document.location = 'install.php?language='+this.options[this.selectedIndex].value;"
+                    >
+                      <option value="af_ZA">Afrikaans (Suid-Afrika)</option>
 <option value="ar_SA">Arbic (saudi)</option>
 <option value="az_AZ">Azərbaycanca (Azərbaycan)</option>
 <option value="id_ID">Bahasa Indonesia (Indonesia)</option>
@@ -224,106 +237,204 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
 <option value="zh_CN">简体中文 (中国)</option>
 <option value="ko_KR">한국어 (대한민국)</option>
 
-    </select>
-      </td>
-    </tr>
-  </table>
-</fieldset>
+                    </select>
+                  </td>
+                </tr>
+              </table>
+            </fieldset>
 
-<fieldset>
-  <legend>Database configuration</legend>
+            <fieldset>
+              <legend>Database configuration</legend>
 
-  <table class="table2">
-    <tr>
-      <td style="width: 30%;" class="fieldname">Database type</td>
-      <td>
-        <select name="dbdriver" id="dbdriver" onchange="document.getElementById('dbport').placeholder = (this.value === 'pgsql') ? '5432' : '3306';">
-          <option value="mysqli" selected>MySQL / MariaDB</option>
-          <option value="pgsql">PostgreSQL</option>
-        </select>
-      </td>
-      <td class="fielddesc">MySQL/MariaDB or PostgreSQL, matching what your host provider gave you</td>
-    </tr>
-    <tr>
-      <td style="width: 30%;" class="fieldname">Host</td>
-      <td><input type="text" name="dbhost" value="localhost" required></td>
-      <td class="fielddesc">localhost or other, supplied by your host provider</td>
-    </tr>
-    <tr>
-      <td class="fieldname">Port</td>
-      <td><input type="number" name="dbport" id="dbport" placeholder="3306" min="1" max="65535"></td>
-      <td class="fielddesc">leave empty to use the default port for your chosen database type</td>
-    </tr>
-    <tr>
-      <td class="fieldname">User</td>
-      <td><input type="text" name="dbuser" value="" required></td>
-      <td class="fielddesc">user login supplied by your host provider</td>
-    </tr>
-    <tr>
-      <td class="fieldname">Password</td>
-      <td><input type="password" name="dbpasswd" value=""></td>
-      <td class="fielddesc">user password supplied by your host provider</td>
-    </tr>
-    <tr>
-      <td class="fieldname">Database name</td>
-      <td><input type="text" name="dbname" value="" required></td>
-      <td class="fielddesc">also supplied by your hosting provider</td>
-    </tr>
-  </table>
+              <table class="table2">
+                <tr>
+                  <td
+                    style="width: 30%;"
+                    class="fieldname"
+                  >Database type</td>
+                  <td>
+                    <select
+                      name="dbdriver"
+                      id="dbdriver"
+                      onchange="document.getElementById('dbport').placeholder = (this.value === 'pgsql') ? '5432' : '3306';"
+                    >
+                      <option
+                        value="mysqli"
+                        
+                        selected
+                        
+                      >MySQL / MariaDB</option>
+                      <option
+                        value="pgsql"
+                        
+                      >PostgreSQL</option>
+                    </select>
+                  </td>
+                  <td
+                    class="fielddesc"
+                  >MySQL/MariaDB or PostgreSQL, matching what your host provider gave you</td>
+                </tr>
+                <tr>
+                  <td
+                    style="width: 30%;"
+                    class="fieldname"
+                  >Host</td>
+                  <td><input
+                      type="text"
+                      name="dbhost"
+                      value="localhost"
+                      required
+                    ></td>
+                  <td
+                    class="fielddesc"
+                  >localhost or other, supplied by your host provider</td>
+                </tr>
+                <tr>
+                  <td class="fieldname">Port</td>
+                  <td><input
+                      type="number"
+                      name="dbport"
+                      id="dbport"
+                      placeholder="3306"
+                      min="1"
+                      max="65535"
+                    ></td>
+                  <td
+                    class="fielddesc"
+                  >leave empty to use the default port for your chosen database type</td>
+                </tr>
+                <tr>
+                  <td class="fieldname">User</td>
+                  <td><input
+                      type="text"
+                      name="dbuser"
+                      value=""
+                      required
+                    ></td>
+                  <td
+                    class="fielddesc"
+                  >user login supplied by your host provider</td>
+                </tr>
+                <tr>
+                  <td class="fieldname">Password</td>
+                  <td><input type="password" name="dbpasswd" value=""></td>
+                  <td
+                    class="fielddesc"
+                  >user password supplied by your host provider</td>
+                </tr>
+                <tr>
+                  <td class="fieldname">Database name</td>
+                  <td><input
+                      type="text"
+                      name="dbname"
+                      value=""
+                      required
+                    ></td>
+                  <td
+                    class="fielddesc"
+                  >also supplied by your hosting provider</td>
+                </tr>
+              </table>
+            </fieldset>
+            <fieldset>
+              <legend>Administration configuration</legend>
 
-</fieldset>
-<fieldset>
-  <legend>Administration configuration</legend>
+              <table class="table2">
+                <tr>
+                  <td
+                    style="width: 30%;"
+                    class="fieldname"
+                  >Username</td>
+                  <td><input
+                      type="text"
+                      name="admin_name"
+                      value=""
+                      required
+                    ></td>
+                  <td
+                    class="fielddesc"
+                  >It will be shown to visitors. It is necessary for website administration</td>
+                </tr>
+                <tr>
+                  <td class="fieldname">Password</td>
+                  <td><input
+                      type="password"
+                      name="admin_pass1"
+                      value=""
+                      required
+                    ></td>
+                  <td
+                    class="fielddesc"
+                  >Keep it confidential, it enables you to access the administration panel</td>
+                </tr>
+                <tr>
+                  <td class="fieldname">Password [confirm]</td>
+                  <td><input
+                      type="password"
+                      name="admin_pass2"
+                      value=""
+                      required
+                    ></td>
+                  <td class="fielddesc">verification</td>
+                </tr>
+                <tr>
+                  <td class="fieldname">Email address</td>
+                  <td><input
+                      type="text"
+                      name="admin_mail"
+                      id="admin_mail"
+                      value=""
+                      required
+                    ></td>
+                  <td
+                    class="fielddesc"
+                  >Visitors will be able to use this email to contact the site administrator</td>
+                </tr>
+                <tr>
+                  <td>Options</options>
+                    <td colspan="2">
+                      <label>
+                        <input
+                          type="checkbox"
+                          name="newsletter_subscribe"
+                          
+                          checked="checked"
+                          
+                        >
+                        <span
+                          class="cluetip"
+                          title="Piwigo Announcement Newsletter|Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will be sent emails when a new release is available (sometimes including a security bug fix, it is important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+                        >Subscribe <span class="adminEmail"></span> to Piwigo Announcements Newsletter</span>
+                      </label>
+                      <br>
+                      <label>
+                        <input
+                          type="checkbox"
+                          name="send_credentials_by_mail"
+                          checked="checked"
+                        >
+                        Send my connection settings by email
+                      </label>
+                    </td>
+                  </tr>
+              </table>
+            </fieldset>
 
-  <table class="table2">
-    <tr>
-      <td style="width: 30%;" class="fieldname">Username</td>
-      <td><input type="text" name="admin_name" value="" required></td>
-      <td class="fielddesc">It will be shown to visitors. It is necessary for website administration</td>
-    </tr>
-    <tr>
-      <td class="fieldname">Password</td>
-      <td><input type="password" name="admin_pass1" value="" required></td>
-      <td class="fielddesc">Keep it confidential, it enables you to access the administration panel</td>
-    </tr>
-    <tr>
-      <td class="fieldname">Password [confirm]</td>
-      <td><input type="password" name="admin_pass2" value="" required></td>
-      <td class="fielddesc">verification</td>
-    </tr>
-    <tr>
-      <td class="fieldname">Email address</td>
-      <td><input type="text" name="admin_mail" id="admin_mail" value="" required></td>
-      <td class="fielddesc">Visitors will be able to use this email to contact the site administrator</td>
-    </tr>
-    <tr>
-      <td>Options</options>
-      <td colspan="2">
-        <label>
-          <input type="checkbox" name="newsletter_subscribe" checked="checked">
-          <span class="cluetip" title="Piwigo Announcement Newsletter|Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will be sent emails when a new release is available (sometimes including a security bug fix, it is important to know and upgrade) and when major events happen to the project. Only a few emails a year.">Subscribe <span class="adminEmail"></span> to Piwigo Announcements Newsletter</span>
-        </label>
-        <br>
-        <label>
-          <input type="checkbox" name="send_credentials_by_mail" checked="checked">
-          Send my connection settings by email
-        </label>
-      </td>
-    </tr>
-  </table>
+            <div style="text-align:center; margin:20px 0 10px 0">
+              <input
+                class="submit"
+                type="submit"
+                name="install"
+                value="Start installation"
+              >
+            </div>
+          </form>
+      </div> 
+      <div style="text-align: center">Need help? Ask your question on the <a href="https://upstream.example.invalid/forum">Piwigo message board</a>.</div>
+    </div> 
 
-</fieldset>
-
-  <div style="text-align:center; margin:20px 0 10px 0">
-    <input class="submit" type="submit" name="install" value="Start installation">
-  </div>
-</form>
-</div> 
-<div style="text-align: center">Need help? Ask your question on the <a href="https://upstream.example.invalid/forum">Piwigo message board</a>.</div>
-</div> 
-
-<!-- BEGIN get_combined_scripts -->
-<script type="text/javascript" src="themes/default/js/plugins/jquery.cluetip.js?v17.0.0"></script>
+    <!-- BEGIN get_combined_scripts -->
+    <script type="text/javascript" src="themes/default/js/plugins/jquery.cluetip.js?v17.0.0"></script>
 <script type="text/javascript">//<![CDATA[
 
 jQuery().ready(function(){
@@ -334,7 +445,6 @@ jQuery().ready(function(){
 	});
 });
 //]]></script>
-<!-- END get_combined_scripts -->
-
-</body>
+    <!-- END get_combined_scripts -->
+  </body>
 </html>

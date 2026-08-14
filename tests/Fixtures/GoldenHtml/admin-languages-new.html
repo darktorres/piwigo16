@@ -1,145 +1,1629 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-<meta name="apple-itunes-app" content="app-id=472225196">
-<meta charset="utf-8">
-<title>Fixture Gallery :: Piwigo Administration</title>
-<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
-<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+  <head>
+      <meta name="apple-itunes-app" content="app-id=472225196">
+    <meta charset="utf-8">
+    <title>Fixture Gallery :: Piwigo Administration</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="themes/default/icon/piwigo.org-icon 1.svg"
+    >
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="themes/admin/default/fonts/open-sans/open-sans.css"
+    >
 
 
-<!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/1bilb4f.css">
+    <!-- BEGIN get_combined -->
+    <link rel="stylesheet" type="text/css" href="_data/combined/1bilb4f.css">
 
-<script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
-<!-- END get_combined -->
+    <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
+    <!-- END get_combined -->
 
-</head>
+  </head>
 
-<body id="theAdminPage">
+  <body id="theAdminPage">
+    <div id="the_page">
 
-<div id="the_page">
+      <div id="pwgHead">
+        <a
+          href="/piwigo17-4/"
+          class="visit-gallery tiptip"
+          title="Visit the gallery"
+        ><i class="icon-left-open"></i>Visit</a>
+        <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-
-<div id="pwgHead">
-  <a href="/piwigo17-4/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
-  <div class="pwgHead-gallery-title">Fixture Gallery</div>
-
-  <div id="headActions">
-    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+        <div id="headActions">
+          <span class="admin-head-username"><i
+              class="icon-user"
+            ></i>fixture_admin</span>
 <a href="admin.php?change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
-    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
-    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
-  </div>
-</div>
+          <a
+            class="tiptip"
+            href="admin.php?page=help"
+            title="Instructions to use Piwigo"
+          ><i
+              class="icon-help-circled"
+            ></i><span>Help Me</span></a>
+          <a href="index.php?act=logout"><i
+              class="icon-logout"
+            ></i><span>Logout</span></a>
+        </div>
+      </div>
 
-<div style="clear:both;"></div>
+      <div style="clear:both;"></div>
 
 
-<div id="pwgMain">
-
+      <div id="pwgMain">
 
 <div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+        class="icon-television"
+      ></i> Dashboard</a></div>
 
-	<dl>
-		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
-			<ul>
-				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
-        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
-				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
-				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
-				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
-			</ul>
-		</dd>
-  </dl>
   <dl>
-		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dt><i class="icon-picture"></i><span>Photos&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
     <dd>
       <ul>
-        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
-        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+        <li><a href="admin.php?page=photos_add"><i
+              class="icon-plus-circled"
+            ></i>Add</a></li>
+          <li><a href="admin.php?page=rating"><i
+                class="icon-star"
+              ></i>Rating</a></li>
+        <li><a href="admin.php?page=tags"><i
+              class="icon-tags"
+            ></i>Tags</a></li>
+        <li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i
+              class="icon-clock"
+            ></i>Recent photos</a></li>
+        <li><a href="admin.php?page=batch_manager"><i
+              class="icon-th"
+            ></i>Batch Manager</a></li>
       </ul>
     </dd>
   </dl>
   <dl>
-		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-sitemap"></i><span>Albums&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
-        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
-				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+        <li><a href="admin.php?page=albums"><i
+              class="icon-folder-open"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i
+              class="icon-pencil"
+            ></i>Properties</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
-  </dl>
-  <dl>
-		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-users"></i><span>Users&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
-				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
-				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
-				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
-          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
-        </a></li>
-        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+        <li><a href="admin.php?page=user_list"><i
+              class="icon-user-add"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i
+              class="icon-group"
+            ></i>Groups</a></li>
+        <li><a href="admin.php?page=notification_by_mail"><i
+              class="icon-mail-1"
+            ></i>Notification</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><a href="admin.php?page=plugins" class="admin-main"><i
+          class="icon-puzzle"
+        ></i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+    <dt><i class="icon-wrench"></i><span>Tools&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
-        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
-				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
-        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+          <li><a href="admin.php?page=site_update&amp;site=1"><i
+                class="icon-exchange"
+              ></i>Synchronize</a></li>
+        <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
+              class="icon-signal"
+            ></i>History</a></li>
+        <li><a href="admin.php?page=maintenance"><i
+              class="icon-tools"
+            ></i>Maintenance</a></li>
+          <li><a href="admin.php?page=comments"><i
+                class="icon-chat"
+              ></i>Comments
+                <span
+                  class="adminMenubarCounter"
+                  title="1 waiting for validation"
+                >1</span>
+              </a></li>
+          <li><a href="admin.php?page=updates"><i
+                class="icon-arrows-cw"
+              ></i>Updates</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i
+        class="icon-cog"
+      ></i><span>Configuration&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i
+              class="icon-cog-alt"
+            ></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i
+              class="icon-menu"
+            ></i>Menus</a></li>
+        <li><a href="admin.php?page=languages"><i
+              class="icon-language"
+            ></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i
+              class="icon-brush"
+            ></i>Themes</a></li>
       </ul>
     </dd>
   </dl>
 </div> <!-- menubar -->
 
 <div id="content" class="content">
+  <h1>Languages<span
+      class="admin-object-id"
+    ></span></h1>
 
-  <h1>Languages<span class="admin-object-id"></span></h1>
-
-  <div id="tabsheet">
-<ul class="tabsheet">
-  <li class="normal_tab">
-    <a href="admin.php?page=languages&amp;tab=installed"><span><span class="icon-menu"></span>List</span></a>
-  </li>
-  <li class="normal_tab">
-    <a href="admin.php?page=languages&amp;tab=update"><span><span class="icon-arrows-cw"></span>Check for updates</span></a>
-  </li>
-  <li class="selected_tab">
-    <a href="admin.php?page=languages&amp;tab=new"><span><span class="icon-plus-circled"></span>Add New Language</span></a>
-  </li>
-</ul>
-</div>
-
-
-<div class="eiw">
-  <div class="errors">
-    <i class="eiw-icon icon-cancel"></i>
-    <ul>
-      <li>Connection to server unavailable.</li>
+      <div id="tabsheet">
+    <ul class="tabsheet">
+        <li
+          class="normal_tab"
+        >
+          <a
+            href="admin.php?page=languages&amp;tab=installed"
+          ><span><span class="icon-menu"></span>List</span></a>
+        </li>
+        <li
+          class="normal_tab"
+        >
+          <a
+            href="admin.php?page=languages&amp;tab=update"
+          ><span><span class="icon-arrows-cw"></span>Check for updates</span></a>
+        </li>
+        <li
+          class="selected_tab"
+        >
+          <a
+            href="admin.php?page=languages&amp;tab=new"
+          ><span><span class="icon-plus-circled"></span>Add New Language</span></a>
+        </li>
     </ul>
   </div>
 
 
+  <div class="eiw">
 
 
-</div> 
+
+  </div> 
 
   
 
-
-<p>There is no other language available.</p>
-
+    <table class="table2 languages">
+      <thead>
+        <tr class="throw">
+          <td>Language</td>
+          <td>Version</td>
+          <td>Date</td>
+          <td>Author</td>
+          <td>Actions</td>
+        </tr>
+      </thead>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=572"
+              class="externalLink cluetip"
+              title="Afrikaans [ZA]|Afrikaans language<br />
+ <br />
+Thanks to Marius Loots, Mignon Smit, maeztro and jpmeijers"
+            >Afrikaans [ZA]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=572"
+              class="externalLink cluetip"
+              title="Afrikaans [ZA]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-af_ZA-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=779"
+              class="externalLink cluetip"
+              title="العربية (مصر) [EG]|Egypt"
+            >العربية (مصر) [EG]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=779"
+              class="externalLink cluetip"
+              title="العربية (مصر) [EG]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-ar_EG-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=412"
+              class="externalLink cluetip"
+              title="العربية [AR]|Arabic / Saudi language<br />
+<br />
+Thanks to mohammed, dolomats, mazili and aldambi"
+            >العربية [AR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=412"
+              class="externalLink cluetip"
+              title="العربية [AR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-ar_SA-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=510"
+              class="externalLink cluetip"
+              title="Български [BG]|Bulgarian language<br />
+<br />
+Thanks to hamsia, josifbg, n0kS, picsvet, neddrag, Martian and turnokopa"
+            >Български [BG]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=510"
+              class="externalLink cluetip"
+              title="Български [BG]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-bg_BG-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=698"
+              class="externalLink cluetip"
+              title="Brezhoneg [FR]|Thanks to yves.kerleguer "
+            >Brezhoneg [FR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=698"
+              class="externalLink cluetip"
+              title="Brezhoneg [FR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-br_FR-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=413"
+              class="externalLink cluetip"
+              title="Catalan [CA]|Catalan language<br />
+<br />
+Thanks to josep.torne and AlbertParera<br />
+"
+            >Catalan [CA]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=413"
+              class="externalLink cluetip"
+              title="Catalan [CA]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-ca_ES-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=414"
+              class="externalLink cluetip"
+              title="Česky [CZ]|Czech language<br />
+<br />
+Thanks to Pavel Budka, Petr Jirsa, Honza Kriz, webprostor, coudy, puschpull, lanius, sichr, ZdenekMaterna, elpresidento, ruman, Dejv92 "
+            >Česky [CZ]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=414"
+              class="externalLink cluetip"
+              title="Česky [CZ]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-cs_CZ-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=415"
+              class="externalLink cluetip"
+              title="Dansk [DK]|Danish language<br />
+<br />
+Thanks to nile, Rollike, thomas1956, Egorip, pointman and Kaare "
+            >Dansk [DK]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=415"
+              class="externalLink cluetip"
+              title="Dansk [DK]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-da_DK-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=416"
+              class="externalLink cluetip"
+              title="Deutsch [DE]|German language<br />
+Thanks to el ninjo, duke, Eric, sugar888, xeomueller, Matterhorn, andimeier, unphysicalix, polly, MigroMundus, fs101299, Richard, Joergen, Ralf, fragoriscus, yogie, stephy, DanielHo, bezz, kaesi_jones, dinkelaker, gsnde, cyberpunk, HarryF, quovadit and bezz "
+            >Deutsch [DE]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=416"
+              class="externalLink cluetip"
+              title="Deutsch [DE]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-de_DE-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=508"
+              class="externalLink cluetip"
+              title="Ελληνικά [GR]|Greek language<br />
+<br />
+Thanks to andmarios, elizap, Lamprianidis and Vasilis Fotopoulos"
+            >Ελληνικά [GR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=508"
+              class="externalLink cluetip"
+              title="Ελληνικά [GR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-el_GR-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=716"
+              class="externalLink cluetip"
+              title="English [GB]|GB English Thanks to Cadencia, beerfestival, Tadjio, "
+            >English [GB]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=716"
+              class="externalLink cluetip"
+              title="English [GB]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-en_GB-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=417"
+              class="externalLink cluetip"
+              title="English [UK]|default technical language"
+            >English [UK]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=417"
+              class="externalLink cluetip"
+              title="English [UK]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-en_UK-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=717"
+              class="externalLink cluetip"
+              title="English [US]|American English (United States)"
+            >English [US]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=717"
+              class="externalLink cluetip"
+              title="English [US]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-en_US-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=596"
+              class="externalLink cluetip"
+              title="Esperanto [EO]|Thanks to Axel Rousseau and sylvbarrier 	"
+            >Esperanto [EO]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=596"
+              class="externalLink cluetip"
+              title="Esperanto [EO]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-eo_EO-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=418"
+              class="externalLink cluetip"
+              title="Argentina [AR]|Argentina language<br />
+<br />
+Thanks to alberto"
+            >Argentina [AR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=418"
+              class="externalLink cluetip"
+              title="Argentina [AR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-es_AR-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=169"
+              class="externalLink cluetip"
+              title="Español [ES]|Translation in Spanish<br />
+<br />
+Thanks to jpr928, am, petaqui, bonzo_bvd, dani BCN"
+            >Español [ES]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=169"
+              class="externalLink cluetip"
+              title="Español [ES]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-es_ES-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=726"
+              class="externalLink cluetip"
+              title="México [MX]|México"
+            >México [MX]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=726"
+              class="externalLink cluetip"
+              title="México [MX]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-es_MX-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=569"
+              class="externalLink cluetip"
+              title="Estonian [EE]|Estonian language<br />
+ <br />
+Thanks to Jolly, daddo and kristian, Eggy, kersta, Pelagis "
+            >Estonian [EE]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=569"
+              class="externalLink cluetip"
+              title="Estonian [EE]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-et_EE-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=725"
+              class="externalLink cluetip"
+              title="Euskara [ES]|Euskara language"
+            >Euskara [ES]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=725"
+              class="externalLink cluetip"
+              title="Euskara [ES]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-eu_ES-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=419"
+              class="externalLink cluetip"
+              title="پارسی [IR]|Persian language<br />
+<br />
+Thanks to mohammadN, alikhani, hadi, Garcia, ipic "
+            >پارسی [IR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=419"
+              class="externalLink cluetip"
+              title="پارسی [IR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-fa_IR-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=686"
+              class="externalLink cluetip"
+              title="Finnish [FI]|Thanks to Juhi24, kristian, Rinnaus, streen, Tome-, Juhi24, argus, rolle, lrd, jhellen "
+            >Finnish [FI]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=686"
+              class="externalLink cluetip"
+              title="Finnish [FI]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-fi_FI-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=420"
+              class="externalLink cluetip"
+              title="Français [QC]|Quebecian language<br />
+<br />
+Thanks to TiOger"
+            >Français [QC]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=420"
+              class="externalLink cluetip"
+              title="Français [QC]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-fr_CA-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=421"
+              class="externalLink cluetip"
+              title="Français [FR]|French language"
+            >Français [FR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=421"
+              class="externalLink cluetip"
+              title="Français [FR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-fr_FR-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=681"
+              class="externalLink cluetip"
+              title="Galego [ES]|Thanks to damufo"
+            >Galego [ES]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=681"
+              class="externalLink cluetip"
+              title="Galego [ES]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-gl_ES-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=457"
+              class="externalLink cluetip"
+              title="עברית [IL]|Hebrew language<br />
+<br />
+Thanks to ADIRBITON"
+            >עברית [IL]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=457"
+              class="externalLink cluetip"
+              title="עברית [IL]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-he_IL-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=422"
+              class="externalLink cluetip"
+              title="Hrvatski [HR]|Croatian language<br />
+<br />
+Thanks to nantic, LuxZg"
+            >Hrvatski [HR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=422"
+              class="externalLink cluetip"
+              title="Hrvatski [HR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-hr_HR-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=423"
+              class="externalLink cluetip"
+              title="Magyar [HU]|Hungarian language<br />
+<br />
+Thanks to sámli, evryka23, asicu, miky, Godot, mionix"
+            >Magyar [HU]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=423"
+              class="externalLink cluetip"
+              title="Magyar [HU]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-hu_HU-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=969"
+              class="externalLink cluetip"
+              title="Հայերեն (Hayerēn) [AM]|Armenian language<br />
+<br />
+Thanks to gayane"
+            >Հայերեն (Hayerēn) [AM]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=969"
+              class="externalLink cluetip"
+              title="Հայերեն (Hayerēn) [AM]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-hy_AM-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=707"
+              class="externalLink cluetip"
+              title="Bahasa Indonesia [ID]|Bahasa Indonesia<br />
+<br />
+Thanks to papua"
+            >Bahasa Indonesia [ID]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=707"
+              class="externalLink cluetip"
+              title="Bahasa Indonesia [ID]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-id_ID-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=518"
+              class="externalLink cluetip"
+              title="Íslenska [IS]|Icelandic translation<br />
+<br />
+Thanks to Wallster"
+            >Íslenska [IS]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=518"
+              class="externalLink cluetip"
+              title="Íslenska [IS]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-is_IS-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=424"
+              class="externalLink cluetip"
+              title="Italiano [IT]|Italian language<br />
+<br />
+Thanks to Rio, EricNet, sugar888, sergix"
+            >Italiano [IT]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=424"
+              class="externalLink cluetip"
+              title="Italiano [IT]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-it_IT-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=425"
+              class="externalLink cluetip"
+              title="日本語 [JP]|Japanese language<br />
+<br />
+Thanks to irohaproject, mits"
+            >日本語 [JP]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=425"
+              class="externalLink cluetip"
+              title="日本語 [JP]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-ja_JP-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=426"
+              class="externalLink cluetip"
+              title="ქართული [GE]|Georgian language<br />
+<br />
+Thanks to geomagi"
+            >ქართული [GE]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=426"
+              class="externalLink cluetip"
+              title="ქართული [GE]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-ka_GE-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=579"
+              class="externalLink cluetip"
+              title="ខ្មែរ [KH]|Khmer (Cambodia) language<br />
+ <br />
+Thanks to Vanndy"
+            >ខ្មែរ [KH]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=579"
+              class="externalLink cluetip"
+              title="ខ្មែរ [KH]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-km_KH-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=693"
+              class="externalLink cluetip"
+              title="ಕನ್ನಡ [IN]|Kannada language [India]<br />
+<br />
+Thanks to rudramurthy"
+            >ಕನ್ನಡ [IN]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=693"
+              class="externalLink cluetip"
+              title="ಕನ್ನಡ [IN]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-kn_IN-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=509"
+              class="externalLink cluetip"
+              title="한국어 [KR]|Korean language<br />
+<br />
+Thanks to Aisika and ayokyun"
+            >한국어 [KR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=509"
+              class="externalLink cluetip"
+              title="한국어 [KR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-ko_KR-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=715"
+              class="externalLink cluetip"
+              title="Lëtzebuergesch [LU]|Thanks to Quetsch"
+            >Lëtzebuergesch [LU]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=715"
+              class="externalLink cluetip"
+              title="Lëtzebuergesch [LU]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-lb_LU-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=648"
+              class="externalLink cluetip"
+              title="Lietuvių [LT]|Thanks to Giedrelis and vilisas"
+            >Lietuvių [LT]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=648"
+              class="externalLink cluetip"
+              title="Lietuvių [LT]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-lt_LT-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=427"
+              class="externalLink cluetip"
+              title="Latviešu [LV]|Latvian language<br />
+<br />
+Thanks to Aivars Baldone"
+            >Latviešu [LV]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=427"
+              class="externalLink cluetip"
+              title="Latviešu [LV]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-lv_LV-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=428"
+              class="externalLink cluetip"
+              title="Македонски [MK]|Macedonian language<br />
+<br />
+Thanks to idefix"
+            >Македонски [MK]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=428"
+              class="externalLink cluetip"
+              title="Македонски [MK]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-mk_MK-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=696"
+              class="externalLink cluetip"
+              title="Монгол [MN]|Thanks to Ulzii"
+            >Монгол [MN]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=696"
+              class="externalLink cluetip"
+              title="Монгол [MN]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-mn_MN-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=483"
+              class="externalLink cluetip"
+              title="Norsk bokmål [NO]|Norwegian language<br />
+<br />
+Thanks to atlew, abbamust10, skaulen and hammer9600"
+            >Norsk bokmål [NO]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=483"
+              class="externalLink cluetip"
+              title="Norsk bokmål [NO]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-nb_NO-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=429"
+              class="externalLink cluetip"
+              title="Nederlands [NL]|Dutch language<br />
+<br />
+Thanks to terwolde, Kees Hessels, pauldaytona"
+            >Nederlands [NL]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=429"
+              class="externalLink cluetip"
+              title="Nederlands [NL]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-nl_NL-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=689"
+              class="externalLink cluetip"
+              title="Norwegian nynorsk [NO]|Norwegian nynorsk<br />
+ <br />
+Thanks to kiho"
+            >Norwegian nynorsk [NO]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=689"
+              class="externalLink cluetip"
+              title="Norwegian nynorsk [NO]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-nn_NO-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=430"
+              class="externalLink cluetip"
+              title="Polski [PL]|Polish language<br />
+<br />
+Thanks to voyteckst, emcek, marcin"
+            >Polski [PL]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=430"
+              class="externalLink cluetip"
+              title="Polski [PL]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-pl_PL-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=431"
+              class="externalLink cluetip"
+              title="Brasil [BR]|Brazilian language<br />
+<br />
+Thanks to a1000, marcelomac , riboard, PabloBSantiago, oigreslima, glaucio, flaviove, hespanhol, manglio and msakik<br />
+"
+            >Brasil [BR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=431"
+              class="externalLink cluetip"
+              title="Brasil [BR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-pt_BR-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=432"
+              class="externalLink cluetip"
+              title="Português [PT]|Portuguese language<br />
+<br />
+Thanks to alahel76 and PsyKick_RuhYn"
+            >Português [PT]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=432"
+              class="externalLink cluetip"
+              title="Português [PT]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-pt_PT-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=433"
+              class="externalLink cluetip"
+              title="Română [RO]|Romanian language<br />
+<br />
+Thanks to strotti"
+            >Română [RO]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=433"
+              class="externalLink cluetip"
+              title="Română [RO]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-ro_RO-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=434"
+              class="externalLink cluetip"
+              title="Русский [RU]|Russian language<br />
+<br />
+Thanks to nadusha, kiddy-admin, ie, yuragal"
+            >Русский [RU]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=434"
+              class="externalLink cluetip"
+              title="Русский [RU]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-ru_RU-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=435"
+              class="externalLink cluetip"
+              title="Srpski [SR]|Serbian language Latin character<br />
+<br />
+Thanks to Darko"
+            >Srpski [SR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=435"
+              class="externalLink cluetip"
+              title="Srpski [SR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-sh_RS-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=452"
+              class="externalLink cluetip"
+              title="Slovensky [SK]|Slovak language<br />
+<br />
+Thanks to dodo"
+            >Slovensky [SK]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=452"
+              class="externalLink cluetip"
+              title="Slovensky [SK]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-sk_SK-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=453"
+              class="externalLink cluetip"
+              title="Slovenšcina [SL]|Slovenian language<br />
+<br />
+Thanks to Klemen, MarkoAm and simon.krajnc"
+            >Slovenšcina [SL]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=453"
+              class="externalLink cluetip"
+              title="Slovenšcina [SL]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-sl_SI-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=458"
+              class="externalLink cluetip"
+              title="Српски [SR]|Serbian language (Cyrillic)<br />
+<br />
+Thanks to Ћирилица1"
+            >Српски [SR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=458"
+              class="externalLink cluetip"
+              title="Српски [SR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-sr_RS-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=451"
+              class="externalLink cluetip"
+              title="Svenska [SE]|Swedish language<br />
+<br />
+Thanks to jonas"
+            >Svenska [SE]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=451"
+              class="externalLink cluetip"
+              title="Svenska [SE]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-sv_SE-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=638"
+              class="externalLink cluetip"
+              title="தமிழ் [IN]|Tamil (India) language<br />
+<br />
+Thanks to sivastar and saitjaleel"
+            >தமிழ் [IN]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=638"
+              class="externalLink cluetip"
+              title="தமிழ் [IN]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-ta_IN-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=519"
+              class="externalLink cluetip"
+              title="ภาษาไทย [TH]|Thai language<br />
+<br />
+Thanks to Songchai"
+            >ภาษาไทย [TH]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=519"
+              class="externalLink cluetip"
+              title="ภาษาไทย [TH]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-th_TH-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=436"
+              class="externalLink cluetip"
+              title="Türkçe [TR]|Turkish language<br />
+<br />
+Thanks to yeckass, Nakre, mehmet, Sait İşbilir, LazBoy, hakanselcuk "
+            >Türkçe [TR]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=436"
+              class="externalLink cluetip"
+              title="Türkçe [TR]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-tr_TR-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=523"
+              class="externalLink cluetip"
+              title="Українська [UA]|Ukrainian language<br />
+Thanks to quest_tom, rukhov, marchelly, Rata, tb0hdan and animan"
+            >Українська [UA]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=523"
+              class="externalLink cluetip"
+              title="Українська [UA]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-uk_UA-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=437"
+              class="externalLink cluetip"
+              title="Tiếng Việt [VN]|Vietnamese language<br />
+<br />
+Thanks to Em Ku"
+            >Tiếng Việt [VN]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=437"
+              class="externalLink cluetip"
+              title="Tiếng Việt [VN]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-vi_VN-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=438"
+              class="externalLink cluetip"
+              title="简体中文 [CN]|Chinese language<br />
+<br />
+Thanks to winson, eliotpoon, ZHU, Ralph.Bai, dennisyan "
+            >简体中文 [CN]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=438"
+              class="externalLink cluetip"
+              title="简体中文 [CN]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-zh_CN-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row2">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=614"
+              class="externalLink cluetip"
+              title="中文 (香港) [HK]|Thanks to fatman and hkdigit"
+            >中文 (香港) [HK]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=614"
+              class="externalLink cluetip"
+              title="中文 (香港) [HK]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-zh_HK-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+        <tr class="row1">
+          <td><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=524"
+              class="externalLink cluetip"
+              title="中文 (繁體) [TW]|Traditional Chinese language Thanks to tedx, unsetlay, azq1231, kelyiu3000, chouyh"
+            >中文 (繁體) [TW]</a></td>
+          <td style="text-align:center;"><a
+              href="http://localhost/piwigo16-languages/extension_view.php?eid=524"
+              class="externalLink cluetip"
+              title="中文 (繁體) [TW]|Already-complete gettext .po content (from this repo&#039;s own prior .lang.php -&gt; .po migration) repackaged as a proper &lt;id&gt;_17.0.0/ sibling instead of the legacy _16.3.0/ directory it had been mutated in place -- see CLAUDE.md."
+            >17.0.0</a></td>
+          <td>2026-08-14</td>
+          <td>Piwigo Team</td>
+          <td style="text-align:center;"><a
+              href="admin.php?page=languages&amp;tab=new&amp;revision=local-zh_TW-17.0.0&amp;pwg_token=c017d30a8885f922bcbb37108c7a60d6495f8bee5449a07d7aa5317c3c606c40"
+            >Install</a>
+            / <a
+              href="&amp;origin=piwigo_download"
+            >download</a>
+          </td>
+        </tr>
+    </table>
 
 </div>
 </div>
@@ -148,43 +1632,72 @@
 
 <div id="footer">
   <div>
-    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What&apos;s new in version 17?">
-      <i class="icon-bell"></i>
-    </span>
+    <a
+      class="externalLink tiptip piwigo-logo"
+      href="https://upstream.example.invalid"
+      title="Visit Piwigo project website"
+    ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+      <span
+        id="whats_new_notification"
+        class="icon-blue tiptip"
+        onclick="show_user_whats_new()"
+        title="What&apos;s new in version 17?"
+      >
+        <i class="icon-bell"></i>
+      </span>
   </div>
   <div id="pageInfos">
 
     Contact
-    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+    <a
+      href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
+    >Webmaster</a>
   </div></div>
 </div>
 
-<div id="whats_new">
+  <div id="whats_new">
     <div id="whats_new_popin">
-      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <a
+        class="icon-cancel close_whats_new"
+        onClick="hide_user_whats_new()"
+      ></a>
       <h3>What's new in version 17?</h3>
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Brand new login &amp; preferences with Standard pages !</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Brand new login &amp; preferences with Standard pages !</a></h4>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Two factor authentication is here</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Two factor authentication is here</a></h4>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">UI redesigns that make a difference</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >UI redesigns that make a difference</a></h4>
           </div>
         </div>
       </div>
       <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
-        <a class="buttonLike" href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+        <button onClick="hide_user_whats_new()"><i
+            class="icon-thumbs-up"
+          ></i> Ok, got it!</button>
+        <a
+          class="buttonLike"
+          href="https://upstream.example.invalid/releases/17.0.0"
+          target="_blank"
+        ><i class="icon-book"></i> Read the release note</a>
       </div>
     </div>
-</div>
+  </div>
 
 <style>
 
@@ -276,7 +1789,7 @@ function show_user_whats_new() {
 //]]></script>
 <!-- END get_combined -->
 
-<script type="module" src="dist/vitals.js"></script>
+  <script type="module" src="dist/vitals.js"></script>
 
 </body>
 </html>

@@ -10,35 +10,34 @@
   <body style="font-family: &quot;Verdana&quot;,&quot;Helvetica&quot;,&quot;Optima&quot;,sans-serif; font-size: 12px; margin: 0px; padding: 0px; width: 100%; height: 100%; color: #111; background: #fff;">
     <table id="bodyTable" cellspacing="0" cellpadding="10" border="0" style="width: 100%; height: 100%; background: #fff;">
       <tr><td align="center" valign="top">
+          <table id="contentTable" cellspacing="0" cellpadding="0" border="0" style="width: 600px;">
+            <tr><td id="header" style="padding: 20px; background: #eee; background-image: radial-gradient(ellipse at center,#fefefe,#e5e5e5); border-top: 4px solid #f70; text-align: center; text-shadow: 1px 1px 0px #fff;">
+                <div id="title" style="font-size: 26px; font-weight: bold;">Fixture Gallery</div>
+                <div id="subtitle" style="font-size: 20px; color: #e06900;"> Visit album Sample Album</div>
+              </td></tr>
 
-        <table id="contentTable" cellspacing="0" cellpadding="0" border="0" style="width: 600px;">
-          <tr><td id="header" style="padding: 20px; background: #eee; background-image: radial-gradient(ellipse at center,#fefefe,#e5e5e5); border-top: 4px solid #f70; text-align: center; text-shadow: 1px 1px 0px #fff;">
-            <div id="title" style="font-size: 26px; font-weight: bold;">Fixture Gallery</div>
-            <div id="subtitle" style="font-size: 20px; color: #e06900;"> Visit album Sample Album</div>
-          </td></tr>
-
-          <tr><td id="content" style="padding: 0 20px 20px 20px; font-family: &quot;Verdana&quot;,&quot;Helvetica&quot;,&quot;Optima&quot;,sans-serif; font-size: 13px; background: #fefefe; border-width: 1px; border-style: solid; border-color: #ddd #eee; box-shadow: inset 0 0 20px #eee;">
-            <div id="topSpacer" style="margin-bottom: 20px;"></div>
-            <div id="cat_group_info">
-<h2 style="margin: .5em 0 .25em 0; font-size: 20px;">Informations</h2>
-<p style="margin: .25em 0 .5em 0;">Hello,</p>
-<p style="margin: .25em 0 .5em 0;">Discover album: <a href="index.php?/category/1" style="color: #f70; text-decoration: none;">Sample Album</a></p>
-<p style="margin: .25em 0 .5em 0;">A short note about this album.</p>
-<p style="margin: .25em 0 .5em 0;">See you soon.</p>
+            <tr><td id="content" style="padding: 0 20px 20px 20px; font-family: &quot;Verdana&quot;,&quot;Helvetica&quot;,&quot;Optima&quot;,sans-serif; font-size: 13px; background: #fefefe; border-width: 1px; border-style: solid; border-color: #ddd #eee; box-shadow: inset 0 0 20px #eee;">
+                <div id="topSpacer" style="margin-bottom: 20px;"></div>
+<div id="cat_group_info">
+  <h2 style="margin: .5em 0 .25em 0; font-size: 20px;">Informations</h2>
+  <p style="margin: .25em 0 .5em 0;">Hello,</p>
+  <p style="margin: .25em 0 .5em 0;">Discover album: <a href="index.php?/category/1" style="color: #f70; text-decoration: none;">Sample Album</a></p>
+  <p style="margin: .25em 0 .5em 0;">A short note about this album.</p>
+  <p style="margin: .25em 0 .5em 0;">See you soon.</p>
 </div>
-          </td></tr>
+</td></tr>
 
-          <tr><td id="footer" style="font-size: 10px; padding: 5px; background: #eee; border-bottom: 2px solid #f70;">
-            Sent by <a href="{{ABSOLUTE_ROOT_URL}}" style="color: #f70; text-decoration: none;">Fixture Gallery</a>
-            - Powered by <a href="https://upstream.example.invalid" class="Piwigo" style="color: #f70; text-decoration: none;">Piwigo</a>
-            
+<tr><td id="footer" style="font-size: 10px; padding: 5px; background: #eee; border-bottom: 2px solid #f70;">
+    Sent by <a href="{{ABSOLUTE_ROOT_URL}}" style="color: #f70; text-decoration: none;">Fixture Gallery</a>
+    - Powered by <a href="https://upstream.example.invalid" class="Piwigo" style="color: #f70; text-decoration: none;">Piwigo</a>
+    
 
-            - Contact
-            <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site" style="color: #f70; text-decoration: none;">Webmaster</a>
-          </td></tr>
-        </table>
+    - Contact
+    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site" style="color: #f70; text-decoration: none;">Webmaster</a>
+  </td></tr>
+</table>
 
-      </td></tr>
-    </table>
-  </body>
+</td></tr>
+</table>
+</body>
 </html>

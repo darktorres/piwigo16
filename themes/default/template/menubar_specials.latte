@@ -1,8 +1,14 @@
 <dt>{='Specials'|translate}</dt>
 <dd>
-	<ul>{spaceless}
-		{foreach $block->data as $link}
-		<li><a href="{$link['URL']|noescape}" title="{$link['TITLE']}"{if isset($link['REL'])} {$link['REL']|noescape}{/if}>{$link['NAME']}</a></li>
-		{/foreach}
-	{/spaceless}</ul>
+  <ul>{spaceless}
+      {foreach $block->data as $link}
+        <li><a
+            href="{$link['URL']|noescape}"
+            title="{$link['TITLE']}"
+            {if isset($link['REL'])}
+            {$link['REL']|noescape}
+            {/if}
+          >{$link['NAME']}</a></li>
+      {/foreach}
+    {/spaceless}</ul>
 </dd>

@@ -2,23 +2,23 @@ Fixture Gallery
  Subscribe to notification by mail
 ----
 
-Notification
-Hello Fixture Recipient,
+  Notification
+  Hello Fixture Recipient,
 
-You have subscribed to receiving notifications by mail.
-
-
-
-Go to Fixture Gallery.
-See you soon,
-Fixture Gallery
+    You have subscribed to receiving notifications by mail.
 
 
-To unsubscribe, click on nbm.php?unsubscribe=fixture-check-key
-To subscribe, click on nbm.php?subscribe=fixture-check-key
-If you encounter problems or have any question, please send a message to fixture_admin@example.test
 
-
+    Go to Fixture Gallery.
+  See you soon,
+  Fixture Gallery
+  
+  
+    To unsubscribe, click on nbm.php?unsubscribe=fixture-check-key
+    To subscribe, click on nbm.php?subscribe=fixture-check-key
+    If you encounter problems or have any question, please send a message to fixture_admin@example.test
+  
+  
 
 ----
 Sent by "Fixture Gallery" {{ABSOLUTE_ROOT_URL}}

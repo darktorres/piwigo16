@@ -1,4 +1,4 @@
-            {*
+{*
               Appended after header.latte + one of cat_group_info.latte /
               notification_by_mail.latte / notification_admin.latte (all
               three rendered independently and joined by raw PHP string
@@ -6,26 +6,30 @@
               file is not a standalone document. The </td></tr> right
               below closes header.latte's own <tr><td id="content">.
             *}
-            {* <!-- end $CONTENT --> *}
-          </td></tr>
+{* <!-- end $CONTENT --> *}
+</td></tr>
 
-          <tr><td id="footer">
-            {* <!-- begin FOOTER --> *}
-{* <!-- Please, do not remove this copyright. If you really want to,
+<tr><td id="footer">
+    {* <!-- begin FOOTER --> *}
+    {* <!-- Please, do not remove this copyright. If you really want to,
 contact us on http://piwigo.org to find a solution on how
 to show the origin of the script... --> *}
 
-            {='Sent by'|translate} <a href="{$GALLERY_URL|noescape}">{$GALLERY_TITLE}</a>
-            - {='Powered by'|translate} <a href="{$APP_URL}" class="Piwigo">Piwigo</a>
-            {if !empty($VERSION)}{$VERSION}{/if}
+    {='Sent by'|translate} <a
+      href="{$GALLERY_URL|noescape}"
+    >{$GALLERY_TITLE}</a>
+    - {='Powered by'|translate} <a href="{$APP_URL}" class="Piwigo">Piwigo</a>
+    {if !empty($VERSION)}{$VERSION}{/if}
 
-            - {='Contact'|translate}
-            <a href="mailto:{$CONTACT_MAIL}?subject={='A comment on your site'|translate|rawurlencode}">{='Webmaster'|translate}</a>
-            {* <!-- end FOOTER --> *}
-          </td></tr>
-        </table>
+    - {='Contact'|translate}
+    <a
+      href="mailto:{$CONTACT_MAIL}?subject={='A comment on your site'|translate|rawurlencode}"
+    >{='Webmaster'|translate}</a>
+    {* <!-- end FOOTER --> *}
+  </td></tr>
+</table>
 
-      </td></tr>
-    </table>
-  </body>
+</td></tr>
+</table>
+</body>
 </html>

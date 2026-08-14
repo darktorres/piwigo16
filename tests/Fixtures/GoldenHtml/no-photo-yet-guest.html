@@ -1,10 +1,12 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link rel="stylesheet" type="text/css" href="themes/default/theme.css">
-<title>Piwigo, Welcome</title>
-<style type="text/css">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" type="text/css" href="themes/default/theme.css">
+    <title>Piwigo, Welcome</title>
+    <style
+      type="text/css"
+    >
 body {
 margin: 0;
 padding: 0;
@@ -116,31 +118,31 @@ border:2px solid #dddddd;
   color:white;
 }
 </style>
+  </head>
 
-</head>
+  <body>
+    <div id="global">
+        <p
+          id="noPhotoWelcome"
+        >Welcome to your Piwigo photo gallery!</p>
 
-<body>
-<div id="global">
+        <form method="post" action="identification.php" id="quickconnect">
+          Username
+          <br><input type="text" name="username">
+          <br>
+          <br>Password
+          <br><input type="password" name="password">
 
-<p id="noPhotoWelcome">Welcome to your Piwigo photo gallery!</p>
-
-<form method="post" action="identification.php" id="quickconnect">
-Username
-<br><input type="text" name="username">
-<br>
-<br>Password
-<br><input type="password" name="password">
-
-<p><input class="submit" type="submit" name="login" value="Sign in"></p>
-
-</form>
-<div id="deactivate"><a href="?no_photo_yet=browse">... or browse your empty gallery</a></div>
-
-
-
-
-</div>
-</body>
-
+          <p><input
+              class="submit"
+              type="submit"
+              name="login"
+              value="Sign in"
+            ></p>
+        </form>
+        <div id="deactivate"><a
+            href="?no_photo_yet=browse"
+          >... or browse your empty gallery</a></div>
+    </div>
+  </body>
 </html>
-

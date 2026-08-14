@@ -1,10 +1,10 @@
 {capture $tmpHtmlStyle}
 .thumbnailCategory .illustration{
-	width: {$derivative_params->maxWidth()+5}px;
+	width: {$derivative_params->maxWidth() + 5}px;
 }
 
 .content .thumbnailCategory .description{
-	height: {$derivative_params->maxHeight()+5}px;
+	height: {$derivative_params->maxHeight() + 5}px;
 }
 {/capture}
 {do htmlStyle($tmpHtmlStyle)}
@@ -12,41 +12,58 @@
   var error_icon = "{$ROOT_URL}{$themeconf['icon_dir']}/errors_small.png", max_requests = {$maxRequests};
 {/capture}
 {do footerScript($tmpFooterScript)}
-<div class="loader"><img src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"></div>
+<div class="loader"><img
+    src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"
+  ></div>
 <ul class="thumbnailCategories">
-{foreach $category_thumbnails as $cat}
-{if $cat['representative']}
-{var $derivative = $pwg->derivative($derivative_params, $cat['representative']['src_image'])}
-{if !$derivative->isCached()}
-{do combineScript(id: 'jquery.ajaxmanager', path: 'themes/default/js/plugins/jquery.ajaxmanager.js', load: 'footer')}
-{do combineScript(id: 'thumbnails.loader', path: 'themes/default/js/thumbnails.loader.js', require: 'jquery.ajaxmanager', load: 'footer')}
-{/if}
-{/if}
-  <li class="{if $iterator->counter0 % 2 !== 0}odd{else}even{/if}">
-		<div class="thumbnailCategory">
-			<div class="illustration">
-			<a href="{$cat['URL']|noescape}">
-				<img {if !$cat['representative']}src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png"{elseif $derivative->isCached()}src="{$derivative->getUrl()|noescape}"{else}src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png" data-src="{$derivative->getUrl()|noescape}"{/if} alt="{$cat['TN_ALT']}" title="{$cat['NAME']|replace:'"',' '|strip_tags:false} - {='display this album'|translate}">
-			</a>
-			</div>
-			<div class="description">
-				<h3>
-					<a href="{$cat['URL']|noescape}">{$cat['NAME']}</a>
-					{if !empty($cat['icon_ts'])}
-					<img title="{$cat['icon_ts']['TITLE']}" src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']['IS_CHILD_DATE']}_by_child{/if}.png" alt="(!)">
-					{/if}
-				</h3>
-		<div class="text">
-				{if isset($cat['INFO_DATES']) }
-				<p class="dates">{$cat['INFO_DATES']}</p>
-				{/if}
-				<p class="Nb_images">{$cat['CAPTION_NB_IMAGES']|noescape}</p>
-				{if !empty($cat['DESCRIPTION'])}
-				<p>{$cat['DESCRIPTION']|noescape}</p>
-				{/if}
-		</div>
-			</div>
-		</div>
-	</li>
-{/foreach}
+  {foreach $category_thumbnails as $cat}
+    {if $cat['representative']}
+      {var $derivative = $pwg->derivative($derivative_params, $cat['representative']['src_image'])}
+      {if !$derivative->isCached()}
+        {do combineScript(id: 'jquery.ajaxmanager', path: 'themes/default/js/plugins/jquery.ajaxmanager.js', load: 'footer')}
+        {do combineScript(id: 'thumbnails.loader', path: 'themes/default/js/thumbnails.loader.js', require: 'jquery.ajaxmanager', load: 'footer')}
+      {/if}
+    {/if}
+    <li class="{if $iterator->counter0 % 2 !== 0}odd{else}even{/if}">
+      <div class="thumbnailCategory">
+        <div class="illustration">
+          <a href="{$cat['URL']|noescape}">
+            <img
+              {if !$cat['representative']}
+              src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png"
+              {elseif $derivative->isCached()}
+              src="{$derivative->getUrl()|noescape}"
+              {else}
+              src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png"
+              data-src="{$derivative->getUrl()|noescape}"
+              {/if}
+              alt="{$cat['TN_ALT']}"
+              title="{$cat['NAME']|replace:'"',' '|strip_tags:false} - {='display this album'|translate}"
+            >
+          </a>
+        </div>
+        <div class="description">
+          <h3>
+            <a href="{$cat['URL']|noescape}">{$cat['NAME']}</a>
+            {if !empty($cat['icon_ts'])}
+              <img
+                title="{$cat['icon_ts']['TITLE']}"
+                src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']['IS_CHILD_DATE']}_by_child{/if}.png"
+                alt="(!)"
+              >
+            {/if}
+          </h3>
+          <div class="text">
+            {if isset($cat['INFO_DATES'])}
+              <p class="dates">{$cat['INFO_DATES']}</p>
+            {/if}
+            <p class="Nb_images">{$cat['CAPTION_NB_IMAGES']|noescape}</p>
+            {if !empty($cat['DESCRIPTION'])}
+              <p>{$cat['DESCRIPTION']|noescape}</p>
+            {/if}
+          </div>
+        </div>
+      </div>
+    </li>
+  {/foreach}
 </ul>

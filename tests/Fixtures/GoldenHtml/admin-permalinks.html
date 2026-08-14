@@ -1,138 +1,226 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-<meta name="apple-itunes-app" content="app-id=472225196">
-<meta charset="utf-8">
-<title>Fixture Gallery :: Piwigo Administration</title>
-<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
-<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+  <head>
+      <meta name="apple-itunes-app" content="app-id=472225196">
+    <meta charset="utf-8">
+    <title>Fixture Gallery :: Piwigo Administration</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="themes/default/icon/piwigo.org-icon 1.svg"
+    >
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="themes/admin/default/fonts/open-sans/open-sans.css"
+    >
 
 
-<!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/6nnbt7.css">
+    <!-- BEGIN get_combined -->
+    <link rel="stylesheet" type="text/css" href="_data/combined/6nnbt7.css">
 
-<script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
-<!-- END get_combined -->
+    <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
+    <!-- END get_combined -->
 
 <style type="text/css">
 [name="permalink"] {
   width : 100%;
   max-width : 600px;
 }</style>
-</head>
+  </head>
 
-<body id="theAdminPage">
+  <body id="theAdminPage">
+    <div id="the_page">
 
-<div id="the_page">
+      <div id="pwgHead">
+        <a
+          href="/piwigo17-4/"
+          class="visit-gallery tiptip"
+          title="Visit the gallery"
+        ><i class="icon-left-open"></i>Visit</a>
+        <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-
-<div id="pwgHead">
-  <a href="/piwigo17-4/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
-  <div class="pwgHead-gallery-title">Fixture Gallery</div>
-
-  <div id="headActions">
-    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+        <div id="headActions">
+          <span class="admin-head-username"><i
+              class="icon-user"
+            ></i>fixture_admin</span>
 <a href="admin.php?page=permalinks&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
-    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
-    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
-  </div>
-</div>
+          <a
+            class="tiptip"
+            href="admin.php?page=help"
+            title="Instructions to use Piwigo"
+          ><i
+              class="icon-help-circled"
+            ></i><span>Help Me</span></a>
+          <a href="index.php?act=logout"><i
+              class="icon-logout"
+            ></i><span>Logout</span></a>
+        </div>
+      </div>
 
-<div style="clear:both;"></div>
+      <div style="clear:both;"></div>
 
 
-<div id="pwgMain">
-
+      <div id="pwgMain">
 
 <div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+        class="icon-television"
+      ></i> Dashboard</a></div>
 
-	<dl>
-		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
-			<ul>
-				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
-        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
-				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
-				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
-				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
-			</ul>
-		</dd>
-  </dl>
   <dl>
-		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dt><i class="icon-picture"></i><span>Photos&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
     <dd>
       <ul>
-        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
-        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+        <li><a href="admin.php?page=photos_add"><i
+              class="icon-plus-circled"
+            ></i>Add</a></li>
+          <li><a href="admin.php?page=rating"><i
+                class="icon-star"
+              ></i>Rating</a></li>
+        <li><a href="admin.php?page=tags"><i
+              class="icon-tags"
+            ></i>Tags</a></li>
+        <li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i
+              class="icon-clock"
+            ></i>Recent photos</a></li>
+        <li><a href="admin.php?page=batch_manager"><i
+              class="icon-th"
+            ></i>Batch Manager</a></li>
       </ul>
     </dd>
   </dl>
   <dl>
-		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-sitemap"></i><span>Albums&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
-        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
-				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+        <li><a href="admin.php?page=albums"><i
+              class="icon-folder-open"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i
+              class="icon-pencil"
+            ></i>Properties</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
-  </dl>
-  <dl>
-		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-users"></i><span>Users&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
-				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
-				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
-				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
-          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
-        </a></li>
-        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+        <li><a href="admin.php?page=user_list"><i
+              class="icon-user-add"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i
+              class="icon-group"
+            ></i>Groups</a></li>
+        <li><a href="admin.php?page=notification_by_mail"><i
+              class="icon-mail-1"
+            ></i>Notification</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><a href="admin.php?page=plugins" class="admin-main"><i
+          class="icon-puzzle"
+        ></i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+    <dt><i class="icon-wrench"></i><span>Tools&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
-        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
-				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
-        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+          <li><a href="admin.php?page=site_update&amp;site=1"><i
+                class="icon-exchange"
+              ></i>Synchronize</a></li>
+        <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
+              class="icon-signal"
+            ></i>History</a></li>
+        <li><a href="admin.php?page=maintenance"><i
+              class="icon-tools"
+            ></i>Maintenance</a></li>
+          <li><a href="admin.php?page=comments"><i
+                class="icon-chat"
+              ></i>Comments
+                <span
+                  class="adminMenubarCounter"
+                  title="1 waiting for validation"
+                >1</span>
+              </a></li>
+          <li><a href="admin.php?page=updates"><i
+                class="icon-arrows-cw"
+              ></i>Updates</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i
+        class="icon-cog"
+      ></i><span>Configuration&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i
+              class="icon-cog-alt"
+            ></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i
+              class="icon-menu"
+            ></i>Menus</a></li>
+        <li><a href="admin.php?page=languages"><i
+              class="icon-language"
+            ></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i
+              class="icon-brush"
+            ></i>Themes</a></li>
       </ul>
     </dd>
   </dl>
 </div> <!-- menubar -->
 
 <div id="content" class="content">
+  <h1>Albums<span
+      class="admin-object-id"
+    ></span></h1>
 
-  <h1>Albums<span class="admin-object-id"></span></h1>
+      <div id="tabsheet">
+    <ul class="tabsheet">
+        <li
+          class="normal_tab"
+        >
+          <a
+            href="admin.php?page=albums"
+          ><span><span class="icon-menu"></span>List</span></a>
+        </li>
+        <li
+          class="selected_tab"
+        >
+          <a
+            href="admin.php?page=permalinks"
+          ><span><span class="icon-link-1"></span>Permalinks</span></a>
+        </li>
+    </ul>
+  </div>
 
-  <div id="tabsheet">
-<ul class="tabsheet">
-  <li class="normal_tab">
-    <a href="admin.php?page=albums"><span><span class="icon-menu"></span>List</span></a>
-  </li>
-  <li class="selected_tab">
-    <a href="admin.php?page=permalinks"><span><span class="icon-link-1"></span>Permalinks</span></a>
-  </li>
-</ul>
-</div>
+    <ul class="HelpActions">
+      <li><a
+          href="admin/popuphelp.php?page=permalinks&amp;output=content_only"
+          title="Help"
+          class="help-popin"
+        ><span class="icon-help-circled"></span></a></li>
+    </ul>
 
-  <ul class="HelpActions">
-    <li><a href="admin/popuphelp.php?page=permalinks&amp;output=content_only" title="Help" class="help-popin"><span class="icon-help-circled"></span></a></li>
-  </ul>
-
-<div class="eiw">
+  <div class="eiw">
 
 
 
-
-</div> 
+  </div> 
 
   
 <style>
@@ -142,73 +230,94 @@ form fieldset p.actionButtons { margin-bottom:0}
 </style>
 
 
-<p id="showAddPermalink"><a href="#" id="addPermalinkOpen">Add/delete a permalink</a></p>
+<p id="showAddPermalink"><a
+    href="#"
+    id="addPermalinkOpen"
+  >Add/delete a permalink</a></p>
 
 <form method="post" action="" id="addPermalink" style="display:none">
-<fieldset>
-  <legend>Add/delete a permalink</legend>
-  <p>
-    <strong>Album</strong>
-    <br>
-    <select name="cat_id">
-      <option value="0">------</option>
-      <option value="1">- 1 - Sample Album</option>
+  <fieldset>
+    <legend>Add/delete a permalink</legend>
+    <p>
+      <strong>Album</strong>
+      <br>
+      <select name="cat_id">
+        <option value="0">------</option>
+        <option value="1">- 1 - Sample Album</option>
 <option value="2">&nbsp;&nbsp;&nbsp;- 2 - Nested Sub Album</option>
 
-    </select>
-  </p>
+      </select>
+    </p>
 
-  <p>
-    <strong>Permalink</strong>
-    <br><input name="permalink">
-  </p>
+    <p>
+      <strong>Permalink</strong>
+      <br><input name="permalink">
+    </p>
 
-  <p>
-    <label><input type="checkbox" name="save" checked="checked"> <strong>Save to permalinks history</strong></label>
-  </p>
+    <p>
+      <label><input
+          type="checkbox"
+          name="save"
+          checked="checked"
+        > <strong>Save to permalinks history</strong></label>
+    </p>
 
-  <p class="actionButtons">
-    <input type="submit" class="submit" name="set_permalink" value="Submit">
-    <a href="#" id="addPermalinkClose">Cancel</a>
-  </p>
-</fieldset>
-<input type="hidden" name="pwg_token" value="176c6e554c9efbb00c3214fb0d8f0db812e88c09f0e8c8c996a7436b72ad6c2c">
+    <p class="actionButtons">
+      <input
+        type="submit"
+        class="submit"
+        name="set_permalink"
+        value="Submit"
+      >
+      <a href="#" id="addPermalinkClose">Cancel</a>
+    </p>
+  </fieldset>
+  <input type="hidden" name="pwg_token" value="0079cd8b0fd3cb925d2e0312e582744ef64ca832ff5894bdfac201d7c58bdf02">
 </form>
 
 <fieldset>
-  <legend><span class="icon-lock icon-blue"></span>Permalinks</legend>
-<table class="table2" style="margin:0">
-	<tr class="throw">
-		<td>Id <a href="/piwigo17-4/admin.php?page=permalinks&amp;psf=id" title="Sort order">↓</a></td>
-		<td>Album <a href="/piwigo17-4/admin.php?page=permalinks" title="Sort order"><em>↓</em></a></td>
-		<td>Permalink <a href="/piwigo17-4/admin.php?page=permalinks&amp;psf=permalink" title="Sort order">↓</a></td>
-	</tr>
-</table>
+  <legend><span
+      class="icon-lock icon-blue"
+    ></span>Permalinks</legend>
+  <table class="table2" style="margin:0">
+    <tr class="throw">
+      <td>Id <a href="/piwigo17-4/admin.php?page=permalinks&amp;psf=id" title="Sort order">↓</a></td>
+      <td>Album <a href="/piwigo17-4/admin.php?page=permalinks" title="Sort order"><em>↓</em></a></td>
+      <td>Permalink <a href="/piwigo17-4/admin.php?page=permalinks&amp;psf=permalink" title="Sort order">↓</a></td>
+    </tr>
+  </table>
 </fieldset>
 
 <fieldset>
-  <legend><span class="icon-lock icon-red"></span>Permalinks history <a name="old_permalinks"></a></legend>
-<table class="table2" style="margin:0">
-	<tr class="throw">
-		<td>Id <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=cat_id#old_permalinks" title="Sort order">↓</a></td>
-		<td>Album</td>
-		<td>Permalink <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=permalink#old_permalinks" title="Sort order">↓</a></td>
-		<td>Deleted on <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=date_deleted#old_permalinks" title="Sort order">↓</a></td>
-		<td>Last hit <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=last_hit#old_permalinks" title="Sort order">↓</a></td>
-		<td>Hit <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=hit#old_permalinks" title="Sort order">↓</a></td>
-		<td style="width:5px;"></td>
-	</tr>
-	<tr style="line-height:1.5em;">
-		<td style="text-align:center;">1</td>
-		<td>
+  <legend><span
+      class="icon-lock icon-red"
+    ></span>Permalinks history <a
+      name="old_permalinks"
+    ></a></legend>
+  <table class="table2" style="margin:0">
+    <tr class="throw">
+      <td>Id <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=cat_id#old_permalinks" title="Sort order">↓</a></td>
+      <td>Album</td>
+      <td>Permalink <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=permalink#old_permalinks" title="Sort order">↓</a></td>
+      <td>Deleted on <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=date_deleted#old_permalinks" title="Sort order">↓</a></td>
+      <td>Last hit <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=last_hit#old_permalinks" title="Sort order">↓</a></td>
+      <td>Hit <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=hit#old_permalinks" title="Sort order">↓</a></td>
+      <td style="width:5px;"></td>
+    </tr>
+      <tr style="line-height:1.5em;">
+        <td style="text-align:center;">1</td>
+        <td>
 <a href="index.php?/category/1">Sample Album</a></td>
-		<td>old-sample-album</td>
-		<td>2026-08-01 00:00:00</td>
-		<td>2026-08-01 00:00:00</td>
-		<td>42</td>
-		<td><a href="admin.php?page=permalinks&amp;delete_permanent=old-sample-album&amp;pwg_token=176c6e554c9efbb00c3214fb0d8f0db812e88c09f0e8c8c996a7436b72ad6c2c"><img src="themes/admin/clear/icon/delete.png" alt="[Delete]"></a></td>
-	</tr>
-</table>
+        <td>old-sample-album</td>
+        <td>2026-08-01 00:00:00</td>
+        <td>2026-08-01 00:00:00</td>
+        <td>42</td>
+        <td><a href="admin.php?page=permalinks&amp;delete_permanent=old-sample-album&amp;pwg_token=0079cd8b0fd3cb925d2e0312e582744ef64ca832ff5894bdfac201d7c58bdf02"><img
+              src="themes/admin/clear/icon/delete.png"
+              alt="[Delete]"
+            ></a></td>
+      </tr>
+  </table>
 </fieldset>
 
 </div>
@@ -218,43 +327,72 @@ form fieldset p.actionButtons { margin-bottom:0}
 
 <div id="footer">
   <div>
-    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What&apos;s new in version 17?">
-      <i class="icon-bell"></i>
-    </span>
+    <a
+      class="externalLink tiptip piwigo-logo"
+      href="https://upstream.example.invalid"
+      title="Visit Piwigo project website"
+    ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+      <span
+        id="whats_new_notification"
+        class="icon-blue tiptip"
+        onclick="show_user_whats_new()"
+        title="What&apos;s new in version 17?"
+      >
+        <i class="icon-bell"></i>
+      </span>
   </div>
   <div id="pageInfos">
 
     Contact
-    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+    <a
+      href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
+    >Webmaster</a>
   </div></div>
 </div>
 
-<div id="whats_new">
+  <div id="whats_new">
     <div id="whats_new_popin">
-      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <a
+        class="icon-cancel close_whats_new"
+        onClick="hide_user_whats_new()"
+      ></a>
       <h3>What's new in version 17?</h3>
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Brand new login &amp; preferences with Standard pages !</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Brand new login &amp; preferences with Standard pages !</a></h4>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Two factor authentication is here</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Two factor authentication is here</a></h4>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">UI redesigns that make a difference</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >UI redesigns that make a difference</a></h4>
           </div>
         </div>
       </div>
       <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
-        <a class="buttonLike" href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+        <button onClick="hide_user_whats_new()"><i
+            class="icon-thumbs-up"
+          ></i> Ok, got it!</button>
+        <a
+          class="buttonLike"
+          href="https://upstream.example.invalid/releases/17.0.0"
+          target="_blank"
+        ><i class="icon-book"></i> Read the release note</a>
       </div>
     </div>
-</div>
+  </div>
 
 <style>
 
@@ -353,7 +491,7 @@ function show_user_whats_new() {
 //]]></script>
 <!-- END get_combined -->
 
-<script type="module" src="dist/vitals.js"></script>
+  <script type="module" src="dist/vitals.js"></script>
 
 </body>
 </html>

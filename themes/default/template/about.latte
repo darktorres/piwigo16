@@ -1,24 +1,25 @@
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
   <div class="titrePage">
-    <ul class="categoryActions">
-    </ul>
-    <h2><a href="{$U_HOME|noescape}">{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='About'|translate}</h2>
+    <ul class="categoryActions"></ul>
+    <h2><a
+        href="{$U_HOME|noescape}"
+      >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='About'|translate}</h2>
   </div>
 
   {include 'infos_errors.latte'}
 
   <div id="piwigoAbout">
-  {$ABOUT_MESSAGE|noescape}
-  {if isset($THEME_ABOUT) }
-  <ul>
-   <li>{$THEME_ABOUT|noescape}</li>
-  </ul>
-  {/if}
-  {if !empty($about_msgs)}
-    {foreach $about_msgs as $elt}
-    {$elt|noescape}
-    {/foreach}
-  {/if}
+    {$ABOUT_MESSAGE|noescape}
+    {if isset($THEME_ABOUT)}
+      <ul>
+        <li>{$THEME_ABOUT|noescape}</li>
+      </ul>
+    {/if}
+    {if !empty($about_msgs)}
+      {foreach $about_msgs as $elt}
+        {$elt|noescape}
+      {/foreach}
+    {/if}
   </div>
 </div>

@@ -92,26 +92,58 @@ const str_assoc_album_ab = '{='Associate to album'|translate|escapeJavascript|no
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 
 <form action="{$F_ACTION|noescape}" method="post" id="pictureModify">
-{if $INTRO['is_svg']}
-  <div id='picture-preview' class="svg-container">
-{else}
-  <div id='picture-preview'>
-{/if}
-    <div class='picture-preview-actions'>
-      <a class="preview-box icon-zoom-square" href="{$FILE_SRC}" title="{='Zoom'|translate}"></a>
-      <a class="icon-download" href="{$U_DOWNLOAD|noescape}" title="{='Download'|translate}"></a>
-      <a class="icon-signal" href="{$U_HISTORY|noescape}" title="{='Visit history'|translate}"></a>
-      <a class="icon-pulse" href="{$U_ACTIVITY|noescape}" title="{='Activity'|translate}"></a>
-      {if !url_is_remote($PATH)}
-      <a class="icon-arrows-cw" href="{$U_SYNC|noescape}" title="{='Synchronize metadata'|translate}"></a>
-      <a class="icon-trash" title="{='delete photo'|translate}" id='action-delete-picture'></a>
-      {/if}
-    </div>
-      {if $INTRO['is_svg']}
-      <img src="{$PATH}" alt="{='Thumbnail'|translate}" class="svg-image other-image-format" style="{if $FORMAT}width:100%; max-height:100%; {else}max-width:100%; height:100%;{/if} object-fit:contain;">
-      {else}
-      <img src="{$TN_SRC|noescape}" alt="{='Thumbnail'|translate}" class="other-image-format" style="{if $FORMAT}width:100%; max-height:100%;{else}max-width:100%; height:100%;{/if} object-fit:contain;">
-      {/if}
+  {if $INTRO['is_svg']}
+    <div id='picture-preview' class="svg-container">{else}
+    <div id='picture-preview'>{/if}
+  <div class='picture-preview-actions'>
+    <a
+      class="preview-box icon-zoom-square"
+      href="{$FILE_SRC}"
+      title="{='Zoom'|translate}"
+    ></a>
+    <a
+      class="icon-download"
+      href="{$U_DOWNLOAD|noescape}"
+      title="{='Download'|translate}"
+    ></a>
+    <a
+      class="icon-signal"
+      href="{$U_HISTORY|noescape}"
+      title="{='Visit history'|translate}"
+    ></a>
+    <a
+      class="icon-pulse"
+      href="{$U_ACTIVITY|noescape}"
+      title="{='Activity'|translate}"
+    ></a>
+    {if !url_is_remote($PATH)}
+      <a
+        class="icon-arrows-cw"
+        href="{$U_SYNC|noescape}"
+        title="{='Synchronize metadata'|translate}"
+      ></a>
+      <a
+        class="icon-trash"
+        title="{='delete photo'|translate}"
+        id='action-delete-picture'
+      ></a>
+    {/if}
+  </div>
+  {if $INTRO['is_svg']}
+    <img
+      src="{$PATH}"
+      alt="{='Thumbnail'|translate}"
+      class="svg-image other-image-format"
+      style="{if $FORMAT}width:100%; max-height:100%; {else}max-width:100%; height:100%;{/if} object-fit:contain;"
+    >
+  {else}
+    <img
+      src="{$TN_SRC|noescape}"
+      alt="{='Thumbnail'|translate}"
+      class="other-image-format"
+      style="{if $FORMAT}width:100%; max-height:100%;{else}max-width:100%; height:100%;{/if} object-fit:contain;"
+    >
+  {/if}
   </div>
   <div id='picture-content'>
     <div id='picture-infos'>
@@ -140,7 +172,6 @@ const str_assoc_album_ab = '{='Associate to album'|translate|escapeJavascript|no
       </div>
     </div>
 
-
     <p>
       <strong>{='Title'|translate}</strong>
       <br>
@@ -159,92 +190,138 @@ const str_assoc_album_ab = '{='Associate to album'|translate|escapeJavascript|no
       <input type="hidden" name="date_creation" value="{$DATE_CREATION}">
       <label class="date-input">
         <i class="icon-calendar"></i>
-        <input type="text" data-datepicker="date_creation" data-datepicker-unset="date_creation_unset" readonly>
+        <input
+          type="text"
+          data-datepicker="date_creation"
+          data-datepicker-unset="date_creation_unset"
+          readonly
+        >
       </label>
-      <a href="#" class="icon-cancel-circled" id="date_creation_unset">{='unset'|translate}</a>
+      <a
+        href="#"
+        class="icon-cancel-circled"
+        id="date_creation_unset"
+      >{='unset'|translate}</a>
     </p>
 
     <p>
-      <strong>{='Linked albums'|translate} <span class="linked-albums-badge {if count($related_categories) < 1 } badge-red {/if}"> {$related_categories|count} </span></strong>
+      <strong>{='Linked albums'|translate} <span
+          class="linked-albums-badge {if count($related_categories) < 1} badge-red {/if}"
+        > {$related_categories|count} </span></strong>
       {if count($related_categories) < 1}
         <span class="orphan-photo">{='This photo is an orphan'|translate}</span>
       {else}
         <span class="orphan-photo"></span>
       {/if}
       <br>
-      <select class="invisible-related-categories-select" name="associate[]" multiple>
-      {foreach $related_categories as $key => $cat_path}
-        <option selected value="{$key}"></option>
-      {/foreach}
+      <select
+        class="invisible-related-categories-select"
+        name="associate[]"
+        multiple
+      >
+        {foreach $related_categories as $key => $cat_path}
+          <option selected value="{$key}"></option>
+        {/foreach}
       </select>
       <div class="related-categories-container">
-      {foreach $related_categories as $key => $cat_path}
-      <div class="breadcrumb-item"><span class="link-path">{$cat_path['name']|noescape}</span>{if $cat_path['unlinkable']}<span id={$key} class="icon-cancel-circled remove-item"></span>{else}<span id={$key} class="icon-help-circled help-item tiptip" title="{='This picture is physically linked to this album, you can\'t dissociate them'|translate}"></span>{/if}</div>
-      {/foreach}
+        {foreach $related_categories as $key => $cat_path}
+          <div class="breadcrumb-item"><span
+              class="link-path"
+            >{$cat_path['name']|noescape}</span>{if $cat_path['unlinkable']}<span
+                id="{$key}"
+                class="icon-cancel-circled remove-item"
+              ></span>{else}<span
+                id="{$key}"
+                class="icon-help-circled help-item tiptip"
+                title="{='This picture is physically linked to this album, you can\'t dissociate them'|translate}"
+              ></span>{/if}</div>
+        {/foreach}
       </div>
-      <div class="breadcrumb-item linked-albums add-item {if count($related_categories) < 1 } highlight {/if}"><span class="icon-plus-circled"></span>{='Add'|translate}</div>
+      <div
+        class="breadcrumb-item linked-albums add-item {if count($related_categories) < 1} highlight {/if}"
+      ><span class="icon-plus-circled"></span>{='Add'|translate}</div>
     </p>
 
     <p>
       <strong>{='Representation of albums'|translate}</strong>
       <br>
-      <select data-selectize="categories" data-value="{$represented_albums|json_encode|noescape}"
+      <select
+        data-selectize="categories"
+        data-value="{$represented_albums|json_encode|noescape}"
         placeholder="{='Type in a search term'|translate}"
-        name="represent[]" multiple style="width:calc(100% + 2px);"></select>
+        name="represent[]"
+        multiple
+        style="width:calc(100% + 2px);"
+      ></select>
     </p>
 
     <p>
       <strong>{='Tags'|translate}</strong>
       <br>
-      <select data-selectize="tags" data-value="{$tag_selection|json_encode|noescape}"
+      <select
+        data-selectize="tags"
+        data-value="{$tag_selection|json_encode|noescape}"
         placeholder="{='Type in a search term'|translate}"
-        data-create="true" name="tags[]" multiple style="width:calc(100% + 2px);"></select>
+        data-create="true"
+        name="tags[]"
+        multiple
+        style="width:calc(100% + 2px);"
+      ></select>
     </p>
 
     <p>
       <strong>{='Description'|translate}</strong>
       <br>
-      <textarea name="comment" id="description" class="description">{$DESCRIPTION}</textarea>
+      <textarea
+        name="comment"
+        id="description"
+        class="description"
+      >{$DESCRIPTION}</textarea>
     </p>
 
     <p>
       <strong>{='Who can see this photo?'|translate}</strong> ({='Privacy level'|translate})
       <br>
-      <div class='select-icon icon-down-open'> </div>
+      <div class='select-icon icon-down-open'></div>
       <select name="level" size="1">
         {=htmlOptions(options: $level_options, selected: $level_options_selected)}
       </select>
-   </p>
+    </p>
 
-   <div class="savebar-footer">
+    <div class="savebar-footer">
       <div class="savebar-footer-start">
         <div class="savebar-footer-block">
-{if isset($U_JUMPTO)}
-          <a class="savebar-see-out" href="{$U_JUMPTO|noescape}" ><i class="icon-left-open"></i>{='Open in gallery'|translate}</a>
-{else}
-          <a class="savebar-see-out tiptip disabled" href="#" title="{='You don\'t have access to this photo'|translate}"><i class="icon-left-open"></i>{='Open in gallery'|translate}</a>
-{/if}
+          {if isset($U_JUMPTO)}
+            <a class="savebar-see-out" href="{$U_JUMPTO|noescape}"><i
+                class="icon-left-open"
+              ></i>{='Open in gallery'|translate}</a>
+          {else}
+            <a
+              class="savebar-see-out tiptip disabled"
+              href="#"
+              title="{='You don\'t have access to this photo'|translate}"
+            ><i class="icon-left-open"></i>{='Open in gallery'|translate}</a>
+          {/if}
         </div>
       </div>
       <div class="savebar-footer-end">
-
-{if isset($save_success)}
-        <div class="savebar-footer-block">
-          <div class="badge info-message">
-            <i class="icon-ok"></i>{$save_success}
+        {if isset($save_success)}
+          <div class="savebar-footer-block">
+            <div class="badge info-message">
+              <i class="icon-ok"></i>{$save_success}
+            </div>
           </div>
-        </div>
-{/if}
+        {/if}
 
         <div class="savebar-footer-block">
-          <button class="buttonLike"  type="submit" name="submit"><i class="icon-floppy"></i> {='Save Settings'|translate}</button>
+          <button class="buttonLike" type="submit" name="submit"><i
+              class="icon-floppy"
+            ></i> {='Save Settings'|translate}</button>
         </div>
       </div>
       <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
     </div>
-
   </div>
-
 </form>
 
 {include 'include/album_selector.inc.latte'}

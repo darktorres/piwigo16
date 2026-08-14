@@ -1,48 +1,54 @@
 <!DOCTYPE html>
 <html lang="{$lang_info['code']}" dir="{$lang_info['direction']}">
-<head>
-{if $SHOW_MOBILE_APP_BANNER}
-<meta name="apple-itunes-app" content="app-id=472225196">
-{/if}
-<meta charset="{$CONTENT_ENCODING}">
-<meta name="generator" content="Piwigo (aka PWG), see piwigo.org">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    {if $SHOW_MOBILE_APP_BANNER}
+      <meta name="apple-itunes-app" content="app-id=472225196">
+    {/if}
+    <meta charset="{$CONTENT_ENCODING}">
+    <meta name="generator" content="Piwigo (aka PWG), see piwigo.org">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>{if $PAGE_TITLE != l10n('Home') && $PAGE_TITLE != $GALLERY_TITLE}{$PAGE_TITLE} | {/if}{$GALLERY_TITLE}</title>
-<link rel="shortcut icon" type="image/x-icon" href="{$ROOT_URL}{$themeconf['icon_dir']}/favicon.ico">
+    <title>{if $PAGE_TITLE != l10n('Home') && $PAGE_TITLE != $GALLERY_TITLE}{$PAGE_TITLE} | {/if}{$GALLERY_TITLE}</title>
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="{$ROOT_URL}{$themeconf['icon_dir']}/favicon.ico"
+    >
 
-{spaceless}
-{foreach $themes as $theme}
-  {if $theme['load_css']}
-  {do combineCss(path: "themes/" . $theme['id'] . "/theme.css", order: -10)}
-  {/if}
-  {if !empty($theme['local_head'])}
-  {include $theme['local_head'], load_css: $theme['load_css']}
-  {/if}
-{/foreach}
+    {spaceless}
+      {foreach $themes as $theme}
+        {if $theme['load_css']}
+          {do combineCss(path: "themes/" . $theme['id'] . "/theme.css", order: -10)}
+        {/if}
+        {if !empty($theme['local_head'])}
+          {include $theme['local_head'], load_css: $theme['load_css']}
+        {/if}
+      {/foreach}
 
-{do combineScript(id: "jquery", load: "header")}
-{/spaceless}
+      {do combineScript(id: "jquery", load: "header")}
+    {/spaceless}
 
-<!-- BEGIN get_combined -->
-{do localCssRules($themes)}
-{=getCombinedCss()}
+    <!-- BEGIN get_combined -->
+    {do localCssRules($themes)}
+    {=getCombinedCss()}
 
-{=getCombinedScripts('header')}
-<!-- END get_combined -->
+    {=getCombinedScripts('header')}
+    <!-- END get_combined -->
 
-{if !empty($head_elements)}
-{foreach $head_elements as $elt}
-  {$elt|noescape}
-{/foreach}
-{/if}
-</head>
+    {if !empty($head_elements)}
+      {foreach $head_elements as $elt}
+        {$elt|noescape}
+      {/foreach}
+    {/if}
+  </head>
 
-<body id="{$BODY_ID}" class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}"  data-infos='{$BODY_DATA}'>
-
-<div id="the_page">
-
-{*
+  <body
+    id="{$BODY_ID}"
+    class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}"
+    data-infos='{$BODY_DATA}'
+  >
+    <div id="the_page">
+      {*
   This file is deliberately left unclosed here (<div id="the_page">,
   <body>, <html> above are never closed in this file). The rest of the
   page (varies by controller) is appended next, followed by footer.latte,

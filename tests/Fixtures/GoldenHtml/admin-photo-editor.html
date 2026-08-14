@@ -1,130 +1,214 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-<meta name="apple-itunes-app" content="app-id=472225196">
-<meta charset="utf-8">
-<title>Fixture Gallery :: Piwigo Administration</title>
-<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
-<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+  <head>
+      <meta name="apple-itunes-app" content="app-id=472225196">
+    <meta charset="utf-8">
+    <title>Fixture Gallery :: Piwigo Administration</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="themes/default/icon/piwigo.org-icon 1.svg"
+    >
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="themes/admin/default/fonts/open-sans/open-sans.css"
+    >
 
 
-<!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/4l6bpn.css">
+    <!-- BEGIN get_combined -->
+    <link rel="stylesheet" type="text/css" href="_data/combined/4l6bpn.css">
 
-<script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
-<!-- END get_combined -->
+    <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
+    <!-- END get_combined -->
 
-</head>
+  </head>
 
-<body id="theAdminPage">
+  <body id="theAdminPage">
+    <div id="the_page">
 
-<div id="the_page">
+      <div id="pwgHead">
+        <a
+          href="/piwigo17-4/"
+          class="visit-gallery tiptip"
+          title="Visit the gallery"
+        ><i class="icon-left-open"></i>Visit</a>
+        <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-
-<div id="pwgHead">
-  <a href="/piwigo17-4/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
-  <div class="pwgHead-gallery-title">Fixture Gallery</div>
-
-  <div id="headActions">
-    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+        <div id="headActions">
+          <span class="admin-head-username"><i
+              class="icon-user"
+            ></i>fixture_admin</span>
 <a href="admin.php?page=photo-1&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
-    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
-    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
-  </div>
-</div>
+          <a
+            class="tiptip"
+            href="admin.php?page=help"
+            title="Instructions to use Piwigo"
+          ><i
+              class="icon-help-circled"
+            ></i><span>Help Me</span></a>
+          <a href="index.php?act=logout"><i
+              class="icon-logout"
+            ></i><span>Logout</span></a>
+        </div>
+      </div>
 
-<div style="clear:both;"></div>
+      <div style="clear:both;"></div>
 
 
-<div id="pwgMain">
-
+      <div id="pwgMain">
 
 <div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+        class="icon-television"
+      ></i> Dashboard</a></div>
 
-	<dl>
-		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
-			<ul>
-				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
-        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
-				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
-				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
-				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
-			</ul>
-		</dd>
-  </dl>
   <dl>
-		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dt><i class="icon-picture"></i><span>Photos&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
     <dd>
       <ul>
-        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
-        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+        <li><a href="admin.php?page=photos_add"><i
+              class="icon-plus-circled"
+            ></i>Add</a></li>
+          <li><a href="admin.php?page=rating"><i
+                class="icon-star"
+              ></i>Rating</a></li>
+        <li><a href="admin.php?page=tags"><i
+              class="icon-tags"
+            ></i>Tags</a></li>
+        <li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i
+              class="icon-clock"
+            ></i>Recent photos</a></li>
+        <li><a href="admin.php?page=batch_manager"><i
+              class="icon-th"
+            ></i>Batch Manager</a></li>
       </ul>
     </dd>
   </dl>
   <dl>
-		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-sitemap"></i><span>Albums&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
-        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
-				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+        <li><a href="admin.php?page=albums"><i
+              class="icon-folder-open"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i
+              class="icon-pencil"
+            ></i>Properties</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
-  </dl>
-  <dl>
-		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-users"></i><span>Users&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
-				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
-				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
-				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
-          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
-        </a></li>
-        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+        <li><a href="admin.php?page=user_list"><i
+              class="icon-user-add"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i
+              class="icon-group"
+            ></i>Groups</a></li>
+        <li><a href="admin.php?page=notification_by_mail"><i
+              class="icon-mail-1"
+            ></i>Notification</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><a href="admin.php?page=plugins" class="admin-main"><i
+          class="icon-puzzle"
+        ></i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+    <dt><i class="icon-wrench"></i><span>Tools&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
-        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
-				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
-        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+          <li><a href="admin.php?page=site_update&amp;site=1"><i
+                class="icon-exchange"
+              ></i>Synchronize</a></li>
+        <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
+              class="icon-signal"
+            ></i>History</a></li>
+        <li><a href="admin.php?page=maintenance"><i
+              class="icon-tools"
+            ></i>Maintenance</a></li>
+          <li><a href="admin.php?page=comments"><i
+                class="icon-chat"
+              ></i>Comments
+                <span
+                  class="adminMenubarCounter"
+                  title="1 waiting for validation"
+                >1</span>
+              </a></li>
+          <li><a href="admin.php?page=updates"><i
+                class="icon-arrows-cw"
+              ></i>Updates</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i
+        class="icon-cog"
+      ></i><span>Configuration&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i
+              class="icon-cog-alt"
+            ></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i
+              class="icon-menu"
+            ></i>Menus</a></li>
+        <li><a href="admin.php?page=languages"><i
+              class="icon-language"
+            ></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i
+              class="icon-brush"
+            ></i>Themes</a></li>
       </ul>
     </dd>
   </dl>
 </div> <!-- menubar -->
 
 <div id="content" class="content">
+  <h1>Edit photo <span class="image-id">#1</span><span
+      class="admin-object-id"
+    ></span></h1>
 
-  <h1>Edit photo <span class="image-id">#1</span><span class="admin-object-id"></span></h1>
+      <div id="tabsheet">
+    <ul class="tabsheet">
+        <li
+          class="selected_tab"
+        >
+          <a
+            href="admin.php?page=photo-1-properties"
+          ><span><span class="icon-file-image"></span>Properties</span></a>
+        </li>
+        <li
+          class="normal_tab"
+        >
+          <a
+            href="admin.php?page=photo-1-coi"
+          ><span><span class="icon-crop"></span>Center of interest</span></a>
+        </li>
+    </ul>
+  </div>
 
-  <div id="tabsheet">
-<ul class="tabsheet">
-  <li class="selected_tab">
-    <a href="admin.php?page=photo-1-properties"><span><span class="icon-file-image"></span>Properties</span></a>
-  </li>
-  <li class="normal_tab">
-    <a href="admin.php?page=photo-1-coi"><span><span class="icon-crop"></span>Center of interest</span></a>
-  </li>
-</ul>
-</div>
 
-
-<div class="eiw">
+  <div class="eiw">
 
 
 
-
-</div> 
+  </div> 
 
   
 
@@ -134,16 +218,46 @@
  
 
 <form action="admin.php?page=photo-1" method="post" id="pictureModify">
-  <div id='picture-preview'>
-    <div class='picture-preview-actions'>
-      <a class="preview-box icon-zoom-square" href="action.php?id=1&amp;amp;part=e" title="Zoom"></a>
-      <a class="icon-download" href="action.php?id=1&amp;part=e&amp;pwg_token=aa361c948eeb3a146b1f354389d02f10901f57aee917f68607e9c66eba5db416" title="download"></a>
-      <a class="icon-signal" href="admin.php?page=history&amp;filter_image_id=1" title="Visit history"></a>
-      <a class="icon-pulse" href="admin.php?page=user_activity&photo=1" title="Activity"></a>
-      <a class="icon-arrows-cw" href="admin.php?page=photo-1-properties&amp;sync_metadata=1&amp;pwg_token=aa361c948eeb3a146b1f354389d02f10901f57aee917f68607e9c66eba5db416" title="Synchronize metadata"></a>
-      <a class="icon-trash" title="delete photo" id='action-delete-picture'></a>
-    </div>
-      <img src="action.php?id=1&amp;part=e" alt="Thumbnail" class="other-image-format" style="width:100%; max-height:100%; object-fit:contain;">
+
+    <div id='picture-preview'>
+  <div class='picture-preview-actions'>
+    <a
+      class="preview-box icon-zoom-square"
+      href="action.php?id=1&amp;amp;part=e"
+      title="Zoom"
+    ></a>
+    <a
+      class="icon-download"
+      href="action.php?id=1&amp;part=e&amp;pwg_token=fffbcb69acb6584e6c83b6a551eaa5442e6295dd906f00f497bcf306963c7a95"
+      title="download"
+    ></a>
+    <a
+      class="icon-signal"
+      href="admin.php?page=history&amp;filter_image_id=1"
+      title="Visit history"
+    ></a>
+    <a
+      class="icon-pulse"
+      href="admin.php?page=user_activity&photo=1"
+      title="Activity"
+    ></a>
+      <a
+        class="icon-arrows-cw"
+        href="admin.php?page=photo-1-properties&amp;sync_metadata=1&amp;pwg_token=fffbcb69acb6584e6c83b6a551eaa5442e6295dd906f00f497bcf306963c7a95"
+        title="Synchronize metadata"
+      ></a>
+      <a
+        class="icon-trash"
+        title="delete photo"
+        id='action-delete-picture'
+      ></a>
+  </div>
+    <img
+      src="action.php?id=1&amp;part=e"
+      alt="Thumbnail"
+      class="other-image-format"
+      style="width:100%; max-height:100%; object-fit:contain;"
+    >
   </div>
   <div id='picture-content'>
     <div id='picture-infos'>
@@ -172,7 +286,6 @@
       </div>
     </div>
 
-
     <p>
       <strong>Title</strong>
       <br>
@@ -191,51 +304,88 @@
       <input type="hidden" name="date_creation">
       <label class="date-input">
         <i class="icon-calendar"></i>
-        <input type="text" data-datepicker="date_creation" data-datepicker-unset="date_creation_unset" readonly>
+        <input
+          type="text"
+          data-datepicker="date_creation"
+          data-datepicker-unset="date_creation_unset"
+          readonly
+        >
       </label>
-      <a href="#" class="icon-cancel-circled" id="date_creation_unset">unset</a>
+      <a
+        href="#"
+        class="icon-cancel-circled"
+        id="date_creation_unset"
+      >unset</a>
     </p>
 
     <p>
-      <strong>Linked albums <span class="linked-albums-badge "> 1 </span></strong>
+      <strong>Linked albums <span
+          class="linked-albums-badge "
+        > 1 </span></strong>
         <span class="orphan-photo"></span>
       <br>
-      <select class="invisible-related-categories-select" name="associate[]" multiple>
-        <option selected value="1"></option>
+      <select
+        class="invisible-related-categories-select"
+        name="associate[]"
+        multiple
+      >
+          <option selected value="1"></option>
       </select>
       <div class="related-categories-container">
-      <div class="breadcrumb-item"><span class="link-path">
-<a href="admin.php?page=album-1">Sample Album</a></span><span id="1" class="icon-cancel-circled remove-item"></span></div>
+          <div class="breadcrumb-item"><span
+              class="link-path"
+            >
+<a href="admin.php?page=album-1">Sample Album</a></span><span
+                id="1"
+                class="icon-cancel-circled remove-item"
+              ></span></div>
       </div>
-      <div class="breadcrumb-item linked-albums add-item "><span class="icon-plus-circled"></span>Add</div>
+      <div
+        class="breadcrumb-item linked-albums add-item "
+      ><span class="icon-plus-circled"></span>Add</div>
     </p>
 
     <p>
       <strong>Album thumbnail</strong>
       <br>
-      <select data-selectize="categories" data-value="[1]"
+      <select
+        data-selectize="categories"
+        data-value="[1]"
         placeholder="Type in a search term"
-        name="represent[]" multiple style="width:calc(100% + 2px);"></select>
+        name="represent[]"
+        multiple
+        style="width:calc(100% + 2px);"
+      ></select>
     </p>
 
     <p>
       <strong>Tags</strong>
       <br>
-      <select data-selectize="tags" data-value="[{&quot;name&quot;:&quot;family&quot;,&quot;id&quot;:&quot;~~3~~&quot;},{&quot;name&quot;:&quot;nature&quot;,&quot;id&quot;:&quot;~~1~~&quot;},{&quot;name&quot;:&quot;travel&quot;,&quot;id&quot;:&quot;~~2~~&quot;}]"
+      <select
+        data-selectize="tags"
+        data-value="[{&quot;name&quot;:&quot;family&quot;,&quot;id&quot;:&quot;~~3~~&quot;},{&quot;name&quot;:&quot;nature&quot;,&quot;id&quot;:&quot;~~1~~&quot;},{&quot;name&quot;:&quot;travel&quot;,&quot;id&quot;:&quot;~~2~~&quot;}]"
         placeholder="Type in a search term"
-        data-create="true" name="tags[]" multiple style="width:calc(100% + 2px);"></select>
+        data-create="true"
+        name="tags[]"
+        multiple
+        style="width:calc(100% + 2px);"
+      ></select>
     </p>
 
     <p>
       <strong>Description</strong>
       <br>
-      <textarea name="comment" id="description" class="description"></textarea>
+      <textarea
+        name="comment"
+        id="description"
+        class="description"
+      ></textarea>
     </p>
 
     <p>
       <strong>Who can see this photo?</strong> (Privacy level)
       <br>
-      <div class='select-icon icon-down-open'> </div>
+      <div class='select-icon icon-down-open'></div>
       <select name="level" size="1">
         <option value="8">Admins</option>
 <option value="4">Admins, Family</option>
@@ -244,111 +394,146 @@
 <option value="0" selected="selected">Everybody</option>
 
       </select>
-   </p>
+    </p>
 
-   <div class="savebar-footer">
+    <div class="savebar-footer">
       <div class="savebar-footer-start">
         <div class="savebar-footer-block">
-          <a class="savebar-see-out" href="picture.php?/1/category/" ><i class="icon-left-open"></i>Open in gallery</a>
+            <a class="savebar-see-out" href="picture.php?/1/category/"><i
+                class="icon-left-open"
+              ></i>Open in gallery</a>
         </div>
       </div>
       <div class="savebar-footer-end">
 
-
         <div class="savebar-footer-block">
-          <button class="buttonLike"  type="submit" name="submit"><i class="icon-floppy"></i> Save Settings</button>
+          <button class="buttonLike" type="submit" name="submit"><i
+              class="icon-floppy"
+            ></i> Save Settings</button>
         </div>
       </div>
-      <input type="hidden" name="pwg_token" value="aa361c948eeb3a146b1f354389d02f10901f57aee917f68607e9c66eba5db416">
+      <input type="hidden" name="pwg_token" value="fffbcb69acb6584e6c83b6a551eaa5442e6295dd906f00f497bcf306963c7a95">
     </div>
-
   </div>
-
 </form>
 
 
-<div id="addLinkedAlbum" class="linkedAlbumPopIn">
-  <div class="linkedAlbumPopInContainer">
-    <a class="gallery-icon-cancel ClosePopIn" id="closeAlbumPopIn"></a>
+  <div id="addLinkedAlbum" class="linkedAlbumPopIn">
+    <div class="linkedAlbumPopInContainer">
+      <a class="gallery-icon-cancel ClosePopIn" id="closeAlbumPopIn"></a>
 
-    <div class="AddIconContainer">
-      <span class="AddIcon icon-blue gallery-icon-plus-circled"></span>
-    </div>
-    <div class="AddIconTitle">
-      <span id="linkedModalTitle"></span>
-    </div>
-
-    <div class="album-selector" id="linkedAlbumSelector">
-      <label class="head-button-2 put-to-root-container notClickable" id="put-to-root">
-        <p class="icon-home">Put at the root</p>
-      </label>
-      <p class="put-to-root-container">or</p>
-
-      <div id="linkedAlbumSearch">
-        <span class='icon-search search-icon'> </span>
-        <span class="icon-cancel search-cancel-linked-album" style="display: none;"></span>
-        <input class='search-input' type='text' id="search-input-ab" placeholder="">
+      <div class="AddIconContainer">
+        <span class="AddIcon icon-blue gallery-icon-plus-circled"></span>
       </div>
-      <div class="limitReached"></div>
-      <div class="noSearch"></div>
-      <div class="searching gallery-icon-spin6 animate-spin"> </div>
-    </div>
-
-    <div id="searchResult">
-    </div>
-
-    <div class="album-create" id="linkedAlbumCreate" style="display: none;">
-      <div class="linked-album-subtitle">
-        <p id="linkedAlbumSubtitle">Add a sub-album of “Album 3”</p>
+      <div class="AddIconTitle">
+        <span id="linkedModalTitle"></span>
       </div>
 
-      <div class="linked-album-input-container album-name">
-        <label class="user-property-label">Album name
-          <input class="user-property-input" id="linkedAlbumInput" />
+      <div class="album-selector" id="linkedAlbumSelector">
+        <label
+          class="head-button-2 put-to-root-container notClickable"
+          id="put-to-root"
+        >
+          <p class="icon-home">Put at the root</p>
         </label>
-      </div>
+        <p class="put-to-root-container">or</p>
 
-      <div class="linked-album-input-container">
-        <label class="user-property-label">Position
-          <div class="linked-add-radio-input">
-            <input type="radio" id="place-start" name="position" value="first" checked>
-            <label for="place-start">Place first</label>
-          </div>
-          <div class="linked-add-radio-input">
-            <input type="radio" id="place-end" name="position" value="last">
-            <label for="place-end">Place last</label>
-          </div>
-        </label>
-      </div>
-
-      <div class="AddAlbumErrors">
-        <p class="icon-cancel" id="linkedAddAlbumErrors">omg big big error</p>
-      </div>
-
-      <div class="linked-album-create-btn">
-        <p class="linked-button-cancel" id="linkedAlbumCancel">Cancel</p>
-        <p class="buttonLike icon-plus" id="linkedAddNewAlbum">Create and select</p>
-      </div>
-    </div>
-
-    <div class="album-switch-bottom" id="linkedAlbumSwitch">
-      <div class="album-switch-container">
-        <div class="switch-input">
-          <label class="switch">
-            <input type="checkbox" name="locked" id="album-create-check" value="true">
-            <span class="slider round"></span>
-          </label>
-          <label class="switch-label" for="album-create-check"><span>Creation mode</span> <i
-              class="icon-help-circled tiptip" style="cursor:help"
-              title="Activate create mode to create and select an album"></i></label>
+        <div id="linkedAlbumSearch">
+          <span class='icon-search search-icon'></span>
+          <span
+            class="icon-cancel search-cancel-linked-album"
+            style="display: none;"
+          ></span>
+          <input
+            class='search-input'
+            type='text'
+            id="search-input-ab"
+            placeholder=""
+          >
         </div>
-        <p class="head-button-2 icon-plus-circled linked-add-album" id="linkedAddAlbum">
-          Create a root album</p>
+        <div class="limitReached"></div>
+        <div class="noSearch"></div>
+        <div class="searching gallery-icon-spin6 animate-spin"></div>
+      </div>
+
+      <div id="searchResult"></div>
+
+      <div class="album-create" id="linkedAlbumCreate" style="display: none;">
+        <div class="linked-album-subtitle">
+          <p id="linkedAlbumSubtitle">Add a sub-album of “Album 3”</p>
+        </div>
+
+        <div class="linked-album-input-container album-name">
+          <label class="user-property-label">Album name
+            <input class="user-property-input" id="linkedAlbumInput" />
+          </label>
+        </div>
+
+        <div class="linked-album-input-container">
+          <label class="user-property-label">Position
+            <div class="linked-add-radio-input">
+              <input
+                type="radio"
+                id="place-start"
+                name="position"
+                value="first"
+                checked
+              >
+              <label for="place-start">Place first</label>
+            </div>
+            <div class="linked-add-radio-input">
+              <input type="radio" id="place-end" name="position" value="last">
+              <label for="place-end">Place last</label>
+            </div>
+          </label>
+        </div>
+
+        <div class="AddAlbumErrors">
+          <p class="icon-cancel" id="linkedAddAlbumErrors">omg big big error</p>
+        </div>
+
+        <div class="linked-album-create-btn">
+          <p
+            class="linked-button-cancel"
+            id="linkedAlbumCancel"
+          >Cancel</p>
+          <p
+            class="buttonLike icon-plus"
+            id="linkedAddNewAlbum"
+          >Create and select</p>
+        </div>
+      </div>
+
+      <div class="album-switch-bottom" id="linkedAlbumSwitch">
+        <div class="album-switch-container">
+          <div class="switch-input">
+            <label class="switch">
+              <input
+                type="checkbox"
+                name="locked"
+                id="album-create-check"
+                value="true"
+              >
+              <span class="slider round"></span>
+            </label>
+            <label
+              class="switch-label"
+              for="album-create-check"
+            ><span>Creation mode</span> <i
+                class="icon-help-circled tiptip"
+                style="cursor:help"
+                title="Activate create mode to create and select an album"
+              ></i></label>
+          </div>
+          <p
+            class="head-button-2 icon-plus-circled linked-add-album"
+            id="linkedAddAlbum"
+          >
+            Create a root album</p>
+        </div>
       </div>
     </div>
-
   </div>
-</div>
 
 <style>
 .selectize-input  .item,
@@ -384,43 +569,72 @@
 
 <div id="footer">
   <div>
-    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What&apos;s new in version 17?">
-      <i class="icon-bell"></i>
-    </span>
+    <a
+      class="externalLink tiptip piwigo-logo"
+      href="https://upstream.example.invalid"
+      title="Visit Piwigo project website"
+    ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+      <span
+        id="whats_new_notification"
+        class="icon-blue tiptip"
+        onclick="show_user_whats_new()"
+        title="What&apos;s new in version 17?"
+      >
+        <i class="icon-bell"></i>
+      </span>
   </div>
   <div id="pageInfos">
 
     Contact
-    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+    <a
+      href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
+    >Webmaster</a>
   </div></div>
 </div>
 
-<div id="whats_new">
+  <div id="whats_new">
     <div id="whats_new_popin">
-      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <a
+        class="icon-cancel close_whats_new"
+        onClick="hide_user_whats_new()"
+      ></a>
       <h3>What's new in version 17?</h3>
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Brand new login &amp; preferences with Standard pages !</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Brand new login &amp; preferences with Standard pages !</a></h4>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Two factor authentication is here</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Two factor authentication is here</a></h4>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">UI redesigns that make a difference</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >UI redesigns that make a difference</a></h4>
           </div>
         </div>
       </div>
       <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
-        <a class="buttonLike" href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+        <button onClick="hide_user_whats_new()"><i
+            class="icon-thumbs-up"
+          ></i> Ok, got it!</button>
+        <a
+          class="buttonLike"
+          href="https://upstream.example.invalid/releases/17.0.0"
+          target="_blank"
+        ><i class="icon-book"></i> Read the release note</a>
       </div>
     </div>
-</div>
+  </div>
 
 <style>
 
@@ -470,7 +684,7 @@ jQuery("a.preview-box").colorbox({
 str_are_you_sure = 'Are you sure?';
 str_yes = 'Yes, delete';
 str_no = 'No, I have changed my mind';
-url_delete = 'admin.php?page=photo-1-properties&amp;delete=1&amp;pwg_token=aa361c948eeb3a146b1f354389d02f10901f57aee917f68607e9c66eba5db416';
+url_delete = 'admin.php?page=photo-1-properties&amp;delete=1&amp;pwg_token=fffbcb69acb6584e6c83b6a551eaa5442e6295dd906f00f497bcf306963c7a95';
 str_orphan = 'This photo is an orphan';
 
 
@@ -596,7 +810,7 @@ function show_user_whats_new() {
 //]]></script>
 <!-- END get_combined -->
 
-<script type="module" src="dist/vitals.js"></script>
+  <script type="module" src="dist/vitals.js"></script>
 
 </body>
 </html>

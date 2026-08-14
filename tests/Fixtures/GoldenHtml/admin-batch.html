@@ -1,130 +1,214 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-<meta name="apple-itunes-app" content="app-id=472225196">
-<meta charset="utf-8">
-<title>Fixture Gallery :: Piwigo Administration</title>
-<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
-<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+  <head>
+      <meta name="apple-itunes-app" content="app-id=472225196">
+    <meta charset="utf-8">
+    <title>Fixture Gallery :: Piwigo Administration</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="themes/default/icon/piwigo.org-icon 1.svg"
+    >
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="themes/admin/default/fonts/open-sans/open-sans.css"
+    >
 
 
-<!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/1bzanog.css">
+    <!-- BEGIN get_combined -->
+    <link rel="stylesheet" type="text/css" href="_data/combined/1bzanog.css">
 
-<script type="text/javascript" src="_data/combined/1o8d4sk.js"></script>
-<!-- END get_combined -->
+    <script type="text/javascript" src="_data/combined/1o8d4sk.js"></script>
+    <!-- END get_combined -->
 
-</head>
+  </head>
 
-<body id="theAdminPage">
+  <body id="theAdminPage">
+    <div id="the_page">
 
-<div id="the_page">
+      <div id="pwgHead">
+        <a
+          href="/piwigo17-4/"
+          class="visit-gallery tiptip"
+          title="Visit the gallery"
+        ><i class="icon-left-open"></i>Visit</a>
+        <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-
-<div id="pwgHead">
-  <a href="/piwigo17-4/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
-  <div class="pwgHead-gallery-title">Fixture Gallery</div>
-
-  <div id="headActions">
-    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+        <div id="headActions">
+          <span class="admin-head-username"><i
+              class="icon-user"
+            ></i>fixture_admin</span>
 <a href="admin.php?page=batch_manager&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
-    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
-    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
-  </div>
-</div>
+          <a
+            class="tiptip"
+            href="admin.php?page=help"
+            title="Instructions to use Piwigo"
+          ><i
+              class="icon-help-circled"
+            ></i><span>Help Me</span></a>
+          <a href="index.php?act=logout"><i
+              class="icon-logout"
+            ></i><span>Logout</span></a>
+        </div>
+      </div>
 
-<div style="clear:both;"></div>
+      <div style="clear:both;"></div>
 
 
-<div id="pwgMain">
-
+      <div id="pwgMain">
 
 <div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+        class="icon-television"
+      ></i> Dashboard</a></div>
 
-	<dl>
-		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
-			<ul>
-				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
-        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
-				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
-				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
-				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
-			</ul>
-		</dd>
-  </dl>
   <dl>
-		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dt><i class="icon-picture"></i><span>Photos&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
     <dd>
       <ul>
-        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
-        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+        <li><a href="admin.php?page=photos_add"><i
+              class="icon-plus-circled"
+            ></i>Add</a></li>
+          <li><a href="admin.php?page=rating"><i
+                class="icon-star"
+              ></i>Rating</a></li>
+        <li><a href="admin.php?page=tags"><i
+              class="icon-tags"
+            ></i>Tags</a></li>
+        <li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i
+              class="icon-clock"
+            ></i>Recent photos</a></li>
+        <li><a href="admin.php?page=batch_manager"><i
+              class="icon-th"
+            ></i>Batch Manager</a></li>
       </ul>
     </dd>
   </dl>
   <dl>
-		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-sitemap"></i><span>Albums&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
-        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
-				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+        <li><a href="admin.php?page=albums"><i
+              class="icon-folder-open"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i
+              class="icon-pencil"
+            ></i>Properties</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
-  </dl>
-  <dl>
-		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-users"></i><span>Users&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
-				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
-				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
-				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
-          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
-        </a></li>
-        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+        <li><a href="admin.php?page=user_list"><i
+              class="icon-user-add"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i
+              class="icon-group"
+            ></i>Groups</a></li>
+        <li><a href="admin.php?page=notification_by_mail"><i
+              class="icon-mail-1"
+            ></i>Notification</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><a href="admin.php?page=plugins" class="admin-main"><i
+          class="icon-puzzle"
+        ></i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+    <dt><i class="icon-wrench"></i><span>Tools&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
-        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
-				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
-        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+          <li><a href="admin.php?page=site_update&amp;site=1"><i
+                class="icon-exchange"
+              ></i>Synchronize</a></li>
+        <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
+              class="icon-signal"
+            ></i>History</a></li>
+        <li><a href="admin.php?page=maintenance"><i
+              class="icon-tools"
+            ></i>Maintenance</a></li>
+          <li><a href="admin.php?page=comments"><i
+                class="icon-chat"
+              ></i>Comments
+                <span
+                  class="adminMenubarCounter"
+                  title="1 waiting for validation"
+                >1</span>
+              </a></li>
+          <li><a href="admin.php?page=updates"><i
+                class="icon-arrows-cw"
+              ></i>Updates</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i
+        class="icon-cog"
+      ></i><span>Configuration&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i
+              class="icon-cog-alt"
+            ></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i
+              class="icon-menu"
+            ></i>Menus</a></li>
+        <li><a href="admin.php?page=languages"><i
+              class="icon-language"
+            ></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i
+              class="icon-brush"
+            ></i>Themes</a></li>
       </ul>
     </dd>
   </dl>
 </div> <!-- menubar -->
 
 <div id="content" class="content">
+  <h1>Batch Manager<span
+      class="admin-object-id"
+    ></span></h1>
 
-  <h1>Batch Manager<span class="admin-object-id"></span></h1>
+      <div id="tabsheet">
+    <ul class="tabsheet">
+        <li
+          class="selected_tab"
+        >
+          <a
+            href="admin.php?page=batch_manager&amp;mode=global"
+          ><span><span class="icon-th"></span>global mode</span></a>
+        </li>
+        <li
+          class="normal_tab"
+        >
+          <a
+            href="admin.php?page=batch_manager&amp;mode=unit"
+          ><span><span class="icon-th-list"></span>single mode</span></a>
+        </li>
+    </ul>
+  </div>
 
-  <div id="tabsheet">
-<ul class="tabsheet">
-  <li class="selected_tab">
-    <a href="admin.php?page=batch_manager&amp;mode=global"><span><span class="icon-th"></span>global mode</span></a>
-  </li>
-  <li class="normal_tab">
-    <a href="admin.php?page=batch_manager&amp;mode=unit"><span><span class="icon-th-list"></span>single mode</span></a>
-  </li>
-</ul>
-</div>
 
-
-<div class="eiw">
+  <div class="eiw">
 
 
 
-
-</div> 
+  </div> 
 
   
  
@@ -141,12 +225,21 @@
       <div class="popinField">
         <span class="popinFieldLabel">Album name</span>
         <input name="category_name" type="text" maxlength="255">
-        <span id="categoryNameError" style="color:red;">The name of an album must not be empty</span>
+        <span
+          id="categoryNameError"
+          style="color:red;"
+        >The name of an album must not be empty</span>
       </div>
 
       <div class="popinButtons">
-        <input type="submit" value="Create" class="albumCreationButton">
-        <span id="albumCreationLoading"><span class="icon-spin6 animate-spin"></span></span>
+        <input
+          type="submit"
+          value="Create"
+          class="albumCreationButton"
+        >
+        <span id="albumCreationLoading"><span
+            class="icon-spin6 animate-spin"
+          ></span></span>
       </div>
     </form>
   </div>
@@ -160,216 +253,552 @@
 
 <div id="batchManagerGlobal">
   <form action="admin.php?page=batch_manager" method="post">
-  <input type="hidden" name="start" value="0">
-  <input type="hidden" name="pwg_token" value="f3d5bdfcd587b7adfd31d8738b83e46cba0b2f45f5a72fee18a1ef65bca46a64">
+    <input type="hidden" name="start" value="0">
+    <input type="hidden" name="pwg_token" value="0ef3bfc367b78c720678dd4ffef4f95710c1023d6b3a14cbf755351195ce2a3b">
 
 
 <fieldset>
-<legend><span class='icon-filter icon-green'></span>Filter</legend>
-<div class="filterBlock">
-  <ul id="filterList">
-    <li id="filter_prefilter" >
-      <input type="checkbox" name="filter_prefilter_use" class="useFilterCheckbox" checked="checked">
-      <p>Predefined filter</p>
-      <a href="#" class="removeFilter" title="remove this filter"><span>[x]</span></a>
-      <select name="filter_prefilter">
+  <legend><span
+      class='icon-filter icon-green'
+    ></span>Filter</legend>
+  <div class="filterBlock">
+    <ul id="filterList">
+      <li
+        id="filter_prefilter"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_prefilter_use"
+          class="useFilterCheckbox"
+          
+          checked="checked"
+          
+        >
+        <p>Predefined filter</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <select name="filter_prefilter">
 
-        <option value="all_photos"  class="" >All</option>
+            <option
+              value="all_photos"
+              class=""
+              
+            >All</option>
 
-        <option value="caddie"  class="icon-flag" selected="selected">Caddie</option>
+            <option
+              value="caddie"
+              class="icon-flag"
+              
+              selected="selected"
+              
+            >Caddie</option>
 
-        <option value="duplicates"  class="" >Duplicates</option>
+            <option
+              value="duplicates"
+              class=""
+              
+            >Duplicates</option>
 
-        <option value="last_import"  class="" >Last import</option>
+            <option
+              value="last_import"
+              class=""
+              
+            >Last import</option>
 
-        <option value="favorites"  class="" >My favorites</option>
+            <option
+              value="favorites"
+              class=""
+              
+            >My favorites</option>
 
-        <option value="no_album"  class="icon-heart-broken" >With no album (Orphans)</option>
+            <option
+              value="no_album"
+              class="icon-heart-broken"
+              
+            >With no album (Orphans)</option>
 
-        <option value="no_sync_md5sum"  class="" >With no checksum</option>
+            <option
+              value="no_sync_md5sum"
+              class=""
+              
+            >With no checksum</option>
 
-        <option value="no_tag"  class="" >With no tag</option>
+            <option
+              value="no_tag"
+              class=""
+              
+            >With no tag</option>
 
-        <option value="no_virtual_album"  class="" >With no virtual album</option>
-      </select>
-      <a id="empty_caddie" href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token=f3d5bdfcd587b7adfd31d8738b83e46cba0b2f45f5a72fee18a1ef65bca46a64" style="">Empty caddie</a>
+            <option
+              value="no_virtual_album"
+              class=""
+              
+            >With no virtual album</option>
+        </select>
+        <a
+          id="empty_caddie"
+          href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token=0ef3bfc367b78c720678dd4ffef4f95710c1023d6b3a14cbf755351195ce2a3b"
+          style=""
+        >Empty caddie</a>
 
-      <span id="add_md5sum" style="display:none">
-        <img class="loading" src="themes/default/images/ajax-loader-small.gif">
-        <span id="md5sum_added">0</span>% -
-        <span id="md5sum_to_add" data-origin=""></span>
-        checksums to add
-      </span>
+        <span id="add_md5sum" style="display:none">
+          <img
+            class="loading"
+            src="themes/default/images/ajax-loader-small.gif"
+          >
+          <span id="md5sum_added">0</span>% -
+          <span
+            id="md5sum_to_add"
+            data-origin=""
+          ></span>
+          checksums to add
+        </span>
 
-      <span id="add_md5sum_error" class="errors" style="display:none"></span>
+        <span id="add_md5sum_error" class="errors" style="display:none"></span>
 
-      <span id="orphans_deletion" style="display:none">
-        <img class="loading" src="themes/default/images/ajax-loader-small.gif">
-        <span id="orphans_deleted">0</span>% -
-        <span id="orphans_to_delete" data-origin="0">0</span>
-        orphans to delete
-      </span>
+        <span id="orphans_deletion" style="display:none">
+          <img
+            class="loading"
+            src="themes/default/images/ajax-loader-small.gif"
+          >
+          <span id="orphans_deleted">0</span>% -
+          <span
+            id="orphans_to_delete"
+            data-origin="0"
+          >0</span>
+          orphans to delete
+        </span>
 
-      <span id="orphans_deletion_error" class="errors" style="display:none"></span>
+        <span
+          id="orphans_deletion_error"
+          class="errors"
+          style="display:none"
+        ></span>
 
-      <span id="duplicates_options" style="display:none">
-        based on
-        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_filename" > file name</label>
-        <label class="font-checkbox" title="md5sum"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_checksum" > checksum <i class="icon-help-circled tiptip" title="translated md5sum definition here !"> </i></label>
-        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_date" checked="checked"> date &amp; time</label>
-        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_dimensions" > width &amp; height</label>
-      </span>
-    </li>
-    <li id="filter_category" style="display:none">
-      <input type="checkbox" name="filter_category_use" class="useFilterCheckbox" >
-      <p>Album</p>
-      <a href="#" class="removeFilter" title="remove this filter"><span>[x]</span></a>
-        <div id="selectedAlbumFilterArea" style="display: none;">
+        <span
+          id="duplicates_options"
+          style="display:none"
+        >
+          based on
+          <label class="font-checkbox"><span class="icon-check"></span><input
+              type="checkbox"
+              name="filter_duplicates_filename"
+              
+            > file name</label>
+          <label class="font-checkbox" title="md5sum"><span
+              class="icon-check"
+            ></span><input
+              type="checkbox"
+              name="filter_duplicates_checksum"
+              
+            > checksum <i
+              class="icon-help-circled tiptip"
+              title="translated md5sum definition here !"
+            ></i></label>
+          <label class="font-checkbox"><span class="icon-check"></span><input
+              type="checkbox"
+              name="filter_duplicates_date"
+              
+              checked="checked"
+              
+            > date &amp; time</label>
+          <label class="font-checkbox"><span class="icon-check"></span><input
+              type="checkbox"
+              name="filter_duplicates_dimensions"
+              
+            > width &amp; height</label>
+        </span>
+      </li>
+      <li
+        id="filter_category"
+        
+        style="display:none"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_category_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Album</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <div
+          id="selectedAlbumFilterArea"
+          
+          style="display: none;"
+          
+        >
           <div class="selectedAlbum" id="selectedAlbumFilter">
-            <input type="hidden" name="filter_category" id="filterCategoryValue" value="null">
-            <span class="icon-sitemap" id="selectedAlbumNameFilter"></span>
+            <input
+              type="hidden"
+              name="filter_category"
+              id="filterCategoryValue"
+              value="null"
+            >
+            <span
+              class="icon-sitemap"
+              id="selectedAlbumNameFilter"
+            ></span>
             <a class="icon-pencil" id="selectedAlbumEditFilter"></a>
           </div>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_category_recursive" > include sub-albums</label>
+          <label class="font-checkbox"><span class="icon-check"></span><input
+              type="checkbox"
+              name="filter_category_recursive"
+              
+            > include sub-albums</label>
         </div>
-        <p class="head-button-1" id="selectAlbumFilter" >
+        <p
+          class="head-button-1"
+          id="selectAlbumFilter"
+          
+        >
           Select an album
         </p>
-    </li>
+      </li>
 
-    <li id="filter_tags" style="display:none">
-      <input type="checkbox" name="filter_tags_use" class="useFilterCheckbox" >
-      <p>Tags</p>
-      <a href="#" class="removeFilter" title="remove this filter"><span>[x]</span></a>
-      <select data-selectize="tags" data-value="[]"
-        placeholder="Type in a search term"
-        name="filter_tags[]" multiple style="width:600px;"></select>
-      <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio" name="tag_mode" value="AND" checked="checked"> All tags</span></label>
-      <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio" name="tag_mode" value="OR" > Any tag</span></label>
-    </li>
+      <li
+        id="filter_tags"
+        
+        style="display:none"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_tags_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Tags</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <select
+          data-selectize="tags"
+          data-value="[]"
+          placeholder="Type in a search term"
+          name="filter_tags[]"
+          multiple
+          style="width:600px;"
+        ></select>
+        <label class="font-checkbox"><span
+            class="icon-circle-empty"
+          ></span><span><input
+              type="radio"
+              name="tag_mode"
+              value="AND"
+              
+              checked="checked"
+              
+            > All tags</span></label>
+        <label class="font-checkbox"><span
+            class="icon-circle-empty"
+          ></span><span><input
+              type="radio"
+              name="tag_mode"
+              value="OR"
+              
+            > Any tag</span></label>
+      </li>
 
-    <li id="filter_level" style="display:none">
-      <input type="checkbox" name="filter_level_use" class="useFilterCheckbox" >
-      <p>Privacy level</p>
-      <a href="#" class="removeFilter" title="remove this filter"><span>[x]</span></a>
-      <select name="filter_level" size="1">
-        <option value="0" selected="selected">Everybody</option>
+      <li
+        id="filter_level"
+        
+        style="display:none"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_level_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Privacy level</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <select name="filter_level" size="1">
+          <option value="0" selected="selected">Everybody</option>
 <option value="1">Contacts</option>
 <option value="2">Friends</option>
 <option value="4">Family</option>
 <option value="8">Admins</option>
 
-      </select>
-      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_level_include_lower" > include photos with lower privacy level</label>
-    </li>
+        </select>
+        <label class="font-checkbox"><span class="icon-check"></span><input
+            type="checkbox"
+            name="filter_level_include_lower"
+            
+          > include photos with lower privacy level</label>
+      </li>
 
-    <li id="filter_dimension" style="display:none">
-      <input type="checkbox" name="filter_dimension_use" class="useFilterCheckbox" >
-      <p>Dimensions</p>
-      <a href="#" class="removeFilter" title="remove this filter"><span>[x]</span></a>
-      <blockquote>
-        <div data-slider="widths" class="dimensionSlidersBlocks">
-          <div class="dimensionSlidersTitleButtons">
-            <div>
-              Width <span class="slider-info">between 200 and 200 pixels</span>
+      <li
+        id="filter_dimension"
+        
+        style="display:none"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_dimension_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Dimensions</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <blockquote>
+          <div data-slider="widths" class="dimensionSlidersBlocks">
+            <div class="dimensionSlidersTitleButtons">
+              <div>
+                Width <span
+                  class="slider-info"
+                >between 200 and 200 pixels</span>
+              </div>
+              <a
+                class="slider-choice dimension-cancel"
+                data-min="200"
+                data-max="200"
+              >Reset</a>
             </div>
-            <a class="slider-choice dimension-cancel" data-min="200" data-max="200">Reset</a>
+            <div class="slider-slider"></div>
+
+            <input
+              type="hidden"
+              data-input="min"
+              name="filter_dimension_min_width"
+              value="200"
+            >
+            <input
+              type="hidden"
+              data-input="max"
+              name="filter_dimension_max_width"
+              value="200"
+            >
           </div>
-          <div class="slider-slider"></div>
 
-          <input type="hidden" data-input="min" name="filter_dimension_min_width" value="200">
-          <input type="hidden" data-input="max" name="filter_dimension_max_width" value="200">
-        </div>
-
-        <div data-slider="heights" class="dimensionSlidersBlocks">
-          <div class="dimensionSlidersTitleButtons">
-            <div>
-              Height <span class="slider-info">between 150 and 150 pixels</span>
+          <div data-slider="heights" class="dimensionSlidersBlocks">
+            <div class="dimensionSlidersTitleButtons">
+              <div>
+                Height <span
+                  class="slider-info"
+                >between 150 and 150 pixels</span>
+              </div>
+              <a
+                class="slider-choice dimension-cancel"
+                data-min="150"
+                data-max="150"
+              >Reset</a>
             </div>
-            <a class="slider-choice dimension-cancel" data-min="150" data-max="150">Reset</a>
+            <div class="slider-slider"></div>
+
+            <input
+              type="hidden"
+              data-input="min"
+              name="filter_dimension_min_height"
+              value="150"
+            >
+            <input
+              type="hidden"
+              data-input="max"
+              name="filter_dimension_max_height"
+              value="150"
+            >
           </div>
-          <div class="slider-slider"></div>
 
-          <input type="hidden" data-input="min" name="filter_dimension_min_height" value="150">
-          <input type="hidden" data-input="max" name="filter_dimension_max_height" value="150">
-        </div>
-
-        <div data-slider="ratios" class="dimensionSlidersBlocks">
+          <div data-slider="ratios" class="dimensionSlidersBlocks">
             <div style="margin-bottom: 11px;">
               <span>Ratio (Width/Height)</span>
-              <span class="slider-info">between 1.33 and 1.33</span>
+              <span
+                class="slider-info"
+              >between 1.33 and 1.33</span>
             </div>
             <div class="dimensionSlidersRatioButtons">
               <div>
-              
-              
-               <a class="slider-choice" data-min="1.33" data-max="1.33">Landscape</a>
-              
+                
+                
+                 <a
+                    class="slider-choice"
+                    data-min="1.33"
+                    data-max="1.33"
+                  >Landscape</a>
+                
               </div>
               <div>
-               <a class="slider-choice dimension-cancel" data-min="1.33" data-max="1.33">Reset</a>
+                <a
+                  class="slider-choice dimension-cancel"
+                  data-min="1.33"
+                  data-max="1.33"
+                >Reset</a>
               </div>
             </div>
-          <div class="slider-slider"></div>
+            <div class="slider-slider"></div>
 
-          <input type="hidden" data-input="min" name="filter_dimension_min_ratio" value="1.33">
-          <input type="hidden" data-input="max" name="filter_dimension_max_ratio" value="1.33">
+            <input
+              type="hidden"
+              data-input="min"
+              name="filter_dimension_min_ratio"
+              value="1.33"
+            >
+            <input
+              type="hidden"
+              data-input="max"
+              name="filter_dimension_max_ratio"
+              value="1.33"
+            >
+          </div>
+        </blockquote>
+      </li>
+
+      <li
+        id="filter_search"
+        
+        style="display:none"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_search_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Search</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <input
+          name="q"
+          size="40"
+          value=""
+        >
+        <p title="Help" class="help-popin-search">
+          <i class="icon-help-circled"></i>
+          <span>Search tips</span>
+        </p>
+      </li>
+
+      <li
+        id="filter_filesize"
+        
+        style="display:none"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_filesize_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Filesize</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <blockquote>
+          <div data-slider="filesizes">
+            <span
+              class="slider-info"
+            >between 0.0 and 0.0 MB</span>
+            <a
+              class="slider-choice dimension-cancel"
+              data-min="0.0"
+              data-max="0.0"
+            >Reset</a>
+            <div class="slider-slider"></div>
+
+            <input
+              type="hidden"
+              data-input="min"
+              name="filter_filesize_min"
+              value="0.0"
+            >
+            <input
+              type="hidden"
+              data-input="max"
+              name="filter_filesize_max"
+              value="0.0"
+            >
+          </div>
+        </blockquote>
+      </li>
+    </ul>
+
+    <div class='noFilter'>No filter, add one</div>
+
+    <div class="filterActions">
+      <div id="addFilter">
+        <div
+          class="addFilter-button icon-plus"
+          onclick="$('.addFilter-dropdown').slideToggle()"
+        >Add a filter</div>
+        <div class="addFilter-dropdown">
+          <a
+            data-value="filter_prefilter"
+            
+            class="disabled"
+            
+          >Predefined filter</a>
+          <a
+            data-value="filter_category"
+            
+          >Album</a>
+          <a
+            data-value="filter_tags"
+            
+          >Tags</a>
+          <a
+            data-value="filter_level"
+            
+          >Privacy level</a>
+          <a
+            data-value="filter_dimension"
+            
+          >Dimensions</a>
+          <a
+            data-value="filter_filesize"
+            
+          >Filesize</a>
+          <a
+            data-value="filter_search"
+            
+          >Search</a>
         </div>
-      </blockquote>
-    </li>
-
-    <li id="filter_search" style="display:none">
-      <input type="checkbox" name="filter_search_use" class="useFilterCheckbox">
-      <p>Search</p>
-      <a href="#" class="removeFilter" title="remove this filter"><span>[x]</span></a>
-      <input name="q" size=40 value="">
-      <p title="Help" class="help-popin-search">
-        <i class="icon-help-circled"></i>
-        <span>Search tips</span>
-      </p>
-    </li>
-
-    <li id="filter_filesize" style="display:none">
-      <input type="checkbox" name="filter_filesize_use" class="useFilterCheckbox" >
-      <p>Filesize</p>
-      <a href="#" class="removeFilter" title="remove this filter"><span>[x]</span></a>
-      <blockquote>
-        <div data-slider="filesizes">
-          <span class="slider-info">between 0.0 and 0.0 MB</span>
-          <a class="slider-choice dimension-cancel" data-min="0.0" data-max="0.0">Reset</a>
-          <div class="slider-slider"></div>
-
-          <input type="hidden" data-input="min" name="filter_filesize_min" value="0.0">
-          <input type="hidden" data-input="max" name="filter_filesize_max" value="0.0">
-        </div>
-      </blockquote>
-    </li>
-  </ul>
-
-  <div class='noFilter'>No filter, add one</div>
-
-  <div class="filterActions">
-    <div id="addFilter">
-      <div class="addFilter-button icon-plus" onclick="$('.addFilter-dropdown').slideToggle()">Add a filter</div>
-      <div class="addFilter-dropdown">
-        <a data-value="filter_prefilter" class="disabled">Predefined filter</a>
-        <a data-value="filter_category" >Album</a>
-        <a data-value="filter_tags" >Tags</a>
-        <a data-value="filter_level" >Privacy level</a>
-        <a data-value="filter_dimension" >Dimensions</a>
-        <a data-value="filter_filesize" >Filesize</a>
-        <a data-value="filter_search">Search</a>
+        <a
+          id="removeFilters"
+          class="icon-cancel"
+          style="display: none;"
+        >Remove all filters</a>
       </div>
-      <a id="removeFilters" class="icon-cancel" style="display: none;">Remove all filters</a>
+
+      <button id="applyFilter" name="submitFilter" type="submit">
+        <i class="icon-arrows-cw"></i> Refresh photo set
+      </button>
+
+      <div
+        id="errorFilter"
+        class="icon-red-error"
+        style="display: none; margin-left: 10px;"
+      ></div>
     </div>
-
-    <button id="applyFilter" name="submitFilter" type="submit">
-      <i class="icon-arrows-cw"></i> Refresh photo set
-    </button>
-
-    <div id="errorFilter" class="icon-red-error" style="display: none; margin-left: 10px;"></div>
   </div>
-</div>
 </fieldset>
 
 <div class="bg-modal" id="modalQuickSearch">
@@ -385,7 +814,9 @@
       <div class="quick-search-syntax">
 
 <div class="quick-search-headers">
-  <span class="mcs-popin-title">Search using extended syntax</span>
+  <span
+    class="mcs-popin-title"
+  >Search using extended syntax</span>
 </div>
 <div class="quick-search-infos">
   <p>
@@ -452,7 +883,10 @@
   </div>
 </div>
 
-<p class="quick-search-section" style="padding-top: 30px;">Others</p>
+<p
+  class="quick-search-section"
+  style="padding-top: 30px;"
+>Others</p>
 <div class="quick-search-items">
   <div class="quick-search-item">
     <div class="quick-search-item-info">
@@ -670,275 +1104,520 @@
       Searches photos by its numeric identifier in Piwigo.
     </div>
   </div>
-</div>      </div>
+</div>
+      </div>
     </div>
   </div>
 </div>
 
-<div id="addLinkedAlbum" class="linkedAlbumPopIn">
-  <div class="linkedAlbumPopInContainer">
-    <a class="gallery-icon-cancel ClosePopIn" id="closeAlbumPopIn"></a>
+  <div id="addLinkedAlbum" class="linkedAlbumPopIn">
+    <div class="linkedAlbumPopInContainer">
+      <a class="gallery-icon-cancel ClosePopIn" id="closeAlbumPopIn"></a>
 
-    <div class="AddIconContainer">
-      <span class="AddIcon icon-blue gallery-icon-plus-circled"></span>
-    </div>
-    <div class="AddIconTitle">
-      <span id="linkedModalTitle"></span>
-    </div>
-
-    <div class="album-selector" id="linkedAlbumSelector">
-      <label class="head-button-2 put-to-root-container notClickable" id="put-to-root">
-        <p class="icon-home">Put at the root</p>
-      </label>
-      <p class="put-to-root-container">or</p>
-
-      <div id="linkedAlbumSearch">
-        <span class='icon-search search-icon'> </span>
-        <span class="icon-cancel search-cancel-linked-album" style="display: none;"></span>
-        <input class='search-input' type='text' id="search-input-ab" placeholder="">
+      <div class="AddIconContainer">
+        <span class="AddIcon icon-blue gallery-icon-plus-circled"></span>
       </div>
-      <div class="limitReached"></div>
-      <div class="noSearch"></div>
-      <div class="searching gallery-icon-spin6 animate-spin"> </div>
-    </div>
-
-    <div id="searchResult">
-    </div>
-
-    <div class="album-create" id="linkedAlbumCreate" style="display: none;">
-      <div class="linked-album-subtitle">
-        <p id="linkedAlbumSubtitle">Add a sub-album of “Album 3”</p>
+      <div class="AddIconTitle">
+        <span id="linkedModalTitle"></span>
       </div>
 
-      <div class="linked-album-input-container album-name">
-        <label class="user-property-label">Album name
-          <input class="user-property-input" id="linkedAlbumInput" />
+      <div class="album-selector" id="linkedAlbumSelector">
+        <label
+          class="head-button-2 put-to-root-container notClickable"
+          id="put-to-root"
+        >
+          <p class="icon-home">Put at the root</p>
         </label>
-      </div>
+        <p class="put-to-root-container">or</p>
 
-      <div class="linked-album-input-container">
-        <label class="user-property-label">Position
-          <div class="linked-add-radio-input">
-            <input type="radio" id="place-start" name="position" value="first" checked>
-            <label for="place-start">Place first</label>
-          </div>
-          <div class="linked-add-radio-input">
-            <input type="radio" id="place-end" name="position" value="last">
-            <label for="place-end">Place last</label>
-          </div>
-        </label>
-      </div>
-
-      <div class="AddAlbumErrors">
-        <p class="icon-cancel" id="linkedAddAlbumErrors">omg big big error</p>
-      </div>
-
-      <div class="linked-album-create-btn">
-        <p class="linked-button-cancel" id="linkedAlbumCancel">Cancel</p>
-        <p class="buttonLike icon-plus" id="linkedAddNewAlbum">Create and select</p>
-      </div>
-    </div>
-
-    <div class="album-switch-bottom" id="linkedAlbumSwitch">
-      <div class="album-switch-container">
-        <div class="switch-input">
-          <label class="switch">
-            <input type="checkbox" name="locked" id="album-create-check" value="true">
-            <span class="slider round"></span>
-          </label>
-          <label class="switch-label" for="album-create-check"><span>Creation mode</span> <i
-              class="icon-help-circled tiptip" style="cursor:help"
-              title="Activate create mode to create and select an album"></i></label>
+        <div id="linkedAlbumSearch">
+          <span class='icon-search search-icon'></span>
+          <span
+            class="icon-cancel search-cancel-linked-album"
+            style="display: none;"
+          ></span>
+          <input
+            class='search-input'
+            type='text'
+            id="search-input-ab"
+            placeholder=""
+          >
         </div>
-        <p class="head-button-2 icon-plus-circled linked-add-album" id="linkedAddAlbum">
-          Create a root album</p>
+        <div class="limitReached"></div>
+        <div class="noSearch"></div>
+        <div class="searching gallery-icon-spin6 animate-spin"></div>
+      </div>
+
+      <div id="searchResult"></div>
+
+      <div class="album-create" id="linkedAlbumCreate" style="display: none;">
+        <div class="linked-album-subtitle">
+          <p id="linkedAlbumSubtitle">Add a sub-album of “Album 3”</p>
+        </div>
+
+        <div class="linked-album-input-container album-name">
+          <label class="user-property-label">Album name
+            <input class="user-property-input" id="linkedAlbumInput" />
+          </label>
+        </div>
+
+        <div class="linked-album-input-container">
+          <label class="user-property-label">Position
+            <div class="linked-add-radio-input">
+              <input
+                type="radio"
+                id="place-start"
+                name="position"
+                value="first"
+                checked
+              >
+              <label for="place-start">Place first</label>
+            </div>
+            <div class="linked-add-radio-input">
+              <input type="radio" id="place-end" name="position" value="last">
+              <label for="place-end">Place last</label>
+            </div>
+          </label>
+        </div>
+
+        <div class="AddAlbumErrors">
+          <p class="icon-cancel" id="linkedAddAlbumErrors">omg big big error</p>
+        </div>
+
+        <div class="linked-album-create-btn">
+          <p
+            class="linked-button-cancel"
+            id="linkedAlbumCancel"
+          >Cancel</p>
+          <p
+            class="buttonLike icon-plus"
+            id="linkedAddNewAlbum"
+          >Create and select</p>
+        </div>
+      </div>
+
+      <div class="album-switch-bottom" id="linkedAlbumSwitch">
+        <div class="album-switch-container">
+          <div class="switch-input">
+            <label class="switch">
+              <input
+                type="checkbox"
+                name="locked"
+                id="album-create-check"
+                value="true"
+              >
+              <span class="slider round"></span>
+            </label>
+            <label
+              class="switch-label"
+              for="album-create-check"
+            ><span>Creation mode</span> <i
+                class="icon-help-circled tiptip"
+                style="cursor:help"
+                title="Activate create mode to create and select an album"
+              ></i></label>
+          </div>
+          <p
+            class="head-button-2 icon-plus-circled linked-add-album"
+            id="linkedAddAlbum"
+          >
+            Create a root album</p>
+        </div>
       </div>
     </div>
-
   </div>
-</div>
-  <fieldset>
+    <fieldset>
+      <legend><span
+          class='icon-check icon-blue '
+        ></span>Selection</legend>
 
-    <legend><span class='icon-check icon-blue '></span>Selection</legend>
+        <div
+          class="selectionEmptyBlock"
+        >No photos in the current set.</div>
+    </fieldset>
 
-  <div class="selectionEmptyBlock">No photos in the current set.</div>
-  </fieldset>
+    <fieldset id="action">
+      <legend><span
+          class='icon-cog icon-red'
+        ></span>Action</legend>
+      <div
+        id="forbidAction"
+        
+      >No photos selected, no actions possible.</div>
+      <div
+        id="permitAction"
+        
+        style="display:none"
+        
+      >
+        <div class="permitActionListButton">
+          <div>
+            <select name="selectAction">
+              <option value="-1">Choose an action</option>
+              <option disabled="disabled">------------------</option>
+              <option
+                value="delete"
+                class="icon-trash"
+              >Delete selected photos</option>
+              <option
+                value="associate"
+              >Associate to album</option>
+              <option value="move">Move to album</option>
+              <option value="add_tags">Add tags</option>
+              <option value="author">Set author</option>
+              <option value="title">Set title</option>
+              <option
+                value="date_creation"
+              >Set creation date</option>
+              <option
+                value="level"
+                class="icon-lock"
+              >Who can see these photos? (Privacy level)</option>
+              <option
+                value="metadata"
+              >Synchronize metadata</option>
+                <option
+                  value="remove_from_caddie"
+                >Remove from caddie</option>
+              <option
+                value="delete_derivatives"
+              >Delete multiple size images</option>
+              <option
+                value="generate_derivatives"
+              >Generate multiple size images</option>
+            </select>
+          </div>
+          <p id="confirmDel" style="visibility:hidden">
+            <label class="font-checkbox">
+              <span class="icon-check"></span>
+              <input
+                type="checkbox"
+                name="confirm_deletion"
+                value="1"
+              > Are you sure?
+            </label><br /><br />
+            <span
+              class="errors"
+              style="visibility:hidden;margin:0;"
+            >You must confirm deletion</span>
+          </p>
+          <p
+            id="applyActionBlock"
+            style="display:none;margin:1em 0 0 0;"
+            class="actionButtons"
+          >
+            <button
+              id="applyAction"
+              name="submit"
+              type="submit"
+              class="buttonLike"
+            >
+              <i class="icon-cog-alt"></i> Apply action
+            </button>
 
-  <fieldset id="action">
-
-    <legend><span class='icon-cog icon-red'></span>Action</legend>
-      <div id="forbidAction">No photos selected, no actions possible.</div>
-      <div id="permitAction" style="display:none">
-
-    <div class="permitActionListButton">
-      <div>
-        <select name="selectAction">
-          <option value="-1">Choose an action</option>
-          <option disabled="disabled">------------------</option>
-          <option value="delete" class="icon-trash">Delete selected photos</option>
-          <option value="associate">Associate to album</option>
-          <option value="move">Move to album</option>
-          <option value="add_tags">Add tags</option>
-          <option value="author">Set author</option>
-          <option value="title">Set title</option>
-          <option value="date_creation">Set creation date</option>
-          <option value="level" class="icon-lock">Who can see these photos? (Privacy level)</option>
-          <option value="metadata">Synchronize metadata</option>
-          <option value="remove_from_caddie">Remove from caddie</option>
-    		<option value="delete_derivatives">Delete multiple size images</option>
-    		<option value="generate_derivatives">Generate multiple size images</option>
-        </select>
-      </div>
-      <p id="confirmDel" style="visibility:hidden">
-        <label class="font-checkbox">
-          <span class="icon-check"></span>
-          <input type="checkbox" name="confirm_deletion" value="1"> Are you sure?</input>
-        </label><br/><br/>
-        <span class="errors" style="visibility:hidden;margin:0;">You must confirm deletion</span>
-      </p>
-      <p id="applyActionBlock" style="display:none;margin:1em 0 0 0;" class="actionButtons">
-        <button id="applyAction" name="submit" type="submit" class="buttonLike">
-          <i class="icon-cog-alt"></i> Apply action
-        </button>
-
-        <span id="applyOnDetails"></span>
-      </p>
-    </div>
-    <div class="permitActionItem">
-      <!-- delete -->
-      <div id="action_delete" class="bulkAction">
-      </div>
-
-      <!-- associate -->
-      <div id="action_associate" class="bulkAction">
-        <div class="head-button-2 icon-plus-circled" id="associate_as">
-          <p>Select an album</p>
+            <span id="applyOnDetails"></span>
+          </p>
         </div>
-        <div class="selected-associate-action">
-        </div>
-      </div>
+        <div class="permitActionItem">
+          <!-- delete -->
+          <div id="action_delete" class="bulkAction"></div>
 
-      <!-- move -->
-      <div id="action_move" class="bulkAction">
-        <select data-selectize="categories" data-default="" name="move" style="width:600px" placeholder="Select an album... or type it!"></select>
-        <a href="#" data-add-album="move" title="create a new album" class="icon-plus"></a>
-      </div>
+          <!-- associate -->
+          <div id="action_associate" class="bulkAction">
+            <div class="head-button-2 icon-plus-circled" id="associate_as">
+              <p>Select an album</p>
+            </div>
+            <div class="selected-associate-action"></div>
+          </div>
 
-      <!-- dissociate -->
-      <div id="action_dissociate" class="bulkAction">
-        <select data-selectize="categories" placeholder="Type in a search term"
-          name="dissociate" style="width:600px"></select>
-      </div>
+          <!-- move -->
+          <div id="action_move" class="bulkAction">
+            <select
+              data-selectize="categories"
+              data-default=""
+              name="move"
+              style="width:600px"
+              placeholder="Select an album... or type it!"
+            ></select>
+            <a
+              href="#"
+              data-add-album="move"
+              title="create a new album"
+              class="icon-plus"
+            ></a>
+          </div>
 
+          <!-- dissociate -->
+          <div id="action_dissociate" class="bulkAction">
+            <select
+              data-selectize="categories"
+              placeholder="Type in a search term"
+              name="dissociate"
+              style="width:600px"
+            ></select>
+          </div>
 
-      <!-- add_tags -->
-      <div id="action_add_tags" class="bulkAction">
-        <select data-selectize="tags" data-create="true" placeholder="Type in a search term"
-          name="add_tags[]" multiple style="width:400px;"></select>
-      </div>
+          <!-- add_tags -->
+          <div id="action_add_tags" class="bulkAction">
+            <select
+              data-selectize="tags"
+              data-create="true"
+              placeholder="Type in a search term"
+              name="add_tags[]"
+              multiple
+              style="width:400px;"
+            ></select>
+          </div>
 
-      <!-- del_tags -->
-      <div id="action_del_tags" class="bulkAction">
-      </div>
+          <!-- del_tags -->
+          <div id="action_del_tags" class="bulkAction">
+          </div>
 
-      <!-- author -->
-      <div id="action_author" class="bulkAction">
-      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_author"> remove author</label>
-      <input type="text" class="large" name="author" placeholder="Type the author name here">
-      </div>
+          <!-- author -->
+          <div id="action_author" class="bulkAction">
+            <label class="font-checkbox"><span class="icon-check"></span><input
+                type="checkbox"
+                name="remove_author"
+              > remove author</label>
+            <input
+              type="text"
+              class="large"
+              name="author"
+              placeholder="Type the author name here"
+            >
+          </div>
 
-      <!-- title -->
-      <div id="action_title" class="bulkAction">
-      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_title"> remove title</label>
-      <input type="text" class="large" name="title" placeholder="Type the title here">
-      </div>
+          <!-- title -->
+          <div id="action_title" class="bulkAction">
+            <label class="font-checkbox"><span class="icon-check"></span><input
+                type="checkbox"
+                name="remove_title"
+              > remove title</label>
+            <input
+              type="text"
+              class="large"
+              name="title"
+              placeholder="Type the title here"
+            >
+          </div>
 
-      <!-- date_creation -->
-      <div id="action_date_creation" class="bulkAction">
-        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_date_creation"> remove creation date</label><br>
-        <div id="set_date_creation">
-          <input type="hidden" name="date_creation" value="2026-08-01 00:00:00">
-          <label>
-            <i class="icon-calendar"></i>
-            <input type="text" data-datepicker="date_creation" readonly>
-          </label>
-        </div>
-      </div>
+          <!-- date_creation -->
+          <div id="action_date_creation" class="bulkAction">
+            <label class="font-checkbox"><span class="icon-check"></span><input
+                type="checkbox"
+                name="remove_date_creation"
+              > remove creation date</label><br>
+            <div id="set_date_creation">
+              <input
+                type="hidden"
+                name="date_creation"
+                value="2026-08-01 00:00:00"
+              >
+              <label>
+                <i class="icon-calendar"></i>
+                <input type="text" data-datepicker="date_creation" readonly>
+              </label>
+            </div>
+          </div>
 
-      <!-- level -->
-      <div id="action_level" class="bulkAction">
-          <select name="level" size="1">
-            <option value="8">Admins</option>
+          <!-- level -->
+          <div id="action_level" class="bulkAction">
+            <select name="level" size="1">
+              <option value="8">Admins</option>
 <option value="4">Admins, Family</option>
 <option value="2">Admins, Family, Friends</option>
 <option value="1">Admins, Family, Friends, Contacts</option>
 <option value="0" selected="selected">Everybody</option>
 
-          </select>
-      </div>
+            </select>
+          </div>
 
-      <!-- metadata -->
-      <div id="action_metadata" class="bulkAction">
-      </div>
+          <!-- metadata -->
+          <div id="action_metadata" class="bulkAction"></div>
 
-      <!-- generate derivatives -->
-      <div id="action_generate_derivatives" class="bulkAction">
-        <div class="deleteDerivButtons">
-          <a href="javascript:selectGenerateDerivAll()">All</a>
-          <a href="javascript:selectGenerateDerivNone()">None</a>
+          <!-- generate derivatives -->
+          <div id="action_generate_derivatives" class="bulkAction">
+            <div class="deleteDerivButtons">
+              <a
+                href="javascript:selectGenerateDerivAll()"
+              >All</a>
+              <a
+                href="javascript:selectGenerateDerivNone()"
+              >None</a>
+            </div>
+            <br>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="generate_derivatives_type[]"
+                  value="square"
+                > Square</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="generate_derivatives_type[]"
+                  value="thumb"
+                > Thumbnail</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="generate_derivatives_type[]"
+                  value="2small"
+                > XXS - tiny</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="generate_derivatives_type[]"
+                  value="xsmall"
+                > XS - extra small</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="generate_derivatives_type[]"
+                  value="small"
+                > S - small</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="generate_derivatives_type[]"
+                  value="medium"
+                > M - medium</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="generate_derivatives_type[]"
+                  value="large"
+                > L - large</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="generate_derivatives_type[]"
+                  value="xlarge"
+                > XL - extra large</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="generate_derivatives_type[]"
+                  value="xxlarge"
+                > XXL - huge</label>
+          </div>
+
+          <!-- delete derivatives -->
+          <div id="action_delete_derivatives" class="bulkAction">
+            <div class="deleteDerivButtons">
+              <a href="javascript:selectDelDerivAll()">All</a>
+              <a href="javascript:selectDelDerivNone()">None</a>
+            </div>
+            <br>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="del_derivatives_type[]"
+                  value="square"
+                > Square</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="del_derivatives_type[]"
+                  value="thumb"
+                > Thumbnail</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="del_derivatives_type[]"
+                  value="2small"
+                > XXS - tiny</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="del_derivatives_type[]"
+                  value="xsmall"
+                > XS - extra small</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="del_derivatives_type[]"
+                  value="small"
+                > S - small</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="del_derivatives_type[]"
+                  value="medium"
+                > M - medium</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="del_derivatives_type[]"
+                  value="large"
+                > L - large</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="del_derivatives_type[]"
+                  value="xlarge"
+                > XL - extra large</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="del_derivatives_type[]"
+                  value="xxlarge"
+                > XXL - huge</label>
+              <label class="font-checkbox"><span
+                  class="icon-check"
+                ></span><input
+                  type="checkbox"
+                  name="del_derivatives_type[]"
+                  value="custom"
+                > Custom</label>
+          </div>
+
+          <!-- plugins -->
         </div>
-        <br>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="generate_derivatives_type[]" value="square"> Square</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="generate_derivatives_type[]" value="thumb"> Thumbnail</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="generate_derivatives_type[]" value="2small"> XXS - tiny</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="generate_derivatives_type[]" value="xsmall"> XS - extra small</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="generate_derivatives_type[]" value="small"> S - small</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="generate_derivatives_type[]" value="medium"> M - medium</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="generate_derivatives_type[]" value="large"> L - large</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="generate_derivatives_type[]" value="xlarge"> XL - extra large</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="generate_derivatives_type[]" value="xxlarge"> XXL - huge</label>
-      </div>
-
-      <!-- delete derivatives -->
-      <div id="action_delete_derivatives" class="bulkAction">
-        <div class="deleteDerivButtons">
-          <a href="javascript:selectDelDerivAll()">All</a>
-          <a href="javascript:selectDelDerivNone()">None</a>
-        </div>
-        <br>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="square"> Square</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="thumb"> Thumbnail</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="2small"> XXS - tiny</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="xsmall"> XS - extra small</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="small"> S - small</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="medium"> M - medium</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="large"> L - large</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="xlarge"> XL - extra large</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="xxlarge"> XXL - huge</label>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="del_derivatives_type[]" value="custom"> Custom</label>
-      </div>
-
-      <!-- plugins -->
-      </div>
-    </div> <!-- #permitAction -->
-    <div id="regenerationMsg" class="bulkAction" style="display:none;margin-left:0;">
+      </div> <!-- #permitAction -->
+      <div
+        id="regenerationMsg"
+        class="bulkAction"
+        style="display:none;margin-left:0;"
+      >
         <div id="regenerationStatus" style="margin-bottom:10px;">
-          <span id="regenerationText">Generate multiple size images</span>
+          <span
+            id="regenerationText"
+          >Generate multiple size images</span>
           <span class="badge-number" style="font-size:12.8px"></span>
         </div>
         <input type="hidden" name="regenerateSuccess" value="0">
         <input type="hidden" name="regenerateError" value="0">
       </div>
-    <!-- progress bar -->
-    <div id="uploadingActions" style="display:none">
-      <div class="big-progressbar" style="max-width:100%;margin-bottom: 10px;">
-        <div class="progressbar" style="width:0%"></div>
+      <!-- progress bar -->
+      <div id="uploadingActions" style="display:none">
+        <div
+          class="big-progressbar"
+          style="max-width:100%;margin-bottom: 10px;"
+        >
+          <div class="progressbar" style="width:0%"></div>
+        </div>
       </div>
-    </div>
-  </fieldset>
-
+    </fieldset>
   </form>
-
 </div> <!-- #batchManagerGlobal -->
 
 <style>
@@ -980,43 +1659,72 @@
 
 <div id="footer">
   <div>
-    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What&apos;s new in version 17?">
-      <i class="icon-bell"></i>
-    </span>
+    <a
+      class="externalLink tiptip piwigo-logo"
+      href="https://upstream.example.invalid"
+      title="Visit Piwigo project website"
+    ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+      <span
+        id="whats_new_notification"
+        class="icon-blue tiptip"
+        onclick="show_user_whats_new()"
+        title="What&apos;s new in version 17?"
+      >
+        <i class="icon-bell"></i>
+      </span>
   </div>
   <div id="pageInfos">
 
     Contact
-    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+    <a
+      href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
+    >Webmaster</a>
   </div></div>
 </div>
 
-<div id="whats_new">
+  <div id="whats_new">
     <div id="whats_new_popin">
-      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <a
+        class="icon-cancel close_whats_new"
+        onClick="hide_user_whats_new()"
+      ></a>
       <h3>What's new in version 17?</h3>
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Brand new login &amp; preferences with Standard pages !</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Brand new login &amp; preferences with Standard pages !</a></h4>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Two factor authentication is here</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Two factor authentication is here</a></h4>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">UI redesigns that make a difference</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >UI redesigns that make a difference</a></h4>
           </div>
         </div>
       </div>
       <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
-        <a class="buttonLike" href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+        <button onClick="hide_user_whats_new()"><i
+            class="icon-thumbs-up"
+          ></i> Ok, got it!</button>
+        <a
+          class="buttonLike"
+          href="https://upstream.example.invalid/releases/17.0.0"
+          target="_blank"
+        ><i class="icon-book"></i> Read the release note</a>
       </div>
     </div>
-</div>
+  </div>
 
 <style>
 
@@ -1449,7 +2157,7 @@ after = after.parentNode.insertBefore(s, after);
 </script>
 <!-- END get_combined -->
 
-<script type="module" src="dist/vitals.js"></script>
+  <script type="module" src="dist/vitals.js"></script>
 
 </body>
 </html>

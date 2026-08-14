@@ -1,212 +1,321 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-<meta name="apple-itunes-app" content="app-id=472225196">
-<meta charset="utf-8">
-<title>Fixture Gallery :: Piwigo Administration</title>
-<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
-<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+  <head>
+      <meta name="apple-itunes-app" content="app-id=472225196">
+    <meta charset="utf-8">
+    <title>Fixture Gallery :: Piwigo Administration</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="themes/default/icon/piwigo.org-icon 1.svg"
+    >
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="themes/admin/default/fonts/open-sans/open-sans.css"
+    >
 
 
-<!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/1lbsonc.css">
+    <!-- BEGIN get_combined -->
+    <link rel="stylesheet" type="text/css" href="_data/combined/1lbsonc.css">
 
-<script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
-<!-- END get_combined -->
+    <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
+    <!-- END get_combined -->
 
-</head>
+  </head>
 
-<body id="theAdminPage">
+  <body id="theAdminPage">
+    <div id="the_page">
 
-<div id="the_page">
+      <div id="pwgHead">
+        <a
+          href="/piwigo17-4/"
+          class="visit-gallery tiptip"
+          title="Visit the gallery"
+        ><i class="icon-left-open"></i>Visit</a>
+        <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-
-<div id="pwgHead">
-  <a href="/piwigo17-4/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
-  <div class="pwgHead-gallery-title">Fixture Gallery</div>
-
-  <div id="headActions">
-    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+        <div id="headActions">
+          <span class="admin-head-username"><i
+              class="icon-user"
+            ></i>fixture_admin</span>
 <a href="admin.php?page=history&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
-    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
-    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
-  </div>
-</div>
+          <a
+            class="tiptip"
+            href="admin.php?page=help"
+            title="Instructions to use Piwigo"
+          ><i
+              class="icon-help-circled"
+            ></i><span>Help Me</span></a>
+          <a href="index.php?act=logout"><i
+              class="icon-logout"
+            ></i><span>Logout</span></a>
+        </div>
+      </div>
 
-<div style="clear:both;"></div>
+      <div style="clear:both;"></div>
 
 
-<div id="pwgMain">
-
+      <div id="pwgMain">
 
 <div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+        class="icon-television"
+      ></i> Dashboard</a></div>
 
-	<dl>
-		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
-			<ul>
-				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
-        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
-				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
-				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
-				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
-			</ul>
-		</dd>
-  </dl>
   <dl>
-		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dt><i class="icon-picture"></i><span>Photos&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
     <dd>
       <ul>
-        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
-        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+        <li><a href="admin.php?page=photos_add"><i
+              class="icon-plus-circled"
+            ></i>Add</a></li>
+          <li><a href="admin.php?page=rating"><i
+                class="icon-star"
+              ></i>Rating</a></li>
+        <li><a href="admin.php?page=tags"><i
+              class="icon-tags"
+            ></i>Tags</a></li>
+        <li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i
+              class="icon-clock"
+            ></i>Recent photos</a></li>
+        <li><a href="admin.php?page=batch_manager"><i
+              class="icon-th"
+            ></i>Batch Manager</a></li>
       </ul>
     </dd>
   </dl>
   <dl>
-		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-sitemap"></i><span>Albums&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
-        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
-				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+        <li><a href="admin.php?page=albums"><i
+              class="icon-folder-open"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i
+              class="icon-pencil"
+            ></i>Properties</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
-  </dl>
-  <dl>
-		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-users"></i><span>Users&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
-				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
-				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
-				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
-          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
-        </a></li>
-        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+        <li><a href="admin.php?page=user_list"><i
+              class="icon-user-add"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i
+              class="icon-group"
+            ></i>Groups</a></li>
+        <li><a href="admin.php?page=notification_by_mail"><i
+              class="icon-mail-1"
+            ></i>Notification</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><a href="admin.php?page=plugins" class="admin-main"><i
+          class="icon-puzzle"
+        ></i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+    <dt><i class="icon-wrench"></i><span>Tools&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
-        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
-				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
-        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+          <li><a href="admin.php?page=site_update&amp;site=1"><i
+                class="icon-exchange"
+              ></i>Synchronize</a></li>
+        <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
+              class="icon-signal"
+            ></i>History</a></li>
+        <li><a href="admin.php?page=maintenance"><i
+              class="icon-tools"
+            ></i>Maintenance</a></li>
+          <li><a href="admin.php?page=comments"><i
+                class="icon-chat"
+              ></i>Comments
+                <span
+                  class="adminMenubarCounter"
+                  title="1 waiting for validation"
+                >1</span>
+              </a></li>
+          <li><a href="admin.php?page=updates"><i
+                class="icon-arrows-cw"
+              ></i>Updates</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i
+        class="icon-cog"
+      ></i><span>Configuration&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i
+              class="icon-cog-alt"
+            ></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i
+              class="icon-menu"
+            ></i>Menus</a></li>
+        <li><a href="admin.php?page=languages"><i
+              class="icon-language"
+            ></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i
+              class="icon-brush"
+            ></i>Themes</a></li>
       </ul>
     </dd>
   </dl>
 </div> <!-- menubar -->
 
 <div id="content" class="content">
+  <h1>History<span
+      class="admin-object-id"
+    ></span></h1>
 
-  <h1>History<span class="admin-object-id"></span></h1>
+      <div id="tabsheet">
+    <ul class="tabsheet">
+        <li
+          class="normal_tab"
+        >
+          <a
+            href="admin.php?page=stats"
+          ><span><span class="icon-signal"></span>Statistics</span></a>
+        </li>
+        <li
+          class="selected_tab"
+        >
+          <a
+            href="admin.php?page=history"
+          ><span><span class="icon-search"></span>Search</span></a>
+        </li>
+    </ul>
+  </div>
 
-  <div id="tabsheet">
-<ul class="tabsheet">
-  <li class="normal_tab">
-    <a href="admin.php?page=stats"><span><span class="icon-signal"></span>Statistics</span></a>
-  </li>
-  <li class="selected_tab">
-    <a href="admin.php?page=history"><span><span class="icon-search"></span>Search</span></a>
-  </li>
-</ul>
-</div>
 
-
-<div class="eiw">
+  <div class="eiw">
 
 
 
-
-</div> 
+  </div> 
 
   
-
 
 
  
 
 <form class="filter" method="post" name="filter" action="">
-<fieldset class="history-filter">
-  <div class="selectable-filter">
-    <div class="filter-part date-start">
-      <label>Start date</label>
+  <fieldset class="history-filter">
+    <div class="selectable-filter">
+      <div class="filter-part date-start">
+        <label>Start date</label>
         <input type="hidden" name="start" value="2026-08-01">
         <label>
-          <input type="text" data-datepicker="start" data-datepicker-end="end" data-datepicker-unset="start_unset" readonly>
+          <input
+            type="text"
+            data-datepicker="start"
+            data-datepicker-end="end"
+            data-datepicker-unset="start_unset"
+            readonly
+          >
         </label>
-        <a href="#" class="icon-cancel-circled" id="start_unset">unset</a>
-    </div>
-    <div class="filter-part date-end">
-      <label>End date</label>
+        <a
+          href="#"
+          class="icon-cancel-circled"
+          id="start_unset"
+        >unset</a>
+      </div>
+      <div class="filter-part date-end">
+        <label>End date</label>
         <input type="hidden" name="end" value="2026-08-01">
         <label>
-          <input type="text" data-datepicker="end" data-datepicker-start="start" data-datepicker-unset="end_unset" readonly>
+          <input
+            type="text"
+            data-datepicker="end"
+            data-datepicker-start="start"
+            data-datepicker-unset="end_unset"
+            readonly
+          >
         </label>
-        <a href="#" class="icon-cancel-circled" id="end_unset">unset</a>
-    </div>
-    <div class="filter-part elem-type advanced-filter-select-container">
-      <label>
-        Action
-        <select name="types[]" class="elem-type-select user-action-select advanced-filter-select">
-          <option value=""></option>
-          <option value="visited">Visited </option>
-          <option value="downloaded">Downloaded </option>
-        </select>
-      </label>
-    </div>
-  </div>
-  <div class="filter-tags">
-    <label>Additional filters</label>
-    <div class="filter-container">
-      <div id="default-filter" class="filter-item hide">
-        <span class="filter-icon"></span><span class="filter-title"> test </span><span class="remove-filter icon-cancel"></span>
+        <a
+          href="#"
+          class="icon-cancel-circled"
+          id="end_unset"
+        >unset</a>
+      </div>
+      <div class="filter-part elem-type advanced-filter-select-container">
+        <label>
+          Action
+          <select
+            name="types[]"
+            class="elem-type-select user-action-select advanced-filter-select"
+          >
+            <option value=""></option>
+            <option value="visited">Visited </option>
+            <option value="downloaded">Downloaded </option>
+          </select>
+        </label>
       </div>
     </div>
-  </div>
-  <div class="refresh-results icon-arrows-cw tiptip" title="Refresh">
-  </div>
-</fieldset>
+    <div class="filter-tags">
+      <label>Additional filters</label>
+      <div class="filter-container">
+        <div id="default-filter" class="filter-item hide">
+          <span class="filter-icon"></span><span
+            class="filter-title"
+          > test </span><span class="remove-filter icon-cancel"></span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="refresh-results icon-arrows-cw tiptip"
+      title="Refresh"
+    ></div>
+  </fieldset>
 </form>
 
 
 <span id="-2" class="icon-green summary-user-item hide">
-  <i class="icon-user-1"> </i>
-  <i class="icon-plus-circled"> </i>
+  <i class="icon-user-1"></i>
+  <i class="icon-plus-circled"></i>
   <span class="user-item-name"> User test </span>
 </span>
 <div class="search-summary">
   <div class="summary-lines">
     <span class="icon-yellow icon-menu summary-icons"></span>
-    <span class="summary-data"> </span>
+    <span class="summary-data"></span>
   </div>
   <div class="summary-weight">
     <span class="icon-purple icon-download summary-icons"></span>
-    <span class="summary-data"> </span>
+    <span class="summary-data"></span>
   </div>
   <div class="summary-users">
     <span class="icon-green icon-user-1 summary-icons"></span>
-    <span class="summary-data"> </span>
-    <div class="user-list">
-    </div>
+    <span class="summary-data"></span>
+    <div class="user-list"></div>
     <span class="user-dot icon-green summary-user-item">...</span>
   </div>
   <div class="summary-guests">
     <span class="icon-blue icon-user-secret summary-icons"></span>
-    <span class="summary-data"> </span>
-    <span class="addGuestFilter"> </span>
+    <span class="summary-data"></span>
+    <span class="addGuestFilter"></span>
   </div>
 </div>
 
 
 <div class="loading hide">
-  <span class="icon-spin6 animate-spin"> </span>
+  <span class="icon-spin6 animate-spin"></span>
 </div>
 <div class="noResults">
   No results
@@ -214,71 +323,80 @@
 <div class="container">
   <div class="tab-title">
     <div class="date-title">
-        Date
+      Date
     </div>
     <div class="user-title">
-        User
+      User
     </div>
     <div class="type-title">
-        Object
+      Object
     </div>
     <div class="detail-title">
-        Details
+      Details
     </div>
   </div>
 
   <div class="search-line hide" id="-1">
-      <div class="date-section">
-        <i class="date-dwld-icon"> </i>
-        <div class="date-infos">
-          <span class="date-day bold"> July 4th, 2042 </span>
-          <span> at <span class="date-hour">23:59:59</span> </span>
-        </div>
-      </div>
-
-      <div class="user-section">
-        <span class="user-name bold" title="Add as filter"> Zac le boss <i class="add-filter icon-plus-circled"></i></span>
-        <span class="user-ip" title="Add as filter"> 192.168.0.0 <i class="add-filter icon-plus-circled"></i></span>
-      </div>
-
-      <div class="type-section">
-        <a class="type-icon no-img" target="_blank"> <i class="icon-file-image"> </i> </a>
-        <span class="icon-ellipsis-vert toggle-img-option">
-          <div class="img-option">
-            <a class="add-img-as-filter icon-filter"> Add as filter </a>
-            <a class="edit-img icon-pencil" href="" target="_blank">Edit</a>
-          </div>
-        </span>
-
-        <div class="type-desc">
-          <span class="type-name bold"> WIP </span>
-          <span class="type-id"> tag #99 </span>
-        </div>
-
-      </div>
-
-      <div class="detail-section">
-        <div class="detail-item detail-item-1 hide">
-          detail 1
-        </div>
-        <div class="detail-item detail-item-2 hide">
-          detail 2
-        </div>
-        <div class="detail-item detail-item-3 hide">
-          detail 3
-        </div>
+    <div class="date-section">
+      <i class="date-dwld-icon"></i>
+      <div class="date-infos">
+        <span class="date-day bold"> July 4th, 2042 </span>
+        <span> at <span class="date-hour">23:59:59</span> </span>
       </div>
     </div>
 
-  <div class="tab">
+    <div class="user-section">
+      <span
+        class="user-name bold"
+        title="Add as filter"
+      > Zac le boss <i class="add-filter icon-plus-circled"></i></span>
+      <span class="user-ip" title="Add as filter"> 192.168.0.0 <i
+          class="add-filter icon-plus-circled"
+        ></i></span>
+    </div>
+
+    <div class="type-section">
+      <a class="type-icon no-img" target="_blank"> <i
+          class="icon-file-image"
+        ></i> </a>
+      <span class="icon-ellipsis-vert toggle-img-option">
+        <div class="img-option">
+          <a
+            class="add-img-as-filter icon-filter"
+          > Add as filter </a>
+          <a
+            class="edit-img icon-pencil"
+            href=""
+            target="_blank"
+          >Edit</a>
+        </div>
+      </span>
+
+      <div class="type-desc">
+        <span class="type-name bold"> WIP </span>
+        <span class="type-id"> tag #99 </span>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-item detail-item-1 hide">
+        detail 1
+      </div>
+      <div class="detail-item detail-item-2 hide">
+        detail 2
+      </div>
+      <div class="detail-item detail-item-3 hide">
+        detail 3
+      </div>
+    </div>
   </div>
+
+  <div class="tab"></div>
   <div class="pagination-container">
     <div class="pagination-arrow left">
       <span class="icon-left-open"></span>
     </div>
-    <div class="pagination-item-container">
-
-    </div>
+    <div class="pagination-item-container"></div>
     <div class="pagination-arrow rigth">
       <span class="icon-left-open"></span>
     </div>
@@ -739,43 +857,72 @@
 
 <div id="footer">
   <div>
-    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What&apos;s new in version 17?">
-      <i class="icon-bell"></i>
-    </span>
+    <a
+      class="externalLink tiptip piwigo-logo"
+      href="https://upstream.example.invalid"
+      title="Visit Piwigo project website"
+    ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+      <span
+        id="whats_new_notification"
+        class="icon-blue tiptip"
+        onclick="show_user_whats_new()"
+        title="What&apos;s new in version 17?"
+      >
+        <i class="icon-bell"></i>
+      </span>
   </div>
   <div id="pageInfos">
 
     Contact
-    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+    <a
+      href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
+    >Webmaster</a>
   </div></div>
 </div>
 
-<div id="whats_new">
+  <div id="whats_new">
     <div id="whats_new_popin">
-      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <a
+        class="icon-cancel close_whats_new"
+        onClick="hide_user_whats_new()"
+      ></a>
       <h3>What's new in version 17?</h3>
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Brand new login &amp; preferences with Standard pages !</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Brand new login &amp; preferences with Standard pages !</a></h4>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Two factor authentication is here</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Two factor authentication is here</a></h4>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">UI redesigns that make a difference</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >UI redesigns that make a difference</a></h4>
           </div>
         </div>
       </div>
       <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
-        <a class="buttonLike" href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+        <button onClick="hide_user_whats_new()"><i
+            class="icon-thumbs-up"
+          ></i> Ok, got it!</button>
+        <a
+          class="buttonLike"
+          href="https://upstream.example.invalid/releases/17.0.0"
+          target="_blank"
+        ><i class="icon-book"></i> Read the release note</a>
       </div>
     </div>
-</div>
+  </div>
 
 <style>
 
@@ -969,7 +1116,7 @@ after = after.parentNode.insertBefore(s, after);
 </script>
 <!-- END get_combined -->
 
-<script type="module" src="dist/vitals.js"></script>
+  <script type="module" src="dist/vitals.js"></script>
 
 </body>
 </html>

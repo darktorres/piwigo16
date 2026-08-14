@@ -1,26 +1,32 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-<meta charset="utf-8">
-<meta name="generator" content="Piwigo (aka PWG), see piwigo.org">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="Piwigo (aka PWG), see piwigo.org">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Registration | Fixture Gallery</title>
-<link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">
+    <title>Registration | Fixture Gallery</title>
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="themes/default/icon/favicon.ico"
+    >
 
 
-<!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/x109kg.css">
+    <!-- BEGIN get_combined -->
+    <link rel="stylesheet" type="text/css" href="_data/combined/x109kg.css">
 
-<script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
-<!-- END get_combined -->
+    <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
+    <!-- END get_combined -->
 
-</head>
+  </head>
 
-<body id="theRegisterPage" class=""  data-infos="[]">
-
-<div id="the_page">
-
+  <body
+    id="theRegisterPage"
+    class=""
+    data-infos="[]"
+  >
+    <div id="the_page">
 
 <script>
   var selected_language = `English (Great Britain)`;
@@ -29,20 +35,29 @@
 </script>
 
 <container id="mode" class="light">
-
   <section id="header-options">
-  <div>
-    <i class="gallery-icon-moon toggle-mode" id="toggle_mode_light" onclick="toggle_mode('dark')"></i>
-    <i class="gallery-icon-sun toggle-mode" id="toggle_mode_dark" onclick="toggle_mode('light')"></i>
-  </div>
+    <div>
+      <i
+        class="gallery-icon-moon toggle-mode"
+        id="toggle_mode_light"
+        onclick="toggle_mode('dark')"
+      ></i>
+      <i
+        class="gallery-icon-sun toggle-mode"
+        id="toggle_mode_dark"
+        onclick="toggle_mode('light')"
+      ></i>
+    </div>
     <div>
       <a href="https://upstream.example.invalid/help/" target="_blank">Help</a>
-  </section>
-
-  <section id="logo-section">
-    <img id="piwigo-logo" src="themes/standard_pages/images/piwigo_logo.svg">
     </section>
 
+    <section id="logo-section">
+        <img
+          id="piwigo-logo"
+          src="themes/standard_pages/images/piwigo_logo.svg"
+        >
+    </section>
 
   <section id="register-form">
     <div class="">
@@ -50,61 +65,111 @@
         Create an account
       </h1>
 
-      <form class="properties" method="post" action="register.php" name="register_form" autocomplete="off">
-
+      <form
+        class="properties"
+        method="post"
+        action="register.php"
+        name="register_form"
+        autocomplete="off"
+      >
         <div class="column-flex">
-          <label for="mail_address">Email address (useful in case password is forgotten)</label>
+          <label
+            for="mail_address"
+          >Email address (useful in case password is forgotten)</label>
           <div class="row-flex input-container">
             <i class="gallery-icon-user-2"></i>
-            <input type="email" name="mail_address" id="login" value="">
+            <input
+              type="email"
+              name="mail_address"
+              id="login"
+              value=""
+              
+            >
           </div>
-          <p class="error-message"><i class="gallery-icon-attention-circled"></i> must not be empty</p>
+          <p class="error-message"><i
+              class="gallery-icon-attention-circled"
+            ></i> must not be empty</p>
         </div>
 
         <div class="column-flex">
           <label for="username">Username</label>
           <div class="row-flex input-container">
             <i class="gallery-icon-user-2"></i>
-            <input type="text" name="login" id="login" value="" data-required="true">
+            <input
+              type="text"
+              name="login"
+              id="login"
+              value=""
+              data-required="true"
+            >
           </div>
-          <p class="error-message"><i class="gallery-icon-attention-circled"></i> must not be empty</p>
+          <p class="error-message"><i
+              class="gallery-icon-attention-circled"
+            ></i> must not be empty</p>
         </div>
 
         <div class="column-flex">
           <label for="password">Password</label>
           <div class="row-flex input-container">
             <i class="gallery-icon-lock"></i>
-            <input type="password" class="" name="password" id="password" size="25" data-required="true">
+            <input
+              type="password"
+              class=""
+              name="password"
+              id="password"
+              size="25"
+              data-required="true"
+            >
             <i class="gallery-icon-eye togglePassword"></i>
           </div>
-          <p class="error-message"><i class="gallery-icon-attention-circled"></i> must not be empty</p>
+          <p class="error-message"><i
+              class="gallery-icon-attention-circled"
+            ></i> must not be empty</p>
         </div>
 
         <div class="column-flex">
           <label for="password">Confirm Password</label>
           <div class="row-flex input-container">
             <i class="gallery-icon-lock"></i>
-            <input type="password" class="" name="password_conf" id="password_conf" size="25" data-required="true">
+            <input
+              type="password"
+              class=""
+              name="password_conf"
+              id="password_conf"
+              size="25"
+              data-required="true"
+            >
             <i class="gallery-icon-eye togglePassword"></i>
           </div>
-          <p class="error-message"><i class="gallery-icon-attention-circled"></i> must not be empty</p>
+          <p class="error-message"><i
+              class="gallery-icon-attention-circled"
+            ></i> must not be empty</p>
         </div>
 
         <div class="column-flex">
-          <input type="hidden" name="key" value="1786722277.1:6:333364d10a7235014567f9c94cd7c3749f211a3cdf94169f839b1cee776234b0" >
-          <input tabindex="4" type="submit" name="submit" value="Register" class="btn btn-main ">
+          <input type="hidden" name="key" value="1786731348.4:6:b3b29e88c45feab31ad5420341d2e499f7afa540512eabc33e710daf2680103f">
+          <input
+            tabindex="4"
+            type="submit"
+            name="submit"
+            value="Register"
+            class="btn btn-main "
+          >
         </div>
       </form>
 
       <div class="secondary-links">
-        <p>Already have an account? <a href="identification.php" title="Sign in">Sign in</a></p>
+        <p>Already have an account? <a
+            href="identification.php"
+            title="Sign in"
+          >Sign in</a></p>
       </div>
-
     </div>
   </section>
 
-  <a href="index.php" id="return-to-gallery"><i class="gallery-icon-left"></i> Return to the gallery</a>
-
+  <a href="index.php" id="return-to-gallery"><i
+      class="gallery-icon-left"
+    ></i> Return to the gallery</a>
 
 </container>
 <!-- BEGIN get_combined -->
@@ -117,7 +182,7 @@ after = after.parentNode.insertBefore(s, after);
 </script>
 <!-- END get_combined -->
 
-<script type="module" src="dist/vitals.js"></script>
+  <script type="module" src="dist/vitals.js"></script>
 
 </body>
 </html>

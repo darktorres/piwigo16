@@ -1,127 +1,207 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-<meta name="apple-itunes-app" content="app-id=472225196">
-<meta charset="utf-8">
-<title>Fixture Gallery :: Piwigo Administration</title>
-<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
-<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+  <head>
+      <meta name="apple-itunes-app" content="app-id=472225196">
+    <meta charset="utf-8">
+    <title>Fixture Gallery :: Piwigo Administration</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="themes/default/icon/piwigo.org-icon 1.svg"
+    >
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="themes/admin/default/fonts/open-sans/open-sans.css"
+    >
 
 
-<!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/otb3y3.css">
+    <!-- BEGIN get_combined -->
+    <link rel="stylesheet" type="text/css" href="_data/combined/otb3y3.css">
 
-<script type="text/javascript" src="_data/combined/4oyym4.js"></script>
-<!-- END get_combined -->
+    <script type="text/javascript" src="_data/combined/4oyym4.js"></script>
+    <!-- END get_combined -->
 
-</head>
+  </head>
 
-<body id="theAdminPage">
+  <body id="theAdminPage">
+    <div id="the_page">
 
-<div id="the_page">
+      <div id="pwgHead">
+        <a
+          href="/piwigo17-4/"
+          class="visit-gallery tiptip"
+          title="Visit the gallery"
+        ><i class="icon-left-open"></i>Visit</a>
+        <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-
-<div id="pwgHead">
-  <a href="/piwigo17-4/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
-  <div class="pwgHead-gallery-title">Fixture Gallery</div>
-
-  <div id="headActions">
-    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+        <div id="headActions">
+          <span class="admin-head-username"><i
+              class="icon-user"
+            ></i>fixture_admin</span>
 <a href="admin.php?page=tags&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
-    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
-    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
-  </div>
-</div>
+          <a
+            class="tiptip"
+            href="admin.php?page=help"
+            title="Instructions to use Piwigo"
+          ><i
+              class="icon-help-circled"
+            ></i><span>Help Me</span></a>
+          <a href="index.php?act=logout"><i
+              class="icon-logout"
+            ></i><span>Logout</span></a>
+        </div>
+      </div>
 
-<div style="clear:both;"></div>
+      <div style="clear:both;"></div>
 
 
-<div id="pwgMain">
-
+      <div id="pwgMain">
 
 <div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+        class="icon-television"
+      ></i> Dashboard</a></div>
 
-	<dl>
-		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
-			<ul>
-				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
-        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
-				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
-				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
-				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
-			</ul>
-		</dd>
-  </dl>
   <dl>
-		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dt><i class="icon-picture"></i><span>Photos&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
     <dd>
       <ul>
-        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
-        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+        <li><a href="admin.php?page=photos_add"><i
+              class="icon-plus-circled"
+            ></i>Add</a></li>
+          <li><a href="admin.php?page=rating"><i
+                class="icon-star"
+              ></i>Rating</a></li>
+        <li><a href="admin.php?page=tags"><i
+              class="icon-tags"
+            ></i>Tags</a></li>
+        <li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i
+              class="icon-clock"
+            ></i>Recent photos</a></li>
+        <li><a href="admin.php?page=batch_manager"><i
+              class="icon-th"
+            ></i>Batch Manager</a></li>
       </ul>
     </dd>
   </dl>
   <dl>
-		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-sitemap"></i><span>Albums&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
-        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
-				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+        <li><a href="admin.php?page=albums"><i
+              class="icon-folder-open"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i
+              class="icon-pencil"
+            ></i>Properties</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
-  </dl>
-  <dl>
-		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-users"></i><span>Users&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
-				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
-				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
-				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
-          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
-        </a></li>
-        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+        <li><a href="admin.php?page=user_list"><i
+              class="icon-user-add"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i
+              class="icon-group"
+            ></i>Groups</a></li>
+        <li><a href="admin.php?page=notification_by_mail"><i
+              class="icon-mail-1"
+            ></i>Notification</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><a href="admin.php?page=plugins" class="admin-main"><i
+          class="icon-puzzle"
+        ></i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+    <dt><i class="icon-wrench"></i><span>Tools&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
-        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
-				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
-        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+          <li><a href="admin.php?page=site_update&amp;site=1"><i
+                class="icon-exchange"
+              ></i>Synchronize</a></li>
+        <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
+              class="icon-signal"
+            ></i>History</a></li>
+        <li><a href="admin.php?page=maintenance"><i
+              class="icon-tools"
+            ></i>Maintenance</a></li>
+          <li><a href="admin.php?page=comments"><i
+                class="icon-chat"
+              ></i>Comments
+                <span
+                  class="adminMenubarCounter"
+                  title="1 waiting for validation"
+                >1</span>
+              </a></li>
+          <li><a href="admin.php?page=updates"><i
+                class="icon-arrows-cw"
+              ></i>Updates</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i
+        class="icon-cog"
+      ></i><span>Configuration&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i
+              class="icon-cog-alt"
+            ></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i
+              class="icon-menu"
+            ></i>Menus</a></li>
+        <li><a href="admin.php?page=languages"><i
+              class="icon-language"
+            ></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i
+              class="icon-brush"
+            ></i>Themes</a></li>
       </ul>
     </dd>
   </dl>
 </div> <!-- menubar -->
 
 <div id="content" class="content">
+  <h1>Tags<span
+      class="admin-object-id"
+    ></span></h1>
 
-  <h1>Tags<span class="admin-object-id"></span></h1>
-
-  <div id="tabsheet">
-<ul class="tabsheet">
-  <li class="selected_tab">
-    <a href="admin.php?page=tags"><span><span class="icon-menu"></span>List</span></a>
-  </li>
-</ul>
-</div>
-
-
-<div class="eiw">
-
+      <div id="tabsheet">
+    <ul class="tabsheet">
+        <li
+          class="selected_tab"
+        >
+          <a
+            href="admin.php?page=tags"
+          ><span><span class="icon-menu"></span>List</span></a>
+        </li>
+    </ul>
+  </div>
 
 
+  <div class="eiw">
 
-</div> 
+
+
+  </div> 
 
   
  
@@ -142,46 +222,58 @@
 
 <div id="selection-mode-block" class="in-selection-mode tag-selection">
   <div class="tag-selection-content">
-
-    <p id="nothing-selected">No tags selected, no actions possible.</p>
+    <p
+      id="nothing-selected"
+    >No tags selected, no actions possible.</p>
 
     <div class="selection-mode-tag">
       <p>Your selection</p>
-      <div class="tag-list" data-list='[]'>
-
-      </div>
+      <div class="tag-list" data-list='[]'></div>
       <div class="selection-other-tags"></div>
-      <button id="MergeSelectionMode" class="icon-object-group unavailable" title="At least 2 selected tags are needed to merge">Merge</button>
-      <button id="DeleteSelectionMode" class="icon-trash-1">Delete</button>
+      <button
+        id="MergeSelectionMode"
+        class="icon-object-group unavailable"
+        title="At least 2 selected tags are needed to merge"
+      >Merge</button>
+      <button
+        id="DeleteSelectionMode"
+        class="icon-trash-1"
+      >Delete</button>
     </div>
 
     <div id="MergeOptionsBlock">
       <p>Choose which tag to merge these tags into</p>
-      <p class="ItalicTextInfo">The other tags will be removed</p>
+      <p
+        class="ItalicTextInfo"
+      >The other tags will be removed</p>
       <div class="MergeOptionsContainer">
-        <select id="MergeOptionsChoices">
-        </select>
+        <select id="MergeOptionsChoices"></select>
       </div>
       <button class="icon-ok ConfirmMergeButton">Confirm merge</button>
       <a id="CancelMerge">Cancel</a>
     </div>
-
   </div>
 </div>
 
 <div class='tag-header'>
   <div id='search-tag'>
-    <div class='search-info'> </div>
-    <span class='icon-search search-icon'> </span>
+    <div class='search-info'></div>
+    <span class='icon-search search-icon'></span>
     <span class="icon-cancel search-cancel"></span>
     <input class='search-input' type='text' placeholder="Search">
   </div>
   <form id='add-tag' class='not-in-selection-mode'>
     <span class='icon-cancel-circled'></span>
-    <label class='add-tag-label icon-plus-circled  head-button-2 '>
+    <label
+      class='add-tag-label icon-plus-circled  head-button-2 '
+    >
       <p>Add a tag</p>
       <div class='add-tag-container'>
-        <input type='text' id='add-tag-input' placeholder="New tag">
+        <input
+          type='text'
+          id='add-tag-input'
+          placeholder="New tag"
+        >
         <input type='submit' hidden>
         <span class='icon-plus icon-validate'></span>
       </div>
@@ -193,11 +285,16 @@
     <a id="selectNone">None</a>
     <a id="selectInvert">Invert</a>
   </div>
-  <div class='info-message tag-info  icon-ok not-in-selection-mode' > <p>  </p> </div>
-  <div class='info-error tag-info icon-cancel not-in-selection-mode'> <p> </p> </div>
+  <div
+    class='info-message tag-info  icon-ok not-in-selection-mode'
+    
+  > <p>  </p> </div>
+  <div
+    class='info-error tag-info icon-cancel not-in-selection-mode'
+  > <p></p> </div>
 </div>
 <div class="pageLoad">
-  <i class='icon-spin6 animate-spin'> </i>
+  <i class='icon-spin6 animate-spin'></i>
 </div>
 
 <div class="tag-select-message">
@@ -215,13 +312,14 @@
       <span>Rename "%s"</span>
     </div>
     <div class="RenameTagInputContainer">
-      <label class="tag-property-label TagRenameLabelUsername">Tag name
-        <input type="text" class="tag-property-input"/>
+      <label
+        class="tag-property-label TagRenameLabelUsername"
+      >Tag name
+        <input type="text" class="tag-property-input" />
       </label>
     </div>
 
-    <div class="TagErrors icon-cancel">
-    </div>
+    <div class="TagErrors icon-cancel"></div>
 
     <div class="TagSubmitOptions">
       <div class="TagSubmit">
@@ -239,88 +337,135 @@
   </div>
 </div>
 
-<div class='tag-container' data-tags='[{&quot;name&quot;:&quot;family&quot;,&quot;id&quot;:3,&quot;url_name&quot;:&quot;family&quot;,&quot;raw_name&quot;:&quot;family&quot;,&quot;counter&quot;:1},{&quot;name&quot;:&quot;nature&quot;,&quot;id&quot;:1,&quot;url_name&quot;:&quot;nature&quot;,&quot;raw_name&quot;:&quot;nature&quot;,&quot;counter&quot;:3},{&quot;name&quot;:&quot;travel&quot;,&quot;id&quot;:2,&quot;url_name&quot;:&quot;travel&quot;,&quot;raw_name&quot;:&quot;travel&quot;,&quot;counter&quot;:1}]' data-per_page="100">
-  <div class='tag-box' data-id="3" data-selected='0'>
-    <p class='tag-name ' data-rawname="family">family</p>
-    <a class="icon-ellipsis-vert showOptions"></a>
-    <div class="tag-dropdown-block dropdown">
-      <div class="dropdown-content">
-        <div class='tag-dropdown-header'>
-          <b>family</b>
-          <i>1 photos</i>
-        </div>
-        <a class='dropdown-option icon-eye view' href="index.php?/tags/3-family" > View in gallery</a>
-        <a class='dropdown-option icon-picture manage' href="admin.php?page=batch_manager&amp;filter=tag-3" > Manage photos</a>
-        <a class='dropdown-option icon-pencil edit'> Edit</a>
-        <a class='dropdown-option icon-docs duplicate'> Duplicate</a>
-        <a class='dropdown-option icon-trash delete'> Delete</a>
+<div
+  class='tag-container'
+  data-tags='[{&quot;name&quot;:&quot;family&quot;,&quot;id&quot;:3,&quot;url_name&quot;:&quot;family&quot;,&quot;raw_name&quot;:&quot;family&quot;,&quot;counter&quot;:1},{&quot;name&quot;:&quot;nature&quot;,&quot;id&quot;:1,&quot;url_name&quot;:&quot;nature&quot;,&quot;raw_name&quot;:&quot;nature&quot;,&quot;counter&quot;:3},{&quot;name&quot;:&quot;travel&quot;,&quot;id&quot;:2,&quot;url_name&quot;:&quot;travel&quot;,&quot;raw_name&quot;:&quot;travel&quot;,&quot;counter&quot;:1}]'
+  data-per_page="100"
+>
+    <div class='tag-box' data-id="3" data-selected='0'>
+  <p
+    class='tag-name '
+    data-rawname="family"
+  >family</p>
+  <a class="icon-ellipsis-vert showOptions"></a>
+  <div class="tag-dropdown-block dropdown">
+    <div class="dropdown-content">
+      <div class='tag-dropdown-header'>
+        <b>family</b>
+        <i>1 photos</i>
       </div>
+      <a
+        class='dropdown-option icon-eye view'
+        href="index.php?/tags/3-family"
+        
+      > View in gallery</a>
+      <a
+        class='dropdown-option icon-picture manage'
+        href="admin.php?page=batch_manager&amp;filter=tag-3"
+        
+      > Manage photos</a>
+      <a class='dropdown-option icon-pencil edit'> Edit</a>
+      <a
+        class='dropdown-option icon-docs duplicate'
+      > Duplicate</a>
+      <a class='dropdown-option icon-trash delete'> Delete</a>
     </div>
-    <span class="select-checkbox">
-      <i class="icon-ok"> </i>
-    </span>
-
   </div>
-  <div class='tag-box' data-id="1" data-selected='0'>
-    <p class='tag-name ' data-rawname="nature">nature</p>
-    <a class="icon-ellipsis-vert showOptions"></a>
-    <div class="tag-dropdown-block dropdown">
-      <div class="dropdown-content">
-        <div class='tag-dropdown-header'>
-          <b>nature</b>
-          <i>3 photos</i>
-        </div>
-        <a class='dropdown-option icon-eye view' href="index.php?/tags/1-nature" > View in gallery</a>
-        <a class='dropdown-option icon-picture manage' href="admin.php?page=batch_manager&amp;filter=tag-1" > Manage photos</a>
-        <a class='dropdown-option icon-pencil edit'> Edit</a>
-        <a class='dropdown-option icon-docs duplicate'> Duplicate</a>
-        <a class='dropdown-option icon-trash delete'> Delete</a>
+  <span class="select-checkbox">
+    <i class="icon-ok"></i>
+  </span>
+    </div>
+    <div class='tag-box' data-id="1" data-selected='0'>
+  <p
+    class='tag-name '
+    data-rawname="nature"
+  >nature</p>
+  <a class="icon-ellipsis-vert showOptions"></a>
+  <div class="tag-dropdown-block dropdown">
+    <div class="dropdown-content">
+      <div class='tag-dropdown-header'>
+        <b>nature</b>
+        <i>3 photos</i>
       </div>
+      <a
+        class='dropdown-option icon-eye view'
+        href="index.php?/tags/1-nature"
+        
+      > View in gallery</a>
+      <a
+        class='dropdown-option icon-picture manage'
+        href="admin.php?page=batch_manager&amp;filter=tag-1"
+        
+      > Manage photos</a>
+      <a class='dropdown-option icon-pencil edit'> Edit</a>
+      <a
+        class='dropdown-option icon-docs duplicate'
+      > Duplicate</a>
+      <a class='dropdown-option icon-trash delete'> Delete</a>
     </div>
-    <span class="select-checkbox">
-      <i class="icon-ok"> </i>
-    </span>
-
   </div>
-  <div class='tag-box' data-id="2" data-selected='0'>
-    <p class='tag-name ' data-rawname="travel">travel</p>
-    <a class="icon-ellipsis-vert showOptions"></a>
-    <div class="tag-dropdown-block dropdown">
-      <div class="dropdown-content">
-        <div class='tag-dropdown-header'>
-          <b>travel</b>
-          <i>1 photos</i>
-        </div>
-        <a class='dropdown-option icon-eye view' href="index.php?/tags/2-travel" > View in gallery</a>
-        <a class='dropdown-option icon-picture manage' href="admin.php?page=batch_manager&amp;filter=tag-2" > Manage photos</a>
-        <a class='dropdown-option icon-pencil edit'> Edit</a>
-        <a class='dropdown-option icon-docs duplicate'> Duplicate</a>
-        <a class='dropdown-option icon-trash delete'> Delete</a>
+  <span class="select-checkbox">
+    <i class="icon-ok"></i>
+  </span>
+    </div>
+    <div class='tag-box' data-id="2" data-selected='0'>
+  <p
+    class='tag-name '
+    data-rawname="travel"
+  >travel</p>
+  <a class="icon-ellipsis-vert showOptions"></a>
+  <div class="tag-dropdown-block dropdown">
+    <div class="dropdown-content">
+      <div class='tag-dropdown-header'>
+        <b>travel</b>
+        <i>1 photos</i>
       </div>
+      <a
+        class='dropdown-option icon-eye view'
+        href="index.php?/tags/2-travel"
+        
+      > View in gallery</a>
+      <a
+        class='dropdown-option icon-picture manage'
+        href="admin.php?page=batch_manager&amp;filter=tag-2"
+        
+      > Manage photos</a>
+      <a class='dropdown-option icon-pencil edit'> Edit</a>
+      <a
+        class='dropdown-option icon-docs duplicate'
+      > Duplicate</a>
+      <a class='dropdown-option icon-trash delete'> Delete</a>
     </div>
-    <span class="select-checkbox">
-      <i class="icon-ok"> </i>
-    </span>
-
   </div>
+  <span class="select-checkbox">
+    <i class="icon-ok"></i>
+  </span>
+    </div>
 </div>
 <div class="emptyResearch"> No tag found </div>
 <div class="tag-pagination">
   <div class="pagination-per-page">
-    <span class="thumbnailsActionsShow" style="font-weight: bold;">Display</span>
-    <a id="100"
-  
-    class="selected"
-  
+    <span
+      class="thumbnailsActionsShow"
+      style="font-weight: bold;"
+    >Display</span>
+    <a
+      id="100"
+      
+      class="selected"
+      
     >100</a>
-    <a id="200"
-  
+    <a
+      id="200"
+      
     >200</a>
-    <a id="500"
-  
+    <a
+      id="500"
+      
     >500</a>
-    <a id="1000"
-  
+    <a
+      id="1000"
+      
     >1000</a>
   </div>
 
@@ -328,8 +473,7 @@
     <div class="pagination-arrow left">
       <span class="icon-left-open"></span>
     </div>
-    <div class="pagination-item-container">
-    </div>
+    <div class="pagination-item-container"></div>
     <div class="pagination-arrow rigth">
       <span class="icon-left-open"></span>
     </div>
@@ -337,24 +481,41 @@
 </div>
 
 <div class='tag-template' style='display:none'>
-    <p class='tag-name icon-globe' data-rawname="%raw_name%">%name%</p>
-    <a class="icon-ellipsis-vert showOptions"></a>
-    <div class="tag-dropdown-block dropdown">
-      <div class="dropdown-content">
-        <div class='tag-dropdown-header'>
-          <b>%name%</b>
-          <i>no photo</i>
-        </div>
-        <a class='dropdown-option icon-eye view' href="%U_VIEW%"  style='display:none' > View in gallery</a>
-        <a class='dropdown-option icon-picture manage' href="%U_EDIT%"  style='display:none' > Manage photos</a>
-        <a class='dropdown-option icon-pencil edit'> Edit</a>
-        <a class='dropdown-option icon-docs duplicate'> Duplicate</a>
-        <a class='dropdown-option icon-trash delete'> Delete</a>
+  <p
+    class='tag-name icon-globe'
+    data-rawname="%raw_name%"
+  >%name%</p>
+  <a class="icon-ellipsis-vert showOptions"></a>
+  <div class="tag-dropdown-block dropdown">
+    <div class="dropdown-content">
+      <div class='tag-dropdown-header'>
+        <b>%name%</b>
+        <i>no photo</i>
       </div>
+      <a
+        class='dropdown-option icon-eye view'
+        href="%U_VIEW%"
+        
+        style='display:none'
+        
+      > View in gallery</a>
+      <a
+        class='dropdown-option icon-picture manage'
+        href="%U_EDIT%"
+        
+        style='display:none'
+        
+      > Manage photos</a>
+      <a class='dropdown-option icon-pencil edit'> Edit</a>
+      <a
+        class='dropdown-option icon-docs duplicate'
+      > Duplicate</a>
+      <a class='dropdown-option icon-trash delete'> Delete</a>
     </div>
-    <span class="select-checkbox">
-      <i class="icon-ok"> </i>
-    </span>
+  </div>
+  <span class="select-checkbox">
+    <i class="icon-ok"></i>
+  </span>
 </div>
 
 </div>
@@ -364,43 +525,72 @@
 
 <div id="footer">
   <div>
-    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What&apos;s new in version 17?">
-      <i class="icon-bell"></i>
-    </span>
+    <a
+      class="externalLink tiptip piwigo-logo"
+      href="https://upstream.example.invalid"
+      title="Visit Piwigo project website"
+    ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+      <span
+        id="whats_new_notification"
+        class="icon-blue tiptip"
+        onclick="show_user_whats_new()"
+        title="What&apos;s new in version 17?"
+      >
+        <i class="icon-bell"></i>
+      </span>
   </div>
   <div id="pageInfos">
 
     Contact
-    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+    <a
+      href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
+    >Webmaster</a>
   </div></div>
 </div>
 
-<div id="whats_new">
+  <div id="whats_new">
     <div id="whats_new_popin">
-      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <a
+        class="icon-cancel close_whats_new"
+        onClick="hide_user_whats_new()"
+      ></a>
       <h3>What's new in version 17?</h3>
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Brand new login &amp; preferences with Standard pages !</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Brand new login &amp; preferences with Standard pages !</a></h4>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Two factor authentication is here</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Two factor authentication is here</a></h4>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">UI redesigns that make a difference</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >UI redesigns that make a difference</a></h4>
           </div>
         </div>
       </div>
       <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
-        <a class="buttonLike" href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+        <button onClick="hide_user_whats_new()"><i
+            class="icon-thumbs-up"
+          ></i> Ok, got it!</button>
+        <a
+          class="buttonLike"
+          href="https://upstream.example.invalid/releases/17.0.0"
+          target="_blank"
+        ><i class="icon-book"></i> Read the release note</a>
       </div>
     </div>
-</div>
+  </div>
 
 <style>
 
@@ -412,7 +602,7 @@
 <script type="text/javascript" src="_data/combined/typzdo.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-var pwg_token = "6a28b0b9ae18dfa3f7598470d73fc829f7d8c7b0e4b770dd6eeb48b0389a327f";
+var pwg_token = "cbddb7228a29d406c15cdbaea0520882a4b11620c45f4d300622d68d5bf566cf";
 var orphan_tag_names = [];
 var str_delete = 'Delete tag "%s"?';
 var str_delete_tags = 'Delete tags {%s}?';
@@ -523,7 +713,7 @@ function show_user_whats_new() {
 //]]></script>
 <!-- END get_combined -->
 
-<script type="module" src="dist/vitals.js"></script>
+  <script type="module" src="dist/vitals.js"></script>
 
 </body>
 </html>

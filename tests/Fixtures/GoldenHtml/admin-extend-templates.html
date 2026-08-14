@@ -1,139 +1,224 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-<meta name="apple-itunes-app" content="app-id=472225196">
-<meta charset="utf-8">
-<title>Fixture Gallery :: Piwigo Administration</title>
-<link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
-<link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
+  <head>
+      <meta name="apple-itunes-app" content="app-id=472225196">
+    <meta charset="utf-8">
+    <title>Fixture Gallery :: Piwigo Administration</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="themes/default/icon/piwigo.org-icon 1.svg"
+    >
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="themes/admin/default/fonts/open-sans/open-sans.css"
+    >
 
 
-<!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/6nnbt7.css">
+    <!-- BEGIN get_combined -->
+    <link rel="stylesheet" type="text/css" href="_data/combined/6nnbt7.css">
 
-<script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
-<!-- END get_combined -->
+    <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
+    <!-- END get_combined -->
 
-</head>
+  </head>
 
-<body id="theAdminPage">
+  <body id="theAdminPage">
+    <div id="the_page">
 
-<div id="the_page">
+      <div id="pwgHead">
+        <a
+          href="/piwigo17-4/"
+          class="visit-gallery tiptip"
+          title="Visit the gallery"
+        ><i class="icon-left-open"></i>Visit</a>
+        <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-
-<div id="pwgHead">
-  <a href="/piwigo17-4/" class="visit-gallery tiptip" title="Visit the gallery"><i class="icon-left-open"></i>Visit</a>
-  <div class="pwgHead-gallery-title">Fixture Gallery</div>
-
-  <div id="headActions">
-    <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
+        <div id="headActions">
+          <span class="admin-head-username"><i
+              class="icon-user"
+            ></i>fixture_admin</span>
 <a href="admin.php?page=extend_for_templates&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
-    <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
-    <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
-  </div>
-</div>
+          <a
+            class="tiptip"
+            href="admin.php?page=help"
+            title="Instructions to use Piwigo"
+          ><i
+              class="icon-help-circled"
+            ></i><span>Help Me</span></a>
+          <a href="index.php?act=logout"><i
+              class="icon-logout"
+            ></i><span>Logout</span></a>
+        </div>
+      </div>
 
-<div style="clear:both;"></div>
+      <div style="clear:both;"></div>
 
 
-<div id="pwgMain">
-
+      <div id="pwgMain">
 
 <div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+        class="icon-television"
+      ></i> Dashboard</a></div>
 
-	<dl>
-		<dt><i class="icon-picture"> </i><span>Photos&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
-			<ul>
-				<li><a href="admin.php?page=photos_add"><i class="icon-plus-circled"></i>Add</a></li>
-        <li><a href="admin.php?page=rating"><i class="icon-star"></i>Rating</a></li>
-				<li><a href="admin.php?page=tags"><i class="icon-tags"></i>Tags</a></li>
-				<li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i class="icon-clock"></i>Recent photos</a></li>
-				<li><a href="admin.php?page=batch_manager"><i class="icon-th"></i>Batch Manager</a></li>
-			</ul>
-		</dd>
-  </dl>
   <dl>
-		<dt><i class="icon-sitemap"> </i><span>Albums&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
+    <dt><i class="icon-picture"></i><span>Photos&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
     <dd>
       <ul>
-        <li><a href="admin.php?page=albums"><i class="icon-folder-open"></i>Manage</a></li>
-        <li><a href="admin.php?page=cat_options"><i class="icon-pencil"></i>Properties</a></li>
+        <li><a href="admin.php?page=photos_add"><i
+              class="icon-plus-circled"
+            ></i>Add</a></li>
+          <li><a href="admin.php?page=rating"><i
+                class="icon-star"
+              ></i>Rating</a></li>
+        <li><a href="admin.php?page=tags"><i
+              class="icon-tags"
+            ></i>Tags</a></li>
+        <li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i
+              class="icon-clock"
+            ></i>Recent photos</a></li>
+        <li><a href="admin.php?page=batch_manager"><i
+              class="icon-th"
+            ></i>Batch Manager</a></li>
       </ul>
     </dd>
   </dl>
   <dl>
-		<dt><i class="icon-users"> </i><span>Users&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-sitemap"></i><span>Albums&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=user_list"><i class="icon-user-add"></i>Manage</a></li>
-        <li><a href="admin.php?page=group_list"><i class="icon-group"></i>Groups</a></li>
-				<li><a href="admin.php?page=notification_by_mail"><i class="icon-mail-1"></i>Notification</a></li>
+        <li><a href="admin.php?page=albums"><i
+              class="icon-folder-open"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i
+              class="icon-pencil"
+            ></i>Properties</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><a href="admin.php?page=plugins" class="admin-main"><i class="icon-puzzle"> </i><span>Plugins&nbsp;</span></a></dt>
-  </dl>
-  <dl>
-		<dt><i class="icon-wrench"> </i><span>Tools&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><i class="icon-users"></i><span>Users&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=site_update&amp;site=1"><i class="icon-exchange"></i>Synchronize</a></li>
-				<li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i class="icon-signal"></i>History</a></li>
-				<li><a href="admin.php?page=maintenance"><i class="icon-tools"></i>Maintenance</a></li>
-				<li><a href="admin.php?page=comments"><i class="icon-chat"></i>Comments
-          <span class="adminMenubarCounter" title="1 waiting for validation">1</span>
-        </a></li>
-        <li><a href="admin.php?page=updates"><i class="icon-arrows-cw"></i>Updates</a></li>
+        <li><a href="admin.php?page=user_list"><i
+              class="icon-user-add"
+            ></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i
+              class="icon-group"
+            ></i>Groups</a></li>
+        <li><a href="admin.php?page=notification_by_mail"><i
+              class="icon-mail-1"
+            ></i>Notification</a></li>
       </ul>
-		</dd>
+    </dd>
   </dl>
   <dl>
-		<dt><i class="icon-cog"> </i><span>Configuration&nbsp;</span><i class="icon-down-open open-menu"></i></dt>
-		<dd>
+    <dt><a href="admin.php?page=plugins" class="admin-main"><i
+          class="icon-puzzle"
+        ></i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+    <dt><i class="icon-wrench"></i><span>Tools&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
       <ul>
-        <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
-        <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
-				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
-        <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
+          <li><a href="admin.php?page=site_update&amp;site=1"><i
+                class="icon-exchange"
+              ></i>Synchronize</a></li>
+        <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
+              class="icon-signal"
+            ></i>History</a></li>
+        <li><a href="admin.php?page=maintenance"><i
+              class="icon-tools"
+            ></i>Maintenance</a></li>
+          <li><a href="admin.php?page=comments"><i
+                class="icon-chat"
+              ></i>Comments
+                <span
+                  class="adminMenubarCounter"
+                  title="1 waiting for validation"
+                >1</span>
+              </a></li>
+          <li><a href="admin.php?page=updates"><i
+                class="icon-arrows-cw"
+              ></i>Updates</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i
+        class="icon-cog"
+      ></i><span>Configuration&nbsp;</span><i
+        class="icon-down-open open-menu"
+      ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i
+              class="icon-cog-alt"
+            ></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i
+              class="icon-menu"
+            ></i>Menus</a></li>
+        <li><a href="admin.php?page=languages"><i
+              class="icon-language"
+            ></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i
+              class="icon-brush"
+            ></i>Themes</a></li>
       </ul>
     </dd>
   </dl>
 </div> <!-- menubar -->
 
 <div id="content" class="content">
+  <h1>Extend templates<span
+      class="admin-object-id"
+    ></span></h1>
 
-  <h1>Extend templates<span class="admin-object-id"></span></h1>
+    <ul class="HelpActions">
+      <li><a
+          href="admin/popuphelp.php?page=extend_for_templates&amp;output=content_only"
+          title="Help"
+          class="help-popin"
+        ><span class="icon-help-circled"></span></a></li>
+    </ul>
 
-  <ul class="HelpActions">
-    <li><a href="admin/popuphelp.php?page=extend_for_templates&amp;output=content_only" title="Help" class="help-popin"><span class="icon-help-circled"></span></a></li>
-  </ul>
-
-<div class="eiw">
+  <div class="eiw">
 
 
 
+  </div> 
 
-</div> 
-
-  <h4>Replacement of original templates by customized templates from the template-extension subfolder</h4>
-<form method="post" name="extend_for_templates" id="extend_for_templates" action="">
-  <table class="table2">
-    <tr class="throw">
-      <th>Substitutes (customized templates)</th>
-      <th>Original templates</th>
-      <th>Optional URL keyword</th>
-      <th>Bound Theme</th>
-    </tr>
-    <tr class="row2">
-      <td>
-        <input type="hidden" name="reptpl[]" value="distributed/samples/my-picture.latte">
-        distributed/samples/my-picture.latte
-      </td>
-      <td>
-        <select name="original[]">
+    <h4>Replacement of original templates by customized templates from the template-extension subfolder</h4>
+  <form
+    method="post"
+    name="extend_for_templates"
+    id="extend_for_templates"
+    action=""
+  >
+    <table class="table2">
+      <tr class="throw">
+        <th>Substitutes (customized templates)</th>
+        <th>Original templates</th>
+        <th>Optional URL keyword</th>
+        <th>Bound Theme</th>
+      </tr>
+        <tr class="row2">
+          <td>
+            <input type="hidden" name="reptpl[]" value="distributed/samples/my-picture.latte">
+            distributed/samples/my-picture.latte
+          </td>
+          <td>
+            <select name="original[]">
 <option value="----------" selected="selected">----------</option>
 <option value="about.latte">about.latte</option>
 <option value="comments.latte">comments.latte</option>
@@ -169,9 +254,9 @@
 <option value="thumbnails.latte">thumbnails.latte</option>
 </select>
 
-      </td>
-      <td>
-        <select name="url[]">
+          </td>
+          <td>
+            <select name="url[]">
 <option value="----------">----------</option>
 <option value="category">category</option>
 <option value="favorites">favorites</option>
@@ -187,9 +272,9 @@
 <option value="tags">tags</option>
 </select>
 
-      </td>
-      <td>
-        <select name="bound[]">
+          </td>
+          <td>
+            <select name="bound[]">
 <option value="----------">----------</option>
 <option value="standard_pages">standard_pages</option>
 <option value="default">default</option>
@@ -197,15 +282,15 @@
 <option value="admin">admin</option>
 </select>
 
-      </td>
-    </tr>
-    <tr class="row1">
-      <td>
-        <input type="hidden" name="reptpl[]" value="distributed/samples/my-thumbnails.latte">
-        distributed/samples/my-thumbnails.latte
-      </td>
-      <td>
-        <select name="original[]">
+          </td>
+        </tr>
+        <tr class="row1">
+          <td>
+            <input type="hidden" name="reptpl[]" value="distributed/samples/my-thumbnails.latte">
+            distributed/samples/my-thumbnails.latte
+          </td>
+          <td>
+            <select name="original[]">
 <option value="----------" selected="selected">----------</option>
 <option value="about.latte">about.latte</option>
 <option value="comments.latte">comments.latte</option>
@@ -241,9 +326,9 @@
 <option value="thumbnails.latte">thumbnails.latte</option>
 </select>
 
-      </td>
-      <td>
-        <select name="url[]">
+          </td>
+          <td>
+            <select name="url[]">
 <option value="----------">----------</option>
 <option value="category">category</option>
 <option value="favorites">favorites</option>
@@ -259,9 +344,9 @@
 <option value="tags">tags</option>
 </select>
 
-      </td>
-      <td>
-        <select name="bound[]">
+          </td>
+          <td>
+            <select name="bound[]">
 <option value="----------">----------</option>
 <option value="standard_pages">standard_pages</option>
 <option value="default">default</option>
@@ -269,15 +354,15 @@
 <option value="admin">admin</option>
 </select>
 
-      </td>
-    </tr>
-    <tr class="row2">
-      <td>
-        <input type="hidden" name="reptpl[]" value="distributed/samples/my-thumbnails2.latte">
-        distributed/samples/my-thumbnails2.latte
-      </td>
-      <td>
-        <select name="original[]">
+          </td>
+        </tr>
+        <tr class="row2">
+          <td>
+            <input type="hidden" name="reptpl[]" value="distributed/samples/my-thumbnails2.latte">
+            distributed/samples/my-thumbnails2.latte
+          </td>
+          <td>
+            <select name="original[]">
 <option value="----------" selected="selected">----------</option>
 <option value="about.latte">about.latte</option>
 <option value="comments.latte">comments.latte</option>
@@ -313,9 +398,9 @@
 <option value="thumbnails.latte">thumbnails.latte</option>
 </select>
 
-      </td>
-      <td>
-        <select name="url[]">
+          </td>
+          <td>
+            <select name="url[]">
 <option value="----------">----------</option>
 <option value="category">category</option>
 <option value="favorites">favorites</option>
@@ -331,9 +416,9 @@
 <option value="tags">tags</option>
 </select>
 
-      </td>
-      <td>
-        <select name="bound[]">
+          </td>
+          <td>
+            <select name="bound[]">
 <option value="----------">----------</option>
 <option value="standard_pages">standard_pages</option>
 <option value="default">default</option>
@@ -341,15 +426,15 @@
 <option value="admin">admin</option>
 </select>
 
-      </td>
-    </tr>
-    <tr class="row1">
-      <td>
-        <input type="hidden" name="reptpl[]" value="distributed/samples/titling_categories.latte">
-        distributed/samples/titling_categories.latte
-      </td>
-      <td>
-        <select name="original[]">
+          </td>
+        </tr>
+        <tr class="row1">
+          <td>
+            <input type="hidden" name="reptpl[]" value="distributed/samples/titling_categories.latte">
+            distributed/samples/titling_categories.latte
+          </td>
+          <td>
+            <select name="original[]">
 <option value="----------" selected="selected">----------</option>
 <option value="about.latte">about.latte</option>
 <option value="comments.latte">comments.latte</option>
@@ -385,9 +470,9 @@
 <option value="thumbnails.latte">thumbnails.latte</option>
 </select>
 
-      </td>
-      <td>
-        <select name="url[]">
+          </td>
+          <td>
+            <select name="url[]">
 <option value="----------">----------</option>
 <option value="category">category</option>
 <option value="favorites">favorites</option>
@@ -403,9 +488,9 @@
 <option value="tags">tags</option>
 </select>
 
-      </td>
-      <td>
-        <select name="bound[]">
+          </td>
+          <td>
+            <select name="bound[]">
 <option value="----------">----------</option>
 <option value="standard_pages">standard_pages</option>
 <option value="default">default</option>
@@ -413,13 +498,13 @@
 <option value="admin">admin</option>
 </select>
 
-      </td>
-    </tr>
-  </table>
-  <p>
-    <input type="submit" value="Submit" name="submit">
-  </p>
-</form>
+          </td>
+        </tr>
+    </table>
+    <p>
+      <input type="submit" value="Submit" name="submit">
+    </p>
+  </form>
 
 </div>
 </div>
@@ -428,43 +513,72 @@
 
 <div id="footer">
   <div>
-    <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What&apos;s new in version 17?">
-      <i class="icon-bell"></i>
-    </span>
+    <a
+      class="externalLink tiptip piwigo-logo"
+      href="https://upstream.example.invalid"
+      title="Visit Piwigo project website"
+    ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+      <span
+        id="whats_new_notification"
+        class="icon-blue tiptip"
+        onclick="show_user_whats_new()"
+        title="What&apos;s new in version 17?"
+      >
+        <i class="icon-bell"></i>
+      </span>
   </div>
   <div id="pageInfos">
 
     Contact
-    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
+    <a
+      href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
+    >Webmaster</a>
   </div></div>
 </div>
 
-<div id="whats_new">
+  <div id="whats_new">
     <div id="whats_new_popin">
-      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <a
+        class="icon-cancel close_whats_new"
+        onClick="hide_user_whats_new()"
+      ></a>
       <h3>What's new in version 17?</h3>
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Brand new login &amp; preferences with Standard pages !</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Brand new login &amp; preferences with Standard pages !</a></h4>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Two factor authentication is here</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >Two factor authentication is here</a></h4>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">UI redesigns that make a difference</a></h4>
+            <h4><a
+                href="https://upstream.example.invalid/releases/17.0.0"
+                target="_blank"
+              >UI redesigns that make a difference</a></h4>
           </div>
         </div>
       </div>
       <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
-        <a class="buttonLike" href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+        <button onClick="hide_user_whats_new()"><i
+            class="icon-thumbs-up"
+          ></i> Ok, got it!</button>
+        <a
+          class="buttonLike"
+          href="https://upstream.example.invalid/releases/17.0.0"
+          target="_blank"
+        ><i class="icon-book"></i> Read the release note</a>
       </div>
     </div>
-</div>
+  </div>
 
 <style>
 
@@ -551,7 +665,7 @@ function show_user_whats_new() {
 //]]></script>
 <!-- END get_combined -->
 
-<script type="module" src="dist/vitals.js"></script>
+  <script type="module" src="dist/vitals.js"></script>
 
 </body>
 </html>

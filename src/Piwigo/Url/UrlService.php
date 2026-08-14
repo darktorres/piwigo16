@@ -201,6 +201,27 @@ final class UrlService implements UrlServiceInterface
     }
 
     /**
+     * Same "built from this class's own already-resolvable properties"
+     * rationale as permissionService() above. Used at this class's own 2
+     * `new CategoryService(...)` construction sites this replaces
+     * (parseSectionUrl()'s categories branch, and once more inside its
+     * tags branch's nested TagService/ImageService construction).
+     */
+    private function categoryService(): CategoryService
+    {
+        return new CategoryService(
+            $this->lang,
+            new CategoryRepository($this->entityManager, $this->currentConfig),
+            $this->permissionService(),
+            $this->currentConfig,
+            $this->eventDispatcher,
+            $this->translator(),
+            $this->accessLevelChecker(),
+            new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
+        );
+    }
+
+    /**
      * Returns a prefix for each url link on displayed page and returns an
      * empty string for current path.
      */
@@ -731,16 +752,7 @@ final class UrlService implements UrlServiceInterface
             /** @var array{cat_url_name?: string, cat_permalink?: string} $hit_by */
             $hit_by = [];
 
-            $categoryService = new CategoryService(
-                $this->lang,
-                new CategoryRepository($this->entityManager, $this->currentConfig),
-                $this->permissionService(),
-                $this->currentConfig,
-                $this->eventDispatcher,
-                $this->translator(),
-                $this->accessLevelChecker(),
-                new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
-            );
+            $categoryService = $this->categoryService();
 
             while (isset($tokens[$nextToken])) {
                 if ($loop_counter++ > count($tokens) + 10) {
@@ -866,7 +878,7 @@ final class UrlService implements UrlServiceInterface
                 $this->htmlRenderer->badRequest($redirectService, 'at least one tag required');
             }
 
-            $page['tags'] = new TagService($this->lang, $this->entityManager->getRepository(TagEntity::class), $this->permissionService(), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), new ImageService($this->entityManager->getRepository(ImageEntity::class), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->sessionService(), $this->eventDispatcher, $this->currentConfig, $this->paths(), new CategoryService($this->lang, new CategoryRepository($this->entityManager, $this->currentConfig), $this->permissionService(), $this->currentConfig, $this->eventDispatcher, $this->translator(), $this->accessLevelChecker(), new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig))))
+            $page['tags'] = new TagService($this->lang, $this->entityManager->getRepository(TagEntity::class), $this->permissionService(), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), new ImageService($this->entityManager->getRepository(ImageEntity::class), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->sessionService(), $this->eventDispatcher, $this->currentConfig, $this->paths(), $this->categoryService()))
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');

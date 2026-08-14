@@ -113,11 +113,12 @@ final readonly class UserBootstrap
         if (! $paths instanceof Paths) {
             throw new LogicException('Container returned an unexpected type for ' . Paths::class);
         }
+        $passwordService = new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), $this->deploymentPolicy);
         $authService = new AuthService(
             new AuthRepository(EntityManagerFactory::build($conn)),
             new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
             RequestBootstrap::htmlService(),
-            new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), $this->deploymentPolicy),
+            $passwordService,
             new CookieService(),
             EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
             $sessionService,
@@ -133,6 +134,7 @@ final readonly class UserBootstrap
         if (! $translator instanceof Translator) {
             throw new LogicException('Container returned an unexpected type for ' . Translator::class);
         }
+        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), $currentUser, $filterState, $this->accessLevelChecker);
         $userService = new UserService(
             RequestBootstrap::lang(),
             new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, RequestBootstrap::currentConfig()),
@@ -148,9 +150,9 @@ final readonly class UserBootstrap
             RequestBootstrap::processCache(),
             $paths,
             EntityManagerFactory::build($conn),
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), $currentUser, $filterState, $this->accessLevelChecker),
-            new CategoryService(RequestBootstrap::lang(), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), $currentUser, $filterState, $this->accessLevelChecker), RequestBootstrap::currentConfig(), $eventDispatcher, $translator, $this->accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, RequestBootstrap::currentConfig())),
-            new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), $this->deploymentPolicy),
+            $permissionService,
+            new CategoryService(RequestBootstrap::lang(), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), $permissionService, RequestBootstrap::currentConfig(), $eventDispatcher, $translator, $this->accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, RequestBootstrap::currentConfig())),
+            $passwordService,
         );
 
         $guest_id_int = RequestBootstrap::currentConfig()->guestId;

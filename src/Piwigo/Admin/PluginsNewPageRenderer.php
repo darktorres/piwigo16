@@ -156,7 +156,14 @@ final readonly class PluginsNewPageRenderer
         // If the current version in known, give the current and last version's compatible plugins
         $beta_test = $pluginsNewRequest->betaTest;
 
-        $pem_base_url = RequestBootstrap::pemUrl();
+        // Must match the type-specific mirror getServerExtensions() below
+        // actually fetches from (PemCatalog's own RequestBootstrap::
+        // pemUrl($type) call) -- the bare, untyped pemUrl() resolves a
+        // different base (the generic alternativePemUrl override, or the
+        // real, deliberately-unreachable AppInfo::URL default), which
+        // would 404 every EXT_URL "Website" link below even when the
+        // plugin catalog itself loaded fine from a real per-type mirror.
+        $pem_base_url = RequestBootstrap::pemUrl(ExtensionType::Plugin);
 
         $fs_plugin_ids = [];
         foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager) as $fs_plugin) {
@@ -244,6 +251,19 @@ final readonly class PluginsNewPageRenderer
                 }
                 // Between 6 month and 3 years : certification = 1
 
+                // 'screenshot_url' matches the real upstream PEM wire
+                // format this fork no longer talks to (PemCatalog's own
+                // docblock) -- the actual local-mirror manifest.json
+                // field is 'thumbnail' (a bare filename inside the
+                // sibling repo's own docroot, same convention
+                // piwigo16-ext/api/get_revision_list.php's own
+                // screenshot_url computation already uses:
+                // $base_url . '/' . $ext['thumbnail']).
+                $thumbnail_raw = $plugin['thumbnail'] ?? null;
+                $screenshot = is_string($thumbnail_raw) && $thumbnail_raw !== ''
+                    ? $pem_base_url . '/' . $thumbnail_raw
+                    : '';
+
                 $tpl_plugins[] = [
                     'ID' => $plugin['extension_id'],
                     'EXT_NAME' => $plugin['extension_name'],
@@ -259,7 +279,7 @@ final readonly class PluginsNewPageRenderer
                     'CERTIFICATION' => $certification,
                     'RATING' => $plugin['rating_score'],
                     'NB_RATINGS' => $plugin['nb_ratings'],
-                    'SCREENSHOT' => (key_exists('screenshot_url', $plugin)) ? $plugin['screenshot_url'] : '',
+                    'SCREENSHOT' => $screenshot,
                     'TAGS' => $plugin['tags'],
                 ];
             }

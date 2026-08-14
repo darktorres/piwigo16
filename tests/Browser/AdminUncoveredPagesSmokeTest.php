@@ -25,12 +25,19 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * project's test suite before this file).
  *
  * Unlike AdminExtendedSmokeTest.php's "clean (no errors)" checks, every
- * test here also asserts on real, specific rendered content. Several of
- * these pages' real content depends on this fork's own
- * unconditionally-unreachable PEM domain (AppInfo::DOMAIN ===
- * 'upstream.example.invalid', see that class's own docblock) --
- * "Connection to server unavailable." is therefore a real, deterministic,
- * always-reachable branch in this environment, not flaky network coverage.
+ * test here also asserts on real, specific rendered content. The
+ * languages/plugins/themes add-new + updates-ext/plugins-update tests
+ * below depend on this test environment's real, working local PEM mirrors
+ * (PIWIGO_ALT_PLUGINS_PEM_URL/PIWIGO_ALT_THEMES_PEM_URL/
+ * PIWIGO_ALT_LANGUAGES_PEM_URL, see RequestBootstrap::pemUrl()'s own
+ * docblock) -- all 3 extension types resolve to real, reachable sibling
+ * repos here, not AppInfo::DOMAIN's deliberately-unreachable 'ext'
+ * fallback. The deterministic "PEM server unreachable" error-handling
+ * path itself is covered separately, decoupled from whichever mirror
+ * happens to be configured in a given environment -- see
+ * tests/Unit/Admin/Extensions/PemCatalogTest.php's own
+ * "getServerExtensions returns null when the manifest.json fetch fails"
+ * test.
  */
 it('help page shows the default Add Photos section and its real translated content', function (): void {
     $page = H::loginAsAdmin($this);
@@ -47,30 +54,39 @@ it('help page renders a non-default section when one is requested', function ():
     $page->assertSee('Permissions on albums');
 });
 
-it('languages add-new tab reports the PEM server as unreachable', function (): void {
+it('languages add-new tab connects to the real mirror but finds no 17.0.0-compatible language', function (): void {
+    // piwigo16-languages' manifest genuinely has zero entries whose
+    // piwigo_compat includes '17.0.0' (unlike plugins/themes, no language
+    // has ever been ported) -- "There is no other language available." is
+    // therefore the real, correct empty-catalog message, not the old
+    // connection-failure one.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=languages&tab=new');
 
     $page->assertSee('Add New Language');
-    $page->assertSee('Connection to server unavailable.');
     $page->assertSee('There is no other language available.');
+    $page->assertDontSee('Connection to server unavailable.');
 });
 
-it('plugins add-new tab reports the PEM server as unreachable', function (): void {
+it('plugins add-new tab lists a real plugin from the local mirror', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');
 
-    $page->assertSee('There is no other plugin available.');
-    $page->assertSee('Connection to server unavailable.');
+    // language_switch_17.0.0 -- the first plugin ever ported to this
+    // fork's PluginConfig\ExtensionInterface contract (piwigo16-plugins'
+    // own CLAUDE.md), a stable, always-present entry.
+    $page->assertSee('Language Switch');
+    $page->assertDontSee('Connection to server unavailable.');
 });
 
-it('themes add-new tab reports the PEM server as unreachable', function (): void {
+it('themes add-new tab lists a real theme from the local mirror', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=themes&tab=new');
 
     $page->assertSee('Add a new theme');
-    $page->assertSee('Connection to server unavailable.');
-    $page->assertSee('There is no other theme available.');
+    // clear_17.0.0 -- a core-ish, stable, always-present ported entry.
+    $page->assertSee('Clear');
+    $page->assertDontSee('Connection to server unavailable.');
 });
 
 it('theme page rejects a theme id that ExtensionScanner never found on disk', function (): void {
@@ -171,12 +187,17 @@ it('theme page includes a real admin.inc.php for a theme that ships one', functi
     }
 });
 
-it('updates ext tab checks every extension type and reports the PEM server as unreachable', function (): void {
+it('updates ext tab checks every extension type against the real mirrors and finds nothing outdated', function (): void {
+    // The fixture has no real 3rd-party plugin/theme/language installed on
+    // disk to compare against the (now genuinely reachable) catalogs, so
+    // the real, correct outcome is "nothing to update", not a connection
+    // failure.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=updates&tab=ext');
 
     $page->assertSee('Extensions');
-    $page->assertSee('Connection to server unavailable.');
+    $page->assertSee('All extensions are up to date.');
+    $page->assertDontSee('Connection to server unavailable.');
 });
 
 it('plugins update tab restricts the shared updates-ext renderer to the plugin type', function (): void {
@@ -188,7 +209,8 @@ it('plugins update tab restricts the shared updates-ext renderer to the plugin t
     // and the page's own ADMIN_PAGE_TITLE override applies afterward
     // ("Plugins", not "Updates").
     $page->assertSee('Check for updates');
-    $page->assertSee('Connection to server unavailable.');
+    $page->assertSee('All plugins are up to date.');
+    $page->assertDontSee('Connection to server unavailable.');
     expect($page->content())
         ->toContain('<h1>Plugins');
 });

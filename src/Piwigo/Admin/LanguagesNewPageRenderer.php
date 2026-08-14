@@ -148,7 +148,15 @@ final readonly class LanguagesNewPageRenderer
         $tpl_languages = [];
 
         if ($server_languages !== null) {
-            $pem_base_url = RequestBootstrap::pemUrl();
+            // Must match the type-specific mirror getServerExtensions()
+            // above actually fetched from (PemCatalog's own
+            // RequestBootstrap::pemUrl($type) call) -- the bare, untyped
+            // pemUrl() resolves a different base (the generic
+            // alternativePemUrl override, or the real, deliberately-
+            // unreachable AppInfo::URL default), which would 404 every
+            // EXT_URL "Website" link below even when the language catalog
+            // itself loaded fine from a real per-type mirror.
+            $pem_base_url = RequestBootstrap::pemUrl(ExtensionType::Language);
 
             foreach ($server_languages as $language) {
                 // $language comes from an untyped unserialize() of a remote PEM

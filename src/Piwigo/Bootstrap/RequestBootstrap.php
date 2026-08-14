@@ -478,22 +478,23 @@ final class RequestBootstrap
      * and behaviourally identical (Config doesn't change mid-request).
      *
      * $type selects a per-type override, read directly from the process
-     * environment (PIWIGO_ALT_PLUGINS_PEM_URL/PIWIGO_ALT_THEMES_PEM_URL)
-     * -- same DbCredentials::env()-style precedent used for the
-     * PIWIGO_DB_* vars, deliberately not routed through CurrentConfig/
-     * ConfigLoader::applyEnvOverrides() (a genuine no-op today, called
-     * with zero arguments at over 100 real call sites -- see its own
-     * docblock). Lets each sibling repo's local extension mirror
-     * (P27.9) be pointed at independently of the single, generic
-     * $alternativePemUrl override, which stays exactly as-is for every
-     * caller that doesn't pass $type.
+     * environment (PIWIGO_ALT_PLUGINS_PEM_URL/PIWIGO_ALT_THEMES_PEM_URL/
+     * PIWIGO_ALT_LANGUAGES_PEM_URL) -- same DbCredentials::env()-style
+     * precedent used for the PIWIGO_DB_* vars, deliberately not routed
+     * through CurrentConfig/ConfigLoader::applyEnvOverrides() (a genuine
+     * no-op today, called with zero arguments at over 100 real call
+     * sites -- see its own docblock). Lets each sibling repo's local
+     * extension mirror (P27.9) be pointed at independently of the
+     * single, generic $alternativePemUrl override, which stays exactly
+     * as-is for every caller that doesn't pass $type.
      */
     public static function pemUrl(?ExtensionType $type = null): string
     {
         $envVar = match ($type) {
             ExtensionType::Plugin => 'PIWIGO_ALT_PLUGINS_PEM_URL',
             ExtensionType::Theme => 'PIWIGO_ALT_THEMES_PEM_URL',
-            ExtensionType::Language, null => null,
+            ExtensionType::Language => 'PIWIGO_ALT_LANGUAGES_PEM_URL',
+            null => null,
         };
         if ($envVar !== null) {
             $typedOverride = getenv($envVar);

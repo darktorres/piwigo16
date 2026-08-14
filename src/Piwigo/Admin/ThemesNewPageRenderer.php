@@ -13,6 +13,7 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\Projection\ThemesNewPageContext;
 use Piwigo\Admin\Request\ThemesNewInstallRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\CurrentLogger;
@@ -150,6 +151,12 @@ final readonly class ThemesNewPageRenderer
 
         $new_themes = [];
         if ($server_themes !== null) { // only new themes
+            // Must match the type-specific mirror getServerExtensions()
+            // above actually fetched from -- same reasoning as
+            // PluginsNewPageRenderer/LanguagesNewPageRenderer's own
+            // pem_base_url.
+            $pem_base_url = RequestBootstrap::pemUrl(ExtensionType::Theme);
+
             foreach ($server_themes as $theme) {
                 // server_themes entries come from an untyped unserialize() of a
                 // remote PEM payload (themes::get_server_themes()); narrow the
@@ -166,10 +173,22 @@ final readonly class ThemesNewPageRenderer
                   . '&amp;pwg_token=' . $this->csrfService->getToken()
                 ;
 
+                // 'screenshot_url' matches the real upstream PEM wire
+                // format this fork no longer talks to (PemCatalog's own
+                // docblock) -- the actual local-mirror manifest.json
+                // field is 'thumbnail' (a bare filename inside the
+                // sibling repo's own docroot, same convention
+                // piwigo16-ext/api/get_revision_list.php's own
+                // screenshot_url computation already uses:
+                // $base_url . '/' . $ext['thumbnail']).
+                $thumbnail_raw = $theme['thumbnail'] ?? null;
+                $screenshot = is_string($thumbnail_raw) && $thumbnail_raw !== ''
+                    ? $pem_base_url . '/' . $thumbnail_raw
+                    : '';
+
                 $new_themes[] = [
                     'name' => $theme['extension_name'],
-                    'thumbnail' => (key_exists('thumbnail_src', $theme)) ? $theme['thumbnail_src'] : '',
-                    'screenshot' => (key_exists('screenshot_url', $theme)) ? $theme['screenshot_url'] : '',
+                    'screenshot' => $screenshot,
                     'install_url' => $url_auto_install,
                 ];
             }

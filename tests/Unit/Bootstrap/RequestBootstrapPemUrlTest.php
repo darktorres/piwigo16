@@ -116,20 +116,38 @@ test('pemUrl(Plugin) falls through to the generic alternativePemUrl, then the re
     }
 });
 
-test('pemUrl(Language) has no per-type override -- unaffected by either env var', function (): void {
+test('pemUrl(Language) returns its own, independent per-type env override, unaffected by the Plugin/Theme ones', function (): void {
+    Kernel::boot();
+
+    $originalPlugins = pemUrlTestSetEnv('PIWIGO_ALT_PLUGINS_PEM_URL', 'http://127.0.0.1:9996/piwigo16-plugins');
+    $originalThemes = pemUrlTestSetEnv('PIWIGO_ALT_THEMES_PEM_URL', 'http://127.0.0.1:9995/piwigo16-themes');
+    $originalLanguages = pemUrlTestSetEnv('PIWIGO_ALT_LANGUAGES_PEM_URL', 'http://127.0.0.1:9994/piwigo16-languages');
+    try {
+        expect(RequestBootstrap::pemUrl(ExtensionType::Language))->toBe('http://127.0.0.1:9994/piwigo16-languages')
+            ->and(RequestBootstrap::pemUrl(ExtensionType::Plugin))->toBe('http://127.0.0.1:9996/piwigo16-plugins')
+            ->and(RequestBootstrap::pemUrl(ExtensionType::Theme))->toBe('http://127.0.0.1:9995/piwigo16-themes');
+    } finally {
+        pemUrlTestRestoreEnv('PIWIGO_ALT_PLUGINS_PEM_URL', $originalPlugins);
+        pemUrlTestRestoreEnv('PIWIGO_ALT_THEMES_PEM_URL', $originalThemes);
+        pemUrlTestRestoreEnv('PIWIGO_ALT_LANGUAGES_PEM_URL', $originalLanguages);
+    }
+});
+
+test('pemUrl(Language) falls through to the generic alternativePemUrl, then the real default, when its own env var is unset', function (): void {
     Kernel::boot();
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
         throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
-    $currentConfig->alternativePemUrl = 'https://pem.example.test/mirror';
 
-    $originalPlugins = pemUrlTestSetEnv('PIWIGO_ALT_PLUGINS_PEM_URL', 'http://127.0.0.1:9996/piwigo16-plugins');
-    $originalThemes = pemUrlTestSetEnv('PIWIGO_ALT_THEMES_PEM_URL', 'http://127.0.0.1:9995/piwigo16-themes');
+    $original = pemUrlTestSetEnv('PIWIGO_ALT_LANGUAGES_PEM_URL', null);
     try {
+        $currentConfig->alternativePemUrl = 'https://pem.example.test/mirror';
         expect(RequestBootstrap::pemUrl(ExtensionType::Language))->toBe('https://pem.example.test/mirror');
+
+        $currentConfig->alternativePemUrl = '';
+        expect(RequestBootstrap::pemUrl(ExtensionType::Language))->toBe(AppInfo::URL . '/ext');
     } finally {
-        pemUrlTestRestoreEnv('PIWIGO_ALT_PLUGINS_PEM_URL', $originalPlugins);
-        pemUrlTestRestoreEnv('PIWIGO_ALT_THEMES_PEM_URL', $originalThemes);
+        pemUrlTestRestoreEnv('PIWIGO_ALT_LANGUAGES_PEM_URL', $original);
     }
 });

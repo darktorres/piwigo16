@@ -223,9 +223,9 @@ function goldenHtmlNormalize(string $html): string
     $html = preg_replace('#(psk-[0-9]{8}-)[A-Za-z0-9]{10}#', '$1{{SEARCH_SUFFIX}}', $html) ?? $html;
 
     $basePath = null;
-    if (preg_match('#<link rel="start" title="Home" href="(/[^"]*?)/?"#', $html, $m) === 1) {
+    if (preg_match('#<link\s+rel="start"\s+title="Home"\s+href="(/[^"]*?)/?"#', $html, $m) === 1) {
         $basePath = $m[1];
-    } elseif (preg_match('#<a href="(/[^"]*?)/?" class="visit-gallery#', $html, $m) === 1) {
+    } elseif (preg_match('#<a\s+href="(/[^"]*?)/?"\s+class="visit-gallery#', $html, $m) === 1) {
         $basePath = $m[1];
     }
     if ($basePath === null) {

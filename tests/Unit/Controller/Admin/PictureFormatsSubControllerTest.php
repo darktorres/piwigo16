@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -93,6 +94,16 @@ function pictureFormatsSubControllerTestImageStdParams(): ImageStdParams
     return $imageStdParams;
 }
 
+function pictureFormatsSubControllerTestEntityManager(): EntityManagerInterface
+{
+    $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+    if (! $entityManager instanceof EntityManagerInterface) {
+        throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+    }
+
+    return $entityManager;
+}
+
 test('handle() delegates to PictureFormatsPageRenderer::render(), which fatal-errors when image_id is missing', function (): void {
     $root = pictureFormatsSubControllerTestRoot();
     unset($_GET['image_id']);
@@ -110,6 +121,7 @@ test('handle() delegates to PictureFormatsPageRenderer::render(), which fatal-er
             HtmlServiceTestFactory::build(),
             new InputValidator(),
             CurrentConfigTestFactory::get(),
+            pictureFormatsSubControllerTestEntityManager(),
         );
 
         $exception = null;

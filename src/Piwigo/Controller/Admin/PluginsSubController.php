@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
@@ -70,6 +71,7 @@ final readonly class PluginsSubController implements AdminSubControllerInterface
         private CurrentUser $currentUser,
         private Paths $paths,
         private PluginRegistry $pluginRegistry,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -99,7 +101,7 @@ final readonly class PluginsSubController implements AdminSubControllerInterface
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer, $this->currentConfig, $this->currentUser, $this->paths, $this->pluginRegistry);
+                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer, $this->currentConfig, $this->currentUser, $this->paths, $this->pluginRegistry, $this->entityManager);
         }
     }
 }

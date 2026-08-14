@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\CatModifyPageRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Kernel;
@@ -53,8 +54,17 @@ function catModifyReflect(string $method, int|string $categoryId): string
         throw new LogicException('Container returned an unexpected type for ' . CategoryService::class);
     }
 
+    $args = [$categoryId, $categoryService];
+    if ($method === 'getSiteUrl') {
+        $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+        if (! $entityManager instanceof EntityManagerInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+        }
+        $args[] = $entityManager;
+    }
+
     /** @var string */
-    return $reflected->invoke(new CatModifyPageRenderer(), $categoryId, $categoryService);
+    return $reflected->invoke(new CatModifyPageRenderer(), ...$args);
 }
 
 test('getLocalDir throws when the category id matches no real row', function (): void {

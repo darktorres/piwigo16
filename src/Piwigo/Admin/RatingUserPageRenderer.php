@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\RatingUserPageContext;
 use Piwigo\Admin\Request\RatingUserFilterRequest;
 use Piwigo\Auth\AccessControl;
@@ -11,8 +12,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -26,7 +25,7 @@ use Piwigo\Template\CurrentTemplate;
  */
 final class RatingUserPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -40,7 +39,7 @@ final class RatingUserPageRenderer
         $consensus_top_number = $ratingFilter->consensusTopNumber;
 
         // build users
-        $rate_repository = EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class);
+        $rate_repository = $entityManager->getRepository(RateEntity::class);
 
         $users_by_id = [];
         foreach ($rate_repository->findUsersWithStatusByIdUsername() as $u) {

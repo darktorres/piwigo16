@@ -12,7 +12,7 @@ use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
- * Piwigo\Controller\Admin\MaintenanceSubController -- 13 constructor
+ * Piwigo\Controller\Admin\MaintenanceSubController -- 14 constructor
  * deps. Resolved via `Kernel::container()->get()` (same rationale as
  * `UpdatesSubControllerTest.php`). No dedicated Integration/Browser
  * spec of its own.

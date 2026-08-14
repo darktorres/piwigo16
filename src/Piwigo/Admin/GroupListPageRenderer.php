@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\GroupListPageContext;
 use Piwigo\Admin\Request\GroupListActionRequest;
 use Piwigo\Auth\AccessControl;
@@ -14,8 +15,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -37,6 +36,7 @@ final readonly class GroupListPageRenderer
         private HtmlRenderingInterface $htmlRenderer,
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     public function render(): void
@@ -56,7 +56,7 @@ final readonly class GroupListPageRenderer
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
-        $group_repo = EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class);
+        $group_repo = $this->entityManager->getRepository(GroupEntity::class);
         $groups = $group_repo->findAllBasic();
 
         $admin_url = $this->urlService->getRootUrl() . 'admin.php?page=';

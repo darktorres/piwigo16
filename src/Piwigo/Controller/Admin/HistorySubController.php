@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\HistoryPageRenderer;
@@ -36,12 +37,13 @@ final readonly class HistorySubController implements AdminSubControllerInterface
         private CurrentConfig $currentConfig,
         private EventDispatcher $eventDispatcher,
         private InputValidator $inputValidator,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new HistoryPageRenderer()
-            ->render($this->lang, $this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->inputValidator);
+            ->render($this->lang, $this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->inputValidator, $this->entityManager);
     }
 }

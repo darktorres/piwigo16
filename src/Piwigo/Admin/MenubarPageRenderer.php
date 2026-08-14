@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\MenubarPageContext;
 use Piwigo\Admin\Projection\MenubarSaveSuccessPageContext;
 use Piwigo\Admin\Request\MenubarSubmitRequest;
@@ -14,8 +15,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Menu\BlockManager;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -29,7 +28,7 @@ use Piwigo\Template\CurrentTemplate;
  */
 final class MenubarPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -88,7 +87,7 @@ final class MenubarPageRenderer
             $mb_conf_db = $mb_conf;
             $encodedPositions = json_encode($mb_conf_db);
             assert($encodedPositions !== false);
-            EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class)
+            $entityManager->getRepository(ConfigEntry::class)
                 ->upsert('blk_' . $menu->getId(), $encodedPositions);
 
             // The upsert() above bypasses ConfigService::confUpdateParam()

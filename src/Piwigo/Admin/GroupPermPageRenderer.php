@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\GroupPermPageContext;
 use Piwigo\Admin\Request\GroupPermSubmitRequest;
 use Piwigo\Audit\AuditService;
@@ -18,8 +19,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupService;
 use Piwigo\Permission\PermissionService;
@@ -48,13 +47,13 @@ final readonly class GroupPermPageRenderer
         private HtmlRenderingInterface $htmlRenderer,
         private InputValidator $inputValidator,
         private CurrentConfig $currentConfig,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     public function render(): void
     {
         $template = $this->currentTemplate->get();
 
-        $conn = DbConnection::build();
         $categoryService = $this->categoryService;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
@@ -125,7 +124,7 @@ final readonly class GroupPermPageRenderer
         $template->assignContext(new GroupPermPageContext(
             title: $this->lang->t(
                 'Manage permissions for group "%s"',
-                EntityManagerFactory::build($conn)->getRepository(GroupEntity::class)
+                $this->entityManager->getRepository(GroupEntity::class)
                     ->findName($groupId) ?? false
             ),
             catOptionsTrueLabel: $this->lang->t('Authorized'),

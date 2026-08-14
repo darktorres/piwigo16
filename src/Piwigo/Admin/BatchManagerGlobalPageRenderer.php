@@ -26,8 +26,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\ElementSetGlobalAction;
 use Piwigo\Event\Location\LocBeginElementSetGlobal;
 use Piwigo\Event\Location\LocEndElementSetGlobal;
@@ -100,7 +98,6 @@ final readonly class BatchManagerGlobalPageRenderer
     public function render(array $catElementsId, int $pageStart, ?array $duplicatesOnFields = null): void
     {
         $template = $this->currentTemplate->get();
-        $conn = DbConnection::build();
 
         // Runs before Request\BatchManagerGlobalRequest::fromGlobals() below
         // (matching the original's own ordering exactly, CSRF check before
@@ -188,12 +185,12 @@ final readonly class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = $this->tagService;
-            $imageService = new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
+            $imageService = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()
                     ->id->value;
-                EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class)
+                $this->entityManager->getRepository(CaddieEntity::class)
                     ->removeElementsForUser($current_user_id, $collection);
 
                 // remove from caddie action available only in caddie so reload content
@@ -482,7 +479,7 @@ final readonly class BatchManagerGlobalPageRenderer
         $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
 
         // metadata
-        $site_reader = new LocalSiteReader('./', $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths));
+        $site_reader = new LocalSiteReader('./', $this->currentConfig, new MetadataService($this->lang, new MetadataRepository($this->entityManager), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths));
         $used_metadata = implode(', ', $site_reader->getMetadataAttributes());
 
         // derivatives

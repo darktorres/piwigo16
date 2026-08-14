@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\RatingPageContext;
 use Piwigo\Admin\Request\RatingRequest;
 use Piwigo\Auth\AccessControl;
@@ -15,8 +16,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateEntity;
@@ -28,7 +27,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class RatingPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CategoryService $categoryService, InputValidator $inputValidator, EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CategoryService $categoryService, InputValidator $inputValidator, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -50,8 +49,6 @@ final class RatingPageRenderer
         $conf_guest_id = $currentConfig->guestId;
         $guest_id = $conf_guest_id;
 
-        $conn = DbConnection::build();
-
         $cat_ids = [];
         if ($ratingRequest->catId !== null) {
             $cat_ids = array_values(array_map(intval(...), array_filter($categoryService->getSubcatIds([$ratingRequest->catId]), is_numeric(...))));
@@ -67,7 +64,7 @@ final class RatingPageRenderer
             $exclude_filter_user = false;
         }
 
-        $rate_repository = EntityManagerFactory::build($conn)->getRepository(RateEntity::class);
+        $rate_repository = $entityManager->getRepository(RateEntity::class);
 
         $usernames_by_id = $rate_repository->findUsernamesById();
         $users = [];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
@@ -20,8 +21,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\GetAdminPluginMenuLinks;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
@@ -49,7 +48,7 @@ final class PluginsInstalledPageRenderer
      * fixed page slug statically (it's the only class registered for the
      * 'plugins' slug in config/admin_pages.php).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CurrentUser $currentUser, Paths $paths, PluginRegistry $pluginRegistry): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CurrentUser $currentUser, Paths $paths, PluginRegistry $pluginRegistry, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -68,8 +67,7 @@ final class PluginsInstalledPageRenderer
         $pwg_token = new CsrfService($currentConfig)
             ->getToken();
 
-        $conn = DbConnection::build();
-        $extension_repository = new ExtensionRepository(EntityManagerFactory::build($conn));
+        $extension_repository = new ExtensionRepository($entityManager);
         $pem_catalog = new PemCatalog(new ZipExtractor(), $currentLogger, $paths, $currentConfig);
         // ExtensionScanner::scan()'s own declared return type is a generic
         // array<string, array<string, mixed>> dispatch shape by design (see

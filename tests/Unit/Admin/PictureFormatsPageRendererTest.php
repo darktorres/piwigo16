@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -105,6 +106,16 @@ function pictureFormatsTestImageStdParams(): ImageStdParams
     return $imageStdParams;
 }
 
+function pictureFormatsTestEntityManager(): EntityManagerInterface
+{
+    $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+    if (! $entityManager instanceof EntityManagerInterface) {
+        throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+    }
+
+    return $entityManager;
+}
+
 test('render() fatal-errors when image_id is missing from the request', function (): void {
     $root = pictureFormatsTestRoot();
     unset($_GET['image_id']);
@@ -116,7 +127,7 @@ test('render() fatal-errors when image_id is missing from the request', function
         $exception = null;
         try {
             new PictureFormatsPageRenderer()
-                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get());
+                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get(), pictureFormatsTestEntityManager());
         } catch (ResponseReadyException $e) {
             $exception = $e;
         }
@@ -147,7 +158,7 @@ test('render() fatal-errors when image_id does not match any real image', functi
         $exception = null;
         try {
             new PictureFormatsPageRenderer()
-                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get());
+                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get(), pictureFormatsTestEntityManager());
         } catch (ResponseReadyException $e) {
             $exception = $e;
         }

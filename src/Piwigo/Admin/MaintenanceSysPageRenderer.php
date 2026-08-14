@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
 use Piwigo\Admin\Projection\MaintenanceSysPageContext;
@@ -12,8 +13,6 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Template\CurrentTemplate;
 
 /**
@@ -33,7 +32,7 @@ final class MaintenanceSysPageRenderer
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      */
-    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -42,7 +41,7 @@ final class MaintenanceSysPageRenderer
             if (MaintenanceSysMethodRequest::fromGlobals()->isActivitySysGetList) {
                 $data = [];
 
-                $activity_log = EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)
+                $activity_log = $entityManager->getRepository(ActivityEntity::class)
                     ->findSystemObjectLogWithUsernames();
 
                 $formatter = new ActivityLogEntryFormatter();

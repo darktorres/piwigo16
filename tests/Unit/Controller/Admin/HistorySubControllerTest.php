@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Auth\AccessControl;
@@ -30,7 +31,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Piwigo\Controller\Admin\HistorySubController -- a genuinely thin
- * delegate, all 8 constructor deps standard/already-factory-covered (B3
+ * delegate, all 9 constructor deps standard/already-factory-covered (B3
  * Tier 2's real shape). No dedicated Integration/Browser spec of its
  * own -- reached only via the "history" page slug.
  *
@@ -105,6 +106,11 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
 
+        $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+        if (! $entityManager instanceof EntityManagerInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+        }
+
         $subController = new HistorySubController(
             LangTestFactory::get(),
             historySubControllerTestAccessControl(),
@@ -114,6 +120,7 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
             CurrentConfigTestFactory::get(),
             $eventDispatcher,
             new InputValidator(),
+            $entityManager,
         );
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));

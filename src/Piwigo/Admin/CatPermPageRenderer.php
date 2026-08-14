@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Projection\CatPermPageContext;
 use Piwigo\Admin\Request\CatPermSubmitRequest;
@@ -12,8 +13,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
@@ -42,6 +41,7 @@ final readonly class CatPermPageRenderer
         private UserService $userService,
         private HtmlService $htmlService,
         private CurrentConfig $currentConfig,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -64,7 +64,6 @@ final readonly class CatPermPageRenderer
         /** @var array<string, mixed> $page */
         $page = [];
         $template = $this->currentTemplate->get();
-        $conn = DbConnection::build();
 
         $page['cat'] = $category['id'];
 
@@ -102,7 +101,7 @@ final readonly class CatPermPageRenderer
         }
 
         // groups granted to access the category
-        $permissionRepository = new PermissionRepository(EntityManagerFactory::build($conn));
+        $permissionRepository = new PermissionRepository($this->entityManager);
         $cat_id = $page['cat'];
         $group_granted_ids = $permissionRepository->findGrantedGroupIdsByCategory([$cat_id])[$cat_id] ?? [];
 

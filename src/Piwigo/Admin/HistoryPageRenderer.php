@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\HistoryPageContext;
 use Piwigo\Admin\Request\HistoryFilterRequest;
 use Piwigo\Auth\AccessControl;
@@ -14,8 +15,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\History\HistoryImageType;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -38,10 +37,9 @@ final class HistoryPageRenderer
      * tab within the shared 'history' tabsheet group (see
      * StatsPageRenderer, its sibling in that same group).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
-        $conn = DbConnection::build();
 
         $types = array_merge(['none'], array_map(
             static fn (HistoryImageType $type): string => $type->value,
@@ -86,7 +84,7 @@ final class HistoryPageRenderer
 
         if ($form_param['user_id'] !== -1) {
             $form_param_user_id = UserId::tryFrom($form_param['user_id']);
-            $form_param_username = $form_param_user_id instanceof UserId ? new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, $currentConfig)
+            $form_param_username = $form_param_user_id instanceof UserId ? new UserRepository($entityManager, $eventDispatcher, $currentConfig)
                 ->findUsernameById($form_param_user_id) : null;
             $form_param['user_name'] = $form_param_username?->value;
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];

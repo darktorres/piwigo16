@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
@@ -59,6 +60,7 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -158,7 +160,7 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
-                ->render($this->lang, $this->accessControl, $maintActions, $this->pageState, $this->currentTemplate, $this->currentConfig);
+                ->render($this->lang, $this->accessControl, $maintActions, $this->pageState, $this->currentTemplate, $this->currentConfig, $this->entityManager);
         } else {
             $this->maintenanceActionsPageRenderer
                 ->render($maintActions);

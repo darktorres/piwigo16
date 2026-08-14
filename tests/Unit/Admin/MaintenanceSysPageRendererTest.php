@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -45,6 +46,16 @@ function maintenanceSysTestRoot(): string
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
+}
+
+function maintenanceSysTestEntityManager(): EntityManagerInterface
+{
+    $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+    if (! $entityManager instanceof EntityManagerInterface) {
+        throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+    }
+
+    return $entityManager;
 }
 
 function maintenanceSysTestRrmdir(string $dir): void
@@ -97,7 +108,7 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
         $pageState = new PageState();
 
         new MaintenanceSysPageRenderer()
-            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Admin), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Admin), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), maintenanceSysTestEntityManager());
 
         expect($pageState->warnings)
             ->toHaveCount(1)
@@ -126,7 +137,7 @@ test('render() adds no warning for a webmaster and reaches the template tail wit
         $pageState = new PageState();
 
         new MaintenanceSysPageRenderer()
-            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Webmaster), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Webmaster), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), maintenanceSysTestEntityManager());
 
         expect($pageState->warnings)
             ->toBe([])

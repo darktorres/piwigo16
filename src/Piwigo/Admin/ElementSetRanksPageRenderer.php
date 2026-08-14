@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Projection\ElementSetRanksHeaderPageContext;
 use Piwigo\Admin\Projection\ElementSetRanksSaveSuccessPageContext;
@@ -19,8 +20,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
@@ -54,6 +53,7 @@ final readonly class ElementSetRanksPageRenderer
         private ImageService $imageService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     public function render(): void
@@ -61,7 +61,6 @@ final readonly class ElementSetRanksPageRenderer
         $template = $this->currentTemplate->get();
 
         $htmlRenderer = $this->htmlRenderer;
-        $conn = DbConnection::build();
 
         $sort_fields = [
             '' => '',
@@ -134,7 +133,7 @@ final readonly class ElementSetRanksPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
-        $category = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
+        $category = new CategoryRepository($this->entityManager, $this->currentConfig)
             ->findById($category_id);
         if (! $category instanceof Category) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested album does not exist');
@@ -154,7 +153,7 @@ final readonly class ElementSetRanksPageRenderer
 
         $thumbnails = [];
 
-        $thumbnail_rows = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+        $thumbnail_rows = $this->entityManager->getRepository(ImageEntity::class)
             ->findThumbnailRowsForCategoryOrderedByRank(CategoryId::from($category_id));
         if (count($thumbnail_rows) > 0) {
             // template thumbnail initialization

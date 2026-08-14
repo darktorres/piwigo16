@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Projection\CatModifyPageContext;
@@ -15,8 +16,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Location\LocBeginCatModify;
 use Piwigo\Event\Location\LocEndCatModify;
@@ -50,7 +49,7 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -240,7 +239,7 @@ final class CatModifyPageRenderer
         $cat_min_dir = null;
         $u_sync = null;
         if (! (bool) $category['is_virtual']) {
-            $category['cat_full_dir'] = $this->getCompleteDir($category_id, $categoryService);
+            $category['cat_full_dir'] = $this->getCompleteDir($category_id, $categoryService, $entityManager);
             $category_full_dir = preg_replace('/\/$/', '', $category['cat_full_dir']);
             $cat_full_dir = $category_full_dir;
             $cat_dir_name = basename((string) $category_full_dir);
@@ -347,9 +346,9 @@ final class CatModifyPageRenderer
      * Piwigo files and this category has 22 for identifier
      * getCompleteDir(22) returns "./galleries/pets/rex/1_year_old/"
      */
-    private function getCompleteDir(int|string $category_id, CategoryService $categoryService): string
+    private function getCompleteDir(int|string $category_id, CategoryService $categoryService, EntityManagerInterface $entityManager): string
     {
-        return $this->getSiteUrl($category_id, $categoryService) . $this->getLocalDir($category_id, $categoryService);
+        return $this->getSiteUrl($category_id, $categoryService, $entityManager) . $this->getLocalDir($category_id, $categoryService);
     }
 
     /**
@@ -387,9 +386,9 @@ final class CatModifyPageRenderer
      * retrieving the site url : "http://domain.com/gallery/" or
      * simply "./galleries/"
      */
-    private function getSiteUrl(int|string $category_id, CategoryService $categoryService): string
+    private function getSiteUrl(int|string $category_id, CategoryService $categoryService, EntityManagerInterface $entityManager): string
     {
-        $siteGalleriesUrlLookup = EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class);
+        $siteGalleriesUrlLookup = $entityManager->getRepository(SiteEntity::class);
         $galleries_url = $categoryService->getGalleriesUrlForCategory($category_id, $siteGalleriesUrlLookup);
         if ($galleries_url === null) {
             throw new Exception(__FUNCTION__ . "(): category #{$category_id} not found");

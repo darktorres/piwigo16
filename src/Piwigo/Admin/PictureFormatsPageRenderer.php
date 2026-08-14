@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\PictureFormatsPageContext;
 use Piwigo\Admin\Request\PictureFormatsImageIdRequest;
 use Piwigo\Auth\AccessControl;
@@ -14,8 +15,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
@@ -27,7 +26,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, CurrentConfig $currentConfig, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -39,8 +38,7 @@ final class PictureFormatsPageRenderer
                 ->fatalError('image_id does not exist');
         }
 
-        $conn = DbConnection::build();
-        $imageRow = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+        $imageRow = $entityManager->getRepository(ImageEntity::class)
             ->findById($image_id);
         if ($imageRow === null) {
             $htmlRenderer
@@ -49,7 +47,7 @@ final class PictureFormatsPageRenderer
         $image = $imageRow->toArray();
 
         $formats = [];
-        foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findFormatsForImage($image_id) as $formatRow) {
+        foreach ($entityManager->getRepository(ImageEntity::class)->findFormatsForImage($image_id) as $formatRow) {
             $format = $formatRow->toArray();
             $format['download_url'] = 'action.php?format=' . $formatRow->formatId . '&amp;download';
 

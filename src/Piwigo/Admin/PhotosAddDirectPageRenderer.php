@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Projection\PhotosAddDirectPageContext;
 use Piwigo\Admin\Projection\PhotosAddDirectUploadFormPageContext;
@@ -22,8 +22,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndPhotoAddDirect;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
@@ -63,6 +61,7 @@ final readonly class PhotosAddDirectPageRenderer
         private PreferencesService $preferencesService,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -82,7 +81,6 @@ final readonly class PhotosAddDirectPageRenderer
         $template = $this->currentTemplate->get();
 
         $htmlRenderer = $this->htmlRenderer;
-        $conn = DbConnection::build();
 
         $user_id = $this->currentUser->get()
             ->id->value;
@@ -93,7 +91,7 @@ final readonly class PhotosAddDirectPageRenderer
             new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class)
+            $this->entityManager->getRepository(CaddieEntity::class)
                 ->replaceForUser(
                     $user_id,
                     array_values(array_map(intval(...), array_unique(explode(',', $photosAddDirectRequest->batch))))
@@ -103,11 +101,11 @@ final readonly class PhotosAddDirectPageRenderer
         }
 
         if ($this->preferencesService->getPromoteMobileApps() ?? true) {
-            $register_date = new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)
+            $register_date = new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
                 ->findEarliestRegistrationDate();
-            $nb_cats = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
+            $nb_cats = new CategoryRepository($this->entityManager, $this->currentConfig)
                 ->countAllCategories();
-            $nb_images = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+            $nb_images = $this->entityManager->getRepository(ImageEntity::class)
                 ->countAllImages();
 
             // To see the mobile app promote, the account must have 2 weeks
@@ -141,7 +139,7 @@ final readonly class PhotosAddDirectPageRenderer
 
                 $formats_image_id = $formats_original_info['id'];
 
-                $formats = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+                $formats = $this->entityManager->getRepository(ImageEntity::class)
                     ->findFormatsForImage(ImageId::from($formats_image_id));
 
                 if ($formats !== []) {
@@ -171,7 +169,7 @@ final readonly class PhotosAddDirectPageRenderer
             }
         }
 
-        $this->prepareUploadForm($conn, $photosAddDirectRequest);
+        $this->prepareUploadForm($photosAddDirectRequest);
 
         $this->eventDispatcher->dispatchNotify(new LocEndPhotoAddDirect());
 
@@ -200,7 +198,7 @@ final readonly class PhotosAddDirectPageRenderer
      * render(), unlike the shared admin/include/*.inc.php files this
      * project has kept as real includes elsewhere.
      */
-    private function prepareUploadForm(Connection $conn, PhotosAddDirectRequest $photosAddDirectRequest): void
+    private function prepareUploadForm(PhotosAddDirectRequest $photosAddDirectRequest): void
     {
         $template = $this->currentTemplate->get();
 
@@ -270,7 +268,7 @@ final readonly class PhotosAddDirectPageRenderer
             $album_id = $photosAddDirectRequest->albumId;
 
             // test if album really exists
-            $uppercats = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
+            $uppercats = new CategoryRepository($this->entityManager, $this->currentConfig)
                 ->findCategoryUppercatsById($album_id ?? 0);
             if ($album_id !== null && $uppercats !== null) {
                 $selected_category = [$album_id];
@@ -281,7 +279,7 @@ final readonly class PhotosAddDirectPageRenderer
             }
         } else {
             // we need to know the category in which the last photo was added
-            $mostRecentCategoryInfo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+            $mostRecentCategoryInfo = $this->entityManager->getRepository(ImageEntity::class)
                 ->findMostRecentImageCategoryInfo();
             if ($mostRecentCategoryInfo !== null) {
                 $selected_category = [$mostRecentCategoryInfo->categoryId];
@@ -291,7 +289,7 @@ final readonly class PhotosAddDirectPageRenderer
         }
 
         // how many existing albums?
-        $nb_albums = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
+        $nb_albums = new CategoryRepository($this->entityManager, $this->currentConfig)
             ->countAllCategories();
 
         // image level options

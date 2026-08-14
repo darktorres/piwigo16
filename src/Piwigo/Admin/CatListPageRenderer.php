@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Projection\CatListCategoriesPageContext;
@@ -18,8 +19,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginCatList;
 use Piwigo\Event\Location\LocEndCatList;
 use Piwigo\Event\Template\RenderCategoryName;
@@ -63,6 +62,7 @@ final readonly class CatListPageRenderer
         private HtmlService $htmlRenderer,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     public function render(): void
@@ -116,7 +116,7 @@ final readonly class CatListPageRenderer
                 $this->urlService,
                 $this->sessionService,
                 $this->eventDispatcher,
-                new PermalinkRepository(EntityManagerFactory::build(DbConnection::build())),
+                new PermalinkRepository($this->entityManager),
                 $catListRequest->photoDeletionMode
             );
 

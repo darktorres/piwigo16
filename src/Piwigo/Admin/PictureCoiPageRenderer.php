@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\PictureCoiPageContext;
 use Piwigo\Admin\Request\PictureCoiRequest;
 use Piwigo\Auth\AccessControl;
@@ -13,8 +14,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
@@ -38,6 +37,7 @@ final readonly class PictureCoiPageRenderer
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private Paths $paths,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     public function render(): void
@@ -45,7 +45,6 @@ final readonly class PictureCoiPageRenderer
         $template = $this->currentTemplate->get();
 
         $htmlRenderer = $this->htmlRenderer;
-        $conn = DbConnection::build();
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
@@ -56,11 +55,11 @@ final readonly class PictureCoiPageRenderer
         }
 
         if ($pictureCoiRequest->isSubmitted) {
-            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+            $this->entityManager->getRepository(ImageEntity::class)
                 ->updateCoi($image_id, $pictureCoiRequest->coi);
         }
 
-        $image = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
+        $image = $this->entityManager->getRepository(ImageEntity::class)
             ->findById($image_id);
         if ($image === null) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested photo does not exist');

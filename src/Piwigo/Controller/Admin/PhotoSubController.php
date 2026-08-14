@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
@@ -19,7 +20,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -54,6 +54,7 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -72,7 +73,6 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
         $this->coreTabs->setContext(new CoreTabsContext(adminPhotoBaseUrl: $adminPhotoBaseUrl));
 
         // retrieving direct information about picture
-        $imageConn = DbConnection::build();
         $page['image'] = $this->imageService
             ->getImageInfos($get_image_id, $this->htmlRenderer, true);
 
@@ -95,7 +95,7 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($this->currentConfig->isFormatsEnabled) {
             new PictureFormatsPageRenderer()
-                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->currentConfig);
+                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->currentConfig, $this->entityManager);
         }
     }
 }

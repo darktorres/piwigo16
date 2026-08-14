@@ -18,7 +18,7 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
 /**
- * Piwigo\Controller\Admin\PhotoSubController -- 13 constructor deps.
+ * Piwigo\Controller\Admin\PhotoSubController -- 14 constructor deps.
  * Resolved via `Kernel::container()->get()` (same rationale as
  * `UpdatesSubControllerTest.php`) -- every dep beyond `CurrentTemplate`/
  * `CurrentConfig`/the container-shared `CurrentUser` is untouched on

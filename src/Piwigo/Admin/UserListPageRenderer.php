@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\UserListPageContext;
 use Piwigo\Admin\Request\UserListFilterRequest;
 use Piwigo\Common\ValueObject\UserId;
@@ -34,7 +35,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class UserListPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, InputValidator $inputValidator, Paths $paths): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, InputValidator $inputValidator, Paths $paths, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -178,9 +179,9 @@ final class UserListPageRenderer
                 ->getToken(),
             nbImagePage: $default_user->nbImagePage,
             recentPeriod: $default_user->recentPeriod,
-            themeOptions: ThemeCatalog::getPwgThemes($eventDispatcher, $paths, $currentConfig, $lang),
+            themeOptions: ThemeCatalog::getPwgThemes($eventDispatcher, $paths, $currentConfig, $lang, $entityManager),
             themeSelected: $userService->getDefaultTheme(),
-            languageOptions: LangService::getLanguages($paths),
+            languageOptions: LangService::getLanguages($paths, $entityManager),
             languageSelected: $userService->getDefaultLanguage(),
             associationOptions: $groups,
             protectedUsers: implode(',', array_unique($protected_users)),

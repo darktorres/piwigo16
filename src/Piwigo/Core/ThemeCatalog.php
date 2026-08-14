@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Projection\ThemeListing;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\GetPwgThemes;
 use Piwigo\PluginConfig\EventDispatcher;
 
@@ -28,13 +27,12 @@ final class ThemeCatalog
      *
      * @return array<int|string, string>
      */
-    public static function getPwgThemes(EventDispatcher $eventDispatcher, Paths $paths, CurrentConfig $currentConfig, Lang $lang, bool $showMobile = false): array
+    public static function getPwgThemes(EventDispatcher $eventDispatcher, Paths $paths, CurrentConfig $currentConfig, Lang $lang, EntityManagerInterface $entityManager, bool $showMobile = false): array
     {
 
         $themes = [];
 
-        $conn = DbConnection::build();
-        $rows = EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class)->findAllIdsAndNames();
+        $rows = $entityManager->getRepository(ThemeEntity::class)->findAllIdsAndNames();
 
         // AppInfo::DEFAULT_TEMPLATE is a base layer other themes load on
         // top of, never something a real install activates (see

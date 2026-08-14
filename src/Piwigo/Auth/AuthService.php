@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use DateTimeImmutable;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Piwigo\Auth\Event\FinalizeLogin;
 use Piwigo\Auth\Projection\AuthKeyDetails;
@@ -70,6 +71,7 @@ final readonly class AuthService
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
         private Paths $paths,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -159,7 +161,7 @@ final readonly class AuthService
             if (! is_string($lang_cookie)) {
                 $this->htmlRenderer->fatalError('Invalid request parameter "lang"');
             }
-            if (! array_key_exists($lang_cookie, LangService::getLanguages($this->paths))) {
+            if (! array_key_exists($lang_cookie, LangService::getLanguages($this->paths, $this->entityManager))) {
                 $this->htmlRenderer->fatalError('Unrecognized value for parameter "lang"');
             }
 

@@ -709,7 +709,7 @@ final class InstallWizard
             // data; this mirrors that method's own two calls verbatim.
             $this->currentUser->set(User::fromUserArray($user));
             $this->currentUser->markRealUserResolved();
-            new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $this->passwordService($conn), new CookieService(), EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->paths)
+            new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $this->passwordService($conn), new CookieService(), EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->paths, EntityManagerFactory::build($conn))
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 

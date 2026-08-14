@@ -260,7 +260,7 @@ final class PasswordController implements ControllerInterface
         // pages
         $cookie_lang = $_COOKIE['lang'] ?? null;
         if (is_string($cookie_lang) and $this->currentUser->get()->language->value !== $cookie_lang) {
-            if (! array_key_exists($cookie_lang, LangService::getLanguages($this->paths))) {
+            if (! array_key_exists($cookie_lang, LangService::getLanguages($this->paths, $this->entityManager))) {
                 $this->htmlService
                     ->fatalError('Unrecognized value for parameter "lang"');
             }
@@ -272,7 +272,7 @@ final class PasswordController implements ControllerInterface
         }
 
         $language_options = [];
-        foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
+        foreach (LangService::getLanguages($this->paths, $this->entityManager) as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\PluginConfig;
 
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\PluginId;
@@ -72,6 +73,7 @@ final readonly class ExtensionContext
         private ImageReadFacade $imageReadFacade,
         private Paths $paths,
         private ConfigService $configService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -170,7 +172,7 @@ final readonly class ExtensionContext
      */
     public function languages(): array
     {
-        return LangService::getLanguages($this->paths);
+        return LangService::getLanguages($this->paths, $this->entityManager);
     }
 
     /**

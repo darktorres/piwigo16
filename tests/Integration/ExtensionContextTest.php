@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Caddie\CaddieRepository;
@@ -151,6 +152,7 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->imageReadFacade,
             $this->containerGet(Paths::class),
             $this->containerGet(ConfigService::class),
+            $this->containerGet(EntityManagerInterface::class),
         );
     }
 

@@ -126,7 +126,7 @@ final readonly class ProfileController implements ControllerInterface
                 $this->htmlService
                     ->fatalError('Invalid request parameter "lang"');
             }
-            if (! array_key_exists($cookie_lang, LangService::getLanguages($this->paths))) {
+            if (! array_key_exists($cookie_lang, LangService::getLanguages($this->paths, $this->entityManager))) {
                 $this->htmlService
                     ->fatalError('Unrecognized value for parameter "lang"');
             }
@@ -218,7 +218,7 @@ final readonly class ProfileController implements ControllerInterface
 
         // Get list of languages
         $language_options = [];
-        foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
+        foreach (LangService::getLanguages($this->paths, $this->entityManager) as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
 

@@ -12,6 +12,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\GetPwgThemes;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -84,7 +85,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         );
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get());
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn));
         } finally {
             $this->conn->executeStatement("DELETE FROM themes WHERE id = 'broken-theme'");
         }
@@ -112,7 +113,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->mobileTheme = 'mobile-candidate';
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), showMobile: false);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn), showMobile: false);
         } finally {
             $this->conn->executeStatement("DELETE FROM themes WHERE id = 'mobile-candidate'");
         }
@@ -138,7 +139,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->mobileTheme = 'default';
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), showMobile: true);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn), showMobile: true);
         } finally {
             $this->conn->executeStatement("DELETE FROM themes WHERE id = 'default'");
         }
@@ -164,7 +165,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $this->expectExceptionMessageIsOrContains('must return an instance of');
 
         try {
-            ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get());
+            ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn));
         } finally {
             // EventDispatcher is a shared process-wide singleton -- a real
             // reset (not just removing this one handler, no such API
@@ -190,7 +191,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->addTypedHandler(GetPwgThemes::class, $handler);
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get());
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn));
         } finally {
             EventDispatcherTestFactory::get()->removeEventHandler(GetPwgThemes::class, $handler);
         }

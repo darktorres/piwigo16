@@ -137,6 +137,7 @@ function core_update_service_test_mail_service(): MailService
             new CurrentUser(new CurrentConfig()),
             new CurrentConfig(),
             Paths::fromRoot(sys_get_temp_dir()),
+            EntityManagerFactory::build($conn),
         ),
         core_update_service_test_user_service(),
     );

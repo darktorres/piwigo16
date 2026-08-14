@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Caddie\CaddieRepository;
@@ -109,6 +110,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
             $imageReadFacade,
             $this->containerGet(Paths::class),
             $this->containerGet(ConfigService::class),
+            $this->containerGet(EntityManagerInterface::class),
         );
     }
 

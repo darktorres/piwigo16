@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Caddie\CaddieService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
@@ -61,7 +62,7 @@ test('fillCurrentUserCaddie() inserts rows for the current user id', function ()
             'id' => 3,
         ]));
 
-        CaddieService::fillCurrentUserCaddie([2, 4, 1], CurrentUserTestFactory::get());
+        CaddieService::fillCurrentUserCaddie([2, 4, 1], CurrentUserTestFactory::get(), EntityManagerFactory::build($conn));
 
         expect(caddieServiceTestFetchElementIds($conn, 3))
             ->toBe([1, 2, 4]);
@@ -77,12 +78,12 @@ test('fillCurrentUserCaddie() scopes to whichever user is current', function ():
         CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 3,
         ]));
-        CaddieService::fillCurrentUserCaddie([5], CurrentUserTestFactory::get());
+        CaddieService::fillCurrentUserCaddie([5], CurrentUserTestFactory::get(), EntityManagerFactory::build($conn));
 
         CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 4,
         ]));
-        CaddieService::fillCurrentUserCaddie([2, 3], CurrentUserTestFactory::get());
+        CaddieService::fillCurrentUserCaddie([2, 3], CurrentUserTestFactory::get(), EntityManagerFactory::build($conn));
 
         expect(caddieServiceTestFetchElementIds($conn, 3))
             ->toBe([5])
@@ -100,7 +101,7 @@ test('fillCurrentUserCaddie() does nothing for an empty element list', function 
         'id' => 3,
     ]));
 
-    CaddieService::fillCurrentUserCaddie([], CurrentUserTestFactory::get());
+    CaddieService::fillCurrentUserCaddie([], CurrentUserTestFactory::get(), EntityManagerFactory::build($conn));
 
     expect(caddieServiceTestFetchElementIds($conn, 3))
         ->toBe([]);

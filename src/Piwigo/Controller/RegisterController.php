@@ -259,7 +259,7 @@ final readonly class RegisterController implements ControllerInterface
                 $this->htmlService
                     ->fatalError('Invalid request parameter "lang"');
             }
-            if (! array_key_exists($lang_cookie, LangService::getLanguages($this->paths))) {
+            if (! array_key_exists($lang_cookie, LangService::getLanguages($this->paths, $this->entityManager))) {
                 $this->htmlService
                     ->fatalError('Unrecognized value for parameter "lang"');
             }
@@ -271,7 +271,7 @@ final readonly class RegisterController implements ControllerInterface
         }
 
         $language_options = [];
-        foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
+        foreach (LangService::getLanguages($this->paths, $this->entityManager) as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
 

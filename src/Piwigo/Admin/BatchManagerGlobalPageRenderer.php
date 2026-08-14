@@ -386,7 +386,7 @@ final readonly class BatchManagerGlobalPageRenderer
 
             // add_to_caddie
             elseif ($action === 'add_to_caddie') {
-                CaddieService::fillCurrentUserCaddie($collection, $this->currentUser);
+                CaddieService::fillCurrentUserCaddie($collection, $this->currentUser, $this->entityManager);
             }
 
             // delete

@@ -695,7 +695,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
                     // add new photos to caddie
                     if (isset($post['add_to_caddie']) and $post['add_to_caddie'] === '1') {
-                        CaddieService::fillCurrentUserCaddie($caddiables, $this->currentUser);
+                        CaddieService::fillCurrentUserCaddie($caddiables, $this->currentUser, $this->entityManager);
                     }
                 }
 

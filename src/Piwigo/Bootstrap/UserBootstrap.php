@@ -126,6 +126,7 @@ final readonly class UserBootstrap
             $currentUser,
             RequestBootstrap::currentConfig(),
             $paths,
+            EntityManagerFactory::build($conn),
         );
         $filterState = RequestBootstrap::filterState();
         $translator = Kernel::container()->get(Translator::class);

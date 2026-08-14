@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\PluginConfig;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\ConfigService;
@@ -23,7 +24,7 @@ use Piwigo\Users\UserService;
  * Builds a fresh `ExtensionContext` per plugin/theme -- `PluginRegistry`/
  * `ThemeRegistry` (P27.3) both need this identically, only the
  * `$extensionId` argument varies per call, so this factors out what would
- * otherwise be the same 11-collaborator constructor call duplicated in
+ * otherwise be the same 14-collaborator constructor call duplicated in
  * both registries. Every collaborator here is a real, already-composed
  * service -- no new infrastructure, purely composition, same as
  * `ExtensionContext` itself.
@@ -44,6 +45,7 @@ final readonly class ExtensionContextFactory
         private ImageReadFacade $imageReadFacade,
         private Paths $paths,
         private ConfigService $configService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     public function build(PluginId|ThemeId $extensionId): ExtensionContext
@@ -63,6 +65,7 @@ final readonly class ExtensionContextFactory
             $this->imageReadFacade,
             $this->paths,
             $this->configService,
+            $this->entityManager,
         );
     }
 }

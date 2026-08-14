@@ -87,6 +87,7 @@ function sensitiveParameterTestAuthService(): AuthService
         CurrentUserTestFactory::get(),
         $currentConfig,
         CurrentPathsTestFactory::get(),
+        EntityManagerFactory::build($conn),
     );
 }
 

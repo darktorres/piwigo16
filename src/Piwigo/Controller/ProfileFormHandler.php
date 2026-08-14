@@ -139,12 +139,12 @@ final readonly class ProfileFormHandler
                 $errors[] = $this->lang->t('Recent period must be a positive integer value');
             }
 
-            if (! in_array($post['language'] ?? null, array_keys(LangService::getLanguages($this->paths)), true)) {
+            if (! in_array($post['language'] ?? null, array_keys(LangService::getLanguages($this->paths, $this->entityManager)), true)) {
                 $this->htmlRenderer
                     ->fatalError('Unrecognized value for parameter "language"');
             }
 
-            if (! in_array($post['theme'] ?? null, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang)), true)) {
+            if (! in_array($post['theme'] ?? null, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang, $this->entityManager)), true)) {
                 $this->htmlRenderer
                     ->fatalError('Unrecognized value for parameter "theme"');
             }
@@ -329,13 +329,13 @@ final readonly class ProfileFormHandler
         ];
 
         $template_selection = ThemeId::tryFrom($userdata['theme'] ?? null) ?? ThemeId::from(AppInfo::DEFAULT_TEMPLATE);
-        $template_options = ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang);
+        $template_options = ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang, $this->entityManager);
 
         $profileFormSubmitRequest = ProfileFormSubmitRequest::fromGlobals();
 
         $language_selection = null;
         $language_options = [];
-        foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
+        foreach (LangService::getLanguages($this->paths, $this->entityManager) as $language_code => $language_name) {
             if ($profileFormSubmitRequest->isSubmitPresent or (is_string($userdata['language']) and $userdata['language'] === $language_code)) {
                 $language_selection = $language_code;
             }

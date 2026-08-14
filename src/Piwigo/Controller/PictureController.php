@@ -423,7 +423,7 @@ final readonly class PictureController implements ControllerInterface
                     // no break
                 case 'add_to_caddie':
 
-                    CaddieService::fillCurrentUserCaddie([$image_id], $this->currentUser);
+                    CaddieService::fillCurrentUserCaddie([$image_id], $this->currentUser, $this->entityManager);
                     $this->redirectService->redirect($url_self);
 
                     // no break

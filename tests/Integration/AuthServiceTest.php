@@ -146,6 +146,7 @@ namespace Piwigo\Tests\Integration {
                 CurrentUserTestFactory::get(),
                 CurrentConfigTestFactory::get(),
                 CurrentPathsTestFactory::get(),
+                EntityManagerFactory::build(DbConnection::build()),
             );
         }
 

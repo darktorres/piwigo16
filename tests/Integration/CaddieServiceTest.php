@@ -12,6 +12,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
@@ -68,7 +69,7 @@ final class CaddieServiceTest extends IntegrationTestCase
             'id' => 3,
         ]));
 
-        CaddieService::fillCurrentUserCaddie([2, 4, 1], CurrentUserTestFactory::get());
+        CaddieService::fillCurrentUserCaddie([2, 4, 1], CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn));
 
         self::assertSame([1, 2, 4], $this->fetchElementIds(3));
     }
@@ -78,12 +79,12 @@ final class CaddieServiceTest extends IntegrationTestCase
         CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 1,
         ]));
-        CaddieService::fillCurrentUserCaddie([5], CurrentUserTestFactory::get());
+        CaddieService::fillCurrentUserCaddie([5], CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn));
 
         CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 4,
         ]));
-        CaddieService::fillCurrentUserCaddie([2, 3], CurrentUserTestFactory::get());
+        CaddieService::fillCurrentUserCaddie([2, 3], CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn));
 
         self::assertSame([5], $this->fetchElementIds(1), 'user 1 must only have its own element');
         self::assertSame([2, 3], $this->fetchElementIds(4), 'user 4 must only have its own elements');
@@ -95,7 +96,7 @@ final class CaddieServiceTest extends IntegrationTestCase
             'id' => 3,
         ]));
 
-        CaddieService::fillCurrentUserCaddie([], CurrentUserTestFactory::get());
+        CaddieService::fillCurrentUserCaddie([], CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn));
 
         self::assertSame([], $this->fetchElementIds(3));
     }

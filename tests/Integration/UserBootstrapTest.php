@@ -254,6 +254,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             CurrentUserTestFactory::get(),
             CurrentConfigTestFactory::get(),
             CurrentPathsTestFactory::get(),
+            EntityManagerFactory::build($this->conn),
         )->pwgLogin(...));
 
         $_SERVER = [];

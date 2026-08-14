@@ -873,7 +873,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         // let's find the first available theme
-        $active_themes = array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang));
+        $active_themes = array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang, $this->entityManager));
         return isset($active_themes[0]) ? (string) $active_themes[0] : 'default';
     }
 
@@ -984,7 +984,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // list all enabled language codes in the Piwigo installation
         // in both full and short forms, and case insensitive
         $languages_available = [];
-        foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
+        foreach (LangService::getLanguages($this->paths, $this->entityManager) as $language_code => $language_name) {
             $lowercase_full = strtolower($language_code);
             $lowercase_parts = explode('_', $lowercase_full, 2);
             $lowercase_prefix = $lowercase_parts[0];
@@ -1321,7 +1321,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['language'] ?? null)) {
             $language_param = $params['language'] ?? null;
-            if (! in_array($language_param, array_keys(LangService::getLanguages($this->paths)), true)) {
+            if (! in_array($language_param, array_keys(LangService::getLanguages($this->paths, $this->entityManager)), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1334,7 +1334,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['theme'] ?? null)) {
             $theme_param = $params['theme'] ?? null;
-            if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang)), true)) {
+            if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang, $this->entityManager)), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1385,6 +1385,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->currentUser,
             $this->currentConfig,
             $this->paths,
+            $this->entityManager,
         );
 
         if ($password_update !== null) {

@@ -458,6 +458,7 @@ final class RequestBootstrap
             self::currentUser(),
             self::currentConfig(),
             self::paths(),
+            EntityManagerFactory::build($conn),
         )));
         new UserBootstrap(
             self::accessLevelChecker(),
@@ -804,6 +805,7 @@ final class RequestBootstrap
             self::imageReadFacade($conn),
             self::paths(),
             $configService,
+            EntityManagerFactory::build($conn),
         );
     }
 

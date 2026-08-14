@@ -101,6 +101,7 @@ function authServiceTestService(?Connection $conn = null): AuthService
         CurrentUserTestFactory::get(),
         $currentConfig,
         CurrentPathsTestFactory::get(),
+        EntityManagerFactory::build($conn),
     );
 }
 

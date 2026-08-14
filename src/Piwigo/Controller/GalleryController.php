@@ -180,7 +180,7 @@ final readonly class GalleryController implements ControllerInterface
 
         // caddie filling :-)
         if ($galleryDisplay->hasCaddie) {
-            CaddieService::fillCurrentUserCaddie($page_items, $this->currentUser);
+            CaddieService::fillCurrentUserCaddie($page_items, $this->currentUser, $this->entityManager);
             $redirectService->redirect($urlService->duplicateIndexUrl());
         }
 

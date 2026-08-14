@@ -7,10 +7,9 @@
 <link rel="icon" type="image/svg+xml" href="themes/default/icon/piwigo.org-icon 1.svg">
 <link rel="stylesheet" type="text/css" href="themes/admin/default/fonts/open-sans/open-sans.css">
 
-  
 
 <!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/1bzanog.css">
+<link rel="stylesheet" type="text/css" href="_data/combined/2ve75s.css">
 
 <script type="text/javascript" src="_data/combined/1o8d4sk.js"></script>
 <!-- END get_combined -->
@@ -28,9 +27,7 @@
 
   <div id="headActions">
     <span class="admin-head-username"><i class="icon-user"></i>fixture_admin</span>
-
 <a href="admin.php?page=batch_manager&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
-
     <a class="tiptip" href="admin.php?page=help" title="Instructions to use Piwigo"><i class="icon-help-circled"></i><span>Help Me</span></a>
     <a href="index.php?act=logout"><i class="icon-logout"></i><span>Logout</span></a>
   </div>
@@ -40,6 +37,7 @@
 
 
 <div id="pwgMain">
+
 
 <div id="menubar">
   <div id="adminHome"><a href="admin.php" class="admin-main"><i class="icon-television"></i> Dashboard</a></div>
@@ -98,7 +96,7 @@
       <ul>
         <li><a href="admin.php?page=configuration"><i class="icon-cog-alt"></i>Options</a></li>
         <li><a href="admin.php?page=menubar"><i class="icon-menu"></i>Menus</a></li>
-        				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
+				<li><a href="admin.php?page=languages"><i class="icon-language"></i>Languages</a></li>
         <li><a href="admin.php?page=themes"><i class="icon-brush"></i>Themes</a></li>
       </ul>
     </dd>
@@ -120,24 +118,15 @@
 </ul>
 </div>
 
+
 <div class="eiw">
+
+
+
+
 </div> 
+
   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
  
 
 
@@ -167,24 +156,12 @@
 
 
 
-
-
-
-
-
-
  
+
 <div id="batchManagerGlobal">
   <form action="admin.php?page=batch_manager" method="post">
   <input type="hidden" name="start" value="0">
-  <input type="hidden" name="pwg_token" value="3f8953920fdb2ccd2b53cfc2969799f9100410a489b30d0c9b58a6ab406e946c">
-  
-
-
-
-
-
-
+  <input type="hidden" name="pwg_token" value="7e079233794bd345218ed6a795c15216675bc86bc21b862f27ed1fcf3c7a5ff5">
 
 
 <fieldset>
@@ -196,26 +173,26 @@
       <p>Predefined filter</p>
       <a href="#" class="removeFilter" title="remove this filter"><span>[x]</span></a>
       <select name="filter_prefilter">
-                              
+
         <option value="all_photos"  class="" >All</option>
-                              
+
         <option value="caddie"  class="icon-flag" selected="selected">Caddie</option>
-                              
+
         <option value="duplicates"  class="" >Duplicates</option>
-                              
+
         <option value="last_import"  class="" >Last import</option>
-                              
+
         <option value="favorites"  class="" >My favorites</option>
-                              
+
         <option value="no_album"  class="icon-heart-broken" >With no album (Orphans)</option>
-                              
+
         <option value="no_sync_md5sum"  class="" >With no checksum</option>
-                              
+
         <option value="no_tag"  class="" >With no tag</option>
-                              
+
         <option value="no_virtual_album"  class="" >With no virtual album</option>
       </select>
-      <a id="empty_caddie" href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token=3f8953920fdb2ccd2b53cfc2969799f9100410a489b30d0c9b58a6ab406e946c" style="">Empty caddie</a>
+      <a id="empty_caddie" href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token=7e079233794bd345218ed6a795c15216675bc86bc21b862f27ed1fcf3c7a5ff5" style="">Empty caddie</a>
 
       <span id="add_md5sum" style="display:none">
         <img class="loading" src="themes/default/images/ajax-loader-small.gif">
@@ -239,15 +216,15 @@
         based on
         <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_filename" > file name</label>
         <label class="font-checkbox" title="md5sum"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_checksum" > checksum <i class="icon-help-circled tiptip" title="translated md5sum definition here !"> </i></label>
-        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_date" checked="checked"> date & time</label>
-        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_dimensions" > width & height</label>
+        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_date" checked="checked"> date &amp; time</label>
+        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_dimensions" > width &amp; height</label>
       </span>
     </li>
-        <li id="filter_category" style="display:none">
+    <li id="filter_category" style="display:none">
       <input type="checkbox" name="filter_category_use" class="useFilterCheckbox" >
       <p>Album</p>
       <a href="#" class="removeFilter" title="remove this filter"><span>[x]</span></a>
-              <div id="selectedAlbumFilterArea" style="display: none;">
+        <div id="selectedAlbumFilterArea" style="display: none;">
           <div class="selectedAlbum" id="selectedAlbumFilter">
             <input type="hidden" name="filter_category" id="filterCategoryValue" value="null">
             <span class="icon-sitemap" id="selectedAlbumNameFilter"></span>
@@ -312,7 +289,7 @@
             <a class="slider-choice dimension-cancel" data-min="150" data-max="150">Reset</a>
           </div>
           <div class="slider-slider"></div>
-          
+
           <input type="hidden" data-input="min" name="filter_dimension_min_height" value="150">
           <input type="hidden" data-input="max" name="filter_dimension_max_height" value="150">
         </div>
@@ -324,7 +301,11 @@
             </div>
             <div class="dimensionSlidersRatioButtons">
               <div>
-                                           <a class="slider-choice" data-min="1.33" data-max="1.33">Landscape</a>                            </div>
+              
+              
+               <a class="slider-choice" data-min="1.33" data-max="1.33">Landscape</a>
+              
+              </div>
               <div>
                <a class="slider-choice dimension-cancel" data-min="1.33" data-max="1.33">Reset</a>
               </div>
@@ -346,7 +327,6 @@
         <i class="icon-help-circled"></i>
         <span>Search tips</span>
       </p>
-
     </li>
 
     <li id="filter_filesize" style="display:none">
@@ -403,7 +383,6 @@
         </div>
       </div>
       <div class="quick-search-syntax">
-        
 
 <div class="quick-search-headers">
   <span class="mcs-popin-title">Search using extended syntax</span>
@@ -418,7 +397,7 @@
 <p class="quick-search-section">With keywords</p>
 
 <div class="quick-search-items">
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>Exact search</p>
@@ -432,7 +411,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>OR inclusive</p>
@@ -446,7 +425,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>Exclude</p>
@@ -461,7 +440,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>Grouping ()</p>
@@ -494,7 +473,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>tag:</p>
@@ -509,7 +488,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>photo:</p>
@@ -524,7 +503,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>file:</p>
@@ -539,7 +518,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>author:</p>
@@ -553,7 +532,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>created:</p>
@@ -572,7 +551,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>posted:</p>
@@ -586,7 +565,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>width:</p>
@@ -602,7 +581,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>size:</p>
@@ -617,7 +596,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>ratio:</p>
@@ -633,7 +612,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>hits:</p>
@@ -647,7 +626,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>score:</p>
@@ -663,7 +642,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>filesize:</p>
@@ -677,7 +656,7 @@
     </div>
   </div>
 
-    <div class="quick-search-item">
+  <div class="quick-search-item">
     <div class="quick-search-item-info">
       <div class="quick-search-item-type">
         <p>id:</p>
@@ -695,12 +674,6 @@
     </div>
   </div>
 </div>
-
-
-
-
-
-
 
 <div id="addLinkedAlbum" class="linkedAlbumPopIn">
   <div class="linkedAlbumPopInContainer">
@@ -796,7 +769,7 @@
     <legend><span class='icon-cog icon-red'></span>Action</legend>
       <div id="forbidAction">No photos selected, no actions possible.</div>
       <div id="permitAction" style="display:none">
-    
+
     <div class="permitActionListButton">
       <div>
         <select name="selectAction">
@@ -990,7 +963,7 @@
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
   color: black;
-  
+
   border-left: 1px solid transparent;
 
 }
@@ -1004,42 +977,46 @@
 </div>
 
 
+
 <div id="footer">
   <div>
     <a class="externalLink tiptip piwigo-logo" href="https://upstream.example.invalid" title="Visit Piwigo project website"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What's new in version 16?">
+    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="What&apos;s new in version 17?">
       <i class="icon-bell"></i>
     </span>
   </div>
   <div id="pageInfos">
+
     Contact
     <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site">Webmaster</a>
-  </div>
-</div></div>
+  </div></div>
+</div>
+
 <div id="whats_new">
     <div id="whats_new_popin">
       <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
-      <h3>What's new in version 16?</h3>
+      <h3>What's new in version 17?</h3>
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4>Brand new login & preferences with Standard pages!</h4>
-            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
+            <h4>Brand new login &amp; preferences with Standard pages !</h4>
+            <a href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
             <h4>Two factor authentication is here</h4>
-            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
+            <a href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
             <h4>UI redesigns that make a difference</h4>
-            <a href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
+            <a href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
           </div>
-                </div>
+        </div>
+      </div>
       <div class="whats_new_buttons">
         <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> Ok, got it!</button>
-        <a class="buttonLike" href="https://upstream.example.invalid/releases/16.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
+        <a class="buttonLike" href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><i class="icon-book"></i> Read the release note</a>
       </div>
     </div>
 </div>
@@ -1048,8 +1025,6 @@
 
 
 </style>
-
-
 
 
 <!-- BEGIN get_combined -->
@@ -1066,7 +1041,7 @@ var lang = {
 
 jQuery(document).ready(function() {
 
-    var tagsCache = new TagsCache({
+  var tagsCache = new TagsCache({
     serverKey: '1785553200_3',
     serverId: 'dda54766ec207d793317d8d6ae40a754',
     rootUrl: ''
@@ -1076,12 +1051,12 @@ jQuery(document).ready(function() {
     'Add': 'Create'
   }});
 
-    window.categoriesCache = new CategoriesCache({
+  window.categoriesCache = new CategoriesCache({
     serverKey: '1785639600_2',
     serverId: 'dda54766ec207d793317d8d6ae40a754',
     rootUrl: ''
   });
-  
+
   var associated_categories = [];
 
   categoriesCache.selectize(jQuery('[data-selectize=categories]'), {
@@ -1178,7 +1153,6 @@ $(document).ready(function() {
     $("[id^=action_]").hide();
 
     var action = $(this).prop("value");
-    
     $("#action_"+action).show();
 
     if ($(this).val() != -1) {
@@ -1190,7 +1164,7 @@ $(document).ready(function() {
     if ($(this).val() == "delete" || $(this).val() == "delete_derivatives") {
       $("#confirmDel").css("visibility", "visible");
     } else {
-      $("#confirmDel").css("visibility", "hidden");  
+      $("#confirmDel").css("visibility", "hidden");
     }
   });
 
@@ -1274,7 +1248,7 @@ $(document).ready(function() {
     $('input[name=whole_set]').val(this.checked ? all_elements.join(',') : '');
   });
 
-    if ($('input[name="setSelected"]').is(':checked')) {
+  if ($('input[name="setSelected"]').is(':checked')) {
     $("input[name=setSelected]").trigger('change');
   }
 
@@ -1384,34 +1358,34 @@ const str_select_tag = "Select at least one tag";
 let errorFilters = '';
 const str_plus_albums_found = "Only the first %d albums are displayed, out of %d."
   const str_album_selected = "Album already selected"
-  const str_already_in_related_cats = 'This albums is already in related albums list';
-  const str_no_search_in_progress = 'No search in progress';
-  const str_albums_found = '<b>%d<\/b> albums found';
-  const str_album_found = '<b>1<\/b> album found';
-  const str_result_limit = '<b>%d+<\/b> albums found, try to refine the search';
-  const str_add_subcat_of = 'Add a sub-album to “%s”';
-  const str_create_and_select = 'Create and select';
-  const str_root_album_select = 'Root';
-  const str_complete_name_field = 'Name field must not be empty';
-  const str_an_error_has_occured = 'An error has occured';
-  const str_album_modal_title = 'Select an album';
-  const str_album_modal_placeholder = 'Search';
-  const str_root = 'Root';
+  const str_already_in_related_cats = "This albums is already in related albums list";
+  const str_no_search_in_progress = "No search in progress";
+  const str_albums_found = "<b>%d<\/b> albums found";
+  const str_album_found = "<b>1<\/b> album found";
+  const str_result_limit = "<b>%d+<\/b> albums found, try to refine the search";
+  const str_add_subcat_of = "Add a sub-album to “%s”";
+  const str_create_and_select = "Create and select";
+  const str_root_album_select = "Root";
+  const str_complete_name_field = "Name field must not be empty";
+  const str_an_error_has_occured = "An error has occured";
+  const str_album_modal_title = "Select an album";
+  const str_album_modal_placeholder = "Search";
+  const str_root = "Root";
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',
     content: 'dd',
     active: 0
   }, options);
-  
+
   return this.each(function() {
     var self = jQuery(this);
-    
+
     var contents = self.find(settings.content),
         headers = self.find(settings.header);
-    
+
     contents.not(contents[settings.active]).hide();
-  
+
     self.on('click', settings.header, function() {
         var content = jQuery(this).next(settings.content);
         content.slideDown();
@@ -1458,7 +1432,7 @@ function hide_user_whats_new() {
     type: "POST",
     dataType: "JSON",
     data: {
-      param: 'show_whats_new_16',
+      param: 'show_whats_new_17',
       value: false,
     }
   })

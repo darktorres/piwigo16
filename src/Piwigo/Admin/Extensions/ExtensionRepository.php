@@ -94,26 +94,6 @@ final readonly class ExtensionRepository
         return $row === false ? null : $row;
     }
 
-    /**
-     * Plugins only: id/version/state. Themes/languages: id/version/name
-     * (no state column exists on those two tables).
-     */
-    public function insertPlugin(string $id, string $version, string $state = 'inactive'): void
-    {
-        $this->em->getConnection()
-            ->createQueryBuilder()
-            ->insert(ExtensionType::Plugin->table())
-            ->values([
-                'id' => ':id',
-                'version' => ':version',
-                'state' => ':state',
-            ])
-            ->setParameter('id', $id)
-            ->setParameter('version', $version)
-            ->setParameter('state', $state)
-            ->executeStatement();
-    }
-
     public function insertNamed(ExtensionType $type, string $id, string $version, string $name): void
     {
         $this->em->getConnection()

@@ -999,7 +999,14 @@ namespace Piwigo\Tests\Integration {
             $id = $this->rawPluginId();
             $this->writePluginManifest($id, '1.0', mainClass: 'PiwigoTestFixture\\ExtensionLifecycleTest\\DoesNotExist');
             $this->createdPluginIds[] = $id;
-            $this->repo->insertPlugin($id, '1.0');
+            // ExtensionRepository::insertPlugin() no longer exists (P27.8:
+            // zero real production callers) -- seed the row directly via
+            // DBAL instead.
+            $this->conn->insert('plugins', [
+                'id' => $id,
+                'version' => '1.0',
+                'state' => 'inactive',
+            ]);
 
             try {
                 $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [

@@ -97,22 +97,6 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repo->find(ExtensionType::Plugin, 'no-such-plugin'));
     }
 
-    public function testInsertPluginThenFindAndDeleteRoundTrips(): void
-    {
-        $this->repo->insertPlugin('test-plugin', '1.0.0');
-
-        try {
-            $row = $this->repo->find(ExtensionType::Plugin, 'test-plugin');
-            self::assertIsArray($row);
-            self::assertSame('1.0.0', $row['version']);
-            self::assertSame('inactive', $row['state']);
-        } finally {
-            $this->repo->delete(ExtensionType::Plugin, 'test-plugin');
-        }
-
-        self::assertNull($this->repo->find(ExtensionType::Plugin, 'test-plugin'));
-    }
-
     public function testInsertNamedCreatesAThemeRow(): void
     {
         $this->repo->insertNamed(ExtensionType::Theme, 'test-theme', '2.0.0', 'Test Theme');
@@ -129,7 +113,16 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
 
     public function testUpdatePluginStateChangesTheColumn(): void
     {
-        $this->repo->insertPlugin('test-plugin-state', '1.0.0');
+        // insertPlugin() no longer exists (P27.8: zero real production
+        // callers, confirmed dead once ExtensionLifecycle's own plugin
+        // 'install' case retargeted onto PluginConfig\PluginRegistry) --
+        // seeds the row directly via DBAL instead, matching this
+        // repository class's own raw-DBAL shape.
+        $this->conn->insert('plugins', [
+            'id' => 'test-plugin-state',
+            'version' => '1.0.0',
+            'state' => 'inactive',
+        ]);
 
         try {
             $this->repo->updatePluginState('test-plugin-state', 'active');

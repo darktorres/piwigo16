@@ -123,7 +123,7 @@ onto the original scope.
 | P30 | Asset-pipeline foundation (ScriptLoader/CssLoader/FileCombiner retirement + ViteManifest resolution) | Not started | 0 |
 | P31 | Smarty → Latte template migration | Done — all 139 real templates converted, Smarty engine fully removed (`smarty/smarty` dropped, `Template.php` Latte-only). Deferred asset-pipeline items (`ViteManifest`, `<picture>`, ThumbHash) out of scope, pick up under P29/P30/P43 | 80 |
 | P32 | Latte lint/format | DONE. Format-half: `tools/latte-prettier/` (real Prettier plugin, 135/135 real-tree coverage, all 126 reformatted templates manually reviewed line-by-line). Lint-half: `composer lint:latte` + `precompile:templates` + a Piwigo-native phpstan-latte pipeline (`tools/phpstan/Latte/`, replacing an initially-vendored efabrica/phpstan-latte fork after a deep upstream review) — `bin/piwigo phpstan-latte:compile` compiles all 135 templates with typed `@var` injection + shim-rewritten filter/function calls into `_analysis/phpstan-latte/`, analysed by plain `phpstan analyse` (parallel, result-cached) with errors mapped back to real `.latte` lines via an `errorFormatter.table!` override. Two follow-up campaigns shrink the remaining scoped ignores: context-docblock enrichment (~1,400 mixed-flow findings across 130 TemplatePageContext classes) and template-source modernization (~450 loose-`==`/`empty()` findings) | 11 |
-| P33 | Latte idiomatic modernization | In progress — P33A done (P32's reformat applied for real, `Feature::Dedent`/`Feature::ScopedLoopVariables` enabled). P33B done (`{varType}` blocks generated from the live `VariableMap` + a `composer lint:vartype`/`lint:vartype:fix` check/fix pair, not a one-time hand pass — see `tools/phpstan/Latte/VarTypeSyncer.php`). P33C done (n:if/n:foreach sweep, 451 conversions/91 templates, AST-based tool not a manual sweep — 4 templates skipped, real structural edge case). P33D done (verification-only — `{spaceless}`'s runtime whitespace-collapse confirmed unaffected by Dedent/n:attribute work, directly inspected against the current golden-html baselines). P33E-H researched, not yet implemented | 8 |
+| P33 | Latte idiomatic modernization | In progress — P33A done (P32's reformat applied for real, `Feature::Dedent`/`Feature::ScopedLoopVariables` enabled). P33B done (`{varType}` blocks generated from the live `VariableMap` + a `composer lint:vartype`/`lint:vartype:fix` check/fix pair, not a one-time hand pass — see `tools/phpstan/Latte/VarTypeSyncer.php`). P33C done (n:if/n:foreach sweep, 451 conversions/91 templates, AST-based tool not a manual sweep — 4 templates skipped, real structural edge case). P33D done (verification-only — `{spaceless}`'s runtime whitespace-collapse confirmed unaffected by Dedent/n:attribute work, directly inspected against the current golden-html baselines). P33F done (native `{_ ...}`/`{translate ...}` tags added to `PiwigoExtension::getTags()`, wired directly to the existing `translate()`/filter mechanism — additive, no existing `|translate`/`|l10n` call site converted yet). P33E/G/H researched, not yet implemented | 8 |
 | P34 | Inline JS extraction | Not started | 0 |
 | P35 | Inline CSS extraction | Not started | 0 |
 | P36 | JS → TS mechanical conversion | Not started (mixed-elimination work landed under P24 instead, see above) | 0 |
@@ -1695,12 +1695,14 @@ committed, one per bug found.
 templates once formatting is enforced — idiomatic Latte constructs,
 cleaning up any Smarty-era patterns that survived P31's mechanical
 conversion. Same rendered output. Depends on P32. Broken into P33A-H;
-A and B are done (`Feature::Dedent`/`Feature::ScopedLoopVariables`
+A, B, C, D, and F are done (`Feature::Dedent`/`Feature::ScopedLoopVariables`
 enabled on a P32-reformatted tree; `{varType}` type hints generated from
 the same `VariableMap` the compiled-analysis `@var` docblocks already
-use, via `composer lint:vartype:fix`, not hand-authored). C-H (n:attribute
-sweep, {spaceless} sanity check, |noescape cleanup, native {translate}
-tags, locale-aware |number, Tracy integration) remain.
+use, via `composer lint:vartype:fix`, not hand-authored; n:if/n:foreach
+sweep, 451 conversions/91 templates; {spaceless} sanity check verified
+unaffected; native `{_ ...}`/`{translate ...}` tags added, wired to the
+existing translate() mechanism). E, G, H (|noescape cleanup, locale-aware
+|number, Tracy integration) remain.
 
 **P34 — Inline JS extraction.** Not started. Every `<script>` block
 embedded in a template moves to a plain `.js` file loaded through P30's

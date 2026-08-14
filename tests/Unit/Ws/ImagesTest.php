@@ -24,19 +24,17 @@ use Piwigo\Ws\WsErrorResponse;
  * constructor deps touched by the guard branches under test. No
  * dedicated Integration/Browser spec of its own.
  *
- * `delete()`/`setInfo()`/`formatsDelete()`/`deleteOrphans()`/
- * `setCategory()` each cover their CSRF-token-mismatch 403 guard,
- * which fires before touching any real service. This is a
- * representative sample, not every one of the remaining CSRF-gated
- * methods in this file (also gated: `upload()`, `uploadCompleted()`,
- * `setMd5sum()`, `syncMetadata()`) -- the pattern is identical and
- * already well-established across this campaign's other Pwg* classes.
+ * `delete()`/`setInfo()`/`setCategory()` each cover their
+ * CSRF-token-mismatch 403 guard, which fires before touching any real
+ * service. This is a representative sample, not every one of the
+ * remaining CSRF-gated methods in this file (also gated: `upload()`,
+ * `uploadCompleted()`) -- the pattern is identical and already
+ * well-established across this campaign's other Pwg* classes.
  *
- * Every other remaining method (`filteredSearchCreate`/`setPrivacyLevel`/
- * `setRank`/`addChunk`/`addFile`/`add`/`addSimple`/`upload`/
- * `uploadAsync`/`formatsSearchImage`/`uploadCompleted`/`setMd5sum`/
- * `syncMetadata`) needs real upload/file/DB state disproportionate for
- * a guard-branch test and is not attempted here.
+ * Every other remaining method (`addChunk`/`addFile`/`add`/`addSimple`/
+ * `upload`/`uploadAsync`/`uploadCompleted`) needs real upload/file/DB
+ * state disproportionate for a guard-branch test and is not attempted
+ * here.
  */
 function pwgImagesTestSubject(): Images
 {
@@ -115,38 +113,6 @@ test('setInfo returns a 403 WsErrorResponse when a submitted pwg_token does not 
         'level' => null,
         'single_value_mode' => 'fill_if_empty',
         'multiple_value_mode' => 'append',
-        'pwg_token' => 'wrong-token',
-    ], pwgImagesTestServer());
-
-    expect($result)
-        ->toBeInstanceOf(WsErrorResponse::class);
-    if ($result instanceof WsErrorResponse) {
-        expect($result->code())
-            ->toBe(403);
-    }
-});
-
-test('formatsDelete returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
-    $ws = pwgImagesTestSubject();
-
-    $result = $ws->formatsDelete([
-        'format_id' => 1,
-        'pwg_token' => 'wrong-token',
-    ], pwgImagesTestServer());
-
-    expect($result)
-        ->toBeInstanceOf(WsErrorResponse::class);
-    if ($result instanceof WsErrorResponse) {
-        expect($result->code())
-            ->toBe(403);
-    }
-});
-
-test('deleteOrphans returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
-    $ws = pwgImagesTestSubject();
-
-    $result = $ws->deleteOrphans([
-        'block_size' => 1000,
         'pwg_token' => 'wrong-token',
     ], pwgImagesTestServer());
 

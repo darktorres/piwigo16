@@ -58,11 +58,19 @@ use Piwigo\Ws\History\SearchHandler as HistorySearchHandler;
 use Piwigo\Ws\Images\AddCommentHandler;
 use Piwigo\Ws\Images\CheckFilesHandler;
 use Piwigo\Ws\Images\CheckUploadHandler;
+use Piwigo\Ws\Images\DeleteOrphansHandler;
 use Piwigo\Ws\Images\EmptyLoungeHandler;
 use Piwigo\Ws\Images\ExistHandler;
+use Piwigo\Ws\Images\FilteredSearchCreateHandler;
+use Piwigo\Ws\Images\FormatsDeleteHandler;
+use Piwigo\Ws\Images\FormatsSearchImageHandler;
 use Piwigo\Ws\Images\GetInfoHandler;
 use Piwigo\Ws\Images\RateHandler;
 use Piwigo\Ws\Images\SearchHandler as ImagesSearchHandler;
+use Piwigo\Ws\Images\SetMd5sumHandler;
+use Piwigo\Ws\Images\SetPrivacyLevelHandler;
+use Piwigo\Ws\Images\SetRankHandler as ImagesSetRankHandler;
+use Piwigo\Ws\Images\SyncMetadataHandler;
 use Piwigo\Ws\Permissions\AddHandler as PermissionsAddHandler;
 use Piwigo\Ws\Permissions\GetListHandler as PermissionsGetListHandler;
 use Piwigo\Ws\Permissions\RemoveHandler as PermissionsRemoveHandler;
@@ -322,84 +330,58 @@ final readonly class WsDefaultMethods
             ],
         ));
 
-        $service->addMethod(
-            'pwg.images.setPrivacyLevel',
-            $this->pwgImages->setPrivacyLevel(...),
-            [
-                'image_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'level' => [
-                    'maxValue' => max($available_permission_levels),
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.setPrivacyLevel',
+            handlerClass: SetPrivacyLevelHandler::class,
+            description: 'Sets the privacy levels for the images.',
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('level', WsParamType::INT | WsParamType::POSITIVE, maxValue: max($available_permission_levels)),
             ],
-            'Sets the privacy levels for the images.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.images.formats.searchImage',
-            $this->pwgImages->formatsSearchImage(...),
-            [
-                'filename_list' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.formats.searchImage',
+            handlerClass: FormatsSearchImageHandler::class,
+            description: 'Search for image ids matching the provided filenames. <b>filename_list</b> must be a JSON encoded associative array of unique_id:filename.<br><br>The method returns a list of unique_id:image_id.',
+            params: [
+                ParamDefinition::required('filename_list'),
             ],
-            'Search for image ids matching the provided filenames. <b>filename_list</b> must be a JSON encoded associative array of unique_id:filename.<br><br>The method returns a list of unique_id:image_id.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.images.formats.delete',
-            $this->pwgImages->formatsDelete(...),
-            [
-                'format_id' => [
-                    'type' => WsParamType::ID,
-                    'default' => null,
-                    'flags' => WsParamFlag::ACCEPT_ARRAY,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.formats.delete',
+            handlerClass: FormatsDeleteHandler::class,
+            description: 'Remove a format',
+            params: [
+                ParamDefinition::optional('format_id', null, WsParamType::ID, WsParamFlag::ACCEPT_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Remove a format',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.images.setRank',
-            $this->pwgImages->setRank(...),
-            [
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                ],
-                'category_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'rank' => [
-                    'type' => WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL,
-                    'default' => null,
-                ],
-            ],
-            'Sets the rank of a photo for a given album.
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.setRank',
+            handlerClass: ImagesSetRankHandler::class,
+            description: 'Sets the rank of a photo for a given album.
     <br><br>If you provide a list for image_id:
     <ul>
     <li>rank becomes useless, only the order of the image_id list matters</li>
     <li>you are supposed to provide the list of all image_ids belonging to the album.
     </ul>',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('category_id', WsParamType::ID),
+                ParamDefinition::optional('rank', null, WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL),
+            ],
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         $service->addMethod(
             'pwg.images.setCategory',
@@ -744,56 +726,41 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.images.setMd5sum',
-            $this->pwgImages->setMd5sum(...),
-            [
-                'block_size' => [
-                    'default' => $this->currentConfig->checksumComputeBlocksize,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.setMd5sum',
+            handlerClass: SetMd5sumHandler::class,
+            description: 'Set md5sum column, by blocks. Returns how many md5sums were added and how many are remaining.',
+            params: [
+                ParamDefinition::optional('block_size', $this->currentConfig->checksumComputeBlocksize, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Set md5sum column, by blocks. Returns how many md5sums were added and how many are remaining.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.images.syncMetadata',
-            $this->pwgImages->syncMetadata(...),
-            [
-                'image_id' => [
-                    'flags' => WsParamFlag::ACCEPT_ARRAY,
-                    'info' => 'Comma separated ids or array of id',
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.syncMetadata',
+            handlerClass: SyncMetadataHandler::class,
+            description: 'Sync metadatas, by blocks. Returns how many images were synchronized',
+            params: [
+                ParamDefinition::required('image_id', flags: WsParamFlag::ACCEPT_ARRAY, info: 'Comma separated ids or array of id'),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Sync metadatas, by blocks. Returns how many images were synchronized',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.images.deleteOrphans',
-            $this->pwgImages->deleteOrphans(...),
-            [
-                'block_size' => [
-                    'default' => 1000,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.deleteOrphans',
+            handlerClass: DeleteOrphansHandler::class,
+            description: 'Deletes orphans, by blocks. Returns how many orphans were deleted and how many are remaining.',
+            params: [
+                ParamDefinition::optional('block_size', 1000, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Deletes orphans, by blocks. Returns how many orphans were deleted and how many are remaining.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         $service->register(new MethodDefinition(
             name: 'pwg.categories.calculateOrphans',
@@ -1531,102 +1498,35 @@ final readonly class WsDefaultMethods
             requiresAuth: true,
         ));
 
-        $service->addMethod(
-            'pwg.images.filteredSearch.create',
-            $this->pwgImages->filteredSearchCreate(...),
-            [
-                'search_id' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'prior search_id (or search_key), if any',
-                ],
-                'allwords' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'query to search by words',
-                ],
-                'allwords_mode' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'AND (by default) | OR',
-                ],
-                'allwords_fields' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'info' => 'values among [name, comment, tags, file, author, cat-title, cat-desc]',
-                ],
-                'tags' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'tags_mode' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'AND (by default) | OR',
-                ],
-                'categories' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'categories_withsubs' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::BOOL,
-                    'info' => 'false, by default',
-                ],
-                'authors' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                ],
-                'added_by' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'filetypes' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                ],
-                'date_posted_preset' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'files posted within 24 hours, 7 days, 30 days, 3 months, 6 months or custom. Value among 24h|7d|30d|3m|6m|custom.',
-                ],
-                'date_posted_custom' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'info' => 'Must be provided if date_posted_preset is custom. List of yYYYY or mYYYY-MM or dYYYY-MM-DD.',
-                ],
-                'date_created_preset' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'files created within 7 days, 30 days, 3 months, 6 months, 12 months or custom. Value among 7d|30d|3m|6m|12m|custom.',
-                ],
-                'date_created_custom' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'info' => 'Must be provided if date_created_preset is custom. List of yYYYY or mYYYY-MM or dYYYY-MM-DD.',
-                ],
-                'ratios' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                ],
-                'ratings' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                ],
-                'filesize_min' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'filesize_max' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'height_min' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'height_max' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'width_min' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'width_max' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.filteredSearch.create',
+            handlerClass: FilteredSearchCreateHandler::class,
+            params: [
+                ParamDefinition::optionalFlag('search_id', info: 'prior search_id (or search_key), if any'),
+                ParamDefinition::optionalFlag('allwords', info: 'query to search by words'),
+                ParamDefinition::optionalFlag('allwords_mode', info: 'AND (by default) | OR'),
+                ParamDefinition::optionalFlag('allwords_fields', flags: WsParamFlag::FORCE_ARRAY, info: 'values among [name, comment, tags, file, author, cat-title, cat-desc]'),
+                ParamDefinition::optionalFlag('tags', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('tags_mode', info: 'AND (by default) | OR'),
+                ParamDefinition::optionalFlag('categories', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('categories_withsubs', WsParamType::BOOL, info: 'false, by default'),
+                ParamDefinition::optionalFlag('authors', flags: WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('added_by', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('filetypes', flags: WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('date_posted_preset', info: 'files posted within 24 hours, 7 days, 30 days, 3 months, 6 months or custom. Value among 24h|7d|30d|3m|6m|custom.'),
+                ParamDefinition::optionalFlag('date_posted_custom', flags: WsParamFlag::FORCE_ARRAY, info: 'Must be provided if date_posted_preset is custom. List of yYYYY or mYYYY-MM or dYYYY-MM-DD.'),
+                ParamDefinition::optionalFlag('date_created_preset', info: 'files created within 7 days, 30 days, 3 months, 6 months, 12 months or custom. Value among 7d|30d|3m|6m|12m|custom.'),
+                ParamDefinition::optionalFlag('date_created_custom', flags: WsParamFlag::FORCE_ARRAY, info: 'Must be provided if date_created_preset is custom. List of yYYYY or mYYYY-MM or dYYYY-MM-DD.'),
+                ParamDefinition::optionalFlag('ratios', flags: WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('ratings', flags: WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('filesize_min', WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optionalFlag('filesize_max', WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optionalFlag('height_min', WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optionalFlag('height_max', WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optionalFlag('width_min', WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optionalFlag('width_max', WsParamType::INT | WsParamType::POSITIVE),
             ],
-            ''
-        );
+        ));
 
         $service->register(new MethodDefinition(
             name: 'pwg.users.generatePasswordLink',

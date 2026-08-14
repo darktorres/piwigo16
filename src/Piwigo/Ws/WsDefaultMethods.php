@@ -21,6 +21,12 @@ use Piwigo\Ws\Comments\DeleteHandler as CommentsDeleteHandler;
 use Piwigo\Ws\Comments\GetListHandler as CommentsGetListHandler;
 use Piwigo\Ws\Comments\ValidateHandler as CommentsValidateHandler;
 use Piwigo\Ws\Event\WsAddMethods;
+use Piwigo\Ws\Extensions\CheckUpdatesHandler;
+use Piwigo\Ws\Extensions\IgnoreUpdateHandler;
+use Piwigo\Ws\Extensions\PluginsGetListHandler;
+use Piwigo\Ws\Extensions\PluginsPerformActionHandler;
+use Piwigo\Ws\Extensions\ThemesPerformActionHandler;
+use Piwigo\Ws\Extensions\UpdateHandler;
 use Piwigo\Ws\Permissions\AddHandler as PermissionsAddHandler;
 use Piwigo\Ws\Permissions\GetListHandler as PermissionsGetListHandler;
 use Piwigo\Ws\Permissions\RemoveHandler as PermissionsRemoveHandler;
@@ -31,16 +37,16 @@ final readonly class WsDefaultMethods
     // property; the property list here and the instance-method callbacks
     // registered below must stay in sync -- register() calls these as real
     // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
-    // ClassName::method() calls. `pwg.userComments.*`/`pwg.permissions.*`
-    // (Comments.php/Permissions.php, Group 19's first 2 migrated domains)
-    // no longer have a callback-based registration or a constructor
-    // property here -- their methods register via
+    // ClassName::method() calls. `pwg.userComments.*`/`pwg.permissions.*`/
+    // `pwg.plugins.*`/`pwg.themes.performAction`/`pwg.extensions.*`
+    // (Comments.php/Permissions.php/Extensions.php, Group 19's first 3
+    // migrated domains) no longer have a callback-based registration or a
+    // constructor property here -- their methods register via
     // MethodDefinition/handlerClass instead, resolved from the container
     // at invocation time.
     public function __construct(
         private Categories $pwgCategories,
         private Core $pwgCore,
-        private Extensions $pwgExtensions,
         private Groups $pwgGroups,
         private Tags $pwgTags,
         private Users $pwgUsers,
@@ -1366,98 +1372,71 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.plugins.getList',
-            $this->pwgExtensions->pluginsGetList(...),
-            null,
-            'Gets the list of plugins with id, name, version, state and description.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+        // pwg.plugins.*/pwg.themes.performAction/pwg.extensions.* (Group 19's
+        // third migrated domain) register via MethodDefinition/handlerClass
+        // -- Extensions.php is gone, each method is its own
+        // container-resolved WsAction.
+        $service->register(new MethodDefinition(
+            name: 'pwg.plugins.getList',
+            handlerClass: PluginsGetListHandler::class,
+            description: 'Gets the list of plugins with id, name, version, state and description.',
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.plugins.performAction',
-            $this->pwgExtensions->pluginsPerformAction(...),
-            [
-                'action' => [
-                    'info' => 'install, activate, deactivate, uninstall, delete',
-                ],
-                'plugin' => [],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.plugins.performAction',
+            handlerClass: PluginsPerformActionHandler::class,
+            params: [
+                ParamDefinition::required('action', info: 'install, activate, deactivate, uninstall, delete'),
+                ParamDefinition::required('plugin'),
+                ParamDefinition::required('pwg_token'),
             ],
-            null,
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.themes.performAction',
-            $this->pwgExtensions->themesPerformAction(...),
-            [
-                'action' => [
-                    'info' => 'activate, deactivate, delete, set_default',
-                ],
-                'theme' => [],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.themes.performAction',
+            handlerClass: ThemesPerformActionHandler::class,
+            params: [
+                ParamDefinition::required('action', info: 'activate, deactivate, delete, set_default'),
+                ParamDefinition::required('theme'),
+                ParamDefinition::required('pwg_token'),
             ],
-            null,
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.extensions.update',
-            $this->pwgExtensions->update(...),
-            [
-                'type' => [
-                    'info' => 'plugins, languages, themes',
-                ],
-                'id' => [],
-                'revision' => [],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.extensions.update',
+            handlerClass: UpdateHandler::class,
+            description: '<b>Webmaster only.</b>',
+            params: [
+                ParamDefinition::required('type', info: 'plugins, languages, themes'),
+                ParamDefinition::required('id'),
+                ParamDefinition::required('revision'),
+                ParamDefinition::required('pwg_token'),
             ],
-            '<b>Webmaster only.</b>',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.extensions.ignoreUpdate',
-            $this->pwgExtensions->ignoreUpdate(...),
-            [
-                'type' => [
-                    'default' => null,
-                    'info' => 'plugins, languages, themes',
-                ],
-                'id' => [
-                    'default' => null,
-                ],
-                'reset' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                    'info' => 'If true, all ignored extensions will be reinitilized.',
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.extensions.ignoreUpdate',
+            handlerClass: IgnoreUpdateHandler::class,
+            description: '<b>Webmaster only.</b> Ignores an extension if it needs update.',
+            params: [
+                ParamDefinition::optional('type', info: 'plugins, languages, themes'),
+                ParamDefinition::optional('id'),
+                ParamDefinition::optional('reset', false, WsParamType::BOOL, info: 'If true, all ignored extensions will be reinitilized.'),
+                ParamDefinition::required('pwg_token'),
             ],
-            '<b>Webmaster only.</b> Ignores an extension if it needs update.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.extensions.checkUpdates',
-            $this->pwgExtensions->checkUpdates(...),
-            null,
-            'Checks if piwigo or extensions are up to date.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.extensions.checkUpdates',
+            handlerClass: CheckUpdatesHandler::class,
+            description: 'Checks if piwigo or extensions are up to date.',
+            requiresAuth: true,
+        ));
 
         $service->addMethod(
             'pwg.groups.getList',

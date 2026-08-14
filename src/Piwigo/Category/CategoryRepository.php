@@ -2285,7 +2285,10 @@ final readonly class CategoryRepository
                     'primary' => ['id'],
                     'update' => ['rank', 'lastmodified'],
                 ],
-                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas)
+                array_map(static fn (array $data): array => [
+                    ...$data,
+                    'lastmodified' => $now,
+                ], $datas)
             );
         $em->clear();
     }
@@ -2306,7 +2309,10 @@ final readonly class CategoryRepository
                     'primary' => ['id'],
                     'update' => ['rank', 'global_rank', 'lastmodified'],
                 ],
-                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas)
+                array_map(static fn (array $data): array => [
+                    ...$data,
+                    'lastmodified' => $now,
+                ], $datas)
             );
         $em->clear();
     }
@@ -2327,7 +2333,10 @@ final readonly class CategoryRepository
                     'primary' => ['id'],
                     'update' => ['representative_picture_id', 'lastmodified'],
                 ],
-                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas)
+                array_map(static fn (array $data): array => [
+                    ...$data,
+                    'lastmodified' => $now,
+                ], $datas)
             );
         $em->clear();
     }
@@ -2348,7 +2357,10 @@ final readonly class CategoryRepository
                     'primary' => ['id'],
                     'update' => ['uppercats', 'lastmodified'],
                 ],
-                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas)
+                array_map(static fn (array $data): array => [
+                    ...$data,
+                    'lastmodified' => $now,
+                ], $datas)
             );
         $em->clear();
     }

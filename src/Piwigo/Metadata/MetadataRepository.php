@@ -137,7 +137,10 @@ final readonly class MetadataRepository
                     'primary' => ['id'],
                     'update' => [...$updateFields, 'lastmodified'],
                 ],
-                array_map(static fn (array $data): array => [...$data, 'lastmodified' => $now], $datas),
+                array_map(static fn (array $data): array => [
+                    ...$data,
+                    'lastmodified' => $now,
+                ], $datas),
                 BatchWriter::SKIP_EMPTY
             );
 

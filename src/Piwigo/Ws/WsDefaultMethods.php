@@ -58,6 +58,7 @@ use Piwigo\Ws\History\SearchHandler as HistorySearchHandler;
 use Piwigo\Ws\Images\AddCommentHandler;
 use Piwigo\Ws\Images\CheckFilesHandler;
 use Piwigo\Ws\Images\CheckUploadHandler;
+use Piwigo\Ws\Images\DeleteHandler as ImagesDeleteHandler;
 use Piwigo\Ws\Images\DeleteOrphansHandler;
 use Piwigo\Ws\Images\EmptyLoungeHandler;
 use Piwigo\Ws\Images\ExistHandler;
@@ -67,6 +68,8 @@ use Piwigo\Ws\Images\FormatsSearchImageHandler;
 use Piwigo\Ws\Images\GetInfoHandler;
 use Piwigo\Ws\Images\RateHandler;
 use Piwigo\Ws\Images\SearchHandler as ImagesSearchHandler;
+use Piwigo\Ws\Images\SetCategoryHandler;
+use Piwigo\Ws\Images\SetInfoHandler as ImagesSetInfoHandler;
 use Piwigo\Ws\Images\SetMd5sumHandler;
 use Piwigo\Ws\Images\SetPrivacyLevelHandler;
 use Piwigo\Ws\Images\SetRankHandler as ImagesSetRankHandler;
@@ -383,29 +386,19 @@ final readonly class WsDefaultMethods
             postOnly: true,
         ));
 
-        $service->addMethod(
-            'pwg.images.setCategory',
-            $this->pwgImages->setCategory(...),
-            [
-                'image_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'category_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'action' => [
-                    'default' => 'associate',
-                    'info' => 'associate/dissociate/move',
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.setCategory',
+            handlerClass: SetCategoryHandler::class,
+            description: 'Manage associations of images with an album. <b>action</b> can be:<ul><li><i>associate</i> : add photos to this album</li><li><i>dissociate</i> : remove photos from this album</li><li><i>move</i> : dissociate photos from any other album and adds photos to this album</li></ul>',
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('category_id', WsParamType::ID),
+                ParamDefinition::optional('action', 'associate', info: 'associate/dissociate/move'),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Manage associations of images with an album. <b>action</b> can be:<ul><li><i>associate</i> : add photos to this album</li><li><i>dissociate</i> : remove photos from this album</li><li><i>move</i> : dissociate photos from any other album and adds photos to this album</li></ul>',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         $service->register(new MethodDefinition(
             name: 'pwg.rates.delete',
@@ -710,21 +703,17 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.images.delete',
-            $this->pwgImages->delete(...),
-            [
-                'image_id' => [
-                    'flags' => WsParamFlag::ACCEPT_ARRAY,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.delete',
+            handlerClass: ImagesDeleteHandler::class,
+            description: 'Deletes image(s).',
+            params: [
+                ParamDefinition::required('image_id', flags: WsParamFlag::ACCEPT_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Deletes image(s).',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         $service->register(new MethodDefinition(
             name: 'pwg.images.setMd5sum',
@@ -995,61 +984,31 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.images.setInfo',
-            $this->pwgImages->setInfo(...),
-            [
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'file' => [
-                    'default' => null,
-                ],
-                'name' => [
-                    'default' => null,
-                ],
-                'author' => [
-                    'default' => null,
-                ],
-                'date_creation' => [
-                    'default' => null,
-                ],
-                'comment' => [
-                    'default' => null,
-                ],
-                'categories' => [
-                    'default' => null,
-                    'info' => 'String list "category_id[,rank];category_id[,rank]".<br>The rank is optional and is equivalent to "auto" if not given.',
-                ],
-                'tag_ids' => [
-                    'default' => null,
-                    'info' => 'Comma separated ids',
-                ],
-                'level' => [
-                    'default' => null,
-                    'maxValue' => max($available_permission_levels),
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'single_value_mode' => [
-                    'default' => 'fill_if_empty',
-                ],
-                'multiple_value_mode' => [
-                    'default' => 'append',
-                ],
-                'pwg_token' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-            ],
-            'Changes properties of an image.
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.setInfo',
+            handlerClass: ImagesSetInfoHandler::class,
+            description: 'Changes properties of an image.
     <br><b>single_value_mode</b> can be "fill_if_empty" (only use the input value if the corresponding values is currently empty) or "replace"
     (overwrite any existing value) and applies to single values properties like name/author/date_creation/comment.
     <br><b>multiple_value_mode</b> can be "append" (no change on existing values, add the new values) or "replace" and applies to multiple values properties like tag_ids/categories.
     <br><b>pwg_token</b> required if you want to use HTML in name/comment/author.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID),
+                ParamDefinition::optional('file'),
+                ParamDefinition::optional('name'),
+                ParamDefinition::optional('author'),
+                ParamDefinition::optional('date_creation'),
+                ParamDefinition::optional('comment'),
+                ParamDefinition::optional('categories', info: 'String list "category_id[,rank];category_id[,rank]".<br>The rank is optional and is equivalent to "auto" if not given.'),
+                ParamDefinition::optional('tag_ids', info: 'Comma separated ids'),
+                ParamDefinition::optional('level', null, WsParamType::INT | WsParamType::POSITIVE, maxValue: max($available_permission_levels)),
+                ParamDefinition::optional('single_value_mode', 'fill_if_empty'),
+                ParamDefinition::optional('multiple_value_mode', 'append'),
+                ParamDefinition::optionalFlag('pwg_token'),
+            ],
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         $service->register(new MethodDefinition(
             name: 'pwg.categories.setInfo',

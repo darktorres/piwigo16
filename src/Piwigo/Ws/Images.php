@@ -15,7 +15,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use LogicException;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -27,7 +26,6 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\AdvisorySessionLock;
@@ -50,7 +48,6 @@ use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Request\ChunkedUploadRequest;
-use Piwigo\Ws\Request\TagListRequest;
 use Piwigo\Ws\Request\UploadedFileRequest;
 
 /**
@@ -80,7 +77,6 @@ final readonly class Images
         private CategoryService $categoryService,
         private TagService $tagService,
         private ImageService $imageService,
-        private ActivityService $activityService,
         private MetadataService $metadataService,
         private UploadService $uploadService,
         private CurrentConfig $currentConfig,
@@ -1214,205 +1210,6 @@ final readonly class Images
 
     /**
      * API method
-     * Sets details of an image
-     * @param array{image_id: int, file: string|null, name: string|null, author: string|null, date_creation: string|null, comment: string|null, categories: string|null, tag_ids: string|null, level: int|null, single_value_mode: string, multiple_value_mode: string, pwg_token?: string, ...} $params
-     *    image_id: WsParamType::ID, mandatory -- always int. file/name/author/
-     *    date_creation/comment/categories/tag_ids: no WS_TYPE flag, null
-     *    default -- string|null. level: WsParamType::INT|POSITIVE, null default --
-     *    int|null. single_value_mode/multiple_value_mode: no WS_TYPE flag,
-     *    non-null string defaults -- always string. pwg_token:
-     *    WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
-     */
-    public function setInfo(array $params, Server $service): ?WsErrorResponse
-    {
-
-        if (isset($params['pwg_token']) and new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new WsErrorResponse(403, 'Invalid security token');
-        }
-
-        $imageId = ImageId::tryFrom($params['image_id']);
-        $imageRow = $imageId instanceof ImageId ? $this->imageRepository->findById($imageId) : null;
-
-        if (! $imageRow instanceof Image) {
-            return new WsErrorResponse(404, 'image_id not found');
-        }
-        // Unboxed here rather than kept as the typed object -- this method
-        // reads $image_row[$key] for a dynamically-iterated column name
-        // list below, not a fixed set of named properties.
-        $image_row = $imageRow->toArray();
-
-        // database registration
-        $update = [];
-
-        $info_columns = [
-            'name',
-            'author',
-            'comment',
-            'level',
-            'date_creation',
-        ];
-
-        foreach ($info_columns as $key) {
-            if (isset($params[$key])) {
-                if (! $this->currentConfig->allowHtmlDescriptions or ! isset($params['pwg_token'])) {
-                    $params[$key] = strip_tags((string) $params[$key], '<b><strong><em><i>');
-                }
-
-                if ($params['single_value_mode'] === 'fill_if_empty') {
-                    // $image_row[$key] is int|null|string for every key in
-                    // $info_columns (Image::toArray()) -- false/0.0/[] can
-                    // never actually occur, so they're dropped from the
-                    // haystack rather than kept as unreachable dead entries.
-                    if (in_array($image_row[$key], [null, 0, '0', ''], true)) {
-                        $update[$key] = $params[$key];
-                    }
-                } elseif ($params['single_value_mode'] === 'replace') {
-                    $update[$key] = $params[$key];
-                } else {
-                    return new WsErrorResponse(
-                        500,
-                        '[ws_images_setInfo]'
-          . ' invalid parameter single_value_mode "' . $params['single_value_mode'] . '"'
-          . ', possible values are {fill_if_empty, replace}.'
-                    );
-                }
-            }
-        }
-
-        if (isset($params['file'])) {
-            if (($image_row['storage_category_id'] ?? 0) !== 0) {
-                return new WsErrorResponse(
-                    500,
-                    '[ws_images_setInfo] updating "file" is forbidden on photos added by synchronization'
-                );
-            }
-
-            // prevent XSS, remove HTML tags
-            $update['file'] = strip_tags($params['file']);
-            if ($update['file'] === '' || $update['file'] === '0') {
-                unset($update['file']);
-            }
-        }
-
-        if (count(array_keys($update)) > 0) {
-            $this->imageService->updateFields($imageId, $update);
-            $this->entityManager->clear();
-
-            $this->activityService->record('photo', $params['image_id'], 'edit');
-        }
-
-        if (isset($params['categories'])) {
-            $this->addImageCategoryRelations(
-                $imageId,
-                $params['categories'],
-                ($params['multiple_value_mode'] === 'replace' ? true : false)
-            );
-        }
-
-        // and now, let's create tag associations
-        $tagService = $this->tagService;
-
-        if (isset($params['tag_ids'])) {
-            $tag_ids = [];
-
-            foreach (explode(',', $params['tag_ids']) as $candidate) {
-                $candidate = trim($candidate);
-
-                if ((bool) preg_match(ValidationPattern::ID, $candidate)) {
-                    $tag_ids[] = TagId::from((int) $candidate);
-                }
-            }
-
-            if ($params['multiple_value_mode'] === 'replace') {
-                $tagService->setTags(
-                    $tag_ids,
-                    $params['image_id']
-                );
-            } elseif ($params['multiple_value_mode'] === 'append') {
-                $tagService->addTags(
-                    $tag_ids,
-                    [$params['image_id']]
-                );
-            } else {
-                return new WsErrorResponse(
-                    500,
-                    '[ws_images_setInfo]'
-        . ' invalid parameter multiple_value_mode "' . $params['multiple_value_mode'] . '"'
-        . ', possible values are {replace, append}.'
-                );
-            }
-        }
-
-        // Temporary use of the batch manager's unit mode,
-        // not to be used by an external application,
-        // as this code bellow will be deleted when a tag selector is added.
-        $tagListRequest = TagListRequest::fromGlobals();
-        if ($tagListRequest->present) {
-            if (isset($params['tag_ids'])) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
-            }
-
-            // TagService::getTagIds()/tagIdFromTagName() go through
-            // TagRepository's parameterized DBAL queries, so no manual
-            // escaping is needed here.
-            $cleaned_tag_list = [];
-            foreach ($tagListRequest->items as $tag_candidate) {
-                $cleaned_tag_list[] = strip_tags(stripslashes(is_string($tag_candidate) ? $tag_candidate : ''));
-            }
-
-            $tag_list = $tagService->getTagIds($cleaned_tag_list);
-            $tagService->setTags($tag_list, $params['image_id']);
-        }
-
-        PermissionCacheInvalidator::invalidate();
-
-        return null;
-    }
-
-    /**
-     * API method
-     * Deletes an image
-     * @param array{image_id: string|array<array-key, string>, pwg_token: string, ...} $params
-     *    image_id: WsParamFlag::ACCEPT_ARRAY (not FORCE), no WS_TYPE flag,
-     *    mandatory -- a plain string or an array, never null. pwg_token: no
-     *    WS_TYPE flag, mandatory -- always a plain string.
-     */
-    public function delete(array $params, Server $service): WsErrorResponse|int
-    {
-        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new WsErrorResponse(403, 'Invalid security token');
-        }
-
-        if (! is_array($params['image_id'])) {
-            $image_id_list = preg_split(
-                '/[\s,;\|]/',
-                $params['image_id'],
-                -1,
-                PREG_SPLIT_NO_EMPTY
-            );
-            if ($image_id_list === false) {
-                throw new Exception(__FUNCTION__ . '(): preg_split() failed');
-            }
-            $params['image_id'] = $image_id_list;
-        }
-        $params['image_id'] = array_map(intval(...), $params['image_id']);
-
-        $image_ids = [];
-        foreach ($params['image_id'] as $image_id) {
-            if ($image_id > 0) {
-                $image_ids[] = $image_id;
-            }
-        }
-
-        $ret = $this->imageService
-            ->deleteElements($image_ids, $this->urlService, true);
-        PermissionCacheInvalidator::invalidate();
-
-        return $ret;
-    }
-
-    /**
-     * API method
      * Notify Piwigo you have finished uploading a set of photos.
      * @since 12
      * @param array{image_id: string|array<array-key, string>|null, pwg_token: string, category_id: int, ...} $params
@@ -1477,42 +1274,5 @@ final readonly class Images
                 'label' => $category_name,
             ],
         ];
-    }
-
-    /**
-     * API method
-     * Associate/Dissociate/Move photos with an album.
-     *
-     * @since 14
-     * @param array{image_id: array<int, int>, category_id: int, action: string, pwg_token: string, ...} $params
-     *    image_id: WsParamFlag::FORCE_ARRAY|WsParamType::ID -- always a list of positive
-     *    ints. category_id: WsParamType::ID, mandatory. action/pwg_token: no
-     *    WS_TYPE flag, but always plain strings (action has a string default,
-     *    pwg_token is mandatory)
-     */
-    public function setCategory(array $params, Server $service): ?WsErrorResponse
-    {
-        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new WsErrorResponse(403, 'Invalid security token');
-        }
-
-        // does the category really exist?
-        if (! $this->categoryService->existsById($params['category_id'])) {
-            return new WsErrorResponse(404, 'category_id not found');
-        }
-
-        $imageService = $this->imageService;
-
-        if ($params['action'] === 'associate') {
-            $imageService->associateImagesToCategories($params['image_id'], [$params['category_id']]);
-        } elseif ($params['action'] === 'dissociate') {
-            $imageService->dissociateImagesFromCategory($params['image_id'], $params['category_id']);
-        } elseif ($params['action'] === 'move') {
-            $imageService->moveImagesToCategories($params['image_id'], [$params['category_id']]);
-        }
-
-        PermissionCacheInvalidator::invalidate();
-
-        return null;
     }
 }

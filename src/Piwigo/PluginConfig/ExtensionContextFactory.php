@@ -14,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
@@ -46,6 +47,7 @@ final readonly class ExtensionContextFactory
         private Paths $paths,
         private ConfigService $configService,
         private EntityManagerInterface $entityManager,
+        private MailService $mailService,
     ) {}
 
     public function build(PluginId|ThemeId $extensionId): ExtensionContext
@@ -66,6 +68,7 @@ final readonly class ExtensionContextFactory
             $this->paths,
             $this->configService,
             $this->entityManager,
+            $this->mailService,
         );
     }
 }

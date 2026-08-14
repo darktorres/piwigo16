@@ -88,6 +88,7 @@ use Piwigo\Listener\HtmlRenderingListener;
 use Piwigo\Listener\ListenerInterface;
 use Piwigo\Listener\SiteCleanupListener;
 use Piwigo\Listener\UploadFormatListener;
+use Piwigo\Mail\MailService;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -803,6 +804,11 @@ final class RequestBootstrap
             throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
         }
 
+        $mailService = Kernel::container()->get(MailService::class);
+        if (! $mailService instanceof MailService) {
+            throw new LogicException('Container returned an unexpected type for ' . MailService::class);
+        }
+
         return new ExtensionContextFactory(
             self::currentTemplate(),
             self::currentConfig(),
@@ -818,6 +824,7 @@ final class RequestBootstrap
             self::paths(),
             $configService,
             EntityManagerFactory::build($conn),
+            $mailService,
         );
     }
 

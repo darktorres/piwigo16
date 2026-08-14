@@ -22,6 +22,7 @@ use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContext;
 use Piwigo\PluginConfig\ExtensionContextFactory;
@@ -111,6 +112,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
             $this->containerGet(Paths::class),
             $this->containerGet(ConfigService::class),
             $this->containerGet(EntityManagerInterface::class),
+            $this->containerGet(MailService::class),
         );
     }
 

@@ -18,6 +18,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Lang\LangService;
+use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
@@ -74,6 +75,7 @@ final readonly class ExtensionContext
         private Paths $paths,
         private ConfigService $configService,
         private EntityManagerInterface $entityManager,
+        private MailService $mailService,
     ) {}
 
     /**
@@ -288,5 +290,23 @@ final readonly class ExtensionContext
     public function images(): ImageReadFacade
     {
         return $this->imageReadFacade;
+    }
+
+    /**
+     * `MailService::mail()`'s own real, already-public entry point --
+     * every core caller (`mailAdmins()`/`mailGroup()`/
+     * `mailNotificationAdmins()`) already funnels through it, and its
+     * signature already closely matches legacy `pwg_mail($to, $args =
+     * array(), $tpl = array())`. Wrapped directly, not behind a narrower
+     * facade: unlike raw DB access, `MailService` is already the
+     * sanctioned, safe way core itself sends mail.
+     *
+     * @param string|array<int|string, mixed> $to
+     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
+     * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
+     */
+    public function mail(string|array $to, array $args = [], array $tpl = []): bool
+    {
+        return $this->mailService->mail($to, $args, $tpl);
     }
 }

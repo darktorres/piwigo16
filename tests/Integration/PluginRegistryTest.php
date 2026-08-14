@@ -20,6 +20,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
@@ -110,6 +111,7 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->containerGet(Paths::class),
             $this->containerGet(ConfigService::class),
             $this->containerGet(EntityManagerInterface::class),
+            $this->containerGet(MailService::class),
         );
     }
 

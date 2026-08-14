@@ -231,7 +231,7 @@
   id="notification_by_mail"
   action="admin.php?page=notification_by_mail"
 >
-  <input type="hidden" name="pwg_token" value="3b7f8540105b65ce94d6eb1b70c36b64af5937117c0fa4d8f5db03457869abab">
+  <input type="hidden" name="pwg_token" value="bb6c14934031b184ce003db5b7008ace88a89a36741c9c57419a01f29bd9e8d3">
 
 
       <p>There is no subscribers to be notified by mail.</p>
@@ -326,21 +326,21 @@
 <script type="text/javascript">//<![CDATA[
 
 jQuery(document).ready(function(){
-	jQuery('textarea').css('overflow-y', 'hidden');
-	// Auto size and auto grow for all text area
-	jQuery('textarea').autogrow();
+  jQuery('textarea').css('overflow-y', 'hidden');
+  // Auto size and auto grow for all text area
+  jQuery('textarea').autogrow();
 });
 jQuery(document).ready(function(){
 
-	jQuery("#checkAllLink").click(function () {
-		jQuery("#notification_by_mail input[type=checkbox]").prop('checked', true);
-		return false;
-	});
+  jQuery("#checkAllLink").click(function () {
+    jQuery("#notification_by_mail input[type=checkbox]").prop('checked', true);
+    return false;
+  });
 
-	jQuery("#uncheckAllLink").click(function () {
-		jQuery("#notification_by_mail input[type=checkbox]").prop('checked', false);
-		return false;
-	});
+  jQuery("#uncheckAllLink").click(function () {
+    jQuery("#notification_by_mail input[type=checkbox]").prop('checked', false);
+    return false;
+  });
 
 });
 jQuery.fn.lightAccordion = function(options) {

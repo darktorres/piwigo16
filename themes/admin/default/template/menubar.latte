@@ -2,28 +2,28 @@
 
 {capture $tmpFooterScript}
 jQuery(document).ready(function(){
-	jQuery(".menuPos").hide();
-	jQuery(".drag_button").show();
-	jQuery(".menuLi").css("cursor","move");
-	jQuery(".menuUl").sortable({
-		axis: "y",
-		opacity: 0.8
-	});
-	jQuery("input[name^='hide_']").click(function() {
-		men = this.name.split('hide_');
-		if (this.checked) {
-			jQuery("#menu_"+men[1]).addClass('menuLi_hidden');
-		} else {
-			jQuery("#menu_"+men[1]).removeClass('menuLi_hidden');
-		}
-	});
-	jQuery("#menuOrdering").submit(function(){
-		ar = jQuery('.menuUl').sortable('toArray');
-		for(i=0;i < ar.length;i++) {
-			men = ar[i].split('menu_');
-			document.getElementsByName('pos_' + men[1])[0].value = i+1;
-		}
-	});
+  jQuery(".menuPos").hide();
+  jQuery(".drag_button").show();
+  jQuery(".menuLi").css("cursor","move");
+  jQuery(".menuUl").sortable({
+    axis: "y",
+    opacity: 0.8
+  });
+  jQuery("input[name^='hide_']").click(function() {
+    men = this.name.split('hide_');
+    if (this.checked) {
+      jQuery("#menu_"+men[1]).addClass('menuLi_hidden');
+    } else {
+      jQuery("#menu_"+men[1]).removeClass('menuLi_hidden');
+    }
+  });
+  jQuery("#menuOrdering").submit(function(){
+    ar = jQuery('.menuUl').sortable('toArray');
+    for(i=0;i < ar.length;i++) {
+      men = ar[i].split('menu_');
+      document.getElementsByName('pos_' + men[1])[0].value = i+1;
+    }
+  });
 });
 {/capture}
 {do footerScript($tmpFooterScript, 'jquery.ui.sortable')}

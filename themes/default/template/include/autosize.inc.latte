@@ -2,9 +2,9 @@
 {* Auto size and auto grow textarea *}
 {capture $tmpFooterScript}
 jQuery(document).ready(function(){
-	jQuery('textarea').css('overflow-y', 'hidden');
-	// Auto size and auto grow for all text area
-	jQuery('textarea').autogrow();
+  jQuery('textarea').css('overflow-y', 'hidden');
+  // Auto size and auto grow for all text area
+  jQuery('textarea').autogrow();
 });
 {/capture}
 {do footerScript($tmpFooterScript, 'jquery.autogrow')}

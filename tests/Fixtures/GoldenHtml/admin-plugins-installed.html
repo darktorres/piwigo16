@@ -334,7 +334,7 @@
 <script type="text/javascript" src="_data/combined/cttr5r.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-var pwg_token = '604c5d7aa81447bd1cb1bbc0b5878f99b3462c7fd25b5421b4e41d2e3375a1b2';
+var pwg_token = '827bf2cee34d152b53e48bf2d4dd925ee87a4337287b3e233f8910b78accdce0';
 var extType = 'plugins';
 var confirmMsg  = 'Are you sure?';
 var errorHead   = 'ERROR';
@@ -344,8 +344,8 @@ var restoreMsg  = 'Reset ignored updates';
 
 var todo = 0;
 var queuedManager = $.manageAjax.create('queued', {
-	queue: true,
-	maxRequests: 1,
+  queue: true,
+  maxRequests: 1,
   beforeSend: function() { autoupdate_bar_toggle(1); },
   complete: function() { autoupdate_bar_toggle(-1); }
 });

@@ -122,20 +122,20 @@
       <script
         type="text/javascript"
       >
-function addToCadie(aElement, rootUrl, id)
-{
-if (aElement.disabled) return;
-aElement.disabled=true;
-var y = new PwgWS(rootUrl);
+      function addToCadie(aElement, rootUrl, id)
+      {
+        if (aElement.disabled) return;
+        aElement.disabled=true;
+        var y = new PwgWS(rootUrl);
 
-y.callService(
-	"pwg.caddie.add", { image_id: id } ,
-	{
-		onFailure: function(num, text) { alert(num + " " + text); document.location=aElement.href; },
-		onSuccess: function(result) { aElement.disabled = false; }
-	}
-	);
-}
+        y.callService(
+          "pwg.caddie.add", { image_id: id } ,
+          {
+            onFailure: function(num, text) { alert(num + " " + text); document.location=aElement.href; },
+            onSuccess: function(result) { aElement.disabled = false; }
+          }
+        );
+      }
 </script>
       <a
         href="{$U_CADDIE}"

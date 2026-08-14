@@ -996,14 +996,14 @@ const str_and_more = "and %d more"
 const guest_id = 2;
 jQuery(document).ready( function() {
   jQuery(".IP").one( "mouseenter", function(){
-  	var that = $(this);
-  	that
-  		.data("isOver", true)
-  		.one("mouseleave", function() {
-  			that.removeData("isOver");
-  		});
-  	GeoIp.get( that.text(), function(data) {
-  		if (!data.fullName) return;
+    var that = $(this);
+    that
+      .data("isOver", true)
+      .one("mouseleave", function() {
+        that.removeData("isOver");
+      });
+    GeoIp.get( that.text(), function(data) {
+      if (!data.fullName) return;
 
       var content = data.fullName;
       if (data.latitude && data.region_name) {
@@ -1011,15 +1011,15 @@ jQuery(document).ready( function() {
         content += ' href="#">show on a Google Map</a>';
       }
 
-  		that.tipTip( {
-  			content: content,
+      that.tipTip( {
+        content: content,
         keepAlive: true,
         defaultPosition: "right",
         maxWidth: 320,
-  			}	);
-  		if (that.data("isOver"))
-  			that.trigger("mouseenter");
-  	});
+        } );
+      if (that.data("isOver"))
+        that.trigger("mouseenter");
+    });
   } );
 
   jQuery(document).on('click', '.ipGeoOpen',  function() {

@@ -62,10 +62,10 @@
       </tr>
     </thead>
     {capture $tmpHtmlStyle}
-.calMonth TD, .calMonth .calImg{
-	width:{$chronology_calendar['month_view']['CELL_WIDTH']}px;height:{$chronology_calendar['month_view']['CELL_HEIGHT']}px
-}
-{/capture}
+  .calMonth TD, .calMonth .calImg{
+    width:{$chronology_calendar['month_view']['CELL_WIDTH']}px;height:{$chronology_calendar['month_view']['CELL_HEIGHT']}px
+  }
+  {/capture}
     {do htmlStyle($tmpHtmlStyle)}
     {foreach $chronology_calendar['month_view']['weeks'] as $week}
       <tr>

@@ -11,10 +11,10 @@
 
 {capture $tmpFooterScript}
 var lang = {
-	Cancel: '{='Cancel'|translate|escapeJavascript|noescape}',
-	deleteProgressMessage: "{='Deletion in progress'|translate|escapeJavascript|noescape}",
-	syncProgressMessage: "{='Synchronization in progress'|translate|escapeJavascript|noescape}",
-	AreYouSure: "{='Are you sure?'|translate|escapeJavascript|noescape}",
+  Cancel: '{='Cancel'|translate|escapeJavascript|noescape}',
+  deleteProgressMessage: "{='Deletion in progress'|translate|escapeJavascript|noescape}",
+  syncProgressMessage: "{='Synchronization in progress'|translate|escapeJavascript|noescape}",
+  AreYouSure: "{='Are you sure?'|translate|escapeJavascript|noescape}",
   generateMsg: "{='Generate multiple size images'|translate|noescape}"
 };
 
@@ -246,10 +246,10 @@ $(document).ready(function() {
   });
 
   jQuery('#applyAction').click(function() {
-		var action = jQuery('[name="selectAction"]').val();
-		if (action == 'delete_derivatives') {
-			let d_count = $('#confirmDel input[type=checkbox]').filter(':checked').length
-			let e_count = $('input[name="setSelected"]').is(':checked') ? nb_thumbs_set : $('.thumbnails input[type=checkbox]').filter(':checked').length;
+    var action = jQuery('[name="selectAction"]').val();
+    if (action == 'delete_derivatives') {
+      let d_count = $('#confirmDel input[type=checkbox]').filter(':checked').length
+      let e_count = $('input[name="setSelected"]').is(':checked') ? nb_thumbs_set : $('.thumbnails input[type=checkbox]').filter(':checked').length;
       if (!jQuery("#confirmDel input[name=confirm_deletion]").is(':checked')) {
         jQuery("#confirmDel span.errors").css("visibility", "visible");
         return false;
@@ -258,39 +258,39 @@ $(document).ready(function() {
       }
     }
 
-		if (action != 'generate_derivatives'
-			|| derivatives.finished() )
-		{
-			return true;
-		}
+    if (action != 'generate_derivatives'
+      || derivatives.finished() )
+    {
+      return true;
+    }
 
-		jQuery('.bulkAction').hide();
+    jQuery('.bulkAction').hide();
 
-		var queuedManager = jQuery.manageAjax.create('queued', {
-			queue: true,
-			cacheResponse: false,
-			maxRequests: 1
-		});
+    var queuedManager = jQuery.manageAjax.create('queued', {
+      queue: true,
+      cacheResponse: false,
+      maxRequests: 1
+    });
 
-		derivatives.elements = [];
-		if (jQuery('input[name="setSelected"]').is(':checked'))
-			derivatives.elements = all_elements;
-		else
-			jQuery('.thumbnails input[type=checkbox]').each(function() {
-				if (jQuery(this).is(':checked')) {
-					derivatives.elements.push(jQuery(this).val());
-				}
-			});
+    derivatives.elements = [];
+    if (jQuery('input[name="setSelected"]').is(':checked'))
+      derivatives.elements = all_elements;
+    else
+      jQuery('.thumbnails input[type=checkbox]').each(function() {
+        if (jQuery(this).is(':checked')) {
+          derivatives.elements.push(jQuery(this).val());
+        }
+      });
 
-		jQuery('#applyActionBlock').hide();
-		jQuery('select[name="selectAction"]').hide();
+    jQuery('#applyActionBlock').hide();
+    jQuery('select[name="selectAction"]').hide();
     jQuery('.permitActionListButton div').addClass('hidden');
-		jQuery('#regenerationMsg').show();
+    jQuery('#regenerationMsg').show();
 
-		progress_start();
+    progress_start();
     progress();
-		getDerivativeUrls();
-		return false;
+    getDerivativeUrls();
+    return false;
   });
 
   checkPermitAction();
@@ -347,13 +347,13 @@ $(document).ready(function() {
 
         <ul class="thumbnails">
           {capture $tmpHtmlStyle}
-UL.thumbnails SPAN.wrap2{
-  width: {$thumb_params->maxWidth() + 2}px;
-}
-UL.thumbnails SPAN.wrap2 {
-  height: {$thumb_params->maxHeight() + 25}px;
-}
-		{/capture}
+          UL.thumbnails SPAN.wrap2{
+            width: {$thumb_params->maxWidth() + 2}px;
+          }
+          UL.thumbnails SPAN.wrap2 {
+            height: {$thumb_params->maxHeight() + 25}px;
+          }
+          {/capture}
           {do htmlStyle($tmpHtmlStyle)}
           {foreach $thumbnails as $thumbnail}
             {var $isSelected = ($thumbnail['id']|in_array:$selection)}

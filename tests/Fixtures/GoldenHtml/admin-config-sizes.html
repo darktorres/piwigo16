@@ -1489,7 +1489,7 @@
         class="sizeDetails"
       >
         <a
-          href="admin.php?page=configuration&amp;section=sizes&action=restore_settings&pwg_token=7516cf40d51c66eec0bdb7c499f12cbffaf28e9be0b48a00f929cfc6753bad78"
+          href="admin.php?page=configuration&amp;section=sizes&action=restore_settings&pwg_token=94f08f5052cdc2b04e4a4e53a1a59497e45a2079ba07d031127b32554142f367"
           class="restore-settings-button"
         >Reset to default values</a>
       </p>
@@ -1508,7 +1508,7 @@
         ><i class="icon-floppy"></i> Save Settings</button>
       </div>
     </div>
-    <input type="hidden" name="pwg_token" value="7516cf40d51c66eec0bdb7c499f12cbffaf28e9be0b48a00f929cfc6753bad78">
+    <input type="hidden" name="pwg_token" value="94f08f5052cdc2b04e4a4e53a1a59497e45a2079ba07d031127b32554142f367">
   </div>
 </form>
 
@@ -1635,7 +1635,7 @@ $(".restore-settings-button").each(function() {
     var sizeName = jQuery(this).attr("id").split("-")[1];
     jQuery("#sizeEdit-"+sizeName).toggle();
     jQuery(this).hide();
-		return false;
+    return false;
   });
 
   jQuery(".cropToggle").click(function() {
@@ -1655,7 +1655,7 @@ $(".restore-settings-button").each(function() {
   jQuery("#showDetails").click(function() {
     jQuery(".sizeDetails").show();
     jQuery(this).css("visibility", "hidden");
-		return false;
+    return false;
   });
 })();
 jQuery.fn.lightAccordion = function(options) {

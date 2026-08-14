@@ -52,10 +52,10 @@
       >
 
 <!--[if lt IE 7]>
-		<link rel="stylesheet" type="text/css" href="themes/default/fix-ie5-ie6.css">
-	<![endif]--><!--[if IE 7]>
-		<link rel="stylesheet" type="text/css" href="themes/default/fix-ie7.css">
-	<![endif]-->
+  <link rel="stylesheet" type="text/css" href="themes/default/fix-ie5-ie6.css">
+  <![endif]--><!--[if IE 7]>
+  <link rel="stylesheet" type="text/css" href="themes/default/fix-ie7.css">
+  <![endif]-->
     <!-- BEGIN get_combined -->
     <link rel="stylesheet" type="text/css" href="_data/combined/174b7fc.css">
 
@@ -167,18 +167,18 @@
 <script type="text/javascript">//<![CDATA[
 
 document.onkeydown = function(e){
-	e=e||window.event;
-	if (e.altKey) return true;
-	var target=e.target||e.srcElement;
-	if (target && target.type) return true;
-	var keyCode=e.keyCode||e.which, docElem=document.documentElement, url;
-	switch(keyCode){
-	case 63235: case 39: if (e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth)url="picture.php?/2/category/1&amp;slideshow="; break;
-	case 35: if (e.ctrlKey)url="picture.php?/3/category/1&amp;slideshow="; break;
-	case 32: url="picture.php?/1/category/1&amp;slideshow=+play-false"; break;
-	}
-	if (url) { window.location=url.replace("&amp;","&"); return false;}
-	return true;
+  e=e||window.event;
+  if (e.altKey) return true;
+  var target=e.target||e.srcElement;
+  if (target && target.type) return true;
+  var keyCode=e.keyCode||e.which, docElem=document.documentElement, url;
+  switch(keyCode){
+  case 63235: case 39: if (e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth)url="picture.php?/2/category/1&amp;slideshow="; break;
+  case 35: if (e.ctrlKey)url="picture.php?/3/category/1&amp;slideshow="; break;
+  case 32: url="picture.php?/1/category/1&amp;slideshow=+play-false"; break;
+  }
+  if (url) { window.location=url.replace("&amp;","&"); return false;}
+  return true;
 }
 //]]></script>
 <!-- END get_combined -->

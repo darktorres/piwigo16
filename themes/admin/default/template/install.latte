@@ -149,11 +149,11 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
 
     {capture $tmpFooterScript}
 jQuery().ready(function(){
-	jQuery('.cluetip').cluetip({
-		width: 300,
-		splitTitle: '|',
-		positionBy: 'bottomTop'
-	});
+  jQuery('.cluetip').cluetip({
+    width: 300,
+    splitTitle: '|',
+    positionBy: 'bottomTop'
+  });
 });
 {/capture}
     {do footerScript($tmpFooterScript, 'jquery.cluetip')}

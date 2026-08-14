@@ -43,7 +43,7 @@ $(".restore-settings-button").each(function() {
     var sizeName = jQuery(this).attr("id").split("-")[1];
     jQuery("#sizeEdit-"+sizeName).toggle();
     jQuery(this).hide();
-		return false;
+    return false;
   });
 
   jQuery(".cropToggle").click(function() {
@@ -63,7 +63,7 @@ $(".restore-settings-button").each(function() {
   jQuery("#showDetails").click(function() {
     jQuery(".sizeDetails").show();
     jQuery(this).css("visibility", "hidden");
-		return false;
+    return false;
   });
 })();
 {/capture}

@@ -254,7 +254,7 @@
 <div id="batchManagerGlobal">
   <form action="admin.php?page=batch_manager" method="post">
     <input type="hidden" name="start" value="0">
-    <input type="hidden" name="pwg_token" value="0ef3bfc367b78c720678dd4ffef4f95710c1023d6b3a14cbf755351195ce2a3b">
+    <input type="hidden" name="pwg_token" value="725747367c42a2bd9681d215cdb14a847ca637e4ee17e119534b11627638a644">
 
 
 <fieldset>
@@ -341,7 +341,7 @@
         </select>
         <a
           id="empty_caddie"
-          href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token=0ef3bfc367b78c720678dd4ffef4f95710c1023d6b3a14cbf755351195ce2a3b"
+          href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token=725747367c42a2bd9681d215cdb14a847ca637e4ee17e119534b11627638a644"
           style=""
         >Empty caddie</a>
 
@@ -1737,10 +1737,10 @@
 <script type="text/javascript">//<![CDATA[
 
 var lang = {
-	Cancel: 'Cancel',
-	deleteProgressMessage: "Deletion in progress",
-	syncProgressMessage: "Synchronization in progress",
-	AreYouSure: "Are you sure?",
+  Cancel: 'Cancel',
+  deleteProgressMessage: "Deletion in progress",
+  syncProgressMessage: "Synchronization in progress",
+  AreYouSure: "Are you sure?",
   generateMsg: "Generate multiple size images"
 };
 
@@ -1962,10 +1962,10 @@ $(document).ready(function() {
   });
 
   jQuery('#applyAction').click(function() {
-		var action = jQuery('[name="selectAction"]').val();
-		if (action == 'delete_derivatives') {
-			let d_count = $('#confirmDel input[type=checkbox]').filter(':checked').length
-			let e_count = $('input[name="setSelected"]').is(':checked') ? nb_thumbs_set : $('.thumbnails input[type=checkbox]').filter(':checked').length;
+    var action = jQuery('[name="selectAction"]').val();
+    if (action == 'delete_derivatives') {
+      let d_count = $('#confirmDel input[type=checkbox]').filter(':checked').length
+      let e_count = $('input[name="setSelected"]').is(':checked') ? nb_thumbs_set : $('.thumbnails input[type=checkbox]').filter(':checked').length;
       if (!jQuery("#confirmDel input[name=confirm_deletion]").is(':checked')) {
         jQuery("#confirmDel span.errors").css("visibility", "visible");
         return false;
@@ -1974,39 +1974,39 @@ $(document).ready(function() {
       }
     }
 
-		if (action != 'generate_derivatives'
-			|| derivatives.finished() )
-		{
-			return true;
-		}
+    if (action != 'generate_derivatives'
+      || derivatives.finished() )
+    {
+      return true;
+    }
 
-		jQuery('.bulkAction').hide();
+    jQuery('.bulkAction').hide();
 
-		var queuedManager = jQuery.manageAjax.create('queued', {
-			queue: true,
-			cacheResponse: false,
-			maxRequests: 1
-		});
+    var queuedManager = jQuery.manageAjax.create('queued', {
+      queue: true,
+      cacheResponse: false,
+      maxRequests: 1
+    });
 
-		derivatives.elements = [];
-		if (jQuery('input[name="setSelected"]').is(':checked'))
-			derivatives.elements = all_elements;
-		else
-			jQuery('.thumbnails input[type=checkbox]').each(function() {
-				if (jQuery(this).is(':checked')) {
-					derivatives.elements.push(jQuery(this).val());
-				}
-			});
+    derivatives.elements = [];
+    if (jQuery('input[name="setSelected"]').is(':checked'))
+      derivatives.elements = all_elements;
+    else
+      jQuery('.thumbnails input[type=checkbox]').each(function() {
+        if (jQuery(this).is(':checked')) {
+          derivatives.elements.push(jQuery(this).val());
+        }
+      });
 
-		jQuery('#applyActionBlock').hide();
-		jQuery('select[name="selectAction"]').hide();
+    jQuery('#applyActionBlock').hide();
+    jQuery('select[name="selectAction"]').hide();
     jQuery('.permitActionListButton div').addClass('hidden');
-		jQuery('#regenerationMsg').show();
+    jQuery('#regenerationMsg').show();
 
-		progress_start();
+    progress_start();
     progress();
-		getDerivativeUrls();
-		return false;
+    getDerivativeUrls();
+    return false;
   });
 
   checkPermitAction();

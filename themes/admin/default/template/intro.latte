@@ -17,11 +17,11 @@ let translate_type = {};
   const newsletter_base_url = "{$SUBSCRIBE_BASE_URL}";
 {/if}
 jQuery().ready(function(){
-	jQuery('.cluetip').cluetip({
-		width: 300,
-		splitTitle: '|',
-		positionBy: 'bottomTop'
-	});
+  jQuery('.cluetip').cluetip({
+    width: 300,
+    splitTitle: '|',
+    positionBy: 'bottomTop'
+  });
 {if $CHECK_FOR_UPDATES}
   jQuery.ajax({
     type: 'GET',

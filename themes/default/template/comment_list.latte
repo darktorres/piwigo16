@@ -1,11 +1,11 @@
 {if isset($comment_derivative_params)}
   {capture $tmpHtmlStyle}
 .commentElement .illustration{
-	width:{$comment_derivative_params->maxWidth() + 5}px
+  width:{$comment_derivative_params->maxWidth() + 5}px
 }
 
 .content .commentElement .description{
-	min-height:{$comment_derivative_params->maxHeight() + 5}px
+  min-height:{$comment_derivative_params->maxHeight() + 5}px
 }
 {/capture}
   {do htmlStyle($tmpHtmlStyle)}

@@ -13,8 +13,8 @@ var restoreMsg  = '{='Reset ignored updates'|translate|escapeJavascript|noescape
 
 var todo = 0;
 var queuedManager = $.manageAjax.create('queued', {
-	queue: true,
-	maxRequests: 1,
+  queue: true,
+  maxRequests: 1,
   beforeSend: function() { autoupdate_bar_toggle(1); },
   complete: function() { autoupdate_bar_toggle(-1); }
 });

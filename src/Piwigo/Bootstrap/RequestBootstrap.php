@@ -95,6 +95,8 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ThemeReadFacade;
+use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\PluginEntity;
 use Piwigo\PluginConfig\PluginManifest;
 use Piwigo\PluginConfig\PluginMigrationEntity;
@@ -790,6 +792,16 @@ final class RequestBootstrap
         );
     }
 
+    private static function userReadFacade(Connection $conn): UserReadFacade
+    {
+        return new UserReadFacade(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()));
+    }
+
+    private static function themeReadFacade(Connection $conn): ThemeReadFacade
+    {
+        return new ThemeReadFacade(EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class));
+    }
+
     /**
      * Builds a fresh ExtensionContextFactory (P27.3) -- cheap, pure
      * composition of already-resolved accessors, no I/O of its own, so
@@ -825,6 +837,8 @@ final class RequestBootstrap
             $configService,
             EntityManagerFactory::build($conn),
             $mailService,
+            self::userReadFacade($conn),
+            self::themeReadFacade($conn),
         );
     }
 

@@ -16,6 +16,8 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ThemeReadFacade;
+use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
@@ -48,6 +50,8 @@ final readonly class ExtensionContextFactory
         private ConfigService $configService,
         private EntityManagerInterface $entityManager,
         private MailService $mailService,
+        private UserReadFacade $userReadFacade,
+        private ThemeReadFacade $themeReadFacade,
     ) {}
 
     public function build(PluginId|ThemeId $extensionId): ExtensionContext
@@ -69,6 +73,8 @@ final readonly class ExtensionContextFactory
             $this->configService,
             $this->entityManager,
             $this->mailService,
+            $this->userReadFacade,
+            $this->themeReadFacade,
         );
     }
 }

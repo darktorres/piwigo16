@@ -27,12 +27,15 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContext;
 use Piwigo\PluginConfig\ExtensionContextFactory;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ThemeReadFacade;
+use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\ThemeDependencyException;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\PluginConfig\ThemeValidationException;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -113,6 +116,8 @@ final class ThemeRegistryTest extends IntegrationTestCase
             $this->containerGet(ConfigService::class),
             $this->containerGet(EntityManagerInterface::class),
             $this->containerGet(MailService::class),
+            new UserReadFacade($this->containerGet(UserRepository::class)),
+            new ThemeReadFacade($this->repository),
         );
     }
 

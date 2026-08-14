@@ -41,6 +41,7 @@ use Piwigo\Users\Projection\BasicUserRow;
 use Piwigo\Users\Projection\NotificationRecipient;
 use Piwigo\Users\Projection\UserInfo;
 use Piwigo\Users\Projection\UserInfoWithThemeName;
+use Piwigo\Users\Projection\UserListing;
 use Piwigo\Users\Projection\UsernameById;
 use Piwigo\Users\Projection\UsernameLookup;
 use RuntimeException;
@@ -1989,6 +1990,49 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
 
         return $byId;
+    }
+
+    /**
+     * Every user's id/username/status, ordered by username --
+     * `PluginConfig\Facade\UserReadFacade::listBasic()`'s own real source
+     * (P27.14), grounded in `../piwigo16-plugins/AdminTools_16.3.0/
+     * include/MultiView.class.php`'s own real `ws_get_data()` query
+     * listing every user for its custom `multiView.getData` WS method. A
+     * user present in `users` but missing its `user_infos` row (the LEFT
+     * JOIN's own "no such row" case) is skipped -- unlike
+     * findStatusByIds() above, a plugin listing users has no use for an
+     * entry with an unknown status.
+     *
+     * @return list<UserListing>
+     */
+    public function findAllBasicInfo(): array
+    {
+        $rows = $this->em
+            ->createQueryBuilder()
+            ->select('u.id AS id', 'u.username AS username', 'ui.status AS status')
+            ->from(UserEntity::class, 'u')
+            ->leftJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.userId')
+            ->orderBy('u.username', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $users = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            $username = $row['username'] ?? null;
+            $status = $row['status'] ?? null;
+            if (! $id instanceof UserId || ! $username instanceof Username || ! $status instanceof UserStatus) {
+                continue;
+            }
+
+            $users[] = new UserListing($id, $username->value, $status);
+        }
+
+        return $users;
     }
 
     /**

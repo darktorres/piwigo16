@@ -20,6 +20,8 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ThemeReadFacade;
+use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
@@ -76,6 +78,8 @@ final readonly class ExtensionContext
         private ConfigService $configService,
         private EntityManagerInterface $entityManager,
         private MailService $mailService,
+        private UserReadFacade $userReadFacade,
+        private ThemeReadFacade $themeReadFacade,
     ) {}
 
     /**
@@ -290,6 +294,26 @@ final readonly class ExtensionContext
     public function images(): ImageReadFacade
     {
         return $this->imageReadFacade;
+    }
+
+    /**
+     * Narrow, purpose-built read facade -- never `UserService`/raw SQL
+     * directly. See that class's own docblock for the real caller this
+     * is grounded in.
+     */
+    public function users(): UserReadFacade
+    {
+        return $this->userReadFacade;
+    }
+
+    /**
+     * Narrow, purpose-built read facade -- never `ThemeCatalog`/raw SQL
+     * directly. See that class's own docblock for the real caller this
+     * is grounded in.
+     */
+    public function themes(): ThemeReadFacade
+    {
+        return $this->themeReadFacade;
     }
 
     /**

@@ -17,6 +17,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
@@ -24,6 +25,8 @@ use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ThemeReadFacade;
+use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\PluginDependencyException;
 use Piwigo\PluginConfig\PluginMigrationRepository;
 use Piwigo\PluginConfig\PluginRegistry;
@@ -32,6 +35,7 @@ use Piwigo\PluginConfig\PluginValidationException;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -112,6 +116,8 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->containerGet(ConfigService::class),
             $this->containerGet(EntityManagerInterface::class),
             $this->containerGet(MailService::class),
+            new UserReadFacade($this->containerGet(UserRepository::class)),
+            new ThemeReadFacade($this->containerGet(ThemeRepository::class)),
         );
     }
 

@@ -20,6 +20,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -30,7 +31,11 @@ use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContext;
 use Piwigo\PluginConfig\ExtensionInterface;
+use Piwigo\PluginConfig\Facade\BasicThemeInfo;
+use Piwigo\PluginConfig\Facade\BasicUserInfo;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ThemeReadFacade;
+use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -39,7 +44,9 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Users\UserStatus;
 use RuntimeException;
 use Symfony\Component\Mime\Email;
 
@@ -176,6 +183,8 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->containerGet(ConfigService::class),
             $this->containerGet(EntityManagerInterface::class),
             $this->containerGet(MailService::class),
+            new UserReadFacade($this->containerGet(UserRepository::class)),
+            new ThemeReadFacade($this->containerGet(ThemeRepository::class)),
         );
     }
 
@@ -345,6 +354,55 @@ final class ExtensionContextTest extends IntegrationTestCase
 
         self::assertSame('P27.13 test', $capturedEmail->getSubject());
         self::assertStringContainsString('hello from ExtensionContext::mail()', (string) $capturedEmail->getTextBody());
+    }
+
+    /**
+     * users()->listBasic() (P27.14) -- against the real fixture's 4
+     * `users`/`user_infos` rows, proving id/username/status come back
+     * correctly typed and ordered by username.
+     */
+    public function testUsersListBasicReturnsEveryFixtureUserOrderedByUsername(): void
+    {
+        $users = $this->context->users()
+            ->listBasic();
+
+        $summaries = array_map(
+            static fn (BasicUserInfo $user): array => [$user->id->value, $user->username, $user->status],
+            $users,
+        );
+
+        self::assertSame([
+            [1, 'fixture_admin', UserStatus::Webmaster],
+            [2, 'guest', UserStatus::Guest],
+            [4, 'power_user', UserStatus::Normal],
+            [3, 'regular_user', UserStatus::Normal],
+        ], $summaries);
+    }
+
+    /**
+     * themes()->listBasic() (P27.14) -- the fixture's `themes` table
+     * starts empty, so this inserts one real row directly (cleaned up in
+     * `finally`) rather than relying on ThemeRegistry's own heavier
+     * install()/activate() flow, which ThemeRegistryTest.php already
+     * covers end-to-end.
+     */
+    public function testThemesListBasicReturnsARealInstalledTheme(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO themes (id, version, name) VALUES ('p27-14-fixture-theme', '1.0.0', 'P27.14 Fixture Theme')",
+        );
+
+        try {
+            $themes = $this->context->themes()
+                ->listBasic();
+        } finally {
+            $this->conn->executeStatement("DELETE FROM themes WHERE id = 'p27-14-fixture-theme'");
+        }
+
+        $matching = array_values(array_filter($themes, static fn (BasicThemeInfo $theme): bool => $theme->id->value === 'p27-14-fixture-theme'));
+
+        self::assertCount(1, $matching);
+        self::assertSame('P27.14 Fixture Theme', $matching[0]->name);
     }
 
     public function testImagesIsInCaddieReflectsARealInsertAndRemoval(): void

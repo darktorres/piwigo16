@@ -19,8 +19,10 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Users\Projection\UserListing;
 use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserStatus;
 
 final class UserRepositoryTest extends IntegrationTestCase
 {
@@ -587,6 +589,27 @@ final class UserRepositoryTest extends IntegrationTestCase
     public function testFindStatusByIdsWithNoIdsReturnsEmpty(): void
     {
         self::assertSame([], $this->repo->findStatusByIds([]));
+    }
+
+    /**
+     * Fixture: user 1 (fixture_admin, status webmaster), user 2 (guest,
+     * status guest), user 3 (regular_user, status normal), user 4
+     * (power_user, status normal) -- see this class's own "Fixture:"
+     * comment further down for the fuller row shape.
+     */
+    public function testFindAllBasicInfoReturnsEveryUserOrderedByUsername(): void
+    {
+        $summaries = array_map(
+            static fn (UserListing $user): array => [$user->id->value, $user->username, $user->status],
+            $this->repo->findAllBasicInfo(),
+        );
+
+        self::assertSame([
+            [1, 'fixture_admin', UserStatus::Webmaster],
+            [2, 'guest', UserStatus::Guest],
+            [4, 'power_user', UserStatus::Normal],
+            [3, 'regular_user', UserStatus::Normal],
+        ], $summaries);
     }
 
     // Five defensive branches in this class stay genuinely unreached by any

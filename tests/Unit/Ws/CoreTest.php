@@ -200,3 +200,34 @@ test('getActivityList rejects an unparsable date_min', function (): void {
             ->toBe('Invalid date_min');
     }
 });
+
+test('getActivityList treats a present-but-empty uid/id the same as absent, not a fatal type error', function (): void {
+    // Both are WsParamType::ID (optional, null default) --
+    // Server::checkType() deliberately skips type coercion for an
+    // empty-string value on an OPTIONAL param, so a real client that
+    // sends 'uid='/'id=' (e.g. Users\Admin\user_activity.js's own
+    // uid_filter/additional_filt_value, undefined/null on first page
+    // load) reaches this method with the raw string '', not int|null.
+    // Real bug reproduced live: this previously threw
+    // "UserId::from(): Argument #1 ($value) must be of type int, string
+    // given" / "ActivityListCriteria::__construct(): Argument #6
+    // ($objectId) must be of type ?int, string given" instead of
+    // returning a result.
+    $ws = pwgCoreTestSubject();
+    $server = pwgCoreTestServer();
+
+    $result = $ws->getActivityList([
+        'page' => 0,
+        'offset' => 0,
+        'uid' => '',
+        'date_min' => null,
+        'date_max' => null,
+        'id' => '',
+        'object' => null,
+        'action' => null,
+    ], $server);
+
+    expect($result)
+        ->not->toBeInstanceOf(WsErrorResponse::class)
+        ->toHaveKey('result_lines');
+});

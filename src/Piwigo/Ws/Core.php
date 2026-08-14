@@ -517,11 +517,18 @@ final readonly class Core
      * API method
      * Returns lines of users activity
      *  @since 12
-     * @param array{page: int|null, offset: int, uid: int|null, date_min: string|null, date_max: string|null, id: int|null, object: string|null, action: string|null, ...} $param
-     *    page/uid/id: WsParamType::INT|POSITIVE or WsParamType::ID, null default ->
-     *    int|null. offset: WsParamType::INT|POSITIVE, default 0 (non-null) ->
-     *    always int. date_min/date_max/object/action: no WS_TYPE flag, null
-     *    default -> string|null.
+     * @param array{page: int|null, offset: int, uid: int|string|null, date_min: string|null, date_max: string|null, id: int|string|null, object: string|null, action: string|null, ...} $param
+     *    page: WsParamType::INT|POSITIVE, null default -> int|null (never
+     *    sent as '' by this method's own JS caller, unlike uid/id below).
+     *    uid/id: WsParamType::ID, null default -- Server::checkType()
+     *    deliberately skips type coercion for an empty-string value on an
+     *    OPTIONAL param (matches legacy ws_core.inc.php's own
+     *    PwgServer::checkType() byte-for-byte), so a present-but-empty
+     *    'uid'/'id' arrives here as the raw string '', not int|null; a
+     *    genuinely-provided value is coerced to int by that same
+     *    checkType() call. offset: WsParamType::INT|POSITIVE, default 0
+     *    (non-null) -> always int. date_min/date_max/object/action: no
+     *    WS_TYPE flag, null default -> string|null.
      * result_lines' rows are genuinely heterogeneous (activity.details is
      * an entity-agnostic per-action payload, same rationale as
      * Admin\Maintenance\ActivityLogEntryFormatter's own $details); 'params'
@@ -587,12 +594,22 @@ final readonly class Core
         }
 
         $criteria = new ActivityListCriteria(
-            performedBy: $param['uid'] !== null ? UserId::from($param['uid']) : null,
+            // uid/id are WsParamType::ID (optional, null default) --
+            // Server::checkType() deliberately skips type coercion for an
+            // empty-string value on an OPTIONAL param (matches legacy
+            // ws_core.inc.php's own PwgServer::checkType() byte-for-byte),
+            // so a present-but-empty 'uid'/'id' arrives here as the raw
+            // string '', not null/int. UserId::from()/ActivityListCriteria's
+            // own $objectId are both strictly typed (no string), so is_int()
+            // -- not a null/'' exclusion list -- both narrows for PHPStan and
+            // excludes that empty string, same is_string() shape as
+            // action/object below.
+            performedBy: is_int($param['uid']) ? UserId::from($param['uid']) : null,
             action: is_string($param['action']) ? $param['action'] : null,
             object: is_string($param['object']) ? $param['object'] : null,
             minDate: ! in_array($date_min_raw, [null, ''], true) ? SqlDateTime::from($min) : null,
             maxDate: ! in_array($date_max_raw, [null, ''], true) ? SqlDateTime::from($max) : null,
-            objectId: ($param['id'] !== null and $param['id'] !== 0) ? $param['id'] : null,
+            objectId: (is_int($param['id']) and $param['id'] !== 0) ? $param['id'] : null,
             connectionsMode: $connections_mode,
             adminIds: $admin_ids,
         );

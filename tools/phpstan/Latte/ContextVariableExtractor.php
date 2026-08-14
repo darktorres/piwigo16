@@ -31,6 +31,7 @@ use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
 use PHPStan\PhpDocParser\ParserConfig;
 use PHPStan\PhpDocParser\Printer\Printer;
+use Piwigo\Template\TemplateAdapter;
 use ReflectionClass;
 use ReflectionEnum;
 use ReflectionNamedType;
@@ -167,7 +168,16 @@ final class ContextVariableExtractor
         return [
             'ROOT_URL' => 'string',
             'ROOT_PATH' => 'string',
-            'pwg' => '\\Piwigo\\Template\\TemplateAdapter',
+            // Leading backslash required: this type string is spliced
+            // directly into a generated `@var` docblock
+            // (LatteTemplateCompiler::injectVarDocblocks()), not just
+            // referenced within this file's own execution context --
+            // ::class alone never carries one, which would leave the
+            // emitted @var namespace-relative instead of absolute.
+            // Concatenation, not a bare string literal, so Rector's
+            // StringClassNameToClassConstantRector has nothing to
+            // rewrite here (empirically verified).
+            'pwg' => '\\' . TemplateAdapter::class,
             'lang_info' => 'array<string, mixed>',
             'themeconf' => 'array<string, mixed>',
             'PLUGIN_PICTURE_BUTTONS' => 'array<array-key, mixed>',

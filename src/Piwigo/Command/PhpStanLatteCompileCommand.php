@@ -6,6 +6,7 @@ namespace Piwigo\Command;
 
 use FilesystemIterator;
 use Latte\Engine;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Core\Paths;
 use Piwigo\Template\Latte\PiwigoExtension;
@@ -91,7 +92,15 @@ final class PhpStanLatteCompileCommand extends Command
         $notices = [...$notices, ...$themeVars['notices']];
         $globals = $extractor->frameworkGlobals() + $themeVars['vars'];
         foreach ($scan->assignedTemplateVars as $name) {
-            $globals[$name] ??= '\\Latte\\Runtime\\Html';
+            // Leading backslash required: this feeds
+            // LatteTemplateCompiler's `/** @var {$type} ... */` docblock
+            // generation, spliced directly into generated PHP source
+            // text -- ::class alone never carries one, which would leave
+            // the emitted @var namespace-relative instead of absolute.
+            // Concatenation, not a bare string literal, so Rector's
+            // StringClassNameToClassConstantRector has nothing to
+            // rewrite here (empirically verified).
+            $globals[$name] ??= '\\' . Html::class;
         }
 
         $engine = new Engine();

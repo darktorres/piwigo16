@@ -473,6 +473,34 @@ test('src/Piwigo/ contains no InputValidator::createStatic() calls', function ()
         ->toBe([]);
 });
 
+test('the Latte-analysis tooling contains no raw absolute-FQCN string literals', function (): void {
+    // A prior Rector run mechanically rewrote 3 literal FQCN strings
+    // ('\Piwigo\...\Foo') into Foo::class constants -- normally safe,
+    // but these particular strings get spliced directly into *generated
+    // PHP source text* (compiled-template @var docblocks, a shim-class
+    // call prefix), and ::class alone never carries the leading
+    // backslash the emitted code needs. The fix ('\\' . Foo::class,
+    // see ContextVariableExtractor::frameworkGlobals()/
+    // LatteTemplateCompiler::SHIMS/PhpStanLatteCompileCommand::execute())
+    // is a concatenation expression, not a bare string literal, so it
+    // can't regress the same way. Uses plain findCallSites()
+    // (str_contains(), no comment/string exclusion), not
+    // findCallSitesOutsideComments() above -- the anti-pattern being
+    // guarded against *is* string-literal content, so a helper that
+    // blanks strings out first would never find it.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/tools/phpstan/Latte', "'\\Piwigo\\"),
+        ...findCallSites($repoRoot . '/tools/phpstan/Latte', "'\\Latte\\"),
+        ...findCallSites($repoRoot . '/src/Piwigo/Command', "'\\Piwigo\\"),
+        ...findCallSites($repoRoot . '/src/Piwigo/Command', "'\\Latte\\"),
+    ];
+
+    expect(describeCallSites($hits))
+        ->toBe([]);
+});
+
 test('MailService::reset() is only called from tests/', function (): void {
     $repoRoot = __DIR__ . '/../..';
 

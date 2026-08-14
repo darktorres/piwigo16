@@ -48,7 +48,16 @@ use Piwigo\Tools\PhpStan\Latte\Generated\LatteAnalysisShims;
  */
 final class LatteTemplateCompiler
 {
-    private const SHIMS = '\\Piwigo\\Tools\\PhpStan\\Latte\\Generated\\LatteAnalysisShims';
+    // Leading backslash required: this constant is spliced directly into
+    // generated PHP *source text* below (self::SHIMS . '::...(' ), not
+    // just referenced within this file's own execution context --
+    // ::class alone never carries one, which would leave the emitted
+    // call namespace-relative instead of absolute. Concatenation of two
+    // constant-expressions (a legal const initializer -- confirmed via
+    // ReflectionClass::getConstant()), not a bare string literal, so
+    // Rector's StringClassNameToClassConstantRector has nothing to
+    // rewrite here (empirically verified).
+    private const string SHIMS = '\\' . LatteAnalysisShims::class;
 
     /**
      * @param list<string> $templateAwareFunctions function names whose real

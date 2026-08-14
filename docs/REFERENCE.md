@@ -9,7 +9,7 @@ of how this codebase got here.
 
 ### Namespace tree and layers
 
-Every first-party class lives under `src/Piwigo\*`, PSR-4 autoloaded. 52
+Every first-party class lives under `src/Piwigo\*`, PSR-4 autoloaded. 53
 top-level namespace directories, each assigned to one of 6 layers in
 `deptrac.yaml`, with one exception: **`Migrations`** (4 Doctrine
 migration classes, `src/Piwigo\Migrations\Version*`) matches no layer
@@ -30,9 +30,9 @@ directory on disk yet.
 
 | Layer | Namespaces |
 | --- | --- |
-| **L4 Integration** | `Admin` (+ `Admin\Image`, `Admin\Integrity`), `Bootstrap`, `Command`, `Controller`, `Job`, `Ws` (+ `Ws\Encoder`, `Ws\Protocol`) |
-| **L3 Presentation** | `Html`, `Http` (+ `Http\Middleware`), `Mail`, `Menu`, `Page`, `Picture`, `Routing`, `Template`; reserves `Asset`/`Listener` (not directories yet, same as L0Data's `Exception` reservation) |
-| **L2b Extended Domain** | `Activity`, `Caddie`, `Calendar`, `Comment`, `Csrf`, `Feed`, `Filter`, `History`, `Metadata`, `Notification`, `Permalink`, `PluginConfig\PluginRepository` (+ `PluginEntity`/`Projection\Plugin`), `Rate`, `Search`, `Section`, `Site`, `Telemetry`, `Url` |
+| **L4 Integration** | `Admin` (+ `Admin\Image`, `Admin\Integrity`), `Bootstrap`, `Command`, `Controller`, `Job`, `Ws` (+ `Ws\Encoder`, `Ws\Protocol`); `Listener\UploadFormatListener` is carved out of the general `Listener\*` L3 match (below) into this layer instead — see "Plugin/theme contract surface" below |
+| **L3 Presentation** | `Html`, `Http` (+ `Http\Middleware`), `Mail`, `Menu`, `Page`, `Picture`, `Routing`, `Template`, `Listener\*` (except `UploadFormatListener`, above), `PluginConfig\{ExtensionInterface,ExtensionContext,ExtensionContextFactory,ExtensionSession,PluginManifest,ThemeManifest,PluginRegistry,ThemeRegistry,PluginValidationException,PluginDependencyException,ThemeValidationException,ThemeDependencyException}`, `PluginConfig\Facade\*`; reserves `Asset` (not a directory yet, same as L0Data's `Exception` reservation) |
+| **L2b Extended Domain** | `Activity`, `Caddie`, `Calendar`, `Comment`, `Csrf`, `Feed`, `Filter`, `History`, `Metadata`, `Notification`, `Permalink`, `PluginConfig\{PluginRepository,PluginEntity,Projection\Plugin,PluginMigrationEntity,PluginMigrationRepository}`, `Rate`, `Search`, `Section`, `Site`, `Telemetry`, `Url` |
 | **L2a Core Domain** | `Auth`, `Category`, `Group`, `Image`, `Permission`, `Tag`, `Users` |
 | **L1 Infrastructure** | `Audit`, `Backup`, `Cache`, `Config`, `Core`, `Db`, `Lang`, `PluginConfig\EventDispatcher` (+ `EventHandler`), `Session`, `Storage`, `Validation` |
 | **L0 Data** | `Common` (23 files — see above), `Event` (138 files — see above), `Exception` (reserved, no classes yet) |
@@ -51,21 +51,38 @@ distinct from a violation (a checked edge that breaks the rules).
 each namespace landed where it did (real dependency edges found via
 `deptrac analyse` itself, not guessed placement) — read it directly for a
 specific namespace's placement reasoning rather than this table alone.
-Two structural notes worth surfacing here:
+Three structural notes worth surfacing here:
 
-- **`PluginConfig` is split across two layers** — `EventDispatcher` sits at
-  L1Infrastructure (a generic pub/sub bus reachable from every layer,
-  injects nothing), `PluginRepository` stays at L2bExtendedDomain (its only
-  real caller is L4Integration). Retargeting the legacy string-keyed event
-  functions onto `EventDispatcher::get()` directly (rather than a free
-  function) is what surfaced this split — a free-function call creates no
-  deptrac dependency edge, a direct class reference does.
+- **`PluginConfig` is split across three layers** — `EventDispatcher`
+  (+ `EventHandler`) sits at L1Infrastructure (a generic pub/sub bus
+  reachable from every layer, injects nothing); `PluginRepository`/
+  `PluginEntity`/`Projection\Plugin`/`PluginMigrationEntity`/
+  `PluginMigrationRepository` stay at L2bExtendedDomain (their only real
+  caller is L4Integration); `ExtensionInterface`/`ExtensionContext`/
+  `PluginRegistry`/`ThemeRegistry` and the rest of the plugin/theme
+  contract (see "Plugin/theme contract" below) sit at L3Presentation,
+  since `ExtensionContext` needs read access to `Config`/`Lang`/`Session`
+  (L1), `CurrentUser` (L2a), and `CurrentTemplate` (L3) — L3 is the
+  lowest layer covering all three. Retargeting the legacy string-keyed
+  event functions onto `EventDispatcher::get()` directly (rather than a
+  free function) is what originally surfaced the two-layer split — a
+  free-function call creates no deptrac dependency edge, a direct class
+  reference does; the third layer was added later by the plugin/theme
+  contract itself (P27).
 - **`MailService` implements `Core\MailerInterface`** (L1Infrastructure)
   specifically so `Users`/`Comment`/`Search`/`Section` (L2a/L2b) can
   constructor-inject it without an illegal upward dependency on
   `Mail` itself (L3Presentation, since `MailService` needs `Template` for
   themed HTML email). Same interface-inversion pattern used wherever an L2
   domain class needs an L3 capability.
+- **`Listener\UploadFormatListener` is the one first-party-listener
+  exception to "listeners live at L3Presentation"** — it exists purely
+  to delegate to `Admin\Upload\UploadService`'s static per-format
+  handlers, and `UploadService` itself is genuinely L4Integration (heavy
+  `Kernel`/`WsContext`/DB dependencies) — relocating it just to satisfy
+  this one caller wasn't worth it, so the listener follows its
+  dependency to L4Integration instead of staying with its `Listener\*`
+  siblings.
 
 ### Kernel, DI container, and boot sequence
 
@@ -168,6 +185,96 @@ the admin web UI uses. `migrations:migrate` is Doctrine's own command;
 `schema:dump` (`Piwigo\Command\SchemaDumpCommand`) regenerates the
 checked-in `install/piwigo_structure-{mysql,pgsql}.sql` snapshots from
 the current, live (post-migration) schema.
+
+### Plugin/theme contract (P27)
+
+`PluginConfig\ExtensionInterface` is the one shared contract for both
+plugins and themes — `boot(ExtensionContext $context)`, `install()`,
+`activate()`, `deactivate()`, `uninstall()`, `update(string $oldVersion,
+string $newVersion)`, and `subscribedEvents(): array<class-string,
+Closure|list<Closure>>` (bound closures via first-class-callable syntax
+on a literal method name — e.g. `[SomeEvent::class =>
+$this->onFoo(...)]` — never a method-name string; this project's
+PHPStan `level: 10` + `bleedingEdge.neon` bans variable method calls
+outright, which a string-keyed shape would eventually need). A plugin's
+`subscribedEvents()` runs on a bare `new $class()` with no
+constructor-injected state and before `boot()` ever runs, so it can't
+condition on runtime state the way a container-resolved
+`Piwigo\Listener\*` class can — any runtime branching (e.g. admin vs.
+public registration) has to live inside the handler methods themselves,
+checking `ExtensionContext::isAdminContext()`.
+
+`plugin.json`/`theme.json` (schema: `docs/schemas/plugin.schema.json`/
+`theme.schema.json`, validated via `opis/json-schema`) replace the
+legacy `main.inc.php`/`themeconf.inc.php` header-comment format
+entirely — `Admin\Extensions\ExtensionScanner`/`ExtensionType::
+markerFilenames()` recognize only the new manifest files, no legacy
+fallback (P27.10; this fork breaks all pre-17.x extensions by design,
+see "Key design decisions" in `docs/PLAN.md`). `PluginConfig\
+PluginManifest`/`ThemeManifest` are the readonly DTOs; `require` (a
+Composer-style version-constraint map keyed `'piwigo'` or
+`'plugin/<id>'`) is a genuinely new capability legacy Piwigo never had —
+`PluginRegistry` resolves it into a real, enforced dependency graph
+(`composer/semver`), refusing `activate()` when a required plugin isn't
+active and refusing `deactivate()`/`uninstall()` when another active
+plugin still depends on it.
+
+`PluginConfig\PluginRegistry`/`ThemeRegistry` own the manifest scan,
+validation, dependency resolution, and request-time boot.
+`PluginRegistry::bootActive()` is a two-pass process (register every
+active plugin's `subscribedEvents()` first, *then* call `boot()` on the
+same cached instances) so a plugin dispatching a custom event from its
+own `boot()` reaches every other plugin's handlers regardless of load
+order, and so registration/boot always share one instance per plugin.
+`ThemeRegistry::bootCurrent()` walks the current theme's parent chain
+furthest-ancestor-first for both registration and boot — the reverse of
+the child-first order asset/CSS lookup uses, because `dispatchChange()`
+is a pipeline where the *last* handler registered has final say. Both
+registries retarget `Admin\Extensions\ExtensionLifecycle`'s admin
+install/activate/deactivate/uninstall/update actions (P27.5) — the
+business-rule layer (last-theme guard, default-theme reassignment on
+deactivate) stays in `ExtensionLifecycle` itself, wrapping a call into
+the registry rather than being replaced by it.
+
+`PluginConfig\ExtensionContext` is the one object `boot()` and every
+`subscribedEvents()` handler receive — never the raw container:
+`template()`, `config()` (the same shared `CurrentConfig` instance core
+itself mutates — full read/write, not a narrow facade),
+`currentUser()`, `setLanguage()`/`syncLanguageForRequest()`, `lang()`/
+`languages()`, `url()`, `redirect()`, `isAdminContext()`, a per-plugin
+namespaced `session()` store (`PluginConfig\ExtensionSession`, backed by
+`Session\SessionService::getSessionVar()`), `dispatchNotify()`/
+`dispatchChange()`, and `images()` (`PluginConfig\Facade\
+ImageReadFacade` — a narrow, purpose-built read facade; no raw SQL
+access exists on `ExtensionContext` at all). `template()`/`currentUser()`
+carry a real timing constraint: `bootActive()` runs early in
+`RequestBootstrap::connect()`, before `UserBootstrap::initialize()`
+resolves the real logged-in user and long before `Template` is
+constructed in `finalize()` — calling `template()` from `boot()` throws
+a guarded exception naming `boot()` as the cause; user-dependent logic
+belongs in a `subscribedEvents()` handler for a later lifecycle event
+instead.
+
+The legacy PEM wire protocol (`piwigo.org/ext`'s `serialize()`-encoded,
+3-endpoint API) isn't used by this fork's own extension catalog.
+`Admin\Extensions\PemCatalog` instead fetches a sibling repo's plain
+static `manifest.json` directly (`RequestBootstrap::pemUrl(?ExtensionType
+$type)`, per-type overrides via `PIWIGO_ALT_PLUGINS_PEM_URL`/
+`PIWIGO_ALT_THEMES_PEM_URL`) and filters/normalizes it in plain PHP —
+every real caller's method signature and return shape is unchanged.
+`AppInfo::VERSION` (`'17.0.0'`) is the real compatibility marker an
+extension's own `piwigo_compat` array is checked against.
+
+Bundled-extension status: `Admin\Extensions\ExtensionType::defaultIds()`
+names the 7 extensions this fork ships and maintains itself
+(`AdminTools`, `LocalFilesEditor`, `TakeATour`, `language_switch`,
+`elegant`, `modus`, `smartpocket`) — these aren't duplicated into this
+repo's own git history (`.gitignore` already excludes `plugins/*`/
+`themes/*` except `index.php`/core's own `themes/default`); they ship
+via the PEM mirror above and get auto-installed at install time. Porting
+each one onto the new contract (source lives in the sibling
+`../piwigo16-plugins`/`../piwigo16-themes` repos) is tracked as P27.6 —
+in progress as of this writing, not yet complete for all 7.
 
 ### What's genuinely not built yet
 

@@ -117,7 +117,7 @@ onto the original scope.
 | P24 | Post-P23 remediation & hardening (globals/DBAL/event/l10n coupling retirement, coverage + mutation-testing hardening, SQL bound-parameter sweep, singleton/DI elimination, type correctness + mixed elimination + superglobal/array-offset access — the original plan's P27, merged in, see above — plus the table-prefix + `Tables::` removal) | In progress — remediation sub-tracks done, 2 gaps found (see below); singleton/DI campaign **complete** (Phases 0–12F, zero shims remain); type-correctness/mixed-elimination sub-track real progress (Request DTO migration, Phase 4), not complete; table-prefix + `Tables::` removal **complete** | 405 `(p24)` + 16 `(sql)` + 74 `(di)`/`(lang)` + 89 `(p27)` + 62 (table-prefix removal) |
 | P25 | REST resource layer + OpenAPI (WS API removed) | Not started | 0 |
 | P26 | Security hardening | Not started | 0 |
-| P27 | Plugin / Theme contracts + bundled extensions | Not started | 0 |
+| P27 | Plugin / Theme contracts + bundled extensions | In progress — P27.0-P27.5 and P27.7-P27.10 done; P27.6 (porting the 7 bundled extensions) in progress in a separate session, not yet landed | 17 |
 | P28 | Layer decoupling + repository restructure | Not started (1 unrelated commit borrowed the tag — `doc/` cleanup) | 1 |
 | P29 | Browserslist decision + legacy back-compat removal | Not started | 0 |
 | P30 | Asset-pipeline foundation (ScriptLoader/CssLoader/FileCombiner retirement + ViteManifest resolution) | Not started | 0 |
@@ -1321,18 +1321,41 @@ vs. commit-tag labels" above). Not started — `rate_limiter` (the one P11
 cache pool deliberately left unbuilt, "genuinely P26 scope") is the
 clearest concrete marker that this phase hasn't begun.
 
-### Epoch I — Plugins/Layering/Repo-restructure (P27–P28) — not started
+### Epoch I — Plugins/Layering/Repo-restructure (P27–P28) — P27 in progress, P28 not started
 
 **P27 — Plugin / Theme contracts + bundled extensions + decomposition**
 (`PluginInterface`/`ThemeInterface`, JSON-schema manifests, 16
 Listener/Subscriber classes, migrating 7 bundled extensions, OpenAPI spec
-generation, outbound webhooks). Not started as code, but a full
-preliminary design pass has been done — real-world-grounded, not
-speculative — and the god-class-decomposition prerequisite the original
-plan called for is already done. Track B's own typed-event-object piece
-shipped early and independent of the rest: **156** typed event classes
-plus the `dispatchChange()`/`dispatchNotify()`/`addTypedHandler()`
-mechanism, ahead of and outside P27.
+generation, outbound webhooks). The god-class-decomposition prerequisite
+the original plan called for was already done ahead of this phase, and
+Track B's own typed-event-object piece shipped early and independent of
+the rest: **156** typed event classes plus the
+`dispatchChange()`/`dispatchNotify()`/`addTypedHandler()` mechanism,
+ahead of and outside P27.
+
+**Implementation status (branch `17.x-rewrite-sql-modernization`):**
+P27.0–P27.5 and P27.7–P27.10 are done; P27.6 (porting the 7 bundled
+extensions onto the new contract) is in progress in a separate session,
+not yet landed on this branch. Real commit tags: `P27.0`
+(`8236c685de`, EventDispatcher PSR-14 conformance +
+`Piwigo\Listener\*`), `P27.1`+`P27.2` (`83a7c8cbef`, `ExtensionInterface`
+contract + manifests + JSON schemas + `ExtensionContext` SDK), `P27.3`
+(`35dc37dacf`, `PluginRegistry`/`ThemeRegistry`), `P27.4`
+(`e5650148e1`, request-time boot retarget), `P27.5` (`c80581d493` +
+`cfbb03094f`, admin lifecycle retarget + page-renderer listing merge),
+`P27.7` (`20a7a6ce08`, SEC-49 — `eval_visible` replaced by a typed
+`CheckMenuLinkVisibility` event), `P27.8` (`626f6832ed`, dead
+`PluginMaintain`/`ThemeMaintain`/`insertPlugin()` removal, plus
+`ef65cbb25e`/`3fed9f66cc`, a pre-existing `MailService`
+`RootPathOverride` leak + golden-snapshot fix found while doing that
+cleanup), `P27.9` (`b1e58e7b4e` prerequisite `AppInfo::VERSION` bump to
+`17.0.0`, `7674b185a2` local PEM mirror + manifest-aware compatibility),
+`P27.10` (`f91b821a37` + `9497578aa1`, an unplanned but real
+sub-campaign — full legacy plugin/theme file support retirement,
+prompted mid-session by a live `elegant` theme rendering bug).
+`docs/REFERENCE.md`'s architecture section now documents the shipped
+contract surface. P27.6 stays open on this branch; do not treat P27 as
+fully done until it lands.
 
 *Survey grounding*: every real plugin in the sibling `../piwigo16-plugins`
 catalog (~400 extensions) and every real theme in `../piwigo16-themes`

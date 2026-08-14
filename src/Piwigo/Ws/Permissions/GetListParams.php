@@ -21,7 +21,10 @@ use Piwigo\Ws\WsParams;
  * with no 'default' never lands in $params at all, so `*Set` tracks
  * whether the client provided the key, matching `GetListHandler`'s
  * original `isset($params[...])` checks (an empty list filter must still
- * drop every row, distinct from "no filter requested").
+ * drop every row, distinct from "no filter requested"). `cat_id`'s own
+ * "was it provided" check is done by `GetListHandler` directly against
+ * the raw params (it feeds the mutual-exclusivity error message), so
+ * there's no `catIdSet` here -- only `catIds` itself is consumed.
  */
 final readonly class GetListParams implements WsParams
 {
@@ -31,7 +34,6 @@ final readonly class GetListParams implements WsParams
      * @param list<int> $userIds
      */
     public function __construct(
-        public bool $catIdSet,
         public array $catIds,
         public bool $groupIdSet,
         public array $groupIds,
@@ -45,7 +47,6 @@ final readonly class GetListParams implements WsParams
     public static function fromArray(array $raw): static
     {
         return new self(
-            catIdSet: array_key_exists('cat_id', $raw),
             catIds: self::intList($raw['cat_id'] ?? null),
             groupIdSet: array_key_exists('group_id', $raw),
             groupIds: self::intList($raw['group_id'] ?? null),

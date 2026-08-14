@@ -25,8 +25,10 @@ use Piwigo\Ws\WsParams;
  * -- `makeArrayParam()` converts the null default to `[]`, always a
  * list (`tag_id`: positive ints via `WsParamType::ID`; `tag_url_name`/
  * `tag_name`: untyped, so strings). `tag_mode_and`/`per_page`/`page`:
- * non-null default, always present. `order`: null default, no 'type'
- * flag -- always present, string|null.
+ * non-null default, always present. `order` is deliberately NOT a field
+ * here -- `GetImagesHandler` reads it (along with the rest of the
+ * shared `f_*` filter params) straight off the raw `$params` array via
+ * its own `@var`-narrowed copy, the same as those `f_*` fields.
  */
 final readonly class GetImagesParams implements WsParams
 {
@@ -42,7 +44,6 @@ final readonly class GetImagesParams implements WsParams
         public bool $tagModeAnd,
         public int $perPage,
         public int $page,
-        public ?string $order,
     ) {}
 
     /**
@@ -53,7 +54,6 @@ final readonly class GetImagesParams implements WsParams
         $tagModeAnd = $raw['tag_mode_and'] ?? null;
         $perPage = $raw['per_page'] ?? null;
         $page = $raw['page'] ?? null;
-        $order = $raw['order'] ?? null;
 
         return new self(
             tagIds: self::intList($raw['tag_id'] ?? null),
@@ -62,7 +62,6 @@ final readonly class GetImagesParams implements WsParams
             tagModeAnd: is_bool($tagModeAnd) ? $tagModeAnd : false,
             perPage: is_int($perPage) ? $perPage : 100,
             page: is_int($page) ? $page : 0,
-            order: is_string($order) ? $order : null,
         );
     }
 

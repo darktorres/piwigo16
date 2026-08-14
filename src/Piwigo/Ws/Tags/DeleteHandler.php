@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+// +-----------------------------------------------------------------------+
+// | This file is part of Piwigo.                                          |
+// |                                                                       |
+// | For copyright and license information, please view the COPYING.txt    |
+// | file that was distributed with this source code.                      |
+// +-----------------------------------------------------------------------+
+
+namespace Piwigo\Ws\Tags;
+
+use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\WsError;
+use Piwigo\Csrf\CsrfService;
+use Piwigo\Tag\TagService;
+use Piwigo\Ws\Server;
+use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsErrorResponse;
+
+/**
+ * `pwg.tags.delete` -- admin only. Delete tag(s) by ID.
+ */
+final readonly class DeleteHandler implements WsAction
+{
+    public function __construct(
+        private TagService $tagService,
+        private CurrentConfig $currentConfig,
+    ) {}
+
+    /**
+     * @param array<mixed> $params
+     * @return WsErrorResponse|array{id: list<int>}
+     */
+    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    {
+        $input = DeleteParams::fromArray($params);
+
+        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
+            return new WsErrorResponse(403, 'Invalid security token');
+        }
+
+        if ($this->tagService->countExistingIds($input->tagIds) !== count($input->tagIds)) {
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'All tags does not exist.');
+        }
+
+        $tag_ids = $input->tagIds;
+
+        if (count($tag_ids) > 0) {
+            $this->tagService->deleteTags(array_map(TagId::from(...), $input->tagIds));
+            return [
+                'id' => $tag_ids,
+            ];
+        } else {
+            return [
+                'id' => [],
+            ];
+        }
+    }
+}

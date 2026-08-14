@@ -38,6 +38,14 @@ use Piwigo\Ws\Groups\SetInfoHandler as GroupsSetInfoHandler;
 use Piwigo\Ws\Permissions\AddHandler as PermissionsAddHandler;
 use Piwigo\Ws\Permissions\GetListHandler as PermissionsGetListHandler;
 use Piwigo\Ws\Permissions\RemoveHandler as PermissionsRemoveHandler;
+use Piwigo\Ws\Tags\AddHandler as TagsAddHandler;
+use Piwigo\Ws\Tags\DeleteHandler as TagsDeleteHandler;
+use Piwigo\Ws\Tags\DuplicateHandler as TagsDuplicateHandler;
+use Piwigo\Ws\Tags\GetAdminListHandler as TagsGetAdminListHandler;
+use Piwigo\Ws\Tags\GetImagesHandler as TagsGetImagesHandler;
+use Piwigo\Ws\Tags\GetListHandler as TagsGetListHandler;
+use Piwigo\Ws\Tags\MergeHandler as TagsMergeHandler;
+use Piwigo\Ws\Tags\RenameHandler as TagsRenameHandler;
 
 final readonly class WsDefaultMethods
 {
@@ -47,15 +55,15 @@ final readonly class WsDefaultMethods
     // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
     // ClassName::method() calls. `pwg.userComments.*`/`pwg.permissions.*`/
     // `pwg.plugins.*`/`pwg.themes.performAction`/`pwg.extensions.*`/
-    // `pwg.groups.*` (Comments.php/Permissions.php/Extensions.php/
-    // Groups.php, Group 19's first 4 migrated domains) no longer have a
-    // callback-based registration or a constructor property here -- their
-    // methods register via MethodDefinition/handlerClass instead, resolved
-    // from the container at invocation time.
+    // `pwg.groups.*`/`pwg.tags.*` (Comments.php/Permissions.php/
+    // Extensions.php/Groups.php/Tags.php, Group 19's first 5 migrated
+    // domains) no longer have a callback-based registration or a
+    // constructor property here -- their methods register via
+    // MethodDefinition/handlerClass instead, resolved from the container
+    // at invocation time.
     public function __construct(
         private Categories $pwgCategories,
         private Core $pwgCore,
-        private Tags $pwgTags,
         private Users $pwgUsers,
         private Images $pwgImages,
         private CurrentConfig $currentConfig,
@@ -63,6 +71,33 @@ final readonly class WsDefaultMethods
         private CurrentUser $currentUser,
         private ImageStdParams $imageStdParams,
     ) {}
+
+    /**
+     * The MethodDefinition/ParamDefinition equivalent of $f_params below
+     * (the shared images-table range-filter block merged into several
+     * still-addMethod()-registered methods' own params) -- kept as a
+     * separate method rather than replacing $f_params itself, since
+     * addMethod() and register() need the same 11 filter params in two
+     * different shapes and not every method using them has migrated yet.
+     *
+     * @return list<ParamDefinition>
+     */
+    private static function sharedImageFilterParams(): array
+    {
+        return [
+            ParamDefinition::optional('f_min_rate', null, WsParamType::FLOAT),
+            ParamDefinition::optional('f_max_rate', null, WsParamType::FLOAT),
+            ParamDefinition::optional('f_min_hit', null, WsParamType::INT | WsParamType::POSITIVE),
+            ParamDefinition::optional('f_max_hit', null, WsParamType::INT | WsParamType::POSITIVE),
+            ParamDefinition::optional('f_min_ratio', null, WsParamType::FLOAT | WsParamType::POSITIVE),
+            ParamDefinition::optional('f_max_ratio', null, WsParamType::FLOAT | WsParamType::POSITIVE),
+            ParamDefinition::optional('f_max_level', null, WsParamType::INT | WsParamType::POSITIVE),
+            ParamDefinition::optional('f_min_date_available'),
+            ParamDefinition::optional('f_max_date_available'),
+            ParamDefinition::optional('f_min_date_created'),
+            ParamDefinition::optional('f_max_date_created'),
+        ];
+    }
 
     /**
      * event handler that registers standard methods with the web service
@@ -550,55 +585,33 @@ final readonly class WsDefaultMethods
             'Ends the current session.'
         );
 
-        $service->addMethod(
-            'pwg.tags.getList',
-            $this->pwgTags->getList(...),
-            [
-                'sort_by_counter' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
+        // pwg.tags.* (Group 19's fifth migrated domain) registers via
+        // MethodDefinition/handlerClass -- Tags.php is gone, each method
+        // is its own container-resolved WsAction.
+        $service->register(new MethodDefinition(
+            name: 'pwg.tags.getList',
+            handlerClass: TagsGetListHandler::class,
+            description: 'Retrieves a list of available tags.',
+            params: [
+                ParamDefinition::optional('sort_by_counter', false, WsParamType::BOOL),
             ],
-            'Retrieves a list of available tags.'
-        );
+        ));
 
-        $service->addMethod(
-            'pwg.tags.getImages',
-            $this->pwgTags->getImages(...),
-            array_merge([
-                'tag_id' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'tag_url_name' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                ],
-                'tag_name' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                ],
-                'tag_mode_and' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
-                'per_page' => [
-                    'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'page' => [
-                    'default' => 0,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'order' => [
-                    'default' => null,
-                    'info' => 'id, file, name, hit, rating_score, date_creation, date_available, random',
-                ],
-            ], $f_params),
-            'Returns elements for the corresponding tags. Fill at least tag_id, tag_url_name or tag_name.'
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.tags.getImages',
+            handlerClass: TagsGetImagesHandler::class,
+            description: 'Returns elements for the corresponding tags. Fill at least tag_id, tag_url_name or tag_name.',
+            params: [
+                ParamDefinition::optional('tag_id', null, WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optional('tag_url_name', null, flags: WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optional('tag_name', null, flags: WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optional('tag_mode_and', false, WsParamType::BOOL),
+                ParamDefinition::optional('per_page', 100, WsParamType::INT | WsParamType::POSITIVE, maxValue: $this->currentConfig->wsMaxImagesPerPage),
+                ParamDefinition::optional('page', 0, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('order', null, info: 'id, file, name, hit, rating_score, date_creation, date_available, random'),
+                ...self::sharedImageFilterParams(),
+            ],
+        ));
 
         $service->addMethod(
             'pwg.images.addChunk',
@@ -1077,100 +1090,74 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.tags.getAdminList',
-            $this->pwgTags->getAdminList(...),
-            null,
-            '<b>Admin only.</b>',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.tags.getAdminList',
+            handlerClass: TagsGetAdminListHandler::class,
+            description: '<b>Admin only.</b>',
+            requiresAuth: true,
+        ));
 
         // Known limitation: one tag per call -- batch creation would need
         // a param-shape change (a list instead of a single 'name'),
         // deliberate current API shape, not a defect.
-        $service->addMethod(
-            'pwg.tags.add',
-            $this->pwgTags->add(...),
-            [
-                'name' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.tags.add',
+            handlerClass: TagsAddHandler::class,
+            description: 'Adds a new tag.',
+            params: [
+                ParamDefinition::required('name'),
             ],
-            'Adds a new tag.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.tags.delete',
-            $this->pwgTags->delete(...),
-            [
-                'tag_id' => [
-                    'type' => WsParamType::ID,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.tags.delete',
+            handlerClass: TagsDeleteHandler::class,
+            description: 'Delete tag(s) by ID.',
+            params: [
+                ParamDefinition::required('tag_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Delete tag(s) by ID.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.tags.rename',
-            $this->pwgTags->rename(...),
-            [
-                'tag_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'new_name' => [],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.tags.rename',
+            handlerClass: TagsRenameHandler::class,
+            description: 'Rename tag',
+            params: [
+                ParamDefinition::required('tag_id', WsParamType::ID),
+                ParamDefinition::required('new_name'),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Rename tag',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.tags.duplicate',
-            $this->pwgTags->duplicate(...),
-            [
-                'tag_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'copy_name' => [],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.tags.duplicate',
+            handlerClass: TagsDuplicateHandler::class,
+            description: 'Create a copy of a tag',
+            params: [
+                ParamDefinition::required('tag_id', WsParamType::ID),
+                ParamDefinition::required('copy_name'),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Create a copy of a tag',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.tags.merge',
-            $this->pwgTags->merge(...),
-            [
-                'destination_tag_id' => [
-                    'type' => WsParamType::ID,
-                    'info' => 'Is not necessarily part of groups to merge',
-                ],
-                'merge_tag_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.tags.merge',
+            handlerClass: TagsMergeHandler::class,
+            description: 'Merge tags in one other group',
+            params: [
+                ParamDefinition::required('destination_tag_id', WsParamType::ID, info: 'Is not necessarily part of groups to merge'),
+                ParamDefinition::required('merge_tag_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Merge tags in one other group',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         $service->addMethod(
             'pwg.images.exist',

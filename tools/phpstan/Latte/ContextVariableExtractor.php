@@ -9,6 +9,7 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
@@ -175,15 +176,29 @@ final class ContextVariableExtractor
     }
 
     /**
-     * The `$theme_template_vars` bulk spread (`Template::loadThemeconf()`
-     * `include`s each theme's `themeconf.inc.php`, then bulk-assigns
-     * whatever that file put in `$theme_template_vars`). Not arbitrary in
-     * practice: the files are real, parseable array literals, so their
-     * keys ARE statically enumerable. Values are typed when they follow
-     * the one real shape (`Template::currentConfig()->prop`, resolved via
-     * reflection through currentConfig()'s return type), `mixed` with a
-     * notice otherwise. Union across every theme, same widening-only
-     * semantics as everything else.
+     * The `$theme_template_vars` bulk spread this used to read
+     * (`Template::loadThemeconf()` `include`d each theme's
+     * `themeconf.inc.php`, then bulk-assigned whatever that file put in
+     * `$theme_template_vars`) was retired by P27.10 -- every theme now
+     * ships `theme.json`, plain manifest data with no per-theme template-
+     * variable declaration mechanism at all, so the glob below always
+     * matches zero files today. The one surviving real case,
+     * `standard_pages`'s own `STD_PGS_SELECTED_SKIN`/
+     * `STD_PGS_SELECTED_LOGO`/`GALLERY_TITLE` (genuinely dynamic
+     * `CurrentConfig` reads, not static `theme.json` data -- see
+     * `Template::loadThemeJson()`'s own docblock), moved into a hardcoded
+     * `$this->assign([...])` call inside that same method; scanned
+     * directly from `Template.php` below via the sibling
+     * `$this->currentConfig->prop` shape (thisCurrentConfigChainType()),
+     * same reflection-through-declared-type approach as the old
+     * `Template::currentConfig()->prop` shape (currentConfigChainType()),
+     * just an instance property read instead of a static call chain.
+     * Kept as one glob (rather than deleted outright) since a plugin/theme
+     * author could still in principle ship a `themeconf.inc.php` the
+     * legacy scanner no longer reads but this pre-step tool would still
+     * happily type if one ever reappeared -- matches the "stable seam,
+     * cheap to keep" precedent this whole pipeline already follows
+     * elsewhere.
      *
      * @return array{vars: array<string, string>, notices: list<string>}
      */
@@ -229,7 +244,75 @@ final class ContextVariableExtractor
                 }
             }
         }
+
+        $standardPages = $this->standardPagesTemplateVars($root);
+        foreach ($standardPages['vars'] as $key => $type) {
+            $existing = $vars[$key] ?? null;
+            $vars[$key] = $existing === null || $existing === $type
+                ? $type
+                : $existing . '|' . $type;
+        }
+        $notices = [...$notices, ...$standardPages['notices']];
+
         ksort($vars);
+
+        return [
+            'vars' => $vars,
+            'notices' => $notices,
+        ];
+    }
+
+    /**
+     * `Template::loadThemeJson()`'s own hardcoded `standard_pages` special
+     * case -- see themeTemplateVars()'s own docblock for why this exists
+     * as a sibling scan rather than folding into the `themeconf.inc.php`
+     * glob above.
+     *
+     * @return array{vars: array<string, string>, notices: list<string>}
+     */
+    private function standardPagesTemplateVars(string $root): array
+    {
+        $vars = [];
+        $notices = [];
+        $file = rtrim($root, '/') . '/src/Piwigo/Template/Template.php';
+        $source = file_exists($file) ? file_get_contents($file) : false;
+        if ($source === false) {
+            return [
+                'vars' => $vars,
+                'notices' => $notices,
+            ];
+        }
+
+        $ast = (new ParserFactory())->createForNewestSupportedVersion()
+            ->parse($source);
+        if ($ast === null) {
+            return [
+                'vars' => $vars,
+                'notices' => $notices,
+            ];
+        }
+
+        foreach ((new NodeFinder())->findInstanceOf($ast, MethodCall::class) as $call) {
+            if (
+                ! $call->var instanceof Variable || $call->var->name !== 'this'
+                || ! $call->name instanceof Identifier || $call->name->name !== 'assign'
+                || count($call->args) !== 1 || ! $call->args[0] instanceof Node\Arg
+                || ! $call->args[0]->value instanceof Array_
+            ) {
+                continue;
+            }
+
+            foreach ($call->args[0]->value->items as $item) {
+                if (! $item->key instanceof String_) {
+                    continue;
+                }
+                $type = $this->thisCurrentConfigChainType($item->value);
+                if ($type === null) {
+                    continue; // not the standard_pages special case -- some other assign() call
+                }
+                $vars[$item->key->value] = $type;
+            }
+        }
 
         return [
             'vars' => $vars,
@@ -261,6 +344,51 @@ final class ContextVariableExtractor
             return null;
         }
         $configClassName = $returnType->getName();
+        if (! class_exists($configClassName)) {
+            return null;
+        }
+        $configClass = new ReflectionClass($configClassName);
+        if (! $configClass->hasProperty($expr->name->name)) {
+            return null;
+        }
+        $propType = $configClass->getProperty($expr->name->name)
+            ->getType();
+
+        return $propType === null ? null : ReflectionTypeRenderer::render($propType);
+    }
+
+    /**
+     * Sibling of currentConfigChainType() for the one shape that only
+     * appears inside Template.php itself: `$this->currentConfig->prop`,
+     * an instance property read rather than a `Template::currentConfig()`
+     * static call chain -- reflects Template::$currentConfig's own
+     * declared type instead of currentConfig()'s return type, otherwise
+     * identical.
+     */
+    private function thisCurrentConfigChainType(Expr $expr): ?string
+    {
+        if (! $expr instanceof PropertyFetch || ! $expr->name instanceof Identifier) {
+            return null;
+        }
+        $inner = $expr->var;
+        if (
+            ! $inner instanceof PropertyFetch || ! $inner->name instanceof Identifier
+            || $inner->name->name !== 'currentConfig'
+            || ! $inner->var instanceof Variable || $inner->var->name !== 'this'
+        ) {
+            return null;
+        }
+
+        $templateClass = new ReflectionClass('Piwigo\\Template\\Template');
+        if (! $templateClass->hasProperty('currentConfig')) {
+            return null;
+        }
+        $currentConfigType = $templateClass->getProperty('currentConfig')
+            ->getType();
+        if (! $currentConfigType instanceof ReflectionNamedType || $currentConfigType->isBuiltin()) {
+            return null;
+        }
+        $configClassName = $currentConfigType->getName();
         if (! class_exists($configClassName)) {
             return null;
         }

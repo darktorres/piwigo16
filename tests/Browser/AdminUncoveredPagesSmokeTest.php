@@ -56,18 +56,12 @@ it('languages add-new tab reports the PEM server as unreachable', function (): v
     $page->assertSee('There is no other language available.');
 });
 
-it('plugins add-new tab shows no plugins available without a false connection error', function (): void {
+it('plugins add-new tab reports the PEM server as unreachable', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');
 
     $page->assertSee('There is no other plugin available.');
-    // getVersionsToCheck() returning an empty list is documented as "nothing
-    // to show", NOT a connection failure -- unlike languages_new/themes_new
-    // (which call getServerExtensions() unconditionally), plugins_new only
-    // calls it when versions_to_check isn't already empty, so this page
-    // must never show the same error banner those two do.
-    expect($page->content())
-        ->not->toContain('Connection to server unavailable.');
+    $page->assertSee('Connection to server unavailable.');
 });
 
 it('themes add-new tab reports the PEM server as unreachable', function (): void {

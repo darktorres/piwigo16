@@ -166,12 +166,7 @@ final readonly class PluginsNewPageRenderer
             }
         }
 
-        // get_server_plugins() legacy quirk: an empty versions-to-check list (no
-        // PEM version matches the current branch) is treated as "nothing to show",
-        // NOT a connection error -- only a real fetchRemote()/unserialize() failure
-        // triggers the "Can't connect to server" message below.
-        $versions_to_check = $pem_catalog->getVersionsToCheck(ExtensionType::Plugin, $beta_test);
-        $server_plugins = $versions_to_check === [] ? [] : $pem_catalog->getServerExtensions(ExtensionType::Plugin, $fs_plugin_ids, true, $beta_test);
+        $server_plugins = $pem_catalog->getServerExtensions(ExtensionType::Plugin, $fs_plugin_ids, true, $beta_test);
 
         $order_selected = null;
         $tpl_plugins = [];

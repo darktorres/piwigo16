@@ -12,7 +12,6 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -46,8 +45,8 @@ final readonly class GroupPermPageRenderer
         private PermissionService $permissionService,
         private HtmlRenderingInterface $htmlRenderer,
         private InputValidator $inputValidator,
-        private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
     ) {}
 
     public function render(): void
@@ -61,7 +60,7 @@ final readonly class GroupPermPageRenderer
         $groupPermSubmit = GroupPermSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($groupPermSubmit->isSubmitted) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -132,7 +131,7 @@ final readonly class GroupPermPageRenderer
             formAction: $this->urlService->getRootUrl() .
                 'admin.php?page=group_perm&amp;group_id=' .
                 $groupId->value,
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             categoryOptionTrue: $categoryOptionTrue,
             categoryOptionFalse: $categoryOptionFalse,

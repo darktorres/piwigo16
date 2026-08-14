@@ -47,6 +47,7 @@ final readonly class UpdatesPwgPageRenderer
         private ExtensionUpdateChecker $extensionUpdateChecker,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
     ) {}
 
@@ -108,7 +109,7 @@ final readonly class UpdatesPwgPageRenderer
 
         if ($step === 2 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
-                new CsrfService($this->currentConfig)
+                $this->csrfService
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
@@ -117,7 +118,7 @@ final readonly class UpdatesPwgPageRenderer
         $missing = null;
         if ($step === 3 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
-                new CsrfService($this->currentConfig)
+                $this->csrfService
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
@@ -172,7 +173,7 @@ final readonly class UpdatesPwgPageRenderer
             step: $step,
             piwigoCurrentVersion: $this->pageState->updatedVersion ?? AppInfo::VERSION,
             upgradeTo: $upgrade_to,
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             minorVersion: $minor_version,
             minorReleaseUrl: $minor_release_url,

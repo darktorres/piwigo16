@@ -51,6 +51,7 @@ final readonly class ThemesNewPageRenderer
         private PreferencesService $preferencesService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private CurrentUser $currentUser,
         private Paths $paths,
         private EventDispatcher $eventDispatcher,
@@ -90,7 +91,7 @@ final readonly class ThemesNewPageRenderer
             if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
-                new CsrfService($this->currentConfig)
+                $this->csrfService
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Theme, 'install', $themesNewInstall->revision, $themesNewInstall->extension);
@@ -162,7 +163,7 @@ final readonly class ThemesNewPageRenderer
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
                   . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken()
+                  . '&amp;pwg_token=' . $this->csrfService->getToken()
                 ;
 
                 $new_themes[] = [

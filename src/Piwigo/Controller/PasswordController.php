@@ -83,6 +83,7 @@ final class PasswordController implements ControllerInterface
         private readonly HtmlService $htmlService,
         private readonly MailService $mailService,
         private readonly CurrentConfig $currentConfig,
+        private readonly CsrfService $csrfService,
         private readonly InputValidator $inputValidator,
         private readonly Translator $translator,
         private readonly CurrentLogger $currentLogger,
@@ -130,7 +131,7 @@ final class PasswordController implements ControllerInterface
 
         // ------------------------------------------------------- process form
         if ($this->request->isSubmitted) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlService, $this->redirectService);
 
             if ($action_param === 'lost') {
@@ -291,7 +292,7 @@ final class PasswordController implements ControllerInterface
             action: $action,
             username: $username ?? $this->currentUser->get()
                 ->username?->value,
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             languageOptions: $language_options,
             currentLanguage: $this->currentUser->get()

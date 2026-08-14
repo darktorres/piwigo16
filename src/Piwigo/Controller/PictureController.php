@@ -140,6 +140,7 @@ final readonly class PictureController implements ControllerInterface
         private HtmlService $htmlService,
         private PictureRateRenderer $pictureRateRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Translator $translator,
         private Paths $paths,
@@ -446,7 +447,7 @@ final readonly class PictureController implements ControllerInterface
                         // $_POST values are always strings (or arrays) --
                         // never a real PHP int/float/bool.
                         if ($pictureRequest->content !== null && $pictureRequest->content !== '' && $pictureRequest->content !== '0') {
-                            new CsrfService($this->currentConfig)
+                            $this->csrfService
                                 ->checkOrFail($this->htmlService, $this->redirectService);
                             $comment_action = $commentService->updateComment(
                                 [
@@ -497,7 +498,7 @@ final readonly class PictureController implements ControllerInterface
 
                 case 'delete_comment':
 
-                    new CsrfService($this->currentConfig)
+                    $this->csrfService
                         ->checkOrFail($this->htmlService, $this->redirectService);
 
                     $commentService = $this->commentService($this->urlService);
@@ -521,7 +522,7 @@ final readonly class PictureController implements ControllerInterface
                     // no break
                 case 'validate_comment':
 
-                    new CsrfService($this->currentConfig)
+                    $this->csrfService
                         ->checkOrFail($this->htmlService, $this->redirectService);
 
                     $commentService = $this->commentService($this->urlService);

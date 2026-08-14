@@ -70,6 +70,7 @@ final readonly class ActionController implements ControllerInterface
         private PermissionService $permissionService,
         private ImageService $imageService,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Paths $paths,
         private EntityManagerInterface $entityManager,
@@ -118,7 +119,7 @@ final readonly class ActionController implements ControllerInterface
 
         // special download action for admins
         $is_admin_download = false;
-        if ($this->accessControl->isAdmin() and $actionRequest->pwgToken === new CsrfService($this->currentConfig)->getToken()) {
+        if ($this->accessControl->isAdmin() and $actionRequest->pwgToken === $this->csrfService->getToken()) {
             $is_admin_download = true;
             $this->currentUser->set($this->currentUser->get()->withEnabledHigh(true));
         }

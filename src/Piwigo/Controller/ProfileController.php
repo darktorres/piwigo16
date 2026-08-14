@@ -87,6 +87,7 @@ final readonly class ProfileController implements ControllerInterface
         private HtmlService $htmlService,
         private MailService $mailService,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private Translator $translator,
         private CurrentLogger $currentLogger,
         private Paths $paths,
@@ -103,7 +104,7 @@ final readonly class ProfileController implements ControllerInterface
         $profileAction = ProfileActionRequest::fromGlobals();
 
         if ($profileAction->requiresCsrfCheck) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlService, $this->redirectService);
         }
 
@@ -181,7 +182,7 @@ final readonly class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig, $this->paths);
+        $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths);
 
         $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);

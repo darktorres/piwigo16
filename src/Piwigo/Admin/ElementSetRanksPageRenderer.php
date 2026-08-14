@@ -54,6 +54,7 @@ final readonly class ElementSetRanksPageRenderer
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
     ) {}
 
     public function render(): void
@@ -96,7 +97,7 @@ final readonly class ElementSetRanksPageRenderer
         $image_order_choice = $elementSetRanksRequest->imageOrderChoice;
 
         if ($elementSetRanksRequest->isSubmitted) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             if ($elementSetRanksRequest->rankOfImage !== []) {
@@ -189,7 +190,7 @@ final readonly class ElementSetRanksPageRenderer
         $template->assignContext(new ElementSetRanksHeaderPageContext(
             categoriesNav: (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
             formAction: $base_url . $this->urlService->getQueryStringDiff([]),
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             imageOrderOptions: $sort_fields,
             imageOrderChoice: $image_order_choice,

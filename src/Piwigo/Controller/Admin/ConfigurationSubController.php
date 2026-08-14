@@ -132,6 +132,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly MailService $mailService,
         private readonly CurrentConfig $currentConfig,
+        private readonly CsrfService $csrfService,
         private readonly InputValidator $inputValidator,
         private readonly Paths $paths,
     ) {}
@@ -289,7 +290,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $save_success = null;
 
         if ($configurationRequest->isSubmitted) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
             $int_pattern = '/^\d+$/';
 
@@ -475,7 +476,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // restore default derivatives settings
         if ($page['section'] === 'sizes' and $configurationRequest->restoreSettingsRequested and $this->accessControl->isWebmaster()) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->imageStdParams->restoreDefault();
@@ -508,7 +509,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $action .= '&amp;section=' . $page_section;
 
         $u_help = $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=configuration';
-        $pwg_token = new CsrfService($this->currentConfig)
+        $pwg_token = $this->csrfService
             ->getToken();
 
         switch ($page['section']) {
@@ -589,7 +590,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $guest_id = $this->currentConfig->guestId;
 
                 $edit_user = $this->userService->buildUser(UserId::from($guest_id));
-                $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService, $this->currentConfig, $this->paths);
+                $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {

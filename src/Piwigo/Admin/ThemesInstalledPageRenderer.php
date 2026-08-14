@@ -62,6 +62,7 @@ final readonly class ThemesInstalledPageRenderer
         private UserService $userService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private CurrentUser $currentUser,
         private Paths $paths,
         private PluginRegistry $pluginRegistry,
@@ -92,7 +93,7 @@ final readonly class ThemesInstalledPageRenderer
 
         $themesAction = ThemesInstalledActionRequest::fromGlobals();
         if ($themesAction->action !== null and $themesAction->themeId !== null and $this->accessControl->isWebmaster()) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$themesAction->themeId] ?? null;
@@ -164,7 +165,7 @@ final readonly class ThemesInstalledPageRenderer
 
         usort($tpl_themes, $this->compareThemes(...));
 
-        $pwg_token = new CsrfService($this->currentConfig)
+        $pwg_token = $this->csrfService
             ->getToken();
 
         $this->eventDispatcher->dispatchNotify(new LocEndThemesInstalled());

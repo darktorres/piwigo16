@@ -10,11 +10,11 @@ use Piwigo\Admin\GroupPermPageRenderer;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\CurrentTemplate;
@@ -43,14 +43,14 @@ final readonly class GroupPermSubController implements AdminSubControllerInterfa
         private PermissionService $permissionService,
         private HtmlRenderingInterface $htmlRenderer,
         private InputValidator $inputValidator,
-        private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new GroupPermPageRenderer($this->lang, $this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer, $this->inputValidator, $this->currentConfig, $this->entityManager)
+        new GroupPermPageRenderer($this->lang, $this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer, $this->inputValidator, $this->entityManager, $this->csrfService)
             ->render();
     }
 }

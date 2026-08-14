@@ -10,7 +10,6 @@ use Piwigo\Admin\Projection\CatOptionsPageContext;
 use Piwigo\Admin\Request\CatOptionsRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -43,7 +42,7 @@ final readonly class CatOptionsPageRenderer
         private HtmlRenderingInterface $htmlRenderer,
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
-        private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
     ) {}
 
     public function render(): void
@@ -55,7 +54,7 @@ final readonly class CatOptionsPageRenderer
         $catOptionsRequest = CatOptionsRequest::fromGlobals($this->inputValidator);
 
         if ($catOptionsRequest->isSubmitted) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -136,7 +135,7 @@ final readonly class CatOptionsPageRenderer
             section: $l_section,
             catOptionsTrueLabel: $l_true,
             catOptionsFalseLabel: $l_false,
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             adminPageTitle: $this->lang->t('Properties of abums'),
             categoryOptionTrue: $categoryOptionTrue,

@@ -101,6 +101,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         private CategoryService $categoryService,
         private UserService $userService,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private Paths $paths,
         private EntityManagerInterface $entityManager,
     ) {}
@@ -507,7 +508,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             nbViews: AdminUiHelper::numberFormatHumanReadable($nb_views),
             nbPlugins: count($this->loadedPlugins->get()),
             storageUsed: str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),
-            uQuickSync: $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
+            uQuickSync: $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . $this->csrfService->getToken(),
             checkForUpdates: $this->currentConfig->dashboardCheckForUpdates,
             nbComments: $nb_comments,
             activityWeekNumber: $week_number,

@@ -10,7 +10,6 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\PermalinksPageContext;
 use Piwigo\Controller\Admin\Request\PermalinksRequest;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -39,8 +38,8 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         private HtmlRenderingInterface $htmlRenderer,
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
-        private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
     ) {}
 
     #[Override]
@@ -55,7 +54,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         $selected_cat = [];
         $post_cat_id = $permalinksRequest->catId;
         if ($permalinksRequest->isSetPermalink and $post_cat_id > 0) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $permalink = $permalinksRequest->permalink;
             $permalink_service = $this->permalinkService;
@@ -66,7 +65,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
             }
             $selected_cat = [$post_cat_id];
         } elseif ($permalinksRequest->deletePermanentPresent) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $this->permalinkService
                 ->deleteOldPermalinkByValue($permalinksRequest->deletePermanent);
@@ -83,7 +82,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
 
         $categories_options = $this->categoryService->displaySelectForPermalinks($selected_cat, $htmlRenderer);
 
-        $pwg_token = new CsrfService($this->currentConfig)
+        $pwg_token = $this->csrfService
             ->getToken();
 
         $sortResult = $this->parseSortVariables(

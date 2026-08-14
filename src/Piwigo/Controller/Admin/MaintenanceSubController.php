@@ -58,6 +58,7 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
         private MaintenanceActionsPageRenderer $maintenanceActionsPageRenderer,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
@@ -77,7 +78,7 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
         $maintenanceDispatch = MaintenanceDispatchRequest::fromGlobals($this->inputValidator);
 
         if ($maintenanceDispatch->requiresCsrfCheck) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 

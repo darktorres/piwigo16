@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\GroupListPageContext;
 use Piwigo\Admin\Request\GroupListActionRequest;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -35,8 +34,8 @@ final readonly class GroupListPageRenderer
         private CurrentTemplate $currentTemplate,
         private HtmlRenderingInterface $htmlRenderer,
         private EventDispatcher $eventDispatcher,
-        private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
     ) {}
 
     public function render(): void
@@ -52,7 +51,7 @@ final readonly class GroupListPageRenderer
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         if (GroupListActionRequest::fromGlobals()->requiresCsrfCheck) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -82,10 +81,10 @@ final readonly class GroupListPageRenderer
                 'NB_MEMBERS' => count($members),
                 'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
                 'MEMBERS' => $this->translator->plural('%d member', '%d members', count($members)),
-                'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
+                'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . $this->csrfService->getToken(),
                 'U_PERM' => $perm_url . $row->id->value,
                 'U_USERS' => $users_url . $row->id->value,
-                'U_ISDEFAULT' => $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
+                'U_ISDEFAULT' => $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . $this->csrfService->getToken(),
             ];
 
             $group_counter++;
@@ -93,7 +92,7 @@ final readonly class GroupListPageRenderer
 
         $template->assignContext(new GroupListPageContext(
             addAction: $this->urlService->getRootUrl() . 'admin.php?page=group_list',
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
             adminPageTitle: $this->lang->t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>',

@@ -15,6 +15,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -220,6 +221,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             CurrentTemplateTestFactory::get(),
             HtmlServiceTestFactory::build(),
             CurrentConfigTestFactory::get(),
+            new CsrfService(CurrentConfigTestFactory::get()),
             CurrentPathsTestFactory::get(),
             CurrentUserTestFactory::get(),
             EventDispatcherTestFactory::get(),

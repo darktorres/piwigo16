@@ -42,6 +42,7 @@ final readonly class CatPermPageRenderer
         private HtmlService $htmlService,
         private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
     ) {}
 
     /**
@@ -70,7 +71,7 @@ final readonly class CatPermPageRenderer
         $save_success = null;
         $catPermSubmit = CatPermSubmitRequest::fromGlobals();
         if ($catPermSubmit->isSubmitted) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlService, $this->redirectService);
 
             $post_status = $catPermSubmit->status;
@@ -167,7 +168,7 @@ final readonly class CatPermPageRenderer
             users: $users,
             usersSelected: $user_granted_direct_ids,
             nbUsersGrantedIndirect: $nb_users_granted_indirect,
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             inherit: $this->currentConfig->inheritanceByDefault,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),

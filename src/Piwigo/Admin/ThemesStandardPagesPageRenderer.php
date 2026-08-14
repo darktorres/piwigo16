@@ -51,6 +51,7 @@ final readonly class ThemesStandardPagesPageRenderer
         private CurrentTemplate $currentTemplate,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private Paths $paths,
         private CurrentUser $currentUser,
         private EventDispatcher $eventDispatcher,
@@ -89,7 +90,7 @@ final readonly class ThemesStandardPagesPageRenderer
         $stdPagesSubmit = ThemesStandardPagesSubmitRequest::fromGlobals($std_pgs_logo_options, $std_pgs_skin_options);
 
         if ($stdPagesSubmit->isSubmitted and $this->accessControl->isWebmaster()) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->configService->confUpdateParam('use_standard_pages', $stdPagesSubmit->useStandardPages, true);
@@ -201,7 +202,7 @@ final readonly class ThemesStandardPagesPageRenderer
             isStandardPagesUsed: $is_standard_pages_used,
             standardPagesUsedBy: $standard_pages_used_by,
             stdPgsSelectedLogoPath: $std_pgs_selected_logo_path,
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             isWebmaster: ($this->accessControl->isWebmaster()) ? 1 : 0,
             adminPageTitle: $this->lang->t('Themes'),

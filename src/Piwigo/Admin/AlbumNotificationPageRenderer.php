@@ -56,6 +56,7 @@ final readonly class AlbumNotificationPageRenderer
         private HtmlService $htmlService,
         private MailService $mailService,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
     ) {}
 
@@ -84,7 +85,7 @@ final readonly class AlbumNotificationPageRenderer
         $albumNotificationSubmit = AlbumNotificationSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($albumNotificationSubmit->isSubmitted) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlService, $this->redirectService);
             $this->urlService->setMakeFullUrl();
 
@@ -300,7 +301,7 @@ final readonly class AlbumNotificationPageRenderer
             saveSuccess: $save_success,
             categoriesNav: $categories_nav,
             fAction: $admin_album_base_url . '-notification',
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             authKeyDuration: $auth_key_duration_value,
             noGroupInGallery: $no_group_in_gallery,

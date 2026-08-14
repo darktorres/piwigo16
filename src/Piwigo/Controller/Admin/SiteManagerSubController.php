@@ -64,6 +64,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
         private CategoryService $categoryService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private Paths $paths,
         private EntityManagerInterface $entityManager,
     ) {}
@@ -81,7 +82,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
         $siteManagerRequest = SiteManagerRequest::fromGlobals();
 
         if ($siteManagerRequest->requiresCsrfCheck) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -161,7 +162,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             $base_url = $this->urlService->getRootUrl() . 'admin.php';
             $base_url .= '?page=site_manager';
             $base_url .= '&amp;site=' . $id;
-            $base_url .= '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
+            $base_url .= '&amp;pwg_token=' . $this->csrfService->getToken();
             $base_url .= '&amp;action=';
 
             $update_url = $this->urlService->getRootUrl() . 'admin.php';
@@ -189,7 +190,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
 
         $template->assignContext(new SiteManagerSubControllerPageContext(
             formAction: $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             adminPageTitle: $this->lang->t('Synchronize'),
             sites: $tpl_sites,

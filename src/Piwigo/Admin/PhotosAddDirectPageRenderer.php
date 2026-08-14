@@ -60,6 +60,7 @@ final readonly class PhotosAddDirectPageRenderer
         private ImageService $imageService,
         private PreferencesService $preferencesService,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private EntityManagerInterface $entityManager,
     ) {}
@@ -88,7 +89,7 @@ final readonly class PhotosAddDirectPageRenderer
         $photosAddDirectRequest = PhotosAddDirectRequest::fromGlobals($this->currentConfig->isFormatsEnabled, $this->inputValidator);
 
         if ($photosAddDirectRequest->batchPresent) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->entityManager->getRepository(CaddieEntity::class)
@@ -249,7 +250,7 @@ final readonly class PhotosAddDirectPageRenderer
         }
 
         $form_action = self::baseUrl($this->urlService);
-        $pwg_token = new CsrfService($this->currentConfig)
+        $pwg_token = $this->csrfService
             ->getToken();
 
         $upload_extensions = ($this->currentConfig->uploadFormAllTypes) ? $this->currentConfig->fileExtensions : $this->currentConfig->pictureExtensions;

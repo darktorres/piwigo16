@@ -105,6 +105,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         private CategoryService $categoryService,
         private HtmlService $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Paths $paths,
     ) {}
@@ -171,7 +172,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->inputValidator, $this->paths)
+            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }
@@ -184,7 +185,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         }
 
         if ($action === 'empty_caddie') {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->entityManager->getRepository(CaddieEntity::class)

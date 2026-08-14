@@ -101,6 +101,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         private TagService $tagService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Paths $paths,
     ) {}
@@ -216,7 +217,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         $post = $siteUpdateRequest->post;
 
         if ($siteUpdateRequest->quickSyncRequested) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $post['sync'] = 'files';
@@ -231,7 +232,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
         $general_failure = true;
         if (isset($post['submit'])) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             if ($site_reader->open()) {
@@ -938,7 +939,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             metadataList: $used_metadata,
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
             adminPageTitle: $this->lang->t('Synchronize'),
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             footerElements: $footer_elements,
         ));

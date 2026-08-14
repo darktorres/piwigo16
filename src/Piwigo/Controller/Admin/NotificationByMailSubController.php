@@ -85,6 +85,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
         private HtmlRenderingInterface $htmlRenderer,
         private NotificationByMailSender $notificationByMailSender,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private PageState $pageState,
         private EntityManagerInterface $entityManager,
@@ -123,7 +124,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
         }
 
         if ($post !== []) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($htmlRenderer, $this->redirectService);
         }
 
@@ -319,7 +320,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
 
         $template->assignContext(new NotificationByMailFramePageContext(
             saveSuccess: $save_success,
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=notification_by_mail',
             fAction: $base_url . $this->urlService->getQueryStringDiff([]),

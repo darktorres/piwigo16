@@ -60,6 +60,7 @@ final readonly class LanguagesInstalledPageRenderer
         private UserService $userService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private CurrentUser $currentUser,
         private Paths $paths,
@@ -97,7 +98,7 @@ final readonly class LanguagesInstalledPageRenderer
         $languagesAction = LanguagesInstalledActionRequest::fromGlobals('/^(' . join('|', array_keys($fs_languages)) . ')$/', $this->inputValidator);
 
         if ($languagesAction->action !== null and $languagesAction->languageId !== null and $this->accessControl->isWebmaster()) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $fs_language_entry = $fs_languages[$languagesAction->languageId] ?? null;
@@ -116,7 +117,7 @@ final readonly class LanguagesInstalledPageRenderer
         foreach ($fs_languages as $language_id => $language) {
             $language['u_action'] = $this->urlService->addUrlParams($base_url, [
                 'language' => $language_id,
-                'pwg_token' => new CsrfService($this->currentConfig)
+                'pwg_token' => $this->csrfService
                     ->getToken(),
             ]);
 

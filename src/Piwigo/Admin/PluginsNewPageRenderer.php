@@ -58,6 +58,7 @@ final readonly class PluginsNewPageRenderer
         private ActivityService $activityService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private CurrentUser $currentUser,
         private Paths $paths,
         private EventDispatcher $eventDispatcher,
@@ -92,7 +93,7 @@ final readonly class PluginsNewPageRenderer
             if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
-                new CsrfService($this->currentConfig)
+                $this->csrfService
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Plugin, 'install', $pluginsNewRequest->revision, $pluginsNewRequest->extension);
@@ -203,7 +204,7 @@ final readonly class PluginsNewPageRenderer
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
                   . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken()
+                  . '&amp;pwg_token=' . $this->csrfService->getToken()
                 ;
 
                 // get the age of the last revision in days

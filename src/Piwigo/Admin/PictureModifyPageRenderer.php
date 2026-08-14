@@ -79,6 +79,7 @@ final readonly class PictureModifyPageRenderer
         private PermissionService $permissionService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Paths $paths,
         private PermissionsCachePool $permissionsCachePool,
@@ -118,7 +119,7 @@ final readonly class PictureModifyPageRenderer
         $represented_albums = $this->categoryService->getCategoryIdsRepresentedByImage($image_id);
 
         if ($pictureModifyRequest->deletePresent) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $imageService->deleteElements([$image_id], $this->urlService, true);
@@ -142,7 +143,7 @@ final readonly class PictureModifyPageRenderer
         }
 
         if ($pictureModifyRequest->syncMetadataPresent) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->metadataService
@@ -155,7 +156,7 @@ final readonly class PictureModifyPageRenderer
         $data = [];
         $save_success = null;
         if ($pictureModifyRequest->isSubmitted) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $data = [];
@@ -277,9 +278,9 @@ final readonly class PictureModifyPageRenderer
         $post_comment = $pictureModifyRequest->commentField;
         $comment_value = $post_comment !== null ? stripslashes($post_comment) : (is_string($row['comment'] ?? null) && $row['comment'] !== '' ? $row['comment'] : '');
 
-        $u_download = 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
-        $u_sync = $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
-        $u_delete = $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
+        $u_download = 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . $this->csrfService->getToken();
+        $u_sync = $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . $this->csrfService->getToken();
+        $u_delete = $admin_url_start . '&amp;delete=1&amp;pwg_token=' . $this->csrfService->getToken();
         $u_history = $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $image_id;
         $u_activity = $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $image_id;
         $path = is_string($row['path']) ? $row['path'] : '';
@@ -461,7 +462,7 @@ final readonly class PictureModifyPageRenderer
             representedAlbums: $represented_albums,
             storageAlbum: $storage_category_id,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
         ));
 

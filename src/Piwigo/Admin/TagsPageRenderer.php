@@ -7,7 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Projection\TagsPageContext;
 use Piwigo\Admin\Request\TagsActionRequest;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -35,7 +34,7 @@ final readonly class TagsPageRenderer
         private CurrentTemplate $currentTemplate,
         private TagService $tagService,
         private HtmlRenderingInterface $htmlRenderer,
-        private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
     ) {}
 
     public function render(): void
@@ -53,7 +52,7 @@ final readonly class TagsPageRenderer
         $tagService = $this->tagService;
 
         if (TagsActionRequest::fromGlobals()->isDeleteOrphans) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $tagService->deleteOrphanTags();
@@ -78,7 +77,7 @@ final readonly class TagsPageRenderer
                 count($orphan_tag_names),
                 '<a
       class="icon-eye"
-      data-url="' . $this->urlService->getRootUrl() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken() . '">'
+      data-url="' . $this->urlService->getRootUrl() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . $this->csrfService->getToken() . '">'
                 . $this->lang->t('Review') . '</a>'
             );
 
@@ -138,7 +137,7 @@ final readonly class TagsPageRenderer
 
         $template->assignContext(new TagsPageContext(
             formAction: $this->urlService->getRootUrl() . 'admin.php?page=tags',
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             orphanTagNamesArray: $orphan_tag_names_array,
             warningTags: $warning_tags,

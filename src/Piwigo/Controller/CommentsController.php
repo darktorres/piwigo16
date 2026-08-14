@@ -88,6 +88,7 @@ final readonly class CommentsController implements ControllerInterface
         private HtmlService $htmlService,
         private MailerInterface $mailer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Translator $translator,
         private CurrentLogger $currentLogger,
@@ -340,14 +341,14 @@ final readonly class CommentsController implements ControllerInterface
                 $perform_redirect = false;
 
                 if ($action === 'delete') {
-                    new CsrfService($this->currentConfig)
+                    $this->csrfService
                         ->checkOrFail($this->htmlService, $this->redirectService);
                     $commentService->deleteComment($commentIdVo);
                     $perform_redirect = true;
                 }
 
                 if ($action === 'validate') {
-                    new CsrfService($this->currentConfig)
+                    $this->csrfService
                         ->checkOrFail($this->htmlService, $this->redirectService);
                     $commentService->validateComment($commentIdVo);
                     $perform_redirect = true;
@@ -356,7 +357,7 @@ final readonly class CommentsController implements ControllerInterface
                 if ($action === 'edit') {
                     $content = $commentsRequest->content;
                     if ($content !== null) {
-                        new CsrfService($this->currentConfig)
+                        $this->csrfService
                             ->checkOrFail($this->htmlService, $this->redirectService);
                         $comment_action = $commentService->updateComment(
                             [
@@ -555,7 +556,7 @@ final readonly class CommentsController implements ControllerInterface
                         $url_self,
                         [
                             'delete' => $comment['comment_id'],
-                            'pwg_token' => new CsrfService($this->currentConfig)
+                            'pwg_token' => $this->csrfService
                                 ->getToken(),
                         ]
                     );
@@ -577,7 +578,7 @@ final readonly class CommentsController implements ControllerInterface
                         $tpl_comment['KEY'] = $key;
                         $tpl_comment['IMAGE_ID'] = $image_id;
                         $tpl_comment['CONTENT'] = $comment['content'];
-                        $tpl_comment['CSRF_TOKEN'] = new CsrfService($this->currentConfig)->getToken();
+                        $tpl_comment['CSRF_TOKEN'] = $this->csrfService->getToken();
                         $tpl_comment['U_CANCEL'] = $url_self;
                     }
                 }
@@ -588,7 +589,7 @@ final readonly class CommentsController implements ControllerInterface
                             $url_self,
                             [
                                 'validate' => $comment['comment_id'],
-                                'pwg_token' => new CsrfService($this->currentConfig)
+                                'pwg_token' => $this->csrfService
                                     ->getToken(),
                             ]
                         );

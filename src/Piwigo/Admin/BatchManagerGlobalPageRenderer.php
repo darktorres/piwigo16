@@ -85,6 +85,7 @@ final readonly class BatchManagerGlobalPageRenderer
         private ImageService $imageService,
         private HtmlService $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Paths $paths,
     ) {}
@@ -105,7 +106,7 @@ final readonly class BatchManagerGlobalPageRenderer
         // yet -- a minimal, single-fact existence check, same shape as
         // Ws\Server::isPost()'s own already-reviewed raw $_POST read.
         if (count($_POST) > 0) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 

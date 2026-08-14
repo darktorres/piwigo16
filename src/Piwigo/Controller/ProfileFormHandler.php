@@ -66,6 +66,7 @@ final readonly class ProfileFormHandler
         private HtmlRenderingInterface $htmlRenderer,
         private MailService $mailService,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private Paths $paths,
     ) {}
 
@@ -406,7 +407,7 @@ final readonly class ProfileFormHandler
             apiSelectedExpiration: array_key_first($display_duration),
             apiCanManage: 'pwg_ui' === ($_SESSION['connected_with'] ?? null),
             apiEmailInfos: $email_notifications_infos,
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
         ));
     }

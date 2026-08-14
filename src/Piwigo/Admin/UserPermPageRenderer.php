@@ -9,7 +9,6 @@ use Piwigo\Admin\Request\UserPermSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -42,7 +41,7 @@ final readonly class UserPermPageRenderer
         private UserService $userService,
         private HtmlRenderingInterface $htmlRenderer,
         private InputValidator $inputValidator,
-        private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
     ) {}
 
     public function render(): void
@@ -59,7 +58,7 @@ final readonly class UserPermPageRenderer
         $userPermSubmit = UserPermSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($userPermSubmit->isSubmitted) {
-            new CsrfService($this->currentConfig)
+            $this->csrfService
                 ->checkOrFail($htmlRenderer, $this->redirectService);
         }
 
@@ -124,7 +123,7 @@ final readonly class UserPermPageRenderer
             formAction: $this->urlService->getRootUrl() .
                 'admin.php?page=user_perm' .
                 '&amp;user_id=' . $user_id,
-            pwgToken: new CsrfService($this->currentConfig)
+            pwgToken: $this->csrfService
                 ->getToken(),
             categoriesBecauseOfGroups: $categories_because_of_groups,
             categoryOptionTrue: $categoryOptionTrue,

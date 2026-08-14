@@ -90,7 +90,7 @@ final readonly class Extensions
          *   'author uri'?: string, extension?: string}> $fs_plugins
          */
         $fs_plugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
+            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
         uasort($fs_plugins, $this->htmlRenderer->nameCompare(...));
         $db_plugins_by_id = new ExtensionRepository($this->entityManager)
             ->findAll(ExtensionType::Plugin);
@@ -164,9 +164,10 @@ final readonly class Extensions
             $this->eventDispatcher,
             $this->pluginRegistry,
             $this->themeRegistry,
+            $this->entityManager,
         );
         $fsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$params['plugin']] ?? null;
+            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$params['plugin']] ?? null;
         $errors = $lifecycle->performAction(ExtensionType::Plugin, $params['action'], $params['plugin'], $fsEntry);
 
         if ($errors !== []) {
@@ -219,9 +220,10 @@ final readonly class Extensions
             $this->eventDispatcher,
             $this->pluginRegistry,
             $this->themeRegistry,
+            $this->entityManager,
         );
         $fsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$params['theme']] ?? null;
+            ->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$params['theme']] ?? null;
         $errors = $lifecycle->performAction(ExtensionType::Theme, $params['action'], $params['theme'], $fsEntry);
 
         if ($errors !== []) {
@@ -279,7 +281,7 @@ final readonly class Extensions
         $scanner = new ExtensionScanner();
         $repo = new ExtensionRepository($this->entityManager);
         $pemCatalog = $this->pemCatalog;
-        $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
+        $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry, $this->entityManager);
 
         if ($type === ExtensionType::Plugin) {
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);
@@ -287,7 +289,7 @@ final readonly class Extensions
                 isset($dbPluginsById[$extension_id])
                 and $dbPluginsById[$extension_id]['state'] === 'active'
             ) {
-                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$extension_id] ?? null;
+                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$extension_id] ?? null;
                 $lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $extension_id, $fsEntry);
 
                 $this->redirectService
@@ -304,18 +306,18 @@ final readonly class Extensions
                     );
             }
 
-            $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$extension_id] ?? null;
+            $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$extension_id] ?? null;
             $upgrade_status = $lifecycle->performAction(ExtensionType::Plugin, 'update', $extension_id, $fsEntry, [
                 'revision' => $revision,
             ])[0] ?? null;
-            $extension_name = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$extension_id]['name'] ?? $extension_id;
+            $extension_name = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$extension_id]['name'] ?? $extension_id;
 
             if (isset($params['reactivate'])) {
-                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$extension_id] ?? null;
+                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$extension_id] ?? null;
                 $lifecycle->performAction(ExtensionType::Plugin, 'activate', $extension_id, $fsEntry);
             }
         } elseif ($type === ExtensionType::Theme) {
-            $fsThemesBefore = $scanner->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
+            $fsThemesBefore = $scanner->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
             $extension_name = $fsThemesBefore[$extension_id]['name'] ?? $extension_id;
 
             $extraction = $pemCatalog->extractArchive(ExtensionType::Theme, 'upgrade', $revision, $extension_id);
@@ -327,7 +329,7 @@ final readonly class Extensions
             ];
 
             if ($upgrade_status === 'ok') {
-                $fsThemesAfter = $scanner->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig); // refresh list
+                $fsThemesAfter = $scanner->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager); // refresh list
                 $activity_details['to_version'] = $fsThemesAfter[$extension_id]['version'] ?? null;
             } else {
                 $activity_details['result'] = 'error';
@@ -337,7 +339,7 @@ final readonly class Extensions
         } elseif ($type === ExtensionType::Language) {
             $extraction = $pemCatalog->extractArchive(ExtensionType::Language, 'upgrade', $revision, $extension_id);
             $upgrade_status = $extraction->status;
-            $extension_name = $scanner->scan(ExtensionType::Language, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$extension_id]['name'] ?? $extension_id;
+            $extension_name = $scanner->scan(ExtensionType::Language, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$extension_id]['name'] ?? $extension_id;
         } else {
             // Unreachable: $type is derived from $params['type'], already
             // restricted to plugins/themes/languages by the in_array()

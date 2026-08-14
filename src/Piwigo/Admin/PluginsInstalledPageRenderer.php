@@ -75,7 +75,7 @@ final class PluginsInstalledPageRenderer
         // follows its documented convention and reads specific keys
         // defensively instead.
         $fs_plugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $lang, $paths, $currentUser, $eventDispatcher, $currentConfig);
+            ->scan(ExtensionType::Plugin, $urlService, $lang, $paths, $currentUser, $eventDispatcher, $currentConfig, $entityManager);
 
         // P27.5's own original gap here: ExtensionScanner used to recognize
         // only the legacy main.inc.php header-comment format, so a

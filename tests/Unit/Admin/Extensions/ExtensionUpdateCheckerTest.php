@@ -201,7 +201,8 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     // the disposable fixture root, and a fresh, never-.set() CurrentUser
     // throws once scan() actually reaches a real theme with no
     // screenshot.png.
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ExtensionIgnoredUpdateEntity::class);
+    $entityManager = EntityManagerFactory::build(DbConnection::build());
+    $repo = $entityManager->getRepository(ExtensionIgnoredUpdateEntity::class);
 
     return new ExtensionUpdateChecker(
         LangTestFactory::get(),
@@ -213,6 +214,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
         CurrentUserTestFactory::get(),
         new EventDispatcher(),
         CurrentConfigTestFactory::get(),
+        $entityManager,
     );
 }
 

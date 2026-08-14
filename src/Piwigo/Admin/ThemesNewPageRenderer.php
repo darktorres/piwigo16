@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
@@ -53,6 +54,7 @@ final readonly class ThemesNewPageRenderer
         private CurrentUser $currentUser,
         private Paths $paths,
         private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -105,7 +107,7 @@ final readonly class ThemesNewPageRenderer
                     $this->pageState->addInfo($this->lang->t('Theme has been successfully installed'));
 
                     $installed_theme_id = $themesNewInstall->installedThemeId;
-                    $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$installed_theme_id] ?? null) : null;
+                    $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$installed_theme_id] ?? null) : null;
                     if ($installed_fs_theme !== null) {
                         $this->activityService->record('system', ActivitySystem::Theme, 'install', [
                             'theme_id' => $installed_theme_id,
@@ -137,7 +139,7 @@ final readonly class ThemesNewPageRenderer
         }
 
         $fs_theme_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig) as $fs_theme) {
+        foreach ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager) as $fs_theme) {
             $extension = $fs_theme['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_theme_ids[] = (string) $extension;

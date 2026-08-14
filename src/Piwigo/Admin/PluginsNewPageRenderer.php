@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use DateInterval;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
@@ -60,6 +61,7 @@ final readonly class PluginsNewPageRenderer
         private CurrentUser $currentUser,
         private Paths $paths,
         private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -114,7 +116,7 @@ final readonly class PluginsNewPageRenderer
                     $this->pageState->addInfo('<a href="' . $activate_url . '">' . $this->lang->t('Activate it now') . '</a>');
 
                     $installed_plugin_id = $pluginsNewRequest->pluginId;
-                    $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$installed_plugin_id] ?? null) : null;
+                    $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$installed_plugin_id] ?? null) : null;
                     if ($installed_fs_plugin !== null) {
                         $this->activityService->record('system', ActivitySystem::Plugin, 'install', [
                             'plugin_id' => $installed_plugin_id,
@@ -156,7 +158,7 @@ final readonly class PluginsNewPageRenderer
         $pem_base_url = RequestBootstrap::pemUrl();
 
         $fs_plugin_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig) as $fs_plugin) {
+        foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager) as $fs_plugin) {
             $extension = $fs_plugin['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_plugin_ids[] = (string) $extension;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
@@ -16,8 +17,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -69,7 +68,7 @@ final class ExtensionScanner
      * unused parameter costs nothing to keep vs. a 20-file blast radius
      * to drop.
      */
-    public function scan(ExtensionType $type, UrlServiceInterface $urlService, Lang $lang, Paths $paths, CurrentUser $currentUser, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, ?string $targetCharset = null): array
+    public function scan(ExtensionType $type, UrlServiceInterface $urlService, Lang $lang, Paths $paths, CurrentUser $currentUser, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, ?string $targetCharset = null): array
     {
         $dir = opendir($type->scanDirectory($paths, $currentConfig));
         if ($dir === false) {
@@ -87,7 +86,7 @@ final class ExtensionScanner
 
             $entry = match ($type) {
                 ExtensionType::Plugin => $this->scanPlugin($file, $paths, $currentUser),
-                ExtensionType::Theme => $this->scanTheme($file, $urlService, $paths, $eventDispatcher, $currentConfig, $currentUser),
+                ExtensionType::Theme => $this->scanTheme($file, $urlService, $paths, $eventDispatcher, $currentConfig, $currentUser, $entityManager),
                 ExtensionType::Language => $this->scanLanguage($file, $targetCharset, $paths),
             };
 
@@ -105,7 +104,6 @@ final class ExtensionScanner
             // nameCompare() itself is a pure strcmp()-on-strtolower()
             // comparator that touches none of them, so bare/throwaway
             // instances are harmless here.
-            $extensionScannerConn = DbConnection::build();
             @uasort($found, new HtmlService(
                 new CurrentConfig(),
                 new EventDispatcher(),
@@ -115,8 +113,8 @@ final class ExtensionScanner
                 new CurrentTemplate(),
                 new PageState(),
                 new Translator(new CurrentConfig()),
-                new CategoryRepository(EntityManagerFactory::build($extensionScannerConn), new CurrentConfig()),
-                EntityManagerFactory::build($extensionScannerConn),
+                new CategoryRepository($entityManager, new CurrentConfig()),
+                $entityManager,
             )->nameCompare(...));
         }
 
@@ -210,7 +208,7 @@ final class ExtensionScanner
      *   admin_uri?: string,
      * }|null
      */
-    private function scanTheme(string $themeId, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser): ?array
+    private function scanTheme(string $themeId, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser, EntityManagerInterface $entityManager): ?array
     {
         $path = ExtensionType::Theme->scanDirectory($paths, $currentConfig) . $themeId;
         if (! is_dir($path) || ! file_exists($path . '/theme.json')) {
@@ -259,7 +257,8 @@ final class ExtensionScanner
         if (file_exists($screenshotPath)) {
             $theme['screenshot'] = $screenshotPath;
         } else {
-            $adminTheme = new PreferencesService(new UserRepository(EntityManagerFactory::build(DbConnection::build()), $eventDispatcher, $currentConfig), $currentUser)->getAdminThemePref() ?? $currentConfig->adminTheme;
+            $adminTheme = new PreferencesService(new UserRepository($entityManager, $eventDispatcher, $currentConfig), $currentUser)
+                ->getAdminThemePref() ?? $currentConfig->adminTheme;
             $theme['screenshot'] = $urlService->getRootUrl() . 'themes/admin/'
                 . $adminTheme
                 . '/images/missing_screenshot.png';

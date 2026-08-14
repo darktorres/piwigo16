@@ -285,7 +285,7 @@ final class InstallWizard
         }
 
         $this->fsLanguages = new ExtensionScanner()
-            ->scan(ExtensionType::Language, PresentationAccessor::urlService(), $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, 'utf-8');
+            ->scan(ExtensionType::Language, PresentationAccessor::urlService(), $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, EntityManagerFactory::build(DbConnection::build()), 'utf-8');
 
         if ($this->request->languageParam !== null) {
             $language = $this->request->languageParam;
@@ -582,6 +582,7 @@ final class InstallWizard
             $this->eventDispatcher,
             PresentationAccessor::pluginRegistry(),
             PresentationAccessor::themeRegistry(),
+            EntityManagerFactory::build($languageActivationConn),
         )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
         // fill CurrentConfig::$data from the freshly-seeded config table

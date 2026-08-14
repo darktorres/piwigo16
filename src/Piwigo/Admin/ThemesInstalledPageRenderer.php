@@ -88,14 +88,14 @@ final readonly class ThemesInstalledPageRenderer
         $extension_repository = new ExtensionRepository($this->entityManager);
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry, $this->entityManager);
 
         $themesAction = ThemesInstalledActionRequest::fromGlobals();
         if ($themesAction->action !== null and $themesAction->themeId !== null and $this->accessControl->isWebmaster()) {
             new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$themesAction->themeId] ?? null;
+            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$themesAction->themeId] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $themesAction->action, $themesAction->themeId, $fs_theme_entry);
             $this->pageState->errors = array_values(array_filter($action_errors, is_string(...)));
 
@@ -112,7 +112,7 @@ final readonly class ThemesInstalledPageRenderer
         // that method's own docblock) -- every $fs_theme read below follows
         // its documented convention and reads specific keys defensively
         // instead.
-        $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
+        $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
 
         // P27.5's own original gap here: ExtensionScanner used to recognize
         // only the legacy themeconf.inc.php header-comment format, so a

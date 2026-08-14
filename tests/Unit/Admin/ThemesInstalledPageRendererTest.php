@@ -381,7 +381,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
         throw new LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, CurrentPathsTestFactory::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), new EventDispatcher(), $pluginRegistry, $themeRegistry);
+    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, CurrentPathsTestFactory::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), new EventDispatcher(), $pluginRegistry, $themeRegistry, EntityManagerFactory::build($conn));
 }
 
 /**

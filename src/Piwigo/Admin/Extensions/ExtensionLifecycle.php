@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PluginLoader;
@@ -107,6 +108,7 @@ final readonly class ExtensionLifecycle
         private EventDispatcher $eventDispatcher,
         private PluginRegistry $pluginRegistry,
         private ThemeRegistry $themeRegistry,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -528,7 +530,7 @@ final readonly class ExtensionLifecycle
         }
 
         $parentFsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$parent] ?? null;
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$parent] ?? null;
         if ($parentFsEntry === null) {
             return $parent;
         }
@@ -545,7 +547,7 @@ final readonly class ExtensionLifecycle
     public function getChildrenThemes(string $themeId): array
     {
         $children = [];
-        foreach (new ExtensionScanner()->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig) as $candidate) {
+        foreach (new ExtensionScanner()->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager) as $candidate) {
             if (($candidate['parent'] ?? null) === $themeId) {
                 $name = $candidate['name'] ?? null;
                 if (is_string($name)) {

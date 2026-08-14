@@ -16,6 +16,7 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -222,6 +223,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             CurrentPathsTestFactory::get(),
             CurrentUserTestFactory::get(),
             EventDispatcherTestFactory::get(),
+            EntityManagerFactory::build(DbConnection::build()),
         );
     }
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Controller\Admin\ThemeSubController;
 use Piwigo\Core\Kernel;
@@ -35,6 +36,16 @@ function themeSubControllerTestRoot(): string
     Kernel::boot(Paths::fromRoot($root));
 
     return $root;
+}
+
+function themeSubControllerTestEntityManager(): EntityManagerInterface
+{
+    $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+    if (! $entityManager instanceof EntityManagerInterface) {
+        throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+    }
+
+    return $entityManager;
 }
 
 function themeSubControllerTestRrmdir(string $dir): void
@@ -72,6 +83,7 @@ test('handle() fatal-errors when the requested theme is not among the scanned th
             Paths::fromRoot($root),
             CurrentUserTestFactory::get(),
             new EventDispatcher(),
+            themeSubControllerTestEntityManager(),
         );
 
         $exception = null;

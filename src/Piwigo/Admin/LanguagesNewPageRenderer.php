@@ -88,7 +88,7 @@ final readonly class LanguagesNewPageRenderer
         $extension_repository = new ExtensionRepository($this->entityManager);
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry, $this->entityManager);
 
         $languages_dir = $this->paths->root . 'language';
         if (! is_writable($languages_dir)) {
@@ -115,7 +115,7 @@ final readonly class LanguagesNewPageRenderer
                 // PemCatalog::extractArchive() only extracts, it doesn't know about
                 // the lifecycle state machine.
                 if ($install_status === 'ok' && $extraction->id !== null) {
-                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$extraction->id] ?? null;
+                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$extraction->id] ?? null;
                     $extension_lifecycle->performAction(ExtensionType::Language, 'activate', $extraction->id, $fs_language_entry);
                 }
 
@@ -136,7 +136,7 @@ final readonly class LanguagesNewPageRenderer
         }
 
         $fs_language_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig) as $fs_language) {
+        foreach ($extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager) as $fs_language) {
             $extension = $fs_language['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_language_ids[] = (string) $extension;

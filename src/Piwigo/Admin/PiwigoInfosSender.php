@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionRepository;
@@ -25,7 +26,6 @@ use Piwigo\Core\UniqueExecLock;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
@@ -64,6 +64,7 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
         private Paths $paths,
         private CurrentUser $currentUser,
         private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -235,8 +236,8 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
 
         $urlService = $this->urlService;
         $fsPlugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
-        $dbPluginsById = new ExtensionRepository(EntityManagerFactory::build($conn))
+            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
+        $dbPluginsById = new ExtensionRepository($this->entityManager)
             ->findAll(ExtensionType::Plugin);
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
         $piwigoInfos['plugins'] = [];
@@ -288,8 +289,8 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
         $piwigoInfos['general_stats']['nb_plugins'] = $piwigoInfos['general_stats']['nb_private_plugins'] + count($piwigoInfos['plugins']);
 
         $fsThemes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
-        $dbThemesById = new ExtensionRepository(EntityManagerFactory::build($conn))
+            ->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
+        $dbThemesById = new ExtensionRepository($this->entityManager)
             ->findAll(ExtensionType::Theme);
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;
         $piwigoInfos['themes'] = [];

@@ -215,5 +215,5 @@ test('send returns immediately without touching the DB or network when telemetry
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
     $urlService = UrlServiceTestFactory::build();
-    expect(static fn () => new PiwigoInfosSender(piwigoInfosSenderTestLang(), $currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService, $userService, $imageService, $urlService, $currentConfig, Paths::fromRoot(sys_get_temp_dir()), new CurrentUser(new CurrentConfig()), new EventDispatcher())->send())->not->toThrow(Throwable::class);
+    expect(static fn () => new PiwigoInfosSender(piwigoInfosSenderTestLang(), $currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService, $userService, $imageService, $urlService, $currentConfig, Paths::fromRoot(sys_get_temp_dir()), new CurrentUser(new CurrentConfig()), new EventDispatcher(), EntityManagerFactory::build())->send())->not->toThrow(Throwable::class);
 });

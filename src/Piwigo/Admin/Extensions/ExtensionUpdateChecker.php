@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
@@ -43,6 +44,7 @@ final readonly class ExtensionUpdateChecker
         private CurrentUser $currentUser,
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -83,7 +85,7 @@ final readonly class ExtensionUpdateChecker
      */
     public function getPendingUpdates(ExtensionType $type, string $version = AppInfo::VERSION): ?array
     {
-        $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
+        $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
 
         $fsExtensionIds = [];
         foreach ($fsExtensions as $fsExtension) {
@@ -203,7 +205,7 @@ final readonly class ExtensionUpdateChecker
                 continue;
             }
 
-            $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
+            $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
             foreach ($fsExtensions as $extId => $fsExt) {
                 $neededVersion = $typeUpdatesRaw[$extId] ?? null;
                 $fsVersionRaw = $fsExt['version'] ?? null;
@@ -265,7 +267,7 @@ final readonly class ExtensionUpdateChecker
         $missing = [];
 
         foreach (ExtensionType::cases() as $type) {
-            $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
+            $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
 
             $fsExtensionIds = [];
             foreach ($fsExtensions as $fsExtension) {

@@ -128,7 +128,7 @@ namespace Piwigo\Tests\Integration {
             $this->themeRegistry = $themeRegistry;
             $this->createdPluginIds = [];
             $this->createdThemeIds = [];
-            $this->lifecycle = new ExtensionLifecycle(LangTestFactory::get(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, CurrentPathsTestFactory::get(), $currentConfig), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $activityService, $userService, $htmlService, $currentConfig, CurrentPathsTestFactory::get(), $currentUser, new EventDispatcher(), $pluginRegistry, $themeRegistry);
+            $this->lifecycle = new ExtensionLifecycle(LangTestFactory::get(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, CurrentPathsTestFactory::get(), $currentConfig), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $activityService, $userService, $htmlService, $currentConfig, CurrentPathsTestFactory::get(), $currentUser, new EventDispatcher(), $pluginRegistry, $themeRegistry, EntityManagerFactory::build($this->conn));
 
             $currentConfig->enableExtensionsInstall = true;
             $currentConfig->phpExtensionInUrls = false;

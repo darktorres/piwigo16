@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
@@ -43,6 +44,7 @@ final readonly class ThemeSubController implements AdminSubControllerInterface
         private Paths $paths,
         private CurrentUser $currentUser,
         private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     #[Override]
@@ -51,7 +53,7 @@ final readonly class ThemeSubController implements AdminSubControllerInterface
         $theme = ThemeIdRequest::fromGlobals($this->inputValidator)->themeId;
 
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
         if (! in_array($theme, array_keys($fs_themes), true)) {
             $this->htmlRenderer
                 ->fatalError('Invalid theme');

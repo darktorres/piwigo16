@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Projection\ThemesStandardPagesPageContext;
@@ -53,6 +54,7 @@ final readonly class ThemesStandardPagesPageRenderer
         private Paths $paths,
         private CurrentUser $currentUser,
         private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     public function render(): void
@@ -167,7 +169,7 @@ final readonly class ThemesStandardPagesPageRenderer
 
         // We want to now if any themes use standard pages and which ones
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
 
         $is_standard_pages_used = false;
         $standard_pages_used_by = [];

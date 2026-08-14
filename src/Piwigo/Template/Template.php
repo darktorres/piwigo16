@@ -902,8 +902,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->cssLoader->clear();
 
         if ((bool) count($this->htmlHeadElements) || (bool) strlen($this->htmlStyle)) {
-            $search = "\n</head>";
-            $pos = strpos($this->output, $search);
+            // `[ \t]*` tolerates the leading indentation a formatted
+            // `</head>` line carries (Latte's `Feature::Dedent` isn't
+            // enabled, so that indentation is literal in the rendered
+            // output) -- a bare `strpos($this->output, "\n</head>")`
+            // silently misses an indented tag and drops this content.
+            $pos = preg_match('#\n[ \t]*</head>#', $this->output, $m, PREG_OFFSET_CAPTURE) === 1
+                ? $m[0][1]
+                : false;
             if ($pos !== false) {
                 $rep = "\n" . implode("\n", $this->htmlHeadElements);
                 if ((bool) strlen($this->htmlStyle)) {

@@ -1220,7 +1220,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Reads `theme.json`, mapped onto the same `$themeconf` shape
      * `setTheme()` already reads (`use_standard_pages`/`parent`/
      * `load_parent_css`/`load_parent_local_head`/`local_head`/
-     * `colorscheme`/`icon_dir`/`img_dir`/`mime_icon_dir`) -- a plain file read
+     * `colorscheme`/`icon_dir`/`admin_icon_dir`/`img_dir`/`mime_icon_dir`) -- a plain file read
      * + `json_decode()`, not `PluginConfig\ThemeManifest`/`ThemeRegistry`:
      * those are the same L3Presentation layer as this class but pull in
      * DB/EntityManager dependencies this purely-file-based lookup has no
@@ -1228,18 +1228,25 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * (matching `loadThemeconf()`'s own pre-P27.10 not-found behavior),
      * not a thrown exception.
      *
-     * `icon_dir`/`img_dir`/`mime_icon_dir` (`ThemeManifest::$iconDir`/
-     * `$imgDir`/`$mimeIconDir`) are real, live-read fields (Html\
-     * HtmlService reads `icon_dir` via `themeConf()`, Image\SrcImage
-     * reads `mime_icon_dir`) but deliberately have **no** convention-
-     * based default computed here -- unset when the manifest doesn't
-     * declare them, exactly like `parent`/`local_head`/`colorscheme`
-     * above, so a child theme with no icon assets of its own correctly
-     * inherits its parent's value via `setTheme()`'s parent-then-child
-     * merge (`themes/admin/clear`/`themes/admin/roma` both rely on this
-     * for `themes/admin/default`'s own explicit value -- a hardcoded
-     * `'themes/<id>/icon'` default here would silently break that
-     * inheritance for both).
+     * `icon_dir`/`admin_icon_dir`/`img_dir`/`mime_icon_dir`
+     * (`ThemeManifest::$iconDir`/`$adminIconDir`/`$imgDir`/`$mimeIconDir`)
+     * are real, live-read fields (Html\HtmlService reads `icon_dir` via
+     * `themeConf()`, Image\SrcImage reads `mime_icon_dir`, admin's own
+     * `permalinks`/`popuphelp`/`menubar` templates read `admin_icon_dir`
+     * directly) but deliberately have **no** convention-based default
+     * computed here -- unset when the manifest doesn't declare them,
+     * exactly like `parent`/`local_head`/`colorscheme` above, so a child
+     * theme with no icon assets of its own correctly inherits its
+     * parent's value via `setTheme()`'s parent-then-child merge
+     * (`themes/admin/roma` relies on this for `themes/admin/default`'s
+     * own explicit `admin_icon_dir` -- a hardcoded `'themes/<id>/icon'`
+     * default here would silently break that inheritance). `icon_dir`
+     * and `admin_icon_dir` are deliberately separate: admin themes set
+     * `icon_dir` to the gallery theme's own icon path (shared favicon,
+     * see `themes/admin/default/theme.json`) while `admin_icon_dir`
+     * points at the admin theme's own icon set (delete/exit/drag
+     * button icons) -- the same split as legacy piwigo16's
+     * `admin/themes/<id>/themeconf.inc.php`.
      *
      * `standard_pages` gets one hardcoded exception: its own
      * `STD_PGS_SELECTED_SKIN`/`STD_PGS_SELECTED_LOGO`/`GALLERY_TITLE`
@@ -1287,6 +1294,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
         if (is_string($data['iconDir'] ?? null)) {
             $themeconf['icon_dir'] = $data['iconDir'];
+        }
+        if (is_string($data['adminIconDir'] ?? null)) {
+            $themeconf['admin_icon_dir'] = $data['adminIconDir'];
         }
         if (is_string($data['imgDir'] ?? null)) {
             $themeconf['img_dir'] = $data['imgDir'];

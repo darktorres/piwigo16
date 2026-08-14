@@ -1,6 +1,7 @@
 {
   "name": "default",
   "iconDir": "themes/default/icon",
+  "adminIconDir": "themes/admin/default/icon",
   "mimeIconDir": "themes/default/icon/mimetypes/",
   "colorscheme": "dark"
 }

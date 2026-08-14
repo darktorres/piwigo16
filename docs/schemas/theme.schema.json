@@ -131,6 +131,11 @@
       "minLength": 1,
       "description": "Root-relative path to this theme's icon assets (e.g. 'themes/default/icon'). Omit to inherit the parent theme's value -- most themes with a parent leave this unset."
     },
+    "adminIconDir": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Root-relative path to this admin theme's own icon assets (e.g. 'themes/admin/default/icon'), distinct from 'iconDir' -- admin themes commonly set 'iconDir' to the gallery theme's icon path (for a shared favicon) while needing their own separate icon set for in-page controls (delete/exit/drag icons). Omit to inherit the parent theme's value -- most themes with a parent leave this unset."
+    },
     "imgDir": {
       "type": "string",
       "minLength": 1,

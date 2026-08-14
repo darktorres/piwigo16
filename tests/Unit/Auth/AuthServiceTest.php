@@ -14,6 +14,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\Event\FinalizeLogin;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Auth\Projection\AuthUser;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -231,7 +232,7 @@ test('findUserByUsernameOrEmail() matches by username', function (): void {
 
     expect($user)
         ->not->toBeNull();
-    if ($user === null) {
+    if (! $user instanceof AuthUser) {
         return; // unreachable -- the assertion above already failed the test otherwise.
     }
     expect($user->username)

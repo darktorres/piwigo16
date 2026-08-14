@@ -6,6 +6,7 @@ namespace Piwigo\Tools\PhpStan\Latte;
 
 use FilesystemIterator;
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Identifier;
@@ -49,7 +50,7 @@ final class TemplateCallSiteScanner
     /**
      * @var array<string, int> method name => literal-path argument index
      */
-    private const METHOD_ARG_INDEX = [
+    private const array METHOD_ARG_INDEX = [
         'assignVarFromTemplate' => 1,
         'parse' => 0,
     ];
@@ -70,7 +71,8 @@ final class TemplateCallSiteScanner
         $assignedTemplateVars = [];
         $notices = [];
 
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $parser = new ParserFactory()
+            ->createForNewestSupportedVersion();
 
         foreach ($this->candidateFiles() as $file) {
             $source = file_get_contents($file);
@@ -173,7 +175,7 @@ final class TemplateCallSiteScanner
     ): void {
         if ($method === 'assignContext') {
             $arg = $node->args[0] ?? null;
-            if (! $arg instanceof Node\Arg) {
+            if (! $arg instanceof Arg) {
                 return;
             }
             if ($arg->value instanceof New_ && $arg->value->class instanceof Name) {
@@ -204,13 +206,13 @@ final class TemplateCallSiteScanner
         // $ADMIN_CONTENT undefined in admin_shell.latte.
         if ($method === 'assignVarFromTemplate') {
             $varArg = $node->args[0] ?? null;
-            if ($varArg instanceof Node\Arg && $varArg->value instanceof String_) {
+            if ($varArg instanceof Arg && $varArg->value instanceof String_) {
                 $assignedTemplateVars[$varArg->value->value] = true;
             }
         }
 
         $arg = $node->args[$argIndex] ?? null;
-        if (! $arg instanceof Node\Arg || ! $arg->value instanceof String_) {
+        if (! $arg instanceof Arg || ! $arg->value instanceof String_) {
             // Variable/computed template args are legitimate internal
             // forwarding (Template::assignVarFromTemplate() -> parse());
             // real resolution happens at the outer literal call sites.

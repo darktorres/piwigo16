@@ -6,6 +6,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -369,7 +370,7 @@ test('getCategoryInfo() resolves upperNames for a nested category', function ():
 
     expect($info)
         ->not->toBeNull();
-    if ($info === null) {
+    if (! $info instanceof CategoryInfo) {
         throw new LogicException('unreachable -- asserted above');
     }
     $upperNames = $info->upperNames;
@@ -681,7 +682,7 @@ test('getPreferredImageOrders() throws when the event handler returns something 
     EventDispatcherTestFactory::get()->addEventHandler(GetCategoryPreferredImageOrders::class, static fn (): string => 'not-an-array');
 
     try {
-        expect(fn () => categoryServiceTestService()->getPreferredImageOrders())
+        expect(fn (): array => categoryServiceTestService()->getPreferredImageOrders())
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->reset();
@@ -1318,7 +1319,7 @@ test('getCategoryRepresentantProperties() throws for a missing image', function 
     // unconditionally when Kernel isn't booted -- confirmed by reading
     // its source. Kernel is already booted file-wide (see this file's
     // own top docblock for why).
-    expect(fn () => categoryServiceTestService()->getCategoryRepresentantProperties(999999, UrlServiceTestFactory::build(), EntityManagerFactory::build(DbConnection::build())))
+    expect(fn (): array => categoryServiceTestService()->getCategoryRepresentantProperties(999999, UrlServiceTestFactory::build(), EntityManagerFactory::build(DbConnection::build())))
         ->toThrow(Exception::class, 'getCategoryRepresentantProperties(): image 999999 does not exist (stale representative_picture_id?)');
 });
 

@@ -251,7 +251,7 @@ final class DerivativeImage
         // own recursive call below) passes a freshly-resolved, non-null
         // DerivativeParams; it's only ever reassigned to null as an
         // out-param, below.
-        assert($params !== null);
+        assert($params instanceof DerivativeParams);
 
         if ($src->hasSize()) {
             $src_size = $src->getSize();

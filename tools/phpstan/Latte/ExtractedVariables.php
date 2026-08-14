@@ -7,7 +7,7 @@ namespace Piwigo\Tools\PhpStan\Latte;
 /**
  * ContextVariableExtractor's output for one TemplatePageContext class.
  */
-final class ExtractedVariables
+final readonly class ExtractedVariables
 {
     /**
      * @param array<string, string> $vars template variable name => PHPStan type string
@@ -15,7 +15,7 @@ final class ExtractedVariables
      *   (dynamic keys, expressions typed via their underlying property, ...)
      */
     public function __construct(
-        public readonly array $vars,
-        public readonly array $notices,
+        public array $vars,
+        public array $notices,
     ) {}
 }

@@ -6,6 +6,7 @@ namespace Piwigo\Template\Latte;
 
 use Latte\Extension;
 use Latte\Runtime\Html;
+use Override;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\Lang;
@@ -57,7 +58,7 @@ final class PiwigoExtension extends Extension
     /**
      * @return array<string, callable>
      */
-    #[\Override]
+    #[Override]
     public function getFilters(): array
     {
         return [
@@ -127,7 +128,7 @@ final class PiwigoExtension extends Extension
     /**
      * @return array<string, callable>
      */
-    #[\Override]
+    #[Override]
     public function getFunctions(): array
     {
         return [

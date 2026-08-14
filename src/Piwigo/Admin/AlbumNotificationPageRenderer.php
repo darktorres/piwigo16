@@ -9,6 +9,7 @@ use Piwigo\Admin\Request\AlbumNotificationSubmitRequest;
 use Piwigo\Auth\AuthService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
@@ -199,7 +200,7 @@ final readonly class AlbumNotificationPageRenderer
                 $message .= ' (' . implode(', ', $usernames) . ')';
 
                 $save_success = $message;
-            } elseif ($albumNotificationSubmit->who === 'group' and $albumNotificationSubmit->group !== null) {
+            } elseif ($albumNotificationSubmit->who === 'group' and $albumNotificationSubmit->group instanceof GroupId) {
                 $groupId = $albumNotificationSubmit->group;
 
                 $this->mailService

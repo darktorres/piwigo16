@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
@@ -319,8 +320,8 @@ test('render() lists real activity aggregated by user and skips the additional-f
         // (see that method's own docblock), not a plain string.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
-            ->toBeInstanceOf(Latte\Runtime\Html::class);
-        if (! $adminContent instanceof Latte\Runtime\Html) {
+            ->toBeInstanceOf(Html::class);
+        if (! $adminContent instanceof Html) {
             throw new LogicException('unreachable -- asserted above');
         }
 

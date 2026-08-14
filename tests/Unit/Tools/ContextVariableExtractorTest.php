@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\Projection\StatsPageContext;
+use Piwigo\Admin\Projection\TabsheetPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkPageContext;
+use Piwigo\Menu\DisplayBlock;
+use Piwigo\Menu\Projection\MenubarBlocksPageContext;
+use Piwigo\Template\TemplateAdapter;
 use Piwigo\Tools\PhpStan\Latte\ContextVariableExtractor;
 use Piwigo\Tools\PhpStan\Latte\VariableMapBuilder;
 
@@ -10,7 +16,7 @@ beforeEach(function (): void {
 });
 
 it('maps StatsPageContext with docblock array types, VO ->value narrowing and native strings', function (): void {
-    $extracted = $this->extractor->extract('Piwigo\\Admin\\Projection\\StatsPageContext');
+    $extracted = $this->extractor->extract(StatsPageContext::class);
 
     expect($extracted->vars['U_HELP'])->toBe('string')
         ->and($extracted->vars['lastYears'])->toBe('float[]|int[]')
@@ -21,11 +27,11 @@ it('maps StatsPageContext with docblock array types, VO ->value narrowing and na
 });
 
 it('FQCN-expands use-imported classes in docblock types', function (): void {
-    $extracted = $this->extractor->extract('Piwigo\\Menu\\Projection\\MenubarBlocksPageContext');
+    $extracted = $this->extractor->extract(MenubarBlocksPageContext::class);
 
     $withDisplayBlock = array_filter(
         $extracted->vars,
-        static fn (string $type): bool => str_contains($type, '\\Piwigo\\Menu\\DisplayBlock'),
+        static fn (string $type): bool => str_contains($type, DisplayBlock::class),
     );
     expect($withDisplayBlock)
         ->not->toBe([]);
@@ -34,7 +40,7 @@ it('FQCN-expands use-imported classes in docblock types', function (): void {
 });
 
 it('collects literal keys and notices dynamic ones from variable-built toArray bodies', function (): void {
-    $extracted = $this->extractor->extract('Piwigo\\Admin\\Projection\\TabsheetPageContext');
+    $extracted = $this->extractor->extract(TabsheetPageContext::class);
 
     expect($extracted->vars)
         ->toHaveKey('tabsheet')
@@ -69,13 +75,19 @@ it('declares the framework globals Template.php itself assigns', function (): vo
     $globals = $this->extractor->frameworkGlobals();
 
     expect($globals['ROOT_URL'])->toBe('string')
-        ->and($globals['pwg'])->toBe('\\Piwigo\\Template\\TemplateAdapter')
+        // Leading backslash required -- this type string is spliced
+        // directly into a generated `@var` docblock, see
+        // frameworkGlobals()'s own comment. Written as a concatenation,
+        // not a bare string literal, so this assertion itself can't be
+        // silently flipped back to the wrong value by a future Rector
+        // run the way it was here (real incident, 2026-08-14).
+        ->and($globals['pwg'])->toBe('\\' . TemplateAdapter::class)
         ->and($globals)
         ->not->toHaveKey('theme_template_vars');
 });
 
 it('builds per-template maps with same-class association and a cross-class fallback union', function (): void {
-    $map = (new VariableMapBuilder(
+    $map = new VariableMapBuilder(
         templatesByClass: [
             'App\\ARenderer' => ['/t/a.latte'],
         ],
@@ -91,7 +103,7 @@ it('builds per-template maps with same-class association and a cross-class fallb
                 'messages' => 'list<string>',
             ],
         ],
-    ))->build();
+    )->build();
 
     expect($map->byTemplate['/t/a.latte'])->toBe([
         'title' => 'string',
@@ -110,7 +122,7 @@ it('builds per-template maps with same-class association and a cross-class fallb
 });
 
 it('unions conflicting types deterministically and never overrides specific vars with fallback ones', function (): void {
-    $map = (new VariableMapBuilder(
+    $map = new VariableMapBuilder(
         templatesByClass: [
             'App\\A' => ['/t/shared.latte'],
             'App\\B' => ['/t/shared.latte'],
@@ -131,11 +143,12 @@ it('unions conflicting types deterministically and never overrides specific vars
                 'val' => 'float',
             ],
         ],
-    ))->build();
+    )->build();
 
     expect($map->byTemplate['/t/shared.latte']['val'])->toBe('int|string');
 
-    $globals = (new ContextVariableExtractor())->frameworkGlobals();
+    $globals = new ContextVariableExtractor()
+        ->frameworkGlobals();
     $forTemplate = $map->forTemplate('/t/shared.latte', $globals);
     expect($forTemplate['val'])->toBe('int|string');
     expect($forTemplate['ROOT_URL'])->toBe('string');
@@ -145,14 +158,16 @@ it('unions conflicting types deterministically and never overrides specific vars
 });
 
 it('extracts conditional dim-assigned variables with their declared types', function (): void {
-    $extracted = (new ContextVariableExtractor())->extract('Piwigo\\Controller\\Admin\\Projection\\ConfigurationWatermarkPageContext');
+    $extracted = new ContextVariableExtractor()
+        ->extract(ConfigurationWatermarkPageContext::class);
 
     expect($extracted->vars)
         ->toHaveKey('watermark');
 });
 
 it('enumerates theme_template_vars keys across real themeconf files with reflected config types', function (): void {
-    $result = (new ContextVariableExtractor())->themeTemplateVars(dirname(__DIR__, 3));
+    $result = new ContextVariableExtractor()
+        ->themeTemplateVars(dirname(__DIR__, 3));
 
     expect($result['vars']['GALLERY_TITLE'])->toBe('string')
         ->and($result['vars'])->toHaveKey('STD_PGS_SELECTED_SKIN');

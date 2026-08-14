@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Assert;
 use Piwigo\Tools\PhpStan\Latte\GeneratedFileErrorMapper;
 
 beforeEach(function (): void {
@@ -102,7 +103,7 @@ it('maps a real generated file from the live analysis directory', function (): v
     $liveDir = $repoRoot . '/_analysis/phpstan-latte';
     $liveFile = $liveDir . '/themes-admin-default-template-stats.latte.php';
     if (! is_file($liveFile)) {
-        \PHPUnit\Framework\Assert::markTestSkipped('run bin/piwigo phpstan-latte:compile first');
+        Assert::markTestSkipped('run bin/piwigo phpstan-latte:compile first');
     }
 
     $mapper = new GeneratedFileErrorMapper($liveDir);

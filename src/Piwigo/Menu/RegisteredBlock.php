@@ -14,7 +14,7 @@ namespace Piwigo\Menu;
 /**
  * Represents a menu block registered in a BlockManager object.
  */
-final class RegisteredBlock
+final readonly class RegisteredBlock
 {
     public function __construct(
         private string $id,

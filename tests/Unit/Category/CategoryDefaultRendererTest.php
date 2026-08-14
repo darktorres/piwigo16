@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Common\Enum\Section;
@@ -127,8 +128,8 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
         expect($slideshowUrl)
             ->toBeNull()
             ->and($thumbnailsVar)
-            ->toBeInstanceOf(Latte\Runtime\Html::class);
-        if (! $thumbnailsVar instanceof Latte\Runtime\Html) {
+            ->toBeInstanceOf(Html::class);
+        if (! $thumbnailsVar instanceof Html) {
             throw new LogicException('unreachable -- asserted above');
         }
         expect((string) $thumbnailsVar)

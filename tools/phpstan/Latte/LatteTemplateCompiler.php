@@ -46,7 +46,7 @@ use Piwigo\Tools\PhpStan\Latte\Generated\LatteAnalysisShims;
  * cache stays warm across runs -- the exact trap efabrica's own #426
  * performance discussion describes.
  */
-final class LatteTemplateCompiler
+final readonly class LatteTemplateCompiler
 {
     // Leading backslash required: this constant is spliced directly into
     // generated PHP *source text* below (self::SHIMS . '::...(' ), not
@@ -65,10 +65,10 @@ final class LatteTemplateCompiler
      *   `$this` argument stays for these
      */
     public function __construct(
-        private readonly Engine $engine,
-        private readonly string $root,
-        private readonly string $outputDir,
-        private readonly array $templateAwareFunctions = LatteAnalysisShims::TEMPLATE_AWARE,
+        private Engine $engine,
+        private string $root,
+        private string $outputDir,
+        private array $templateAwareFunctions = LatteAnalysisShims::TEMPLATE_AWARE,
     ) {}
 
     /**

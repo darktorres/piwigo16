@@ -149,7 +149,7 @@ final class MenubarRenderer
         }
 
         $categoryCountCategories = null;
-        if ($block !== null) {
+        if ($block instanceof DisplayBlock) {
             $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, $translator, $lang, $currentConfig, $eventDispatcher, $entityManager), $urlService, $filterState, $currentUser, $lang);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
@@ -171,7 +171,7 @@ final class MenubarRenderer
             $section_context instanceof SectionContext
             and is_array($page_items)
             and count($page_items) < $currentConfig->relatedAlbumsMaximumItemsToCompute
-            and $block !== null
+            and $block instanceof DisplayBlock
             and $page_items !== []
         ) {
             $exclude_cat_ids = [];
@@ -202,7 +202,7 @@ final class MenubarRenderer
         }
 
         $block = $menu->getBlock('mbTags');
-        if ($block !== null and PageFilterHelper::scriptBasename($currentConfig) !== 'picture') {
+        if ($block instanceof DisplayBlock and PageFilterHelper::scriptBasename($currentConfig) !== 'picture') {
             $block->data = [];
             $tags = $tagService->getAvailableTags();
             usort($tags, $tagService->tagsCounterCompare(...));
@@ -224,7 +224,7 @@ final class MenubarRenderer
             }
         }
 
-        if (($block = $menu->getBlock('mbSpecials')) !== null) {
+        if (($block = $menu->getBlock('mbSpecials')) instanceof DisplayBlock) {
             $block->data = [];
             if (! $accessLevelChecker->isAGuest()) {// favorites
                 $block->data['favorites'] =
@@ -300,7 +300,7 @@ final class MenubarRenderer
             $block->template = 'menubar_specials.latte';
         }
 
-        if (($block = $menu->getBlock('mbMenu')) !== null) {
+        if (($block = $menu->getBlock('mbMenu')) instanceof DisplayBlock) {
             $block->data = [];
             // quick search block will be displayed only if data['qsearch'] is set
             // to "yes"
@@ -387,7 +387,7 @@ final class MenubarRenderer
                 $u_admin = $urlService->getRootUrl() . 'admin.php';
             }
         }
-        if (($block = $menu->getBlock('mbIdentification')) !== null) {
+        if (($block = $menu->getBlock('mbIdentification')) instanceof DisplayBlock) {
             $block->template = 'menubar_identification.latte';
         }
 

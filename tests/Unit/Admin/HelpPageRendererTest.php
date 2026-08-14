@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\HelpPageRenderer;
 use Piwigo\Auth\AccessControl;
@@ -126,8 +127,8 @@ test('render() shows the English documentation message for an en_ user and defau
         // (see that method's own docblock), not a plain string.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
-            ->toBeInstanceOf(Latte\Runtime\Html::class);
-        if (! $adminContent instanceof Latte\Runtime\Html) {
+            ->toBeInstanceOf(Html::class);
+        if (! $adminContent instanceof Html) {
             throw new LogicException('unreachable -- asserted above');
         }
 

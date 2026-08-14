@@ -29,12 +29,12 @@ use PHPStan\Command\Output;
  * `errorFormatter.table!` service definition in phpstan.neon -- no PHP
  * call site exists for shipmonk/dead-code-detector to find.
  */
-final class TemplateErrorFormatter implements ErrorFormatter
+final readonly class TemplateErrorFormatter implements ErrorFormatter
 {
-    private readonly GeneratedFileErrorMapper $mapper;
+    private GeneratedFileErrorMapper $mapper;
 
     public function __construct(
-        private readonly ErrorFormatter $inner,
+        private ErrorFormatter $inner,
         string $analysisDir,
     ) {
         $this->mapper = new GeneratedFileErrorMapper($analysisDir);

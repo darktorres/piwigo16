@@ -35,16 +35,16 @@ use Piwigo\Users\UserRepository;
  * of category rows freshly loaded from the DB, overwriting their
  * aggregate columns with the filtered equivalents.
  */
-final class FilterService implements FilterUpdaterInterface
+final readonly class FilterService implements FilterUpdaterInterface
 {
     public function __construct(
-        private readonly FilterState $filterState,
-        private readonly SessionService $sessionService,
-        private readonly Translator $translator,
-        private readonly Lang $lang,
-        private readonly CurrentConfig $currentConfig,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly EntityManagerInterface $entityManager,
+        private FilterState $filterState,
+        private SessionService $sessionService,
+        private Translator $translator,
+        private Lang $lang,
+        private CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**

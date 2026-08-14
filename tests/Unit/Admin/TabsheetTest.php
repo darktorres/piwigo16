@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\Projection\TabSheetEntry;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\CurrentConfig;
@@ -311,8 +312,8 @@ test('assign makes the sheets array available to the tabsheet.latte template bef
     // that method's own docblock), not a plain string.
     $tabsheetVar = $template->getTemplateVars('MY_TABSHEET');
     expect($tabsheetVar)
-        ->toBeInstanceOf(Latte\Runtime\Html::class);
-    if (! $tabsheetVar instanceof Latte\Runtime\Html) {
+        ->toBeInstanceOf(Html::class);
+    if (! $tabsheetVar instanceof Html) {
         throw new LogicException('unreachable -- asserted above');
     }
     expect((string) $tabsheetVar)

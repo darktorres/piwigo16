@@ -22,7 +22,6 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Users\CurrentUser;
 
 // ExtensionScanner/PemCatalog are both `final` with no interface, and
 // PemCatalog::getServerExtensions()/getVersionsToCheck() talk to the real

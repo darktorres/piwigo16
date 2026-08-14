@@ -95,6 +95,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
 use Piwigo\PluginConfig\PluginEntity;
+use Piwigo\PluginConfig\PluginManifest;
 use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
@@ -379,7 +380,7 @@ final class RequestBootstrap
         if (self::currentConfig()->enablePlugins) {
             foreach ($pluginRegistry->getActiveIds() as $activePluginId) {
                 $manifest = $pluginRegistry->getManifest($activePluginId);
-                if ($manifest === null) {
+                if (! $manifest instanceof PluginManifest) {
                     continue;
                 }
                 self::loadedPlugins()->add($activePluginId, [

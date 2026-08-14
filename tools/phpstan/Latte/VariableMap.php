@@ -8,7 +8,7 @@ namespace Piwigo\Tools\PhpStan\Latte;
  * VariableMapBuilder's output: the per-template and fallback variable
  * type maps LatteTemplateCompiler injects as `@var` docblocks.
  */
-final class VariableMap
+final readonly class VariableMap
 {
     /**
      * @param array<string, array<string, string>> $byTemplate template realpath => {var => type}
@@ -18,9 +18,9 @@ final class VariableMap
      *   for the compile Command's visibility log
      */
     public function __construct(
-        public readonly array $byTemplate,
-        public readonly array $fallback,
-        public readonly array $fallbackContexts,
+        public array $byTemplate,
+        public array $fallback,
+        public array $fallbackContexts,
     ) {}
 
     /**

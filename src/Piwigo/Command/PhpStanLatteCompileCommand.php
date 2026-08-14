@@ -45,7 +45,7 @@ use Throwable;
 #[AsCommand(name: 'phpstan-latte:compile', description: 'Compiles every .latte template into the PHPStan analysis directory with typed variables')]
 final class PhpStanLatteCompileCommand extends Command
 {
-    public const OUTPUT_DIR = '_analysis/phpstan-latte';
+    public const string OUTPUT_DIR = '_analysis/phpstan-latte';
 
     public function __construct(
         private readonly PiwigoExtension $piwigoExtension,
@@ -66,7 +66,8 @@ final class PhpStanLatteCompileCommand extends Command
         $root = rtrim($this->paths->root, '/');
         $outputDir = $root . '/' . self::OUTPUT_DIR;
 
-        $scan = (new TemplateCallSiteScanner($root))->scan();
+        $scan = new TemplateCallSiteScanner($root)
+            ->scan();
 
         $extractor = new ContextVariableExtractor();
         $varsByContext = [];
@@ -82,7 +83,8 @@ final class PhpStanLatteCompileCommand extends Command
             }
         }
 
-        $map = (new VariableMapBuilder($scan->templatesByClass, $scan->contextsByClass, $varsByContext))->build();
+        $map = new VariableMapBuilder($scan->templatesByClass, $scan->contextsByClass, $varsByContext)
+            ->build();
 
         // Always-available variables from outside the context system:
         // Template.php's own framework assigns, every theme's parseable

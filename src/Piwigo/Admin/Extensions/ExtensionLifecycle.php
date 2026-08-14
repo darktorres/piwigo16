@@ -18,7 +18,9 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\PluginManifest;
 use Piwigo\PluginConfig\PluginRegistry;
+use Piwigo\PluginConfig\ThemeManifest;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
@@ -169,7 +171,7 @@ final readonly class ExtensionLifecycle
                 }
 
                 $installedManifest = $this->pluginRegistry->getManifest($id);
-                $activityDetails['version'] = $installedManifest !== null ? $installedManifest->version : '0';
+                $activityDetails['version'] = $installedManifest instanceof PluginManifest ? $installedManifest->version : '0';
                 break;
 
             case 'update':
@@ -248,7 +250,7 @@ final readonly class ExtensionLifecycle
                     try {
                         $this->pluginRegistry->activate($id);
                         $activatedManifest = $this->pluginRegistry->getManifest($id);
-                        $activityDetails['version'] = $activatedManifest !== null ? $activatedManifest->version : '0';
+                        $activityDetails['version'] = $activatedManifest instanceof PluginManifest ? $activatedManifest->version : '0';
                     } catch (RuntimeException $e) {
                         $errors[] = $e->getMessage();
                     }
@@ -370,7 +372,7 @@ final readonly class ExtensionLifecycle
                 }
 
                 $activatedThemeManifest = $this->themeRegistry->getManifest($id);
-                $activityDetails['version'] = $activatedThemeManifest !== null ? $activatedThemeManifest->version : '0';
+                $activityDetails['version'] = $activatedThemeManifest instanceof ThemeManifest ? $activatedThemeManifest->version : '0';
 
                 if ($isMobile) {
                     $this->configService->confUpdateParam('mobile_theme', $id);
@@ -598,7 +600,7 @@ final readonly class ExtensionLifecycle
      */
     private function pluginExistsOnDisk(string $id, ?array $fsEntry): bool
     {
-        return $fsEntry !== null || $this->pluginRegistry->getManifest($id) !== null;
+        return $fsEntry !== null || $this->pluginRegistry->getManifest($id) instanceof PluginManifest;
     }
 
     private function stringOrDefault(mixed $value, string $default): string

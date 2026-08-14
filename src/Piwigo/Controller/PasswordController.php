@@ -88,8 +88,8 @@ final class PasswordController implements ControllerInterface
         private readonly Translator $translator,
         private readonly CurrentLogger $currentLogger,
         private readonly Paths $paths,
-        private PermissionService $permissionService,
-        private EntityManagerInterface $entityManager,
+        private readonly PermissionService $permissionService,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     /**

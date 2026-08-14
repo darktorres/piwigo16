@@ -35,7 +35,7 @@ final class BlockManager
     private array $display_blocks = [];
 
     public function __construct(
-        private string $id,
+        private readonly string $id,
         private readonly EventDispatcher $eventDispatcher,
         private readonly CurrentTemplate $currentTemplate,
         private readonly CurrentConfig $currentConfig,

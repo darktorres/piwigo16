@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\HistoryPageRenderer;
 use Piwigo\Auth\AccessControl;
@@ -123,8 +124,8 @@ test('render() defaults the date range to today and skips the user-id lookup whe
         // (see that method's own docblock), not a plain string.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
-            ->toBeInstanceOf(Latte\Runtime\Html::class);
-        if (! $adminContent instanceof Latte\Runtime\Html) {
+            ->toBeInstanceOf(Html::class);
+        if (! $adminContent instanceof Html) {
             throw new LogicException('unreachable -- asserted above');
         }
 

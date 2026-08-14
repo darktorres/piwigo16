@@ -31,7 +31,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'phpstan-latte:generate-shims', description: 'Regenerates the PHPStan Latte analysis shim class from PiwigoExtension')]
 final class PhpStanLatteShimsCommand extends Command
 {
-    private const DEFAULT_OUTPUT = 'tools/phpstan/Latte/Generated/LatteAnalysisShims.php';
+    private const string DEFAULT_OUTPUT = 'tools/phpstan/Latte/Generated/LatteAnalysisShims.php';
 
     public function __construct(
         private readonly PiwigoExtension $piwigoExtension,
@@ -74,7 +74,8 @@ final class PhpStanLatteShimsCommand extends Command
         // Engine registration set is the set that needs shims.
         $engine = new Engine();
         $engine->addExtension($this->piwigoExtension);
-        $source = (new ShimClassGenerator($engine))->generate();
+        $source = new ShimClassGenerator($engine)
+            ->generate();
 
         $dir = dirname($outputPath);
         if (! is_dir($dir) && ! mkdir($dir, 0o775, true) && ! is_dir($dir)) {

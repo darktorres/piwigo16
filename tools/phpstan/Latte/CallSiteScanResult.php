@@ -10,7 +10,7 @@ namespace Piwigo\Tools\PhpStan\Latte;
  * assigns -- the two halves VariableMapBuilder joins into per-template
  * variable maps.
  */
-final class CallSiteScanResult
+final readonly class CallSiteScanResult
 {
     /**
      * @param array<string, list<string>> $templatesByClass class FQCN => template realpaths
@@ -22,9 +22,9 @@ final class CallSiteScanResult
      *   literals, non-`new` assignContext arguments, fallback-widened lookups)
      */
     public function __construct(
-        public readonly array $templatesByClass,
-        public readonly array $contextsByClass,
-        public readonly array $assignedTemplateVars,
-        public readonly array $notices,
+        public array $templatesByClass,
+        public array $contextsByClass,
+        public array $assignedTemplateVars,
+        public array $notices,
     ) {}
 }

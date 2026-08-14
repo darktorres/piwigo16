@@ -24,35 +24,35 @@ use Piwigo\Users\CurrentUser;
 test('lang throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         Lang::class,
-        static fn () => RequestBootstrap::lang(),
+        static fn (): Lang => RequestBootstrap::lang(),
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . Lang::class);
 
 test('pageState throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         PageState::class,
-        static fn () => RequestBootstrap::pageState(),
+        static fn (): PageState => RequestBootstrap::pageState(),
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . PageState::class);
 
 test('currentUser throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         CurrentUser::class,
-        static fn () => RequestBootstrap::currentUser(),
+        static fn (): CurrentUser => RequestBootstrap::currentUser(),
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentUser::class);
 
 test('currentConfigService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         CurrentConfigService::class,
-        static fn () => RequestBootstrap::currentConfigService(),
+        static fn (): CurrentConfigService => RequestBootstrap::currentConfigService(),
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfigService::class);
 
 test('sessionService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         SessionService::class,
-        static fn () => RequestBootstrap::sessionService(),
+        static fn (): SessionService => RequestBootstrap::sessionService(),
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . SessionService::class);
 

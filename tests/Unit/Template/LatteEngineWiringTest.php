@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
@@ -116,11 +117,11 @@ test('assignVarFromTemplate() renders a real .latte file and assigns the result 
 
     $result = $t->getTemplateVars('greeting');
     expect($result)
-        ->toBeInstanceOf(Latte\Runtime\Html::class);
+        ->toBeInstanceOf(Html::class);
     // Real instanceof narrowing (not just the Pest assertion above, which
     // PHPStan can't use to narrow $result's static type) before the cast --
     // same idiom as CurrentTemplateTest.php's own container-resolve checks.
-    if (! $result instanceof Latte\Runtime\Html) {
+    if (! $result instanceof Html) {
         throw new LogicException('unreachable -- asserted above');
     }
     expect((string) $result)

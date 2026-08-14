@@ -6,6 +6,8 @@ namespace Piwigo\Tools\PhpStan\Latte;
 
 use Closure;
 use Latte\Engine;
+use Latte\Runtime\FilterInfo;
+use Latte\Runtime\Template;
 use LogicException;
 use ReflectionFunction;
 use ReflectionNamedType;
@@ -38,14 +40,14 @@ use ReflectionType;
  * against real signatures. Analysis-only: every body throws, nothing
  * here ever executes at runtime.
  */
-final class ShimClassGenerator
+final readonly class ShimClassGenerator
 {
-    private const CLASS_NAME = 'LatteAnalysisShims';
+    private const string CLASS_NAME = 'LatteAnalysisShims';
 
-    private const NAMESPACE = 'Piwigo\\Tools\\PhpStan\\Latte\\Generated';
+    private const string NAMESPACE = 'Piwigo\\Tools\\PhpStan\\Latte\\Generated';
 
     public function __construct(
-        private readonly Engine $engine,
+        private Engine $engine,
     ) {}
 
     public function generate(): string
@@ -120,7 +122,7 @@ final class ShimClassGenerator
         }
         $type = $params[0]->getType();
 
-        return $type instanceof ReflectionNamedType && $type->getName() === 'Latte\\Runtime\\Template';
+        return $type instanceof ReflectionNamedType && $type->getName() === Template::class;
     }
 
     private function isFilterInfoAware(ReflectionFunction $reflection): bool
@@ -131,7 +133,7 @@ final class ShimClassGenerator
         }
         $type = $params[0]->getType();
 
-        return $type instanceof ReflectionNamedType && $type->getName() === 'Latte\\Runtime\\FilterInfo';
+        return $type instanceof ReflectionNamedType && $type->getName() === FilterInfo::class;
     }
 
     private function renderMethod(string $name, ReflectionFunction $reflection, bool $dropFilterInfoParam = false): string
@@ -141,7 +143,7 @@ final class ShimClassGenerator
             array_shift($reflectionParams);
         }
         $params = array_map(
-            fn (ReflectionParameter $p): string => $this->renderParameter($p),
+            $this->renderParameter(...),
             $reflectionParams,
         );
 

@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Request\SearchQueryRequest;
 use Piwigo\Core\AccessLevel;
@@ -129,7 +130,7 @@ final readonly class SearchController implements ControllerInterface
         $cat_ids = [];
         if ($searchQuery->hasCatId) {
             $catId = $searchQuery->catId;
-            if ($catId === null) {
+            if (! $catId instanceof CategoryId) {
                 $this->htmlRenderer
                     ->pageNotFound($this->redirectService, $this->lang->t('Requested album does not exist'));
             }

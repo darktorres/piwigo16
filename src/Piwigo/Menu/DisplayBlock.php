@@ -54,7 +54,7 @@ final class DisplayBlock
     public mixed $id = null;
 
     public function __construct(
-        private RegisteredBlock $registeredBlock
+        private readonly RegisteredBlock $registeredBlock
     ) {}
 
     public function getBlock(): RegisteredBlock

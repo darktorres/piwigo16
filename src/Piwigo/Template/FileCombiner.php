@@ -32,7 +32,7 @@ final class FileCombiner
      */
     public function __construct(
         private readonly AccessLevelChecker $accessLevelChecker,
-        private string $type,
+        private readonly string $type,
         private readonly UrlServiceInterface $urlService,
         private readonly Paths $paths,
         private readonly EventDispatcher $eventDispatcher,

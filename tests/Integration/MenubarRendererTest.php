@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
@@ -262,7 +263,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in
         // Latte\Runtime\Html, not a plain string.
         $menubar = $this->template->getTemplateVars('MENUBAR');
-        self::assertInstanceOf(\Latte\Runtime\Html::class, $menubar);
+        self::assertInstanceOf(Html::class, $menubar);
         $menubarHtml = (string) $menubar;
         self::assertStringContainsString('Related albums', $menubarHtml);
         self::assertStringContainsString('Nested Sub Album', $menubarHtml);
@@ -299,7 +300,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in
         // Latte\Runtime\Html, not a plain string.
         $menubar = $this->template->getTemplateVars('MENUBAR');
-        self::assertInstanceOf(\Latte\Runtime\Html::class, $menubar);
+        self::assertInstanceOf(Html::class, $menubar);
         self::assertStringNotContainsString('Related albums', (string) $menubar);
     }
 }

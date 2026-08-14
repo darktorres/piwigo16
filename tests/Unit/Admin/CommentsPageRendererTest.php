@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\CommentsPageRenderer;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Auth\AccessControl;
@@ -111,8 +112,8 @@ test('render() assigns the comments page context and tabsheet without any real t
         // (see that method's own docblock), not a plain string.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
-            ->toBeInstanceOf(Latte\Runtime\Html::class);
-        if (! $adminContent instanceof Latte\Runtime\Html) {
+            ->toBeInstanceOf(Html::class);
+        if (! $adminContent instanceof Html) {
             throw new LogicException('unreachable -- asserted above');
         }
 

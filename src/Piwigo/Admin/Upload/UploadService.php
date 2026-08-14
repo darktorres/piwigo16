@@ -78,7 +78,7 @@ use Piwigo\Ws\WsErrorResponse;
  * `__construct()` is 100% `readonly` properties, so sharing one instance
  * carries no mutable-state risk.
  */
-final class UploadService
+final readonly class UploadService
 {
     /**
      * Advisory-lock acquisition timeout for addUploadedFile()'s
@@ -90,22 +90,22 @@ final class UploadService
     private const int DUP_DETECT_LOCK_TIMEOUT_SECONDS = 30;
 
     public function __construct(
-        private readonly Lang $lang,
-        private readonly CurrentLogger $currentLogger,
-        private readonly StorageRegistry $storageRegistry,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly ConfigService $configService,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ActivityService $activityService,
-        private readonly MetadataService $metadataService,
-        private readonly ImageService $imageService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly WsContext $wsContext,
-        private readonly CurrentUser $currentUser,
-        private readonly Paths $paths,
-        private readonly DbCredentials $dbCredentials,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly PermissionService $permissionService,
+        private Lang $lang,
+        private CurrentLogger $currentLogger,
+        private StorageRegistry $storageRegistry,
+        private EventDispatcher $eventDispatcher,
+        private ConfigService $configService,
+        private EntityManagerInterface $entityManager,
+        private ActivityService $activityService,
+        private MetadataService $metadataService,
+        private ImageService $imageService,
+        private CurrentConfig $currentConfig,
+        private WsContext $wsContext,
+        private CurrentUser $currentUser,
+        private Paths $paths,
+        private DbCredentials $dbCredentials,
+        private ImageStdParams $imageStdParams,
+        private PermissionService $permissionService,
     ) {}
 
     /**

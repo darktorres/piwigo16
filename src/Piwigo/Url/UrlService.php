@@ -69,20 +69,20 @@ use Piwigo\Users\UserRepository;
  * it's built directly from this class's own currentUser/currentConfig
  * rather than resolved from the container.
  */
-final class UrlService implements UrlServiceInterface
+final readonly class UrlService implements UrlServiceInterface
 {
     public function __construct(
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly RootPathOverride $rootPathOverride,
-        private readonly SectionContextRegistry $sectionContextRegistry,
-        private readonly RequestMountDepth $requestMountDepth,
-        private readonly CurrentConfig $currentConfig,
-        private readonly DeploymentPolicy $deploymentPolicy,
-        private readonly WsContext $wsContext,
-        private readonly CurrentUser $currentUser,
-        private readonly Lang $lang,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly EntityManagerInterface $entityManager,
+        private HtmlRenderingInterface $htmlRenderer,
+        private RootPathOverride $rootPathOverride,
+        private SectionContextRegistry $sectionContextRegistry,
+        private RequestMountDepth $requestMountDepth,
+        private CurrentConfig $currentConfig,
+        private DeploymentPolicy $deploymentPolicy,
+        private WsContext $wsContext,
+        private CurrentUser $currentUser,
+        private Lang $lang,
+        private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**

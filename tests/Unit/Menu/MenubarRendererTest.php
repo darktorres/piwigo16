@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -159,8 +160,8 @@ test('render skips every real DB-backed block when no listener has registered an
         // Latte\Runtime\Html, not a plain string.
         $menubar = $template->getTemplateVars('MENUBAR');
         expect($menubar)
-            ->toBeInstanceOf(Latte\Runtime\Html::class);
-        if (! $menubar instanceof Latte\Runtime\Html) {
+            ->toBeInstanceOf(Html::class);
+        if (! $menubar instanceof Html) {
             throw new LogicException('unreachable -- asserted above');
         }
 

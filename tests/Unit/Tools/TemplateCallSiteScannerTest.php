@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\Projection\StatsPageContext;
+use Piwigo\Admin\StatsPageRenderer;
+use Piwigo\Mail\NotificationByMailSender;
+use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
 
 /**
@@ -15,11 +20,12 @@ use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
  */
 beforeEach(function (): void {
     $this->root = dirname(__DIR__, 3);
-    $this->result = (new TemplateCallSiteScanner($this->root))->scan();
+    $this->result = new TemplateCallSiteScanner($this->root)
+        ->scan();
 });
 
 it('resolves an Admin renderer call site only under the admin theme', function (): void {
-    $templates = $this->result->templatesByClass['Piwigo\\Admin\\StatsPageRenderer'] ?? [];
+    $templates = $this->result->templatesByClass[StatsPageRenderer::class] ?? [];
 
     expect($templates)
         ->toContain($this->root . '/themes/admin/default/template/stats.latte');
@@ -29,7 +35,7 @@ it('resolves an Admin renderer call site only under the admin theme', function (
 });
 
 it('resolves a Mail call site only under the mail template dir', function (): void {
-    $templates = $this->result->templatesByClass['Piwigo\\Mail\\NotificationByMailSender'] ?? [];
+    $templates = $this->result->templatesByClass[NotificationByMailSender::class] ?? [];
 
     expect($templates)
         ->not->toBe([]);
@@ -39,7 +45,7 @@ it('resolves a Mail call site only under the mail template dir', function (): vo
 });
 
 it('resolves a frontend polymorphic call site to every reachable theme variant', function (): void {
-    $templates = $this->result->templatesByClass['Piwigo\\Page\\PageHeaderRenderer'] ?? [];
+    $templates = $this->result->templatesByClass[PageHeaderRenderer::class] ?? [];
 
     expect($templates)
         ->toContain($this->root . '/themes/default/template/header.latte')
@@ -47,8 +53,8 @@ it('resolves a frontend polymorphic call site to every reachable theme variant',
 });
 
 it('associates assignContext call sites with their context class', function (): void {
-    expect($this->result->contextsByClass['Piwigo\\Admin\\StatsPageRenderer'] ?? [])
-        ->toContain('Piwigo\\Admin\\Projection\\StatsPageContext');
+    expect($this->result->contextsByClass[StatsPageRenderer::class] ?? [])
+        ->toContain(StatsPageContext::class);
 });
 
 it('records the cross-class context assigners the same-class association cannot cover', function (): void {
@@ -56,9 +62,9 @@ it('records the cross-class context assigners the same-class association cannot 
     // of the 25 confirmed cross-class files that motivate the fallback
     // union in VariableMapBuilder.
     expect($this->result->contextsByClass)
-        ->toHaveKey('Piwigo\\Menu\\MenubarRenderer');
+        ->toHaveKey(MenubarRenderer::class);
     expect($this->result->templatesByClass)
-        ->not->toHaveKey('Piwigo\\Menu\\MenubarRenderer');
+        ->not->toHaveKey(MenubarRenderer::class);
 });
 
 it('resolves every literal call site to at least one real file', function (): void {
@@ -87,7 +93,8 @@ it('widens to the full tree when the namespace scope has no match, instead of re
         PHP);
 
     try {
-        $result = (new TemplateCallSiteScanner($root))->scan();
+        $result = new TemplateCallSiteScanner($root)
+            ->scan();
 
         expect($result->templatesByClass['Piwigo\\Admin\\SomeRenderer'] ?? [])
             ->toContain(realpath($root . '/themes/default/template/only_frontend.latte'));

@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
 use Error;
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
@@ -273,7 +274,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // (see that method's own docblock), not a plain string.
         $vars = $this->template->getTemplateVars('CATEGORIES');
 
-        return $vars instanceof \Latte\Runtime\Html ? (string) $vars : '';
+        return $vars instanceof Html ? (string) $vars : '';
     }
 
     public function testRenderRendersTheRootCategoriesWithTheirOwnRepresentativePicture(): void

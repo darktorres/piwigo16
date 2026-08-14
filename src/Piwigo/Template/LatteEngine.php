@@ -21,9 +21,9 @@ use Piwigo\Template\Latte\PiwigoExtension;
  * base dir) accepts an absolute path directly. See docs/PLAN.md's P31
  * section, "Template-directory resolution".
  */
-final class LatteEngine
+final readonly class LatteEngine
 {
-    private readonly Engine $engine;
+    private Engine $engine;
 
     public function __construct(string $cacheDirectory, bool $autoRefresh, PiwigoExtension $extension)
     {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Core\AppInfo;
@@ -22,7 +23,6 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
@@ -1081,7 +1081,7 @@ test('concat casts an existing Latte\Runtime\Html value to string instead of dro
     // suffix.
     $t = TemplateTestFactory::build();
     $t->assignContext(new AdHocPageContext([
-        'greeting' => new Latte\Runtime\Html('Hello '),
+        'greeting' => new Html('Hello '),
     ]));
     $t->concat('greeting', 'World');
 

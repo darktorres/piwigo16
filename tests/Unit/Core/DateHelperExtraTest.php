@@ -144,7 +144,7 @@ test('translator() throws when the container returns an unexpected type for Tran
     try {
         KernelContainerOverride::withWrongTypeFor(
             Translator::class,
-            static fn (): string => DateHelper::timeSince((new DateTime())->modify('-90 seconds')->getTimestamp()),
+            static fn (): string => DateHelper::timeSince(new DateTime()->modify('-90 seconds')->getTimestamp()),
         );
     } finally {
         Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));

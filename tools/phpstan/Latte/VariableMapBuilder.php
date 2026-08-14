@@ -21,7 +21,7 @@ namespace Piwigo\Tools\PhpStan\Latte;
  * v1; `fallbackContexts` keeps the tradeoff visible in the compile
  * Command's output instead of silent.
  */
-final class VariableMapBuilder
+final readonly class VariableMapBuilder
 {
     /**
      * @param array<string, list<string>> $templatesByClass class FQCN => template realpaths
@@ -29,9 +29,9 @@ final class VariableMapBuilder
      * @param array<string, array<string, string>> $varsByContext context FQCN => {var => type}
      */
     public function __construct(
-        private readonly array $templatesByClass,
-        private readonly array $contextsByClass,
-        private readonly array $varsByContext,
+        private array $templatesByClass,
+        private array $contextsByClass,
+        private array $varsByContext,
     ) {}
 
     public function build(): VariableMap

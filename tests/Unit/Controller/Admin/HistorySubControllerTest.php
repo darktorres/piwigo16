@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Auth\AccessControl;
@@ -131,8 +132,8 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
         // (see that method's own docblock), not a plain string.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
-            ->toBeInstanceOf(Latte\Runtime\Html::class);
-        if (! $adminContent instanceof Latte\Runtime\Html) {
+            ->toBeInstanceOf(Html::class);
+        if (! $adminContent instanceof Html) {
             throw new LogicException('unreachable -- asserted above');
         }
 

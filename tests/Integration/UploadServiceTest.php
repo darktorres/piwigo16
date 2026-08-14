@@ -29,7 +29,6 @@ use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Image\ImageService;
-use Piwigo\Image\ImageStdParams;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;

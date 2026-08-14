@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Image\DerivativeParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -88,7 +89,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
     public function testMissingHeightWithoutATypeIsFatal(): void
     {
         $this->callExpectingFatal(
-            fn () => $this->template->defineDerivative(width: 100),
+            fn (): DerivativeParams => $this->template->defineDerivative(width: 100),
             'defineDerivative missing width or height'
         );
     }
@@ -96,7 +97,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
     public function testMissingWidthWithoutATypeIsFatal(): void
     {
         $this->callExpectingFatal(
-            fn () => $this->template->defineDerivative(height: 80),
+            fn (): DerivativeParams => $this->template->defineDerivative(height: 80),
             'defineDerivative missing width or height'
         );
     }
@@ -148,7 +149,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
     public function testMinWidthGreaterThanWidthIsFatal(): void
     {
         $this->callExpectingFatal(
-            fn () => $this->template->defineDerivative(width: 100, height: 80, crop: 50, minWidth: 200),
+            fn (): DerivativeParams => $this->template->defineDerivative(width: 100, height: 80, crop: 50, minWidth: 200),
             'defineDerivative invalid min_width'
         );
     }
@@ -163,7 +164,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
     public function testMinHeightGreaterThanHeightIsFatal(): void
     {
         $this->callExpectingFatal(
-            fn () => $this->template->defineDerivative(width: 100, height: 80, crop: 50, minHeight: 200),
+            fn (): DerivativeParams => $this->template->defineDerivative(width: 100, height: 80, crop: 50, minHeight: 200),
             'defineDerivative invalid min_height'
         );
     }

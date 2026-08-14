@@ -88,7 +88,7 @@ test('prepareDisplay assigns positions in registration order (idx*50) with no co
         ->toBeFalse();
     $first = $manager->getBlock('first');
     $second = $manager->getBlock('second');
-    if ($first === null || $second === null) {
+    if (! $first instanceof DisplayBlock || ! $second instanceof DisplayBlock) {
         throw new RuntimeException('Expected both blocks to be visible after prepareDisplay()');
     }
     expect($first->getPosition())
@@ -108,7 +108,7 @@ test('prepareDisplay honors an explicit position from blk_menubar config', funct
     $manager->prepareDisplay();
 
     $cat = $manager->getBlock('cat');
-    if ($cat === null) {
+    if (! $cat instanceof DisplayBlock) {
         throw new RuntimeException('Expected the cat block to be visible after prepareDisplay()');
     }
     expect($cat->getPosition())
@@ -179,7 +179,7 @@ test('prepareDisplay falls back to idx*50 positioning when a block\'s config val
 
     $first = $manager->getBlock('first');
     $second = $manager->getBlock('second');
-    if ($first === null || $second === null) {
+    if (! $first instanceof DisplayBlock || ! $second instanceof DisplayBlock) {
         throw new RuntimeException('Expected both blocks to be visible after prepareDisplay()');
     }
     expect($first->getPosition())
@@ -203,7 +203,7 @@ test('prepareDisplay casts a numeric-string config position to a real int', func
     $manager->prepareDisplay();
 
     $cat = $manager->getBlock('cat');
-    if ($cat === null) {
+    if (! $cat instanceof DisplayBlock) {
         throw new RuntimeException('Expected the cat block to remain visible after prepareDisplay()');
     }
     expect($cat->getPosition())
@@ -227,7 +227,7 @@ test('prepareDisplay treats a resolved position of exactly 1 as visible', functi
     expect($manager->isHidden('cat'))
         ->toBeFalse();
     $cat = $manager->getBlock('cat');
-    if ($cat === null) {
+    if (! $cat instanceof DisplayBlock) {
         throw new RuntimeException('Expected the cat block to be visible after prepareDisplay()');
     }
     expect($cat->getPosition())
@@ -339,7 +339,7 @@ test('setBlockPosition updates the position of a visible block, and is a no-op f
 
     $manager->setBlockPosition('cat', 999);
     $cat = $manager->getBlock('cat');
-    if ($cat === null) {
+    if (! $cat instanceof DisplayBlock) {
         throw new RuntimeException('Expected the cat block to remain visible after setBlockPosition()');
     }
     expect($cat->getPosition())

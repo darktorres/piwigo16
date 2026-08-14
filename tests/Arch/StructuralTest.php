@@ -12,8 +12,10 @@ use Piwigo\Http\MiddlewarePipeline;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Routing\Router;
 use Piwigo\Routing\RouteResult;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 arch()
     ->expect('Piwigo')
@@ -949,7 +951,7 @@ test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls', func
     // signature. Locking in both facts together guards against a future
     // change that drops the interface, or one that "simplifies" by
     // routing 'trigger' through it.
-    expect(new ReflectionClass(Piwigo\PluginConfig\EventDispatcher::class)->implementsInterface(Psr\EventDispatcher\EventDispatcherInterface::class))
+    expect(new ReflectionClass(EventDispatcher::class)->implementsInterface(EventDispatcherInterface::class))
         ->toBeTrue();
 });
 

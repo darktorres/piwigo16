@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tools\PhpStan\Latte;
 
+use PhpParser\NameContext;
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
@@ -31,9 +34,11 @@ use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
 use PHPStan\PhpDocParser\ParserConfig;
 use PHPStan\PhpDocParser\Printer\Printer;
+use Piwigo\Template\Template;
 use Piwigo\Template\TemplateAdapter;
 use ReflectionClass;
 use ReflectionEnum;
+use ReflectionMethod;
 use ReflectionNamedType;
 use Throwable;
 
@@ -62,11 +67,11 @@ use Throwable;
  * lives in a different namespace, where an unqualified `TabSheetEntry`
  * would silently resolve to nothing.
  */
-final class ContextVariableExtractor
+final readonly class ContextVariableExtractor
 {
-    private readonly PhpDocParser $phpDocParser;
+    private PhpDocParser $phpDocParser;
 
-    private readonly Lexer $lexer;
+    private Lexer $lexer;
 
     public function __construct()
     {
@@ -92,7 +97,7 @@ final class ContextVariableExtractor
         $propertyTypes = $this->propertyTypes($reflection, $notices);
 
         $classNode = $this->parseClassNode($file, $reflection->getShortName());
-        if ($classNode === null) {
+        if (! $classNode instanceof ClassLike) {
             return new ExtractedVariables([], ["cannot locate class node for {$contextClass} in {$file}"]);
         }
 
@@ -140,7 +145,7 @@ final class ContextVariableExtractor
                     $dim->value,
                     $notices,
                 );
-            } elseif ($dim !== null) {
+            } elseif ($dim instanceof Expr) {
                 $notices[] = "dynamic array-dim assignment in {$contextClass}::toArray() (line {$assign->getStartLine()}) -- variable unknowable statically";
             }
         }
@@ -224,12 +229,13 @@ final class ContextVariableExtractor
             if ($source === false) {
                 continue;
             }
-            $ast = (new ParserFactory())->createForNewestSupportedVersion()
+            $ast = new ParserFactory()
+                ->createForNewestSupportedVersion()
                 ->parse($source);
             if ($ast === null) {
                 continue;
             }
-            foreach ((new NodeFinder())->findInstanceOf($ast, Assign::class) as $assign) {
+            foreach (new NodeFinder()->findInstanceOf($ast, Assign::class) as $assign) {
                 if (! $assign->var instanceof Variable || $assign->var->name !== 'theme_template_vars') {
                     continue;
                 }
@@ -293,7 +299,8 @@ final class ContextVariableExtractor
             ];
         }
 
-        $ast = (new ParserFactory())->createForNewestSupportedVersion()
+        $ast = new ParserFactory()
+            ->createForNewestSupportedVersion()
             ->parse($source);
         if ($ast === null) {
             return [
@@ -302,11 +309,11 @@ final class ContextVariableExtractor
             ];
         }
 
-        foreach ((new NodeFinder())->findInstanceOf($ast, MethodCall::class) as $call) {
+        foreach (new NodeFinder()->findInstanceOf($ast, MethodCall::class) as $call) {
             if (
                 ! $call->var instanceof Variable || $call->var->name !== 'this'
                 || ! $call->name instanceof Identifier || $call->name->name !== 'assign'
-                || count($call->args) !== 1 || ! $call->args[0] instanceof Node\Arg
+                || count($call->args) !== 1 || ! $call->args[0] instanceof Arg
                 || ! $call->args[0]->value instanceof Array_
             ) {
                 continue;
@@ -341,14 +348,14 @@ final class ContextVariableExtractor
             return null;
         }
         $call = $expr->var;
-        if (! $call instanceof Node\Expr\StaticCall
+        if (! $call instanceof StaticCall
             || ! $call->name instanceof Identifier
             || $call->name->name !== 'currentConfig'
         ) {
             return null;
         }
 
-        $method = new \ReflectionMethod('Piwigo\\Template\\Template', 'currentConfig');
+        $method = new ReflectionMethod(Template::class, 'currentConfig');
         $returnType = $method->getReturnType();
         if (! $returnType instanceof ReflectionNamedType || $returnType->isBuiltin()) {
             return null;
@@ -389,7 +396,7 @@ final class ContextVariableExtractor
             return null;
         }
 
-        $templateClass = new ReflectionClass('Piwigo\\Template\\Template');
+        $templateClass = new ReflectionClass(Template::class);
         if (! $templateClass->hasProperty('currentConfig')) {
             return null;
         }
@@ -440,10 +447,11 @@ final class ContextVariableExtractor
             }
         }
 
-        $fallback = (new NodeFinder())->findFirst(
-            $expr,
-            fn (Node $n): bool => $this->directPropertyName($n) !== null,
-        );
+        $fallback = new NodeFinder()
+            ->findFirst(
+                $expr,
+                fn (Node $n): bool => $this->directPropertyName($n) !== null,
+            );
         if ($fallback instanceof Expr) {
             $name = $this->directPropertyName($fallback);
             if ($name !== null && isset($propertyTypes[$name])) {
@@ -493,7 +501,8 @@ final class ContextVariableExtractor
         $class = $type->getName();
 
         if (enum_exists($class) && $member === 'value') {
-            $backing = (new ReflectionEnum($class))->getBackingType();
+            $backing = new ReflectionEnum($class)
+                ->getBackingType();
 
             return $backing instanceof ReflectionNamedType ? $backing->getName() : null;
         }
@@ -576,17 +585,18 @@ final class ContextVariableExtractor
      * over the node tree, so every phpdoc-parser node kind (unions,
      * generics, array shapes, ...) is covered without enumerating them.
      */
-    private function expandedTypeString(TypeNode $type, \PhpParser\NameContext $nameContext): string
+    private function expandedTypeString(TypeNode $type, NameContext $nameContext): string
     {
         $this->expandIdentifiers($type, $nameContext);
 
         // Printer, not (string)-casting -- the AST's own __toString()
         // re-parenthesizes unions as "(A | B)", while Printer emits
         // canonical "A|B".
-        return (new Printer())->print($type);
+        return new Printer()
+            ->print($type);
     }
 
-    private function expandIdentifiers(object $node, \PhpParser\NameContext $nameContext): void
+    private function expandIdentifiers(object $node, NameContext $nameContext): void
     {
         if ($node instanceof IdentifierTypeNode) {
             $name = $node->name;
@@ -623,14 +633,15 @@ final class ContextVariableExtractor
     /**
      * @param ReflectionClass<object> $reflection
      */
-    private function buildNameContext(ReflectionClass $reflection): \PhpParser\NameContext
+    private function buildNameContext(ReflectionClass $reflection): NameContext
     {
         $nameResolver = new NameResolver();
         $file = $reflection->getFileName();
         if ($file !== false) {
             $source = file_get_contents($file);
             if ($source !== false) {
-                $ast = (new ParserFactory())->createForNewestSupportedVersion()
+                $ast = new ParserFactory()
+                    ->createForNewestSupportedVersion()
                     ->parse($source);
                 if ($ast !== null) {
                     $traverser = new NodeTraverser();
@@ -649,16 +660,18 @@ final class ContextVariableExtractor
         if ($source === false) {
             return null;
         }
-        $ast = (new ParserFactory())->createForNewestSupportedVersion()
+        $ast = new ParserFactory()
+            ->createForNewestSupportedVersion()
             ->parse($source);
         if ($ast === null) {
             return null;
         }
 
-        $found = (new NodeFinder())->findFirst(
-            $ast,
-            static fn (Node $n): bool => $n instanceof ClassLike && $n->name?->toString() === $shortName,
-        );
+        $found = new NodeFinder()
+            ->findFirst(
+                $ast,
+                static fn (Node $n): bool => $n instanceof ClassLike && $n->name?->toString() === $shortName,
+            );
 
         return $found instanceof ClassLike ? $found : null;
     }

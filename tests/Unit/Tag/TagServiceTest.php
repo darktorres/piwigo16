@@ -35,6 +35,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tag\Projection\TagBrief;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -572,7 +573,7 @@ test('getOrphanTags() finds a tag with no images past the grace period', functio
     $id = (int) $conn->lastInsertId();
 
     try {
-        $orphanIds = array_map(static fn ($tag): int => $tag->id->value, $service->getOrphanTags());
+        $orphanIds = array_map(static fn (TagBrief $tag): int => $tag->id->value, $service->getOrphanTags());
 
         expect($orphanIds)
             ->toContain($id);
@@ -841,7 +842,7 @@ test('tagIdFromTagName() throws when the RenderTagUrl handler returns something 
     EventDispatcherTestFactory::get()->addEventHandler(RenderTagUrl::class, static fn (): int => 42);
 
     try {
-        expect(static fn () => $service->tagIdFromTagName($name))
+        expect(static fn (): TagId => $service->tagIdFromTagName($name))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->reset();

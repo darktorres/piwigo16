@@ -7,6 +7,7 @@ namespace Piwigo\PluginConfig;
 use Composer\Autoload\ClassLoader;
 use Composer\Semver\Semver;
 use JsonException;
+use Opis\JsonSchema\Errors\ValidationError;
 use Opis\JsonSchema\Validator;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
@@ -259,7 +260,7 @@ final class ThemeRegistry
         $instances = [];
         foreach ($this->resolveParentChain($themeId->value) as $id) {
             $manifest = $this->getManifest($id);
-            if ($manifest === null) {
+            if (! $manifest instanceof ThemeManifest) {
                 continue;
             }
             $instance = $this->bootInstance($manifest);
@@ -464,7 +465,7 @@ final class ThemeRegistry
         $result = $this->validator->validate($decoded, $this->schema());
         if (! $result->isValid()) {
             $err = $result->error();
-            $errMsg = $err === null ? 'schema validation failed' : ($err->message() . ' at /' . implode('/', $err->data()->path()));
+            $errMsg = $err instanceof ValidationError ? $err->message() . ' at /' . implode('/', $err->data()->path()) : ('schema validation failed');
             throw new ThemeValidationException($themeId, $manifestPath, $errMsg);
         }
 

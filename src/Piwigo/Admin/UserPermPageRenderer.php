@@ -65,7 +65,7 @@ final readonly class UserPermPageRenderer
         $cat_true = $userPermSubmit->catTrue;
         $cat_false = $userPermSubmit->catFalse;
 
-        if ($userPermSubmit->userId === null) {
+        if (! $userPermSubmit->userId instanceof UserId) {
             $htmlRenderer->fatalError('user_id URL parameter is missing');
         }
 

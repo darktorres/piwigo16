@@ -40,7 +40,7 @@ final class ReflectionTypeRenderer
 
         if ($type instanceof ReflectionIntersectionType) {
             return implode('&', array_map(
-                static fn (ReflectionType $t): string => self::render($t),
+                self::render(...),
                 $type->getTypes(),
             ));
         }

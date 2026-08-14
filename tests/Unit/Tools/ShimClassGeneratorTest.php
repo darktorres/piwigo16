@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Engine;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -12,6 +13,7 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Tools\PhpStan\Latte\Generated\LatteAnalysisShims;
 use Piwigo\Tools\PhpStan\Latte\ShimClassGenerator;
 use Piwigo\Users\CurrentUser;
 
@@ -32,9 +34,9 @@ function shim_generator_test_extension(): PiwigoExtension
     );
 }
 
-function shim_generator_test_engine(): Latte\Engine
+function shim_generator_test_engine(): Engine
 {
-    $engine = new Latte\Engine();
+    $engine = new Engine();
     $engine->addExtension(shim_generator_test_extension());
 
     return $engine;
@@ -49,7 +51,8 @@ beforeEach(function (): void {
     CurrentConfigTestFactory::get()->dataLocation = 'data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentUserTestFactory::get()->attachGlobals();
-    $this->generated = (new ShimClassGenerator(shim_generator_test_engine()))->generate();
+    $this->generated = new ShimClassGenerator(shim_generator_test_engine())
+        ->generate();
 });
 
 afterEach(function (): void {
@@ -123,7 +126,7 @@ it('shapes the real generated class to exactly the Engine-merged filter/function
     $engine = shim_generator_test_engine();
     $methodNames = array_map(
         static fn (ReflectionMethod $m): string => strtolower($m->getName()),
-        (new ReflectionClass(Piwigo\Tools\PhpStan\Latte\Generated\LatteAnalysisShims::class))
+        new ReflectionClass(LatteAnalysisShims::class)
             ->getMethods(ReflectionMethod::IS_STATIC),
     );
     // PHP methods dispatch case-insensitively, so Latte's case-variant

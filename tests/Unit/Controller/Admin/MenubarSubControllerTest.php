@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Common\ValueObject\LangCode;
@@ -108,8 +109,8 @@ test('handle renders the real menubar-order admin screen with no registered bloc
         // (see that method's own docblock), not a plain string.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
-            ->toBeInstanceOf(Latte\Runtime\Html::class);
-        if (! $adminContent instanceof Latte\Runtime\Html) {
+            ->toBeInstanceOf(Html::class);
+        if (! $adminContent instanceof Html) {
             throw new LogicException('unreachable -- asserted above');
         }
 

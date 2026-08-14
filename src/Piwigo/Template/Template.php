@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Doctrine\DBAL\Exception;
 use Latte\Runtime\Html;
 use LogicException;
 use Override;
@@ -216,7 +217,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 // JSON number that decodes to an int instead.
                 $this->currentConfigService->get()
                     ->confUpdateParam('data_dir_checked', '1');
-            } catch (\Doctrine\DBAL\Exception) {
+            } catch (Exception) {
             }
         }
 
@@ -727,14 +728,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if (isset($this->extents[$baseName]) && file_exists($this->extents[$baseName])) {
             return true;
         }
-
-        foreach ($this->templateDirs as $dir) {
-            if (file_exists(rtrim($dir, '/') . '/' . $file)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($this->templateDirs, fn (string $dir): bool => file_exists(rtrim($dir, '/') . '/' . $file));
     }
 
     /**

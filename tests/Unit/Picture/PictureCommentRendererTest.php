@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -385,8 +386,8 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // (see that method's own docblock), not a plain string.
     $commentList = CurrentTemplateTestFactory::get()->get()->getTemplateVars('COMMENT_LIST');
     expect($commentList)
-        ->toBeInstanceOf(Latte\Runtime\Html::class);
-    if (! $commentList instanceof Latte\Runtime\Html) {
+        ->toBeInstanceOf(Html::class);
+    if (! $commentList instanceof Html) {
         throw new LogicException('unreachable -- asserted above');
     }
 

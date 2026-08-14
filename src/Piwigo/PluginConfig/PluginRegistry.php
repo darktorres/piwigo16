@@ -7,6 +7,7 @@ namespace Piwigo\PluginConfig;
 use Composer\Autoload\ClassLoader;
 use Composer\Semver\Semver;
 use JsonException;
+use Opis\JsonSchema\Errors\ValidationError;
 use Opis\JsonSchema\Validator;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Config\CurrentConfig;
@@ -470,7 +471,7 @@ final class PluginRegistry
         if (count($sorted) !== count($manifests)) {
             $cycle = array_diff(array_keys($manifests), $sorted);
             throw new PluginDependencyException(
-                array_values($cycle)[0] ?? '',
+                array_first($cycle) ?? '',
                 'Plugin dependency cycle detected involving: ' . implode(', ', $cycle),
             );
         }
@@ -570,7 +571,7 @@ final class PluginRegistry
         $result = $this->validator->validate($decoded, $this->schema());
         if (! $result->isValid()) {
             $err = $result->error();
-            $errMsg = $err === null ? 'schema validation failed' : ($err->message() . ' at /' . implode('/', $err->data()->path()));
+            $errMsg = $err instanceof ValidationError ? $err->message() . ' at /' . implode('/', $err->data()->path()) : ('schema validation failed');
             throw new PluginValidationException($pluginId, $manifestPath, $errMsg);
         }
 

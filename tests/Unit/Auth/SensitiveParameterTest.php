@@ -125,13 +125,7 @@ test('AuthService::tryLogUser() keeps the plaintext password out of its own fram
         }
 
         $trace = $exception->getTrace();
-        $tryLogUserFrame = null;
-        foreach ($trace as $frame) {
-            if ($frame['function'] === 'tryLogUser') {
-                $tryLogUserFrame = $frame;
-                break;
-            }
-        }
+        $tryLogUserFrame = array_find($trace, fn ($frame): bool => $frame['function'] === 'tryLogUser');
 
         expect($tryLogUserFrame)
             ->not->toBeNull();
@@ -159,7 +153,7 @@ test('DbCredentials::__construct() keeps the plaintext password out of its own f
             // real `new DbCredentials(...)` call so PHPStan doesn't need
             // an argument.type suppression for an intentionally-invalid
             // call that exists purely to observe the trace.
-            (new ReflectionClass(DbCredentials::class))
+            new ReflectionClass(DbCredentials::class)
                 ->newInstanceArgs(['db.example.test', 'root', ['not', 'a', 'string'], 'piwigo']);
         } catch (TypeError $e) {
             $exception = $e;
@@ -172,13 +166,7 @@ test('DbCredentials::__construct() keeps the plaintext password out of its own f
         }
 
         $trace = $exception->getTrace();
-        $constructFrame = null;
-        foreach ($trace as $frame) {
-            if ($frame['function'] === '__construct' && ($frame['class'] ?? null) === DbCredentials::class) {
-                $constructFrame = $frame;
-                break;
-            }
-        }
+        $constructFrame = array_find($trace, fn ($frame): bool => $frame['function'] === '__construct' && ($frame['class'] ?? null) === DbCredentials::class);
 
         expect($constructFrame)
             ->not->toBeNull();
@@ -234,13 +222,7 @@ test('IdentificationSubmitRequest\'s private constructor keeps the plaintext pas
         }
 
         $trace = $exception->getTrace();
-        $constructFrame = null;
-        foreach ($trace as $frame) {
-            if ($frame['function'] === '__construct' && ($frame['class'] ?? null) === IdentificationSubmitRequest::class) {
-                $constructFrame = $frame;
-                break;
-            }
-        }
+        $constructFrame = array_find($trace, fn ($frame): bool => $frame['function'] === '__construct' && ($frame['class'] ?? null) === IdentificationSubmitRequest::class);
 
         expect($constructFrame)
             ->not->toBeNull();

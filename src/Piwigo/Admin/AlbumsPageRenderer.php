@@ -10,6 +10,7 @@ use Piwigo\Admin\Request\AlbumsRequest;
 use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\AlbumSortOrder;
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
@@ -74,7 +75,7 @@ final class AlbumsPageRenderer
         if ($albumsRequest->simpleAutoOrder || $albumsRequest->recursiveAutoOrder) {
 
             $post_order = $albumsRequest->order;
-            if ($post_order === null) {
+            if (! $post_order instanceof AlbumSortOrder) {
                 $htmlRenderer
                     ->fatalError('Invalid sort order');
             }

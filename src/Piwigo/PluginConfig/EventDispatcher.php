@@ -9,6 +9,7 @@ use Error;
 use LogicException;
 use Override;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\EventDispatcher\StoppableEventInterface;
 use ReflectionFunction;
 
 /**
@@ -58,6 +59,10 @@ final class EventDispatcher implements EventDispatcherInterface
     }
 
     /**
+     * Higher priority runs first, matching Symfony's own `EventDispatcher`
+     * convention (the concrete dispatcher `../piwigo16-rewrite`'s own P27
+     * reference implementation uses) -- established by `krsort()` below.
+     *
      * @param array{0: object|string, 1: string}|object|string $func
      */
     public function addEventHandler(
@@ -78,7 +83,7 @@ final class EventDispatcher implements EventDispatcherInterface
         $handlersAtPriority[] = new EventHandler($func, $includePath);
         $this->handlers[$event][$priority] = $handlersAtPriority;
 
-        ksort($this->handlers[$event]);
+        krsort($this->handlers[$event]);
         return true;
     }
 
@@ -121,7 +126,8 @@ final class EventDispatcher implements EventDispatcherInterface
      * registration -- real per-event handler-signature checking at
      * registration sites, with zero change to storage/dispatch internals
      * ($event is a class-string, itself just a string; the untyped
-     * registry doesn't need to know the difference).
+     * registry doesn't need to know the difference). Higher priority runs
+     * first -- see addEventHandler()'s own docblock.
      *
      * @template T of object
      * @param class-string<T> $event
@@ -184,6 +190,13 @@ final class EventDispatcher implements EventDispatcherInterface
      * property and returns $event" case too, so capturing the return value
      * is always correct and never a behavior change either way.
      *
+     * Stoppable: if `$event` implements `Psr\EventDispatcher\
+     * StoppableEventInterface` and `isPropagationStopped()` becomes true
+     * after a handler runs, no further handlers are called -- matches
+     * every other typed event class exactly (no changes needed to opt
+     * in/out), zero behavior change for the 156 existing event classes
+     * that don't implement the interface.
+     *
      * @template T of object
      * @param T $event
      * @return T
@@ -210,6 +223,10 @@ final class EventDispatcher implements EventDispatcherInterface
                     }
 
                     $event = $result;
+
+                    if ($event instanceof StoppableEventInterface && $event->isPropagationStopped()) {
+                        break 2;
+                    }
                 }
             }
         }
@@ -231,6 +248,10 @@ final class EventDispatcher implements EventDispatcherInterface
 
     /**
      * Notifier event: fire-and-forget, no return value captured.
+     *
+     * Stoppable: same as `dispatchChange()`'s own docblock -- a handler
+     * wanting to stop propagation mutates a non-`readonly` property on
+     * `$event` directly (no return value here to reassign from).
      */
     public function dispatchNotify(object $event): void
     {
@@ -251,6 +272,10 @@ final class EventDispatcher implements EventDispatcherInterface
                 }
 
                 call_user_func($handler->function, $event);
+
+                if ($event instanceof StoppableEventInterface && $event->isPropagationStopped()) {
+                    break 2;
+                }
             }
         }
     }

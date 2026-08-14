@@ -117,7 +117,7 @@ onto the original scope.
 | P24 | Post-P23 remediation & hardening (globals/DBAL/event/l10n coupling retirement, coverage + mutation-testing hardening, SQL bound-parameter sweep, singleton/DI elimination, type correctness + mixed elimination + superglobal/array-offset access — the original plan's P27, merged in, see above — plus the table-prefix + `Tables::` removal) | In progress — remediation sub-tracks done, 2 gaps found (see below); singleton/DI campaign **complete** (Phases 0–12F, zero shims remain); type-correctness/mixed-elimination sub-track real progress (Request DTO migration, Phase 4), not complete; table-prefix + `Tables::` removal **complete** | 405 `(p24)` + 16 `(sql)` + 74 `(di)`/`(lang)` + 89 `(p27)` + 62 (table-prefix removal) |
 | P25 | REST resource layer + OpenAPI (WS API removed) | Not started | 0 |
 | P26 | Security hardening | Not started | 0 |
-| P27 | Plugin / Theme contracts + bundled extensions | In progress — P27.0-P27.5 and P27.7-P27.10 done; P27.6 (porting the 7 bundled extensions) in progress in a separate session, not yet landed | 17 |
+| P27 | Plugin / Theme contracts + bundled extensions | In progress — P27.0-P27.5 and P27.7-P27.11 done; P27.6 (porting the 7 bundled extensions) in progress in a separate session, not yet landed | 18 |
 | P28 | Layer decoupling + repository restructure | Not started (1 unrelated commit borrowed the tag — `doc/` cleanup) | 1 |
 | P29 | Browserslist decision + legacy back-compat removal | Not started | 0 |
 | P30 | Asset-pipeline foundation (ScriptLoader/CssLoader/FileCombiner retirement + ViteManifest resolution) | Not started | 0 |
@@ -868,34 +868,37 @@ outside a `'trigger'` exception. Track B itself delivered in 14 commits
 full commit-level history is in `git log`, the plan doc itself was
 deleted once the work landed.
 
-**Follow-up recommendation, not yet actioned: replace the hand-rolled
-`EventDispatcher` with Symfony's, independent of and before P27.** Found
+**Follow-up recommendation (P27.11): keep the hand-rolled `EventDispatcher`,
+close its 2 remaining real gaps in place — not a Symfony swap.** Found
 while grounding P27's design against a reference implementation that
 uses Symfony's `EventDispatcher`/PSR-14 (see Epoch I's P27 entry below)
 — compared the two directly rather than assuming Symfony's is simply
-better. Two of the three differences found (this fork's own priority
-order runs ascending/lower-first where Symfony runs descending/
-higher-first; no stoppable-event mechanism exists at all) are real gaps,
-but checked before recommending anything: zero real
-`addTypedHandler`/`addEventHandler` call sites in `src/Piwigo` pass a
-non-default priority today, so neither gap currently affects any shipped
-behavior — this is a safe window to fix that would close once real
-plugins exist and start relying on priority ordering. The lazy-listener-
-resolution difference the reference's own container wiring demonstrates
-turned out not to be a dispatcher-class limitation at all — it's how
+better, and found 3 real differences. All 3 are now closed or
+resolved: `EventDispatcher` already implements `Psr\EventDispatcher\
+EventDispatcherInterface` (P27.0 — the original "implements no
+interface at all" framing here is stale); priority order now runs
+descending/higher-first, matching Symfony's own convention, and
+`dispatchChange()`/`dispatchNotify()` now support
+`Psr\EventDispatcher\StoppableEventInterface` (both P27.11 — zero real
+`addTypedHandler`/`addEventHandler` call sites in `src/Piwigo` passed a
+non-default priority when this was fixed, so the direction flip was a
+behavior no-op for every real caller). The lazy-listener-resolution
+difference the reference's own container wiring demonstrates turned out
+not to be a dispatcher-class limitation at all — it's how
 `RequestBootstrap.php` happens to call it (3 of 23 real registrations
 there eagerly construct a one-off service regardless of whether the
-event ever fires; fixable in place, no library swap needed). The
-strongest actual case: this fork's `EventDispatcher` implements no
-interface at all, not `Psr\EventDispatcher\EventDispatcherInterface` — a
-real inconsistency against this codebase's own pattern of PSR-conforming
-elsewhere (PSR-11/PSR-7/PSR-15/PSR-3, all in active use). Not even a new
-dependency: `composer.lock` already resolves both
+event ever fires; fixable in place, no library swap needed, still open,
+unrelated to P27.11). A real Symfony swap was reconsidered and rejected
+at P27.11 time, not just left unconsidered: `dispatchChange()`/
+`dispatchNotify()`'s own `addEventHandler()`/`addTypedHandler()`
+registration API (string-keyed legacy handlers, `includePath`-based
+lazy inclusion, `callablesEqual()`'s custom closure-identity dedup) are
+Piwigo-specific mechanics Symfony's own dispatcher doesn't provide —
+adopting it would mean rebuilding all of that on top of, not instead
+of, Symfony's own class. `composer.lock` still resolves both
 `symfony/event-dispatcher` and `psr/event-dispatcher` transitively,
-unused for this purpose. Recommendation: switch onto Symfony's
-`EventDispatcher` via the PSR-14 interface as its own standalone item,
-not gated on P27 — `dispatchNotify()`/`dispatchChange()` survive as thin
-typed wrappers over Symfony's own `dispatch()`.
+unused for this purpose — `psr/event-dispatcher` is the one actually
+required directly (P27.0).
 
 **Track C — `l10n()`/`get_root_url()` retarget.** Done and verified —
 `Lang/functions.php`/`Url/functions.php`/`Category/functions.php`/

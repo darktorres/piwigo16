@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Fixtures\PluginConfig\TestChangeEvent;
 use Piwigo\Tests\Fixtures\PluginConfig\TestNotifyEvent;
+use Piwigo\Tests\Fixtures\PluginConfig\TestStoppableEvent;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 
 /**
@@ -406,7 +407,7 @@ test('dispatchChange passes the event through a single handler', function (): vo
         ->toBe('HELLO');
 });
 
-test('dispatchChange chains handlers in priority order, lowest first', function (): void {
+test('dispatchChange chains handlers in priority order, highest first', function (): void {
     $dispatcher = new EventDispatcher();
     $dispatcher->addTypedHandler(TestChangeEvent::class, static function (TestChangeEvent $e): TestChangeEvent {
         $e->value .= 'b';
@@ -423,7 +424,7 @@ test('dispatchChange chains handlers in priority order, lowest first', function 
     $dispatcher->dispatchChange($event);
 
     expect($event->value)
-        ->toBe('ab');
+        ->toBe('ba');
 });
 
 test('dispatchChange preserves readonly context through a handler', function (): void {
@@ -509,6 +510,52 @@ test('dispatchChange skips include_once for a handler registered with an empty-s
         ->toBe('HI');
 });
 
+test('dispatchChange stops calling further handlers once a handler stops propagation', function (): void {
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): TestStoppableEvent {
+        $e->calls[] = 'first';
+
+        return $e;
+    }, 30);
+    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): TestStoppableEvent {
+        $e->calls[] = 'second';
+        $e->stop();
+
+        return $e;
+    }, 20);
+    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): TestStoppableEvent {
+        $e->calls[] = 'third';
+
+        return $e;
+    }, 10);
+    $event = new TestStoppableEvent();
+
+    $dispatcher->dispatchChange($event);
+
+    expect($event->calls)
+        ->toBe(['first', 'second']);
+});
+
+test('dispatchChange runs every handler when the event never stops propagation', function (): void {
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): TestStoppableEvent {
+        $e->calls[] = 'first';
+
+        return $e;
+    }, 20);
+    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): TestStoppableEvent {
+        $e->calls[] = 'second';
+
+        return $e;
+    }, 10);
+    $event = new TestStoppableEvent();
+
+    $dispatcher->dispatchChange($event);
+
+    expect($event->calls)
+        ->toBe(['first', 'second']);
+});
+
 test('dispatchNotify calls every registered handler without transmitting a return value', function (): void {
     $dispatcher = new EventDispatcher();
     $calls = [];
@@ -522,7 +569,7 @@ test('dispatchNotify calls every registered handler without transmitting a retur
     $dispatcher->dispatchNotify(new TestNotifyEvent('hi'));
 
     expect($calls)
-        ->toBe(['first:hi', 'second:hi']);
+        ->toBe(['second:hi', 'first:hi']);
 });
 
 test('dispatchNotify is a no-op when no handler is registered', function (): void {
@@ -571,4 +618,40 @@ test('dispatchNotify skips include_once for a handler registered with an empty-s
 
     expect($calls)
         ->toBe([true]);
+});
+
+test('dispatchNotify stops calling further handlers once a handler stops propagation', function (): void {
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): void {
+        $e->calls[] = 'first';
+    }, 30);
+    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): void {
+        $e->calls[] = 'second';
+        $e->stop();
+    }, 20);
+    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): void {
+        $e->calls[] = 'third';
+    }, 10);
+    $event = new TestStoppableEvent();
+
+    $dispatcher->dispatchNotify($event);
+
+    expect($event->calls)
+        ->toBe(['first', 'second']);
+});
+
+test('dispatchNotify runs every handler when the event never stops propagation', function (): void {
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): void {
+        $e->calls[] = 'first';
+    }, 20);
+    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): void {
+        $e->calls[] = 'second';
+    }, 10);
+    $event = new TestStoppableEvent();
+
+    $dispatcher->dispatchNotify($event);
+
+    expect($event->calls)
+        ->toBe(['first', 'second']);
 });

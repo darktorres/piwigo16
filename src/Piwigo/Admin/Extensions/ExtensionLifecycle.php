@@ -226,6 +226,18 @@ final readonly class ExtensionLifecycle
                 if ($dbRow === null) {
                     $errors = $this->performPluginAction('install', $id, $fsEntry, $options);
                     $dbRow = $this->repo->find(ExtensionType::Plugin, $id);
+                    if ($dbRow === null) {
+                        // The 'install' delegation above was itself a safe
+                        // no-op (pluginExistsOnDisk() is false -- see that
+                        // case's own guard), not a failure: $errors is
+                        // already [] in that case. Nothing was ever
+                        // installed, so there is nothing to activate --
+                        // without this, activate() below would call
+                        // PluginRegistry::activate($id), which throws
+                        // (requireManifest() has no manifest for a plugin
+                        // that was never scanned off disk).
+                        break;
+                    }
                 } elseif ($dbRow['state'] === 'active') {
                     break;
                 }

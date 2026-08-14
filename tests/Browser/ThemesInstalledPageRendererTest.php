@@ -9,10 +9,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * default "installed" tab) -- already GET-tested by the extension-tabs
  * smoke route. This file exercises the CSRF-gated action dispatch
  * (activate/deactivate/set_default/delete). It does NOT actually toggle a
- * real theme's active state: this test environment has only one theme on
- * disk (themes/default), and a real activate/delete cycle would need a
- * second throwaway theme directory written directly under the live,
- * Apache-shared themes/ root, which no other test in this suite does (too
+ * real theme's active state: this test environment's live, Apache-shared
+ * themes/ root has 'default' and 'golden_html_test' on disk (the latter
+ * a deliberate non-selectable test fixture, see themes/golden_html_test/
+ * theme.json's own description), both excluded from the installed-themes
+ * list by render()'s own `continue` guard -- a real activate/delete cycle
+ * would need a genuine 3rd, throwaway theme directory written directly
+ * under that live root, which no other test in this suite does (too
  * much blast radius for concurrently running Browser tests).
  * ExtensionLifecycle::performAction() itself already has its own dedicated
  * Integration coverage (ExtensionLifecycleTest.php) for the actual
@@ -32,17 +35,22 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * guard itself is still exercised, without relying on an activation path
  * that can't produce that state for 'default'.
  */
-it('renders an empty installed-themes list since the only real theme (default) is deliberately excluded', function (): void {
+it('renders an empty installed-themes list since every real theme on disk is deliberately excluded', function (): void {
     // ThemesInstalledPageRenderer::render()'s own $fs_themes loop
-    // unconditionally `continue`s past 'default'/'standard_pages' before
-    // ever building $tpl_themes -- confirmed in its own source. Since
-    // `default` is the only theme on disk in this test environment, the
-    // installed-themes table always renders with zero rows here; there is
-    // no real "default" text to see inside it.
+    // unconditionally `continue`s past 'default'/'standard_pages'/
+    // 'golden_html_test' before ever building $tpl_themes -- confirmed in
+    // its own source. Every theme actually on disk in this test
+    // environment falls into that exclusion list, so the installed-themes
+    // table always renders with zero rows here.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=themes');
 
     $page->assertSee('Add a new theme');
+    // The real regression this test previously missed: golden_html_test
+    // (a non-selectable test fixture, not a real theme) leaked into this
+    // admin-visible, webmaster-activatable list before the exclusion
+    // above existed.
+    $page->assertDontSee('golden_html_test');
     $page->assertNoJavaScriptErrors();
 });
 

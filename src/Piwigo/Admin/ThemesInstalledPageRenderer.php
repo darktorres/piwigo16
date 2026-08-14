@@ -156,7 +156,15 @@ final readonly class ThemesInstalledPageRenderer
         $tpl_themes = [];
 
         foreach ($fs_themes as $theme_id => $fs_theme) {
-            if ($theme_id === 'default' or $theme_id === 'standard_pages') {
+            // golden_html_test: not a real theme, exists only so
+            // Template::setTheme()'s standard_pages fallback has something
+            // real to load before it swaps to themes/standard_pages -- see
+            // its own theme.json description and
+            // tests/Browser/GoldenHtmlSnapshotTest.php. A real directory
+            // under themes/ with a valid theme.json, so ExtensionScanner
+            // picks it up like any other installed theme unless excluded
+            // here, same as 'default'/'standard_pages'.
+            if ($theme_id === 'default' or $theme_id === 'standard_pages' or $theme_id === 'golden_html_test') {
                 continue;
             }
 

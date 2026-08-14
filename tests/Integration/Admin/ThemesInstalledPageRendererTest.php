@@ -42,11 +42,12 @@ use Piwigo\Users\UserService;
  * tests/Browser/ThemesInstalledPageRendererTest.php's own docblock for why
  * its own per-theme foreach body (the real `$tpl_themes[] =
  * $this->buildTplTheme(...)` call, ~L117) is unreachable there: this test
- * environment's real, Apache-shared themes/ tree has only 'default' on
- * disk, and render()'s own loop unconditionally `continue`s past
- * 'default'/'standard_pages' (~L114) before ever reaching that call --
- * writing a second real theme under the live themes/ root was ruled out of
- * scope there for its blast radius on concurrently running Browser tests.
+ * environment's real, Apache-shared themes/ tree has 'default' and
+ * 'golden_html_test' on disk, and render()'s own loop unconditionally
+ * `continue`s past 'default'/'standard_pages'/'golden_html_test' (~L114)
+ * before ever reaching that call -- writing a genuine 3rd real theme
+ * under the live themes/ root was ruled out of scope there for its blast
+ * radius on concurrently running Browser tests.
  * tests/Unit/Admin/ThemesInstalledPageRendererTest.php closes the *body* of
  * buildTplTheme() itself via direct reflection, but that bypasses render()'s
  * own foreach entirely, so line 117 itself (the call site) stays uncovered

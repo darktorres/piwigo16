@@ -19,6 +19,7 @@ use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Validation\InputValidator;
+use Symfony\Component\Messenger\Command\ConsumeMessagesCommand;
 use Throwable;
 
 /**
@@ -124,6 +125,13 @@ final class ContainerSmokeTest extends TestCase
         // HtmlRenderingInterface directly, so it fails to resolve for the
         // identical reason, one level removed.
         InputValidator::class,
+        // Symfony\Component\Messenger\Command\ConsumeMessagesCommand's own
+        // factory binding takes Paths $paths directly (to build its
+        // RoutableMessageBus/receiver locator) -- same "Kernel booted with
+        // no real Paths" reasoning as PersistentCache/StorageRegistry/
+        // DeploymentPolicy above; real usage always resolves this only
+        // after Bootstrap\CliBootstrap has set up a real Paths first.
+        ConsumeMessagesCommand::class,
     ];
 
     public function testEveryContainerEntryResolves(): void

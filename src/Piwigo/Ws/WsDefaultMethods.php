@@ -58,6 +58,22 @@ use Piwigo\Ws\Tags\GetImagesHandler as TagsGetImagesHandler;
 use Piwigo\Ws\Tags\GetListHandler as TagsGetListHandler;
 use Piwigo\Ws\Tags\MergeHandler as TagsMergeHandler;
 use Piwigo\Ws\Tags\RenameHandler as TagsRenameHandler;
+use Piwigo\Ws\Users\AddHandler as UsersAddHandler;
+use Piwigo\Ws\Users\CreateApiKeyHandler;
+use Piwigo\Ws\Users\DeleteHandler as UsersDeleteHandler;
+use Piwigo\Ws\Users\EditApiKeyHandler;
+use Piwigo\Ws\Users\FavoritesAddHandler;
+use Piwigo\Ws\Users\FavoritesGetListHandler;
+use Piwigo\Ws\Users\FavoritesRemoveHandler;
+use Piwigo\Ws\Users\GeneratePasswordLinkHandler;
+use Piwigo\Ws\Users\GetApiKeyHandler;
+use Piwigo\Ws\Users\GetAuthKeyHandler;
+use Piwigo\Ws\Users\GetListHandler as UsersGetListHandler;
+use Piwigo\Ws\Users\PreferencesSetHandler;
+use Piwigo\Ws\Users\RevokeApiKeyHandler;
+use Piwigo\Ws\Users\SetInfoHandler as UsersSetInfoHandler;
+use Piwigo\Ws\Users\SetMainUserHandler;
+use Piwigo\Ws\Users\SetMyInfoHandler;
 
 final readonly class WsDefaultMethods
 {
@@ -67,15 +83,15 @@ final readonly class WsDefaultMethods
     // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
     // ClassName::method() calls. `pwg.userComments.*`/`pwg.permissions.*`/
     // `pwg.plugins.*`/`pwg.themes.performAction`/`pwg.extensions.*`/
-    // `pwg.groups.*`/`pwg.tags.*`/`pwg.categories.*` (Comments.php/
-    // Permissions.php/Extensions.php/Groups.php/Tags.php/Categories.php,
-    // Group 19's first 6 migrated domains) no longer have a
-    // callback-based registration or a constructor property here --
-    // their methods register via MethodDefinition/handlerClass instead,
-    // resolved from the container at invocation time.
+    // `pwg.groups.*`/`pwg.tags.*`/`pwg.categories.*`/`pwg.users.*`
+    // (Comments.php/Permissions.php/Extensions.php/Groups.php/Tags.php/
+    // Categories.php/Users.php, Group 19's first 7 migrated domains) no
+    // longer have a callback-based registration or a constructor
+    // property here -- their methods register via
+    // MethodDefinition/handlerClass instead, resolved from the container
+    // at invocation time.
     public function __construct(
         private Core $pwgCore,
-        private Users $pwgUsers,
         private Images $pwgImages,
         private CurrentConfig $currentConfig,
         private AccessControl $accessControl,
@@ -1411,67 +1427,10 @@ final readonly class WsDefaultMethods
             postOnly: true,
         ));
 
-        $service->addMethod(
-            'pwg.users.getList',
-            $this->pwgUsers->getList(...),
-            [
-                'user_id' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'username' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'Use "%" as wildcard.',
-                ],
-                'status' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'info' => 'guest,generic,normal,admin,webmaster',
-                ],
-                'min_level' => [
-                    'default' => 0,
-                    'maxValue' => max($available_permission_levels),
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'group_id' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'per_page' => [
-                    'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxUsersPerPage,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'page' => [
-                    'default' => 0,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'order' => [
-                    'default' => 'id',
-                    'info' => 'id, username, level, email',
-                ],
-                'exclude' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                    'info' => 'Expects a user_id as value.',
-                ],
-                'display' => [
-                    'default' => 'basics',
-                    'info' => 'Comma saparated list (see method description)',
-                ],
-                'filter' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'Filter by username, email, group',
-                ],
-                'min_register' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'See method description',
-                ],
-                'max_register' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'See method description',
-                ],
-            ],
-            'Retrieves a list of all the users.<br>
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.getList',
+            handlerClass: UsersGetListHandler::class,
+            description: 'Retrieves a list of all the users.<br>
     <br>
     <b>display</b> controls which data are returned, possible values are:<br>
     all, basics, none,<br>
@@ -1480,198 +1439,113 @@ final readonly class WsDefaultMethods
     enabled_high, registration_date, registration_date_string, registration_date_since, last_visit, last_visit_string, last_visit_since<br>
     <b>basics</b> stands for "username,email,status,level,groups"<br>
     <b>min_register</b> and <b>max_register</b> filter users by their registration date expecting format "YYYY" or "YYYY-mm" or "YYYY-mm-dd".',
-            options: [
-                'admin_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.users.add',
-            $this->pwgUsers->add(...),
-            [
-                'username' => [],
-                'auto_password' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                    'info' => 'if true ignores password and confirm password',
-                ],
-                'password' => [
-                    'default' => null,
-                ],
-                'password_confirm' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'email' => [
-                    'default' => null,
-                ],
-                'send_password_by_mail' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
-                'pwg_token' => [],
+            params: [
+                ParamDefinition::optionalFlag('user_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('username', info: 'Use "%" as wildcard.'),
+                ParamDefinition::optionalFlag('status', flags: WsParamFlag::FORCE_ARRAY, info: 'guest,generic,normal,admin,webmaster'),
+                ParamDefinition::optional('min_level', 0, WsParamType::INT | WsParamType::POSITIVE, maxValue: max($available_permission_levels)),
+                ParamDefinition::optionalFlag('group_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optional('per_page', 100, WsParamType::INT | WsParamType::POSITIVE, maxValue: $this->currentConfig->wsMaxUsersPerPage),
+                ParamDefinition::optional('page', 0, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('order', 'id', info: 'id, username, level, email'),
+                ParamDefinition::optionalFlag('exclude', WsParamType::ID, WsParamFlag::FORCE_ARRAY, info: 'Expects a user_id as value.'),
+                ParamDefinition::optional('display', 'basics', info: 'Comma saparated list (see method description)'),
+                ParamDefinition::optionalFlag('filter', info: 'Filter by username, email, group'),
+                ParamDefinition::optionalFlag('min_register', info: 'See method description'),
+                ParamDefinition::optionalFlag('max_register', info: 'See method description'),
             ],
-            'Registers a new user.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.users.delete',
-            $this->pwgUsers->delete(...),
-            [
-                'user_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.add',
+            handlerClass: UsersAddHandler::class,
+            description: 'Registers a new user.',
+            params: [
+                ParamDefinition::required('username'),
+                ParamDefinition::optional('auto_password', false, WsParamType::BOOL, info: 'if true ignores password and confirm password'),
+                ParamDefinition::optional('password'),
+                ParamDefinition::optionalFlag('password_confirm'),
+                ParamDefinition::optional('email'),
+                ParamDefinition::optional('send_password_by_mail', false, WsParamType::BOOL),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Deletes on or more users. Photos owned by this user are not deleted.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.users.getAuthKey',
-            $this->pwgUsers->getAuthKey(...),
-            [
-                'user_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.delete',
+            handlerClass: UsersDeleteHandler::class,
+            description: 'Deletes on or more users. Photos owned by this user are not deleted.',
+            params: [
+                ParamDefinition::required('user_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Get a new authentication key for a user. Only works for normal/generic users (not admins)',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.users.setInfo',
-            $this->pwgUsers->setInfo(...),
-            [
-                'user_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'username' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'password' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'email' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'status' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'guest,generic,normal,admin,webmaster',
-                ],
-                'level' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'maxValue' => max($available_permission_levels),
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'language' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'theme' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'group_id' => [
-                    'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::INT,
-                ],
-                // bellow are parameters removed in a future version
-                'nb_image_page' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL,
-                ],
-                'recent_period' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'expand' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::BOOL,
-                ],
-                'show_nb_comments' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::BOOL,
-                ],
-                'show_nb_hits' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::BOOL,
-                ],
-                'enabled_high' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::BOOL,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.getAuthKey',
+            handlerClass: GetAuthKeyHandler::class,
+            description: 'Get a new authentication key for a user. Only works for normal/generic users (not admins)',
+            params: [
+                ParamDefinition::required('user_id', WsParamType::ID),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Updates a user. Leave a field blank to keep the current value.
+            requiresAuth: true,
+            postOnly: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.setInfo',
+            handlerClass: UsersSetInfoHandler::class,
+            description: 'Updates a user. Leave a field blank to keep the current value.
     <br>"username", "password" and "email" are ignored if "user_id" is an array.
     <br>set "group_id" to -1 if you want to dissociate users from all groups',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.users.setMyInfo',
-            $this->pwgUsers->setMyInfo(...),
-            [
-                'email' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'nb_image_page' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL,
-                ],
-                'theme' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'language' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'recent_period' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'expand' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::BOOL,
-                ],
-                'show_nb_comments' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::BOOL,
-                ],
-                'show_nb_hits' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::BOOL,
-                ],
-                'password' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'new_password' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'conf_new_password' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'pwg_token' => [],
+            params: [
+                ParamDefinition::required('user_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('username'),
+                ParamDefinition::optionalFlag('password'),
+                ParamDefinition::optionalFlag('email'),
+                ParamDefinition::optionalFlag('status', info: 'guest,generic,normal,admin,webmaster'),
+                ParamDefinition::optionalFlag('level', WsParamType::INT | WsParamType::POSITIVE, maxValue: max($available_permission_levels)),
+                ParamDefinition::optionalFlag('language'),
+                ParamDefinition::optionalFlag('theme'),
+                ParamDefinition::optionalFlag('group_id', WsParamType::INT, WsParamFlag::FORCE_ARRAY),
+                // bellow are parameters removed in a future version
+                ParamDefinition::optionalFlag('nb_image_page', WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL),
+                ParamDefinition::optionalFlag('recent_period', WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optionalFlag('expand', WsParamType::BOOL),
+                ParamDefinition::optionalFlag('show_nb_comments', WsParamType::BOOL),
+                ParamDefinition::optionalFlag('show_nb_hits', WsParamType::BOOL),
+                ParamDefinition::optionalFlag('enabled_high', WsParamType::BOOL),
+                ParamDefinition::required('pwg_token'),
             ],
-            '',
-            options: [
-                'admin_only' => false,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.setMyInfo',
+            handlerClass: SetMyInfoHandler::class,
+            params: [
+                ParamDefinition::optionalFlag('email'),
+                ParamDefinition::optionalFlag('nb_image_page', WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL),
+                ParamDefinition::optionalFlag('theme'),
+                ParamDefinition::optionalFlag('language'),
+                ParamDefinition::optionalFlag('recent_period', WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optionalFlag('expand', WsParamType::BOOL),
+                ParamDefinition::optionalFlag('show_nb_comments', WsParamType::BOOL),
+                ParamDefinition::optionalFlag('show_nb_hits', WsParamType::BOOL),
+                ParamDefinition::optionalFlag('password'),
+                ParamDefinition::optionalFlag('new_password'),
+                ParamDefinition::optionalFlag('conf_new_password'),
+                ParamDefinition::required('pwg_token'),
+            ],
+            postOnly: true,
+        ));
 
         // pwg.permissions.* (Group 19's second migrated domain) registers
         // via MethodDefinition/handlerClass -- Permissions.php is gone,
@@ -1718,64 +1592,45 @@ final readonly class WsDefaultMethods
             postOnly: true,
         ));
 
-        $service->addMethod(
-            'pwg.users.preferences.set',
-            $this->pwgUsers->preferencesSet(...),
-            [
-                'param' => [],
-                'value' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'is_json' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.preferences.set',
+            handlerClass: PreferencesSetHandler::class,
+            description: 'Set a user preferences parameter. JSON encode the value (and set is_json to true) if you need a complex data structure.',
+            params: [
+                ParamDefinition::required('param'),
+                ParamDefinition::optionalFlag('value'),
+                ParamDefinition::optional('is_json', false, WsParamType::BOOL),
             ],
-            'Set a user preferences parameter. JSON encode the value (and set is_json to true) if you need a complex data structure.'
-        );
+        ));
 
-        $service->addMethod(
-            'pwg.users.favorites.add',
-            $this->pwgUsers->favoritesAdd(...),
-            [
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.favorites.add',
+            handlerClass: FavoritesAddHandler::class,
+            description: 'Adds the indicated image to the current user\'s favorite images.',
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID),
             ],
-            'Adds the indicated image to the current user\'s favorite images.'
-        );
+        ));
 
-        $service->addMethod(
-            'pwg.users.favorites.remove',
-            $this->pwgUsers->favoritesRemove(...),
-            [
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.favorites.remove',
+            handlerClass: FavoritesRemoveHandler::class,
+            description: 'Removes the indicated image from the current user\'s favorite images.',
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID),
             ],
-            'Removes the indicated image from the current user\'s favorite images.'
-        );
+        ));
 
-        $service->addMethod(
-            'pwg.users.favorites.getList',
-            $this->pwgUsers->favoritesGetList(...),
-            [
-                'per_page' => [
-                    'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'page' => [
-                    'default' => 0,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'order' => [
-                    'default' => null,
-                    'info' => 'id, file, name, hit, rating_score, date_creation, date_available, random',
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.favorites.getList',
+            handlerClass: FavoritesGetListHandler::class,
+            description: 'Returns the favorite images of the current user.',
+            params: [
+                ParamDefinition::optional('per_page', 100, WsParamType::INT | WsParamType::POSITIVE, maxValue: $this->currentConfig->wsMaxImagesPerPage),
+                ParamDefinition::optional('page', 0, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('order', info: 'id, file, name, hit, rating_score, date_creation, date_available, random'),
             ],
-            'Returns the favorite images of the current user.'
-        );
+        ));
 
         $service->addMethod(
             'pwg.history.log',
@@ -1948,105 +1803,78 @@ final readonly class WsDefaultMethods
             ''
         );
 
-        $service->addMethod(
-            'pwg.users.generatePasswordLink',
-            $this->pwgUsers->generatePasswordLink(...),
-            [
-                'user_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'pwg_token' => [],
-                'send_by_mail' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::BOOL,
-                    'default' => false,
-                ],
-            ],
-            'Return the reset password link <br />
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.generatePasswordLink',
+            handlerClass: GeneratePasswordLinkHandler::class,
+            description: 'Return the reset password link <br />
            (Only webmaster can perform this action for another webmaster)',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.users.setMainUser',
-            $this->pwgUsers->setMainUser(...),
-            [
-                'user_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'pwg_token' => [],
+            params: [
+                ParamDefinition::required('user_id', WsParamType::ID),
+                ParamDefinition::required('pwg_token'),
+                ParamDefinition::optional('send_by_mail', false, WsParamType::BOOL),
             ],
-            'Update the main user (owner) <br />
+            requiresAuth: true,
+            postOnly: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.setMainUser',
+            handlerClass: SetMainUserHandler::class,
+            description: 'Update the main user (owner) <br />
             - To be the main user, the user must have the status "webmaster".<br />
             - Only a webmaster can perform this action',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.users.api_key.create',
-            $this->pwgUsers->createApiKey(...),
-            [
-                'key_name' => [],
-                'duration' => [
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                    'info' => 'Number of days',
-                ],
-                'pwg_token' => [],
+            params: [
+                ParamDefinition::required('user_id', WsParamType::ID),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Create a new api key for the user in the current session',
-            options: [
-                'admin_only' => false,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.users.api_key.revoke',
-            $this->pwgUsers->revokeApiKey(...),
-            [
-                'pkid' => [],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.api_key.create',
+            handlerClass: CreateApiKeyHandler::class,
+            description: 'Create a new api key for the user in the current session',
+            params: [
+                ParamDefinition::required('key_name'),
+                ParamDefinition::required('duration', WsParamType::INT | WsParamType::POSITIVE, info: 'Number of days'),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Revoke a api key for the user in the current session',
-            options: [
-                'admin_only' => false,
-                'post_only' => true,
-            ]
-        );
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.users.api_key.edit',
-            $this->pwgUsers->editApiKey(...),
-            [
-                'key_name' => [],
-                'pkid' => [],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.api_key.revoke',
+            handlerClass: RevokeApiKeyHandler::class,
+            description: 'Revoke a api key for the user in the current session',
+            params: [
+                ParamDefinition::required('pkid'),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Edit a api key for the user in the current session',
-            options: [
-                'admin_only' => false,
-                'post_only' => true,
-            ]
-        );
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.users.api_key.get',
-            $this->pwgUsers->getApiKey(...),
-            [
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.api_key.edit',
+            handlerClass: EditApiKeyHandler::class,
+            description: 'Edit a api key for the user in the current session',
+            params: [
+                ParamDefinition::required('key_name'),
+                ParamDefinition::required('pkid'),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Get all api key for the user in the current session',
-            options: [
-                'admin_only' => false,
-                'post_only' => true,
-            ]
-        );
+            postOnly: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.users.api_key.get',
+            handlerClass: GetApiKeyHandler::class,
+            description: 'Get all api key for the user in the current session',
+            params: [
+                ParamDefinition::required('pwg_token'),
+            ],
+            postOnly: true,
+        ));
 
         // pwg.userComments.* (Group 19's first migrated domain) registers
         // via MethodDefinition/handlerClass -- Comments.php is gone, each

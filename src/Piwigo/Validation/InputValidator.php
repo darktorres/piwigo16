@@ -32,17 +32,6 @@ final readonly class InputValidator
     }
 
     /**
-     * Entry point to the same fatal-error mechanism validate() uses, for
-     * rejections that don't fit validate()'s one-value-against-one-pattern
-     * model -- e.g. a structural/cardinality check such as "at least 2
-     * path segments".
-     */
-    public function fail(string $msg): never
-    {
-        $this->fatalError($msg);
-    }
-
-    /**
      * @param array<int|string, mixed> $paramArray
      */
     public function validate(string $paramName, array $paramArray, bool $isArray, string $pattern, bool $mandatory = false): ?true

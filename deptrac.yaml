@@ -182,7 +182,17 @@ deptrac:
     # PluginMigrationRepository/PluginRepository (L2b, above) and
     # Core\ThemeRepository (L1, below), both allowed downward
     # dependencies from L3. ExtensionContextFactory composes the exact
-    # same 11 collaborators ExtensionContext itself does, same layer.
+    # same collaborators ExtensionContext itself does, same layer.
+    # SettingsPageInterface (P27.15) rides the same collector as
+    # ExtensionInterface, for the identical reason: its own
+    # handleSettingsRequest() has no ExtensionContext dependency of its
+    # own, but it has nowhere else to go and PluginRegistry/ThemeRegistry
+    # both reference it directly (the manifest-time `hasSettings`
+    # validation). CurrentPluginRegistry (P27.15) is the
+    # Config\CurrentConfigService-shaped bridge letting
+    # Controller\Admin\PluginSubController (L4) reach the one real,
+    # already-`bootActive()`d PluginRegistry instance -- same layer as
+    # PluginRegistry itself, which it wraps.
     - name: L3Presentation
       collectors:
         - type: classLike
@@ -190,7 +200,7 @@ deptrac:
         - type: classLike
           value: ^Piwigo\\Listener\\(?!UploadFormatListener$).+
         - type: classLike
-          value: ^Piwigo\\PluginConfig\\(ExtensionInterface|ExtensionContext|ExtensionContextFactory|ExtensionSession|PluginManifest|ThemeManifest|PluginRegistry|ThemeRegistry|PluginValidationException|PluginDependencyException|ThemeValidationException|ThemeDependencyException)$
+          value: ^Piwigo\\PluginConfig\\(ExtensionInterface|ExtensionContext|ExtensionContextFactory|ExtensionSession|PluginManifest|ThemeManifest|PluginRegistry|ThemeRegistry|PluginValidationException|PluginDependencyException|ThemeValidationException|ThemeDependencyException|SettingsPageInterface|CurrentPluginRegistry)$
         - type: classLike
           value: ^Piwigo\\PluginConfig\\Facade\\.*
     # L4 Integration — Piwigo\Command (bin/piwigo's Symfony Console

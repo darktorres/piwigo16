@@ -148,8 +148,9 @@ final class ThemeRegistry
     public function install(string $themeId): void
     {
         $manifest = $this->requireManifest($themeId);
-        $this->bootInstance($manifest)
-            ->install();
+        $instance = $this->bootInstance($manifest);
+        $this->assertSettingsContractSatisfied($manifest, $instance);
+        $instance->install();
     }
 
     /**
@@ -168,6 +169,7 @@ final class ThemeRegistry
         $this->assertDependenciesSatisfied($manifest);
 
         $instance = $this->bootInstance($manifest);
+        $this->assertSettingsContractSatisfied($manifest, $instance);
         $instance->activate();
 
         if (! $this->isInstalled($themeId)) {
@@ -279,6 +281,27 @@ final class ThemeRegistry
     }
 
     /**
+     * Constructs and `boot()`s a single theme for
+     * `Controller\Admin\ThemeSubController`'s own settings-page dispatch
+     * (P27.15) -- a page-scoped, throwaway boot, deliberately NOT
+     * `bootCurrent()`: an admin can open *any* installed theme's
+     * settings page (configuring `modus` while the live site itself
+     * runs `elegant`), not just the current request's own theme + parent
+     * chain `bootCurrent()` is scoped to. Doesn't register
+     * `subscribedEvents()` against the live dispatcher and doesn't touch
+     * `bootCurrent()`'s own cache -- this instance exists only to run
+     * `handleSettingsRequest()` on, once, for this one request.
+     */
+    public function bootForSettingsPage(string $themeId): ExtensionInterface
+    {
+        $manifest = $this->requireManifest($themeId);
+        $instance = $this->bootInstance($manifest);
+        $instance->boot($this->contextFactory->build(ThemeId::from($themeId)));
+
+        return $instance;
+    }
+
+    /**
      * Furthest ancestor first, self last. Cycle-safe: stops the moment
      * an id already seen in this walk would repeat. A missing/
      * unmanifested ancestor stops the walk there too -- the
@@ -384,6 +407,21 @@ final class ThemeRegistry
             throw new ThemeDependencyException(
                 $themeId,
                 "Theme '{$themeId}' cannot be removed: still required by " . implode(', ', $dependents) . '.',
+            );
+        }
+    }
+
+    /**
+     * `install()`/`activate()`'s own manifest-authoring check (P27.15) --
+     * same reasoning as `PluginRegistry`'s own identically-named method.
+     */
+    private function assertSettingsContractSatisfied(ThemeManifest $manifest, ExtensionInterface $instance): void
+    {
+        if ($manifest->hasSettings !== false && ! $instance instanceof SettingsPageInterface) {
+            throw new ThemeValidationException(
+                $manifest->id,
+                rtrim($this->currentConfig->themesPath, '/') . "/{$manifest->id}/theme.json",
+                "Theme '{$manifest->id}' declares hasSettings but its main class does not implement SettingsPageInterface.",
             );
         }
     }

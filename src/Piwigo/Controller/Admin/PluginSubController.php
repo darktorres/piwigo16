@@ -6,18 +6,21 @@ namespace Piwigo\Controller\Admin;
 
 use Override;
 use Piwigo\Admin\LoadedPlugins;
-use Piwigo\Admin\PluginLoader;
 use Piwigo\Controller\Admin\Request\PluginSectionRequest;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\Paths;
+use Piwigo\PluginConfig\CurrentPluginRegistry;
+use Piwigo\PluginConfig\SettingsPageInterface;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces admin/plugin.php's own body (page slug "plugin"), folded
- * directly into this controller -- dynamic inclusion
- * of a whitelisted file from within an already-active plugin's own
- * directory (e.g. that plugin's settings page). Doesn't touch the
+ * directly into this controller -- dispatches to the requested plugin's
+ * own `PluginConfig\SettingsPageInterface::handleSettingsRequest()`
+ * (P27.15), the real, already-`boot()`ed instance
+ * `PluginConfig\CurrentPluginRegistry` holds (see that class's own
+ * docblock for why this reads through it rather than a freshly
+ * container-autowired `PluginRegistry`). Doesn't touch the
  * plugins/themes/languages god-classes at all, only $pwg_loaded_plugins (a
  * real, already-established global from Piwigo\Admin\PluginLoader's
  * plugin-loading bootstrap chain -- same usage already exists in
@@ -28,9 +31,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * own (redundant) copy of that check is dropped here.
  *
  * $_GET['section'] parsing/validation is extracted into
- * Request\PluginSectionRequest -- see that class's own docblock for the
- * real denial-of-service bug found and fixed
- * (an unreindexed unset() during empty-segment filtering).
+ * Request\PluginSectionRequest -- see that class's own docblock.
  */
 final readonly class PluginSubController implements AdminSubControllerInterface
 {
@@ -38,7 +39,7 @@ final readonly class PluginSubController implements AdminSubControllerInterface
         private LoadedPlugins $loadedPlugins,
         private HtmlRenderingInterface $htmlRenderer,
         private InputValidator $inputValidator,
-        private Paths $paths,
+        private CurrentPluginRegistry $currentPluginRegistry,
     ) {}
 
     #[Override]
@@ -51,12 +52,13 @@ final readonly class PluginSubController implements AdminSubControllerInterface
                 ->fatalError('Invalid URL - plugin ' . $pluginSection->pluginId . ' not active');
         }
 
-        $filename = PluginLoader::pluginsPath($this->paths) . implode('/', $pluginSection->sections);
-        if (is_file($filename)) {
-            include_once $filename;
-        } else {
+        $instance = $this->currentPluginRegistry->get()
+            ->getBootedInstance($pluginSection->pluginId);
+        if (! $instance instanceof SettingsPageInterface) {
             $this->htmlRenderer
-                ->fatalError('Missing file ' . htmlentities($filename));
+                ->fatalError('Plugin ' . $pluginSection->pluginId . ' has no settings page');
         }
+
+        $instance->handleSettingsRequest($request);
     }
 }

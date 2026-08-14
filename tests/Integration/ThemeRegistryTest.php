@@ -7,19 +7,23 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
+use Nyholm\Psr7\ServerRequest;
 use Override;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Mail\MailService;
@@ -29,6 +33,7 @@ use Piwigo\PluginConfig\ExtensionContextFactory;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
+use Piwigo\PluginConfig\SettingsPageInterface;
 use Piwigo\PluginConfig\ThemeDependencyException;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\PluginConfig\ThemeValidationException;
@@ -118,6 +123,9 @@ final class ThemeRegistryTest extends IntegrationTestCase
             $this->containerGet(MailService::class),
             new UserReadFacade($this->containerGet(UserRepository::class)),
             new ThemeReadFacade($this->repository),
+            $this->containerGet(CsrfService::class),
+            $this->containerGet(HtmlRenderingInterface::class),
+            $this->containerGet(AccessControl::class),
         );
     }
 
@@ -487,5 +495,147 @@ final class ThemeRegistryTest extends IntegrationTestCase
         } catch (ThemeDependencyException $e) {
             self::assertSame($id, $e->themeId);
         }
+    }
+
+    /**
+     * activate() (P27.15) -- same manifest-authoring check as
+     * `PluginRegistryTest`'s own identically-named test.
+     */
+    public function testActivateThrowsWhenHasSettingsIsDeclaredButSettingsPageInterfaceIsNotImplemented(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-missing-settings-contract-' . $suffix;
+        $namespace = 'PiwigoTest\\ThemeFixtureMissingSettings' . $suffix;
+        $className = 'Theme' . $suffix;
+        mkdir($dir . '/' . $id . '/src', 0o777, true);
+
+        file_put_contents($dir . '/' . $id . '/theme.json', json_encode([
+            'id' => $id,
+            'name' => $id,
+            'version' => '1.0.0',
+            'description' => 'Fixture theme declaring hasSettings without implementing SettingsPageInterface',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\' . $className,
+            'hasSettings' => true,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/' . $id . '/src/' . $className . '.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+
+            final class {$className} implements ExtensionInterface
+            {
+                public function boot(ExtensionContext \$context): void {}
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+                public function subscribedEvents(): array { return []; }
+            }
+            PHP);
+
+        $registry = $this->buildRegistry($dir);
+
+        try {
+            $registry->activate($id);
+            self::fail('activate() must throw when hasSettings is declared but SettingsPageInterface is not implemented');
+        } catch (ThemeValidationException $e) {
+            self::assertSame($id, $e->themeId);
+            self::assertStringContainsString('SettingsPageInterface', $e->getMessage());
+        }
+    }
+
+    /**
+     * bootForSettingsPage() (P27.15) -- boots a theme that is NOT the
+     * current request's own theme (never touched via bootCurrent() in
+     * this test), proving the real reason this method exists separately:
+     * an admin can open any installed theme's settings page.
+     */
+    public function testBootForSettingsPageBootsANonCurrentThemeAndReturnsARealSettingsPageInstance(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-settings-page-' . $suffix;
+        $namespace = 'PiwigoTest\\ThemeFixtureSettingsPage' . $suffix;
+        $className = 'Theme' . $suffix;
+        mkdir($dir . '/' . $id . '/src', 0o777, true);
+
+        file_put_contents($dir . '/' . $id . '/theme.json', json_encode([
+            'id' => $id,
+            'name' => $id,
+            'version' => '1.0.0',
+            'description' => 'Fixture theme implementing SettingsPageInterface',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\' . $className,
+            'hasSettings' => true,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/' . $id . '/src/' . $className . '.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+            use Piwigo\\PluginConfig\\SettingsPageInterface;
+            use Psr\\Http\\Message\\ServerRequestInterface;
+
+            final class {$className} implements ExtensionInterface, SettingsPageInterface
+            {
+                public static ?ExtensionContext \$receivedContext = null;
+                public static ?ServerRequestInterface \$receivedRequest = null;
+
+                public function boot(ExtensionContext \$context): void
+                {
+                    self::\$receivedContext = \$context;
+                }
+
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+                public function subscribedEvents(): array { return []; }
+
+                public function handleSettingsRequest(ServerRequestInterface \$request): void
+                {
+                    self::\$receivedRequest = \$request;
+                }
+            }
+            PHP);
+
+        $registry = $this->buildRegistry($dir);
+        $fqcn = $namespace . '\\' . $className;
+
+        $instance = $registry->bootForSettingsPage($id);
+
+        self::assertInstanceOf(SettingsPageInterface::class, $instance);
+        self::assertInstanceOf(ExtensionContext::class, $fqcn::$receivedContext);
+
+        $request = new ServerRequest('GET', '/admin.php');
+        $instance->handleSettingsRequest($request);
+        self::assertSame($request, $fqcn::$receivedRequest);
     }
 }

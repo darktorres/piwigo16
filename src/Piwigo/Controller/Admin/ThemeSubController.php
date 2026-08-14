@@ -15,20 +15,26 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\SettingsPageInterface;
+use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces admin/theme.php's own body (page slug "theme"), folded directly
- * into this controller -- validates the requested
- * theme id against ExtensionScanner's own scan (already migrated off the
- * legacy themes.class.php god-class), then dynamically
- * includes that theme's own admin/admin.inc.php. No other real caller of
- * admin/theme.php exists (confirmed via grep) -- admin.php's own routing
- * already gates this page behind check_status(AccessLevel::Administrator)
- * before dispatch, so the shell's own (redundant) copy of that check is
- * dropped here.
+ * into this controller -- validates the requested theme id against
+ * ExtensionScanner's own scan (already migrated off the legacy
+ * themes.class.php god-class), then dispatches to that theme's own
+ * `PluginConfig\SettingsPageInterface::handleSettingsRequest()` (P27.15),
+ * booted fresh for this one request via `ThemeRegistry::
+ * bootForSettingsPage()` -- see that method's own docblock for why a
+ * page-scoped, throwaway boot is the right shape here (unlike
+ * `PluginSubController`, which reads an already-`bootActive()`d instance
+ * instead). No other real caller of admin/theme.php exists (confirmed via
+ * grep) -- admin.php's own routing already gates this page behind
+ * check_status(AccessLevel::Administrator) before dispatch, so the shell's
+ * own (redundant) copy of that check is dropped here.
  *
  * $_GET['theme'] parsing/validation is extracted into
  * Request\ThemeIdRequest -- see that class's own docblock.
@@ -45,6 +51,7 @@ final readonly class ThemeSubController implements AdminSubControllerInterface
         private CurrentUser $currentUser,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
+        private ThemeRegistry $themeRegistry,
     ) {}
 
     #[Override]
@@ -59,12 +66,12 @@ final readonly class ThemeSubController implements AdminSubControllerInterface
                 ->fatalError('Invalid theme');
         }
 
-        $filename = $this->currentConfig->themesPath . $theme . '/admin/admin.inc.php';
-        if (is_file($filename)) {
-            include_once $filename;
-        } else {
+        $instance = $this->themeRegistry->bootForSettingsPage($theme);
+        if (! $instance instanceof SettingsPageInterface) {
             $this->htmlRenderer
-                ->fatalError('Missing file ' . $filename);
+                ->fatalError('Theme ' . $theme . ' has no settings page');
         }
+
+        $instance->handleSettingsRequest($request);
     }
 }

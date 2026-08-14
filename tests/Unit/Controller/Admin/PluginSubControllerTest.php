@@ -8,6 +8,7 @@ use Piwigo\Controller\Admin\PluginSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\PluginConfig\CurrentPluginRegistry;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Validation\InputValidator;
 
@@ -17,11 +18,13 @@ use Piwigo\Validation\InputValidator;
  * its own.
  *
  * Covers the "plugin not active" fatalError() guard -- a well-formed
- * ?section= value (passes InputValidator's own charset/segment-count
- * checks cleanly) against an explicitly empty LoadedPlugins::set([])
- * reaches it directly. The "missing file" fatalError() branch and the
- * real include_once happy path both need a real plugin file on disk,
- * not attempted here.
+ * ?section= value (passes InputValidator's own charset check cleanly)
+ * against an explicitly empty LoadedPlugins::set([]) reaches it
+ * directly, before CurrentPluginRegistry is ever touched (an
+ * uninitialised one is passed here for exactly that reason). The "no
+ * settings page" fatalError() branch and the real
+ * handleSettingsRequest() happy path both need a real, booted plugin
+ * instance, not attempted here.
  */
 function pluginSubControllerTestRrmdir(string $dir): void
 {
@@ -53,7 +56,7 @@ test('handle() fatal-errors when the requested plugin is not active', function (
             $loadedPlugins,
             HtmlServiceTestFactory::build(),
             new InputValidator(),
-            Paths::fromRoot(sys_get_temp_dir()),
+            new CurrentPluginRegistry(),
         );
 
         $exception = null;

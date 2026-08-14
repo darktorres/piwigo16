@@ -6,6 +6,7 @@ namespace Piwigo\PluginConfig;
 
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -13,10 +14,12 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\NotificationConfig;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
@@ -80,6 +83,9 @@ final readonly class ExtensionContext
         private MailService $mailService,
         private UserReadFacade $userReadFacade,
         private ThemeReadFacade $themeReadFacade,
+        private CsrfService $csrfService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private AccessControl $accessControl,
     ) {}
 
     /**
@@ -332,5 +338,49 @@ final readonly class ExtensionContext
     public function mail(string|array $to, array $args = [], array $tpl = []): bool
     {
         return $this->mailService->mail($to, $args, $tpl);
+    }
+
+    /**
+     * Fail-fast CSRF check for a settings-page POST handler -- the real
+     * usage shape every legacy plugin's own `check_pwg_token();` call
+     * site already has (a bare statement, no `if`/return-value check), so
+     * this is the primary accessor. `CsrfService::checkOrFail()`'s own
+     * real contract (L2b, may not depend upward on Html/L3) is why this
+     * needs `htmlRenderer` threaded through here rather than
+     * `CsrfService` rendering its own failure page.
+     */
+    public function checkCsrfOrFail(): void
+    {
+        $this->csrfService->checkOrFail($this->htmlRenderer, $this->redirectService);
+    }
+
+    /**
+     * `checkCsrfOrFail()`'s own non-throwing half, for a plugin author
+     * who wants to render its own inline error inside `ADMIN_CONTENT`
+     * instead of the admin shell's generic "access denied" page.
+     */
+    public function checkCsrf(): ?bool
+    {
+        return $this->csrfService->check();
+    }
+
+    public function csrfToken(): string
+    {
+        return $this->csrfService->getToken();
+    }
+
+    /**
+     * `Auth\AccessControl::isWebmaster()`'s own real, already-established
+     * permission check -- an `AccessLevel` hierarchy comparison against
+     * the current user's status, not a bare `currentUser()->status ===
+     * UserStatus::Webmaster` equality this class could otherwise already
+     * express directly. Every existing admin controller with a
+     * webmaster-only gate (`ConfigurationSubController`'s own real
+     * `accessControl->isWebmaster()` calls) already goes through this
+     * same service; a settings page's own gate should too.
+     */
+    public function isWebmaster(): bool
+    {
+        return $this->accessControl->isWebmaster();
     }
 }

@@ -38,6 +38,18 @@ final class PluginRegistry
      */
     private array $loadOrder = [];
 
+    /**
+     * The same instances `bootActive()`'s own two-pass loop already
+     * constructs and `boot()`s -- cached here (P27.15) so
+     * `getBootedInstance()` can hand `Controller\Admin\
+     * PluginSubController` the real, already-booted instance a settings
+     * page needs, not a freshly re-booted duplicate whose `boot()`-time
+     * state a plugin's own `handleSettingsRequest()` wouldn't see.
+     *
+     * @var array<string, ExtensionInterface>
+     */
+    private array $bootedInstances = [];
+
     private bool $loaded = false;
 
     private readonly Validator $validator;
@@ -180,6 +192,7 @@ final class PluginRegistry
         }
 
         $instance = $this->bootInstance($manifest);
+        $this->assertSettingsContractSatisfied($manifest, $instance);
         $instance->install();
 
         $id = PluginId::from($pluginId);
@@ -209,6 +222,7 @@ final class PluginRegistry
         }
 
         $instance = $this->bootInstance($manifest);
+        $this->assertSettingsContractSatisfied($manifest, $instance);
         $instance->activate();
 
         $this->repository->updateState(PluginId::from($pluginId), PluginState::Active);
@@ -325,7 +339,22 @@ final class PluginRegistry
             $instance->boot($this->contextFactory->build(PluginId::from($pluginId)));
         }
 
+        $this->bootedInstances = $instances;
         $this->eventDispatcher->dispatchNotify(new PluginsLoaded());
+    }
+
+    /**
+     * The real, already-`boot()`ed instance for an active plugin id --
+     * `null` before `bootActive()` has run, or for an id it never booted
+     * (never active, or `enablePlugins` off). `Controller\Admin\
+     * PluginSubController` (P27.15) is the one real reader, via
+     * `CurrentPluginRegistry` -- see that class's own docblock for why a
+     * fresh, container-autowired `PluginRegistry` can't just call
+     * `bootActive()` again itself.
+     */
+    public function getBootedInstance(string $pluginId): ?ExtensionInterface
+    {
+        return $this->bootedInstances[$pluginId] ?? null;
     }
 
     /**
@@ -412,6 +441,27 @@ final class PluginRegistry
             throw new PluginDependencyException(
                 $pluginId,
                 "Plugin '{$pluginId}' cannot be removed: still required by " . implode(', ', $dependents) . '.',
+            );
+        }
+    }
+
+    /**
+     * `install()`/`activate()`'s own manifest-authoring check (P27.15):
+     * a manifest declaring `hasSettings` (`true` or `'webmaster'`) but
+     * whose main class doesn't implement `SettingsPageInterface` is
+     * caught here, at the one place a real authoring mistake should
+     * surface -- not confusingly deep inside
+     * `Controller\Admin\PluginSubController` the first time an admin
+     * actually opens that plugin's settings page. Matches this class's
+     * own existing `id`-matches-directory check in `loadManifest()`.
+     */
+    private function assertSettingsContractSatisfied(PluginManifest $manifest, ExtensionInterface $instance): void
+    {
+        if ($manifest->hasSettings !== false && ! $instance instanceof SettingsPageInterface) {
+            throw new PluginValidationException(
+                $manifest->id,
+                rtrim($this->paths->plugins, '/') . "/{$manifest->id}/plugin.json",
+                "Plugin '{$manifest->id}' declares hasSettings but its main class does not implement SettingsPageInterface.",
             );
         }
     }

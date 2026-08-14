@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\PluginId;
@@ -16,12 +17,14 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Mail\BeforeSendMail;
@@ -185,6 +188,9 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->containerGet(MailService::class),
             new UserReadFacade($this->containerGet(UserRepository::class)),
             new ThemeReadFacade($this->containerGet(ThemeRepository::class)),
+            $this->containerGet(CsrfService::class),
+            $this->containerGet(HtmlRenderingInterface::class),
+            $this->containerGet(AccessControl::class),
         );
     }
 
@@ -403,6 +409,76 @@ final class ExtensionContextTest extends IntegrationTestCase
 
         self::assertCount(1, $matching);
         self::assertSame('P27.14 Fixture Theme', $matching[0]->name);
+    }
+
+    /**
+     * csrfToken()/checkCsrf() (P27.15) -- a real round trip through
+     * `Csrf\CsrfService`'s own session-id + secret-key HMAC, proving
+     * `ExtensionContext` reaches the real, container-shared collaborator
+     * (not a throwaway/mocked one).
+     */
+    public function testCsrfTokenRoundTripsThroughCheckCsrf(): void
+    {
+        session_id('ext-context-csrf-test-' . uniqid('', true));
+
+        $token = $this->context->csrfToken();
+        self::assertNotSame('', $token);
+
+        $_REQUEST['pwg_token'] = $token;
+        try {
+            self::assertTrue($this->context->checkCsrf());
+        } finally {
+            unset($_REQUEST['pwg_token']);
+        }
+    }
+
+    public function testCheckCsrfReturnsNullWhenNoTokenSubmittedAndFalseForAWrongOne(): void
+    {
+        session_id('ext-context-csrf-test-' . uniqid('', true));
+
+        self::assertNull($this->context->checkCsrf());
+
+        $_REQUEST['pwg_token'] = 'clearly-wrong-token';
+        try {
+            self::assertFalse($this->context->checkCsrf());
+        } finally {
+            unset($_REQUEST['pwg_token']);
+        }
+    }
+
+    public function testCheckCsrfOrFailThrowsResponseReadyExceptionForAWrongToken(): void
+    {
+        session_id('ext-context-csrf-test-' . uniqid('', true));
+        $_REQUEST['pwg_token'] = 'clearly-wrong-token';
+
+        try {
+            $this->expectException(ResponseReadyException::class);
+            $this->context->checkCsrfOrFail();
+        } finally {
+            unset($_REQUEST['pwg_token']);
+        }
+    }
+
+    /**
+     * isWebmaster() (P27.15) -- backed by the real `Auth\AccessControl`
+     * service every other admin controller's own webmaster gate already
+     * uses (e.g. `ConfigurationSubController`), not a bare
+     * `currentUser()->status` equality this class could otherwise already
+     * express directly.
+     */
+    public function testIsWebmasterReflectsTheCurrentUsersRealStatus(): void
+    {
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
+            'id' => 1,
+            'status' => 'webmaster',
+        ]));
+        self::assertTrue($this->context->isWebmaster());
+
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
+            'id' => 3,
+            'status' => 'normal',
+        ]));
+        self::assertFalse($this->context->isWebmaster());
     }
 
     public function testImagesIsInCaddieReflectsARealInsertAndRemoval(): void

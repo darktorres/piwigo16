@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -17,17 +18,19 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Validation\InputValidator;
 
 /**
- * Piwigo\Controller\Admin\ThemeSubController -- 8 constructor deps, no
- * template rendering at all (dynamically includes another file on the
- * happy path instead). No dedicated Integration/Browser spec of its own.
+ * Piwigo\Controller\Admin\ThemeSubController -- 9 constructor deps, no
+ * template rendering at all (dispatches to the theme's own
+ * SettingsPageInterface on the happy path instead). No dedicated
+ * Integration/Browser spec of its own.
  *
  * Covers the "invalid theme" fatalError() guard: a well-formed ?theme=
  * value (passes ThemeIdRequest/InputValidator's own charset check
  * cleanly) against a themes directory pointed at an empty temp dir (so
- * ExtensionScanner::scan() finds zero real themes) reaches it directly.
- * The "missing file" fatalError() branch and the real include_once happy
- * path both need a real theme directory with a marker `theme.json` on
- * disk, not attempted here.
+ * ExtensionScanner::scan() finds zero real themes) reaches it directly,
+ * before ThemeRegistry::bootForSettingsPage() is ever called. The "no
+ * settings page" fatalError() branch and the real
+ * handleSettingsRequest() happy path both need a real theme directory
+ * with a marker `theme.json` on disk, not attempted here.
  */
 function themeSubControllerTestRoot(): string
 {
@@ -46,6 +49,23 @@ function themeSubControllerTestEntityManager(): EntityManagerInterface
     }
 
     return $entityManager;
+}
+
+/**
+ * Container-autowired, matching themeSubControllerTestEntityManager()'s
+ * own style -- the "invalid theme" branch this file covers never calls a
+ * method on this collaborator (handle() fatalErrors before ever reaching
+ * bootForSettingsPage()), so a fully-wired, DB-backed instance isn't
+ * needed for correctness, only for the constructor's own type.
+ */
+function themeSubControllerTestThemeRegistry(): ThemeRegistry
+{
+    $themeRegistry = Kernel::container()->get(ThemeRegistry::class);
+    if (! $themeRegistry instanceof ThemeRegistry) {
+        throw new LogicException('Container returned an unexpected type for ' . ThemeRegistry::class);
+    }
+
+    return $themeRegistry;
 }
 
 function themeSubControllerTestRrmdir(string $dir): void
@@ -84,6 +104,7 @@ test('handle() fatal-errors when the requested theme is not among the scanned th
             CurrentUserTestFactory::get(),
             new EventDispatcher(),
             themeSubControllerTestEntityManager(),
+            themeSubControllerTestThemeRegistry(),
         );
 
         $exception = null;

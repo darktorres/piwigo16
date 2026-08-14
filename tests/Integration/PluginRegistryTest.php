@@ -8,17 +8,20 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Mail\MailService;
@@ -118,6 +121,9 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->containerGet(MailService::class),
             new UserReadFacade($this->containerGet(UserRepository::class)),
             new ThemeReadFacade($this->containerGet(ThemeRepository::class)),
+            $this->containerGet(CsrfService::class),
+            $this->containerGet(HtmlRenderingInterface::class),
+            $this->containerGet(AccessControl::class),
         );
     }
 
@@ -596,6 +602,72 @@ final class PluginRegistryTest extends IntegrationTestCase
             self::fail('install() must throw when minPiwigo/require: is unsatisfiable');
         } catch (PluginDependencyException $e) {
             self::assertSame($id, $e->pluginId);
+        }
+    }
+
+    /**
+     * install() (P27.15) -- a manifest declaring `hasSettings: true` whose
+     * main class implements plain `ExtensionInterface` only (never
+     * `SettingsPageInterface`) is a real authoring mistake, caught here
+     * rather than surfacing confusingly deep inside
+     * `Controller\Admin\PluginSubController` the first time an admin
+     * opens that plugin's settings page.
+     */
+    public function testInstallThrowsWhenHasSettingsIsDeclaredButSettingsPageInterfaceIsNotImplemented(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-missing-settings-contract-' . $suffix;
+        $namespace = 'PiwigoTest\\FixtureMissingSettings' . $suffix;
+        $className = 'Plugin' . $suffix;
+        mkdir($dir . '/' . $id . '/src', 0o777, true);
+
+        file_put_contents($dir . '/' . $id . '/plugin.json', json_encode([
+            'id' => $id,
+            'name' => $id,
+            'version' => '1.0.0',
+            'description' => 'Fixture plugin declaring hasSettings without implementing SettingsPageInterface',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\' . $className,
+            'hasSettings' => true,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/' . $id . '/src/' . $className . '.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+
+            final class {$className} implements ExtensionInterface
+            {
+                public function boot(ExtensionContext \$context): void {}
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+                public function subscribedEvents(): array { return []; }
+            }
+            PHP);
+
+        $registry = $this->buildRegistry($dir);
+
+        try {
+            $registry->install($id);
+            self::fail('install() must throw when hasSettings is declared but SettingsPageInterface is not implemented');
+        } catch (PluginValidationException $e) {
+            self::assertSame($id, $e->pluginId);
+            self::assertStringContainsString('SettingsPageInterface', $e->getMessage());
         }
     }
 }

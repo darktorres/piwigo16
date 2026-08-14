@@ -66,6 +66,7 @@ use Piwigo\Core\ThemeEntity;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Core\WsContext;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
@@ -92,6 +93,7 @@ use Piwigo\Mail\MailService;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\CurrentPluginRegistry;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
@@ -366,6 +368,7 @@ final class RequestBootstrap
         session_start();
         $pluginRegistry = self::pluginRegistry($conn);
         $pluginRegistry->bootActive();
+        self::currentPluginRegistry()->set($pluginRegistry);
 
         // Repopulates Admin\LoadedPlugins from the registry's own already-
         // scanned manifests -- Admin\PluginLoader::loadPlugins() used to
@@ -821,6 +824,11 @@ final class RequestBootstrap
             throw new LogicException('Container returned an unexpected type for ' . MailService::class);
         }
 
+        $csrfService = Kernel::container()->get(CsrfService::class);
+        if (! $csrfService instanceof CsrfService) {
+            throw new LogicException('Container returned an unexpected type for ' . CsrfService::class);
+        }
+
         return new ExtensionContextFactory(
             self::currentTemplate(),
             self::currentConfig(),
@@ -839,6 +847,9 @@ final class RequestBootstrap
             $mailService,
             self::userReadFacade($conn),
             self::themeReadFacade($conn),
+            $csrfService,
+            self::htmlService(),
+            self::accessControl(),
         );
     }
 
@@ -953,6 +964,23 @@ final class RequestBootstrap
         }
 
         return $loadedPlugins;
+    }
+
+    /**
+     * Resolves the container-shared instance so that connect()'s own
+     * `set($pluginRegistry)` call, right after `bootActive()` runs, makes
+     * that one real, already-booted `PluginRegistry` reachable from
+     * `Controller\Admin\PluginSubController` -- see
+     * `PluginConfig\CurrentPluginRegistry`'s own docblock for why.
+     */
+    private static function currentPluginRegistry(): CurrentPluginRegistry
+    {
+        $currentPluginRegistry = Kernel::container()->get(CurrentPluginRegistry::class);
+        if (! $currentPluginRegistry instanceof CurrentPluginRegistry) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentPluginRegistry::class);
+        }
+
+        return $currentPluginRegistry;
     }
 
     /**

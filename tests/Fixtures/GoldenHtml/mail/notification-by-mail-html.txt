@@ -32,8 +32,8 @@
 <p style="margin: .25em 0 .5em 0; text-align: center;">Fixture Gallery</p>
 <hr style="border-width: 0 0 1px 0; border-color: #ddd; border-style: solid; margin: 1em;">
 <p style="margin: .25em 0 .5em 0;">
-To unsubscribe, click on <a href="nbm.php?unsubscribe=golden-html-check-key" style="color: #f70; text-decoration: none;">nbm.php?unsubscribe=golden-html-check-key</a><br>
-To subscribe, click on <a href="nbm.php?subscribe=golden-html-check-key" style="color: #f70; text-decoration: none;">nbm.php?subscribe=golden-html-check-key</a><br>
+To unsubscribe, click on <a href="nbm.php?unsubscribe=fixture-check-key" style="color: #f70; text-decoration: none;">nbm.php?unsubscribe=fixture-check-key</a><br>
+To subscribe, click on <a href="nbm.php?subscribe=fixture-check-key" style="color: #f70; text-decoration: none;">nbm.php?subscribe=fixture-check-key</a><br>
 If you encounter problems or have any question, please send a message to <a href="mailto:fixture_admin@example.test?subject=[NBM]%20Problems%20or%20questions" style="color: #f70; text-decoration: none;">fixture_admin@example.test</a><br>
 </p>
 <hr style="border-width: 0 0 1px 0; border-color: #ddd; border-style: solid; margin: 1em;">

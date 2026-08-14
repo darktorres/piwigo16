@@ -17,10 +17,13 @@ use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\Comments\DeleteHandler;
-use Piwigo\Ws\Comments\GetListHandler;
-use Piwigo\Ws\Comments\ValidateHandler;
+use Piwigo\Ws\Comments\DeleteHandler as CommentsDeleteHandler;
+use Piwigo\Ws\Comments\GetListHandler as CommentsGetListHandler;
+use Piwigo\Ws\Comments\ValidateHandler as CommentsValidateHandler;
 use Piwigo\Ws\Event\WsAddMethods;
+use Piwigo\Ws\Permissions\AddHandler as PermissionsAddHandler;
+use Piwigo\Ws\Permissions\GetListHandler as PermissionsGetListHandler;
+use Piwigo\Ws\Permissions\RemoveHandler as PermissionsRemoveHandler;
 
 final readonly class WsDefaultMethods
 {
@@ -28,15 +31,15 @@ final readonly class WsDefaultMethods
     // property; the property list here and the instance-method callbacks
     // registered below must stay in sync -- register() calls these as real
     // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
-    // ClassName::method() calls. `pwg.userComments.*` (Comments.php,
-    // Group 19's first migrated domain) no longer has a callback-based
-    // registration or a constructor property here -- its 3 methods
-    // register via MethodDefinition/handlerClass instead, resolved from
-    // the container at invocation time.
+    // ClassName::method() calls. `pwg.userComments.*`/`pwg.permissions.*`
+    // (Comments.php/Permissions.php, Group 19's first 2 migrated domains)
+    // no longer have a callback-based registration or a constructor
+    // property here -- their methods register via
+    // MethodDefinition/handlerClass instead, resolved from the container
+    // at invocation time.
     public function __construct(
         private Categories $pwgCategories,
         private Core $pwgCore,
-        private Permissions $pwgPermissions,
         private Extensions $pwgExtensions,
         private Groups $pwgGroups,
         private Tags $pwgTags,
@@ -1885,83 +1888,50 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.permissions.getList',
-            $this->pwgPermissions->getList(...),
-            [
-                'cat_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::ID,
-                ],
-                'group_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::ID,
-                ],
-                'user_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::ID,
-                ],
-            ],
-            'Returns permissions: user ids and group ids having access to each album ; this list can be filtered.
+        // pwg.permissions.* (Group 19's second migrated domain) registers
+        // via MethodDefinition/handlerClass -- Permissions.php is gone,
+        // each method is its own container-resolved WsAction.
+        $service->register(new MethodDefinition(
+            name: 'pwg.permissions.getList',
+            handlerClass: PermissionsGetListHandler::class,
+            description: 'Returns permissions: user ids and group ids having access to each album ; this list can be filtered.
     <br>Provide only one parameter!',
-            options: [
-                'admin_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.permissions.add',
-            $this->pwgPermissions->add(...),
-            [
-                'cat_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'group_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::ID,
-                ],
-                'user_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::ID,
-                ],
-                'recursive' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
-                'pwg_token' => [],
+            params: [
+                ParamDefinition::optionalFlag('cat_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('group_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('user_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
             ],
-            'Adds permissions to an album.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.permissions.remove',
-            $this->pwgPermissions->remove(...),
-            [
-                'cat_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'group_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::ID,
-                ],
-                'user_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::ID,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.permissions.add',
+            handlerClass: PermissionsAddHandler::class,
+            description: 'Adds permissions to an album.',
+            params: [
+                ParamDefinition::required('cat_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('group_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('user_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optional('recursive', false, WsParamType::BOOL),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Removes permissions from an album.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.permissions.remove',
+            handlerClass: PermissionsRemoveHandler::class,
+            description: 'Removes permissions from an album.',
+            params: [
+                ParamDefinition::required('cat_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('group_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('user_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('pwg_token'),
+            ],
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         $service->addMethod(
             'pwg.users.preferences.set',
@@ -2298,7 +2268,7 @@ final readonly class WsDefaultMethods
         // method is its own container-resolved WsAction.
         $service->register(new MethodDefinition(
             name: 'pwg.userComments.getList',
-            handlerClass: GetListHandler::class,
+            handlerClass: CommentsGetListHandler::class,
             description: 'Get comments',
             params: [
                 ParamDefinition::optional('status', 'all', info: 'must be: all, validated or pending'),
@@ -2315,7 +2285,7 @@ final readonly class WsDefaultMethods
 
         $service->register(new MethodDefinition(
             name: 'pwg.userComments.delete',
-            handlerClass: DeleteHandler::class,
+            handlerClass: CommentsDeleteHandler::class,
             description: 'Delete comments',
             params: [
                 ParamDefinition::required('comment_id', WsParamType::INT | WsParamType::POSITIVE, WsParamFlag::FORCE_ARRAY),
@@ -2327,7 +2297,7 @@ final readonly class WsDefaultMethods
 
         $service->register(new MethodDefinition(
             name: 'pwg.userComments.validate',
-            handlerClass: ValidateHandler::class,
+            handlerClass: CommentsValidateHandler::class,
             description: 'Validate comments',
             params: [
                 ParamDefinition::required('comment_id', WsParamType::INT | WsParamType::POSITIVE, WsParamFlag::FORCE_ARRAY),

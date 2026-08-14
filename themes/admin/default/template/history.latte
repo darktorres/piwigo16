@@ -835,8 +835,7 @@ const guest_id = {$guest_id};
   </fieldset>
 </form>
 
-{if isset($search_summary)}
-  <fieldset>
+<fieldset n:if="isset($search_summary)">
     <legend>{='Summary'|translate}</legend>
 
     <ul>
@@ -850,7 +849,6 @@ const guest_id = {$guest_id};
       </li>
     </ul>
   </fieldset>
-{/if}
 
 {* Used to be copied in JS *}
 <span id="-2" class="icon-green summary-user-item hide">

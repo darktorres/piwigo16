@@ -692,22 +692,14 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
-{if isset($errors)}
-  <div class="errors">
+<div n:if="isset($errors)" class="errors">
     <ul>
-      {foreach $errors as $error}
-        <li>{$error|noescape}</li>
-      {/foreach}
+      <li n:foreach="$errors as $error">{$error|noescape}</li>
     </ul>
   </div>
-{/if}
 
-{if !empty($infos)}
-  <div class="infos">
+<div n:if="!empty($infos)" class="infos">
     <ul>
-      {foreach $infos as $info}
-        <li>{$info|noescape}</li>
-      {/foreach}
+      <li n:foreach="$infos as $info">{$info|noescape}</li>
     </ul>
   </div>
-{/if}

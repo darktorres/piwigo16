@@ -736,18 +736,14 @@
       </ul>
     </fieldset>
 
-    {if $is_standard_pages_used and !$use_standard_pages}
-      <div class="std_pgs_theme_info warnings">
+    <div n:if="$is_standard_pages_used and !$use_standard_pages" class="std_pgs_theme_info warnings">
         <p
           class=""
         >{='Standard pages aren\'t activated, however you have %d active themes that will still use them. These themes are:'|translate:count($standard_pages_used_by)} </p>
         <ul>
-          {foreach $standard_pages_used_by as $theme_name}
-            <li>{$theme_name}</li>
-          {/foreach}
+          <li n:foreach="$standard_pages_used_by as $theme_name">{$theme_name}</li>
         </ul>
       </div>
-    {/if}
 
     <fieldset class="std_pgs_personnalisation_settings">
       <legend><span
@@ -785,12 +781,10 @@
               <div
                 class="custom_logo_preview {if "custom_logo" == $std_pgs_selected_logo}show{else}hide{/if}"
               >
-                {if isset($std_pgs_selected_logo_path)}
-                  <div class="change_logo_container">
+                <div n:if="isset($std_pgs_selected_logo_path)" class="change_logo_container">
                     <img src="{$std_pgs_selected_logo_path}">
                     <a href="#" id="change_logo">{='Change logo'|translate}</a>
                   </div>
-                {/if}
                 <div
                   class="use_existing_logo_container {if isset($std_pgs_selected_logo_path)}hide{/if}"
                 >
@@ -845,13 +839,11 @@
                 value="{$std_pgs_selected_skin}"
               >
               <div class="std_pgs_mini_previews">
-                {foreach $std_pgs_skin_options as $std_pgs_skin_option}
-                  <img
+                <img n:foreach="$std_pgs_skin_options as $std_pgs_skin_option"
                     class="{if $std_pgs_selected_skin == $std_pgs_skin_option}selected{/if}"
                     id="{$std_pgs_skin_option}"
                     src="themes/standard_pages/skins/light-{$std_pgs_skin_option}.jpg"
                   >
-                {/foreach}
               </div>
               <div class="std_pgs_selected_preview">
                 <div class="std_pgs_selected_preview_container">
@@ -878,20 +870,16 @@
     <div class="savebar-footer">
       <div class="savebar-footer-start"></div>
       <div class="savebar-footer-end">
-        {if isset($save_success)}
-          <div class="savebar-footer-block">
+        <div n:if="isset($save_success)" class="savebar-footer-block">
             <div class="badge info-message">
               <i class="icon-ok"></i>{$save_success}
             </div>
           </div>
-        {/if}
-        {if isset($save_error)}
-          <div class="savebar-footer-block">
+        <div n:if="isset($save_error)" class="savebar-footer-block">
             <div class="badge info-warning">
               <i class="icon-attention"></i>{$save_error}
             </div>
           </div>
-        {/if}
         <div class="savebar-footer-block">
           <button
             class="buttonLike"

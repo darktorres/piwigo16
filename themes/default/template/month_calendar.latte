@@ -693,18 +693,13 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {if !empty($chronology_navigation_bars)}
-  {foreach $chronology_navigation_bars as $bar}
-    <div class="calendarBar">
-      {if isset($bar['previous'])}
-        <div style="float:left;margin-right:5px">&laquo; <a
+  <div n:foreach="$chronology_navigation_bars as $bar" class="calendarBar">
+      <div n:if="isset($bar['previous'])" style="float:left;margin-right:5px">&laquo; <a
             href="{$bar['previous']['URL']|noescape}"
           >{$bar['previous']['LABEL']}</a></div>
-      {/if}
-      {if isset($bar['next'])}
-        <div style="float:right;margin-left:5px"><a
+      <div n:if="isset($bar['next'])" style="float:right;margin-left:5px"><a
             href="{$bar['next']['URL']|noescape}"
           >{$bar['next']['LABEL']}</a> &raquo;</div>
-      {/if}
       {if empty($bar['items'])}
         &nbsp;
       {else}
@@ -723,17 +718,14 @@
         {/foreach}
       {/if}
     </div>
-  {/foreach}
 {/if}
 
 {if !empty($chronology_calendar['calendar_bars'])}
-  {foreach $chronology_calendar['calendar_bars'] as $bar}
-    <div class="calendarCalBar">
+  <div n:foreach="$chronology_calendar['calendar_bars'] as $bar" class="calendarCalBar">
       <span class="calCalHead"><a
           href="{$bar['U_HEAD']|noescape}"
         >{$bar['HEAD_LABEL']}</a> ({$bar['NB_IMAGES']})</span><br>
-      {foreach $bar['items'] as $item}
-        <span class="calCal{if !isset($item['URL'])}Empty{/if}">
+      <span n:foreach="$bar['items'] as $item" class="calCal{if !isset($item['URL'])}Empty{/if}">
           {if isset($item['URL'])}
             <a href="{$item['URL']|noescape}">{$item['LABEL']}</a>
           {else}
@@ -741,18 +733,13 @@
           {/if}
           {if isset($item['NB_IMAGES'])}({$item['NB_IMAGES']}){/if}
         </span>
-      {/foreach}
     </div>
-  {/foreach}
 {/if}
 
-{if isset($chronology_calendar['month_view'])}
-  <table class="calMonth">
+<table n:if="isset($chronology_calendar['month_view'])" class="calMonth">
     <thead>
       <tr>
-        {foreach $chronology_calendar['month_view']['wday_labels'] as $wday}
-          <th>{$wday}</th>
-        {/foreach}
+        <th n:foreach="$chronology_calendar['month_view']['wday_labels'] as $wday">{$wday}</th>
       </tr>
     </thead>
     {capture $tmpHtmlStyle}
@@ -761,8 +748,7 @@
   }
   {/capture}
     {do htmlStyle($tmpHtmlStyle)}
-    {foreach $chronology_calendar['month_view']['weeks'] as $week}
-      <tr>
+    <tr n:foreach="$chronology_calendar['month_view']['weeks'] as $week">
         {foreach $week as $day}
           {if !empty($day)}
             {if isset($day['IMAGE'])}
@@ -786,7 +772,5 @@
             <td>{/if}
           </td>
         {/foreach}{*day in week*}
-      </tr>
-    {/foreach}{*week in month*}
+      </tr>{*week in month*}
   </table>
-{/if}

@@ -707,8 +707,7 @@
         <th>{='Optional URL keyword'|translate}</th>
         <th>{='Bound Theme'|translate}</th>
       </tr>
-      {foreach $extents as $tpl}
-        <tr class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}">
+      <tr n:foreach="$extents as $tpl" class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}">
           <td>
             <input type="hidden" name="reptpl[]" value="{$tpl['replacer']}">
             {$tpl['replacer']}
@@ -723,7 +722,6 @@
             {=htmlOptions(name: 'bound[]', output: $tpl['bound_tpl'], values: $tpl['bound_tpl'], selected: $tpl['selected_bound'])}
           </td>
         </tr>
-      {/foreach}
     </table>
     <p>
       <input type="submit" value="{='Submit'|translate}" name="submit">

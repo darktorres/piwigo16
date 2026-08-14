@@ -742,33 +742,25 @@
               >
             </a>
           </span>
-          {if $SHOW_THUMBNAIL_CAPTION}
-            <span class="thumbLegend">
+          <span n:if="$SHOW_THUMBNAIL_CAPTION" class="thumbLegend">
               <span class="thumbName">{$thumbnail['NAME']|noescape}</span>
-              {if !empty($thumbnail['icon_ts'])}
-                <img
+              <img n:if="!empty($thumbnail['icon_ts'])"
                   title="{$thumbnail['icon_ts']['TITLE']}"
                   src="{$ROOT_URL}{$themeconf['icon_dir']}/recent.png"
                   alt="(!)"
                 >
-              {/if}
-              {if isset($thumbnail['NB_COMMENTS'])}
-                <span
+              <span n:if="isset($thumbnail['NB_COMMENTS'])"
                   class="{if 0 == $thumbnail['NB_COMMENTS']}zero {/if}nb-comments"
                 >
                   <br>
                   {$thumbnail['NB_COMMENTS']|translate_dec:'%d comment','%d comments'}
                 </span>
-              {/if}
 
-              {if isset($thumbnail['NB_HITS'])}
-                <span class="{if 0 == $thumbnail['NB_HITS']}zero {/if}nb-hits">
+              <span n:if="isset($thumbnail['NB_HITS'])" class="{if 0 == $thumbnail['NB_HITS']}zero {/if}nb-hits">
                   <br>
                   {$thumbnail['NB_HITS']|translate_dec:'%d hit','%d hits'}
                 </span>
-              {/if}
             </span>
-          {/if}
         </span>
       </li>
     {/foreach}{/spaceless}

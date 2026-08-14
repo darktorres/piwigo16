@@ -723,8 +723,7 @@
     style="display:none"
     {/if}
   >
-    {foreach $FORMATS as $format}
-      <div
+    <div n:foreach="$FORMATS as $format"
         class="format-card"
         data-id="{$format['format_id']}"
         style="background-image: url('{$IMG_SQUARE_SRC|noescape}')"
@@ -740,6 +739,5 @@
           <a class="format-delete"> <i class="icon-trash-1"></i> </a>
         </div>
       </div>
-    {/foreach}
   </div>
 </div>

@@ -797,8 +797,7 @@ $(document).ready(function() {
     <td>{='Rate'|translate}/{='Username'|translate}/{='Rate date'|translate}</td>
     <td></td>
   </tr>
-  {foreach $images as $image}
-    <tr
+  <tr n:foreach="$images as $image"
       valign="top"
       class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
     >
@@ -815,8 +814,7 @@ $(document).ready(function() {
       ><strong>{$image['SUM_RATE']}</strong></td>
       <td>
         <table style="width:100%">
-          {foreach $image['rates'] as $rate}
-            <tr>
+          <tr n:foreach="$image['rates'] as $rate">
               <td>{$rate['rate']}</td>
               <td><b>{$rate['USER']}</b></td>
               <td>{$rate['date']}</td>
@@ -824,12 +822,10 @@ $(document).ready(function() {
                   onclick="return del(this,{$image['id']},{$rate['user_id']}{if !empty($rate['anonymous_id'])},{$rate['anonymous_id']}{/if})"
                   class="icon-trash"
                 ></a></td>
-            </tr>
-          {/foreach}{* rates *}
+            </tr>{* rates *}
         </table>
       </td>
-    </tr>
-  {/foreach}{* images *}
+    </tr>{* images *}
 </table>
 {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
 {capture $tmpFooterScript2}

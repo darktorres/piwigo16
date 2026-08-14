@@ -912,8 +912,7 @@ $("#update_all").click(function() {
   >{='All %s are up to date.'|sprintf:$EXT_TYPE|translate}</p>
 
   {foreach $UPDATES_EXTENSION as $type => $updates}
-    {if !empty($updates)}
-      <fieldset
+    <fieldset n:if="!empty($updates)"
         id="{$type}"
         class="pluginContainer pluginUpdateContainer line-form"
         data-type="{$type}"
@@ -930,8 +929,7 @@ $("#update_all").click(function() {
           {/if}
         </legend>
 
-        {foreach $updates as $extension}
-          <div
+        <div n:foreach="$updates as $extension"
             class="pluginBox pluginMiniBox"
             id="{$type}_{$extension['EXT_ID']}"
             {if $extension['IGNORED']}
@@ -980,8 +978,6 @@ $("#update_all").click(function() {
               </div>
             </div>
           </div>
-        {/foreach}
       </fieldset>
-    {/if}
   {/foreach}
 {/if}

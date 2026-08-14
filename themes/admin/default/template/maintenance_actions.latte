@@ -846,15 +846,13 @@ $(".delete-size-check").click( function () {
         href="{$U_MAINT_C13Y|noescape}"
         class="{$maint_actions['c13y']['icon']} maintenance-action"
       >{$maint_actions['c13y']['label']}</a>
-      {if isset($U_EMPTY_LOUNGE)}
-        <a
+      <a n:if="isset($U_EMPTY_LOUNGE)"
           href="{$U_EMPTY_LOUNGE|noescape}"
           class="{$maint_actions['empty_lounge']['icon']} maintenance-action tiptip"
           title="{='There is currently %d photos in the lounge (upload buffer)'|translate:$LOUNGE_COUNTER}"
         >{$maint_actions['empty_lounge']['label']}<span
             class="multiple-pictures-sizes"
           >{$LOUNGE_COUNTER}</span></a>
-      {/if}
     </div>
   </fieldset>
   <fieldset class="">
@@ -893,21 +891,17 @@ $(".delete-size-check").click( function () {
     </div>
   </fieldset>
 
-  {if isset($advanced_features) and !(count($advanced_features) < 1)}
-    <fieldset class="">
+  <fieldset n:if="isset($advanced_features) and !(count($advanced_features) < 1)" class="">
       <legend><span
           class="icon-puzzle icon-purple"
         ></span>{='Advanced features'|translate}</legend>
       <div style="display:flex;flex-wrap: wrap;">
-        {foreach $advanced_features as $key => $feature}
-          <a
+        <a n:foreach="$advanced_features as $key => $feature"
             href="{$feature['URL']}"
             class="{$feature['ICON']} maintenance-action"
           >{$feature['CAPTION']}</a>
-        {/foreach}
       </div>
     </fieldset>
-  {/if}
 
   <fieldset class="">
     <legend><span
@@ -961,8 +955,7 @@ $(".delete-size-check").click( function () {
         </span>
       </span>
       <div class="delete-check-container">
-        {foreach $purge_derivatives as $name => $url}
-          <div
+        <div n:foreach="$purge_derivatives as $name => $url"
             class="delete-size-check"
             title="{if isset($cache_sizes) and isset($cache_sizes[1]['value'][$url])}{='%s MB'|translate:round($cache_sizes[1]['value'][$url] / 1024 / 1024, 2)}{else}{='N/A'|translate}{/if}"
             data-selected="0"
@@ -977,7 +970,6 @@ $(".delete-size-check").click( function () {
               style="font-size:14px;margin-left:5px;padding-top:2px;"
             >{$name}</span>
           </div>
-        {/foreach}
       </div>
     </div>
 

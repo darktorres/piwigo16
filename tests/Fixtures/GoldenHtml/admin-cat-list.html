@@ -143,11 +143,10 @@
         <li><a href="admin.php?page=comments"><i
                 class="icon-chat"
               ></i>Comments
-            <span
+              <span
                   class="adminMenubarCounter"
                   title="1 waiting for validation"
-                >1</span>
-            </a></li>
+                >1</span></a></li>
         <li><a href="admin.php?page=updates"><i
                 class="icon-arrows-cw"
               ></i>Updates</a></li>
@@ -185,23 +184,23 @@
     ></span></h1>
 
   <div id="tabsheet">
-  <ul class="tabsheet">
-    <li
+    <ul class="tabsheet">
+      <li
           class="selected_tab"
         >
-      <a
+          <a
             href="admin.php?page=albums"
           ><span><span class="icon-menu"></span>List</span></a>
-    </li>
-    <li
+        </li>
+      <li
           class="normal_tab"
         >
-      <a
+          <a
             href="admin.php?page=permalinks"
           ><span><span class="icon-link-1"></span>Permalinks</span></a>
-    </li>
-  </ul>
-</div>
+        </li>
+    </ul>
+  </div>
 
 
   <div class="eiw">
@@ -256,7 +255,7 @@
       <p>Add Album
       </div>
     <form action="admin.php?page=cat_list" method="post">
-      <input type="hidden" name="pwg_token" value="a8ccfd39b0c9c40bf14a6da4e992b05ea72ebcccdc0f84de8b98e77ff54d4ff7">
+      <input type="hidden" name="pwg_token" value="d60968095b2b82a288c0129bceaaf701f3219d4cb5d18dc30b510919ad7c412b">
       <label for="virtual_name">Album name</label>
       <input
         type="text"
@@ -273,27 +272,27 @@
         class="categoryBox virtual_cat"
         id="cat_1"
       >
-    <div class="albumTop">
-      <div class="albumIcon">
-        <span
+      <div class="albumTop">
+        <div class="albumIcon">
+          <span
               class="
         icon-sitemap
         icon-blue
         "
             ></span>
+        </div>
+
+        <div class="albumTitle">
+          Sample Album
+        </div>
       </div>
 
-      <div class="albumTitle">
-        Sample Album
-      </div>
-    </div>
-
-    <span
+      <span
           class="albumInfos"
         ><p>3 photos</p> <p>2 photos in 1 sub-album</p></span>
 
-    <div class="albumActions">
-      <a
+      <div class="albumActions">
+        <a
             href="admin.php?page=album-1"
             class="actionEdit"
             
@@ -301,7 +300,7 @@
               class="icon-pencil tiptip"
               title="Edit"
             ></span><span class="iconLegend">Edit</span></a>
-      <a
+        <a
             href="admin.php?page=cat_list&amp;parent_id=1"
             class="actionTitle"
             
@@ -311,11 +310,11 @@
             ></span><span
               class="iconLegend"
             >sub-albums</span></a>
-      <a href="admin.php?page=albums#cat-1" class="actionMove"><span
+        <a href="admin.php?page=albums#cat-1" class="actionMove"><span
               class="icon-move tiptip"
               title="Move"
             ></span><span class="iconLegend">Move</span></a>
-      <span
+        <span
               href="index.php?/category/1"
               class="actionGalery"
               
@@ -325,7 +324,7 @@
               ></span><span
                 class="iconLegend"
               >Visit the gallery</span></span>
-      <a
+        <a
             href="admin.php?page=photos_add&amp;album=1"
             class="actionAdd"
             
@@ -335,8 +334,8 @@
             ></span><span
               class="iconLegend"
             >Add Photos</span></a>
+      </div>
     </div>
-  </div>
 </div>
 
 <style>
@@ -516,8 +515,8 @@
         onclick="show_user_whats_new()"
         title="What&apos;s new in version 17?"
       >
-      <i class="icon-bell"></i>
-    </span>
+        <i class="icon-bell"></i>
+      </span>
   </div>
   <div id="pageInfos">
 
@@ -529,48 +528,48 @@
 </div>
 
 <div id="whats_new">
-  <div id="whats_new_popin">
-    <a
+    <div id="whats_new_popin">
+      <a
         class="icon-cancel close_whats_new"
         onClick="hide_user_whats_new()"
       ></a>
-    <h3>What's new in version 17?</h3>
-    <div>
-      <div class="whats_new_block_container">
-        <div class="whats_new_block icon-blue whats_new_block_w_60">
-          <h4><a
+      <h3>What's new in version 17?</h3>
+      <div>
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-blue whats_new_block_w_60">
+            <h4><a
                 href="https://upstream.example.invalid/releases/17.0.0"
                 target="_blank"
               >Brand new login &amp; preferences with Standard pages !</a></h4>
-        </div>
-        <div class="whats_new_block icon-purple whats_new_block_w_40">
-          <h4><a
+          </div>
+          <div class="whats_new_block icon-purple whats_new_block_w_40">
+            <h4><a
                 href="https://upstream.example.invalid/releases/17.0.0"
                 target="_blank"
               >Two factor authentication is here</a></h4>
+          </div>
         </div>
-      </div>
-      <div class="whats_new_block_container">
-        <div class="whats_new_block icon-green whats_new_block_w_100">
-          <h4><a
+        <div class="whats_new_block_container">
+          <div class="whats_new_block icon-green whats_new_block_w_100">
+            <h4><a
                 href="https://upstream.example.invalid/releases/17.0.0"
                 target="_blank"
               >UI redesigns that make a difference</a></h4>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="whats_new_buttons">
-      <button onClick="hide_user_whats_new()"><i
+      <div class="whats_new_buttons">
+        <button onClick="hide_user_whats_new()"><i
             class="icon-thumbs-up"
           ></i> Ok, got it!</button>
-      <a
+        <a
           class="buttonLike"
           href="https://upstream.example.invalid/releases/17.0.0"
           target="_blank"
         ><i class="icon-book"></i> Read the release note</a>
+      </div>
     </div>
   </div>
-</div>
 
 <style>
 

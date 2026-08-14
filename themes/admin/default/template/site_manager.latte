@@ -718,24 +718,18 @@ $(".delete-site-button").each(function() {
 {/capture}
 {do footerScript($tmpFooterScript2)}
 
-{if !empty($remote_output)}
-  <div class="remoteOutput">
+<div n:if="!empty($remote_output)" class="remoteOutput">
     <ul>
-      {foreach $remote_output as $remote_line}
-        <li class="{$remote_line['CLASS']}">{$remote_line['CONTENT']}</li>
-      {/foreach}
+      <li n:foreach="$remote_output as $remote_line" class="{$remote_line['CLASS']}">{$remote_line['CONTENT']}</li>
     </ul>
   </div>
-{/if}
 
-{if !empty($sites)}
-  <table class="table2">
+<table n:if="!empty($sites)" class="table2">
     <tr class="throw">
       <td>{='Directory'|translate}</td>
       <td>{='Actions'|translate}</td>
     </tr>
-    {foreach $sites as $site}
-      <tr
+    <tr n:foreach="$sites as $site"
         style="text-align:left"
         class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
       ><td>
@@ -764,9 +758,7 @@ $(".delete-site-button").each(function() {
             {/foreach}
           {/if}
         </td></tr>
-    {/foreach}
   </table>
-{/if}
 
 <p id="showCreateSite" style="text-align:left;margin-left:1em;">
   <a href="#">{='create a new site'|translate}</a>

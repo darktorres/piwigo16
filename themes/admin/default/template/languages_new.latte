@@ -716,8 +716,7 @@ jQuery().ready(function(){
           <td>{='Actions'|translate}</td>
         </tr>
       </thead>
-      {foreach $languages as $language}
-        <tr class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}">
+      <tr n:foreach="$languages as $language" class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}">
           <td><a
               href="{$language['EXT_URL']|noescape}"
               class="externalLink cluetip"
@@ -738,7 +737,6 @@ jQuery().ready(function(){
             >{='Download'|translate}</a>
           </td>
         </tr>
-      {/foreach}
     </table>
   {else}
     <p>{='There is no other language available.'|translate}</p>

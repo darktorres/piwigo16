@@ -693,21 +693,17 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 <dt>
-  {if isset($U_START_FILTER)}
-    <a
+  <a n:if="isset($U_START_FILTER)"
       href="{$U_START_FILTER|noescape}"
       class="pwg-state-default pwg-button menubarFilter"
       title="{='display only recently posted photos'|translate}"
       rel="nofollow"
     ><span class="pwg-icon pwg-icon-filter"></span></a>
-  {/if}
-  {if isset($U_STOP_FILTER)}
-    <a
+  <a n:if="isset($U_STOP_FILTER)"
       href="{$U_STOP_FILTER|noescape}"
       class="pwg-state-default pwg-button menubarFilter"
       title="{='return to the display of all photos'|translate}"
     ><span class="pwg-icon pwg-icon-filter-del"></span></a>
-  {/if}
   <a href="{$block->data['U_CATEGORIES']|noescape}">{='Albums'|translate}</a>
 </dt>
 <dd>
@@ -726,20 +722,16 @@
         {/if}
         title="{$cat['TITLE']}"
       >{$cat['NAME']}</a>
-      {if $cat['count_images'] > 0}
-        <span
+      <span n:if="$cat['count_images'] > 0"
           class="{if $cat['nb_images'] > 0}menuInfoCat{else}menuInfoCatByChild{/if} badge"
           title="{$cat['TITLE']}"
         >{$cat['count_images']}</span>
-      {/if}
-      {if !empty($cat['icon_ts'])}
-        <img
+      <img n:if="!empty($cat['icon_ts'])"
           title="{$cat['icon_ts']['TITLE']}"
           src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']['IS_CHILD_DATE']}_by_child{/if}.png"
           class="icon"
           alt="(!)"
         >
-      {/if}
       {var $ref_level = $cat['LEVEL']}
     {/foreach}
   {='</li></ul>'|str_repeat:$ref_level|noescape}

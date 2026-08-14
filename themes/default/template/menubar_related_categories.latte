@@ -716,18 +716,14 @@
           rel="nofollow"
         >{$cat['name']}</a>
       {/if}
-      {if isset($cat['count_images']) and $cat['count_images'] > 0}
-        <span
+      <span n:if="isset($cat['count_images']) and $cat['count_images'] > 0"
           class="badge"
           title="{$cat['count_images']|translate_dec:'%d photo','%d photos'}"
         >{$cat['count_images']}</span>
-      {/if}
-      {if isset($cat['count_categories']) and $cat['count_categories'] > 0}
-        <span
+      <span n:if="isset($cat['count_categories']) and $cat['count_categories'] > 0"
           class="badge badgeCategories"
           title="{='sub-albums'|translate}"
         >{$cat['count_categories']}</span>
-      {/if}
       {var $ref_level = $cat['LEVEL']}
     {/foreach}
   {='</li></ul>'|str_repeat:$ref_level|noescape}

@@ -710,8 +710,7 @@ $(".delete-lang-button").each(function() {
 {/capture}
 {do footerScript($tmpFooterScript)}
 
-{foreach $language_states as $language_state}
-  <fieldset>
+<fieldset n:foreach="$language_states as $language_state">
     <legend>
       {if $language_state == 'active'}
         {='Active Languages'|translate}
@@ -727,7 +726,7 @@ $(".delete-lang-button").each(function() {
           >
             <div
               class="languageName"
-            >{$language['name']}{if $language['is_default']} <em>({='default'|translate})</em>{/if}</div>
+            >{$language['name']}<em n:if="$language['is_default']">({='default'|translate})</em></div>
             {if $isWebmaster == 1}
               <div class="languageActions">
                 <div>
@@ -775,4 +774,3 @@ $(".delete-lang-button").each(function() {
       {/foreach}
     </div> <!-- languageBoxes -->
   </fieldset>
-{/foreach}

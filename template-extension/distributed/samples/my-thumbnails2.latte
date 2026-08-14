@@ -697,8 +697,7 @@
   {capture $tmpHtmlHead}<link rel="stylesheet" type="text/css" href="./template-extension/distributed/samples/my-thumbnails2.css">{/capture}
   {do htmlHead($tmpHtmlHead)}
   <ul class="thumbnails">
-    {foreach $thumbnails as $thumbnail}
-      <li>
+    <li n:foreach="$thumbnails as $thumbnail">
         <fieldset class="fld1">
           <legend class="thumbLegend">
             {if !empty($thumbnail['NAME'])}{$thumbnail['NAME']}{/if}
@@ -713,6 +712,5 @@
           </a>
         </fieldset>
       </li>
-    {/foreach}
   </ul>
 {/if}

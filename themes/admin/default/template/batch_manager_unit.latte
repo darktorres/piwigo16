@@ -777,11 +777,9 @@ pluginValues = [];
 {do combineScript(id: 'batchManagerUnit', load: 'footer', require: 'jquery.ui.effect-blind,jquery.sort', path: 'themes/admin/default/js/batchManagerUnit.js')}
 <div id="batchManagerGlobal" style="margin-bottom: 80px;">
   <div style="clear:both"></div>
-  {if isset($ELEMENT_IDS)}
-    <div>
+  <div n:if="isset($ELEMENT_IDS)">
       <input type="hidden" name="element_ids" value="{$ELEMENT_IDS}">
     </div>
-  {/if}
   {*Filters*}
   <form method="post" action="{$F_ACTION|noescape}">
     {var $filterTitle = ('Batch Manager Filter'|translate)}
@@ -1029,8 +1027,7 @@ pluginValues = [];
               <span class="orphan-photo"></span>
             {/if}
             <div class="related-categories-container">
-              {foreach $element['related_categories'] as $key => $cat_path}
-                <div class="breadcrumb-item">
+              <div n:foreach="$element['related_categories'] as $key => $cat_path" class="breadcrumb-item">
                   <span class="link-path">{$cat_path['name']|noescape}</span>
                   {if $cat_path['unlinkable']}
                     <span
@@ -1045,7 +1042,6 @@ pluginValues = [];
                     ></span>
                   {/if}
                 </div>
-              {/foreach}
             </div>
             <div
               class="breadcrumb-item linked-albums add-item {if count($element['related_categories']) < 1} highlight {/if}"

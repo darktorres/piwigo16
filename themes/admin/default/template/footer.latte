@@ -710,11 +710,9 @@
   {/foreach}
 {/if}
 
-{if isset($debug['QUERIES_LIST'])}
-  <div id="debug">
+<div n:if="isset($debug['QUERIES_LIST'])" id="debug">
     {$debug['QUERIES_LIST']|noescape}
   </div>
-{/if}
 
 <div id="footer">
   <div>
@@ -723,8 +721,7 @@
       href="{$APP_URL}"
       title="{='Visit Piwigo project website'|translate}"
     ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    {if isset($DISPLAY_BELL) and $DISPLAY_BELL}
-      <span
+    <span n:if="isset($DISPLAY_BELL) and $DISPLAY_BELL"
         id="whats_new_notification"
         class="icon-blue tiptip"
         onclick="show_user_whats_new()"
@@ -732,7 +729,6 @@
       >
         <i class="icon-bell"></i>
       </span>
-    {/if}
   </div>
   <div id="pageInfos">
     {if isset($debug['TIME'])}
@@ -747,8 +743,7 @@
 </div>{* <!-- footer --> *}
 </div>{* <!-- the_page --> *}
 
-{if (isset($SHOW_WHATS_NEW) and $SHOW_WHATS_NEW) or (isset($DISPLAY_BELL) and $DISPLAY_BELL)}
-  <div id="whats_new">
+<div n:if="(isset($SHOW_WHATS_NEW) and $SHOW_WHATS_NEW) or (isset($DISPLAY_BELL) and $DISPLAY_BELL)" id="whats_new">
     <div id="whats_new_popin">
       <a
         class="icon-cancel close_whats_new"
@@ -791,7 +786,6 @@
       </div>
     </div>
   </div>
-{/if}
 
 <style>
 
@@ -838,9 +832,7 @@ function show_user_whats_new() {
 {=getCombinedScripts('footer')}
 <!-- END get_combined -->
 
-{if isset($VITALS_SCRIPT_URL)}
-  <script type="module" src="{$VITALS_SCRIPT_URL}"></script>
-{/if}
+<script n:if="isset($VITALS_SCRIPT_URL)" type="module" src="{$VITALS_SCRIPT_URL}"></script>
 
 </body>
 </html>

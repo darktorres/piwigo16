@@ -695,14 +695,12 @@
 <dt>{='Specials'|translate}</dt>
 <dd>
   <ul>{spaceless}
-      {foreach $block->data as $link}
-        <li><a
+      <li n:foreach="$block->data as $link"><a
             href="{$link['URL']|noescape}"
             title="{$link['TITLE']}"
             {if isset($link['REL'])}
             {$link['REL']|noescape}
             {/if}
           >{$link['NAME']}</a></li>
-      {/foreach}
     {/spaceless}</ul>
 </dd>

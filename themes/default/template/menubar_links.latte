@@ -695,8 +695,7 @@
 <dt>{='Links'|translate}</dt>
 <dd>
   <ul>{spaceless}
-      {foreach $block->data as $link}
-        <li>
+      <li n:foreach="$block->data as $link">
           <a
             href="{$link['URL']}"
             class="external"
@@ -707,6 +706,5 @@
             {$link['LABEL']}
           </a>
         </li>
-      {/foreach}
     {/spaceless}</ul>
 </dd>

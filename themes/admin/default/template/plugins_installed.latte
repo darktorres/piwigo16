@@ -878,12 +878,9 @@ let plugin_filter = searchParams.get('filter');
 
         <div class="pluginContent">
           <div class="PluginOptionsIcons">
-            {if $plugin['STATE'] == 'active' || $plugin['STATE'] == 'inactive'}
-              <a class="icon-ellipsis-v showOptions showInfo"></a>
-            {/if}
+            <a n:if="$plugin['STATE'] == 'active' || $plugin['STATE'] == 'inactive'" class="icon-ellipsis-v showOptions showInfo"></a>
           </div>
-          {if $plugin['STATE'] == 'active' || $plugin['STATE'] == 'inactive'}
-            <label class="switch">
+          <label n:if="$plugin['STATE'] == 'active' || $plugin['STATE'] == 'inactive'" class="switch">
               <input
                 type="checkbox"
                 id="toggleSelectionMode"
@@ -893,7 +890,6 @@ let plugin_filter = searchParams.get('filter');
               >
               <span class="slider round"></span>
             </label>
-          {/if}
 
           <div class="pluginActionsSmallIcons">
             {if $plugin['STATE'] == 'active'}
@@ -938,11 +934,9 @@ let plugin_filter = searchParams.get('filter');
               class="dropdown-option icon-back-in-time plugin-restore separator-top tiptip"
               title="{='While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset'|translate}"
             >{='Restore'|translate}</a>
-            {if $CONF_ENABLE_EXTENSIONS_INSTALL}
-              <a
+            <a n:if="$CONF_ENABLE_EXTENSIONS_INSTALL"
                 class="dropdown-option icon-trash delete-plugin-button separator-top"
               >{='Delete'|translate}</a>
-            {/if}
           </div>
           <div class="pluginName" data-title="{$plugin['NAME']}">
             {$plugin['NAME']}

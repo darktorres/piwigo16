@@ -701,13 +701,11 @@
 <form method="post">
   <fieldset>
     <legend>{='Photo sizes with crop'|translate}</legend>
-    {foreach $cropped_derivatives as $deriv}
-      <img
+    <img n:foreach="$cropped_derivatives as $deriv"
         src="{$deriv['U_IMG']|noescape}"
         alt="{$ALT}"
         {$deriv['HTM_SIZE']|noescape}
       >
-    {/foreach}
   </fieldset>
 
   <fieldset>

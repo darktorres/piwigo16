@@ -765,28 +765,21 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
   {if count($setup_errors) > 0}
     <div class="errors">
       <ul>
-        {foreach $setup_errors as $error}
-          <li>{$error}</li>
-        {/foreach}
+        <li n:foreach="$setup_errors as $error">{$error}</li>
       </ul>
     </div>
   {else}
-    {if count($setup_warnings) > 0}
-      <div class="warnings">
+    <div n:if="count($setup_warnings) > 0" class="warnings">
         <ul>
-          {foreach $setup_warnings as $warning}
-            <li>{$warning}</li>
-          {/foreach}
+          <li n:foreach="$setup_warnings as $warning">{$warning}</li>
         </ul>
         <div class="hideButton" style="text-align:center"><a
             href="{$hide_warnings_link|noescape}"
           >{='Hide'|translate}</a></div>
       </div>
-    {/if}
   {/if} {* $setup_errors *}
 
-  {if $PROMOTE_MOBILE_APPS}
-    <div class="promote-apps">
+  <div n:if="$PROMOTE_MOBILE_APPS" class="promote-apps">
       <div class="promote-content">
         <div class="left-side">
           <img
@@ -810,10 +803,8 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
         title="{='Understood, do not show again'|translate}"
       ></span>
     </div>
-  {/if}
 
-  {if $ENABLE_FORMATS and $can_upload}
-    <div class="format-mode-group-manager">
+  <div n:if="$ENABLE_FORMATS and $can_upload" class="format-mode-group-manager">
       <label
         class="switch"
         onClick="window.location.replace({$SWITCH_FORMAT_MODE_URL}); $('.switch .slider').addClass('loading');"
@@ -829,10 +820,8 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
       </label>
       <p>{='Upload Formats'|translate}</p>
     </div>
-  {/if}
 
-  {if !$DISPLAY_FORMATS}
-    <div
+  <div n:if="!$DISPLAY_FORMATS"
       class="addAlbumEmptyCenter"
       {if $NB_ALBUMS > 0}
       style="display:none;"
@@ -849,7 +838,6 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
         >{='Create a first album'|translate}</a>
       </div>
     </div>
-  {/if}
 
   <div class="infos" style="display:none"><i class="eiw-icon icon-ok"></i></div>
   <div class="errors" style="display:none"><i
@@ -930,7 +918,7 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
             <div
               class='info-framed-title'
             >{$FORMATS_ORIGINAL_INFO['name']}</div>
-            {if isset($FORMATS_ORIGINAL_INFO['formats'])}<div>{$FORMATS_ORIGINAL_INFO['formats']}</div>{/if}
+            <div n:if="isset($FORMATS_ORIGINAL_INFO['formats'])">{$FORMATS_ORIGINAL_INFO['formats']}</div>
             <div>{$FORMATS_ORIGINAL_INFO['ext']}</div>
           </div>
         </a>
@@ -953,16 +941,13 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
           <span
             class="icon-file-image icon-yellow"
           ></span>{='Select files'|translate}
-          {if !$DISPLAY_FORMATS}
-            <div id="uploadOptions" class="upload-options">
+          <div n:if="!$DISPLAY_FORMATS" id="uploadOptions" class="upload-options">
               <span
                 class="icon-equalizer rotate-element upload-options-icon"
               ></span>{='Options'|translate}
             </div>
-          {/if}
         </div>
-        {if !$DISPLAY_FORMATS}
-          <div class="upload-options-content" id="uploadOptionsContent">
+        <div n:if="!$DISPLAY_FORMATS" class="upload-options-content" id="uploadOptionsContent">
             <label class="switch">
               <input type="checkbox" id="toggleUpdateMode">
               <span class="slider round"></span>
@@ -971,7 +956,6 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
               <p>{='If a photo in this album has the same filename, update the file without changing the photo\'s properties'|translate}</p>
             </div>
           </div>
-        {/if}
       </legend>
 
       <div class="selectFilesButtonBlock">
@@ -985,17 +969,15 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
           {if !$DISPLAY_FORMATS}{='Add Photos'|translate}{else}{='Add formats'|translate}{/if}
         </button>
         <div class="selectFilesinfo">
-          {if isset($original_resize_maxheight)}
-            <p
+          <p n:if="isset($original_resize_maxheight)"
               class="uploadInfo"
             >{='The picture dimensions will be reduced to %dx%d pixels.'|translate:$original_resize_maxwidth,$original_resize_maxheight}</p>
-          {/if}
           <p id="uploadWarningsSummary">
             {if !$DISPLAY_FORMATS}
               {='Allowed file types: %s.'|translate:$upload_file_types}
             {else}
               {='Allowed file types: %s.'|translate:$str_format_ext}
-              {if !$HAVE_FORMATS_ORIGINAL}<p>{='The original picture will be detected with the filename (without extension).'|translate}</p>{/if}
+              <p n:if="!$HAVE_FORMATS_ORIGINAL">{='The original picture will be detected with the filename (without extension).'|translate}</p>
             {/if}
           </p>
           </p>

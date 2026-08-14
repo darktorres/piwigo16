@@ -717,8 +717,7 @@ $(window).bind("load", function() {
 
 {if !empty($new_themes)}
   <div class="themeBoxes">
-    {foreach $new_themes as $theme}
-      <div class="themeBox">
+    <div n:foreach="$new_themes as $theme" class="themeBox">
         <div class="themeShot"><a
             href="{$theme['screenshot']|noescape}"
             class="preview-box"
@@ -732,7 +731,6 @@ $(window).bind("load", function() {
             href="{$theme['install_url']|noescape}"
           >{='Install'|translate}</a></div>
       </div>
-    {/foreach}
   </div> <!-- themeBoxes -->
 {else}
   <p>{='There is no other theme available.'|translate}</p>

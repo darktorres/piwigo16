@@ -855,8 +855,7 @@ const str_from_begining = "{='since the beginning'|translate}";
   <div id="availablePlugins">
     {var $color_tab = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"]}
 
-    {foreach $plugins as $plugin}
-      <div
+    <div n:foreach="$plugins as $plugin"
         class="pluginBox pluginBigBox"
         id="plugin_{$plugin['ID']}"
         data-id="{$plugin['ID']}"
@@ -906,8 +905,7 @@ const str_from_begining = "{='since the beginning'|translate}";
             </div>
 
             <div>
-              {if !is_null($plugin['RATING'])}
-                <div
+              <div n:if="!is_null($plugin['RATING'])"
                   class="pluginRating tiptip"
                   data-rating="{$plugin['RATING']}"
                   title="{='On %d rating(s)'|translate:$plugin['NB_RATINGS']}"
@@ -921,7 +919,6 @@ const str_from_begining = "{='since the beginning'|translate}";
                   </div>
                   <span class="rating">{$plugin['RATING']}</span>
                 </div>
-              {/if}
               <div
                 class="pluginDownload tiptip"
                 title="{$plugin['DOWNLOADS']} {='Downloads'|translate}"
@@ -949,9 +946,7 @@ const str_from_begining = "{='since the beginning'|translate}";
               class="pluginTags tiptip"
               title="{='Tags'|translate} : {$plugin['TAGS']|join:", "}"
             >
-              {foreach $plugin['TAGS'] as $tag_id => $tag_label}
-                <span data-id="{$tag_id}">{$tag_label}</span>
-              {/foreach}
+              <span n:foreach="$plugin['TAGS'] as $tag_id => $tag_label" data-id="{$tag_id}">{$tag_label}</span>
             </div>
             <div class="pluginDesc">
               {$plugin['BIG_DESC']|nl2br|noescape}
@@ -959,15 +954,12 @@ const str_from_begining = "{='since the beginning'|translate}";
           </div>
         </div>
       </div>
-    {/foreach}
   </div>
 {else}
   <p>{='There is no other plugin available.'|translate}
-    {if isset($BETA_URL)}
-      <a
+    <a n:if="isset($BETA_URL)"
         href="{$BETA_URL|noescape}"
         class="buttonLike icon-fire"
       >{='Show beta test plugins'|translate}</a>
-    {/if}
   </p>
 {/if}

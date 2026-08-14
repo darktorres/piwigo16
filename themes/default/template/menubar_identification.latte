@@ -695,38 +695,26 @@
 <dt>{='Identification'|translate}</dt>
 <dd>
   {spaceless}
-    {if isset($USERNAME)}
-      <p>{='Hello'|translate} {$USERNAME} !</p>
-    {/if}
+    <p n:if="isset($USERNAME)">{='Hello'|translate} {$USERNAME} !</p>
     <ul>
-      {if isset($U_REGISTER)}
-        <li><a
+      <li n:if="isset($U_REGISTER)"><a
             href="{$U_REGISTER|noescape}"
             title="{='Create a new account'|translate}"
             rel="nofollow"
           >{='Register'|translate}</a></li>
-      {/if}
-      {if isset($U_LOGIN)}
-        <li><a
+      <li n:if="isset($U_LOGIN)"><a
             href="{$U_LOGIN|noescape}"
             rel="nofollow"
           >{='Login'|translate}</a></li>
-      {/if}
-      {if isset($U_LOGOUT)}
-        <li><a href="{$U_LOGOUT|noescape}">{='Logout'|translate}</a></li>
-      {/if}
-      {if isset($U_PROFILE)}
-        <li><a
+      <li n:if="isset($U_LOGOUT)"><a href="{$U_LOGOUT|noescape}">{='Logout'|translate}</a></li>
+      <li n:if="isset($U_PROFILE)"><a
             href="{$U_PROFILE|noescape}"
             title="{='edit user preferences'|translate}"
           >{='Profile'|translate}</a></li>
-      {/if}
-      {if isset($U_ADMIN)}
-        <li><a
+      <li n:if="isset($U_ADMIN)"><a
             href="{$U_ADMIN|noescape}"
             title="{='available for administrators only'|translate}"
           >{='Administration'|translate}</a></li>
-      {/if}
     </ul>
   {/spaceless}
   {if isset($U_LOGIN)}
@@ -754,8 +742,7 @@
             >
           </div>
 
-          {if $AUTHORIZE_REMEMBERING}
-            <div><label for="remember_me">
+          <div n:if="$AUTHORIZE_REMEMBERING"><label for="remember_me">
                 <input
                   type="checkbox"
                   name="remember_me"
@@ -763,7 +750,6 @@
                   value="1"
                 > {='Auto login'|translate}
               </label></div>
-          {/if}
 
           <div>
             <input
@@ -773,8 +759,7 @@
             >
             <input type="submit" name="login" value="{='Submit'|translate}">
             <span class="categoryActions">
-              {if isset($U_REGISTER)}
-                <a
+              <a n:if="isset($U_REGISTER)"
                   href="{$U_REGISTER|noescape}"
                   title="{='Create a new account'|translate}"
                   class="pwg-state-default pwg-button"
@@ -782,7 +767,6 @@
                 >
                   <span class="pwg-icon pwg-icon-register"></span>
                 </a>
-              {/if}
               <a
                 href="{$U_LOST_PASSWORD|noescape}"
                 title="{='Forgot your password?'|translate}"

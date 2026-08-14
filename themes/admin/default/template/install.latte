@@ -861,25 +861,17 @@ jQuery().ready(function(){
       <div id="content" class="content">
         <h2>{='Version'|translate} {$RELEASE} - {='Installation'|translate}</h2>
 
-        {if isset($errors)}
-          <div class="errors">
+        <div n:if="isset($errors)" class="errors">
             <ul>
-              {foreach $errors as $error}
-                <li>{$error}</li>
-              {/foreach}
+              <li n:foreach="$errors as $error">{$error}</li>
             </ul>
           </div>
-        {/if}
 
-        {if isset($infos)}
-          <div class="infos">
+        <div n:if="isset($infos)" class="infos">
             <ul>
-              {foreach $infos as $info}
-                <li>{$info}</li>
-              {/foreach}
+              <li n:foreach="$infos as $info">{$info}</li>
             </ul>
           </div>
-        {/if}
 
         {if isset($install)}
           <form method="POST" action="{$F_ACTION|noescape}" name="install_form">

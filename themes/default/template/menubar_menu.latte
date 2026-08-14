@@ -724,8 +724,7 @@
   {/if}
   <ul>{spaceless}
       {foreach $block->data as $link}
-        {if is_array($link)}
-          <li><a
+        <li n:if="is_array($link)"><a
               href="{$link['URL']|noescape}"
               {if isset($link['TITLE'])}
               title="{$link['TITLE']}"
@@ -734,7 +733,6 @@
               {$link['REL']|noescape}
               {/if}
             >{$link['NAME']}</a>{if isset($link['COUNTER'])} ({$link['COUNTER']}){/if}</li>
-        {/if}
       {/foreach}
     {/spaceless}</ul>
 </dd>

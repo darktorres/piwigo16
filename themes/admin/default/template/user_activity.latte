@@ -834,14 +834,12 @@ var actionInfos_tags_moved = "{='%d tags moved'|translate|noescape}";
           <option value="none">
             <span class='username_filter'>---</span>
           </option>
-          {foreach $ulist as $user}
-            <option value="{$user['id']}">
+          <option n:foreach="$ulist as $user" value="{$user['id']}">
               <span class='username_filter'>{$user['username']}</span>
               <span class='nb_lines_str'>
                 {='(%d)'|translate:$user['nb_lines']}
               </span>
             </option>
-          {/foreach}
         </select>
       </div>
 
@@ -852,8 +850,7 @@ var actionInfos_tags_moved = "{='%d tags moved'|translate|noescape}";
           <option value="none">
             <span class='action_filter'>---</span>
           </option>
-          {foreach $ACTIONS as $action}
-            <option value="{$action['value']}">
+          <option n:foreach="$ACTIONS as $action" value="{$action['value']}">
               <span class='action_filter'>
                 {=ucfirst($action['object'])|translate}
                 /
@@ -865,7 +862,6 @@ var actionInfos_tags_moved = "{='%d tags moved'|translate|noescape}";
                 {=' (%d)'|translate:$action['counter']}
               </span>
             </option>
-          {/foreach}
         </select>
       </div>
 
@@ -893,8 +889,7 @@ var actionInfos_tags_moved = "{='%d tags moved'|translate|noescape}";
         />
       </div>
 
-      {if $ADDITIONAL_FILT['type']}
-        <div class="additional-filters-section">
+      <div n:if="$ADDITIONAL_FILT['type']" class="additional-filters-section">
           <div class="additional-filters-info">
             {='Additional filters'|translate}
           </div>
@@ -910,7 +905,6 @@ var actionInfos_tags_moved = "{='%d tags moved'|translate|noescape}";
             </div>
           </div>
         </div>
-      {/if}
     </div>
   </div>
 

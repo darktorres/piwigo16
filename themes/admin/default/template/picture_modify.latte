@@ -913,13 +913,10 @@ const str_assoc_album_ab = '{='Associate to album'|translate|escapeJavascript|no
         name="associate[]"
         multiple
       >
-        {foreach $related_categories as $key => $cat_path}
-          <option selected value="{$key}"></option>
-        {/foreach}
+        <option n:foreach="$related_categories as $key => $cat_path" selected value="{$key}"></option>
       </select>
       <div class="related-categories-container">
-        {foreach $related_categories as $key => $cat_path}
-          <div class="breadcrumb-item"><span
+        <div n:foreach="$related_categories as $key => $cat_path" class="breadcrumb-item"><span
               class="link-path"
             >{$cat_path['name']|noescape}</span>{if $cat_path['unlinkable']}<span
                 id="{$key}"
@@ -929,7 +926,6 @@ const str_assoc_album_ab = '{='Associate to album'|translate|escapeJavascript|no
                 class="icon-help-circled help-item tiptip"
                 title="{='This picture is physically linked to this album, you can\'t dissociate them'|translate}"
               ></span>{/if}</div>
-        {/foreach}
       </div>
       <div
         class="breadcrumb-item linked-albums add-item {if count($related_categories) < 1} highlight {/if}"
@@ -999,13 +995,11 @@ const str_assoc_album_ab = '{='Associate to album'|translate|escapeJavascript|no
         </div>
       </div>
       <div class="savebar-footer-end">
-        {if isset($save_success)}
-          <div class="savebar-footer-block">
+        <div n:if="isset($save_success)" class="savebar-footer-block">
             <div class="badge info-message">
               <i class="icon-ok"></i>{$save_success}
             </div>
           </div>
-        {/if}
 
         <div class="savebar-footer-block">
           <button class="buttonLike" type="submit" name="submit"><i

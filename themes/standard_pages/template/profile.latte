@@ -767,8 +767,7 @@ const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noe
     </div>
   </section>
 
-  {if 'none' != $STD_PGS_SELECTED_LOGO}
-    <section id="logo-section">
+  <section n:if="'none' != $STD_PGS_SELECTED_LOGO" id="logo-section">
       {if 'piwigo_logo' == $STD_PGS_SELECTED_LOGO}
         <img
           id="piwigo-logo"
@@ -780,7 +779,6 @@ const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noe
         <h1>{$GALLERY_TITLE}</h1>
       {/if}
     </section>
-  {/if}
 
   <a href="{$U_HOME}" id="return-to-gallery"><i
       class="gallery-icon-left"
@@ -825,8 +823,7 @@ const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noe
   </section>
 
   {* PREFERENCES *}
-  {if $ALLOW_USER_CUSTOMIZATION}
-    <section id="preferences-section" class="profile-section">
+  <section n:if="$ALLOW_USER_CUSTOMIZATION" id="preferences-section" class="profile-section">
       <div class="title display-section" data-display="preferences-display">
         <div class="column-flex">
           <h1>{='Preferences'|translate}</h1>
@@ -914,8 +911,7 @@ const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noe
             <p>{='Expand all albums'|translate}</p>
           </div>
 
-          {if $ACTIVATE_COMMENTS}
-            <div class="row-flex option">
+          <div n:if="$ACTIVATE_COMMENTS" class="row-flex option">
               <label class="switch">
                 <input
                   type="checkbox"
@@ -928,7 +924,6 @@ const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noe
               </label>
               <p>{='Show number of comments'|translate}</p>
             </div>
-          {/if}
 
           <div class="row-flex option">
             <label class="switch">
@@ -963,11 +958,9 @@ const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noe
         </div>
       </div>
     </section>
-  {/if}
 
   {* PASSWORD *}
-  {if !$SPECIAL_USER}
-    <section id="password-section" class="profile-section">
+  <section n:if="!$SPECIAL_USER" id="password-section" class="profile-section">
       <div class="title display-section" data-display="password-display">
         <div class="column-flex">
           <h1>{='Password'|translate}</h1>
@@ -1040,7 +1033,6 @@ const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noe
         </div>
       </div>
     </section>
-  {/if}
 
   {* API KEY *}
   <section id="apikey-section" class="profile-section">
@@ -1296,8 +1288,7 @@ const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noe
   </section>
 
   {if isset($PLUGINS_PROFILE)}
-    {foreach $PLUGINS_PROFILE as $k_block => $plugin_block}
-      <section id="{$k_block}-section" class="profile-section">
+    <section n:foreach="$PLUGINS_PROFILE as $k_block => $plugin_block" id="{$k_block}-section" class="profile-section">
         <div class="title display-section" data-display="{$k_block}-display">
           <div class="column-flex">
             <h1>{$plugin_block['name']}</h1>
@@ -1321,19 +1312,15 @@ const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noe
           {/if}
         </div>
       </section>
-    {/foreach}
   {/if}
 
-  {if count($language_options) > 1}
-    <section id="language-switch">
+  <section n:if="count($language_options) > 1" id="language-switch">
       <div id="lang-select">
         <span id="other-languages">
-          {foreach $language_options as $code => $lang}
-            <span
+          <span n:foreach="$language_options as $code => $lang"
               id="lang={$code}"
               onclick="setCookie('lang',{$code},30)"
             >{$lang}</span>
-          {/foreach}
         </span>
         <div id="selected-language-container">
           <i class="gallery-icon-left-chevron"></i><span
@@ -1342,6 +1329,5 @@ const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noe
         </div>
       </div>
     </section>
-  {/if}
   {include 'toaster.latte'}
 </container>

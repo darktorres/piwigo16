@@ -692,25 +692,17 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
-{if isset($errors)}
-  <div class="errors">
+<div n:if="isset($errors)" class="errors">
     <ul>
-      {foreach $errors as $error}
-        <li>{$error}</li>
-      {/foreach}
+      <li n:foreach="$errors as $error">{$error}</li>
     </ul>
   </div>
-{/if}
 
-{if isset($infos)}
-  <div class="infos">
+<div n:if="isset($infos)" class="infos">
     <ul>
-      {foreach $infos as $info}
-        <li>{$info}</li>
-      {/foreach}
+      <li n:foreach="$infos as $info">{$info}</li>
     </ul>
   </div>
-{/if}
 
 <div id="imageHeaderBar">
   <div class="browsePath">
@@ -725,8 +717,7 @@
 {if !empty($PLUGIN_PICTURE_BEFORE)}{$PLUGIN_PICTURE_BEFORE|noescape}{/if}
 <div id="imageToolBar">
   <div class="actionButtons">
-    {if isset($U_SLIDESHOW_START)}
-      <a
+    <a n:if="isset($U_SLIDESHOW_START)"
         href="{$U_SLIDESHOW_START}"
         title="{='slideshow'|translate}"
         class="pwg-state-default pwg-button"
@@ -736,9 +727,7 @@
           class="pwg-button-text"
         >{='slideshow'|translate}</span>
       </a>
-    {/if}
-    {if isset($U_SLIDESHOW_STOP)}
-      <a
+    <a n:if="isset($U_SLIDESHOW_STOP)"
         href="{$U_SLIDESHOW_STOP}"
         title="{='stop the slideshow'|translate}"
         class="pwg-state-default pwg-button"
@@ -748,9 +737,7 @@
           class="pwg-button-text"
         >{='stop the slideshow'|translate}</span>
       </a>
-    {/if}
-    {if isset($U_METADATA)}
-      <a
+    <a n:if="isset($U_METADATA)"
         href="{$U_METADATA}"
         title="{='Show file metadata'|translate}"
         class="pwg-state-default pwg-button"
@@ -760,9 +747,7 @@
           class="pwg-button-text"
         >{='Show file metadata'|translate}</span>
       </a>
-    {/if}
-    {if isset($current['U_DOWNLOAD'])}
-      <a
+    <a n:if="isset($current['U_DOWNLOAD'])"
         href="{$current['U_DOWNLOAD']}"
         title="{='Download this file'|translate}"
         class="pwg-state-default pwg-button"
@@ -772,10 +757,8 @@
           class="pwg-button-text"
         >{='Download'|translate}</span>
       </a>
-    {/if}
     {if isset($PLUGIN_PICTURE_ACTIONS)}{$PLUGIN_PICTURE_ACTIONS|noescape}{/if}
-    {if isset($favorite)}
-      <a
+    <a n:if="isset($favorite)"
         href="{$favorite['U_FAVORITE']}"
         title="{if $favorite['IS_FAVORITE']}{='delete this photo from your favorites'|translate}{else}{='add this photo to your favorites'|translate}{/if}"
         class="pwg-state-default pwg-button"
@@ -787,9 +770,7 @@
           class="pwg-button-text"
         >{='Favorites'|translate}</span>
       </a>
-    {/if}
-    {if isset($U_SET_AS_REPRESENTATIVE)}
-      <a
+    <a n:if="isset($U_SET_AS_REPRESENTATIVE)"
         href="{$U_SET_AS_REPRESENTATIVE}"
         title="{='set as category representative'|translate}"
         class="pwg-state-default pwg-button"
@@ -799,9 +780,7 @@
           class="pwg-button-text"
         >{='representative'|translate}</span>
       </a>
-    {/if}
-    {if isset($U_ADMIN)}
-      <a
+    <a n:if="isset($U_ADMIN)"
         href="{$U_ADMIN}"
         title="{='Modify information'|translate}"
         class="pwg-state-default pwg-button"
@@ -811,7 +790,6 @@
           class="pwg-button-text"
         >{='Edit'|translate}</span>
       </a>
-    {/if}
     {if isset($U_CADDIE)}{*caddie management BEGIN*}
       <script
         type="text/javascript"
@@ -850,19 +828,14 @@
 <div id="theImage">
   {$ELEMENT_CONTENT|noescape}
 
-  {if isset($COMMENT_IMG)}
-    <p>{$COMMENT_IMG|noescape}</p>
-  {/if}
+  <p n:if="isset($COMMENT_IMG)">{$COMMENT_IMG|noescape}</p>
 
-  {if isset($U_SLIDESHOW_STOP)}
-    <p>
+  <p n:if="isset($U_SLIDESHOW_STOP)">
       [ <a href="{$U_SLIDESHOW_STOP}">{='stop the slideshow'|translate}</a> ]
     </p>
-  {/if}
 </div>
 
-{if isset($previous)}
-  <a
+<a n:if="isset($previous)"
     class="navThumb"
     id="linkPrev"
     href="{$previous['U_IMG']}"
@@ -871,9 +844,7 @@
   >
     <img src="{$previous['THUMB_SRC']}" alt="{$previous['TITLE']}">
   </a>
-{/if}
-{if isset($next)}
-  <a
+<a n:if="isset($next)"
     class="navThumb"
     id="linkNext"
     href="{$next['U_IMG']}"
@@ -882,6 +853,5 @@
   >
     <img src="{$next['THUMB_SRC']}" alt="{$next['TITLE']}">
   </a>
-{/if}
 
 {if !empty($PLUGIN_PICTURE_AFTER)}{$PLUGIN_PICTURE_AFTER|noescape}{/if}

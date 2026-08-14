@@ -713,21 +713,15 @@ const unit_MB = "{='%s MB'|translate}"
         href="{$U_CHECK_UPGRADE|noescape}&tab=env"
         class="icon-arrows-cw"
       >{='Check for upgrade'|translate}</a></li>
-    {if isset($INSTALLED_ON)}
-      <li>{='Installed on %s, %s'|translate:$INSTALLED_ON,$INSTALLED_SINCE}</li>
-    {/if}
+    <li n:if="isset($INSTALLED_ON)">{='Installed on %s, %s'|translate:$INSTALLED_ON,$INSTALLED_SINCE}</li>
     <li>{='Operating system'|translate}: {$OS}</li>
-    {if $CONTAINER_INFO != 'none'}
-      <li>{='Container info'|translate}: {$CONTAINER_INFO}</li>
-    {/if}
+    <li n:if="$CONTAINER_INFO != 'none'">{='Container info'|translate}: {$CONTAINER_INFO}</li>
     <li>PHP: {$PHP_VERSION} (<a
         href="{$U_PHPINFO|noescape}"
         class="externalLink"
       >{='Show info'|translate}</a>) [{$PHP_DATATIME}]</li>
     <li>{$DB_ENGINE}: {$DB_VERSION} [{$DB_DATATIME}]</li>
-    {if isset($GRAPHICS_LIBRARY)}
-      <li>{='Graphics Library'|translate}: {$GRAPHICS_LIBRARY}</li>
-    {/if}
+    <li n:if="isset($GRAPHICS_LIBRARY)">{='Graphics Library'|translate}: {$GRAPHICS_LIBRARY}</li>
     <li>
       <span class="cache-size-text">{='Cache size'|translate}</span>
       <span class="cache-size-value">

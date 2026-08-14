@@ -774,18 +774,15 @@ jQuery(document).ready(function() {
             value="file"
             checked="checked"
           > {='File name'|translate}</label>
-        {if isset($TAGS)}
-          <label><input
+        <label n:if="isset($TAGS)"><input
               type="checkbox"
               name="search_in_tags"
               value="tags"
             > {='Tags'|translate}</label>
-        {/if}
       </p>
     </fieldset>
 
-    {if count($AUTHORS) >= 1}
-      <fieldset>
+    <fieldset n:if="count($AUTHORS) >= 1">
         <legend>{='Search for Author'|translate}</legend>
         <p>
           <select
@@ -794,18 +791,14 @@ jQuery(document).ready(function() {
             name="authors[]"
             multiple
           >
-            {foreach $AUTHORS as $author}
-              <option
+            <option n:foreach="$AUTHORS as $author"
                 value="{$author['author']|strip_tags:false}"
               >{$author['author']|strip_tags:false} ({$author['counter']|translate_dec:'%d photo','%d photos'})</option>
-            {/foreach}
           </select>
         </p>
       </fieldset>
-    {/if}
 
-    {if isset($TAGS)}
-      <fieldset>
+    <fieldset n:if="isset($TAGS)">
         <legend>{='Search tags'|translate}</legend>
         <p>
           <select
@@ -814,11 +807,9 @@ jQuery(document).ready(function() {
             name="tags[]"
             multiple
           >
-            {foreach $TAGS as $tag}
-              <option
+            <option n:foreach="$TAGS as $tag"
                 value="{$tag['id']}"
               >{$tag['name']} ({$tag['counter']|translate_dec:'%d photo','%d photos'})</option>
-            {/foreach}
           </select>
           <label><span><input
                 type="radio"
@@ -833,7 +824,6 @@ jQuery(document).ready(function() {
               > {='Any tag'|translate}</span></label>
         </p>
       </fieldset>
-    {/if}
 
     <fieldset>
       <legend>{='Search by date'|translate}</legend>

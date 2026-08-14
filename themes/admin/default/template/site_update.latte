@@ -742,16 +742,12 @@ $('#syncFiles label').click(function () {
   <h3>{='Error list'|translate}</h3>
   <div class="errors">
     <ul>
-      {foreach $sync_errors as $error}
-        <li>[{$error['ELEMENT']}] {$error['LABEL']}</li>
-      {/foreach}
+      <li n:foreach="$sync_errors as $error">[{$error['ELEMENT']}] {$error['LABEL']}</li>
     </ul>
   </div>
   <h3>{='Errors caption'|translate}</h3>
   <ul>
-    {foreach $sync_error_captions as $caption}
-      <li><strong>{$caption['TYPE']}</strong>: {$caption['LABEL']}</li>
-    {/foreach}
+    <li n:foreach="$sync_error_captions as $caption"><strong>{$caption['TYPE']}</strong>: {$caption['LABEL']}</li>
   </ul>
 {/if}
 
@@ -759,15 +755,12 @@ $('#syncFiles label').click(function () {
   <h3>{='Detailed informations'|translate}</h3>
   <div class="infos">
     <ul>
-      {foreach $sync_infos as $info}
-        <li>[{$info['ELEMENT']}] {$info['LABEL']}</li>
-      {/foreach}
+      <li n:foreach="$sync_infos as $info">[{$info['ELEMENT']}] {$info['LABEL']}</li>
     </ul>
   </div>
 {/if}
 
-{if isset($introduction)}
-  <form action="" method="post" id="update">
+<form n:if="isset($introduction)" action="" method="post" id="update">
     <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
 
     <fieldset id="syncFiles">
@@ -895,20 +888,16 @@ $('#syncFiles label').click(function () {
     <div class="savebar-footer">
       <div class="savebar-footer-start"></div>
       <div class="savebar-footer-end">
-        {if isset($save_success)}
-          <div class="savebar-footer-block">
+        <div n:if="isset($save_success)" class="savebar-footer-block">
             <div class="badge info-message">
               <i class="icon-ok"></i>{$save_success}
             </div>
           </div>
-        {/if}
-        {if isset($save_error)}
-          <div class="savebar-footer-block">
+        <div n:if="isset($save_error)" class="savebar-footer-block">
             <div class="badge info-warning">
               <i class="icon-attention"></i>{$save_error|noescape}
             </div>
           </div>
-        {/if}
 
         <div class="savebar-footer-block">
           <button class="buttonLike" type="submit" name="submit"><i
@@ -916,5 +905,4 @@ $('#syncFiles label').click(function () {
             ></i> {='Synchronize'|translate}</button>
         </div>
       </div>
-    </form>
-{/if}{* isset $introduction *}
+    </form>{* isset $introduction *}

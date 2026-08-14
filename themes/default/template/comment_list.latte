@@ -710,8 +710,7 @@
     ></div>
 {/if}
 <ul class="commentsList">
-  {foreach $comments as $comment}
-    <li
+  <li n:foreach="$comments as $comment"
       class="commentElement {if $iterator->counter0 % 2 !== 0}odd{else}even{/if}"
     >
       {if isset($comment['src_image'])}
@@ -739,8 +738,7 @@
         </div>
       {/if}
       <div class="description">
-        {if isset($comment['U_DELETE']) or isset($comment['U_VALIDATE']) or isset($comment['U_EDIT'])}
-          <div class="actions" style="float:right;font-size:90%">
+        <div n:if="isset($comment['U_DELETE']) or isset($comment['U_VALIDATE']) or isset($comment['U_EDIT'])" class="actions" style="float:right;font-size:90%">
             {if isset($comment['U_DELETE'])}
               <a
                 href="{$comment['U_DELETE']|noescape}"
@@ -762,13 +760,10 @@
                 {='Edit'|translate}
               </a>{if isset($comment['U_VALIDATE'])} | {/if}
             {/if}
-            {if isset($comment['U_VALIDATE'])}
-              <a href="{$comment['U_VALIDATE']|noescape}">
+            <a n:if="isset($comment['U_VALIDATE'])" href="{$comment['U_VALIDATE']|noescape}">
                 {='Validate'|translate}
-              </a>
-            {/if}&nbsp;
+              </a>&nbsp;
           </div>
-        {/if}
 
         <span class="commentAuthor">{if $comment['WEBSITE_URL']}<a
               href="{$comment['WEBSITE_URL']}"
@@ -823,5 +818,4 @@
         {/if}
       </div>
     </li>
-  {/foreach}
 </ul>

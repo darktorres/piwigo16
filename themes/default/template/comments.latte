@@ -793,9 +793,7 @@
 
   {if !empty($navbar)}{include getExtent('navigation_bar.latte', 'navbar')}{/if}
 
-  {if isset($COMMENT_LIST)}
-    <div id="comments">
+  <div n:if="isset($COMMENT_LIST)" id="comments">
       {$COMMENT_LIST|noescape}
     </div>
-  {/if}
 </div> <!-- content -->

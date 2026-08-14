@@ -709,47 +709,31 @@
     <h2>{='Search rules'|translate}</h2>
   </div>
 
-  {if isset($INTRODUCTION)}
-    <p>{$INTRODUCTION|noescape}</p>
-  {/if}
+  <p n:if="isset($INTRODUCTION)">{$INTRODUCTION|noescape}</p>
 
   <ul>
     {if isset($search_words)}
-      {foreach $search_words as $v}
-        <li>{$v|noescape}</li>
-      {/foreach}
+      <li n:foreach="$search_words as $v">{$v|noescape}</li>
     {/if}
 
-    {if isset($SEARCH_TAGS_MODE)}
-      <li>
+    <li n:if="isset($SEARCH_TAGS_MODE)">
         <p>{if 'AND' == $SEARCH_TAGS_MODE}{='All tags'|translate}{else}{='Any tag'|translate}{/if}</p>
         <ul>
-          {foreach $search_tags as $v}
-            <li>{$v|noescape}</li>
-          {/foreach}
+          <li n:foreach="$search_tags as $v">{$v|noescape}</li>
         </ul>
       </li>
-    {/if}
 
-    {if isset($DATE_CREATION)}
-      <li>{$DATE_CREATION|noescape}</li>
-    {/if}
+    <li n:if="isset($DATE_CREATION)">{$DATE_CREATION|noescape}</li>
 
-    {if isset($DATE_AVAILABLE)}
-      <li>{$DATE_AVAILABLE|noescape}</li>
-    {/if}
+    <li n:if="isset($DATE_AVAILABLE)">{$DATE_AVAILABLE|noescape}</li>
 
-    {if isset($search_categories)}
-      <li>
+    <li n:if="isset($search_categories)">
         <p>{='Albums'|translate}</p>
 
         <ul>
-          {foreach $search_categories as $v}
-            <li>{$v|noescape}</li>
-          {/foreach}
+          <li n:foreach="$search_categories as $v">{$v|noescape}</li>
         </ul>
       </li>
-    {/if}
   </ul>
 
   <p>

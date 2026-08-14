@@ -715,8 +715,7 @@
               <th>{='Correction'|translate}</th>
             </tr>
             {if isset($c13y_list)}
-              {foreach $c13y_list as $c13y}
-                <tr
+              <tr n:foreach="$c13y_list as $c13y"
                   class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
                 >
                   <td>
@@ -754,15 +753,12 @@
                         {$c13y['correction_error_fct']|noescape}
                       {/if}
                       {if !empty($c13y['correction_msg'])}
-                        {if $c13y['show_correction_success_fct'] or !empty($c13y['correction_error_fct']) or $c13y['show_correction_fct'] or $c13y['show_correction_bad_fct']}
-                          <br>
-                        {/if}
+                        <br n:if="$c13y['show_correction_success_fct'] or !empty($c13y['correction_error_fct']) or $c13y['show_correction_fct'] or $c13y['show_correction_bad_fct']">
                         {$c13y['correction_msg']|nl2br|noescape}
                       {/if}
                     </label>
                   </td>
                 </tr>
-              {/foreach}
             {/if}
           </table>
 
@@ -810,22 +806,18 @@
           </p>
 
           <p>
-            {if $c13y_show_submit_automatic_correction}
-              <input
+            <input n:if="$c13y_show_submit_automatic_correction"
                 class="submit"
                 type="submit"
                 value="{='Apply selected corrections'|translate}"
                 name="Apply selected corrections"
               >
-            {/if}
-            {if $c13y_show_submit_ignore}
-              <input
+            <input n:if="$c13y_show_submit_ignore"
                 class="submit"
                 type="submit"
                 value="{='Ignore selected anomalies'|translate}"
                 name="Ignore selected anomalies"
               >
-            {/if}
             <input
               class="submit"
               type="submit"

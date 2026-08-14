@@ -797,22 +797,18 @@ let errorFilters = '';
           href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token={$CSRF_TOKEN}"
           style="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'caddie'}display:none{/if}"
         >{='Empty caddie'|translate}</a>
-        {if $NB_ORPHANS > 0}
-          <a
+        <a n:if="$NB_ORPHANS > 0"
             id="delete_orphans"
             href="#"
             style="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'no_album'}display:none{/if}"
             class="icon-trash"
           >{='Delete %d orphan photos'|translate:$NB_ORPHANS}</a>
-        {/if}
-        {if $NB_NO_MD5SUM > 0}
-          <a
+        <a n:if="$NB_NO_MD5SUM > 0"
             id="sync_md5sum"
             href="#"
             style="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'no_sync_md5sum'}display:none{/if}"
             class="icon-arrows-cw"
           >{='Compute %d missing checksums'|translate:$NB_NO_MD5SUM}</a>
-        {/if}
 
         <span id="add_md5sum" style="display:none">
           <img
@@ -1119,27 +1115,27 @@ let errorFilters = '';
             </div>
             <div class="dimensionSlidersRatioButtons">
               <div>
-                {if isset($dimensions['ratio_portrait'])} <a
+                <a n:if="isset($dimensions['ratio_portrait'])"
                     class="slider-choice"
                     data-min="{$dimensions['ratio_portrait']['min']}"
                     data-max="{$dimensions['ratio_portrait']['max']}"
-                  >{='Portrait'|translate}</a>{/if}
-                {if isset($dimensions['ratio_square'])} <a
+                  >{='Portrait'|translate}</a>
+                <a n:if="isset($dimensions['ratio_square'])"
                     class="slider-choice"
                     data-min="{$dimensions['ratio_square']['min']}"
                     data-max="
               {$dimensions['ratio_square']['max']}"
-                  >{='square'|translate}</a>{/if}
-                {if isset($dimensions['ratio_landscape'])} <a
+                  >{='square'|translate}</a>
+                <a n:if="isset($dimensions['ratio_landscape'])"
                     class="slider-choice"
                     data-min="{$dimensions['ratio_landscape']['min']}"
                     data-max="{$dimensions['ratio_landscape']['max']}"
-                  >{='Landscape'|translate}</a>{/if}
-                {if isset($dimensions['ratio_panorama'])} <a
+                  >{='Landscape'|translate}</a>
+                <a n:if="isset($dimensions['ratio_panorama'])"
                     class="slider-choice"
                     data-min="{$dimensions['ratio_panorama']['min']}"
                     data-max="{$dimensions['ratio_panorama']['max']}"
-                  >{='Panorama'|translate}</a>{/if}
+                  >{='Panorama'|translate}</a>
               </div>
               <div>
                 <a
@@ -1197,8 +1193,7 @@ let errorFilters = '';
           <span>{='Search tips'|translate}</span>
         </p>
         {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
-        {if isset($no_search_results)}
-          <div>{='No results for'|translate} :
+        <div n:if="isset($no_search_results)">{='No results for'|translate} :
             <em><strong>
                 {foreach $no_search_results as $res}
                   {if !$iterator->first} &mdash; {/if}
@@ -1206,7 +1201,6 @@ let errorFilters = '';
                 {/foreach}
               </strong></em>
           </div>
-        {/if}
       </li>
 
       <li

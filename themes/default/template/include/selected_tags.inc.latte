@@ -693,8 +693,7 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 <span id="selected-tags-container">
-  {foreach $SELECT_RELATED_TAGS as $TAG}
-    <span
+  <span n:foreach="$SELECT_RELATED_TAGS as $TAG"
       class="selected-related-tag {if 1 == count($SELECT_RELATED_TAGS)}unique-tag{/if}"
     >
       <a
@@ -703,8 +702,7 @@
       >
         {$TAG['tag_name']}
       </a>
-      {if count($SELECT_RELATED_TAGS) > 1}
-        <a
+      <a n:if="count($SELECT_RELATED_TAGS) > 1"
           class="selected-related-tag-remove"
           href="{$TAG['remove_url']|noescape}"
           style="border:none;"
@@ -712,7 +710,5 @@
         >
           <i class="gallery-icon-cancel fas fa-plus"></i>
         </a>
-      {/if}
     </span>
-  {/foreach}
 </span>

@@ -209,6 +209,21 @@ final readonly class ExtensionContext
     }
 
     /**
+     * `ConfigService::confDeleteParam()`'s own real signature also accepts
+     * a `list<string>` -- narrowed to a single key here, matching
+     * `getSetting()`/`setSetting()`'s own one-key-at-a-time shape. A
+     * plugin needing to delete several keys calls this several times.
+     * Grounded in a real, common need: 95/406 bundled-catalog plugins and
+     * 1/137 themes call legacy `conf_delete_param()` in their own
+     * `uninstall()`/`delete()` hook -- the default shape for any plugin
+     * with persisted settings at all, not an edge case.
+     */
+    public function deleteSetting(string $key): void
+    {
+        $this->configService->confDeleteParam($key);
+    }
+
+    /**
      * Carries a lighter version of `template()`'s own caution: `boot()`
      * runs before `RequestBootstrap::finalize()` loads translations, so a
      * plugin's own strings may not be loaded yet during `boot()` (missing

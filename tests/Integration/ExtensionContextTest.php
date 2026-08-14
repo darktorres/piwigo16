@@ -268,6 +268,24 @@ final class ExtensionContextTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * deleteSetting() (P27.12, grounded in `AdminTools`'s own real
+     * `uninstall()` -- `conf_delete_param('AdminTools')` -- and
+     * `LocalFilesEditor`'s/`modus`'s own raw-SQL reimplementations of the
+     * same thing).
+     */
+    public function testDeleteSettingThenGetSettingReturnsTheGivenDefault(): void
+    {
+        $key = 'p27-12-test-setting';
+
+        $this->context->setSetting($key, 'a-real-value');
+        self::assertSame('a-real-value', $this->context->getSetting($key));
+
+        $this->context->deleteSetting($key);
+
+        self::assertSame('fallback', $this->context->getSetting($key, 'fallback'));
+    }
+
     public function testImagesIsInCaddieReflectsARealInsertAndRemoval(): void
     {
         $caddieRepository = Kernel::container()->get(CaddieRepository::class);

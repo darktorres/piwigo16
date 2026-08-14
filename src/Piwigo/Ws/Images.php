@@ -17,19 +17,14 @@ use Exception;
 use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Upload\UploadService;
-use Piwigo\Auth\AccessControl;
-use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
-use Piwigo\Comment\CommentService;
-use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
-use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -39,10 +34,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
-use Piwigo\Event\Picture\RenderElementDescription;
-use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Picture\WsImagesUploadCompleted;
-use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImagePathHelper;
@@ -56,22 +48,26 @@ use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Rate\RateService;
 use Piwigo\Search\Projection\Search;
 use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\Request\ChunkedUploadRequest;
 use Piwigo\Ws\Request\TagListRequest;
 use Piwigo\Ws\Request\UploadedFileRequest;
 
 /**
- * `pwg.images.*` WS methods (26 registrations) -- registered via callable
- * arrays in src/Piwigo/Ws/WsDefaultMethods.php. The 3 private helpers
+ * `pwg.images.*` WS methods -- registered via callable arrays in
+ * src/Piwigo/Ws/WsDefaultMethods.php. Group 19's Images batch (last of
+ * 9) is migrating these one method at a time onto typed
+ * MethodDefinition/handlerClass registrations under Ws/Images/; 18 of
+ * the original 26 remain here. The 3 private helpers
  * (addImageCategoryRelations/mergeChunks/removeChunks) are internal,
- * never WS-registered themselves.
+ * never WS-registered themselves -- also duplicated (temporarily, for
+ * the remaining migration) as Ws\Images\ImageCategoryRelationsHelper/
+ * ChunkedUploadHelper for the methods already migrated off this class
+ * that still need them.
  */
 final readonly class Images
 {
@@ -90,24 +86,19 @@ final readonly class Images
         private TagService $tagService,
         private ImageService $imageService,
         private ActivityService $activityService,
-        private RateService $rateService,
         private MetadataService $metadataService,
-        private CommentService $commentService,
         private UploadService $uploadService,
         private CurrentConfig $currentConfig,
         private UrlServiceInterface $urlService,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
-        private Lang $lang,
         private CurrentLogger $currentLogger,
         private CurrentUser $currentUser,
-        private AccessControl $accessControl,
         private HtmlService $htmlService,
         private Paths $paths,
         private StorageRegistry $storageRegistry,
         private ImageRepository $imageRepository,
         private ImageStdParams $imageStdParams,
-        private WsHelper $wsHelper,
         private DbCredentials $dbCredentials,
     ) {}
 
@@ -319,415 +310,6 @@ final readonly class Images
         foreach ($chunks as $chunk) {
             unlink($chunk);
         }
-    }
-
-    /**
-     * API method
-     * Adds a comment to an image
-     * @param array{image_id: int, author: string, content: string, key: string, ...} $params
-     *    image_id: WsParamType::ID, mandatory -- always a plain int. author/content/
-     *    key have no WS_TYPE flag, but Server::invoke() rejects an array
-     *    value for any registered param without WsParamFlag::ACCEPT_ARRAY, so
-     *    they're always plain strings too (author has a string default,
-     *    content/key are mandatory)
-     * @return WsErrorResponse|array{comment: NamedStruct}
-     */
-    public function addComment(array $params, Server $service): WsErrorResponse|array
-    {
-
-        if (! $this->currentConfig->activateComments) {
-            return new WsErrorResponse(403, 'Comments are disabled');
-        }
-
-        $permissionCriteria = $this->permissionService->getPermissionCriteria();
-
-        if (! $this->imageService->isImageCommentableWithCondition(ImageId::from($params['image_id']), $permissionCriteria)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid image_id');
-        }
-
-        $comm = [
-            'author' => trim($params['author']),
-            'content' => trim($params['content']),
-            'image_id' => $params['image_id'],
-        ];
-
-        $infos = [];
-        $comment_action = $this->commentService
-            ->insertComment($comm, $params['key'], $infos);
-
-        switch ($comment_action) {
-            case 'reject':
-                $infos[] = $this->lang->t('Your comment has NOT been registered because it did not pass the validation rules');
-                return new WsErrorResponse(403, implode('; ', $infos));
-
-            case 'validate':
-            case 'moderate':
-                $ret = [
-                    'id' => $comm['id'] ?? 0,
-                    'validation' => $comment_action === 'validate',
-                ];
-                return [
-                    'comment' => new NamedStruct($ret),
-                ];
-
-            default:
-                return new WsErrorResponse(500, 'Unknown comment action ' . $comment_action);
-        }
-    }
-
-    /**
-     * API method
-     * Returns detailed information for an element
-     * @param array{image_id: int, comments_page: int, comments_per_page: int, ...} $params
-     *    all three are WsParamType::INT|WsParamType::POSITIVE (image_id: WsParamType::ID) --
-     *    always plain ints by the time this runs (comments_page/
-     *    comments_per_page have defaults, so always present too)
-     * @return WsErrorResponse|array<string, mixed>
-     */
-    public function getInfo(array $params, Server $service): WsErrorResponse|array
-    {
-
-        $image_row = $this->imageService->getRowWithCondition(
-            ImageId::from($params['image_id']),
-            $this->permissionService->getPermissionCriteria()
-        );
-        if ($image_row === null) {
-            return new WsErrorResponse(404, 'image_id not found');
-        }
-
-        // id is the 'images' primary key, guaranteed numeric; captured
-        // before array_merge() below widens every value of $image_row to mixed.
-        assert(is_numeric($image_row['id']));
-        $image_id = (int) $image_row['id'];
-
-        // array_merge() with WsHelper::stdGetUrls()'s mixed-valued return widens
-        // PHPStan's tracked shape for every other key of the original
-        // fetchAssociative() row -- restate the columns this function reads
-        // below (id: 'images' NOT NULL primary key, native int under
-        // DBAL; file: NOT NULL; name/comment/rating_score: nullable) plus an
-        // open tail for the rest of the row and the page_url/element_url/
-        // download_url/derivatives keys WsHelper::stdGetUrls() injects.
-        /** @var array{id: int, file: string, name: string|null, comment: string|null, rating_score: string|null, ...} $image_row */
-        $image_row = array_merge($image_row, $this->wsHelper->stdGetUrls($image_row, $this->urlService));
-
-        $image_row['name_raw'] = $image_row['name'];
-        $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image_row['name']) ? $image_row['name'] : '', __FUNCTION__));
-        $image_row['name'] = strip_tags($nameEvent->elementName);
-
-        $image_row['comment_raw'] = $image_row['comment'];
-        $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image_row['comment']) ? $image_row['comment'] : '', __FUNCTION__));
-        $image_row['comment'] = $descriptionEvent->elementDescription;
-
-        $related_category_rows = $this->imageService->getRelatedCategoriesForImage(
-            ImageId::from($image_id),
-            $this->permissionService->getPermissionCriteria()
-        );
-
-        $is_commentable = false;
-        $related_categories = [];
-        foreach ($related_category_rows as $row) {
-            if ((bool) $row['commentable']) {
-                $is_commentable = true;
-            }
-            unset($row['commentable']);
-
-            $row['url'] = $this->urlService->makeIndexUrl(
-                [
-                    'category' => $row,
-                ]
-            );
-
-            $row['page_url'] = $this->urlService->makePictureUrl(
-                [
-                    'image_id' => $image_row['id'],
-                    'image_file' => $image_row['file'],
-                    'category' => $row,
-                ]
-            );
-
-            $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
-
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', __FUNCTION__));
-            $row['name'] = strip_tags($nameEvent->categoryName);
-
-            $related_categories[] = $row;
-        }
-        usort($related_categories, CategoryService::compareByGlobalRank(...));
-
-        if ($related_categories === [] and ! $this->accessControl->isAdmin()) {
-            // photo might be in the lounge? or simply orphan. A standard user should not get
-            // info. An admin should still be able to get info.
-            return new WsErrorResponse(401, 'Access denied');
-        }
-
-        $related_tags = $this->tagService
-            ->getCommonTags([$image_id], -1, $this->htmlService);
-        foreach ($related_tags as $i => $tag) {
-            $tag['url'] = $this->urlService->makeIndexUrl(
-                [
-                    'tags' => [$tag],
-                ]
-            );
-            $tag['page_url'] = $this->urlService->makePictureUrl(
-                [
-                    'image_id' => $image_row['id'],
-                    'image_file' => $image_row['file'],
-                    'tags' => [$tag],
-                ]
-            );
-
-            unset($tag['counter']);
-            $related_tags[$i] = $tag;
-        }
-
-        $rating_score_raw = $image_row['rating_score'];
-        $rating = [
-            'score' => $rating_score_raw,
-            'count' => 0,
-            'average' => null,
-        ];
-        if (isset($rating['score'])) {
-            $rate_summary = $this->rateService->getRateSummaryForElement(ImageId::from($image_id));
-
-            assert(is_numeric($rating_score_raw));
-            $rating['score'] = (float) $rating_score_raw;
-            $rating['average'] = $rate_summary->average ?? 0.0;
-            $rating['count'] = $rate_summary->count;
-        }
-
-        $related_comments = [];
-
-        $only_validated_comments = ! $this->accessControl->isAdmin();
-        $commentService = $this->commentService;
-
-        $nb_comments = $commentService->countForImage(ImageId::from($image_id), $only_validated_comments);
-
-        if ($nb_comments > 0 and $params['comments_per_page'] > 0) {
-            $related_comments = array_map(
-                static fn (CommentSummary $summary): array => $summary->toArray(),
-                $commentService->getSummariesForImage(
-                    ImageId::from($image_id),
-                    $only_validated_comments,
-                    $params['comments_per_page'],
-                    $params['comments_per_page'] * $params['comments_page']
-                )
-            );
-        }
-
-        $comment_post_data = null;
-        if ($this->currentConfig->activateComments and
-            $is_commentable and
-            (! $this->accessControl->isAGuest()
-              or $this->currentConfig->commentsForall
-            )
-        ) {
-            $username = $this->currentUser->get()
-                ->username->value ?? '';
-            $comment_post_data['author'] = stripslashes($username);
-            $comment_post_data['key'] = new EphemeralKeyService($this->currentConfig)->generate(2, (string) $params['image_id']);
-        }
-
-        $ret = $image_row;
-        foreach (['id', 'width', 'height', 'hit', 'filesize'] as $k) {
-            if (isset($ret[$k])) {
-                assert(is_numeric($ret[$k]));
-                $ret[$k] = (int) $ret[$k];
-            }
-        }
-        foreach (['path', 'storage_category_id'] as $k) {
-            unset($ret[$k]);
-        }
-
-        $ret['rates'] = [
-            ResponseEncoder::ATTRIBUTES_KEY => $rating,
-        ];
-        $ret['categories'] = new NamedArray(
-            $related_categories,
-            'category',
-            ['id', 'url', 'page_url']
-        );
-        $ret['tags'] = new NamedArray(
-            $related_tags,
-            'tag',
-            $this->wsHelper->stdGetTagXmlAttributes()
-        );
-        if (isset($comment_post_data)) {
-            $ret['comment_post'] = [
-                ResponseEncoder::ATTRIBUTES_KEY => $comment_post_data,
-            ];
-        }
-        $ret['comments_paging'] = new NamedStruct(
-            [
-                'page' => $params['comments_page'],
-                'per_page' => $params['comments_per_page'],
-                'count' => count($related_comments),
-                'total_count' => $nb_comments,
-            ]
-        );
-        $ret['comments'] = new NamedArray(
-            $related_comments,
-            'comment',
-            ['id', 'date']
-        );
-
-        if ($service->responseFormat !== 'rest') {
-            return $ret; // for backward compatibility only
-        } else {
-            return [
-                'image' => new NamedStruct($ret, null, ['name', 'comment']),
-            ];
-        }
-    }
-
-    /**
-     * API method
-     * Rates an image
-     * @param array{image_id: int, rate: float, ...} $params both mandatory
-     *    (WsParamType::ID / WsParamType::FLOAT, no 'default') -- always plain scalars by
-     *    the time this runs
-     * @return WsErrorResponse|array<string, mixed> matches
-     *   Rate\RateService::rate()'s own already-reviewed by-design shape
-     */
-    public function rate(array $params, Server $service): WsErrorResponse|array
-    {
-        $accessible = $this->imageService->isImageAccessibleWithCondition(
-            ImageId::from($params['image_id']),
-            $this->permissionService->getPermissionCriteria()
-        );
-        if (! $accessible) {
-            return new WsErrorResponse(404, 'Invalid image_id or access denied');
-        }
-
-        $res = $this->rateService
-            ->rate($params['image_id'], (int) $params['rate']);
-
-        if ($res === false) {
-            $rate_items = $this->currentConfig->rateItems;
-            return new WsErrorResponse(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
-        }
-        return $res;
-    }
-
-    /**
-     * API method
-     * Returns a list of elements corresponding to a query search
-     * @param array{query: string, per_page: int, page: int, order: string|null, f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
-     *    query: no WS_TYPE flag, mandatory -- always a plain string (see
-     *    WsHelper::stdImageSqlFilterCriteria()'s docblock for the shared f_* filter set,
-     *    merged in via ws.php's $f_params)
-     * @return array{paging: NamedStruct, images: NamedArray}
-     */
-    public function search(array $params, Server $service): array
-    {
-        $images = [];
-        $filterCondition = $this->wsHelper->stdImageSqlFilterCriteria($params, $service)
-            ->toSqlCondition('i.');
-        $order_by = $this->wsHelper->stdImageSqlOrder($params, 'i.');
-
-        $super_order_by = false;
-        if ($order_by !== '') {
-            // Communicates the effective order_by to SearchService::
-            // getQuickSearchResults()/getRegularSearchResults() etc, which
-            // read it back from $this->currentConfig-> for the rest of this request --
-            // an in-memory-only override ($this->currentConfig->orderBy = ), not a
-            // DB write.
-            $this->currentConfig->orderBy = 'ORDER BY ' . $order_by;
-            $super_order_by = true; // quick_search_result might be faster
-        }
-
-        // SearchService::getQuickSearchResults()'s 'images_where' option
-        // takes a single already-built SQL string with no bound-parameter
-        // side-channel, so the filter condition is flattened back into
-        // literal SQL here. Safe to do so: every one of
-        // ImageFilterCriteria's own field values is already
-        // is_numeric()/DateHelper::isValidMysqlDatetime()-validated (see
-        // WsHelper::stdImageSqlFilterCriteria()'s own docblock) before ever
-        // reaching $filterCondition, so no injection-capable character can
-        // survive this substitution.
-        $images_where = $filterCondition->sql;
-        foreach ($filterCondition->parameters as $placeholder => $value) {
-            if (! is_scalar($value)) {
-                continue;
-            }
-            $images_where = str_replace(':' . $placeholder, is_string($value) ? "'" . $value . "'" : (string) $value, $images_where);
-        }
-
-        $search_result = $this->searchService->getQuickSearchResults(
-            $params['query'],
-            [
-                'super_order_by' => $super_order_by,
-                'images_where' => $images_where,
-            ]
-        );
-
-        // get_quick_search_results()'s return type is a generic array<string,
-        // mixed> (cross-file root cause: include/functions_search.inc.php could
-        // give 'items' a precise int[] shape, but that's shared by many other
-        // callers -- narrow locally here instead).
-        $search_items = $search_result['items'];
-        if (! is_array($search_items)) {
-            $search_items = [];
-        }
-
-        $image_ids = array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_slice(
-                $search_items,
-                $params['page'] * $params['per_page'],
-                $params['per_page']
-            )
-        );
-
-        if ((bool) count($image_ids)) {
-            $image_ids = array_flip($image_ids);
-            $favorite_ids = $this->urlService
-                ->getUserFavorites();
-
-            foreach ($this->imageRepository->findByIds(array_keys($image_ids)) as $imageRow) {
-                // Unboxed here rather than kept as the typed object -- this
-                // loop rebuilds a differently-shaped $image array from
-                // $row's fields and separately passes the whole row to
-                // WsHelper::stdGetUrls(array $image_row, ...), both of
-                // which need real array semantics.
-                $row = $imageRow->toArray();
-                $image = [];
-                $image['is_favorite'] = isset($favorite_ids[$imageRow->id->value]);
-                foreach (['id', 'width', 'height', 'hit'] as $k) {
-                    if (isset($row[$k])) {
-                        $image[$k] = $row[$k];
-                    }
-                }
-                foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $row[$k];
-                }
-
-                $nameEvent2 = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
-                $image['name'] = strip_tags($nameEvent2->elementName);
-                $descriptionEvent2 = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
-                $image['comment'] = $descriptionEvent2->elementDescription;
-
-                $image = array_merge($image, $this->wsHelper->stdGetUrls($row, $this->urlService));
-                $images[$image_ids[$image['id']]] = $image;
-            }
-            ksort($images, SORT_NUMERIC);
-            $images = array_values($images);
-        }
-
-        return [
-            'paging' => new NamedStruct(
-                [
-                    'page' => $params['page'],
-                    'per_page' => $params['per_page'],
-                    'count' => count($images),
-                    'total_count' => count($search_items),
-                ]
-            ),
-            'images' => new NamedArray(
-                $images,
-                'image',
-                $this->wsHelper->stdGetImageXmlAttributes()
-            ),
-        ];
     }
 
     /**
@@ -2033,64 +1615,6 @@ final readonly class Images
 
     /**
      * API method
-     * Check if an image exists by it's name or md5 sum
-     * @param array{md5sum_list: string|null, filename_list: string|null, ...} $params
-     *    both: no WS_TYPE flag, null default -- string|null.
-     * @return array<string, int|string|null> keyed by md5sum/filename;
-     *   id is 'images''s NOT NULL primary key (int|string per
-     *   driver), or null when no matching photo was found
-     */
-    public function exist(array $params, Server $service): array
-    {
-        $logger = $this->currentLogger->get();
-
-        $logger->debug(__FUNCTION__, 'WS', $params);
-
-        $split_pattern = '/[\s,;\|]/';
-        $result = [];
-
-        if ($this->currentConfig->uniquenessMode === 'md5sum') {
-            // search among photos the list of photos already added, based on md5sum list
-            $md5sums = preg_split(
-                $split_pattern,
-                (string) $params['md5sum_list'],
-                -1,
-                PREG_SPLIT_NO_EMPTY
-            );
-            if ($md5sums === false) {
-                throw new Exception('ws_images_exist(): preg_split() failed');
-            }
-
-            $id_of_md5 = $this->imageService->getIdsByMd5sums($md5sums);
-
-            foreach ($md5sums as $md5sum) {
-                $result[$md5sum] = $id_of_md5[$md5sum] ?? null;
-            }
-        } elseif ($this->currentConfig->uniquenessMode === 'filename') {
-            // search among photos the list of photos already added, based on
-            // filename list
-            $filenames = preg_split(
-                $split_pattern,
-                (string) $params['filename_list'],
-                -1,
-                PREG_SPLIT_NO_EMPTY
-            );
-            if ($filenames === false) {
-                throw new Exception('ws_images_exist(): preg_split() failed');
-            }
-
-            $id_of_filename = $this->imageService->getIdsByFilenames($filenames);
-
-            foreach ($filenames as $filename) {
-                $result[$filename] = $id_of_filename[$filename] ?? null;
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * API method
      * Checks, for each candidate filename supplied by the client, whether a
      * matching photo already exists (by filename with known format
      * extensions stripped) and whether a format with that extension is
@@ -2275,70 +1799,6 @@ final readonly class Images
         PermissionCacheInvalidator::invalidate();
 
         return $ok;
-    }
-
-    /**
-     * API method
-     * Check is file has been update
-     * @param array{image_id: int, file_sum: string|null, thumbnail_sum: string|null, high_sum: string|null, ...} $params
-     *    image_id: WsParamType::ID, mandatory -- always int. file_sum/
-     *    thumbnail_sum/high_sum: no WS_TYPE flag, null default -- string|null.
-     * @return WsErrorResponse|array<string, string>
-     */
-    public function checkFiles(array $params, Server $service): WsErrorResponse|array
-    {
-        $logger = $this->currentLogger->get();
-
-        $logger->debug(__FUNCTION__, 'WS', $params);
-
-        $path = $this->imageService->getPathById(ImageId::from($params['image_id']));
-
-        if ($path === null) {
-            return new WsErrorResponse(404, 'image_id not found');
-        }
-        // `path` is stored root-relative (e.g. "upload/2026/.../foo.jpg") --
-        // resolve it to a real filesystem path the same way
-        // formatsDelete()/DerivativeImage do (ImagePathHelper::
-        // getElementPath()), rather than handing the bare DB value straight
-        // to md5_file() below, which silently fails (false, never equal to
-        // any real hash) for every non-remote photo.
-        $path = ImagePathHelper::getElementPath(
-            [
-                'path' => $path,
-            ],
-            $this->urlService,
-            $this->paths
-        );
-
-        $ret = [];
-
-        if (isset($params['thumbnail_sum'])) {
-            // We always say the thumbnail is equal to create no reaction on the
-            // other side. Since Piwigo 2.4 and derivatives, the thumbnails and web
-            // sizes are always generated by Piwigo
-            $ret['thumbnail'] = 'equals';
-        }
-
-        if (isset($params['high_sum'])) {
-            $ret['file'] = 'equals';
-            $compare_type = 'high';
-        } elseif (isset($params['file_sum'])) {
-            $compare_type = 'file';
-        }
-
-        if (isset($compare_type)) {
-            $path_md5sum = md5_file($path);
-            $logger->debug(__FUNCTION__ . ', md5_file($path) = ' . ($path_md5sum === false ? '' : $path_md5sum), 'WS');
-            if ($path_md5sum !== $params[$compare_type . '_sum']) {
-                $ret[$compare_type] = 'differs';
-            } else {
-                $ret[$compare_type] = 'equals';
-            }
-        }
-
-        $logger->debug(__FUNCTION__, 'WS', $ret);
-
-        return $ret;
     }
 
     /**
@@ -2536,42 +1996,6 @@ final readonly class Images
         $ret = $this->imageService
             ->deleteElements($image_ids, $this->urlService, true);
         PermissionCacheInvalidator::invalidate();
-
-        return $ret;
-    }
-
-    /**
-     * API method
-     * Checks if Piwigo is ready for upload
-     * @param mixed[] $params
-     * @return array{message: ?string, ready_for_upload: bool}
-     */
-    public function checkUpload(array $params, Server $service): array
-    {
-        $ret = [];
-        $ret['message'] = $this->uploadService->readyForUploadMessage();
-        $ret['ready_for_upload'] = true;
-        if (! in_array($ret['message'], [null, ''], true)) {
-            $ret['ready_for_upload'] = false;
-        }
-
-        return $ret;
-    }
-
-    /**
-     * API method
-     * Empties the lounge, where photos may wait before taking off.
-     * @since 12
-     * @param mixed[] $params
-     * @return array{rows: list<array{image_id: int, category_id: int}>|null} matches
-     *   ImageService::emptyLounge()'s own already-precise return type
-     */
-    public function emptyLounge(array $params, Server $service): array
-    {
-        $ret = [
-            'rows' => $this->imageService
-                ->emptyLounge(),
-        ];
 
         return $ret;
     }

@@ -55,6 +55,14 @@ use Piwigo\Ws\Groups\MergeHandler as GroupsMergeHandler;
 use Piwigo\Ws\Groups\SetInfoHandler as GroupsSetInfoHandler;
 use Piwigo\Ws\History\LogHandler as HistoryLogHandler;
 use Piwigo\Ws\History\SearchHandler as HistorySearchHandler;
+use Piwigo\Ws\Images\AddCommentHandler;
+use Piwigo\Ws\Images\CheckFilesHandler;
+use Piwigo\Ws\Images\CheckUploadHandler;
+use Piwigo\Ws\Images\EmptyLoungeHandler;
+use Piwigo\Ws\Images\ExistHandler;
+use Piwigo\Ws\Images\GetInfoHandler;
+use Piwigo\Ws\Images\RateHandler;
+use Piwigo\Ws\Images\SearchHandler as ImagesSearchHandler;
 use Piwigo\Ws\Permissions\AddHandler as PermissionsAddHandler;
 use Piwigo\Ws\Permissions\GetListHandler as PermissionsGetListHandler;
 use Piwigo\Ws\Permissions\RemoveHandler as PermissionsRemoveHandler;
@@ -116,12 +124,8 @@ final readonly class WsDefaultMethods
     ) {}
 
     /**
-     * The MethodDefinition/ParamDefinition equivalent of $f_params below
-     * (the shared images-table range-filter block merged into several
-     * still-addMethod()-registered methods' own params) -- kept as a
-     * separate method rather than replacing $f_params itself, since
-     * addMethod() and register() need the same 11 filter params in two
-     * different shapes and not every method using them has migrated yet.
+     * The shared images-table range-filter block merged into several
+     * `register()`-based methods' own params.
      *
      * @return list<ParamDefinition>
      */
@@ -158,49 +162,6 @@ final readonly class WsDefaultMethods
 
         // $this->currentConfig->nbCommentPage is a numeric config value (see admin/configuration.php).
         $nb_comment_page = $this->currentConfig->nbCommentPage;
-
-        $f_params = [
-            'f_min_rate' => [
-                'default' => null,
-                'type' => WsParamType::FLOAT,
-            ],
-            'f_max_rate' => [
-                'default' => null,
-                'type' => WsParamType::FLOAT,
-            ],
-            'f_min_hit' => [
-                'default' => null,
-                'type' => WsParamType::INT | WsParamType::POSITIVE,
-            ],
-            'f_max_hit' => [
-                'default' => null,
-                'type' => WsParamType::INT | WsParamType::POSITIVE,
-            ],
-            'f_min_ratio' => [
-                'default' => null,
-                'type' => WsParamType::FLOAT | WsParamType::POSITIVE,
-            ],
-            'f_max_ratio' => [
-                'default' => null,
-                'type' => WsParamType::FLOAT | WsParamType::POSITIVE,
-            ],
-            'f_max_level' => [
-                'default' => null,
-                'type' => WsParamType::INT | WsParamType::POSITIVE,
-            ],
-            'f_min_date_available' => [
-                'default' => null,
-            ],
-            'f_max_date_available' => [
-                'default' => null,
-            ],
-            'f_min_date_created' => [
-                'default' => null,
-            ],
-            'f_max_date_created' => [
-                'default' => null,
-            ],
-        ];
 
         $service->register(new MethodDefinition(
             name: 'pwg.getVersion',
@@ -314,81 +275,52 @@ final readonly class WsDefaultMethods
             requiresAuth: true,
         ));
 
-        $service->addMethod(
-            'pwg.images.addComment',
-            $this->pwgImages->addComment(...),
-            [
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'author' => [
-                    'default' => $this->accessControl->isAGuest() ? 'guest' : $this->currentUser->get()
-                        ->username,
-                ],
-                'content' => [],
-                'key' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.addComment',
+            handlerClass: AddCommentHandler::class,
+            description: 'Adds a comment to an image.',
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID),
+                ParamDefinition::optional('author', $this->accessControl->isAGuest() ? 'guest' : $this->currentUser->get()->username),
+                ParamDefinition::required('content'),
+                ParamDefinition::required('key'),
             ],
-            'Adds a comment to an image.',
-            options: [
-                'post_only' => true,
-            ]
-        );
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.images.getInfo',
-            $this->pwgImages->getInfo(...),
-            [
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'comments_page' => [
-                    'default' => 0,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'comments_per_page' => [
-                    'default' => $nb_comment_page,
-                    'maxValue' => 2 * $nb_comment_page,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.getInfo',
+            handlerClass: GetInfoHandler::class,
+            description: 'Returns information about an image.',
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID),
+                ParamDefinition::optional('comments_page', 0, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('comments_per_page', $nb_comment_page, WsParamType::INT | WsParamType::POSITIVE, maxValue: 2 * $nb_comment_page),
             ],
-            'Returns information about an image.'
-        );
+        ));
 
-        $service->addMethod(
-            'pwg.images.rate',
-            $this->pwgImages->rate(...),
-            [
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'rate' => [
-                    'type' => WsParamType::FLOAT,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.rate',
+            handlerClass: RateHandler::class,
+            description: 'Rates an image.',
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID),
+                ParamDefinition::required('rate', WsParamType::FLOAT),
             ],
-            'Rates an image.'
-        );
+        ));
 
-        $service->addMethod(
-            'pwg.images.search',
-            $this->pwgImages->search(...),
-            array_merge([
-                'query' => [],
-                'per_page' => [
-                    'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'page' => [
-                    'default' => 0,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'order' => [
-                    'default' => null,
-                    'info' => 'id, file, name, hit, rating_score, date_creation, date_available, random',
-                ],
-            ], $f_params),
-            'Returns elements for the corresponding query search.'
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.search',
+            handlerClass: ImagesSearchHandler::class,
+            description: 'Returns elements for the corresponding query search.',
+            params: [
+                ParamDefinition::required('query'),
+                ParamDefinition::optional('per_page', 100, WsParamType::INT | WsParamType::POSITIVE, maxValue: $this->currentConfig->wsMaxImagesPerPage),
+                ParamDefinition::optional('page', 0, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('order', info: 'id, file, name, hit, rating_score, date_creation, date_available, random'),
+                ...self::sharedImageFilterParams(),
+            ],
+        ));
 
         $service->addMethod(
             'pwg.images.setPrivacyLevel',
@@ -1037,67 +969,45 @@ final readonly class WsDefaultMethods
             postOnly: true,
         ));
 
-        $service->addMethod(
-            'pwg.images.exist',
-            $this->pwgImages->exist(...),
-            [
-                'md5sum_list' => [
-                    'default' => null,
-                ],
-                'filename_list' => [
-                    'default' => null,
-                ],
-            ],
-            'Checks existence of images.
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.exist',
+            handlerClass: ExistHandler::class,
+            description: 'Checks existence of images.
     <br>Give <b>md5sum_list</b> if $conf[uniqueness_mode]==md5sum. Give <b>filename_list</b> if $conf[uniqueness_mode]==filename.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.images.checkFiles',
-            $this->pwgImages->checkFiles(...),
-            [
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'file_sum' => [
-                    'default' => null,
-                ],
-                'thumbnail_sum' => [
-                    'default' => null,
-                ],
-                'high_sum' => [
-                    'default' => null,
-                ],
+            params: [
+                ParamDefinition::optional('md5sum_list'),
+                ParamDefinition::optional('filename_list'),
             ],
-            'Checks if you have updated version of your files for a given photo, the answer can be "missing", "equals" or "differs".
+            requiresAuth: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.checkFiles',
+            handlerClass: CheckFilesHandler::class,
+            description: 'Checks if you have updated version of your files for a given photo, the answer can be "missing", "equals" or "differs".
     <br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID),
+                ParamDefinition::optional('file_sum'),
+                ParamDefinition::optional('thumbnail_sum'),
+                ParamDefinition::optional('high_sum'),
+            ],
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.images.checkUpload',
-            $this->pwgImages->checkUpload(...),
-            null,
-            'Checks if Piwigo is ready for upload.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.checkUpload',
+            handlerClass: CheckUploadHandler::class,
+            description: 'Checks if Piwigo is ready for upload.',
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.images.emptyLounge',
-            $this->pwgImages->emptyLounge(...),
-            null,
-            'Empty lounge, where images may be waiting before taking off.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.emptyLounge',
+            handlerClass: EmptyLoungeHandler::class,
+            description: 'Empty lounge, where images may be waiting before taking off.',
+            requiresAuth: true,
+        ));
 
         $service->addMethod(
             'pwg.images.uploadCompleted',

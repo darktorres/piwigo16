@@ -15,28 +15,26 @@ use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
- * Piwigo\Ws\Images -- the `pwg.images.*` WS methods (26 public
- * methods, the largest class in the B4 legacy WS API bucket). Resolved
- * via `Kernel::container()->get()` (same rationale as
- * `UpdatesSubControllerTest.php`) -- 25 constructor deps (incl.
- * `UploadService`, itself 14 deps), none touched by the guard branches
- * under test. No dedicated Integration/Browser spec of its own.
+ * Piwigo\Ws\Images -- the remaining, not-yet-migrated `pwg.images.*` WS
+ * methods (Group 19's Images batch is porting these one method at a
+ * time onto Ws/Images/{Method}Handler classes -- see e.g.
+ * tests/Unit/Ws/Images/GetInfoHandlerTest.php for a migrated method's
+ * own test file). Resolved via `Kernel::container()->get()` (same
+ * rationale as `UpdatesSubControllerTest.php`), none of the remaining
+ * constructor deps touched by the guard branches under test. No
+ * dedicated Integration/Browser spec of its own.
  *
- * `getInfo()` covers its own "image_id not found" 404 guard via a real
- * DB read against a deliberately non-existent `image_id`, same
- * B2-pattern approach as this campaign's Repository/Service tests.
  * `delete()`/`setInfo()`/`formatsDelete()`/`deleteOrphans()`/
  * `setCategory()` each cover their CSRF-token-mismatch 403 guard,
  * which fires before touching any real service. This is a
- * representative sample, not every one of the 9 CSRF-gated methods in
- * this file (also gated: `upload()`, `uploadCompleted()`,
+ * representative sample, not every one of the remaining CSRF-gated
+ * methods in this file (also gated: `upload()`, `uploadCompleted()`,
  * `setMd5sum()`, `syncMetadata()`) -- the pattern is identical and
  * already well-established across this campaign's other Pwg* classes.
  *
- * Every other method (`addComment`/`rate`/`search`/`filteredSearchCreate`/
- * `setPrivacyLevel`/`setRank`/`addChunk`/`addFile`/`add`/`addSimple`/
- * `upload`/`uploadAsync`/`exist`/`formatsSearchImage`/`checkFiles`/
- * `checkUpload`/`emptyLounge`/`uploadCompleted`/`setMd5sum`/
+ * Every other remaining method (`filteredSearchCreate`/`setPrivacyLevel`/
+ * `setRank`/`addChunk`/`addFile`/`add`/`addSimple`/`upload`/
+ * `uploadAsync`/`formatsSearchImage`/`uploadCompleted`/`setMd5sum`/
  * `syncMetadata`) needs real upload/file/DB state disproportionate for
  * a guard-branch test and is not attempted here.
  */
@@ -84,25 +82,6 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     Kernel::reset();
-});
-
-test('getInfo returns a 404 WsErrorResponse for an image_id with no real match', function (): void {
-    $ws = pwgImagesTestSubject();
-
-    $result = $ws->getInfo([
-        'image_id' => 999999,
-        'comments_page' => 0,
-        'comments_per_page' => 10,
-    ], pwgImagesTestServer());
-
-    expect($result)
-        ->toBeInstanceOf(WsErrorResponse::class);
-    if ($result instanceof WsErrorResponse) {
-        expect($result->code())
-            ->toBe(404)
-            ->and($result->message())
-            ->toBe('image_id not found');
-    }
 });
 
 test('delete returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {

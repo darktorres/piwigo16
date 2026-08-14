@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityListCriteria;
 use Piwigo\Activity\ActivityService;
@@ -37,8 +36,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Ws\GetHistory;
@@ -98,7 +95,6 @@ final readonly class Core
         private UrlServiceInterface $urlService,
         private EntityManagerInterface $entityManager,
         private ApiKeyRequestFlag $apiKeyRequestFlag,
-        private Connection $connection,
         private ImageRepository $imageRepository,
         private Paths $paths,
         private Lang $lang,
@@ -586,7 +582,8 @@ final readonly class Core
         $connections_mode = $this->currentConfig->activityDisplayConnections;
         $admin_ids = [];
         if ($connections_mode === 'admins_only') {
-            $admin_ids = new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig)->findAdminIds();
+            $admin_ids = new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
+                ->findAdminIds();
         }
 
         $criteria = new ActivityListCriteria(
@@ -760,7 +757,7 @@ final readonly class Core
     {
         $section = null;
         if (! in_array($params['section'], [null, ''], true)) {
-            $historyRepository = EntityManagerFactory::build(DbConnection::build())
+            $historyRepository = $this->entityManager
                 ->getRepository(HistoryEntity::class);
             if (in_array($params['section'], $historyRepository->getSectionEnumOptions(), true)) {
                 $section = $params['section'];
@@ -839,8 +836,6 @@ final readonly class Core
      */
     public function historySearch(array $param, Server &$service): array
     {
-        $conn = $this->connection;
-
         /** @var array<string, mixed> $page */
         $page = [];
         $page['start'] = HistorySearchPageRequest::fromGlobals()->start;
@@ -944,7 +939,7 @@ final readonly class Core
         // store seach in database
         // register search rules in database, then they will be available on
         // thumbnails page and picture page.
-        $searchRepository = new SearchRepository(EntityManagerFactory::build($conn));
+        $searchRepository = new SearchRepository($this->entityManager);
         $search_id = $searchRepository->insertSavedSearch($search);
 
         // Remove redirect for ajax //

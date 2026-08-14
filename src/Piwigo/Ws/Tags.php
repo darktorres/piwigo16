@@ -20,8 +20,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Album\MergeTags;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
@@ -157,8 +155,6 @@ final readonly class Tags
         $count_set = count($image_ids);
         $image_ids = array_slice($image_ids, $params['per_page'] * $params['page'], $params['per_page']);
 
-        $conn = DbConnection::build();
-
         $image_tag_map = [];
         // build list of image ids with associated tags per image
         if ($image_ids !== [] and ! $params['tag_mode_and']) {
@@ -173,7 +169,7 @@ final readonly class Tags
             $rank_of = array_flip($image_ids);
             $favorite_ids = $urlService->getUserFavorites();
 
-            foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findByIds($image_ids) as $row_id => $imageRow) {
+            foreach ($this->entityManager->getRepository(ImageEntity::class)->findByIds($image_ids) as $row_id => $imageRow) {
                 // Unboxed here rather than kept as the typed object -- this
                 // loop rebuilds a differently-shaped $image array from
                 // $row's fields and separately passes the whole row to

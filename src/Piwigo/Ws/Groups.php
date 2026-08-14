@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 use LogicException;
 use Piwigo\Audit\AuditService;
@@ -21,8 +22,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupService;
 use Piwigo\Group\Projection\GroupListing;
@@ -39,6 +38,7 @@ final readonly class Groups
         private CurrentUser $currentUser,
         private AuditService $auditService,
         private CurrentConfig $currentConfig,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -59,7 +59,7 @@ final readonly class Groups
             return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter order');
         }
 
-        $groups = EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class)
+        $groups = $this->entityManager->getRepository(GroupEntity::class)
             ->findWithMemberCounts(
                 array_values(array_map(GroupId::from(...), $params['group_id'] ?? [])),
                 isset($params['name']) && $params['name'] !== '' ? $params['name'] : null,

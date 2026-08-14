@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
@@ -33,8 +34,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\User\WsUsersGetList;
 use Piwigo\Group\GroupService;
@@ -79,6 +78,7 @@ final readonly class Users
         private PreferencesService $preferencesService,
         private ConfigService $configService,
         private WsHelper $wsHelper,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -367,7 +367,7 @@ final readonly class Users
                     $users[$cur_user_id]['last_visit'] = $last_visit;
 
                     if (! SqlDialect::getBoolean($cur_user['last_visit_from_history']) and in_array($last_visit, [null, ''], true)) {
-                        $lastVisitLookup = EntityManagerFactory::build(DbConnection::build())->getRepository(HistoryEntity::class);
+                        $lastVisitLookup = $this->entityManager->getRepository(HistoryEntity::class);
                         $last_visit = $this->authService->getUserLastVisitFromHistory($cur_user_id, $lastVisitLookup, true);
                         $users[$cur_user_id]['last_visit'] = $last_visit;
                     }
@@ -901,8 +901,7 @@ final readonly class Users
             return new WsErrorResponse(403, 'You cannot perform this action');
         }
 
-        $conn = DbConnection::build();
-        $first_login = $this->authService->hasAlreadyLoggedIn($params['user_id'], EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
+        $first_login = $this->authService->hasAlreadyLoggedIn($params['user_id'], $this->entityManager->getRepository(ActivityEntity::class));
         $send_by_mail_response = null;
         $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : $this->userService->getDefaultLanguage();
         $lang_to_use = $first_login ? $this->userService->getDefaultLanguage() : $user_lost_language;

@@ -33,8 +33,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryDescription;
@@ -1208,7 +1206,7 @@ final readonly class Categories
             $this->urlService,
             $this->sessionService,
             $this->eventDispatcher,
-            new PermalinkRepository(EntityManagerFactory::build(DbConnection::build())),
+            new PermalinkRepository($this->entityManager),
             $params['photo_deletion_mode']
         );
         $categoryService->updateGlobalRank();

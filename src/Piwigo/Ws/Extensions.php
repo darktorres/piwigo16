@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\CoreUpdateService;
@@ -31,8 +32,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
@@ -67,6 +66,7 @@ final readonly class Extensions
         private EventDispatcher $eventDispatcher,
         private PluginRegistry $pluginRegistry,
         private ThemeRegistry $themeRegistry,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -92,7 +92,8 @@ final readonly class Extensions
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
         uasort($fs_plugins, $this->htmlRenderer->nameCompare(...));
-        $db_plugins_by_id = new ExtensionRepository(EntityManagerFactory::build(DbConnection::build()))->findAll(ExtensionType::Plugin);
+        $db_plugins_by_id = new ExtensionRepository($this->entityManager)
+            ->findAll(ExtensionType::Plugin);
         $plugin_list = [];
 
         foreach ($fs_plugins as $plugin_id => $fs_plugin) {
@@ -148,10 +149,9 @@ final readonly class Extensions
         // under src/Piwigo/).
 
         $urlService = $this->urlService;
-        $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
             $this->lang,
-            new ExtensionRepository(EntityManagerFactory::build($conn)),
+            new ExtensionRepository($this->entityManager),
             $this->pemCatalog,
             $urlService,
             $this->configService,
@@ -204,10 +204,9 @@ final readonly class Extensions
         // define('IN_ADMIN', true) here would equally be unnecessary.
 
         $urlService = $this->urlService;
-        $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
             $this->lang,
-            new ExtensionRepository(EntityManagerFactory::build($conn)),
+            new ExtensionRepository($this->entityManager),
             $this->pemCatalog,
             $urlService,
             $this->configService,
@@ -278,8 +277,7 @@ final readonly class Extensions
 
         $urlService = $this->urlService;
         $scanner = new ExtensionScanner();
-        $conn = DbConnection::build();
-        $repo = new ExtensionRepository(EntityManagerFactory::build($conn));
+        $repo = new ExtensionRepository($this->entityManager);
         $pemCatalog = $this->pemCatalog;
         $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry);
 

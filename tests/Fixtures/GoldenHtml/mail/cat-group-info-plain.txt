@@ -1,7 +1,6 @@
 Fixture Gallery
  Visit album Sample Album
 ----
-
 Hello,
 
 Discover album: Sample Album
@@ -10,8 +9,6 @@ index.php?/category/1
 A short note about this album.
 
 See you soon.
-
-
 ----
 Sent by "Fixture Gallery" http://vendor/bin/
 Powered by "Piwigo" https://upstream.example.invalid

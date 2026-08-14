@@ -15,6 +15,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Mail\MailService;
+use Piwigo\Mail\Projection\NbmMailContentPageContext;
 use Piwigo\Mail\Projection\NbmSubscribeActionMailContext;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -205,8 +206,26 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
             'A new comment is waiting for validation.',
         );
 
+        // Template::setFilename() (the old Smarty-era 2-arg
+        // handle-name-to-real-file registration) doesn't exist on this
+        // rewrite's own Template class at all -- parse() already takes a
+        // real file directly, matching MailService::
+        // resolveMailTemplateFilename()'s own "prefer .latte, fall back to
+        // .tpl" convention every other real caller here goes through.
         $mailTemplate = $this->mailer->getMailTemplate('text/html');
-        $mailTemplate->setFilename('notification_by_mail', 'notification_by_mail.tpl');
+        // Real production callers (NotificationByMailSender::
+        // doSubscribeUnsubscribeNotificationByMail()) always assign
+        // NbmMailContentPageContext (USERNAME/SEND_AS_NAME/etc.) before
+        // NbmSubscribeActionMailContext -- notification_by_mail.latte's
+        // own {$USERNAME} read needs the first context too, not just the
+        // second one this test originally assigned alone.
+        $mailTemplate->assignContext(new NbmMailContentPageContext(
+            username: 'Fixture Recipient',
+            sendAsName: 'Fixture Gallery',
+            unsubscribeLink: $this->rootUrl . 'nbm.php?unsubscribe=fixture-check-key',
+            subscribeLink: $this->rootUrl . 'nbm.php?subscribe=fixture-check-key',
+            contactEmail: 'fixture_admin@example.test',
+        ));
         $mailTemplate->assignContext(new NbmSubscribeActionMailContext(
             sectionActionBy: 'subscribe_by_himself',
             galleryTitle: 'Fixture Gallery',
@@ -220,7 +239,7 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
             [
                 'subject' => '[Fixture Gallery] Subscribe to notification by mail',
                 'email_format' => 'text/html',
-                'content' => $mailTemplate->parse('notification_by_mail', true),
+                'content' => $mailTemplate->parse('notification_by_mail.latte', true),
                 'content_format' => 'text/html',
             ]
         );

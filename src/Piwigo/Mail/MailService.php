@@ -860,193 +860,200 @@ final class MailService implements MailerInterface
         $this->urlService
             ->setMakeFullUrl();
 
-        if (! isset($args['from']) || self::emptyValue($args['from'])) {
-            $from = new EmailRecipient(
-                is_string($confMail['email_webmaster']) ? $confMail['email_webmaster'] : '',
-                is_string($confMail['name_webmaster']) ? $confMail['name_webmaster'] : ''
-            );
-        } else {
-            $from = $this->unformatEmail($args['from']);
-        }
-        $email->from(new Address($from->email, $from->name));
-        $replyToMail = $args['reply_to_mail_address'] ?? $from->email;
-        $replyToName = $args['reply_to_name'] ?? $from->name;
-        $email->replyTo(new Address($replyToMail, $replyToName));
-
-        // Subject.
-        if (! isset($args['subject']) || self::emptyValue($args['subject'])) {
-            $args['subject'] = 'Piwigo';
-        }
-        $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', $args['subject']));
-        $email->subject($args['subject']);
-
-        // Cc.
-        if (isset($args['Cc']) && ! self::emptyValue($args['Cc'])) {
-            foreach ($this->getCleanRecipientsList($args['Cc']) as $recipient) {
-                $email->addCc(new Address($recipient->email, $recipient->name));
+        try {
+            if (! isset($args['from']) || self::emptyValue($args['from'])) {
+                $from = new EmailRecipient(
+                    is_string($confMail['email_webmaster']) ? $confMail['email_webmaster'] : '',
+                    is_string($confMail['name_webmaster']) ? $confMail['name_webmaster'] : ''
+                );
+            } else {
+                $from = $this->unformatEmail($args['from']);
             }
-        }
+            $email->from(new Address($from->email, $from->name));
+            $replyToMail = $args['reply_to_mail_address'] ?? $from->email;
+            $replyToName = $args['reply_to_name'] ?? $from->name;
+            $email->replyTo(new Address($replyToMail, $replyToName));
 
-        // Bcc.
-        $bcc = $this->getCleanRecipientsList($args['Bcc'] ?? null);
-        if ($confMail['send_bcc_mail_webmaster'] === true) {
-            $bcc[] = new EmailRecipient($this->webmasterMailAddress(), '');
-        }
-        foreach ($bcc as $recipient) {
-            $email->addBcc(new Address($recipient->email, $recipient->name));
-        }
-
-        // Theme.
-        if (! isset($args['theme']) || self::emptyValue($args['theme']) || ! in_array($args['theme'], ['clear', 'dark'], true)) {
-            $args['theme'] = is_string($confMail['mail_theme']) ? $confMail['mail_theme'] : 'clear';
-        }
-
-        // Content.
-        if (! isset($args['content'])) {
-            $args['content'] = '';
-        }
-
-        // Try to decompose subject like "[....] ....".
-        if (! isset($args['mail_title']) && ! isset($args['mail_subtitle'])) {
-            if (preg_match('#^\[(.*)\](.*)$#', $args['subject'], $matches) === 1) {
-                $args['mail_title'] = $matches[1];
-                $args['mail_subtitle'] = $matches[2];
+            // Subject.
+            if (! isset($args['subject']) || self::emptyValue($args['subject'])) {
+                $args['subject'] = 'Piwigo';
             }
-        }
-        if (! isset($args['mail_title'])) {
-            $args['mail_title'] = $this->currentConfig->galleryTitle;
-        }
-        if (! isset($args['mail_subtitle'])) {
-            $args['mail_subtitle'] = $args['subject'];
-        }
+            $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', $args['subject']));
+            $email->subject($args['subject']);
 
-        // Content type.
-        if (! isset($args['content_format']) || self::emptyValue($args['content_format'])) {
-            $args['content_format'] = 'text/plain';
-        }
-
-        $contentTypeList = [];
-        if ($confMail['mail_allow_html'] === true && ($args['email_format'] ?? null) !== 'text/plain') {
-            $contentTypeList[] = 'text/html';
-        }
-        $contentTypeList[] = 'text/plain';
-
-        $langCode = $this->lang->langInfo()['code'] ?? null;
-        $langCode = is_string($langCode) ? $langCode : '';
-
-        $contents = [];
-        foreach ($contentTypeList as $contentType) {
-            // Key composed of indexes which allow caching mail data. Must
-            // include theme -- a real bug otherwise: the cache entry
-            // built below (css file selection at "mail-css-{theme}.tpl") depends on
-            // $args['theme'], but the key itself didn't, so two mail()
-            // calls in the same request sharing contentType/langCode/
-            // auth_key but using DIFFERENT themes would silently reuse the
-            // first call's CSS. Present identically in the legacy
-            // procedural functions_mail.inc.php and 16.x-rewrite's own
-            // MailService -- a genuine, long-standing bug carried forward
-            // across all 3 codebases, not a regression introduced here.
-            $cacheKey = $contentType . '-' . $langCode . '-' . $args['theme'];
-            if (isset($args['auth_key']) && ! self::emptyValue($args['auth_key'])) {
-                $cacheKey .= '-' . $args['auth_key'];
+            // Cc.
+            if (isset($args['Cc']) && ! self::emptyValue($args['Cc'])) {
+                foreach ($this->getCleanRecipientsList($args['Cc']) as $recipient) {
+                    $email->addCc(new Address($recipient->email, $recipient->name));
+                }
             }
 
-            if (! isset($this->templateCache[$cacheKey])) {
-                $template = $this->getMailTemplate($contentType);
-                $this->templateCache[$cacheKey] = [
-                    'theme' => $template,
-                ];
-                $this->eventDispatcher->dispatchNotify(new BeforeParseMailTemplate($cacheKey, $contentType));
+            // Bcc.
+            $bcc = $this->getCleanRecipientsList($args['Bcc'] ?? null);
+            if ($confMail['send_bcc_mail_webmaster'] === true) {
+                $bcc[] = new EmailRecipient($this->webmasterMailAddress(), '');
+            }
+            foreach ($bcc as $recipient) {
+                $email->addBcc(new Address($recipient->email, $recipient->name));
+            }
 
-                $addUrlParams = [];
+            // Theme.
+            if (! isset($args['theme']) || self::emptyValue($args['theme']) || ! in_array($args['theme'], ['clear', 'dark'], true)) {
+                $args['theme'] = is_string($confMail['mail_theme']) ? $confMail['mail_theme'] : 'clear';
+            }
+
+            // Content.
+            if (! isset($args['content'])) {
+                $args['content'] = '';
+            }
+
+            // Try to decompose subject like "[....] ....".
+            if (! isset($args['mail_title']) && ! isset($args['mail_subtitle'])) {
+                if (preg_match('#^\[(.*)\](.*)$#', $args['subject'], $matches) === 1) {
+                    $args['mail_title'] = $matches[1];
+                    $args['mail_subtitle'] = $matches[2];
+                }
+            }
+            if (! isset($args['mail_title'])) {
+                $args['mail_title'] = $this->currentConfig->galleryTitle;
+            }
+            if (! isset($args['mail_subtitle'])) {
+                $args['mail_subtitle'] = $args['subject'];
+            }
+
+            // Content type.
+            if (! isset($args['content_format']) || self::emptyValue($args['content_format'])) {
+                $args['content_format'] = 'text/plain';
+            }
+
+            $contentTypeList = [];
+            if ($confMail['mail_allow_html'] === true && ($args['email_format'] ?? null) !== 'text/plain') {
+                $contentTypeList[] = 'text/html';
+            }
+            $contentTypeList[] = 'text/plain';
+
+            $langCode = $this->lang->langInfo()['code'] ?? null;
+            $langCode = is_string($langCode) ? $langCode : '';
+
+            $contents = [];
+            foreach ($contentTypeList as $contentType) {
+                // Key composed of indexes which allow caching mail data. Must
+                // include theme -- a real bug otherwise: the cache entry
+                // built below (css file selection at "mail-css-{theme}.tpl") depends on
+                // $args['theme'], but the key itself didn't, so two mail()
+                // calls in the same request sharing contentType/langCode/
+                // auth_key but using DIFFERENT themes would silently reuse the
+                // first call's CSS. Present identically in the legacy
+                // procedural functions_mail.inc.php and 16.x-rewrite's own
+                // MailService -- a genuine, long-standing bug carried forward
+                // across all 3 codebases, not a regression introduced here.
+                $cacheKey = $contentType . '-' . $langCode . '-' . $args['theme'];
                 if (isset($args['auth_key']) && ! self::emptyValue($args['auth_key'])) {
-                    $addUrlParams['auth'] = $args['auth_key'];
+                    $cacheKey .= '-' . $args['auth_key'];
                 }
 
-                $galleryHomeUrl = $this->urlService
-                    ->getGalleryHomeUrl();
+                if (! isset($this->templateCache[$cacheKey])) {
+                    $template = $this->getMailTemplate($contentType);
+                    $this->templateCache[$cacheKey] = [
+                        'theme' => $template,
+                    ];
+                    $this->eventDispatcher->dispatchNotify(new BeforeParseMailTemplate($cacheKey, $contentType));
 
-                $template->assignContext(new MailHeaderPageContext(
-                    galleryUrl: $this->urlService
-                        ->addUrlParams($galleryHomeUrl, $addUrlParams),
-                    galleryTitle: $this->currentConfig->galleryTitle,
-                    version: $this->currentConfig->showVersion ? AppInfo::VERSION : '',
-                    phpwgUrl: AppInfo::URL,
-                    contentEncoding: 'utf-8',
-                    contactMail: is_string($confMail['email_webmaster']) ? $confMail['email_webmaster'] : '',
+                    $addUrlParams = [];
+                    if (isset($args['auth_key']) && ! self::emptyValue($args['auth_key'])) {
+                        $addUrlParams['auth'] = $args['auth_key'];
+                    }
+
+                    $galleryHomeUrl = $this->urlService
+                        ->getGalleryHomeUrl();
+
+                    $template->assignContext(new MailHeaderPageContext(
+                        galleryUrl: $this->urlService
+                            ->addUrlParams($galleryHomeUrl, $addUrlParams),
+                        galleryTitle: $this->currentConfig->galleryTitle,
+                        version: $this->currentConfig->showVersion ? AppInfo::VERSION : '',
+                        phpwgUrl: AppInfo::URL,
+                        contentEncoding: 'utf-8',
+                        contactMail: is_string($confMail['email_webmaster']) ? $confMail['email_webmaster'] : '',
+                    ));
+
+                    if ($contentType === 'text/html') {
+                        $globalMailCssFilename = $this->resolveMailTemplateFilename($template, 'global-mail-css');
+                        if ($globalMailCssFilename !== null) {
+                            $template->assignVarFromTemplate('GLOBAL_MAIL_CSS', $globalMailCssFilename);
+                        }
+
+                        $themeMailCssFilename = $this->resolveMailTemplateFilename($template, 'mail-css-' . $args['theme']);
+                        if ($themeMailCssFilename !== null) {
+                            $template->assignVarFromTemplate('MAIL_CSS', $themeMailCssFilename);
+                        }
+                    }
+                }
+
+                $template = $this->templateCache[$cacheKey]['theme'];
+                $template->assignContext(new MailTitlePageContext(
+                    mailTitle: $args['mail_title'],
+                    mailSubtitle: $args['mail_subtitle'],
                 ));
 
-                if ($contentType === 'text/html') {
-                    $globalMailCssFilename = $this->resolveMailTemplateFilename($template, 'global-mail-css');
-                    if ($globalMailCssFilename !== null) {
-                        $template->assignVarFromTemplate('GLOBAL_MAIL_CSS', $globalMailCssFilename);
-                    }
+                // Header.
+                $contents[$contentType] = $template->parse('header.latte', true);
 
-                    $themeMailCssFilename = $this->resolveMailTemplateFilename($template, 'mail-css-' . $args['theme']);
-                    if ($themeMailCssFilename !== null) {
-                        $template->assignVarFromTemplate('MAIL_CSS', $themeMailCssFilename);
-                    }
+                // Content -- stored in a temp variable; if a content template is
+                // used it's assigned to CONTENT, otherwise appended to the mail.
+                $contentInput = $args['content'];
+
+                if ($args['content_format'] === 'text/plain' && $contentType === 'text/html') {
+                    // Convert plain text to HTML.
+                    $mailContent =
+                        '<p>' .
+                        nl2br(
+                            (string) preg_replace(
+                                '/(https?:\/\/([-\w\.]+[-\w])+(:\d+)?(\/([\w\/_\.\#-]*(\?\S+)?[^\.\s])?)?)/i',
+                                '<a href="$1">$1</a>',
+                                htmlspecialchars($contentInput)
+                            )
+                        ) .
+                        '</p>';
+                } elseif ($args['content_format'] === 'text/html' && $contentType === 'text/plain') {
+                    // Convert HTML text to plain text.
+                    $mailContent = strip_tags($contentInput);
+                } else {
+                    $mailContent = $contentInput;
                 }
-            }
 
-            $template = $this->templateCache[$cacheKey]['theme'];
-            $template->assignContext(new MailTitlePageContext(
-                mailTitle: $args['mail_title'],
-                mailSubtitle: $args['mail_subtitle'],
-            ));
-
-            // Header.
-            $contents[$contentType] = $template->parse('header.latte', true);
-
-            // Content -- stored in a temp variable; if a content template is
-            // used it's assigned to CONTENT, otherwise appended to the mail.
-            $contentInput = $args['content'];
-
-            if ($args['content_format'] === 'text/plain' && $contentType === 'text/html') {
-                // Convert plain text to HTML.
-                $mailContent =
-                    '<p>' .
-                    nl2br(
-                        (string) preg_replace(
-                            '/(https?:\/\/([-\w\.]+[-\w])+(:\d+)?(\/([\w\/_\.\#-]*(\?\S+)?[^\.\s])?)?)/i',
-                            '<a href="$1">$1</a>',
-                            htmlspecialchars($contentInput)
-                        )
-                    ) .
-                    '</p>';
-            } elseif ($args['content_format'] === 'text/html' && $contentType === 'text/plain') {
-                // Convert HTML text to plain text.
-                $mailContent = strip_tags($contentInput);
-            } else {
-                $mailContent = $contentInput;
-            }
-
-            // Runtime template.
-            if (isset($tpl['filename'])) {
-                if (isset($tpl['dirname'])) {
-                    $template->setTemplateDir($tpl['dirname'] . '/' . $contentType);
-                }
-                $runtimeTemplateFilename = $this->resolveMailTemplateFilename($template, $tpl['filename']);
-                if ($runtimeTemplateFilename !== null) {
-                    $template->assignContext(new MailRuntimeTemplatePageContext(
-                        extra: (isset($tpl['assign']) && ! self::emptyValue($tpl['assign'])) ? $tpl['assign'] : [],
-                        content: $mailContent,
-                    ));
-                    $contents[$contentType] .= $template->parse($runtimeTemplateFilename, true);
+                // Runtime template.
+                if (isset($tpl['filename'])) {
+                    if (isset($tpl['dirname'])) {
+                        $template->setTemplateDir($tpl['dirname'] . '/' . $contentType);
+                    }
+                    $runtimeTemplateFilename = $this->resolveMailTemplateFilename($template, $tpl['filename']);
+                    if ($runtimeTemplateFilename !== null) {
+                        $template->assignContext(new MailRuntimeTemplatePageContext(
+                            extra: (isset($tpl['assign']) && ! self::emptyValue($tpl['assign'])) ? $tpl['assign'] : [],
+                            content: $mailContent,
+                        ));
+                        $contents[$contentType] .= $template->parse($runtimeTemplateFilename, true);
+                    } else {
+                        $contents[$contentType] .= $mailContent;
+                    }
                 } else {
                     $contents[$contentType] .= $mailContent;
                 }
-            } else {
-                $contents[$contentType] .= $mailContent;
+
+                // Footer.
+                $contents[$contentType] .= $template->parse('footer.latte', true);
             }
-
-            // Footer.
-            $contents[$contentType] .= $template->parse('footer.latte', true);
+        } finally {
+            // Undo compute-root_path -- always, even if an exception was
+            // thrown above: RootPathOverride is a container-shared,
+            // ref-counted push/pop stack (Url\RootPathOverride), so a
+            // skipped pop here would leak a stuck push into every
+            // later getRootUrl()/getAbsoluteRootUrl() call for the rest
+            // of the process, not just this one.
+            $this->urlService
+                ->unsetMakeFullUrl();
         }
-
-        // Undo compute-root_path.
-        $this->urlService
-            ->unsetMakeFullUrl();
 
         // Send content. 'text/plain' is always present in $contents
         // (unconditionally in $contentTypeList above); 'text/html' is
@@ -1197,18 +1204,20 @@ final class MailService implements MailerInterface
         $this->urlService
             ->setMakeFullUrl();
 
-        $message = '<p style="margin: 20px 0">';
-        $message .= $this->lang->t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
-        $message .= '<p style="margin: 20px 0">' . $this->lang->t('To reset your password, visit the following address:');
-        $message .= ' <a href="' . $passwordLink . '">' . $this->lang->t('Change my password') . '</a></p>';
-        $message .= '<p style="text-align: center; font-size: 70%;">' . $passwordLink . '</p>';
-        $message .= '<p style="margin: 20px 0;">';
-        $message .= $this->lang->t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
-        $message .= ' ';
-        $message .= $this->lang->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
-
-        $this->urlService
-            ->unsetMakeFullUrl();
+        try {
+            $message = '<p style="margin: 20px 0">';
+            $message .= $this->lang->t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
+            $message .= '<p style="margin: 20px 0">' . $this->lang->t('To reset your password, visit the following address:');
+            $message .= ' <a href="' . $passwordLink . '">' . $this->lang->t('Change my password') . '</a></p>';
+            $message .= '<p style="text-align: center; font-size: 70%;">' . $passwordLink . '</p>';
+            $message .= '<p style="margin: 20px 0;">';
+            $message .= $this->lang->t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
+            $message .= ' ';
+            $message .= $this->lang->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        } finally {
+            $this->urlService
+                ->unsetMakeFullUrl();
+        }
 
         $message = $this->eventDispatcher->dispatchChange(new RenderLostPasswordMailContent($message))
             ->message;
@@ -1228,18 +1237,20 @@ final class MailService implements MailerInterface
         $this->urlService
             ->setMakeFullUrl();
 
-        $message = '<p style="margin: 20px 0">';
-        $message .= $this->lang->t('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
-        $message .= '<p style="margin: 20px 0">' . $this->lang->t('To set your password, visit the following address:');
-        $message .= ' <a href="' . $setPasswordLink . '">' . $this->lang->t('Activate') . '</a></p>';
-        $message .= '<p style="text-align: center; font-size: 70%; margin: 20px 0;">' . $setPasswordLink . '</p>';
-        $message .= '<p style="margin: 20px 0;">';
-        $message .= $this->lang->t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
-        $message .= ' ';
-        $message .= $this->lang->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
-
-        $this->urlService
-            ->unsetMakeFullUrl();
+        try {
+            $message = '<p style="margin: 20px 0">';
+            $message .= $this->lang->t('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
+            $message .= '<p style="margin: 20px 0">' . $this->lang->t('To set your password, visit the following address:');
+            $message .= ' <a href="' . $setPasswordLink . '">' . $this->lang->t('Activate') . '</a></p>';
+            $message .= '<p style="text-align: center; font-size: 70%; margin: 20px 0;">' . $setPasswordLink . '</p>';
+            $message .= '<p style="margin: 20px 0;">';
+            $message .= $this->lang->t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
+            $message .= ' ';
+            $message .= $this->lang->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        } finally {
+            $this->urlService
+                ->unsetMakeFullUrl();
+        }
 
         $message = $this->eventDispatcher->dispatchChange(new RenderLostPasswordMailContent($message))
             ->message;
@@ -1258,13 +1269,16 @@ final class MailService implements MailerInterface
     {
         $this->urlService
             ->setMakeFullUrl();
-        $message = '<p style="margin: 20px 0">';
-        $message .= $this->lang->t('Here is your verification code:') . ' <br />';
-        $message .= '<span style="font-size: 16px">' . $code . '</span></p>';
-        $message .= '<p style="margin: 20px 0;">';
-        $message .= $this->lang->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
-        $this->urlService
-            ->unsetMakeFullUrl();
+        try {
+            $message = '<p style="margin: 20px 0">';
+            $message .= $this->lang->t('Here is your verification code:') . ' <br />';
+            $message .= '<span style="font-size: 16px">' . $code . '</span></p>';
+            $message .= '<p style="margin: 20px 0;">';
+            $message .= $this->lang->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        } finally {
+            $this->urlService
+                ->unsetMakeFullUrl();
+        }
 
         $galleryTitle = $this->currentConfig->galleryTitle;
 
@@ -1282,26 +1296,29 @@ final class MailService implements MailerInterface
     {
         $this->urlService
             ->setMakeFullUrl();
-        $profileUrl = $this->urlService
-            ->getRootUrl() . 'profile.php';
+        try {
+            $profileUrl = $this->urlService
+                ->getRootUrl() . 'profile.php';
 
-        $message = '<p style="margin-top: 20px;">' . $this->lang->t('Hello %s,', $username) . '</p>';
-        $message .= '<p style="margin-bottom: 20px;">' . $this->lang->t('Your password was successfully reset') . '.</p>';
-        $message .= '<p>';
-        $message .= $this->lang->t('If this wasn\'t you, please change your password immediately or contact your webmaster.');
-        $message .= '</p>';
-
-        if ($nbOfApikeys > 0) {
-            $message .= '<p style="margin: 20px 0;">';
-            $message .= $this->lang->t(
-                'If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.',
-                $nbOfApikeys,
-                $profileUrl
-            );
+            $message = '<p style="margin-top: 20px;">' . $this->lang->t('Hello %s,', $username) . '</p>';
+            $message .= '<p style="margin-bottom: 20px;">' . $this->lang->t('Your password was successfully reset') . '.</p>';
+            $message .= '<p>';
+            $message .= $this->lang->t('If this wasn\'t you, please change your password immediately or contact your webmaster.');
             $message .= '</p>';
+
+            if ($nbOfApikeys > 0) {
+                $message .= '<p style="margin: 20px 0;">';
+                $message .= $this->lang->t(
+                    'If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.',
+                    $nbOfApikeys,
+                    $profileUrl
+                );
+                $message .= '</p>';
+            }
+        } finally {
+            $this->urlService
+                ->unsetMakeFullUrl();
         }
-        $this->urlService
-            ->unsetMakeFullUrl();
 
         $galleryTitle = $this->currentConfig->galleryTitle;
 

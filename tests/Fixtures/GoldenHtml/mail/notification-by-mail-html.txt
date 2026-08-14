@@ -13,14 +13,15 @@
 
         <table id="contentTable" cellspacing="0" cellpadding="0" border="0" style="width: 600px;">
           <tr><td id="header" style="padding: 20px; background: #eee; background-image: radial-gradient(ellipse at center,#fefefe,#e5e5e5); border-top: 4px solid #f70; text-align: center; text-shadow: 1px 1px 0px #fff;">
-                        <div id="title" style="font-size: 26px; font-weight: bold;">Fixture Gallery</div>
-            <div id="subtitle" style="font-size: 20px; color: #e06900;"> Subscribe to notification by mail</div>                      </td></tr>
+            <div id="title" style="font-size: 26px; font-weight: bold;">Fixture Gallery</div>
+            <div id="subtitle" style="font-size: 20px; color: #e06900;"> Subscribe to notification by mail</div>
+          </td></tr>
 
           <tr><td id="content" style="padding: 0 20px 20px 20px; font-family: &quot;Verdana&quot;,&quot;Helvetica&quot;,&quot;Optima&quot;,sans-serif; font-size: 13px; background: #fefefe; border-width: 1px; border-style: solid; border-color: #ddd #eee; box-shadow: inset 0 0 20px #eee;">
             <div id="topSpacer" style="margin-bottom: 20px;"></div>
             <div id="nbm_message">
 <h2 style="margin: .5em 0 .25em 0; font-size: 20px;">Notification</h2>
-<p style="margin: .25em 0 .5em 0;">Hello ,</p>
+<p style="margin: .25em 0 .5em 0;">Hello Fixture Recipient,</p>
 
 <p style="margin: .25em 0 .5em 0;">You have subscribed to receiving notifications by mail.</p>
 
@@ -28,25 +29,25 @@
 
 <p style="margin: .25em 0 .5em 0;">Go to <a href="" style="color: #f70; text-decoration: none;">Fixture Gallery</a>.</p>
 <p style="margin: .25em 0 .5em 0;">See you soon,</p>
-<p style="margin: .25em 0 .5em 0; text-align: center;"></p>
+<p style="margin: .25em 0 .5em 0; text-align: center;">Fixture Gallery</p>
 <hr style="border-width: 0 0 1px 0; border-color: #ddd; border-style: solid; margin: 1em;">
 <p style="margin: .25em 0 .5em 0;">
-To unsubscribe, click on <a href="" style="color: #f70; text-decoration: none;"></a><br>
-To subscribe, click on <a href="" style="color: #f70; text-decoration: none;"></a><br>
-If you encounter problems or have any question, please send a message to <a href="mailto:?subject=[NBM]%20Problems%20or%20questions" style="color: #f70; text-decoration: none;"></a><br>
+To unsubscribe, click on <a href="nbm.php?unsubscribe=fixture-check-key" style="color: #f70; text-decoration: none;">nbm.php?unsubscribe=fixture-check-key</a><br>
+To subscribe, click on <a href="nbm.php?subscribe=fixture-check-key" style="color: #f70; text-decoration: none;">nbm.php?subscribe=fixture-check-key</a><br>
+If you encounter problems or have any question, please send a message to <a href="mailto:fixture_admin@example.test?subject=[NBM]%20Problems%20or%20questions" style="color: #f70; text-decoration: none;">fixture_admin@example.test</a><br>
 </p>
 <hr style="border-width: 0 0 1px 0; border-color: #ddd; border-style: solid; margin: 1em;">
 </div>
-                      </td></tr>
+          </td></tr>
 
           <tr><td id="footer" style="font-size: 10px; padding: 5px; background: #eee; border-bottom: 2px solid #f70;">
-                  
             Sent by <a href="http://vendor/bin/" style="color: #f70; text-decoration: none;">Fixture Gallery</a>
             - Powered by <a href="https://upstream.example.invalid" class="Piwigo" style="color: #f70; text-decoration: none;">Piwigo</a>
-                        
+            
+
             - Contact
             <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site" style="color: #f70; text-decoration: none;">Webmaster</a>
-                      </td></tr>
+          </td></tr>
         </table>
 
       </td></tr>

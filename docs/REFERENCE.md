@@ -31,7 +31,7 @@ directory on disk yet.
 | Layer | Namespaces |
 | --- | --- |
 | **L4 Integration** | `Admin` (+ `Admin\Image`, `Admin\Integrity`), `Bootstrap`, `Command`, `Controller`, `Job`, `Ws` (+ `Ws\Encoder`, `Ws\Protocol`); `Listener\UploadFormatListener` is carved out of the general `Listener\*` L3 match (below) into this layer instead — see "Plugin/theme contract surface" below |
-| **L3 Presentation** | `Html`, `Http` (+ `Http\Middleware`), `Mail`, `Menu`, `Page`, `Picture`, `Routing`, `Template`, `Listener\*` (except `UploadFormatListener`, above), `PluginConfig\{ExtensionInterface,ExtensionContext,ExtensionContextFactory,ExtensionSession,PluginManifest,ThemeManifest,PluginRegistry,ThemeRegistry,PluginValidationException,PluginDependencyException,ThemeValidationException,ThemeDependencyException}`, `PluginConfig\Facade\*`; reserves `Asset` (not a directory yet, same as L0Data's `Exception` reservation) |
+| **L3 Presentation** | `Html`, `Http` (+ `Http\Middleware`), `Mail`, `Menu`, `Page`, `Picture`, `Routing`, `Template`, `Listener\*` (except `UploadFormatListener`, above), `PluginConfig\{ExtensionInterface,ExtensionContext,ExtensionContextFactory,ExtensionSession,PluginManifest,ThemeManifest,PluginRegistry,ThemeRegistry,PluginValidationException,PluginDependencyException,ThemeValidationException,ThemeDependencyException,SettingsPageInterface,CurrentPluginRegistry}`, `PluginConfig\Facade\*`; reserves `Asset` (not a directory yet, same as L0Data's `Exception` reservation) |
 | **L2b Extended Domain** | `Activity`, `Caddie`, `Calendar`, `Comment`, `Csrf`, `Feed`, `Filter`, `History`, `Metadata`, `Notification`, `Permalink`, `PluginConfig\{PluginRepository,PluginEntity,Projection\Plugin,PluginMigrationEntity,PluginMigrationRepository}`, `Rate`, `Search`, `Section`, `Site`, `Telemetry`, `Url` |
 | **L2a Core Domain** | `Auth`, `Category`, `Group`, `Image`, `Permission`, `Tag`, `Users` |
 | **L1 Infrastructure** | `Audit`, `Backup`, `Cache`, `Config`, `Core`, `Db`, `Lang`, `PluginConfig\EventDispatcher` (+ `EventHandler`), `Session`, `Storage`, `Validation` |
@@ -248,16 +248,54 @@ itself mutates — full read/write, not a narrow facade),
 `languages()`, `url()`, `redirect()`, `isAdminContext()`, a per-plugin
 namespaced `session()` store (`PluginConfig\ExtensionSession`, backed by
 `Session\SessionService::getSessionVar()`), `dispatchNotify()`/
-`dispatchChange()`, and `images()` (`PluginConfig\Facade\
-ImageReadFacade` — a narrow, purpose-built read facade; no raw SQL
-access exists on `ExtensionContext` at all). `template()`/`currentUser()`
-carry a real timing constraint: `bootActive()` runs early in
-`RequestBootstrap::connect()`, before `UserBootstrap::initialize()`
-resolves the real logged-in user and long before `Template` is
-constructed in `finalize()` — calling `template()` from `boot()` throws
-a guarded exception naming `boot()` as the cause; user-dependent logic
-belongs in a `subscribedEvents()` handler for a later lifecycle event
-instead.
+`dispatchChange()`, `getSetting()`/`setSetting()`/`deleteSetting()`
+(arbitrary-key config persistence via `ConfigService`), `mail()`
+(wraps `Mail\MailService::mail()`, the same entry point every core
+caller already funnels through), `images()`/`users()`/`themes()`
+(`PluginConfig\Facade\{ImageReadFacade,UserReadFacade,ThemeReadFacade}`
+— narrow, purpose-built read facades; no raw SQL access exists on
+`ExtensionContext` at all), `checkCsrfOrFail()`/`checkCsrf()`/
+`csrfToken()` (wraps `Csrf\CsrfService`), and `isWebmaster()` (wraps
+`Auth\AccessControl::isWebmaster()`, the same service every other admin
+controller's own webmaster gate already uses). `template()`/
+`currentUser()` carry a real timing constraint: `bootActive()` runs
+early in `RequestBootstrap::connect()`, before `UserBootstrap::
+initialize()` resolves the real logged-in user and long before
+`Template` is constructed in `finalize()` — calling `template()` from
+`boot()` throws a guarded exception naming `boot()` as the cause;
+user-dependent logic belongs in a `subscribedEvents()` handler for a
+later lifecycle event instead.
+
+**Settings pages (P27.15).** A plugin/theme whose manifest declares
+`hasSettings` (`true` or `'webmaster'`) implements `PluginConfig\
+SettingsPageInterface` (`handleSettingsRequest(ServerRequestInterface
+$request): void`) alongside `ExtensionInterface` on the same `main`
+class. `PluginRegistry::install()`/`activate()` and `ThemeRegistry`'s
+equivalents validate this contract at manifest-declaration time — a
+`hasSettings` manifest whose class doesn't implement the interface
+throws `PluginValidationException`/`ThemeValidationException` there,
+not confusingly deep inside the controller the first time an admin
+opens that page. `Controller\Admin\PluginSubController`/
+`ThemeSubController` (page slugs `plugin`/`theme`) dispatch to it
+directly — no `include_once` of a plugin/theme file exists anywhere in
+either controller. For plugins, the dispatched instance is the same
+one `PluginRegistry::bootActive()` already booted this request
+(`getBootedInstance()`, reached via `PluginConfig\
+CurrentPluginRegistry`, a container-shared holder shaped like `Config\
+CurrentConfigService` — needed because `PluginSubController` itself
+resolves fresh via the DI container, a different construction path
+than `RequestBootstrap`'s own manually-`Connection`-scoped
+`PluginRegistry`). Themes have no equivalent "already active" boot to
+reuse — an admin can open *any* installed theme's settings page, not
+just the live site's current one — so `ThemeRegistry::
+bootForSettingsPage()` does a page-scoped, throwaway `boot()` instead,
+outside `bootCurrent()`'s own cache and without registering
+`subscribedEvents()` against the live dispatcher. A settings page
+renders through the same real mechanism `Controller\Admin\
+ConfigurationSubController` already uses —
+`ExtensionContext::template()->assignContext(...)`/
+`assignVarFromTemplate('ADMIN_CONTENT', <absolute path>)` — no new
+`Template` capability was needed.
 
 The legacy PEM wire protocol (`piwigo.org/ext`'s `serialize()`-encoded,
 3-endpoint API) isn't used by this fork's own extension catalog.

@@ -29,7 +29,7 @@
           </td></tr>
 
           <tr><td id="footer" style="font-size: 10px; padding: 5px; background: #eee; border-bottom: 2px solid #f70;">
-            Sent by <a href="http://vendor/bin/" style="color: #f70; text-decoration: none;">Fixture Gallery</a>
+            Sent by <a href="{{ABSOLUTE_ROOT_URL}}" style="color: #f70; text-decoration: none;">Fixture Gallery</a>
             - Powered by <a href="https://upstream.example.invalid" class="Piwigo" style="color: #f70; text-decoration: none;">Piwigo</a>
             
 

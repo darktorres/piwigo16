@@ -79,11 +79,31 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
 
     private string $rootUrl;
 
+    private string $absoluteRootUrl;
+
+    private ?string $previousHttpHost = null;
+
     #[Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->setUpConnectionFromEnv();
+
+        // MailService::mail() computes GALLERY_URL via
+        // UrlService::getAbsoluteRootUrl(), which reads the live
+        // $_SERVER['HTTP_HOST'] -- absent in a CLI/Pest process, and (per
+        // ExtensionLifecycleTest's own docblock on the same quirk)
+        // sometimes left over from whichever earlier Integration test file
+        // happened to run first in this shared process (e.g.
+        // InstallWizardTest sets it to 'example.test' and never restores
+        // it). Left unpinned, this golden snapshot's GALLERY_URL link would
+        // vary by test run order/worker instead of reflecting real
+        // application output -- pin it here the same way
+        // ExtensionLifecycleTest already does for its own, different
+        // reason.
+        $previousHttpHost = $_SERVER['HTTP_HOST'] ?? null;
+        $this->previousHttpHost = is_string($previousHttpHost) ? $previousHttpHost : null;
+        $_SERVER['HTTP_HOST'] = 'mail-golden-html-test.invalid';
 
         if (! self::$fixtureReady) {
             $this->resetDatabase();
@@ -108,11 +128,29 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
         $urlService = Kernel::container()->get(UrlServiceInterface::class);
         self::assertInstanceOf(UrlServiceInterface::class, $urlService);
         $this->rootUrl = $urlService->getRootUrl();
+
+        // getAbsoluteRootUrl() also folds in Auth\CookieService::cookiePath(),
+        // which falls back to dirname($_SERVER['SCRIPT_NAME']) with no
+        // REDIRECT_SCRIPT_NAME/REDIRECT_URL present (true for a CLI/Pest
+        // process) -- pinning HTTP_HOST above doesn't make this half
+        // deterministic across different invocation styles (composer
+        // script vs. direct `vendor/bin/pest` vs. an absolute path). Same
+        // fix as $rootUrl below: capture it once here (same $_SERVER state
+        // MailService::mail()'s own internal getAbsoluteRootUrl() call
+        // will see) and normalize it out of the golden comparison instead
+        // of trying to force it to a fixed value.
+        $this->absoluteRootUrl = $urlService->getAbsoluteRootUrl();
     }
 
     #[Override]
     protected function tearDown(): void
     {
+        if ($this->previousHttpHost === null) {
+            unset($_SERVER['HTTP_HOST']);
+        } else {
+            $_SERVER['HTTP_HOST'] = $this->previousHttpHost;
+        }
+
         Kernel::reset();
         parent::tearDown();
     }
@@ -280,13 +318,14 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
      * the Browser test file directly: this suite's convention (see
      * ApiKeyServiceLifecycleTest.php et al.) is plain PHPUnit assertions,
      * not Pest's expect() the Browser helper is built on, and mail content
-     * needs a different (much smaller) normalization set -- just the root
-     * URL, known here directly rather than detected from anchor tags the
-     * way the HTML normalizer has to.
+     * needs a different (much smaller) normalization set -- the relative
+     * and absolute root URLs, both known here directly rather than
+     * detected from anchor tags the way the HTML normalizer has to.
      */
     private function assertMailGolden(string $name, string $body): void
     {
-        $normalized = str_replace($this->rootUrl, '{{ROOT_URL}}', $body);
+        $normalized = str_replace($this->absoluteRootUrl, '{{ABSOLUTE_ROOT_URL}}', $body);
+        $normalized = str_replace($this->rootUrl, '{{ROOT_URL}}', $normalized);
 
         $dir = $this->mailGoldenDir();
         $path = $dir . '/' . $name . '.txt';

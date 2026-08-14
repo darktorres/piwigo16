@@ -21,6 +21,6 @@ If you encounter problems or have any question, please send a message to fixture
 
 
 ----
-Sent by "Fixture Gallery" http://vendor/bin/
+Sent by "Fixture Gallery" {{ABSOLUTE_ROOT_URL}}
 Powered by "Piwigo" https://upstream.example.invalid
 Contact: fixture_admin@example.test

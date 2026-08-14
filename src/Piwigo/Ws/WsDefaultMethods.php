@@ -17,6 +17,9 @@ use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Ws\Comments\DeleteHandler;
+use Piwigo\Ws\Comments\GetListHandler;
+use Piwigo\Ws\Comments\ValidateHandler;
 use Piwigo\Ws\Event\WsAddMethods;
 
 final readonly class WsDefaultMethods
@@ -25,12 +28,15 @@ final readonly class WsDefaultMethods
     // property; the property list here and the instance-method callbacks
     // registered below must stay in sync -- register() calls these as real
     // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
-    // ClassName::method() calls.
+    // ClassName::method() calls. `pwg.userComments.*` (Comments.php,
+    // Group 19's first migrated domain) no longer has a callback-based
+    // registration or a constructor property here -- its 3 methods
+    // register via MethodDefinition/handlerClass instead, resolved from
+    // the container at invocation time.
     public function __construct(
         private Categories $pwgCategories,
         private Core $pwgCore,
         private Permissions $pwgPermissions,
-        private Comments $pwgComments,
         private Extensions $pwgExtensions,
         private Groups $pwgGroups,
         private Tags $pwgTags,
@@ -2287,80 +2293,48 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.userComments.getList',
-            $this->pwgComments->getList(...),
-            [
-                'status' => [
-                    'default' => 'all',
-                    'info' => 'must be: all, validated or pending',
-                ],
-                'search' => [
-                    'default' => null,
-                    'info' => 'All other parameters are not used during a search.',
-                ],
-                'author_id' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::ID,
-                ],
-                'image_id' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'type' => WsParamType::ID,
-                ],
-                'f_min_date' => [
-                    'default' => null,
-                ],
-                'f_max_date' => [
-                    'default' => null,
-                ],
-                'page' => [
-                    'default' => 0,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'per_page' => [
-                    'default' => $this->currentConfig->commentsPageNbComments,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
+        // pwg.userComments.* (Group 19's first migrated domain) registers
+        // via MethodDefinition/handlerClass -- Comments.php is gone, each
+        // method is its own container-resolved WsAction.
+        $service->register(new MethodDefinition(
+            name: 'pwg.userComments.getList',
+            handlerClass: GetListHandler::class,
+            description: 'Get comments',
+            params: [
+                ParamDefinition::optional('status', 'all', info: 'must be: all, validated or pending'),
+                ParamDefinition::optional('search', info: 'All other parameters are not used during a search.'),
+                ParamDefinition::optionalFlag('author_id', WsParamType::ID),
+                ParamDefinition::optionalFlag('image_id', WsParamType::ID),
+                ParamDefinition::optional('f_min_date'),
+                ParamDefinition::optional('f_max_date'),
+                ParamDefinition::optional('page', 0, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('per_page', $this->currentConfig->commentsPageNbComments, WsParamType::INT | WsParamType::POSITIVE),
             ],
-            'Get comments',
-            options: [
-                'admin_only' => true,
-                'post_only' => false,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.userComments.delete',
-            $this->pwgComments->delete(...),
-            [
-                'comment_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.userComments.delete',
+            handlerClass: DeleteHandler::class,
+            description: 'Delete comments',
+            params: [
+                ParamDefinition::required('comment_id', WsParamType::INT | WsParamType::POSITIVE, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Delete comments',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.userComments.validate',
-            $this->pwgComments->validate(...),
-            [
-                'comment_id' => [
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.userComments.validate',
+            handlerClass: ValidateHandler::class,
+            description: 'Validate comments',
+            params: [
+                ParamDefinition::required('comment_id', WsParamType::INT | WsParamType::POSITIVE, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Validate comments',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
     }
 }

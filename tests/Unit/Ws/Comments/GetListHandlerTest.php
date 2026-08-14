@@ -18,45 +18,39 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\Comments;
+use Piwigo\Ws\Comments\GetListHandler;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
- * Piwigo\Ws\Comments -- the `pwg.userComments.*` WS methods (3
- * registrations, all admin_only). Resolved via
- * `Kernel::container()->get()` (same rationale as
- * `UpdatesSubControllerTest.php`) since `CommentService` alone has 11
- * further constructor deps none of the branches under test ever touch.
- * No dedicated Integration/Browser spec of its own.
+ * Piwigo\Ws\Comments\GetListHandler -- `pwg.userComments.getList`
+ * (admin_only). Resolved via `Kernel::container()->get()` (same
+ * rationale as `UpdatesSubControllerTest.php`) since `CommentService`
+ * alone has 11 further constructor deps none of the branches under test
+ * ever touch. No dedicated Integration/Browser spec of its own.
  *
- * `getList()` covers its own 4 pure/config-driven validation guards, all
- * of which return before `commentService` is ever called: comments
- * disabled, an out-of-allowlist `status`, an out-of-allowlist
- * `per_page`, and an unparsable `f_min_date`/`f_max_date`. The real
- * comment listing needs real comment/image rows and is not attempted
- * here.
- *
- * `delete()`/`validate()` both cover their CSRF-token-mismatch 403
- * guard, same established pattern as `PermissionsTest.php`.
+ * Covers its own 4 pure/config-driven validation guards, all of which
+ * return before `commentService` is ever called: comments disabled, an
+ * out-of-allowlist `status`, an out-of-allowlist `per_page`, and an
+ * unparsable `f_min_date`/`f_max_date`. The real comment listing needs
+ * real comment/image rows and is not attempted here.
  */
-function pwgCommentsTestSubject(): Comments
+function pwgGetListHandlerTestSubject(): GetListHandler
 {
-    $ws = Kernel::container()->get(Comments::class);
-    if (! $ws instanceof Comments) {
-        throw new LogicException('Container returned an unexpected type for ' . Comments::class);
+    $handler = Kernel::container()->get(GetListHandler::class);
+    if (! $handler instanceof GetListHandler) {
+        throw new LogicException('Container returned an unexpected type for ' . GetListHandler::class);
     }
 
-    return $ws;
+    return $handler;
 }
 
 /**
- * None of the branches under test here ever reach `$service->invoke()`
- * -- a bare, unregistered Server only needs to satisfy the by-ref
- * type, same rationale as `PermissionsTest.php`'s own
- * pwgPermissionsTestServer() helper.
+ * This handler never reaches `$service->invoke()` -- a bare,
+ * unregistered Server only needs to satisfy the type, same rationale as
+ * PermissionsTest.php's own pwgPermissionsTestServer() helper.
  */
-function pwgCommentsTestServer(): Server
+function pwgGetListHandlerTestServer(): Server
 {
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
@@ -81,7 +75,7 @@ function pwgCommentsTestServer(): Server
 /**
  * @return array{status: string, search: string|null, f_min_date: string|null, f_max_date: string|null, page: int, per_page: int}
  */
-function pwgCommentsTestBaseParams(): array
+function pwgGetListHandlerTestBaseParams(): array
 {
     return [
         'status' => 'all',
@@ -102,12 +96,12 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-test('getList returns a 403 WsErrorResponse when comments are disabled', function (): void {
+test('returns a 403 WsErrorResponse when comments are disabled', function (): void {
     CurrentConfigTestFactory::get()->activateComments = false;
-    $ws = pwgCommentsTestSubject();
-    $server = pwgCommentsTestServer();
+    $handler = pwgGetListHandlerTestSubject();
+    $server = pwgGetListHandlerTestServer();
 
-    $result = $ws->getList(pwgCommentsTestBaseParams(), $server);
+    $result = $handler(pwgGetListHandlerTestBaseParams(), $server);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);
@@ -119,13 +113,13 @@ test('getList returns a 403 WsErrorResponse when comments are disabled', functio
     }
 });
 
-test('getList returns a 401 WsErrorResponse for a status outside the allowlist', function (): void {
+test('returns a 401 WsErrorResponse for a status outside the allowlist', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
-    $ws = pwgCommentsTestSubject();
-    $server = pwgCommentsTestServer();
+    $handler = pwgGetListHandlerTestSubject();
+    $server = pwgGetListHandlerTestServer();
 
-    $result = $ws->getList([
-        ...pwgCommentsTestBaseParams(),
+    $result = $handler([
+        ...pwgGetListHandlerTestBaseParams(),
         'status' => 'not-a-real-status',
     ], $server);
 
@@ -139,13 +133,13 @@ test('getList returns a 401 WsErrorResponse for a status outside the allowlist',
     }
 });
 
-test('getList returns a 401 WsErrorResponse for a per_page outside the allowed set', function (): void {
+test('returns a 401 WsErrorResponse for a per_page outside the allowed set', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
-    $ws = pwgCommentsTestSubject();
-    $server = pwgCommentsTestServer();
+    $handler = pwgGetListHandlerTestSubject();
+    $server = pwgGetListHandlerTestServer();
 
-    $result = $ws->getList([
-        ...pwgCommentsTestBaseParams(),
+    $result = $handler([
+        ...pwgGetListHandlerTestBaseParams(),
         'per_page' => 7,
     ], $server);
 
@@ -159,13 +153,13 @@ test('getList returns a 401 WsErrorResponse for a per_page outside the allowed s
     }
 });
 
-test('getList returns a 401 WsErrorResponse for an unparsable f_min_date', function (): void {
+test('returns a 401 WsErrorResponse for an unparsable f_min_date', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
-    $ws = pwgCommentsTestSubject();
-    $server = pwgCommentsTestServer();
+    $handler = pwgGetListHandlerTestSubject();
+    $server = pwgGetListHandlerTestServer();
 
-    $result = $ws->getList([
-        ...pwgCommentsTestBaseParams(),
+    $result = $handler([
+        ...pwgGetListHandlerTestBaseParams(),
         'f_min_date' => 'not-a-real-date',
     ], $server);
 
@@ -179,13 +173,13 @@ test('getList returns a 401 WsErrorResponse for an unparsable f_min_date', funct
     }
 });
 
-test('getList returns a 401 WsErrorResponse for an unparsable f_max_date', function (): void {
+test('returns a 401 WsErrorResponse for an unparsable f_max_date', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
-    $ws = pwgCommentsTestSubject();
-    $server = pwgCommentsTestServer();
+    $handler = pwgGetListHandlerTestSubject();
+    $server = pwgGetListHandlerTestServer();
 
-    $result = $ws->getList([
-        ...pwgCommentsTestBaseParams(),
+    $result = $handler([
+        ...pwgGetListHandlerTestBaseParams(),
         'f_max_date' => 'not-a-real-date',
     ], $server);
 
@@ -196,39 +190,5 @@ test('getList returns a 401 WsErrorResponse for an unparsable f_max_date', funct
             ->toBe(401)
             ->and($result->message())
             ->toBe('Invalid f_max_date');
-    }
-});
-
-test('delete returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
-    $ws = pwgCommentsTestSubject();
-    $server = pwgCommentsTestServer();
-
-    $result = $ws->delete([
-        'comment_id' => [1],
-        'pwg_token' => 'wrong-token',
-    ], $server);
-
-    expect($result)
-        ->toBeInstanceOf(WsErrorResponse::class);
-    if ($result instanceof WsErrorResponse) {
-        expect($result->code())
-            ->toBe(403);
-    }
-});
-
-test('validate returns a 403 WsErrorResponse when the submitted pwg_token does not match the real CSRF token', function (): void {
-    $ws = pwgCommentsTestSubject();
-    $server = pwgCommentsTestServer();
-
-    $result = $ws->validate([
-        'comment_id' => [1],
-        'pwg_token' => 'wrong-token',
-    ], $server);
-
-    expect($result)
-        ->toBeInstanceOf(WsErrorResponse::class);
-    if ($result instanceof WsErrorResponse) {
-        expect($result->code())
-            ->toBe(403);
     }
 });

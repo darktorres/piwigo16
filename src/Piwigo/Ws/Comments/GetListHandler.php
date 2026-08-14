@@ -9,13 +9,12 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-namespace Piwigo\Ws;
+namespace Piwigo\Ws\Comments;
 
 use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentService;
 use Piwigo\Comment\Projection\CommentDateRange;
 use Piwigo\Comment\Projection\CommentSummaryCounts;
-use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
@@ -23,19 +22,20 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Ws\Server;
+use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsErrorResponse;
 
 /**
- * `pwg.userComments.*` WS methods (3 registrations, all admin_only) --
- * registered via callable arrays in include/ws_default_methods.inc.php.
+ * `pwg.userComments.getList` -- admin paginated comment moderation view.
  */
-final readonly class Comments
+final readonly class GetListHandler implements WsAction
 {
     public function __construct(
         private CommentService $commentService,
@@ -46,59 +46,51 @@ final readonly class Comments
     ) {}
 
     /**
-     * API method
-     * Get comments
-     * @since 16
-     *
-     * @param array{status: string, search: string|null, author_id?: int, image_id?: int, f_min_date: string|null, f_max_date: string|null, page: int, per_page: int, ...} $params
-     *   status: non-null string default ('all'), no 'type' flag -- always
-     *   present. search/f_min_date/f_max_date: null default, no 'type' flag
-     *   -- always present, string|null. author_id/image_id: WsParamFlag::OPTIONAL
-     *   with no 'default' key -- may be entirely absent; WsParamType::ID
-     *   guarantees a plain int when present. page: non-null int default,
-     *   WsParamType::INT|WsParamType::POSITIVE -- always present. per_page: same type
-     *   flag, default is $this->currentConfig->commentsPageNbComments (a real int,
-     *   confirmed 10 in config_default.inc.php) -- always present, always
-     *   int.
      * A composite, multi-query response (raw summary/nb_authors aggregate
      * rows, a built-up comment list, computed paging) -- genuinely complex
      * enough that forcing one precise shape risked getting it wrong
-     * unverified; left as array<string, mixed>.
+     * unverified; left as array<string, mixed>, same as the god-class
+     * method this replaces.
+     *
+     * @param array<mixed> $params
      * @return WsErrorResponse|array<string, mixed>
      */
-    public function getList(array $params, Server &$service): WsErrorResponse|array
+    public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         if (! $this->currentConfig->activateComments) {
             return new WsErrorResponse(403, 'Comments are disabled');
         }
 
+        $input = GetListParams::fromArray($params);
+
         // accepted status values
         $accepted_status = ['all', 'pending', 'validated'];
-        if (! in_array($params['status'], $accepted_status, true)) {
+        if (! in_array($input->status, $accepted_status, true)) {
             return new WsErrorResponse(401, 'Status must be: all, pending or validated');
         }
 
         // accepted values must match pagination options (5,10,25,50)
         $items_number = [5, 10, 25, 50];
-        if (! in_array($params['per_page'], $items_number, true)) {
+        if (! in_array($input->perPage, $items_number, true)) {
             return new WsErrorResponse(401, 'Per page must be: 5, 10, 25 or 50');
         }
 
-        // author_id/image_id/f_min_date/f_max_date/search/status collapse
+        // authorId/imageId/f_min_date/f_max_date/search/status collapse
         // into one CommentApiCriteria, built once and passed unchanged to
         // all 4 CommentService calls below -- each decides for itself
         // which fields it honors (see CommentApiCriteria's own docblock).
-        // author_id/image_id are already WsParamType::ID-guaranteed ints
-        // and f_min_date/f_max_date already pass through date_format()
-        // (which can't emit SQL metacharacters), so none of these are
-        // live injection risks; the search term is bound as a real
-        // parameter rather than relying on escaping.
-        $authorId = (isset($params['author_id']) and $params['author_id'] !== 0) ? UserId::from($params['author_id']) : null;
-        $imageId = (isset($params['image_id']) and $params['image_id'] !== 0) ? ImageId::from($params['image_id']) : null;
+        // authorId/imageId are already positive-int-guaranteed by
+        // GetListParams::fromArray() and f_min_date/f_max_date already
+        // pass through date_format() (which can't emit SQL
+        // metacharacters), so none of these are live injection risks; the
+        // search term is bound as a real parameter rather than relying on
+        // escaping.
+        $authorId = $input->authorId !== null ? UserId::from($input->authorId) : null;
+        $imageId = $input->imageId !== null ? ImageId::from($input->imageId) : null;
 
         $minDate = null;
-        if (! in_array($params['f_min_date'], [null, ''], true)) {
-            $min_date = date_create($params['f_min_date']);
+        if (! in_array($input->fMinDate, [null, ''], true)) {
+            $min_date = date_create($input->fMinDate);
             if ($min_date === false) {
                 return new WsErrorResponse(401, 'Invalid f_min_date');
             }
@@ -106,8 +98,8 @@ final readonly class Comments
         }
 
         $maxDate = null;
-        if (! in_array($params['f_max_date'], [null, ''], true)) {
-            $max_date = date_create($params['f_max_date']);
+        if (! in_array($input->fMaxDate, [null, ''], true)) {
+            $max_date = date_create($input->fMaxDate);
             if ($max_date === false) {
                 return new WsErrorResponse(401, 'Invalid f_max_date');
             }
@@ -119,8 +111,8 @@ final readonly class Comments
             imageId: $imageId,
             minDate: $minDate,
             maxDate: $maxDate,
-            search: $params['search'],
-            status: $params['status'],
+            search: $input->search,
+            status: $input->status,
         );
 
         // summary. validated is a real tinyint(1) column -- numeric
@@ -134,7 +126,7 @@ final readonly class Comments
         }
         $total_comments = $summary->allComments;
 
-        switch ($params['status']) {
+        switch ($input->status) {
             case 'pending':
                 $total_comments = $summary->pending;
                 break;
@@ -148,8 +140,8 @@ final readonly class Comments
         $list = [];
         foreach ($this->commentService->getListForAdminWs(
             $criteria,
-            $params['per_page'] * $params['page'],
-            $params['per_page']
+            $input->perPage * $input->page,
+            $input->perPage
         ) as $row) {
 
             $row_image_id = $row['image_id'];
@@ -225,50 +217,10 @@ final readonly class Comments
                 'ended_at' => $dates->endedAt,
             ],
             'paging' => [
-                'page' => $params['page'],
-                'per_page' => $params['per_page'],
-                'total_pages' => max(0.0, ceil((float) $total_comments / (float) $params['per_page']) - 1.0),
+                'page' => $input->page,
+                'per_page' => $input->perPage,
+                'total_pages' => max(0.0, ceil((float) $total_comments / (float) $input->perPage) - 1.0),
             ],
         ];
-    }
-
-    /**
-     * API method
-     * Delete comments
-     * @since 16
-     *
-     * @param array{comment_id: array<int, int>, pwg_token: string, ...} $params
-     *   neither has a 'default' key -- both mandatory, always present;
-     *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
-     */
-    public function delete(array $params, Server &$service): WsErrorResponse|string
-    {
-        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new WsErrorResponse(403, $this->lang->t('Invalid security token'));
-        }
-
-        $commentIds = array_values(array_map(CommentId::from(...), array_unique($params['comment_id'])));
-        $this->commentService->deleteComment($commentIds);
-        return 'Comment successfully deleted';
-    }
-
-    /**
-     * API method
-     * Validate comments
-     * @since 16
-     *
-     * @param array{comment_id: array<int, int>, pwg_token: string, ...} $params
-     *   neither has a 'default' key -- both mandatory, always present;
-     *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
-     */
-    public function validate(array $params, Server &$service): WsErrorResponse|string
-    {
-        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new WsErrorResponse(403, $this->lang->t('Invalid security token'));
-        }
-
-        $commentIds = array_values(array_map(CommentId::from(...), array_unique($params['comment_id'])));
-        $this->commentService->validateComment($commentIds);
-        return 'Comment successfully validated';
     }
 }

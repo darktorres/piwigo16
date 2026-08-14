@@ -121,8 +121,8 @@ it('shows the pending-comments counter when at least one unvalidated comment exi
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'AdminShell Comment Photo');
     @unlink($image);
 
-    // There is no pwg.comments.add WS method (confirmed: nothing in
-    // Piwigo\Ws\Comments registers one) -- a real comment only ever
+    // There is no pwg.comments.add WS method (confirmed: nothing under
+    // Piwigo\Ws\Comments\ registers one) -- a real comment only ever
     // gets created through picture.php's own form action, so a direct
     // insert is the established way to seed one for a test (same shape as
     // PictureControllerTest's own pictureInsertComment() helper).

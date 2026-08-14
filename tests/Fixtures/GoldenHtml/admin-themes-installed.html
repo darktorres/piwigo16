@@ -9,7 +9,7 @@
 
 
 <!-- BEGIN get_combined -->
-<link rel="stylesheet" type="text/css" href="_data/combined/11lz8mx.css">
+<link rel="stylesheet" type="text/css" href="_data/combined/wq8n21.css">
 
 <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
 <!-- END get_combined -->
@@ -126,12 +126,6 @@
 
 
 <div class="eiw">
-  <div class="errors">
-    <i class="eiw-icon icon-cancel"></i>
-    <ul>
-      <li>Connection to server unavailable.</li>
-    </ul>
-  </div>
 
 
 
@@ -139,6 +133,20 @@
 </div> 
 
   
+
+
+<div class="autoupdate_bar">
+<div class="head-button-1 icon-ok-circled" id="update_all">Update All</div>
+<div class="head-button-2 icon-block" id="ignore_all" onClick="ignoreAll(); return false;">Ignore All</div>
+<div class="head-button-2 icon-ccw" id="reset_ignore" onClick="resetIgnored(); return false;" style="display:none;">Reset ignored updates</div>
+</div>
+<div class="autoupdate_bar" style="display:none;">
+Please wait...<br><img src="themes/admin/default/images/ajax-loader-bar.gif">
+</div>
+
+<p id="up_to_date" style="display:none; text-align:left; margin-left:20px;">All themes are up to date.</p>
+
+
 </div>
 </div>
 
@@ -165,18 +173,15 @@
       <div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4>Brand new login &amp; preferences with Standard pages !</h4>
-            <a href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-1.png"></a>
+            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Brand new login &amp; preferences with Standard pages !</a></h4>
           </div>
           <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4>Two factor authentication is here</h4>
-            <a href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-2.png"></a>
+            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">Two factor authentication is here</a></h4>
           </div>
         </div>
         <div class="whats_new_block_container">
           <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4>UI redesigns that make a difference</h4>
-            <a href="https://upstream.example.invalid/releases/17.0.0" target="_blank"><img src="https://upstream.example.invalid/whats-new-3.png"></a>
+            <h4><a href="https://upstream.example.invalid/releases/17.0.0" target="_blank">UI redesigns that make a difference</a></h4>
           </div>
         </div>
       </div>
@@ -194,9 +199,182 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="themes/default/js/plugins/jquery.tipTip.minified.js?v17.0.0"></script>
+<script type="text/javascript" src="_data/combined/cttr5r.js"></script>
 <script type="text/javascript">//<![CDATA[
 
+var pwg_token = '6632da46b39d4036446c3d62ed3f56bc36034ee28a527ed037822da452c9cb6e';
+var extType = 'themes';
+var confirmMsg  = 'Are you sure?';
+var errorHead   = 'ERROR';
+var successHead = 'Update Complete';
+var errorMsg    = 'an error occurred';
+var restoreMsg  = 'Reset ignored updates';
+
+var todo = 0;
+var queuedManager = $.manageAjax.create('queued', {
+	queue: true,
+	maxRequests: 1,
+  beforeSend: function() { autoupdate_bar_toggle(1); },
+  complete: function() { autoupdate_bar_toggle(-1); }
+});
+
+function updateAll() {
+  jQuery('.updateExtension').each( function() {
+    if (jQuery(this).parents('div').css('display') == 'block')
+      jQuery(this).click();
+  });
+};
+
+function ignoreAll() {
+  jQuery('.ignoreExtension').each( function() {
+    if (jQuery(this).parents('div').css('display') == 'block')
+      jQuery(this).click();
+  });
+};
+
+function resetIgnored() {
+  jQuery.ajax({
+    type: 'GET',
+    url: 'ws.php',
+    dataType: 'json',
+    data: { method: 'pwg.extensions.ignoreUpdate', reset: true, type: extType, pwg_token: pwg_token, format: 'json' },
+    success: function(data) {
+      if (data['stat'] == 'ok') {
+        jQuery(".pluginBox, fieldset").show();
+        jQuery(".pluginBox").attr('data-ignored', 'false')
+        jQuery("#update_all").show();
+        jQuery("#ignore_all").show();
+        jQuery("#up_to_date").hide();
+        jQuery("#reset_ignore").hide();
+        jQuery("#ignored").hide();
+        checkFieldsets();
+      }
+    }
+  });
+};
+
+function checkFieldsets() {
+  var types = new Array('plugins', 'themes', 'languages');
+  var total = 0;
+  var ignored = 0;
+  for (i=0;i<3;i++) {
+    nbExtensions = 0;
+    jQuery("fieldset[data-type="+types[i]+"] .pluginBox").each(function(index) {
+      if (jQuery(this).attr('data-ignored')== 'true')
+        ignored++;
+      else
+        nbExtensions++;
+    });
+    total = total + nbExtensions;
+    if (nbExtensions == 0)
+      jQuery("#"+types[i]).hide();
+  }
+
+  if (total == 0) {
+    jQuery("#update_all").hide();
+    jQuery("#ignore_all").hide();
+    jQuery("#up_to_date").show();
+  }
+  if (ignored > 0) {
+    jQuery("#reset_ignore").val(restoreMsg + ' (' + ignored + ')');
+  }
+};
+
+function updateExtension(type, id, revision) {
+  queuedManager.add({
+    type: 'GET',
+    dataType: 'json',
+    url: 'ws.php',
+    data: { method: 'pwg.extensions.update', type: type, id: id, revision: revision, pwg_token: pwg_token, format: 'json' },
+    success: function(data) {
+      if (data['stat'] == 'ok') {
+        jQuery.jGrowl( data['result'], { theme: 'success', header: successHead, life: 4000, sticky: false });
+        jQuery("#"+type+"_"+id).remove();
+        checkFieldsets();
+      } else {
+        jQuery.jGrowl( data['result'], { theme: 'error', header: errorHead, sticky: true });
+      }
+    },
+    error: function(data) {
+      jQuery.jGrowl( errorMsg, { theme: 'error', header: errorHead, sticky: true });
+    }
+  });
+};
+
+const targetNode = document.getElementById("theAdminPage");
+
+const config = { attributes: false, childList: true, subtree: true };
+
+const callback = (mutationList, observer) => {
+  for (const mutation of mutationList) {
+    if (mutation.type === "childList") {
+      let popup = jQuery("#jGrowl").children();
+      for (let i = 0; i < popup.length; i++){
+        if ((jQuery(popup[i])).hasClass("success")){
+          if (! ((jQuery(popup[i]).children(":first")).hasClass("jGrowl-popup-icon icon-ok"))){
+            jQuery(popup[i]).prepend('<div class="jGrowl-popup-icon icon-ok"></div>')
+          }
+        };
+
+        if ((jQuery(popup[i])).hasClass("error")){
+          if (! ((jQuery(popup[i]).children(":first")).hasClass("jGrowl-popup-icon icon-cancel"))){
+            jQuery(popup[i]).prepend('<div class="jGrowl-popup-icon icon-cancel"></div>')
+          }
+        }
+      };
+    }
+  }
+};
+
+const observer = new MutationObserver(callback);
+observer.observe(targetNode, config);
+
+function ignoreExtension(type, id) {
+  queuedManager.add({
+    type: 'GET',
+    url: 'ws.php',
+    dataType: 'json',
+    data: { method: 'pwg.extensions.ignoreUpdate', type: type, id: id, pwg_token: pwg_token, format: 'json' },
+    success: function(data) {
+      if (data['stat'] == 'ok') {
+        jQuery("#"+type+"_"+id).hide();
+        jQuery("#"+type+"_"+id).attr('data-ignored', 'true')
+        jQuery("#reset_ignore").show();
+        checkFieldsets();
+      }
+    }
+  });
+};
+
+function autoupdate_bar_toggle(i) {
+  todo = todo + i;
+  if ((i == 1 && todo == 1) || (i == -1 && todo == 0))
+    jQuery('.autoupdate_bar').toggle();
+}
+
+checkFieldsets();
+const are_you_sure_msg  = 'Are you sure?';
+const confirm_msg = 'Yes, I am sure';
+const cancel_msg = "No, I have changed my mind";
+$("#update_all").click(function() {
+  const title_msg = "Are you sure you want to update all extensions?";
+  $.confirm({
+      title: title_msg,
+      buttons: {
+        confirm: {
+          text: confirm_msg,
+          btnClass: 'btn-red',
+          action: function () {
+            updateAll();
+          }
+        },
+        cancel: {
+          text: cancel_msg
+        }
+      },
+      ...jConfirm_confirm_options
+    });
+})
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',

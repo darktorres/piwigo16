@@ -120,6 +120,8 @@
     "lint:php": "@php vendor/bin/ecs check",
     "lint:psr4": "@composer dump-autoload --optimize --strict-psr",
     "lint:latte": "@php tools/latte-lint.php",
+    "lint:vartype": "@php bin/piwigo phpstan-latte:sync-vartype",
+    "lint:vartype:fix": "@php bin/piwigo phpstan-latte:sync-vartype --fix",
     "check:doc-drift": "@php tools/doc-drift-check.php",
     "precompile:templates": "@php bin/piwigo precompile:templates",
     "generate:latte-shims": "@php bin/piwigo phpstan-latte:generate-shims",

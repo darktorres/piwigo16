@@ -16,6 +16,7 @@ use Piwigo\Command\MaintenancePurgeSessionsCommand;
 use Piwigo\Command\MaintenanceRepairDbCommand;
 use Piwigo\Command\PhpStanLatteCompileCommand;
 use Piwigo\Command\PhpStanLatteShimsCommand;
+use Piwigo\Command\PhpStanLatteSyncVarTypeCommand;
 use Piwigo\Command\PrecompileTemplatesCommand;
 use Piwigo\Command\SchemaDumpCommand;
 use Piwigo\Command\UserListCommand;
@@ -60,6 +61,7 @@ final class CommandDefinitions
             PrecompileTemplatesCommand::class,
             PhpStanLatteShimsCommand::class,
             PhpStanLatteCompileCommand::class,
+            PhpStanLatteSyncVarTypeCommand::class,
             ConsumeMessagesCommand::class,
         ];
     }

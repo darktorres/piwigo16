@@ -6,16 +6,12 @@ namespace Piwigo\Command;
 
 use FilesystemIterator;
 use Latte\Engine;
-use Latte\Runtime\Html;
 use Override;
 use Piwigo\Core\Paths;
 use Piwigo\Template\Latte\PiwigoExtension;
-use Piwigo\Tools\PhpStan\Latte\ContextVariableExtractor;
 use Piwigo\Tools\PhpStan\Latte\LatteTemplateCompiler;
-use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
-use Piwigo\Tools\PhpStan\Latte\VariableMapBuilder;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use Piwigo\Tools\PhpStan\Latte\LatteTemplateFiles;
+use Piwigo\Tools\PhpStan\Latte\VariableMapContext;
 use SplFileInfo;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -57,8 +53,8 @@ final class PhpStanLatteCompileCommand extends Command
     #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (! class_exists(TemplateCallSiteScanner::class)) {
-            $output->writeln('<error>' . TemplateCallSiteScanner::class . ' is not autoloadable -- dev dependencies (autoload-dev) are required.</error>');
+        if (! class_exists(VariableMapContext::class)) {
+            $output->writeln('<error>' . VariableMapContext::class . ' is not autoloadable -- dev dependencies (autoload-dev) are required.</error>');
 
             return Command::FAILURE;
         }
@@ -66,44 +62,9 @@ final class PhpStanLatteCompileCommand extends Command
         $root = rtrim($this->paths->root, '/');
         $outputDir = $root . '/' . self::OUTPUT_DIR;
 
-        $scan = new TemplateCallSiteScanner($root)
-            ->scan();
-
-        $extractor = new ContextVariableExtractor();
-        $varsByContext = [];
-        $notices = $scan->notices;
-        foreach ($scan->contextsByClass as $contexts) {
-            foreach ($contexts as $context) {
-                if (isset($varsByContext[$context])) {
-                    continue;
-                }
-                $extracted = $extractor->extract($context);
-                $varsByContext[$context] = $extracted->vars;
-                $notices = [...$notices, ...$extracted->notices];
-            }
-        }
-
-        $map = new VariableMapBuilder($scan->templatesByClass, $scan->contextsByClass, $varsByContext)
-            ->build();
-
-        // Always-available variables from outside the context system:
-        // Template.php's own framework assigns, every theme's parseable
-        // $theme_template_vars literal, and assignVarFromTemplate()'s
-        // rendered-Html outputs.
-        $themeVars = $extractor->themeTemplateVars($root);
-        $notices = [...$notices, ...$themeVars['notices']];
-        $globals = $extractor->frameworkGlobals() + $themeVars['vars'];
-        foreach ($scan->assignedTemplateVars as $name) {
-            // Leading backslash required: this feeds
-            // LatteTemplateCompiler's `/** @var {$type} ... */` docblock
-            // generation, spliced directly into generated PHP source
-            // text -- ::class alone never carries one, which would leave
-            // the emitted @var namespace-relative instead of absolute.
-            // Concatenation, not a bare string literal, so Rector's
-            // StringClassNameToClassConstantRector has nothing to
-            // rewrite here (empirically verified).
-            $globals[$name] ??= '\\' . Html::class;
-        }
+        $context = VariableMapContext::build($root);
+        $map = $context->map;
+        $notices = $context->notices;
 
         $engine = new Engine();
         $engine->addExtension($this->piwigoExtension);
@@ -113,9 +74,9 @@ final class PhpStanLatteCompileCommand extends Command
         $changed = 0;
         $failed = [];
         $produced = [];
-        foreach ($this->allTemplates($root) as $templatePath) {
+        foreach (LatteTemplateFiles::discover($root) as $templatePath) {
             try {
-                $result = $compiler->compile($templatePath, $map->forTemplate($templatePath, $globals));
+                $result = $compiler->compile($templatePath, $map->forTemplate($templatePath, $context->globals));
             } catch (Throwable $e) {
                 $failed[] = "{$templatePath}: {$e->getMessage()}";
                 continue;
@@ -133,11 +94,11 @@ final class PhpStanLatteCompileCommand extends Command
         foreach ($notices as $notice) {
             $output->writeln("<comment>notice: {$notice}</comment>");
         }
-        if ($map->fallbackContexts !== []) {
+        if ($context->fallbackContexts !== []) {
             $output->writeln(sprintf(
                 '<comment>%d context classes assigned outside any rendering class contribute to the global fallback union: %s</comment>',
-                count($map->fallbackContexts),
-                implode(', ', $map->fallbackContexts),
+                count($context->fallbackContexts),
+                implode(', ', $context->fallbackContexts),
             ));
         }
 
@@ -160,33 +121,6 @@ final class PhpStanLatteCompileCommand extends Command
         ));
 
         return Command::SUCCESS;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function allTemplates(string $root): array
-    {
-        $templates = [];
-        foreach ([$root . '/themes', $root . '/template-extension'] as $dir) {
-            if (! is_dir($dir)) {
-                continue;
-            }
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
-            foreach ($iterator as $file) {
-                /** @var SplFileInfo $file */
-                if (! $file->isFile() || $file->getExtension() !== 'latte') {
-                    continue;
-                }
-                $realPath = $file->getRealPath();
-                if ($realPath !== false) {
-                    $templates[] = $realPath;
-                }
-            }
-        }
-        sort($templates);
-
-        return $templates;
     }
 
     /**

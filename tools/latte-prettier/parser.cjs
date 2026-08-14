@@ -835,6 +835,8 @@ function parseLatteNode(s, head, listOpts) {
       return parseBreakIf(s, start);
     case "contentType":
       return parseContentType(s, start);
+    case "varType":
+      return parseVarType(s, start);
     case "spaceless":
       return parseSpaceless(s, start, listOpts);
     case "capture":
@@ -1009,6 +1011,55 @@ function parseContentType(s, start) {
   const src = readTagBody(s).replace(/^contentType\s+/, "");
   const value = src.trim();
   return { type: "LatteContentType", value, start, end: s.pos };
+}
+
+// Like readTagBody(), but tracks `{`/`}` nesting depth instead of stopping
+// at the first `}` -- PHPStan array-shape syntax (`array{key: type, ...}`),
+// routine in real {varType} content, embeds literal braces of its own that
+// a first-`}`-wins scan would mistake for the tag's own close, silently
+// truncating mid-type and leaving the remainder (e.g. a second `array{...}`
+// union member) to be mis-parsed as ordinary template text -- confirmed
+// live: `{CURRENT_PAGE?: float, ...}` inside an array-shape's own braces
+// read back as an attempted new Latte tag once truncation split it out.
+function readNestedBracedTagBody(s) {
+  const start = s.pos;
+  let depth = 0;
+  while (!s.eof()) {
+    const ch = s.peek();
+    if (ch === "'" || ch === '"') {
+      s.advance();
+      while (!s.eof() && s.peek() !== ch) {
+        if (s.peek() === "\\") s.advance();
+        s.advance();
+      }
+      if (s.eof()) s.error("unterminated string literal in Latte tag");
+      s.advance();
+      continue;
+    }
+    if (ch === "{") {
+      depth++;
+    } else if (ch === "}") {
+      if (depth === 0) break;
+      depth--;
+    }
+    s.advance();
+  }
+  if (s.eof()) s.error("unterminated Latte tag, expected '}'");
+  const body = s.text.slice(start, s.pos);
+  s.advance(); // consume '}'
+  return body;
+}
+
+// `{varType Type $name}` — an IDE-autocompletion-only declaration (compiles
+// to a literal empty string, see vendor/latte/latte's own VarTypeNode.php).
+// The "Type" half is real PHP/PHPStan type syntax (FQCN, unions, nullable,
+// generics via TagParser::parseType()'s SuperiorTypeNode), not a general
+// expression -- same reasoning as {contentType}, kept as a raw string
+// rather than parsed, since nothing here needs to inspect the type itself.
+function parseVarType(s, start) {
+  const src = readNestedBracedTagBody(s).replace(/^varType\s+/, "");
+  const value = src.trim();
+  return { type: "LatteVarType", value, start, end: s.pos };
 }
 
 function parseDo(s, start) {

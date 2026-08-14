@@ -238,19 +238,45 @@ function printOpenTag(node, options) {
 function printNode(node, options, mode = "block") {
   switch (node.type) {
     case "Document": {
-      // A document with no real HTML elements or Latte tags at all -- e.g.
-      // themes/default/template/mail/text/html/global-mail-css.latte, raw
-      // CSS meant to be dropped verbatim into a sibling file's <style>
-      // block via {$GLOBAL_MAIL_CSS|noescape} -- has no Latte-tag/element
-      // boundaries for the usual gap-based item reformatting below to work
-      // from: the whole file is one continuous HtmlText run, so it would
-      // go through textFillDoc and have every deliberate line break in
-      // hand-formatted multi-line CSS collapsed into a single unreadable
-      // line. Preserve it byte-verbatim instead (just trimmed of the
-      // outer whitespace the trailing hardline below already accounts for).
-      if (node.children.length && node.children.every((c) => c.type === "HtmlText")) {
-        const raw = node.children.map((c) => c.value).join("");
-        return [raw.trim(), hardline];
+      // A document with no real HTML elements after some leading tags --
+      // e.g. themes/default/template/mail/text/html/global-mail-css.latte
+      // (a {varType} block followed by raw CSS meant to be dropped verbatim
+      // into a sibling file's <style> block via {$GLOBAL_MAIL_CSS|noescape})
+      // -- has no Latte-tag/element boundaries within that trailing run for
+      // the usual gap-based item reformatting below to work from: it's one
+      // continuous HtmlText run, so it would go through textFillDoc and have
+      // every deliberate line break in hand-formatted multi-line CSS
+      // collapsed into a single unreadable line. Preserve that trailing run
+      // byte-verbatim instead (just trimmed of the outer whitespace the
+      // trailing hardline below already accounts for); any leading non-text
+      // nodes (originally none -- now always at least the generated
+      // {varType} block) print normally through the standard path below.
+      // Every document has one -- when a template has no other Latte tags
+      // to serve as the split point, all of children is that leading run
+      // (lastNonTextIdx === -1) and this reduces to "verbatim from byte 0",
+      // the same behavior this case originally covered.
+      let lastNonTextIdx = -1;
+      for (let i = 0; i < node.children.length; i++) {
+        if (node.children[i].type !== "HtmlText") lastNonTextIdx = i;
+      }
+      if (lastNonTextIdx < node.children.length - 1) {
+        const leading = node.children.slice(0, lastNonTextIdx + 1);
+        const trailingRawFull = node.children
+          .slice(lastNonTextIdx + 1)
+          .map((c) => c.value)
+          .join("");
+        // No leading part: trim() both ends, exactly the original all-text
+        // behavior this case still covers. A leading part: trimEnd() only
+        // -- the leading gap (e.g. the newline between a leading tag and
+        // this run) is part of what "byte-verbatim" promises to preserve
+        // untouched, same as the rest of this text; only the trailing
+        // whitespace needs normalizing, since the hardline below already
+        // guarantees "file ends in exactly one newline".
+        const trailingRaw = leading.length ? trailingRawFull.trimEnd() : trailingRawFull.trim();
+        if (trailingRaw.trim()) {
+          const leadingDoc = leading.length ? printNode({ ...node, children: leading }, options, mode).slice(0, -1) : [];
+          return [...leadingDoc, trailingRaw, hardline];
+        }
       }
       // {contentType text} (mail/text/plain/*.latte) declares this template's
       // *output* is the literal email body, not source code -- unlike every
@@ -329,6 +355,9 @@ function printNode(node, options, mode = "block") {
 
     case "LatteContentType":
       return ["{contentType ", node.value, "}"];
+
+    case "LatteVarType":
+      return ["{varType ", node.value, "}"];
 
     case "LatteInclude": {
       const parts = ["{include ", exprToDoc(node.target)];

@@ -71,6 +71,12 @@ const CORPUS_FILES = [
   "footer.latte",
   "comment_list.latte",
   "register.latte",
+  // {varType} content containing a PHPStan array-shape type (`array{key:
+  // type, ...}`) exercises nested-brace tag-body parsing; the whole file's
+  // trailing raw CSS (after the {varType} block) exercises Document-level
+  // byte-verbatim preservation with a leading non-text run -- both real
+  // bugs found live when P33B added a {varType} block to every template.
+  "mail/text/html/global-mail-css.latte",
 ];
 
 describe("Latte Prettier plugin (tools/latte-prettier/)", () => {

@@ -272,6 +272,8 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Site/LocalSiteReader.php',
         '/src/Piwigo/Auth/CookieService.php',
         '/src/Piwigo/Search/SearchService.php',
+        '/src/Piwigo/Config/ConfigService.php',
+        '/src/Piwigo/Menu/MenubarRenderer.php',
     ];
 
     $hits = [

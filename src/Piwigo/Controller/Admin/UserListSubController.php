@@ -14,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -45,6 +46,7 @@ final readonly class UserListSubController implements AdminSubControllerInterfac
         private GroupService $groupService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Paths $paths,
         private EntityManagerInterface $entityManager,
@@ -54,6 +56,6 @@ final readonly class UserListSubController implements AdminSubControllerInterfac
     public function handle(ServerRequestInterface $request): void
     {
         new UserListPageRenderer()
-            ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->userService, $this->preferencesService, $this->groupService, $this->htmlRenderer, $this->currentConfig, $this->inputValidator, $this->paths, $this->entityManager);
+            ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->userService, $this->preferencesService, $this->groupService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->entityManager);
     }
 }

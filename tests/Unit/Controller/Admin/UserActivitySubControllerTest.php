@@ -30,6 +30,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
@@ -271,6 +272,7 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
             userActivitySubControllerTestGroupService($activityService),
             HtmlServiceTestFactory::build(),
             CurrentConfigTestFactory::get(),
+            new CsrfService(CurrentConfigTestFactory::get()),
             new InputValidator(),
             $eventDispatcher,
         );

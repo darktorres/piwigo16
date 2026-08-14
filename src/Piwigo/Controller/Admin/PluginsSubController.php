@@ -24,6 +24,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\Session\SessionService;
@@ -67,6 +68,7 @@ final readonly class PluginsSubController implements AdminSubControllerInterface
         private PreferencesService $preferencesService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private CurrentUser $currentUser,
         private Paths $paths,
@@ -94,14 +96,14 @@ final readonly class PluginsSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig);
+                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService);
             $template->assignContext(new PluginsSubControllerPageContext(adminPageTitle: $this->lang->t('Plugins')));
         } elseif ($tab === 'new') {
             $this->pluginsNewPageRenderer
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer, $this->currentConfig, $this->currentUser, $this->paths, $this->pluginRegistry, $this->entityManager);
+                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->currentUser, $this->paths, $this->pluginRegistry, $this->entityManager);
         }
     }
 }

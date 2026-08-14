@@ -57,6 +57,7 @@ final class FilterPanelRenderer
         HtmlService $htmlService,
         CurrentConfig $currentConfig,
         EntityManagerInterface $entityManager,
+        CsrfService $csrfService,
     ): void {
 
         /** @var array<string, mixed> $bulk_manager_filter */
@@ -182,7 +183,7 @@ final class FilterPanelRenderer
             selection: $collection,
             allElements: $catElementsId,
             start: $pageStart,
-            pwgToken: new CsrfService($currentConfig)
+            pwgToken: $csrfService
                 ->getToken(),
             uDisplay: $baseUrl . $urlService->getQueryStringDiff(['display']),
             fAction: $baseUrl . $urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),

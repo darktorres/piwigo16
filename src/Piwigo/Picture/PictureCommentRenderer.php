@@ -67,7 +67,7 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -223,7 +223,7 @@ final class PictureCommentRenderer
                         [
                             'action' => 'delete_comment',
                             'comment_to_delete' => $row->id->value,
-                            'pwg_token' => new CsrfService($currentConfig)
+                            'pwg_token' => $csrfService
                                 ->getToken(),
                         ]
                     );
@@ -242,7 +242,7 @@ final class PictureCommentRenderer
                             ->generate(2, (string) $imageId);
                         $tplComment['KEY'] = $key;
                         $tplComment['CONTENT'] = $row->content;
-                        $tplComment['CSRF_TOKEN'] = new CsrfService($currentConfig)->getToken();
+                        $tplComment['CSRF_TOKEN'] = $csrfService->getToken();
                         $tplComment['U_CANCEL'] = $url_self;
                     }
                 }
@@ -255,7 +255,7 @@ final class PictureCommentRenderer
                             [
                                 'action' => 'validate_comment',
                                 'comment_to_validate' => $row->id->value,
-                                'pwg_token' => new CsrfService($currentConfig)
+                                'pwg_token' => $csrfService
                                     ->getToken(),
                             ]
                         );

@@ -23,6 +23,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -63,6 +64,7 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
     ) {}
 
     #[Override]
@@ -103,7 +105,7 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
 
         if ($tab === 'properties') {
             new CatModifyPageRenderer()
-                ->render($this->lang, $this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->activityService, $this->categoryService, $this->htmlRenderer, $this->entityManager);
+                ->render($this->lang, $this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->activityService, $this->categoryService, $this->htmlRenderer, $this->entityManager);
         } elseif ($tab === 'sort_order') {
             $this->elementSetRanksPageRenderer
                 ->render();

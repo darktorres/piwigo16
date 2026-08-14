@@ -44,7 +44,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class AlbumsPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CategoryAdminService $categoryAdminService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, CategoryAdminService $categoryAdminService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator): void
     {
         $template = $currentTemplate->get();
 
@@ -247,7 +247,7 @@ final class AlbumsPageRenderer
             // new-album position, but none exists today.
             posPref: $currentConfig->newcatDefaultPosition,
             albumData: self::assocToOrderedTree($associatedTree, $nb_photos_in, $nb_sub_photos, $is_forbidden),
-            pwgToken: new CsrfService($currentConfig)
+            pwgToken: $csrfService
                 ->getToken(),
             nbAlbums: count($allAlbum),
             adminPageTitle: $lang->t('Albums'),

@@ -1234,7 +1234,7 @@ final readonly class PictureController implements ControllerInterface
             ->render($image_id, $urlService, $picture, $url_self);
         if ($this->currentConfig->activateComments) {
             new PictureCommentRenderer()
-                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->mailer, $this->htmlService, $this->entityManager);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->mailer, $this->htmlService, $this->entityManager);
         }
         if ($metadata_showable and $this->sessionService->isShowMetadataEnabled()) {
             new PictureMetadataRenderer()

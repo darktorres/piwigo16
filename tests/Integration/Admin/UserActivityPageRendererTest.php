@@ -15,6 +15,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Group\GroupService;
@@ -189,7 +190,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         }
 
         new UserActivityPageRenderer()
-            ->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplateTestFactory::get(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get());
+            ->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplateTestFactory::get(), $currentConfig, new CsrfService($currentConfig), $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get());
 
         $template = CurrentTemplateTestFactory::get()->get();
         self::assertSame([], $template->getTemplateVars('ulist'));

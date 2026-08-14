@@ -12,6 +12,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -104,7 +105,7 @@ test('render() assigns the comments page context and tabsheet without any real t
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
 
         new CommentsPageRenderer()
-            ->render(LangTestFactory::get(), commentsPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), $eventDispatcher, CurrentConfigTestFactory::get());
+            ->render(LangTestFactory::get(), commentsPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), $eventDispatcher, new CsrfService(CurrentConfigTestFactory::get()));
 
         // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
         // (see that method's own docblock), not a plain string.

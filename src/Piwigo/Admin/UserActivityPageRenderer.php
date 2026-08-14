@@ -34,7 +34,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class UserActivityPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ActivityService $activityService, UserService $userService, ImageService $imageService, CategoryService $categoryService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, ActivityService $activityService, UserService $userService, ImageService $imageService, CategoryService $categoryService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
@@ -163,7 +163,7 @@ final class UserActivityPageRenderer
 
         $template->assignContext(new UserActivityPageContext(
             adminPageTitle: $lang->t('Users'),
-            pwgToken: new CsrfService($currentConfig)
+            pwgToken: $csrfService
                 ->getToken(),
             inherit: $currentConfig->inheritanceByDefault,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($urlService, ['users']),

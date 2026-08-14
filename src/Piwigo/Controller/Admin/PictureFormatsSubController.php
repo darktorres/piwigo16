@@ -8,10 +8,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Validation\InputValidator;
@@ -32,14 +32,14 @@ final readonly class PictureFormatsSubController implements AdminSubControllerIn
         private CurrentTemplate $currentTemplate,
         private HtmlRenderingInterface $htmlRenderer,
         private InputValidator $inputValidator,
-        private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new PictureFormatsPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->currentConfig, $this->entityManager);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->csrfService, $this->entityManager);
     }
 }

@@ -29,6 +29,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
@@ -303,6 +304,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
                 $coreTabs,
                 CurrentTemplateTestFactory::get(),
                 CurrentConfigTestFactory::get(),
+                new CsrfService(CurrentConfigTestFactory::get()),
                 $activityService,
                 userActivityTestUserService($activityService),
                 userActivityTestImageService(),

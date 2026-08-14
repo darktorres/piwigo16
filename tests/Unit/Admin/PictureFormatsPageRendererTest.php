@@ -12,6 +12,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -127,7 +128,7 @@ test('render() fatal-errors when image_id is missing from the request', function
         $exception = null;
         try {
             new PictureFormatsPageRenderer()
-                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get(), pictureFormatsTestEntityManager());
+                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), new CsrfService(CurrentConfigTestFactory::get()), pictureFormatsTestEntityManager());
         } catch (ResponseReadyException $e) {
             $exception = $e;
         }
@@ -158,7 +159,7 @@ test('render() fatal-errors when image_id does not match any real image', functi
         $exception = null;
         try {
             new PictureFormatsPageRenderer()
-                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), CurrentConfigTestFactory::get(), pictureFormatsTestEntityManager());
+                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), new CsrfService(CurrentConfigTestFactory::get()), pictureFormatsTestEntityManager());
         } catch (ResponseReadyException $e) {
             $exception = $e;
         }

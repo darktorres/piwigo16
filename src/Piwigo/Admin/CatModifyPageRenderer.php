@@ -49,7 +49,7 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -329,7 +329,7 @@ final class CatModifyPageRenderer
             uSync: $u_sync,
             representant: $representant,
             parentCategory: $parent_category,
-            pwgToken: new CsrfService($currentConfig)
+            pwgToken: $csrfService
                 ->getToken(),
         ));
 

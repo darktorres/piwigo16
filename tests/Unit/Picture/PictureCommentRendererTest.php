@@ -10,6 +10,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Mail\MailService;
 use Piwigo\Picture\PictureCommentRenderer;
@@ -151,7 +152,7 @@ test('render does nothing when no related category is commentable', function ():
         [
             'commentable' => 0,
         ],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
 
     expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comments'))->toBeNull()
         ->and(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add'))->toBeNull();
@@ -227,7 +228,7 @@ test('render only counts the first commentable related category then stops (`bre
             [
                 'id' => 999,
             ], // no 'commentable' key -- only reached by `continue`
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     } finally {
@@ -258,7 +259,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
             [
                 'commentable' => false,
             ],
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -295,7 +296,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
             [
                 'commentable' => true,
             ],
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -333,7 +334,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
         [
             'commentable' => false,
         ],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
 
     expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('comments'))->toBeNull();
 });
@@ -378,7 +379,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
         [
             'commentable' => true,
         ],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager());
 
     // assignVarFromTemplate() wraps COMMENT_LIST in Latte\Runtime\Html
     // (see that method's own docblock), not a plain string.

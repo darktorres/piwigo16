@@ -14,6 +14,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupService;
 use Piwigo\Image\ImageService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -43,6 +44,7 @@ final readonly class UserActivitySubController implements AdminSubControllerInte
         private GroupService $groupService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
     ) {}
@@ -51,6 +53,6 @@ final readonly class UserActivitySubController implements AdminSubControllerInte
     public function handle(ServerRequestInterface $request): void
     {
         new UserActivityPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->activityService, $this->userService, $this->imageService, $this->categoryService, $this->groupService, $this->htmlRenderer, $this->inputValidator, $this->eventDispatcher);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->activityService, $this->userService, $this->imageService, $this->categoryService, $this->groupService, $this->htmlRenderer, $this->inputValidator, $this->eventDispatcher);
     }
 }

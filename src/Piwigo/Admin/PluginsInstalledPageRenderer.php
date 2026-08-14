@@ -48,7 +48,7 @@ final class PluginsInstalledPageRenderer
      * fixed page slug statically (it's the only class registered for the
      * 'plugins' slug in config/admin_pages.php).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CurrentUser $currentUser, Paths $paths, PluginRegistry $pluginRegistry, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, CurrentUser $currentUser, Paths $paths, PluginRegistry $pluginRegistry, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -64,7 +64,7 @@ final class PluginsInstalledPageRenderer
         }
 
         $base_url = $urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
-        $pwg_token = new CsrfService($currentConfig)
+        $pwg_token = $csrfService
             ->getToken();
 
         $extension_repository = new ExtensionRepository($entityManager);

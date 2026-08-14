@@ -35,7 +35,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class UserListPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, InputValidator $inputValidator, Paths $paths, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, InputValidator $inputValidator, Paths $paths, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -175,7 +175,7 @@ final class UserListPageRenderer
             activateComments: $currentConfig->activateComments,
             doublePassword: $currentConfig->doublePasswordTypeInAdmin,
             uHistory: $urlService->getRootUrl() . 'admin.php?page=history&filter_user_id=',
-            pwgToken: new CsrfService($currentConfig)
+            pwgToken: $csrfService
                 ->getToken(),
             nbImagePage: $default_user->nbImagePage,
             recentPeriod: $default_user->recentPeriod,

@@ -13,6 +13,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\PictureFormatsSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -120,8 +121,8 @@ test('handle() delegates to PictureFormatsPageRenderer::render(), which fatal-er
             CurrentTemplateTestFactory::get(),
             HtmlServiceTestFactory::build(),
             new InputValidator(),
-            CurrentConfigTestFactory::get(),
             pictureFormatsSubControllerTestEntityManager(),
+            new CsrfService(CurrentConfigTestFactory::get()),
         );
 
         $exception = null;

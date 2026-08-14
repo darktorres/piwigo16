@@ -13,6 +13,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\CommentsSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -112,7 +113,7 @@ test('handle() delegates to CommentsPageRenderer::render() with every one of its
             $coreTabs,
             CurrentTemplateTestFactory::get(),
             $eventDispatcher,
-            CurrentConfigTestFactory::get(),
+            new CsrfService(CurrentConfigTestFactory::get()),
         );
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));

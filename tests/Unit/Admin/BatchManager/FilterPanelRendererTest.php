@@ -16,6 +16,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
@@ -170,6 +171,7 @@ test('render() shows every built-in prefilter and no active filter/selection whe
                 HtmlServiceTestFactory::build(),
                 CurrentConfigTestFactory::get(),
                 EntityManagerFactory::build(DbConnection::build()),
+                new CsrfService(CurrentConfigTestFactory::get()),
             );
 
         $prefilters = $template->getTemplateVars('prefilters');

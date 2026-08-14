@@ -9,7 +9,6 @@ use Piwigo\Admin\Projection\PictureFormatsPageContext;
 use Piwigo\Admin\Request\PictureFormatsImageIdRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -26,7 +25,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, CurrentConfig $currentConfig, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, CsrfService $csrfService, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
 
@@ -68,7 +67,7 @@ final class PictureFormatsPageRenderer
             addFormatsUrl: $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,
             imgSquareSrc: DerivativeImage::url($imageStdParams->getByType(ImageStdParams::SQUARE), $image),
             formats: $formats,
-            pwgToken: new CsrfService($currentConfig)
+            pwgToken: $csrfService
                 ->getToken(),
         ));
 

@@ -41,7 +41,7 @@ final class UpdatesExtPageRenderer
      * (config/admin_pages.php registers each of those 4 controllers for
      * exactly one slug), so each passes its own literal.
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService): void
     {
         $template = $currentTemplate->get();
 
@@ -158,7 +158,7 @@ final class UpdatesExtPageRenderer
         $template->assignContext(new UpdatesExtPageContext(
             updatesExtension: $updates_extension,
             showReset: $show_reset,
-            pwgToken: new CsrfService($currentConfig)
+            pwgToken: $csrfService
                 ->getToken(),
             extType: $pageSlug === 'updates' ? 'extensions' : $pageSlug,
             isWebmaster: ($accessControl->isWebmaster()) ? 1 : 0,

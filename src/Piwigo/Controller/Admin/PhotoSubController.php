@@ -20,6 +20,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -52,6 +53,7 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
         private ImageService $imageService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
@@ -95,7 +97,7 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($this->currentConfig->isFormatsEnabled) {
             new PictureFormatsPageRenderer()
-                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->currentConfig, $this->entityManager);
+                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->csrfService, $this->entityManager);
         }
     }
 }

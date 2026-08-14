@@ -6,7 +6,6 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Projection\CommentsPageContext;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -21,7 +20,7 @@ use Piwigo\Template\CurrentTemplate;
  */
 final class CommentsPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, EventDispatcher $eventDispatcher, CsrfService $csrfService): void
     {
         $template = $currentTemplate->get();
 
@@ -38,7 +37,7 @@ final class CommentsPageRenderer
 
         $template->assignContext(new CommentsPageContext(
             formAction: $urlService->getRootUrl() . 'admin.php?page=comments',
-            pwgToken: new CsrfService($currentConfig)
+            pwgToken: $csrfService
                 ->getToken(),
             adminPageTitle: $lang->t('User comments'),
         ));

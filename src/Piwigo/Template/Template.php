@@ -50,8 +50,11 @@ use Piwigo\Template\Request\TemplateExtentsRequest;
  * every real construction site (Bootstrap\RequestBootstrap.php x2,
  * Admin\Install\InstallWizard.php) runs after its own path has already
  * activated CurrentConfigService (RequestBootstrap::connect() resolves
- * one before finalize() ever constructs a Template; InstallWizard is
- * only ever constructed after InstallBootstrap::activateConfigService()).
+ * one before finalize() ever constructs a Template; InstallWizard::boot()
+ * builds its own ConfigService directly and sets it on CurrentConfigService
+ * before this class is ever constructed on the install path -- see
+ * InstallWizard::boot()'s own docblock for why that's a direct build, not
+ * InstallBootstrap::activateConfigService()).
  * Constructor-injecting CurrentConfigService itself is safe regardless
  * of that ordering -- per its own docblock, it's a plain
  * nullable-reference wrapper that "touches nothing until get() is

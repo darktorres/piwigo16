@@ -42,6 +42,8 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
@@ -94,8 +96,9 @@ use Throwable;
  * install.php calls InstallBootstrap::boot($paths) before this wizard is
  * constructed, so the DI container is available throughout. Every
  * CurrentConfigService::get() call here is safe because boot() already
- * calls InstallBootstrap::activateConfigService() and the config table
- * exists by then (the Doctrine Migrations baseline/config.sql runs
+ * builds a ConfigService directly (see that method's own docblock on why
+ * this isn't InstallBootstrap::activateConfigService()) and the config
+ * table exists by then (the Doctrine Migrations baseline/config.sql runs
  * immediately before).
  */
 final class InstallWizard
@@ -228,11 +231,30 @@ final class InstallWizard
         // this method's own Template construction at the end of its body
         // (self::$template below) needs CurrentConfigService already
         // active (Template's data_dir_checked write), and that
-        // construction happens before install.php regains control. Placed
-        // after the credential seeding above, not before, to avoid the
-        // same stale-credentials issue InstallBootstrap::
-        // activateConfigService()'s own docblock documents.
-        InstallBootstrap::activateConfigService();
+        // construction happens before install.php regains control.
+        //
+        // Deliberately NOT InstallBootstrap::activateConfigService()
+        // (which resolves ConfigService from the DI container): by the
+        // time boot() reaches this line, Connection::class may
+        // already be memoized in the container from an earlier,
+        // unavoidable resolution -- $this->lang (a constructor param,
+        // resolved by the caller before this object even exists) reaches
+        // HtmlRenderingInterface -> HtmlService, whose own constructor
+        // eagerly needs EntityManagerInterface, so PHP-DI's
+        // container-bound Connection::class factory can permanently bind
+        // its result to whatever (stale, pre-seed) credentials were
+        // current at that point -- the exact same class of bug this
+        // class's own constructor docblock already documents for
+        // SessionService below. A ConfigService built directly from a
+        // fresh DbConnection::build() call here is immune to that
+        // staleness the same way every other throwaway service in this
+        // method already is.
+        $configService = new ConfigService(
+            EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class),
+            $this->eventDispatcher,
+            $this->currentConfig,
+        );
+        $this->currentConfigService->set($configService);
 
         // Same reasoning again, different dependency: this request never
         // goes through RequestBootstrap::bootEntryPoint()/bootConfigOnly()

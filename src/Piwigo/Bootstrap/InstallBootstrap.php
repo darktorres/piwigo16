@@ -33,20 +33,31 @@ use Piwigo\Db\DbCredentials;
  * activityService()'s own precedent), not a container lookup, for this
  * reason.
  *
- * activateConfigService() is the install-path counterpart to
- * RequestBootstrap::connect()'s/CliBootstrap::buildApplication()'s own
- * CurrentConfigService::set() call -- called separately, and later, than
- * boot() for the identical reason: it must run after real DB credentials
- * are seeded (after InstallWizard::boot()'s own DbCredentials::seed(...)
- * call), or the ConfigService/Connection resolved and cached here would
- * carry stale ones for the rest of the request. Once called, every
- * Tier-2 class reachable from the install path
- * (Admin/themes.php/plugins.php/updates.php/
- * Cache/PermissionCacheInvalidator.php/Image/ImageService.php/
- * Page/NoPhotoYetRenderer.php/Template/Template.php/
- * Image/ImageStdParams.php/Core/UniqueExecLock.php) can safely call
- * CurrentConfigService::get() the same way they already do when reached
- * from the HTTP path (RequestBootstrap::connect() activates it there).
+ * activateConfigService() resolves ConfigService via
+ * Kernel::container()->get() and wires it onto CurrentConfigService --
+ * modeled after RequestBootstrap::connect()'s/CliBootstrap::
+ * buildApplication()'s own CurrentConfigService::set() call. NOT safe on
+ * the install path, though: running it after InstallWizard::boot()'s own
+ * DbCredentials::seed(...) call is necessary but not sufficient. A real,
+ * confirmed bug traced this exactly -- InstallWizard::boot() constructs
+ * its own $lang constructor param *before* seed() ever runs (both here
+ * and in install.php's own real entry-shell sequence, which resolves
+ * RequestBootstrap::lang() before constructing InstallWizard at all), and
+ * Lang's own HtmlRenderingInterface dependency (HtmlService) has its own
+ * eager EntityManagerInterface constructor param -- so PHP-DI's
+ * container-bound Connection::class factory can already be memoized
+ * against stale, pre-seed credentials the moment Lang is first resolved,
+ * regardless of when activateConfigService() itself is later called.
+ * InstallWizard::boot() therefore builds its own ConfigService directly
+ * from a fresh DbConnection::build() call instead (see that method's own
+ * docblock) -- immune to this staleness the same way every other
+ * throwaway service on the install path already is (SessionService,
+ * MigrationDependencyFactory, both documented in InstallWizard's own
+ * constructor/performInstall() docblocks). activateConfigService() stays
+ * here only for its own dedicated test coverage (InstallBootstrapTest)
+ * of its narrow "wire container's ConfigService onto
+ * CurrentConfigService" contract -- do not reach for it from a real
+ * mid-request credential-seeding flow.
  */
 final class InstallBootstrap
 {

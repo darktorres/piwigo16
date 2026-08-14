@@ -88,9 +88,12 @@ final class DbCredentials
      * Seeds the current process's PIWIGO_DB_* env vars directly (no .env
      * write) then reload()s this instance so every consumer holding it
      * reflects them for the rest of this request -- install.php's freshly
-     * submitted form values need this before
-     * InstallBootstrap::activateConfigService() runs, so real credentials
-     * are available before anything connects.
+     * submitted form values need this before InstallWizard::boot() builds
+     * its own ConfigService, so real credentials are available before
+     * anything connects. Necessary but not sufficient on its own: see
+     * InstallWizard::boot()'s own docblock for why that ConfigService is
+     * built directly from a fresh DbConnection::build() call rather than
+     * resolved via the container, even after seed() has already run.
      *
      * @param array<string, string|null> $values keyed by PIWIGO_DB_* env var name
      */

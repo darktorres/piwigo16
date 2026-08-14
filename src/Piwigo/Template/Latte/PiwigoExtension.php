@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Template\Latte;
 
+use Latte\Compiler\Nodes\Php;
+use Latte\Compiler\Nodes\PrintNode;
+use Latte\Compiler\Tag;
 use Latte\Extension;
 use Latte\Runtime\Html;
 use Override;
@@ -123,6 +126,50 @@ final class PiwigoExtension extends Extension
             'get_device' => $this->getDevice(...),
             'get_gallery_home_url' => $this->urlService->getGalleryHomeUrl(...),
         ];
+    }
+
+    /**
+     * @return array<string, callable(Tag, \Latte\Compiler\TemplateParser): PrintNode>
+     */
+    #[Override]
+    public function getTags(): array
+    {
+        return [
+            '_' => $this->parseTranslate(...),
+            'translate' => $this->parseTranslate(...),
+        ];
+    }
+
+    /**
+     * `{_ 'key', arg1, arg2}` / `{translate 'key', arg1, arg2}` -- compiles
+     * to the same `translate` filter call `{='key'|translate:arg1:arg2}`
+     * already produces (see getFilters()'s own `'translate' =>
+     * $this->translate(...)` registration below); this is a shorter,
+     * Latte-native call syntax on top of the existing mechanism, not a
+     * second one. Modeled on Latte's own
+     * `TranslatorExtension::parseTranslate()`
+     * (vendor/latte/latte/src/Latte/Essential/TranslatorExtension.php),
+     * minus its compile-time-baking branch -- `translate()` reads
+     * `$this->lang` instance state, so nothing here is ever statically
+     * resolvable at compile time.
+     */
+    private function parseTranslate(Tag $tag): PrintNode
+    {
+        $tag->outputMode = $tag::OutputKeepIndentation;
+        $tag->expectArguments();
+        $node = new PrintNode();
+        $node->expression = $tag->parser->parseUnquotedStringOrExpression();
+        $args = new Php\Expression\ArrayNode();
+        if ($tag->parser->stream->tryConsume(',') !== null) {
+            $args = $tag->parser->parseArguments();
+        }
+
+        $node->modifier = $tag->parser->parseModifier();
+        $node->modifier->escape = $node->modifier->removeFilter('noescape') === null;
+
+        array_unshift($node->modifier->filters, new Php\FilterNode(new Php\IdentifierNode('translate'), $args->toArguments()));
+
+        return $node;
     }
 
     /**

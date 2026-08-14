@@ -88,6 +88,55 @@ test('parse() renders a real .latte file through Latte, exercising a filter, the
     latte_engine_wiring_test_rrmdir($tplDir);
 });
 
+test('{_...} and {translate ...} tags compile to the same translate() call as the |translate filter', function (): void {
+    $t = TemplateTestFactory::build();
+    $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));
+    mkdir($tplDir, 0o777, true);
+    file_put_contents(
+        $tplDir . '/fixture.latte',
+        <<<'LATTE'
+        <p>{_ 'hello world'}</p>
+        <p>{translate 'Hello %s', $name}</p>
+        LATTE
+        ,
+    );
+    $t->setTemplateDir($tplDir);
+    $t->assignContext(new AdHocPageContext([
+        'name' => 'World',
+    ]));
+
+    $output = $t->parse('fixture.latte', true);
+
+    expect($output)
+        ->toContain('<p>hello world</p>')
+        ->toContain('<p>Hello World</p>');
+
+    latte_engine_wiring_test_rrmdir($tplDir);
+});
+
+test('{_...} auto-escapes by default and honors |noescape, exactly like the |translate filter', function (): void {
+    $t = TemplateTestFactory::build();
+    $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));
+    mkdir($tplDir, 0o777, true);
+    file_put_contents(
+        $tplDir . '/fixture.latte',
+        <<<'LATTE'
+        <p>{_ '<b>escaped</b>'}</p>
+        <p>{_ '<b>raw</b>'|noescape}</p>
+        LATTE
+        ,
+    );
+    $t->setTemplateDir($tplDir);
+
+    $output = $t->parse('fixture.latte', true);
+
+    expect($output)
+        ->toContain('<p>&lt;b&gt;escaped&lt;/b&gt;</p>')
+        ->toContain('<p><b>raw</b></p>');
+
+    latte_engine_wiring_test_rrmdir($tplDir);
+});
+
 test('templateExists() finds a real .latte file on the template-dir chain and correctly rejects a missing one', function (): void {
     $t = TemplateTestFactory::build();
     $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));

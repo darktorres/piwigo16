@@ -17,6 +17,18 @@ use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Ws\Categories\AddHandler as CategoriesAddHandler;
+use Piwigo\Ws\Categories\CalculateOrphansHandler;
+use Piwigo\Ws\Categories\DeleteHandler as CategoriesDeleteHandler;
+use Piwigo\Ws\Categories\DeleteRepresentativeHandler;
+use Piwigo\Ws\Categories\GetAdminListHandler as CategoriesGetAdminListHandler;
+use Piwigo\Ws\Categories\GetImagesHandler as CategoriesGetImagesHandler;
+use Piwigo\Ws\Categories\GetListHandler as CategoriesGetListHandler;
+use Piwigo\Ws\Categories\MoveHandler;
+use Piwigo\Ws\Categories\RefreshRepresentativeHandler;
+use Piwigo\Ws\Categories\SetInfoHandler as CategoriesSetInfoHandler;
+use Piwigo\Ws\Categories\SetRankHandler;
+use Piwigo\Ws\Categories\SetRepresentativeHandler;
 use Piwigo\Ws\Comments\DeleteHandler as CommentsDeleteHandler;
 use Piwigo\Ws\Comments\GetListHandler as CommentsGetListHandler;
 use Piwigo\Ws\Comments\ValidateHandler as CommentsValidateHandler;
@@ -55,14 +67,13 @@ final readonly class WsDefaultMethods
     // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
     // ClassName::method() calls. `pwg.userComments.*`/`pwg.permissions.*`/
     // `pwg.plugins.*`/`pwg.themes.performAction`/`pwg.extensions.*`/
-    // `pwg.groups.*`/`pwg.tags.*` (Comments.php/Permissions.php/
-    // Extensions.php/Groups.php/Tags.php, Group 19's first 5 migrated
-    // domains) no longer have a callback-based registration or a
-    // constructor property here -- their methods register via
-    // MethodDefinition/handlerClass instead, resolved from the container
-    // at invocation time.
+    // `pwg.groups.*`/`pwg.tags.*`/`pwg.categories.*` (Comments.php/
+    // Permissions.php/Extensions.php/Groups.php/Tags.php/Categories.php,
+    // Group 19's first 6 migrated domains) no longer have a
+    // callback-based registration or a constructor property here --
+    // their methods register via MethodDefinition/handlerClass instead,
+    // resolved from the container at invocation time.
     public function __construct(
-        private Categories $pwgCategories,
         private Core $pwgCore,
         private Users $pwgUsers,
         private Images $pwgImages,
@@ -253,78 +264,40 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.categories.getImages',
-            $this->pwgCategories->getImages(...),
-            array_merge([
-                'cat_id' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'recursive' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
-                'per_page' => [
-                    'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'page' => [
-                    'default' => 0,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'order' => [
-                    'default' => null,
-                    'info' => 'id, file, name, hit, rating_score, date_creation, date_available, random',
-                ],
-            ], $f_params),
-            'Returns elements for the corresponding categories.
+        // pwg.categories.* (Group 19's sixth migrated domain) registers via
+        // MethodDefinition/handlerClass -- Categories.php is gone, each
+        // method is its own container-resolved WsAction.
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.getImages',
+            handlerClass: CategoriesGetImagesHandler::class,
+            description: 'Returns elements for the corresponding categories.
     <br><b>cat_id</b> can be empty if <b>recursive</b> is true.
-    <br><b>order</b> comma separated fields for sorting'
-        );
-
-        $service->addMethod(
-            'pwg.categories.getList',
-            $this->pwgCategories->getList(...),
-            [
-                'cat_id' => [
-                    'default' => null,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                    'info' => 'Parent category. "0" or empty for root.',
-                ],
-                'recursive' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
-                'public' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
-                'tree_output' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
-                'fullname' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                ],
-                'thumbnail_size' => [
-                    'default' => ImageStdParams::THUMB,
-                    'info' => implode(',', array_keys($this->imageStdParams->getDefinedTypeMap())),
-                ],
-                'search' => [
-                    'default' => null,
-                ],
-                'limit' => [
-                    'default' => null,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                    'info' => 'Parameter not compatible with recursive=true',
-                ],
+    <br><b>order</b> comma separated fields for sorting',
+            params: [
+                ParamDefinition::optional('cat_id', null, WsParamType::INT | WsParamType::POSITIVE, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optional('recursive', false, WsParamType::BOOL),
+                ParamDefinition::optional('per_page', 100, WsParamType::INT | WsParamType::POSITIVE, maxValue: $this->currentConfig->wsMaxImagesPerPage),
+                ParamDefinition::optional('page', 0, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('order', null, info: 'id, file, name, hit, rating_score, date_creation, date_available, random'),
+                ...self::sharedImageFilterParams(),
             ],
-            'Returns a list of categories.'
-        );
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.getList',
+            handlerClass: CategoriesGetListHandler::class,
+            description: 'Returns a list of categories.',
+            params: [
+                ParamDefinition::optional('cat_id', null, WsParamType::INT | WsParamType::POSITIVE, info: 'Parent category. "0" or empty for root.'),
+                ParamDefinition::optional('recursive', false, WsParamType::BOOL),
+                ParamDefinition::optional('public', false, WsParamType::BOOL),
+                ParamDefinition::optional('tree_output', false, WsParamType::BOOL),
+                ParamDefinition::optional('fullname', false, WsParamType::BOOL),
+                ParamDefinition::optional('thumbnail_size', ImageStdParams::THUMB, info: implode(',', array_keys($this->imageStdParams->getDefinedTypeMap()))),
+                ParamDefinition::optional('search'),
+                ParamDefinition::optional('limit', null, WsParamType::INT | WsParamType::POSITIVE, info: 'Parameter not compatible with recursive=true'),
+            ],
+        ));
 
         $service->addMethod(
             'pwg.getMissingDerivatives',
@@ -919,176 +892,110 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.categories.calculateOrphans',
-            $this->pwgCategories->calculateOrphans(...),
-            [
-                'category_id' => [
-                    'type' => WsParamType::ID,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.calculateOrphans',
+            handlerClass: CalculateOrphansHandler::class,
+            description: 'Return the number of orphan photos if an album is deleted.',
+            params: [
+                ParamDefinition::required('category_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
             ],
-            'Return the number of orphan photos if an album is deleted.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.categories.getAdminList',
-            $this->pwgCategories->getAdminList(...),
-            [
-                'cat_id' => [
-                    'default' => null,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                    'info' => 'Parent category. "0" or empty for root.',
-                ],
-                'search' => [
-                    'default' => null,
-                ],
-                'recursive' => [
-                    'default' => true,
-                    'type' => WsParamType::BOOL,
-                ],
-                'additional_output' => [
-                    'default' => null,
-                    'info' => 'Comma saparated list (see method description)',
-                ],
-            ],
-            'Get albums list as displayed on admin page. <br>
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.getAdminList',
+            handlerClass: CategoriesGetAdminListHandler::class,
+            description: 'Get albums list as displayed on admin page. <br>
           <b>additional_output</b> controls which data are returned, possible values are:<br>
           null, full_name_with_admin_links<br>',
-            options: [
-                'admin_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.categories.add',
-            $this->pwgCategories->add(...),
-            [
-                'name' => [],
-                'parent' => [
-                    'default' => null,
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'comment' => [
-                    'default' => null,
-                ],
-                'visible' => [
-                    'default' => true,
-                    'type' => WsParamType::BOOL,
-                ],
-                'status' => [
-                    'default' => null,
-                    'info' => 'public, private',
-                ],
-                'commentable' => [
-                    'default' => true,
-                    'type' => WsParamType::BOOL,
-                ],
-                'position' => [
-                    'default' => null,
-                    'info' => 'first, last',
-                ],
-                'pwg_token' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
+            params: [
+                ParamDefinition::optional('cat_id', null, WsParamType::INT | WsParamType::POSITIVE, info: 'Parent category. "0" or empty for root.'),
+                ParamDefinition::optional('search'),
+                ParamDefinition::optional('recursive', true, WsParamType::BOOL),
+                ParamDefinition::optional('additional_output', null, info: 'Comma saparated list (see method description)'),
             ],
-            'Adds an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
-        $service->addMethod(
-            'pwg.categories.delete',
-            $this->pwgCategories->delete(...),
-            [
-                'category_id' => [
-                    'flags' => WsParamFlag::ACCEPT_ARRAY,
-                ],
-                'photo_deletion_mode' => [
-                    'default' => 'delete_orphans',
-                ],
-                'pwg_token' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.add',
+            handlerClass: CategoriesAddHandler::class,
+            description: 'Adds an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
+            params: [
+                ParamDefinition::required('name'),
+                ParamDefinition::optional('parent', null, WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::optional('comment'),
+                ParamDefinition::optional('visible', true, WsParamType::BOOL),
+                ParamDefinition::optional('status', null, info: 'public, private'),
+                ParamDefinition::optional('commentable', true, WsParamType::BOOL),
+                ParamDefinition::optional('position', null, info: 'first, last'),
+                ParamDefinition::optionalFlag('pwg_token'),
             ],
-            'Deletes album(s).
+            requiresAuth: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.delete',
+            handlerClass: CategoriesDeleteHandler::class,
+            description: 'Deletes album(s).
     <br><b>photo_deletion_mode</b> can be "no_delete" (may create orphan photos), "delete_orphans"
     (default mode, only deletes photos linked to no other album) or "force_delete" (delete all photos, even those linked to other albums)',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.categories.move',
-            $this->pwgCategories->move(...),
-            [
-                'category_id' => [
-                    'flags' => WsParamFlag::ACCEPT_ARRAY,
-                ],
-                'parent' => [
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'pwg_token' => [],
+            params: [
+                ParamDefinition::required('category_id', flags: WsParamFlag::ACCEPT_ARRAY),
+                ParamDefinition::optional('photo_deletion_mode', 'delete_orphans'),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Move album(s).
+            requiresAuth: true,
+            postOnly: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.move',
+            handlerClass: MoveHandler::class,
+            description: 'Move album(s).
     <br>Set parent as 0 to move to gallery root. Only virtual categories can be moved.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.categories.setRepresentative',
-            $this->pwgCategories->setRepresentative(...),
-            [
-                'category_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                ],
+            params: [
+                ParamDefinition::required('category_id', flags: WsParamFlag::ACCEPT_ARRAY),
+                ParamDefinition::required('parent', WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Sets the representative photo for an album. The photo doesn\'t have to belong to the album.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.categories.deleteRepresentative',
-            $this->pwgCategories->deleteRepresentative(...),
-            [
-                'category_id' => [
-                    'type' => WsParamType::ID,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.setRepresentative',
+            handlerClass: SetRepresentativeHandler::class,
+            description: 'Sets the representative photo for an album. The photo doesn\'t have to belong to the album.',
+            params: [
+                ParamDefinition::required('category_id', WsParamType::ID),
+                ParamDefinition::required('image_id', WsParamType::ID),
             ],
-            'Deletes the album thumbnail. Only possible if $conf[\'allow_random_representative\']',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.categories.refreshRepresentative',
-            $this->pwgCategories->refreshRepresentative(...),
-            [
-                'category_id' => [
-                    'type' => WsParamType::ID,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.deleteRepresentative',
+            handlerClass: DeleteRepresentativeHandler::class,
+            description: 'Deletes the album thumbnail. Only possible if $conf[\'allow_random_representative\']',
+            params: [
+                ParamDefinition::required('category_id', WsParamType::ID),
             ],
-            'Find a new album thumbnail.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.refreshRepresentative',
+            handlerClass: RefreshRepresentativeHandler::class,
+            description: 'Find a new album thumbnail.',
+            params: [
+                ParamDefinition::required('category_id', WsParamType::ID),
+            ],
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         $service->register(new MethodDefinition(
             name: 'pwg.tags.getAdminList',
@@ -1296,75 +1203,40 @@ final readonly class WsDefaultMethods
             ]
         );
 
-        $service->addMethod(
-            'pwg.categories.setInfo',
-            $this->pwgCategories->setInfo(...),
-            [
-                'category_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'name' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'comment' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'status' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'public, private',
-                ],
-                'visible' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'commentable' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'Boolean, effective if configuration variable activate_comments is set to true',
-                ],
-                'apply_commentable_to_subalbums' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::OPTIONAL,
-                    'info' => 'If true, set commentable to all sub album',
-                ],
-                'pwg_token' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.setInfo',
+            handlerClass: CategoriesSetInfoHandler::class,
+            description: 'Changes properties of an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
+            params: [
+                ParamDefinition::required('category_id', WsParamType::ID),
+                ParamDefinition::optionalFlag('name'),
+                ParamDefinition::optionalFlag('comment'),
+                ParamDefinition::optionalFlag('status', info: 'public, private'),
+                ParamDefinition::optionalFlag('visible'),
+                ParamDefinition::optionalFlag('commentable', info: 'Boolean, effective if configuration variable activate_comments is set to true'),
+                ParamDefinition::optionalFlag('apply_commentable_to_subalbums', info: 'If true, set commentable to all sub album'),
+                ParamDefinition::optionalFlag('pwg_token'),
             ],
-            'Changes properties of an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.categories.setRank',
-            $this->pwgCategories->setRank(...),
-            [
-                'category_id' => [
-                    'type' => WsParamType::ID,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                ],
-                'rank' => [
-                    'type' => WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL,
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-            ],
-            'Changes the rank of an album
+        $service->register(new MethodDefinition(
+            name: 'pwg.categories.setRank',
+            handlerClass: SetRankHandler::class,
+            description: 'Changes the rank of an album
             <br><br>If you provide a list for category_id:
             <ul>
             <li>rank becomes useless, only the order of the image_id list matters</li>
             <li>you are supposed to provide the list of all categories_ids belonging to the album.
             </ul>.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            params: [
+                ParamDefinition::required('category_id', WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optionalFlag('rank', WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL),
+            ],
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         // pwg.plugins.*/pwg.themes.performAction/pwg.extensions.* (Group 19's
         // third migrated domain) register via MethodDefinition/handlerClass

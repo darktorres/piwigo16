@@ -1,0 +1,37 @@
+<?php
+
+declare(strict_types=1);
+
+// +-----------------------------------------------------------------------+
+// | This file is part of Piwigo.                                          |
+// |                                                                       |
+// | For copyright and license information, please view the COPYING.txt    |
+// | file that was distributed with this source code.                      |
+// +-----------------------------------------------------------------------+
+
+namespace Piwigo\Ws\Categories;
+
+use Piwigo\Ws\WsParams;
+
+/**
+ * `pwg.categories.deleteRepresentative` input DTO. No 'default' key --
+ * mandatory, always present, `WsParamType::ID` guarantees a plain int.
+ */
+final readonly class DeleteRepresentativeParams implements WsParams
+{
+    public function __construct(
+        public int $categoryId,
+    ) {}
+
+    /**
+     * @param array<int|string, mixed> $raw
+     */
+    public static function fromArray(array $raw): static
+    {
+        $categoryId = $raw['category_id'] ?? null;
+
+        return new self(
+            categoryId: is_int($categoryId) ? $categoryId : 0,
+        );
+    }
+}

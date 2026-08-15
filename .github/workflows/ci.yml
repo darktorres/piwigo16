@@ -558,14 +558,27 @@ jobs:
         env:
           HTTP_X_PIWIGO_ENV: test
       - run: vendor/bin/pest tests/Unit/Db tests/Unit/Config tests/Arch
-      - run: php bin/piwigo schema:dump
+      - if: matrix.provider != 'mariadb'
+        run: php bin/piwigo schema:dump
         env:
           HTTP_X_PIWIGO_ENV: test
-      - name: Verify install/piwigo_structure-{mysql,pgsql}.sql has no drift
-        # mariadb intentionally shares mysql's own dump file (SchemaDumpService
-        # collapses the detected label to just 'mysql'/'pgsql', never a 3rd
-        # 'mariadb' -- see that class's own docblock) -- both legs' dumps are
-        # checked against the same committed file.
+      - if: matrix.provider != 'mariadb'
+        name: Verify install/piwigo_structure-{mysql,pgsql}.sql has no drift
+        # Skipped on mariadb. SchemaDumpService collapses the detected label
+        # to 'mysql'/'pgsql' and never a 3rd 'mariadb', so that leg would be
+        # checked against MySQL's committed file -- which it can never match.
+        # mariadb-dump differs from mysqldump on engine-level details, not
+        # formatting: `int unsigned` -> `int(11) unsigned` (display widths
+        # MySQL 8.4 dropped), `CURRENT_TIMESTAMP` -> `current_timestamp()`,
+        # omitted `COLLATE` clauses, and most fundamentally `json` ->
+        # `longtext ... CHECK (json_valid(...))`, since MariaDB has no native
+        # JSON type. Reproduced locally against mariadb:12, the same image
+        # this matrix uses: 189 differing lines.
+        #
+        # The guard asserts "the committed dump matches what the migrations
+        # produce", which is a per-dialect claim; MariaDB shares the migration
+        # path but not the dump dialect. Its value in this job is the
+        # migration itself plus the smoke tests above, both of which do run.
         run: git diff --exit-code -- install/piwigo_structure-mysql.sql install/piwigo_structure-pgsql.sql
       - if: matrix.provider == 'pgsql'
         name: Start PHP built-in server

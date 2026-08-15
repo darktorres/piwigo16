@@ -339,7 +339,12 @@ function printNode(node, options, mode = "block") {
       return ["</", node.name, ">"];
 
     case "LatteOutput":
-      return ["{", node.form === "=" ? "=" : "", exprToDoc(node.expr), "}"];
+      return [
+        "{",
+        node.form === "=" ? "=" : node.form === "_" || node.form === "translate" ? node.form + " " : "",
+        exprToDoc(node.expr),
+        "}",
+      ];
 
     case "LatteComment":
       return ["{*", node.value, "*}"];

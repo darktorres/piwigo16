@@ -821,6 +821,22 @@ function parseLatteNode(s, head, listOpts) {
     s.error(`unexpected closing tag {/${head.keyword}}`);
   }
   switch (head.keyword) {
+    case "_":
+    case "translate": {
+      // `{_ 'key'|filters}` / `{translate 'key'|filters}` -- Piwigo's own
+      // PiwigoExtension::getTags() (P33F), not Latte's own
+      // TranslatorExtension. Grammar reused as-is from parseExprString():
+      // a key expression (string literal in every real call site today)
+      // followed by an optional filter chain -- identical to what `{=...}`
+      // already parses. No comma-separated-args support: Piwigo's own
+      // parseTranslate() accepts them, but no real template uses that form
+      // yet (confirmed via a full-tree AST scan for P33E's conversion), so
+      // it's left unimplemented here rather than built for a hypothetical.
+      const body = readTagBody(s);
+      const rest = body.replace(new RegExp(`^${head.keyword}\\s*`), "");
+      const expr = parseExprString(rest);
+      return { type: "LatteOutput", form: head.keyword, expr, start, end: s.pos };
+    }
     case "if":
       return parseIf(s, start, listOpts);
     case "foreach":

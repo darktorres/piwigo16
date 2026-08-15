@@ -150,7 +150,7 @@ final class UserListPageRenderer
         $groups_arr_id = [];
         $groups_arr_name = [];
         foreach ($groupService->getAllBasic() as $group) {
-            $groups_arr_name[] = '"' . addslashes($group->name) . '"';
+            $groups_arr_name[] = $group->name;
             $groups_arr_id[] = (string) $group->id->value;
         }
 
@@ -204,7 +204,17 @@ final class UserListPageRenderer
             levelSelected: $default_user->level,
             nbUsersByLevel: $nb_users_by_level,
             groupsArrId: implode(',', $groups_arr_id),
-            groupsArrName: implode(',', $groups_arr_name),
+            // A complete JSON array literal, not a comma-joined list of
+            // hand-quoted names: this is spliced unescaped into an inline
+            // <script> in user_list.latte, and the addslashes() this
+            // replaces escaped only quotes and backslashes -- not `</script>`,
+            // literal newlines, or U+2028/U+2029, each of which breaks or
+            // escapes the script context. The HEX flags keep `<`, `>`, `&`,
+            // `'` and `"` out of the emitted string entirely.
+            groupsArrName: json_encode(
+                $groups_arr_name,
+                JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR,
+            ),
             guestId: $guest_id,
             viewSelector: $view_selector,
             pagination: $pagination,

@@ -26,7 +26,6 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use ReflectionProperty;
 
 /**
  * Piwigo\Controller\WsController -- the web-service dispatcher entry

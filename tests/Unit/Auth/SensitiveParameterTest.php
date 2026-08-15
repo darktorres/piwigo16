@@ -26,10 +26,6 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
-use ReflectionClass;
-use RuntimeException;
-use SensitiveParameterValue;
-use TypeError;
 
 /**
  * Finding 4 (post-DI-campaign shim/facade audit): real, live proof that

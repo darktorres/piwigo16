@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
-use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\ApiKeyRepository;

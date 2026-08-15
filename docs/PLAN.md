@@ -1767,7 +1767,7 @@ Migrations (`bin/piwigo migrations:migrate`) are the real, live mechanism
 today, for both a fresh install and a version-to-version upgrade of an
 existing v17 install.
 
-`install/piwigo_structure-{mysql,pgsql}.sql` are **generated,
+`install/piwigo_structure-{mysql,mariadb,pgsql}.sql` are **generated,
 human-reviewable snapshots** regenerated *from* migrations by
 `bin/piwigo schema:dump` — not the install-time source of truth. They
 look like the hand-maintained static schema that briefly replaced

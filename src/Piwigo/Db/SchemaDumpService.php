@@ -6,6 +6,7 @@ namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
+use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Piwigo\Db\Projection\SchemaDumpResult;
 use RuntimeException;
@@ -34,12 +35,31 @@ use Symfony\Component\Process\Process;
  * provider's throwaway (already-migrated) database each time, the same
  * way `migrations:migrate` already works.
  *
- * Provider label collapses to just 'mysql'/'pgsql' (not a 3rd 'mariadb'
- * variant the recovered prior attempt produced) -- matching this
- * codebase's own established platform-branching granularity everywhere
- * else (RandFunction/GroupConcatFunction/every migration file's own
- * `instanceof AbstractMySQLPlatform` branch), which treats MySQL and
- * MariaDB as one portability tier throughout, never a 3-way split.
+ * Three provider labels: 'mysql', 'mariadb', 'pgsql'.
+ *
+ * This deliberately does NOT follow the one-tier MySQL/MariaDB granularity
+ * used elsewhere (RandFunction/GroupConcatFunction/every migration's own
+ * `instanceof AbstractMySQLPlatform` branch). That tiering is right for
+ * *queries*, which really are portable across both. It is wrong for
+ * *schema representation*, which is what this file records: dumping the
+ * same migrated schema from MariaDB 12 differs from MySQL 8.4 in 189
+ * lines, and not cosmetically --
+ *
+ *   int unsigned        -> int(11) unsigned      (display widths 8.4 dropped)
+ *   CURRENT_TIMESTAMP   -> current_timestamp()
+ *   COLLATE utf8mb4_... -> omitted
+ *   json                -> longtext ... CHECK (json_valid(...))
+ *
+ * -- the last because MariaDB has no native JSON type, so those columns
+ * genuinely are a different type there. Sharing one file made the CI
+ * drift guard unsatisfiable on the mariadb leg, which is why that leg had
+ * the guard skipped until this split existed.
+ *
+ * MySQL's own `mysqldump` client is used for both, verified against a real
+ * mariadb:12 server -- `--column-statistics=0` (already present) is what
+ * makes that work, and MariaDB's own `mariadb-dump` is deliberately not
+ * required, since it is absent from the MySQL client package and from CI
+ * runners.
  *
  * Shells out to mysqldump/pg_dump via the same Symfony\Process pattern
  * BackupService already uses -- schema-only, no data
@@ -68,10 +88,18 @@ final readonly class SchemaDumpService
         return new SchemaDumpResult($label, $outputPath);
     }
 
+    /**
+     * MariaDB is checked first: `MariaDBPlatform` extends
+     * `AbstractMySQLPlatform`, so the MySQL arm would otherwise swallow it
+     * and every MariaDB dump would be written over MySQL's file.
+     */
     private function detectLabel(): string
     {
         $platform = $this->connection->getDatabasePlatform();
 
+        if ($platform instanceof MariaDBPlatform) {
+            return 'mariadb';
+        }
         if ($platform instanceof AbstractMySQLPlatform) {
             return 'mysql';
         }
@@ -79,7 +107,7 @@ final readonly class SchemaDumpService
             return 'pgsql';
         }
 
-        throw new RuntimeException('schema:dump only supports MySQL/MariaDB and PostgreSQL connections, got ' . $platform::class);
+        throw new RuntimeException('schema:dump only supports MySQL, MariaDB and PostgreSQL connections, got ' . $platform::class);
     }
 
     /**

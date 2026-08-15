@@ -188,8 +188,12 @@ entry point, see `tools/latte-lint.php`).
 backed by the same `DbMaintenanceRepository::repairOptimizeAllTables()`
 the admin web UI uses. `migrations:migrate` is Doctrine's own command;
 `schema:dump` (`Piwigo\Command\SchemaDumpCommand`) regenerates the
-checked-in `install/piwigo_structure-{mysql,pgsql}.sql` snapshots from
-the current, live (post-migration) schema.
+checked-in `install/piwigo_structure-{mysql,mariadb,pgsql}.sql` snapshots
+from the current, live (post-migration) schema. MariaDB gets its own file
+rather than sharing MySQL's: the two schemas differ at the engine level
+(`int(11) unsigned` display widths, `current_timestamp()`, and `json` as
+`longtext ... CHECK (json_valid(...))`, since MariaDB has no native JSON
+type), so one shared file made the CI drift guard unsatisfiable there.
 
 ### Plugin/theme contract (P27)
 
@@ -567,7 +571,7 @@ Schema for either provider comes from Doctrine Migrations
 (`bin/piwigo migrations:migrate`), the mechanism both a fresh install and
 an existing install's own upgrade path run through — not a one-time
 generator. `bin/piwigo schema:dump` regenerates the checked-in
-`install/piwigo_structure-{mysql,pgsql}.sql` snapshots from the current
+`install/piwigo_structure-{mysql,mariadb,pgsql}.sql` snapshots from the current
 connection's live (post-migration) schema; CI's `db-multi-provider` job
 fails on any drift between that snapshot and what a fresh
 `migrations:migrate` run actually produces.
@@ -906,7 +910,7 @@ installs adopt v17 via a one-time `bin/piwigo import:legacy` migration
 above), not a rolling upgrade. Version-to-version upgrades *within* v17
 run through Doctrine Migrations (`bin/piwigo migrations:migrate`) — the
 mechanism both a fresh install and an existing install's own upgrade
-path use today. `install/piwigo_structure-{mysql,pgsql}.sql` are
+path use today. `install/piwigo_structure-{mysql,mariadb,pgsql}.sql` are
 generated, human-reviewable schema snapshots + a CI drift guard
 (`bin/piwigo schema:dump`), not the install-time source of truth.
 

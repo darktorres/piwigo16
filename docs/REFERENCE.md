@@ -577,6 +577,7 @@ fails on any drift between that snapshot and what a fresh
 | `composer analyse:phpstan` | PHPStan — the sole **blocking** static-analysis gate |
 | `composer analyse` | Alias for `analyse:phpstan` — `analyse:psalm` doesn't exist; Psalm is installed again but has no `composer` script and isn't a CI gate (see "Key design decisions" below) |
 | `composer lint:php` | ECS in check mode — **still not blocking** (see CI below) |
+| `composer lint:composer` (`:fix`) | ergebnis/composer-normalize in check (`--dry-run`) / write mode — **blocking** in CI and in lefthook's `pre-commit`, unlike ECS: `composer.json` was normalized in the same commit that added the tool, so there's no pre-existing layout debt to grandfather |
 | `composer require-checker` | Composer-require-checker |
 | `composer unused` | Composer-unused |
 | `composer bench` | PHPBench (`tests/Bench/`, one real subject so far — `KernelBootBench::benchColdBoot()`, landed P11; no others yet) |
@@ -707,14 +708,14 @@ concluding it's real — never dismiss (or accept) a failure on sight.
 ### CI
 
 `.github/workflows/ci.yml` runs on every push/PR (docs-only changes
-excluded via `paths-ignore`). 30 jobs: `pest`, `ecs`, `phpstan`, `rector`,
+excluded via `paths-ignore`). 32 jobs: `pest`, `ecs`, `phpstan`, `rector`,
 `coverage`, `audit`, `deptrac`, `require-checker`, `composer-unused`,
-`phpbench`, `vitest`, `eslint`, `stylelint`, `knip`, `size-limit`,
-`k6-load` (no-op until a load-test track lands), `commitlint`,
-`actionlint`, `test-file-inventory`, `db-multi-provider`, `integration`,
-`contract`, `browser`, `install-flow`, `visual-regression`,
-`restore-drill`, `lighthouse`, `sbom`, `apache-deny-rules`,
-`container-deny-rules`.
+`composer-normalize`, `phpbench`, `vitest`, `eslint`, `stylelint`, `knip`,
+`size-limit`, `k6-load` (no-op until a load-test track lands),
+`commitlint`, `actionlint`, `test-file-inventory`, `doc-drift`,
+`db-multi-provider`, `integration`, `contract`, `browser`,
+`install-flow`, `visual-regression`, `restore-drill`, `lighthouse`,
+`sbom`, `apache-deny-rules`, `container-deny-rules`.
 
 Separate workflow files, independent of `ci.yml`: `osv-scanner.yml`/
 `scorecard.yml` (SEC-52/SEC-64, weekly + push/PR), `release-please.yml`
@@ -786,8 +787,9 @@ that never happened. Not a blocker, just an open, small optimization.)
 ### Gates
 
 `composer test`, `composer analyse`, `composer lint:php`,
-`composer require-checker`, `composer unused`, `composer bench` — see
-Development above for what each does and its current status.
+`composer lint:composer`, `composer require-checker`, `composer unused`,
+`composer bench` — see Development above for what each does and its
+current status.
 
 ### Test database
 

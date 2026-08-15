@@ -1,8 +1,8 @@
 {
   "name": "piwigo/piwigo",
   "description": "Piwigo photo gallery — modernized",
-  "type": "project",
   "license": "GPL-2.0-or-later",
+  "type": "project",
   "require": {
     "php": "^8.5",
     "ext-calendar": "*",
@@ -63,11 +63,6 @@
     "symfony/process": "^8.0",
     "symfony/routing": "^8.0"
   },
-  "suggest": {
-    "ext-exif": "Read EXIF metadata from JPEGs. All call sites guard with function_exists(); features that need EXIF degrade gracefully when the extension is absent.",
-    "ext-imagick": "Alternative graphics library to GD, selected at runtime when present.",
-    "ext-imap": "Optional email-address parsing helper for notification features."
-  },
   "require-dev": {
     "ext-pdo": "*",
     "ext-pdo_mysql": "*",
@@ -75,6 +70,7 @@
     "cweagans/composer-patches": "^2.0",
     "cyclonedx/cyclonedx-php-composer": "^6.2",
     "deptrac/deptrac": "^4.6",
+    "ergebnis/composer-normalize": "^2.52",
     "icanhazstring/composer-unused": "^0.9",
     "justinrainbow/json-schema": "^6.8",
     "maglnet/composer-require-checker": "^4.16",
@@ -103,6 +99,13 @@
     "tracy/tracy": "^2.12",
     "vimeo/psalm": "7.x-dev"
   },
+  "suggest": {
+    "ext-exif": "Read EXIF metadata from JPEGs. All call sites guard with function_exists(); features that need EXIF degrade gracefully when the extension is absent.",
+    "ext-imagick": "Alternative graphics library to GD, selected at runtime when present.",
+    "ext-imap": "Optional email-address parsing helper for notification features."
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "autoload": {
     "psr-4": {
       "Piwigo\\": "src/Piwigo/"
@@ -117,88 +120,24 @@
       "/tests/Fixtures/Migrations/"
     ]
   },
-  "scripts": {
-    "lint:php": "@php vendor/bin/ecs check",
-    "lint:psr4": "@composer dump-autoload --optimize --strict-psr",
-    "lint:latte": "@php tools/latte-lint.php",
-    "lint:vartype": "@php bin/piwigo phpstan-latte:sync-vartype",
-    "lint:vartype:fix": "@php bin/piwigo phpstan-latte:sync-vartype --fix",
-    "check:doc-drift": "@php tools/doc-drift-check.php",
-    "precompile:templates": "@php bin/piwigo precompile:templates",
-    "generate:latte-shims": "@php bin/piwigo phpstan-latte:generate-shims",
-    "analyse:phpstan": [
-      "@php bin/piwigo phpstan-latte:compile",
-      "@php vendor/bin/phpstan analyse"
-    ],
-    "analyse": [
-      "@analyse:phpstan"
-    ],
-    "test": [
-      "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Unit,Arch --parallel"
-    ],
-    "test:coverage": [
-      "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Unit,Arch --coverage-php _data/coverage-raw/unit-arch.cov"
-    ],
-    "test:coverage:integration": [
-      "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Integration --coverage-php _data/coverage-raw/integration.cov"
-    ],
-    "test:integration": [
-      "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Integration"
-    ],
-    "test:contract": [
-      "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Contract"
-    ],
-    "test:browser": [
-      "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow"
-    ],
-    "test:coverage:web": [
-      "rm -rf _data/coverage-raw/web",
-      "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Contract",
-      "bash tools/reimport-fixture.sh",
-      "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow"
-    ],
-    "test:coverage:all": [
-      "@test:coverage",
-      "@test:coverage:integration",
-      "@test:coverage:web",
-      "@php tools/coverage-merge.php _data/coverage-raw/unit-arch.cov _data/coverage-raw/integration.cov"
-    ],
-    "test:fixture-regen": "@php vendor/bin/pest --testsuite Browser --group=fixture-regen",
-    "test:visual": [
-      "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Browser --group=visual-regression"
-    ],
-    "test:golden-html": [
-      "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Browser --group=golden-html-snapshot"
-    ],
-    "test:install": "@php vendor/bin/pest --testsuite Browser --group=install-flow",
-    "test:mutate": "@php vendor/bin/pest --mutate --testsuite Unit --parallel --everything --covered-only",
-    "require-checker": "@php vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json",
-    "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php",
-    "bench": "@php vendor/bin/phpbench run",
-    "sbom": "@composer CycloneDX:make-sbom --output-format=JSON --output-file=sbom-composer.cdx.json --spec-version=1.6 --output-reproducible"
-  },
   "config": {
-    "optimize-autoloader": true,
-    "sort-packages": true,
-    "process-timeout": 0,
     "allow-plugins": {
-      "cyclonedx/cyclonedx-php-composer": true,
-      "pestphp/pest-plugin": true,
-      "phpstan/extension-installer": true,
+      "cweagans/composer-configurable-plugin": true,
       "cweagans/composer-patches": true,
-      "cweagans/composer-configurable-plugin": true
-    }
+      "cyclonedx/cyclonedx-php-composer": true,
+      "ergebnis/composer-normalize": true,
+      "pestphp/pest-plugin": true,
+      "phpstan/extension-installer": true
+    },
+    "optimize-autoloader": true,
+    "process-timeout": 0,
+    "sort-packages": true
   },
   "extra": {
     "patches": {
+      "doctrine/dbal": {
+        "Fix Driver\\PgSQL\\Statement::__destruct() unconditionally running a DEALLOCATE cleanup query even when the connection's transaction was already aborted by an earlier failed query -- PostgreSQL rejects every subsequent command in an aborted transaction, so the DEALLOCATE itself fails with 'current transaction is aborted, commands ignored until end of transaction block', surfacing as a spurious PHP warning during exception unwinding, strictly before any higher-level rollback (e.g. Doctrine ORM UnitOfWork::commit()'s own finally block) gets a chance to run. Guards with pg_transaction_status(), which requires a preceding pg_connection_busy() call to avoid reading a stale ACTIVE status (confirmed via live reproduction against a real aborted transaction) -- see doctrine/dbal#5893, which added the destructor with no aborted-transaction handling and no known upstream fix": "patches/doctrine-dbal-4.4.4-pgsql-statement-skip-deallocate-on-aborted-transaction.patch"
+      },
       "pestphp/pest-plugin-browser": {
         "Fix expectScreenshot() unconditionally failing when the tolerant threshold comparison actually passes (missing return after Page.php's foreach loop)": "patches/pest-plugin-browser-5.0.0-expect-screenshot-success-path.patch",
         "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175": "patches/pest-plugin-browser-5.0.0-deterministic-screenshot-flags.patch",
@@ -208,9 +147,6 @@
       "pestphp/pest-plugin-mutate": {
         "Bound the composed --filter argument length in MutationTest::start() -- a mutation covered by hundreds/thousands of tests can build a --filter regex past Linux's 128 KiB MAX_ARG_STRLEN, crashing proc_open() with ProcessStartFailedException (\"Argument list too long\") and killing the entire test:mutate run; falls back to running the full testsuite for that one mutant instead, which is always correctness-preserving": "patches/pest-plugin-mutate-5.0.1-bound-filter-argument-length.patch",
         "Fix MutationTestRunner::run() building $coveredLines directly from lineCoverage()'s raw per-line array, which since phpunit/php-code-coverage 14 is keyed by an interned test index (int) with the hit count as the value, not a list of test id strings -- MutationTest::start() then fed a hit-count int straight into preg_match(), fatalling with 'Argument #2 ($subject) must be of type string, int given' on the very first covered mutation. Resolves each surviving index back to its real test id via testIds() before handing $coveredLines off": "patches/pest-plugin-mutate-5.0.1-resolve-interned-test-index.patch"
-      },
-      "doctrine/dbal": {
-        "Fix Driver\\PgSQL\\Statement::__destruct() unconditionally running a DEALLOCATE cleanup query even when the connection's transaction was already aborted by an earlier failed query -- PostgreSQL rejects every subsequent command in an aborted transaction, so the DEALLOCATE itself fails with 'current transaction is aborted, commands ignored until end of transaction block', surfacing as a spurious PHP warning during exception unwinding, strictly before any higher-level rollback (e.g. Doctrine ORM UnitOfWork::commit()'s own finally block) gets a chance to run. Guards with pg_transaction_status(), which requires a preceding pg_connection_busy() call to avoid reading a stale ACTIVE status (confirmed via live reproduction against a real aborted transaction) -- see doctrine/dbal#5893, which added the destructor with no aborted-transaction handling and no known upstream fix": "patches/doctrine-dbal-4.4.4-pgsql-statement-skip-deallocate-on-aborted-transaction.patch"
       },
       "vimeo/psalm": {
         "Fix StatementsAnalyzer referencing two of its own properties, $depth and $root_scope, without ever declaring either as a class property -- confirmed absent from the class, every parent, and every trait in the installed source. $depth is a plain recursion-depth counter (incremented on analyze() entry, decremented in its own finally block, gating checkUnreferencedVars()/var-initialization-alteration to only the outermost call); reading/writing it under PHP 8.2+'s dynamic-property deprecation throws PHP Error: Creation of dynamic property ... is deprecated on literally the first statement analyzed in any file. $root_scope is read at two sites gating that same logic but is never assigned anywhere in the codebase, so reading it throws PHP Error: Undefined property once $depth's crash is patched around. Psalm's own ErrorHandler (by design) escalates both from a PHP notice/deprecation into a hard RuntimeException; inside a forked amphp/parallel worker that crash cascades into an unhandled Future, then an uncaught-in-event-loop-callback error, which leaves that worker's Revolt driver Fiber marked running so the next worker spawn's own EventLoop::run() call fails with 'The event loop is already running' -- i.e. Psalm 7.x-dev crashes on every real run, in exactly this shape, purely from its own missing property declarations. No upstream fix found (the file's own commit history has no matching change) and no existing GitHub issue found for this exact crash; declares `private int $depth = 0;` and `private bool $root_scope = false;` next to the class's other simple fields, matching each one's existing usage/semantics exactly (root_scope stays unwired/always-false, matching its current always-undefined behavior, rather than inventing new analysis logic upstream doesn't have)": "patches/vimeo-psalm-dev-master-statementsanalyzer-undeclared-properties.patch"
@@ -222,6 +158,74 @@
       ]
     }
   },
-  "minimum-stability": "dev",
-  "prefer-stable": true
+  "scripts": {
+    "analyse": [
+      "@analyse:phpstan"
+    ],
+    "analyse:phpstan": [
+      "@php bin/piwigo phpstan-latte:compile",
+      "@php vendor/bin/phpstan analyse"
+    ],
+    "bench": "@php vendor/bin/phpbench run",
+    "check:doc-drift": "@php tools/doc-drift-check.php",
+    "generate:latte-shims": "@php bin/piwigo phpstan-latte:generate-shims",
+    "lint:composer": "@composer normalize --dry-run",
+    "lint:composer:fix": "@composer normalize",
+    "lint:latte": "@php tools/latte-lint.php",
+    "lint:php": "@php vendor/bin/ecs check",
+    "lint:psr4": "@composer dump-autoload --optimize --strict-psr",
+    "lint:vartype": "@php bin/piwigo phpstan-latte:sync-vartype",
+    "lint:vartype:fix": "@php bin/piwigo phpstan-latte:sync-vartype --fix",
+    "precompile:templates": "@php bin/piwigo precompile:templates",
+    "require-checker": "@php vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json",
+    "sbom": "@composer CycloneDX:make-sbom --output-format=JSON --output-file=sbom-composer.cdx.json --spec-version=1.6 --output-reproducible",
+    "test": [
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite Unit,Arch --parallel"
+    ],
+    "test:browser": [
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow"
+    ],
+    "test:contract": [
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite Contract"
+    ],
+    "test:coverage": [
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite Unit,Arch --coverage-php _data/coverage-raw/unit-arch.cov"
+    ],
+    "test:coverage:all": [
+      "@test:coverage",
+      "@test:coverage:integration",
+      "@test:coverage:web",
+      "@php tools/coverage-merge.php _data/coverage-raw/unit-arch.cov _data/coverage-raw/integration.cov"
+    ],
+    "test:coverage:integration": [
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite Integration --coverage-php _data/coverage-raw/integration.cov"
+    ],
+    "test:coverage:web": [
+      "rm -rf _data/coverage-raw/web",
+      "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Contract",
+      "bash tools/reimport-fixture.sh",
+      "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow"
+    ],
+    "test:fixture-regen": "@php vendor/bin/pest --testsuite Browser --group=fixture-regen",
+    "test:golden-html": [
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite Browser --group=golden-html-snapshot"
+    ],
+    "test:install": "@php vendor/bin/pest --testsuite Browser --group=install-flow",
+    "test:integration": [
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite Integration"
+    ],
+    "test:mutate": "@php vendor/bin/pest --mutate --testsuite Unit --parallel --everything --covered-only",
+    "test:visual": [
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite Browser --group=visual-regression"
+    ],
+    "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php"
+  }
 }

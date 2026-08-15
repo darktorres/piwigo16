@@ -11,6 +11,11 @@ pre-commit:
     eslint:
       glob: "*.{ts,js}"
       run: bunx eslint {staged_files}
+    # Blocks, unlike ecs above: composer.json has no pre-existing layout debt,
+    # and `composer lint:composer:fix` fixes any failure in one command.
+    composer-normalize:
+      glob: "composer.json"
+      run: composer lint:composer
 commit-msg:
   commands:
     commitlint:

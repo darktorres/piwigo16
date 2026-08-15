@@ -202,6 +202,24 @@ jobs:
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
       - run: composer unused
 
+  composer-normalize:
+    name: composer-normalize
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      # Blocking, unlike ECS: composer.json carries no pre-existing layout
+      # debt (it was normalized in the same commit that added the tool), the
+      # check is deterministic, and `composer lint:composer:fix` resolves any
+      # failure in one command.
+      - run: composer lint:composer
+
   phpbench:
     name: PHPBench
     runs-on: ubuntu-latest

@@ -71,12 +71,20 @@ bench:
 
 # ─── Lint ───────────────────────────────────────────────────────────────
 
-# Run all linters (PHP + JS + CSS)
-lint: lint-php lint-js lint-css
+# Run all linters (PHP + JS + CSS + composer.json)
+lint: lint-php lint-js lint-css lint-composer
 
 # PHP code style (ECS, check mode)
 lint-php:
     composer lint:php
+
+# composer.json layout (ergebnis/composer-normalize, check mode)
+lint-composer:
+    composer lint:composer
+
+# Rewrite composer.json into normalized form
+lint-composer-fix:
+    composer lint:composer:fix
 
 # ESLint
 lint-js:

@@ -106,6 +106,51 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         self::assertSame(500, $response['err']);
     }
 
+    /**
+     * SEC finding 3: neither original_sum nor type carried a WsParamType,
+     * so Server::invoke() applied no coercion beyond rejecting arrays --
+     * addChunk() built the buffer filename straight from the raw value.
+     * A path-traversal-shaped original_sum used to escape the buffer
+     * directory entirely (the "-<type>-<NNNNN>.block" suffix stayed
+     * forced, so this was an arbitrary-directory write with a forced
+     * extension, not arbitrary-file overwrite).
+     */
+    public function testAddChunkRejectsAPathTraversalOriginalSum(): void
+    {
+        $traversalTarget = sys_get_temp_dir() . '/pwg-addchunk-traversal-poc-file-00000.block';
+        if (is_file($traversalTarget)) {
+            unlink($traversalTarget);
+        }
+
+        $response = $this->callWs('pwg.images.addChunk', [
+            'data' => self::TINY_PNG_B64,
+            'original_sum' => '../../../../../../tmp/pwg-addchunk-traversal-poc',
+            'type' => 'file',
+            'position' => 0,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('Invalid original_sum', $response['message']);
+        self::assertFileDoesNotExist($traversalTarget);
+    }
+
+    public function testAddChunkRejectsAnInvalidType(): void
+    {
+        $sum = md5(uniqid());
+
+        $response = $this->callWs('pwg.images.addChunk', [
+            'data' => self::TINY_PNG_B64,
+            'original_sum' => $sum,
+            'type' => 'not-a-real-type',
+            'position' => 0,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('Invalid type', $response['message']);
+    }
+
     public function testAddRejectsADuplicateMd5sumBeforeTouchingAnyChunk(): void
     {
         // Fixture image 1's real md5sum -- check_uniqueness (default true)

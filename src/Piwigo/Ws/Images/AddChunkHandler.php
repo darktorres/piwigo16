@@ -16,6 +16,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
+use Piwigo\Core\WsError;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
@@ -38,6 +39,21 @@ final readonly class AddChunkHandler implements WsAction
     public function __invoke(array $params, Server $server): ?WsErrorResponse
     {
         $input = AddChunkParams::fromArray($params);
+
+        // SEC finding 3: neither field carries a WsParamType, so
+        // Server::invoke() applies no coercion beyond rejecting arrays --
+        // these are the only guards standing between $input->originalSum/
+        // $input->type and the filesystem path built below. Without them,
+        // e.g. original_sum = "../../../.." escapes the buffer directory
+        // (the "-<type>-<NNNNN>.block" suffix stays forced, so this is an
+        // arbitrary-directory write with a forced extension, not
+        // arbitrary-file overwrite).
+        if (! (bool) preg_match('/^[a-fA-F0-9]{32}$/', $input->originalSum)) {
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid original_sum');
+        }
+        if (! in_array($input->type, ['file', 'high', 'thumb'], true)) {
+            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid type');
+        }
 
         $logger = $this->currentLogger->get();
 

@@ -156,11 +156,28 @@ test('parseOrderByFragment lowercases the captured field token before matching i
 test('parseOrderByFragment returns null for text outside the bounded vocabulary', function (string $fragment): void {
     expect(PhotoSortField::parseOrderByFragment($fragment))->toBeNull();
 })->with([
-    'ORDER BY RAND()',
     'ORDER BY comment ASC',
     'ORDER BY id',
     '',
     'ORDER BY ',
+]);
+
+test('parseOrderByFragment recognises a random order despite it carrying no direction', function (string $fragment): void {
+    // RAND()/RANDOM() is a function call, so it never matches the
+    // "<field> ASC|DESC" shape the other entries do. It still has to parse:
+    // the MySQL and PostgreSQL spellings differ, and only the structured
+    // path rewrites between them -- falling through to raw text would ship
+    // MySQL's RAND() to PostgreSQL verbatim.
+    expect(PhotoSortField::parseOrderByFragment($fragment))->toBe([
+        [
+            'field' => PhotoSortField::Random,
+            'dir' => 'ASC',
+        ],
+    ]);
+})->with([
+    'ORDER BY RAND()',
+    'ORDER BY random()',
+    'ORDER BY RAND( )',
 ]);
 
 test('dqlOrderProperty maps every base field against the image alias', function (): void {

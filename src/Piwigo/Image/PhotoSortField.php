@@ -175,6 +175,21 @@ enum PhotoSortField
 
         $entries = [];
         foreach (explode(',', $body) as $rawEntry) {
+            // `RAND()`/`RANDOM()` is a function call with no direction, so it
+            // never matches the "<field> ASC|DESC" shape below. Recognising it
+            // here keeps a random order structured rather than dropping the
+            // whole fragment to raw text -- which matters because the
+            // MySQL/PostgreSQL spelling differs and only the structured path
+            // rewrites it.
+            if (preg_match('/^\s*(?:RAND|RANDOM)\s*\(\s*\)\s*$/i', $rawEntry) === 1) {
+                $entries[] = [
+                    'field' => self::Random,
+                    'dir' => 'ASC',
+                ];
+
+                continue;
+            }
+
             if (preg_match('/^\s*`?([a-z_]+)`?\s+(ASC|DESC)\s*$/i', $rawEntry, $matches) !== 1) {
                 return null;
             }

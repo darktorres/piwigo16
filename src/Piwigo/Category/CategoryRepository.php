@@ -1053,32 +1053,84 @@ final readonly class CategoryRepository
     }
 
     /**
-     * $whereCatsSql is a pre-built SQL fragment from the caller (e.g. `1=1`,
-     * `c.id = :catId`, `c.id IN (:catIds)`) -- same "repository takes a
-     * pre-built SQL fragment" shape this class already uses for permission
-     * conditions; any real value it references is bound via $params/$types
-     * rather than spliced.
+     * Categories whose representative picture points at an image that no
+     * longer exists -- CategoryService::updateCategory()'s own first sweep.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
+     * $ids scopes the sweep, in the three shapes its single caller can
+     * produce: 'all', one category id, or a list of them.
+     *
+     * @param 'all'|int|string|array<int|string> $ids
      * @return list<int>
      *
-     * Stays on DBAL -- $whereCatsSql is a caller-supplied raw SQL
-     * fragment, and this joins `images` (Image domain, no association
-     * from CategoryEntity).
+     * Real DQL -- `images` is queried directly via Join::WITH with no
+     * association declared on CategoryEntity, the same shape
+     * findStorageLinkedImageIds()/findRefDatesByCategoryIds() already use.
+     * getSingleColumnResult() hydrates HYDRATE_SCALAR_COLUMN, which never
+     * applies a field's custom Type, so `c.id` comes back as a plain scalar
+     * despite being CategoryId-typed.
      */
-    public function findWrongRepresentativeCategoryIds(string $whereCatsSql, array $params = [], array $types = []): array
+    public function findWrongRepresentativeCategoryIds(array|int|string $ids = 'all'): array
     {
+        $qb = $this->em->createQueryBuilder()
+            ->select('c.id')
+            ->distinct()
+            ->from(CategoryEntity::class, 'c')
+            ->leftJoin(ImageEntity::class, 'i', Join::WITH, 'c.representativePictureId = i.id')
+            ->where('c.representativePictureId IS NOT NULL')
+            ->andWhere('i.id IS NULL');
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getConnection()->executeQuery(<<<SQL
-            SELECT DISTINCT c.id
-            FROM categories AS c LEFT JOIN images AS i
-                ON c.representative_picture_id = i.id
-            WHERE representative_picture_id IS NOT NULL
-                AND {$whereCatsSql}
-                AND i.id IS NULL
-            SQL
-            , $params, $types)->fetchFirstColumn());
+        if (! self::restrictToCategoryIds($qb, $ids)) {
+            return [];
+        }
+
+        return array_values(array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
+    }
+
+    /**
+     * Narrows $qb to the categories $ids names, returning false when $ids
+     * can never match anything (so the caller can skip the query outright).
+     *
+     * The scalar branch binds a real CategoryId: `c.id` uses the
+     * `category_id` custom Type, whose convertToDatabaseValue() is
+     * deliberately VO-only and rejects a bare int. The list branch passes
+     * plain ints with an explicit ArrayParameterType, which bypasses
+     * field-type inference entirely -- same split findDistinctLinkedImageIds()
+     * and setParameter('categoryId', CategoryId::from(...)) already use.
+     *
+     * `QueryBuilder` is imported here as DBAL's, so the ORM one is named in
+     * full -- same convention applyCondition() above already follows.
+     *
+     * @param 'all'|int|string|array<int|string> $ids
+     */
+    private static function restrictToCategoryIds(\Doctrine\ORM\QueryBuilder $qb, array|int|string $ids): bool
+    {
+        if ($ids === 'all') {
+            return true;
+        }
+
+        if (! is_array($ids)) {
+            // tryFrom(), not from(): a non-positive or non-numeric id can't
+            // match a row, and the raw-SQL version this replaced bound it
+            // happily and returned nothing rather than raising.
+            $catId = CategoryId::tryFrom($ids);
+            if (! $catId instanceof CategoryId) {
+                return false;
+            }
+
+            $qb->andWhere('c.id = :catId')
+                ->setParameter('catId', $catId);
+
+            return true;
+        }
+
+        $qb->andWhere('c.id IN (:catIds)')
+            ->setParameter('catIds', array_map(intval(...), array_values($ids)), ArrayParameterType::INTEGER);
+
+        return true;
     }
 
     /**
@@ -1105,28 +1157,35 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @return list<int>
-     */
-    /**
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
+     * Categories that hold at least one photo but have no representative
+     * picture set -- CategoryService::updateCategory()'s own second sweep.
+     *
+     * @param 'all'|int|string|array<int|string> $ids
      * @return list<int>
      *
-     * Stays on DBAL -- `image_category` is mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but `$whereCatsSql` is a
-     * caller-supplied raw SQL fragment.
+     * Real DQL -- same no-association Join::WITH shape as
+     * findWrongRepresentativeCategoryIds() above. Scoping on `c.id` rather
+     * than the original's `image_category.category_id` is equivalent: the
+     * join equates them for every matched row.
      */
-    public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql, array $params = [], array $types = []): array
+    public function findCategoriesNeedingRandomRepresentative(array|int|string $ids = 'all'): array
     {
+        $qb = $this->em->createQueryBuilder()
+            ->select('c.id')
+            ->distinct()
+            ->from(CategoryEntity::class, 'c')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'c.id = ic.categoryId')
+            ->where('c.representativePictureId IS NULL');
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getConnection()->executeQuery(<<<SQL
-            SELECT DISTINCT id
-            FROM categories INNER JOIN image_category
-                ON id = category_id
-            WHERE representative_picture_id IS NULL
-                AND {$whereCatsSql}
-            SQL
-            , $params, $types)->fetchFirstColumn());
+        if (! self::restrictToCategoryIds($qb, $ids)) {
+            return [];
+        }
+
+        return array_values(array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**

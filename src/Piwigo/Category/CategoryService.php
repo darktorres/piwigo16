@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use DateTimeImmutable;
-use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use LogicException;
@@ -1209,32 +1208,13 @@ final readonly class CategoryService
     public function updateCategory(array|int|string $ids = 'all'): ?false
     {
 
-        if ($ids === 'all') {
-            $whereCats = '1=1';
-            $whereCatsParams = [];
-            $whereCatsTypes = [];
-        } elseif (! is_array($ids)) {
-            $whereCats = '%s = :catId';
-            $whereCatsParams = [
-                'catId' => $ids,
-            ];
-            $whereCatsTypes = [];
-        } else {
-            if (count($ids) === 0) {
-                return false;
-            }
-            $whereCats = '%s IN (:catIds)';
-            $whereCatsParams = [
-                'catIds' => array_map(intval(...), array_values($ids)),
-            ];
-            $whereCatsTypes = [
-                'catIds' => ArrayParameterType::INTEGER,
-            ];
+        if (is_array($ids) && count($ids) === 0) {
+            return false;
         }
 
         // find all categories where the setted representative is not possible :
         // the picture does not exist
-        $wrongRepresentant = $this->repo->findWrongRepresentativeCategoryIds(sprintf($whereCats, 'c.id'), $whereCatsParams, $whereCatsTypes);
+        $wrongRepresentant = $this->repo->findWrongRepresentativeCategoryIds($ids);
 
         if (count($wrongRepresentant) > 0) {
             $this->repo->clearRepresentativePictureIds($wrongRepresentant);
@@ -1245,7 +1225,7 @@ final readonly class CategoryService
             // categories with elements and with no representant. Those categories
             // must be added to the list of categories to set to a random
             // representant.
-            $toRand = $this->repo->findCategoriesNeedingRandomRepresentative(sprintf($whereCats, 'category_id'), $whereCatsParams, $whereCatsTypes);
+            $toRand = $this->repo->findCategoriesNeedingRandomRepresentative($ids);
             if (count($toRand) > 0) {
                 $this->setRandomRepresentant($toRand);
             }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Migrations;
 
+use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
@@ -100,6 +101,33 @@ final class Version20260804122300 extends AbstractMigration
         );
     }
 
+    /**
+     * Strips `WITH PARSER ngram` on MariaDB, which has no such parser --
+     * `CREATE TABLE ... WITH PARSER ngram` fails there outright with
+     * "Function 'ngram' is not defined", so the schema could never be
+     * created on that platform at all.
+     *
+     * The clause is removed rather than substituted because MariaDB has no
+     * equivalent: its FULLTEXT indexes tokenise on word boundaries, so
+     * `MATCH ... AGAINST` matches whole words where MySQL's ngram matches
+     * substrings. {@see \Piwigo\Search\SearchService} already ANDs an
+     * exact-substring `LIKE` confirmation onto every `MATCH ... AGAINST`
+     * (to reject ngram's own false positives), so a MariaDB search returns
+     * a subset of MySQL's results rather than wrong ones -- narrower
+     * matching, not incorrect matching.
+     *
+     * Deliberately a string strip, not a rebuilt statement: the MySQL SQL
+     * must stay byte-identical, or `install/piwigo_structure-mysql.sql`
+     * drifts from what the migration produces and the schema-drift guard
+     * in the db-multi-provider CI job fails.
+     */
+    private function withNgramParser(string $sql): string
+    {
+        return $this->platform instanceof MariaDBPlatform
+            ? str_replace(' WITH PARSER ngram', '', $sql)
+            : $sql;
+    }
+
     private function upMysql(): void
     {
         // Must run before any of this migration's FULLTEXT ... WITH PARSER
@@ -123,7 +151,7 @@ final class Version20260804122300 extends AbstractMigration
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user temporary photo selection (caddie/basket) used by batch operations'
             SQL);
 
-        $this->addSql(<<<'SQL'
+        $this->addSql($this->withNgramParser(<<<'SQL'
             CREATE TABLE `categories` (
               `id` smallint(5) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
               `name` varchar(255) NOT NULL default '' COMMENT 'album display name',
@@ -147,7 +175,7 @@ final class Version20260804122300 extends AbstractMigration
               KEY `lastmodified` (`lastmodified`),
               FULLTEXT KEY `categories_ft_name_comment` (`name`,`comment`) WITH PARSER ngram
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo albums, both physical filesystem-synced and virtual'
-            SQL);
+            SQL));
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `comments` (
@@ -205,7 +233,7 @@ final class Version20260804122300 extends AbstractMigration
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='image-to-tag associations'
             SQL);
 
-        $this->addSql(<<<'SQL'
+        $this->addSql($this->withNgramParser(<<<'SQL'
             CREATE TABLE `images` (
               `id` mediumint(8) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
               `file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'base filename of the original file',
@@ -246,7 +274,7 @@ final class Version20260804122300 extends AbstractMigration
               FULLTEXT KEY `images_ft_name_comment` (`name`,`comment`) WITH PARSER ngram,
               FULLTEXT KEY `images_ft_author` (`author`) WITH PARSER ngram
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo/media metadata and file location, one row per uploaded image'
-            SQL);
+            SQL));
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `lounge` (
@@ -278,7 +306,7 @@ final class Version20260804122300 extends AbstractMigration
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user or per-anonymous-visitor image ratings, aggregated into images.rating_score'
             SQL);
 
-        $this->addSql(<<<'SQL'
+        $this->addSql($this->withNgramParser(<<<'SQL'
             CREATE TABLE `tags` (
               `id` smallint(5) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
               `name` varchar(255) NOT NULL default '' COMMENT 'tag display name',
@@ -289,7 +317,7 @@ final class Version20260804122300 extends AbstractMigration
               KEY `lastmodified` (`lastmodified`),
               FULLTEXT KEY `tags_ft_name` (`name`) WITH PARSER ngram
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo tags/keywords'
-            SQL);
+            SQL));
     }
 
     private function upPostgres(): void

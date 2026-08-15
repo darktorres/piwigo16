@@ -565,9 +565,8 @@ final class InstallWizard
         $secretKeyJson = json_encode(sha1(random_bytes(1000)));
         assert($secretKeyJson !== false);
 
-        $configTable = 'config';
         $query = <<<SQL
-            INSERT INTO {$configTable} (param,value,comment)
+            INSERT INTO config (param,value,comment)
                VALUES ('secret_key', :secretKey,
                'a secret key specific to the gallery for internal use');
             SQL;

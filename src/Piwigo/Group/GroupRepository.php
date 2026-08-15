@@ -374,11 +374,10 @@ final class GroupRepository extends EntityRepository
     {
         $conn = $this->getEntityManager()
             ->getConnection();
-        $userGroupTable = 'user_group';
         foreach ($userIds as $userId) {
             try {
                 $conn->insert(
-                    $userGroupTable,
+                    'user_group',
                     [
                         'group_id' => $groupId->value,
                         'user_id' => $userId->value,

@@ -1080,9 +1080,6 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ));
         }
 
-        $favoritesTable = 'favorites';
-        $imagesTable = 'images';
-
         $condition = SqlCondition::combine(
             'AND',
             $criteria->visibleImagesCondition('id'),
@@ -1106,8 +1103,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->executeQuery(
                 <<<SQL
                 SELECT image_id
-                FROM {$favoritesTable}
-                    INNER JOIN {$imagesTable} ON image_id = id
+                FROM favorites
+                    INNER JOIN images ON image_id = id
                 {$whereSql}
                 {$orderBySql}
                 SQL
@@ -1172,8 +1169,6 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      */
     public function findVisibleFavoriteImages(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
-        $favoritesTable = 'favorites';
-        $imagesTable = 'images';
 
         $condition = SqlCondition::combine(
             'AND',
@@ -1200,8 +1195,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
                 <<<SQL
                 SELECT
                     i.*
-                FROM {$favoritesTable}
-                    INNER JOIN {$imagesTable} i ON image_id = i.id
+                FROM favorites
+                    INNER JOIN images i ON image_id = i.id
                 {$whereSql}
                 {$orderBySql}
                 SQL
@@ -1679,10 +1674,6 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         $conn = $this->em
             ->getConnection();
 
-        $usersTable = 'users';
-        $userInfosTable = 'user_infos';
-        $userGroupTable = 'user_group';
-
         $columnPairs = [];
         foreach ($displayColumns as $field => $alias) {
             $columnPairs[] = (str_starts_with($field, 'u.') ? $field : 'ANY_VALUE(' . $field . ')') . ' AS ' . $alias;
@@ -1697,10 +1688,10 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         $types = $combined->types;
 
         $joinSql = <<<SQL
-            FROM {$usersTable} AS u
-                INNER JOIN {$userInfosTable} AS ui
+            FROM users AS u
+                INNER JOIN user_infos AS ui
                     ON u.id = ui.user_id
-                LEFT JOIN {$userGroupTable} AS ug
+                LEFT JOIN user_group AS ug
                     ON u.id = ug.user_id
             WHERE
                 {$combined->sql}

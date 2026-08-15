@@ -812,11 +812,10 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     {
         $conn = $this->getEntityManager()
             ->getConnection();
-        $historyTable = 'history';
 
         if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
             $sections = $conn->executeQuery(<<<SQL
-                SELECT DISTINCT section FROM {$historyTable} WHERE section IS NOT NULL
+                SELECT DISTINCT section FROM history WHERE section IS NOT NULL
                 SQL)->fetchFirstColumn();
 
             return array_values(array_unique([
@@ -825,10 +824,8 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             ]));
         }
 
-        // {$historyTable} is a structural 'history' constant, no
-        // real value spliced.
         $rows = $conn->executeQuery(<<<SQL
-            DESC {$historyTable}
+            DESC history
             SQL)->fetchAllAssociative();
 
         foreach ($rows as $row) {
@@ -877,10 +874,9 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
         // this method's own docblock) rather than raw user input.
         $enumList = implode(',', array_map(static fn (string $option): string => "'" . $option . "'", array_unique($options)));
 
-        $historyTable = 'history';
         $conn->executeStatement(
             <<<SQL
-            ALTER TABLE {$historyTable} CHANGE section section enum({$enumList}) DEFAULT NULL
+            ALTER TABLE history CHANGE section section enum({$enumList}) DEFAULT NULL
             SQL
         );
     }

@@ -2006,11 +2006,10 @@ final class ImageRepository extends EntityRepository
      */
     public function findBatchManagerThumbnails(array $imageIds, ?int $categoryId, string $orderBySql, int $limit, int $offset): array
     {
-        $imagesTable = 'images';
 
         $query = <<<SQL
             SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
-            FROM {$imagesTable}
+            FROM images
             SQL;
         $params = [
             'ids' => array_map(strval(...), $imageIds),
@@ -2024,10 +2023,9 @@ final class ImageRepository extends EntityRepository
         ];
 
         if ($categoryId !== null) {
-            $imageCategoryTable = 'image_category';
             $query .= <<<SQL
 
-                JOIN {$imageCategoryTable} ON id = image_id
+                JOIN image_category ON id = image_id
                 SQL;
         }
 
@@ -2921,13 +2919,10 @@ final class ImageRepository extends EntityRepository
             $criteria->visibleImagesCondition,
         );
 
-        $imagesTable = 'images';
-        $imageCategoryTable = 'image_category';
-
         $sql = <<<SQL
             SELECT i.*, COUNT(*) OVER() AS total_count
-            FROM {$imagesTable} i
-                INNER JOIN {$imageCategoryTable} ON i.id=image_id
+            FROM images i
+                INNER JOIN image_category ON i.id=image_id
             WHERE {$combined->sql}
             GROUP BY i.id
             {$orderByClause}
@@ -3208,15 +3203,13 @@ final class ImageRepository extends EntityRepository
      */
     public function findIdsWithNoTag(): array
     {
-        $imagesTable = 'images';
-        $imageTagTable = 'image_tag';
 
         // Row order is otherwise unguaranteed; MySQL and PostgreSQL return
         // this exact join's row order differently with no ORDER BY.
         return $this->getEntityManager()
             ->getConnection()
             ->fetchFirstColumn(<<<SQL
-                SELECT id FROM {$imagesTable} LEFT JOIN {$imageTagTable} ON id = image_id WHERE tag_id IS NULL ORDER BY id
+                SELECT id FROM images LEFT JOIN image_tag ON id = image_id WHERE tag_id IS NULL ORDER BY id
                 SQL);
     }
 
@@ -3300,7 +3293,6 @@ final class ImageRepository extends EntityRepository
      */
     public function findIdsWithConditions(array $whereClauses, array $params, string $orderBySql): array
     {
-        $imagesTable = 'images';
         $whereSql = $whereClauses === [] ? '' : 'WHERE ' . implode(' AND ', $whereClauses);
 
         // An empty $orderBySql defaults to `ORDER BY id` for a
@@ -3322,7 +3314,7 @@ final class ImageRepository extends EntityRepository
                 ->getConnection()
                 ->executeQuery(
                     <<<SQL
-                        SELECT id FROM {$imagesTable} {$whereSql} {$orderBySql}
+                        SELECT id FROM images {$whereSql} {$orderBySql}
                         SQL
                     ,
                     $params,
@@ -3348,8 +3340,6 @@ final class ImageRepository extends EntityRepository
      */
     public function findIdsVisibleInCategoriesRecentlyAvailable(string $categoryIdsCsv, string $recentPeriodExpr): array
     {
-        $imageCategoryTable = 'image_category';
-        $imagesTable = 'images';
         $categoryIds = array_map(intval(...), explode(',', $categoryIdsCsv));
 
         return array_map(
@@ -3359,7 +3349,7 @@ final class ImageRepository extends EntityRepository
                 ->fetchFirstColumn(
                     <<<SQL
                     SELECT DISTINCT image_id
-                    FROM {$imageCategoryTable} INNER JOIN {$imagesTable} ON image_id = id
+                    FROM image_category INNER JOIN images ON image_id = id
                     WHERE category_id IN (:categoryIds)
                         AND date_available >= {$recentPeriodExpr}
                     SQL

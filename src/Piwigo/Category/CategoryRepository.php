@@ -1069,12 +1069,10 @@ final readonly class CategoryRepository
      */
     public function findWrongRepresentativeCategoryIds(string $whereCatsSql, array $params = [], array $types = []): array
     {
-        $categoriesTable = 'categories';
-        $imagesTable = 'images';
 
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getConnection()->executeQuery(<<<SQL
             SELECT DISTINCT c.id
-            FROM {$categoriesTable} AS c LEFT JOIN {$imagesTable} AS i
+            FROM categories AS c LEFT JOIN images AS i
                 ON c.representative_picture_id = i.id
             WHERE representative_picture_id IS NOT NULL
                 AND {$whereCatsSql}
@@ -1120,12 +1118,10 @@ final readonly class CategoryRepository
      */
     public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql, array $params = [], array $types = []): array
     {
-        $categoriesTable = 'categories';
-        $imageCategoryTable = 'image_category';
 
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getConnection()->executeQuery(<<<SQL
             SELECT DISTINCT id
-            FROM {$categoriesTable} INNER JOIN {$imageCategoryTable}
+            FROM categories INNER JOIN image_category
                 ON id = category_id
             WHERE representative_picture_id IS NULL
                 AND {$whereCatsSql}
@@ -1150,13 +1146,12 @@ final readonly class CategoryRepository
             $tableAndColumn = $target->tableAndColumn();
             $table = $tableAndColumn->table;
             $column = $tableAndColumn->column;
-            $categoriesTable = 'categories';
 
             return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->em->getConnection()->executeQuery(<<<SQL
                 SELECT
                     {$column}
                 FROM {$table}
-                    LEFT JOIN {$categoriesTable} ON id = {$column}
+                    LEFT JOIN categories ON id = {$column}
                 WHERE id IS NULL
                 SQL)->fetchFirstColumn())));
         }
@@ -3488,7 +3483,6 @@ final readonly class CategoryRepository
         $params = $combined->parameters;
         $types = $combined->types;
 
-        $categoriesTable = 'categories';
         $totalColumn = $limit !== null ? 'COUNT(*) OVER() AS total_count,' : '';
 
         $sql = <<<SQL
@@ -3497,7 +3491,7 @@ final readonly class CategoryRepository
                 uppercats, global_rank, id_uppercat,
                 representative_picture_id,
                 image_order
-            FROM {$categoriesTable}
+            FROM categories
             WHERE {$combined->sql}
             SQL;
 
@@ -3557,11 +3551,9 @@ final readonly class CategoryRepository
         $params = $combined->parameters;
         $types = $combined->types;
 
-        $categoriesTable = 'categories';
-
         $sql = <<<SQL
             SELECT COUNT(*) OVER() AS total_count, id, name, comment, uppercats, global_rank, dir, status, image_order
-            FROM {$categoriesTable}
+            FROM categories
             WHERE {$combined->sql}
             SQL;
 

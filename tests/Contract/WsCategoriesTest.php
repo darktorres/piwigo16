@@ -67,14 +67,16 @@ final class WsCategoriesTest extends ContractTestCase
      */
     private function createCategory(string $name, ?int $parentId = null): int
     {
+        $this->loginAsAdmin();
         $params = [
             'name' => $name,
+            'pwg_token' => $this->getPwgToken(),
         ];
         if ($parentId !== null) {
             $params['parent'] = $parentId;
         }
 
-        $response = $this->wsAdmin('pwg.categories.add', $params);
+        $response = $this->callWs('pwg.categories.add', $params);
         self::assertSame('ok', $response['stat'], 'category creation failed: ' . json_encode($response));
         $result = $response['result'];
         self::assertIsArray($result);
@@ -211,9 +213,11 @@ final class WsCategoriesTest extends ContractTestCase
      */
     public function testGetListPublicTrueExcludesAPrivateAlbum(): void
     {
-        $created = $this->wsAdmin('pwg.categories.add', [
+        $this->loginAsAdmin();
+        $created = $this->callWs('pwg.categories.add', [
             'name' => 'Stage 4h Private Album',
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
         self::assertSame('ok', $created['stat']);
         $result = $created['result'] ?? null;
@@ -245,9 +249,11 @@ final class WsCategoriesTest extends ContractTestCase
      */
     public function testGetListAsRegularUserExcludesAPrivateAlbumWithoutAccess(): void
     {
-        $created = $this->wsAdmin('pwg.categories.add', [
+        $this->loginAsAdmin();
+        $created = $this->callWs('pwg.categories.add', [
             'name' => 'Stage 4h Private Album For Regular User',
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
         self::assertSame('ok', $created['stat']);
         $result = $created['result'] ?? null;

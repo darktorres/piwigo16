@@ -84,3 +84,34 @@ test('setInfo returns a 403 WsErrorResponse when a submitted pwg_token does not 
             ->toBe(403);
     }
 });
+
+/**
+ * SEC finding 5: checkSecurityToken() used to be called with
+ * required: false here, so an omitted pwg_token skipped CSRF validation
+ * entirely while also silently disabling the allow_html_descriptions-gated
+ * strip_tags() call on name/author/comment/date_creation.
+ */
+test('setInfo returns a 403 WsErrorResponse when pwg_token is absent entirely', function (): void {
+    $handler = pwgImagesSetInfoHandlerTestSubject();
+
+    $result = $handler([
+        'image_id' => 1,
+        'file' => null,
+        'name' => null,
+        'author' => null,
+        'date_creation' => null,
+        'comment' => null,
+        'categories' => null,
+        'tag_ids' => null,
+        'level' => null,
+        'single_value_mode' => 'fill_if_empty',
+        'multiple_value_mode' => 'append',
+    ], pwgImagesSetInfoHandlerTestServer());
+
+    expect($result)
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
+        expect($result->code())
+            ->toBe(403);
+    }
+});

@@ -66,6 +66,25 @@ final class WsImagesSetInfoTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
+    /**
+     * SEC finding 5: pwg_token used to be checked with checkSecurityToken(
+     * ..., required: false) here -- an omitted token skipped CSRF
+     * validation entirely while also silently disabling the
+     * allow_html_descriptions-gated strip_tags() call on name/author/
+     * comment.
+     */
+    public function testSetInfoWithNoTokenReturnsError(): void
+    {
+        $this->loginAsAdmin();
+
+        $response = $this->callWs('pwg.images.setInfo', [
+            'image_id' => 1,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+    }
+
     public function testSetInfoUnknownImageReturns404(): void
     {
         $response = $this->callWs('pwg.images.setInfo', [

@@ -64,6 +64,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     {
         $params = [
             'name' => $name,
+            'pwg_token' => $this->getPwgToken(),
         ];
         if ($parentId !== null) {
             $params['parent'] = $parentId;
@@ -148,6 +149,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     {
         $response = $this->callWs('pwg.categories.add', [
             'name' => 'ct_album_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -158,12 +160,28 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
     public function testAddWithAnExplicitInvalidTokenReturnsError(): void
     {
-        // pwg_token is WsParamFlag::OPTIONAL for add() -- every other add()
-        // test omits it entirely; this exercises the branch where it's
-        // present but wrong.
         $response = $this->callWs('pwg.categories.add', [
             'name' => 'ct_album_' . uniqid(),
             'pwg_token' => 'wrong',
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('Invalid security token', $response['message']);
+    }
+
+    /**
+     * SEC finding 5: pwg_token used to be WsParamFlag::OPTIONAL for add()
+     * -- an omitted token skipped CSRF validation entirely (checkSecurityToken()
+     * was called with required: false), while doubling as the flag deciding
+     * whether HTML in name/comment gets stripped. A caller could always omit
+     * it and still mutate the gallery; only the CSRF check on a *present*
+     * token was ever exercised.
+     */
+    public function testAddWithNoTokenReturnsError(): void
+    {
+        $response = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_album_' . uniqid(),
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -175,12 +193,14 @@ final class WsCategoriesMutationTest extends ContractTestCase
     {
         $add = $this->callWs('pwg.categories.add', [
             'name' => 'ct_album_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->categoryId = $this->extractResultId($add);
 
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $this->categoryId,
             'name' => 'ct_album_renamed_' . $this->categoryId,
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -190,6 +210,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     {
         $add = $this->callWs('pwg.categories.add', [
             'name' => 'ct_album_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->categoryId = $this->extractResultId($add);
 
@@ -213,6 +234,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     {
         $add = $this->callWs('pwg.categories.add', [
             'name' => 'ct_album_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->categoryId = $this->extractResultId($add);
 
@@ -228,9 +250,11 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $token = $this->getPwgToken();
         $parent = $this->callWs('pwg.categories.add', [
             'name' => 'ct_parent_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $child = $this->callWs('pwg.categories.add', [
             'name' => 'ct_child_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $parentId = $this->extractResultId($parent);
         $childId = $this->extractResultId($child);
@@ -256,6 +280,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     {
         $add = $this->callWs('pwg.categories.add', [
             'name' => 'ct_album_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->categoryId = $this->extractResultId($add);
 
@@ -271,6 +296,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     {
         $add = $this->callWs('pwg.categories.add', [
             'name' => 'ct_album_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $id = $this->extractResultId($add);
         $token = $this->getPwgToken();
@@ -291,6 +317,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     {
         $response = $this->callWsAllowingServerError('pwg.categories.add', [
             'name' => '   ',
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -302,6 +329,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $add = $this->callWs('pwg.categories.add', [
             'name' => 'ct_album_' . uniqid(),
             'comment' => 'a real comment ' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->categoryId = $this->extractResultId($add);
 
@@ -414,10 +442,30 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
+    /**
+     * SEC finding 5: same as testAddWithNoTokenReturnsError() above --
+     * pwg_token used to be WsParamFlag::OPTIONAL for setInfo() too, so an
+     * omitted token skipped CSRF validation (checkSecurityToken() was
+     * called with required: false) while also silently disabling the
+     * strip_tags() call on name/comment.
+     */
+    public function testSetInfoWithNoTokenReturnsError(): void
+    {
+        $categoryId = $this->createCategory('ct_album_' . uniqid());
+
+        $response = $this->callWsAllowingServerError('pwg.categories.setInfo', [
+            'category_id' => $categoryId,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+    }
+
     public function testSetInfoUnknownCategoryReturns404(): void
     {
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => 999999,
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -431,6 +479,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $categoryId,
             'status' => 'bogus',
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -447,6 +496,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $categoryId,
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -461,6 +511,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $categoryId,
             'visible' => 'not-a-bool',
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -489,6 +540,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $categoryId,
             'visible' => 'false',
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -509,6 +561,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $categoryId,
             'comment' => 'a fresh comment ' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -526,6 +579,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             'category_id' => $parentId,
             'commentable' => 'false',
             'apply_commentable_to_subalbums' => '1',
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -541,6 +595,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $parentId,
             'commentable' => 'false',
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);

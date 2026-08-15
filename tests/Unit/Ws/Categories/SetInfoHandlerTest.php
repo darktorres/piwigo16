@@ -26,10 +26,11 @@ use Piwigo\Ws\WsErrorResponse;
  * (admin_only, post_only). Resolved via `Kernel::container()->get()`,
  * same rationale as GetListHandlerTest.php (Comments).
  *
- * Checks `CsrfService::getToken() !== $input->pwgToken` only when
- * `pwg_token` is present at all -- included here with a wrong token
- * present, not absent. The real category update needs a real category
- * row and is not attempted here.
+ * Covers both an explicitly wrong token and an entirely absent one (SEC
+ * finding 5 -- checkSecurityToken() used to be called with
+ * required: false here, so an omitted pwg_token skipped CSRF validation
+ * entirely). The real category update needs a real category row and is
+ * not attempted here.
  */
 function pwgCategoriesSetInfoHandlerTestSubject(): SetInfoHandler
 {
@@ -84,6 +85,29 @@ test('returns a 403 WsErrorResponse when a submitted pwg_token does not match th
         'commentable' => null,
         'apply_commentable_to_subalbums' => null,
         'pwg_token' => 'wrong-token',
+    ], $server);
+
+    expect($result)
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
+        expect($result->code())
+            ->toBe(403);
+    }
+});
+
+test('returns a 403 WsErrorResponse when pwg_token is absent entirely', function (): void {
+    $handler = pwgCategoriesSetInfoHandlerTestSubject();
+    $server = pwgCategoriesSetInfoHandlerTestServer();
+
+    $result = $handler([
+        'category_id' => 1,
+        'name' => null,
+        'comment' => null,
+        'status' => null,
+        'visible' => null,
+        'commentable' => null,
+        'apply_commentable_to_subalbums' => null,
+        'pwg_token' => null,
     ], $server);
 
     expect($result)

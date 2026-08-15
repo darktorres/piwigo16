@@ -26,10 +26,11 @@ use Piwigo\Ws\WsErrorResponse;
  * Resolved via `Kernel::container()->get()`, same rationale as
  * GetListHandlerTest.php (Comments).
  *
- * Checks `CsrfService::getToken() !== $input->pwgToken` only when
- * `pwg_token` is present at all -- included here with a wrong token
- * present, not absent. The real category creation needs a real DB write
- * and is not attempted here.
+ * Covers both an explicitly wrong token and an entirely absent one (SEC
+ * finding 5 -- checkSecurityToken() used to be called with
+ * required: false here, so an omitted pwg_token skipped CSRF validation
+ * entirely). The real category creation needs a real DB write and is not
+ * attempted here.
  */
 function pwgCategoriesAddHandlerTestSubject(): AddHandler
 {
@@ -84,6 +85,29 @@ test('returns a 403 WsErrorResponse when a submitted pwg_token does not match th
         'commentable' => true,
         'position' => null,
         'pwg_token' => 'wrong-token',
+    ], $server);
+
+    expect($result)
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
+        expect($result->code())
+            ->toBe(403);
+    }
+});
+
+test('returns a 403 WsErrorResponse when pwg_token is absent entirely', function (): void {
+    $handler = pwgCategoriesAddHandlerTestSubject();
+    $server = pwgCategoriesAddHandlerTestServer();
+
+    $result = $handler([
+        'name' => 'New album',
+        'parent' => null,
+        'comment' => null,
+        'visible' => true,
+        'status' => null,
+        'commentable' => true,
+        'position' => null,
+        'pwg_token' => null,
     ], $server);
 
     expect($result)

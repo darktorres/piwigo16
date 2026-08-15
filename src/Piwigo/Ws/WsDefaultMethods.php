@@ -661,7 +661,7 @@ final readonly class WsDefaultMethods
         $service->register(new MethodDefinition(
             name: 'pwg.categories.add',
             handlerClass: CategoriesAddHandler::class,
-            description: 'Adds an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
+            description: 'Adds an album.<br><br><b>pwg_token</b> required. HTML in name/comment is allowed only when the allow_html_descriptions config is enabled.',
             params: [
                 ParamDefinition::required('name'),
                 ParamDefinition::optional('parent', null, WsParamType::INT | WsParamType::POSITIVE),
@@ -673,6 +673,7 @@ final readonly class WsDefaultMethods
                 ParamDefinition::optionalFlag('pwg_token'),
             ],
             requiresAuth: true,
+            postOnly: true,
         ));
 
         $service->register(new MethodDefinition(
@@ -866,7 +867,7 @@ final readonly class WsDefaultMethods
     <br><b>single_value_mode</b> can be "fill_if_empty" (only use the input value if the corresponding values is currently empty) or "replace"
     (overwrite any existing value) and applies to single values properties like name/author/date_creation/comment.
     <br><b>multiple_value_mode</b> can be "append" (no change on existing values, add the new values) or "replace" and applies to multiple values properties like tag_ids/categories.
-    <br><b>pwg_token</b> required if you want to use HTML in name/comment/author.',
+    <br><b>pwg_token</b> required. HTML in name/comment/author is allowed only when the allow_html_descriptions config is enabled.',
             params: [
                 ParamDefinition::required('image_id', WsParamType::ID),
                 ParamDefinition::optional('file'),
@@ -888,7 +889,7 @@ final readonly class WsDefaultMethods
         $service->register(new MethodDefinition(
             name: 'pwg.categories.setInfo',
             handlerClass: CategoriesSetInfoHandler::class,
-            description: 'Changes properties of an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
+            description: 'Changes properties of an album.<br><br><b>pwg_token</b> required. HTML in name/comment is allowed only when the allow_html_descriptions config is enabled.',
             params: [
                 ParamDefinition::required('category_id', WsParamType::ID),
                 ParamDefinition::optionalFlag('name'),
@@ -1010,6 +1011,7 @@ final readonly class WsDefaultMethods
             params: [
                 ParamDefinition::required('name'),
                 ParamDefinition::optional('is_default', false, WsParamType::BOOL),
+                ParamDefinition::required('pwg_token'),
             ],
             requiresAuth: true,
             postOnly: true,

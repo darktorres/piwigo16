@@ -45,7 +45,7 @@ final readonly class SetInfoHandler implements WsAction
     {
         $input = SetInfoParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken, required: false);
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }
@@ -98,7 +98,7 @@ final readonly class SetInfoHandler implements WsAction
         foreach ($info_values as $key => $value) {
             if ($value !== null) {
                 $perform_update = true;
-                $update[$key] = (! $this->currentConfig->allowHtmlDescriptions or $input->pwgToken === null) ? strip_tags($value) : $value;
+                $update[$key] = $this->currentConfig->allowHtmlDescriptions ? $value : strip_tags($value);
             }
         }
 

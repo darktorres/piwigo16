@@ -70,7 +70,6 @@ final readonly class SetInfoHandler implements WsAction
 
         $csrfError = $this->wsHelper->checkSecurityToken(
             is_string($params['pwg_token'] ?? null) ? $params['pwg_token'] : null,
-            required: false,
         );
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
@@ -100,7 +99,7 @@ final readonly class SetInfoHandler implements WsAction
 
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
-                if (! $this->currentConfig->allowHtmlDescriptions or ! isset($params['pwg_token'])) {
+                if (! $this->currentConfig->allowHtmlDescriptions) {
                     $params[$key] = strip_tags((string) $params[$key], '<b><strong><em><i>');
                 }
 

@@ -104,6 +104,7 @@ final class WsGroupsMutationTest extends ContractTestCase
         $name = 'ct_group_' . uniqid();
         $response = $this->callWs('pwg.groups.add', [
             'name' => $name,
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -117,6 +118,7 @@ final class WsGroupsMutationTest extends ContractTestCase
         $name = 'ct_group_' . uniqid();
         $add = $this->callWs('pwg.groups.add', [
             'name' => $name,
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->groupId = self::firstItemId($add, 'groups');
 
@@ -143,6 +145,7 @@ final class WsGroupsMutationTest extends ContractTestCase
         $name = 'ct_group_' . uniqid();
         $add = $this->callWs('pwg.groups.add', [
             'name' => $name,
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->groupId = self::firstItemId($add, 'groups');
 
@@ -168,6 +171,7 @@ final class WsGroupsMutationTest extends ContractTestCase
         $name = 'ct_group_' . uniqid();
         $add = $this->callWs('pwg.groups.add', [
             'name' => $name,
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->groupId = self::firstItemId($add, 'groups');
         $token = $this->getPwgToken();
@@ -198,6 +202,7 @@ final class WsGroupsMutationTest extends ContractTestCase
         $name = 'ct_group_' . uniqid();
         $add = $this->callWs('pwg.groups.add', [
             'name' => $name,
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $id = self::firstItemId($add, 'groups');
         $token = $this->getPwgToken();
@@ -216,6 +221,7 @@ final class WsGroupsMutationTest extends ContractTestCase
         $name = 'ct_group_' . uniqid();
         $add = $this->callWs('pwg.groups.add', [
             'name' => $name,
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $srcId = self::firstItemId($add, 'groups');
         $token = $this->getPwgToken();
@@ -248,9 +254,11 @@ final class WsGroupsMutationTest extends ContractTestCase
         $token = $this->getPwgToken();
         $src = $this->callWs('pwg.groups.add', [
             'name' => 'ct_merge_src_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $dst = $this->callWs('pwg.groups.add', [
             'name' => 'ct_merge_dst_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $srcId = self::firstItemId($src, 'groups');
         $dstId = self::firstItemId($dst, 'groups');
@@ -278,11 +286,38 @@ final class WsGroupsMutationTest extends ContractTestCase
         // 'Editors' is a real fixture group name.
         $response = $this->callWs('pwg.groups.add', [
             'name' => 'Editors',
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('This name is already used by another group.', $response['message']);
+    }
+
+    /**
+     * SEC finding 5 (related): pwg.groups.add carried no pwg_token param
+     * and no CSRF check of any kind, unlike every one of its five sibling
+     * Groups mutations (delete/setInfo/addUser/deleteUser/merge/duplicate).
+     */
+    public function testAddInvalidTokenReturnsError(): void
+    {
+        $response = $this->callWs('pwg.groups.add', [
+            'name' => 'ct_group_' . uniqid(),
+            'pwg_token' => 'wrong',
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+    }
+
+    public function testAddWithNoTokenReturnsError(): void
+    {
+        $response = $this->callWs('pwg.groups.add', [
+            'name' => 'ct_group_' . uniqid(),
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1002, $response['err']);
     }
 
     public function testDeleteInvalidTokenReturnsError(): void
@@ -416,6 +451,7 @@ final class WsGroupsMutationTest extends ContractTestCase
         $token = $this->getPwgToken();
         $dst = $this->callWs('pwg.groups.add', [
             'name' => 'ct_merge_bad_dst_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->groupId = self::firstItemId($dst, 'groups');
 

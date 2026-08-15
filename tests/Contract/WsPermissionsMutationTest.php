@@ -114,6 +114,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $cat = $this->callWs('pwg.categories.add', [
             'name' => 'ct_private_' . uniqid(),
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->privateCatId = self::resultId($cat);
 
@@ -135,6 +136,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $cat = $this->callWs('pwg.categories.add', [
             'name' => 'ct_private_' . uniqid(),
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->privateCatId = self::resultId($cat);
 
@@ -167,6 +169,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $cat = $this->callWs('pwg.categories.add', [
             'name' => 'ct_private_group_' . uniqid(),
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->privateCatId = self::resultId($cat);
 
@@ -195,6 +198,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $cat = $this->callWs('pwg.categories.add', [
             'name' => 'ct_private_group_' . uniqid(),
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->privateCatId = self::resultId($cat);
 
@@ -241,6 +245,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $cat = $this->callWs('pwg.categories.add', [
             'name' => 'ct_private_group_filter_' . uniqid(),
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->privateCatId = self::resultId($cat);
         $this->callWs('pwg.permissions.add', [
@@ -293,6 +298,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $token = $this->getPwgToken();
         $group = $this->callWs('pwg.groups.add', [
             'name' => 'ct_permless_group_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $groupResult = $group['result'] ?? null;
         self::assertIsArray($groupResult);
@@ -307,6 +313,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
 
         $cat = $this->callWs('pwg.categories.add', [
             'name' => 'ct_memberless_group_' . uniqid(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->privateCatId = self::resultId($cat);
 
@@ -349,6 +356,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $cat = $this->callWs('pwg.categories.add', [
             'name' => 'ct_private_user_filter_' . uniqid(),
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->privateCatId = self::resultId($cat);
 
@@ -385,6 +393,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $cat = $this->callWs('pwg.categories.add', [
             'name' => 'ct_private_wrong_token_' . uniqid(),
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->privateCatId = self::resultId($cat);
 
@@ -424,6 +433,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $parent = $this->callWs('pwg.categories.add', [
             'name' => 'ct_private_recursive_parent_' . uniqid(),
             'status' => 'private',
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $this->privateCatId = self::resultId($parent);
 
@@ -431,6 +441,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
             'name' => 'ct_private_recursive_child_' . uniqid(),
             'status' => 'private',
             'parent' => $this->privateCatId,
+            'pwg_token' => $this->getPwgToken(),
         ]);
         $childId = self::resultId($child);
 

@@ -44,7 +44,7 @@ final readonly class AddHandler implements WsAction
     {
         $input = AddParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken, required: false);
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }
@@ -71,11 +71,11 @@ final readonly class AddHandler implements WsAction
         }
 
         if (! in_array($input->comment, [null, ''], true)) {
-            $options['comment'] = (! $this->currentConfig->allowHtmlDescriptions or $input->pwgToken === null) ? strip_tags($input->comment) : $input->comment;
+            $options['comment'] = $this->currentConfig->allowHtmlDescriptions ? $input->comment : strip_tags($input->comment);
         }
 
         $creation_output = $this->categoryService->createVirtualCategory(
-            (! $this->currentConfig->allowHtmlDescriptions or $input->pwgToken === null) ? strip_tags($input->name) : $input->name,
+            $this->currentConfig->allowHtmlDescriptions ? $input->name : strip_tags($input->name),
             $this->activityService,
             $this->currentUser,
             $input->parent,

@@ -21,6 +21,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.groups.add` -- creates a group and returns the new group record.
@@ -31,6 +32,7 @@ final readonly class AddHandler implements WsAction
         private GroupService $groupService,
         private CurrentUser $currentUser,
         private AuditService $auditService,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -42,6 +44,12 @@ final readonly class AddHandler implements WsAction
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = AddParams::fromArray($params);
+
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
+        }
+
         $name = strip_tags($input->name);
 
         try {

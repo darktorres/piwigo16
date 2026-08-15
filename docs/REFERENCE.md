@@ -576,8 +576,8 @@ fails on any drift between that snapshot and what a fresh
 | `composer test` | Pest `Unit`+`Arch` — fast, no DB/webserver |
 | `composer analyse:phpstan` | PHPStan — the sole **blocking** static-analysis gate |
 | `composer analyse` | Alias for `analyse:phpstan` — `analyse:psalm` doesn't exist; Psalm is installed again but has no `composer` script and isn't a CI gate (see "Key design decisions" below) |
-| `composer lint:php` | ECS in check mode — **still not blocking** (see CI below) |
-| `composer lint:composer` (`:fix`) | ergebnis/composer-normalize in check (`--dry-run`) / write mode — **blocking** in CI and in lefthook's `pre-commit`, unlike ECS: `composer.json` was normalized in the same commit that added the tool, so there's no pre-existing layout debt to grandfather |
+| `composer lint:php` | ECS in check mode — **blocking** in CI since 2026-08-15 (see CI below) |
+| `composer lint:composer` (`:fix`) | ergebnis/composer-normalize in check (`--dry-run`) / write mode — **blocking** in CI and in lefthook's `pre-commit`; `composer.json` was normalized in the same commit that added the tool, so it never had pre-existing layout debt to grandfather in the first place |
 | `composer require-checker` | Composer-require-checker |
 | `composer unused` | Composer-unused |
 | `composer bench` | PHPBench (`tests/Bench/`, one real subject so far — `KernelBootBench::benchColdBoot()`, landed P11; no others yet) |
@@ -726,10 +726,14 @@ branch is `17.x-rewrite` itself too, confirmed via `gh repo view`/
 practice regardless of which branch is currently default),
 `release-image.yml` (image build + signing, on release only).
 
-`ecs` and `rector` are still `continue-on-error: true` (non-blocking),
-each with an inline comment saying so "until P5" — see `docs/PLAN.md` for
-P5's completion status; the CI file itself hasn't been revisited to make
-either job blocking since. Psalm has no CI job at all (gating was never
+`rector` is still `continue-on-error: true` (non-blocking), with an inline
+comment saying so — see `docs/PLAN.md` for P5's completion status. `ecs`
+was made blocking on 2026-08-15: its grandfathering rationale
+("pre-existing violations would block unrelated commits") no longer held,
+since `vendor/bin/ecs check` reports zero violations tree-wide. That job
+also persists ECS's own `sys_get_temp_dir()` changed-files cache across
+runs (130s cold → 1.5s warm), the same way the `phpstan` job persists
+`/tmp/phpstan`. Psalm has no CI job at all (gating was never
 reconsidered, and would be moot regardless — see "Psalm gating is moot,
 not just paused" under Key design decisions), even though the dependency
 itself is installed again. Rector's rule set is real again too, not the

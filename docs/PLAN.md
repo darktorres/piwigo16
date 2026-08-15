@@ -1633,7 +1633,7 @@ per-commit; a few are aspirational until later phases land. See
 vendor/bin/pest                             # unit, integration, browser, arch
 vendor/bin/pest --mutate --min=60           # mutation score — not run in CI yet
 vendor/bin/pest --type-coverage --min=95    # type coverage
-vendor/bin/ecs --no-progress-bar            # style — non-blocking
+vendor/bin/ecs --no-progress-bar            # style — 0 violations, blocking
 composer analyse:phpstan                    # level 10, 0 errors — blocking
 vendor/bin/rector --dry-run                 # non-blocking
 vendor/bin/deptrac --no-progress            # 0 violations — blocking

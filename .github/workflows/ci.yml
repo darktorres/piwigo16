@@ -43,7 +43,7 @@ jobs:
       - run: composer test
 
   ecs:
-    name: ECS (style, non-blocking)
+    name: ECS (style)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -54,11 +54,32 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      # ECS checks whole files, not diffs, so pre-existing violations would
-      # block unrelated commits — non-blocking here, same as lefthook.yml's
-      # matching `|| true`.
+      # ECS's changed-files cache lives under
+      # sys_get_temp_dir()/changed_files_detector_<ecs-version> (the version
+      # suffix and the per-cwd namespace both come from ECS's own bundled
+      # config/config.php, which calls withCache() before ecs.php is read) —
+      # no ecs.php override needed, just persist the runner's own default,
+      # same as the phpstan job above. Measured 130s cold vs 1.5s warm.
+      #
+      # Safe to cache even though this job blocks: ECS hashes the registered
+      # checkers *and* their configuration, its parameters, and its own
+      # package version into one configuration_hash, and wipes the entire
+      # cache when that hash moves — so an ecs.php ruleset edit can never be
+      # masked by stale per-file entries.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /tmp/changed_files_detector_*
+          key: ${{ runner.os }}-ecs-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-ecs-
+      # Blocking since 2026-08-15. It was non-blocking on the rationale that
+      # "ECS checks whole files, not diffs, so pre-existing violations would
+      # block unrelated commits" — that debt is gone (`ecs check` reports
+      # zero violations tree-wide, verified against a tracked-files-only
+      # `git archive HEAD` checkout, i.e. exactly what CI sees), so the
+      # grandfathering no longer applies. lefthook.yml's `ecs` hook keeps its
+      # `|| true` deliberately: it lints only staged files pre-commit, and
+      # this job is the real gate.
       - run: composer lint:php
-        continue-on-error: true
 
   phpstan:
     name: PHPStan

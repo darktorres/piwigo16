@@ -662,8 +662,13 @@ it('previews the guest-default values in the rendered form on reset-to-default, 
         ]);
 
         expect($result['status'])->toBe(200);
-        expect($result['body'])->toContain('id="nb_image_page" value="' . $guestDefaults['nb_image_page'] . '"');
-        expect($result['body'])->toContain('id="recent_period" value="' . $guestDefaults['recent_period'] . '"');
+        // id= and value= sit on separate template-source lines after
+        // P32's reformat -- 2 independent checks per field, not one
+        // literal single-line string.
+        expect($result['body'])->toContain('id="nb_image_page"');
+        expect($result['body'])->toContain('value="' . $guestDefaults['nb_image_page'] . '"');
+        expect($result['body'])->toContain('id="recent_period"');
+        expect($result['body'])->toContain('value="' . $guestDefaults['recent_period'] . '"');
 
         $unchanged = profileUserSettings();
         expect($unchanged['nb_image_page'])->toBe($guestDefaults['nb_image_page'] + 50);

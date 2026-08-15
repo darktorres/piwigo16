@@ -2127,8 +2127,12 @@ it('wraps around to the first photo via meta-refresh when a repeating slideshow 
     // "renders slideshow mode..." test above already relies on) -- viewing
     // B (no next item) therefore deterministically wraps to A, producing a
     // real <meta http-equiv="refresh"> pointing at A's own picture URL.
+    // http-equiv= and content= sit on separate template-source lines
+    // after P32's reformat, so only the content= attribute (still intact
+    // on its own line) is regex-matched here.
+    expect($body)->toContain('http-equiv="refresh"');
     expect($body)
-        ->toMatch('/<meta http-equiv="refresh" content="\d+;url=[^"]*\/' . $idA . '\/[^"]*">/');
+        ->toMatch('/content="\d+;url=[^"]*\/' . $idA . '\/[^"]*"/');
 });
 
 it('falls back to the medium derivative size, without warnings, when the picture_deriv session value is corrupted to a non-string', function (): void {
@@ -2194,8 +2198,15 @@ it('falls back to the medium derivative size, without warnings, when the picture
     // <link> (__invoke()'s own branch, reading the SAME corrupted session
     // var) still gets a real, well-formed derivative URL rather than an
     // "Illegal offset type"/array-to-string failure on
-    // `$picture['next']['derivatives'][$prefetch_deriv_type]`.
-    expect($result['body'])->toMatch('/<link rel="prefetch" href="[^"]+">/');
+    // `$picture['next']['derivatives'][$prefetch_deriv_type]`. rel= and
+    // href= sit on separate template-source lines after P32's reformat,
+    // so this checks a real href= attribute follows shortly after the
+    // rel="prefetch" marker rather than hardcoding the literal
+    // multi-line gap, which a future reformat could reshape again.
+    $prefetchPos = strpos($result['body'], 'rel="prefetch"');
+    expect($prefetchPos)->not->toBeFalse();
+    assert($prefetchPos !== false);
+    expect(substr($result['body'], $prefetchPos, 300))->toMatch('/href="[^"]+"/');
 });
 
 it('short-circuits the default element-content renderer when an earlier render_element_content plugin handler already produced content', function (): void {

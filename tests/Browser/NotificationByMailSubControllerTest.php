@@ -412,7 +412,11 @@ it('reports a repost for falsify with the estimated-time message when the sendma
         expect($result['body'])->not->toContain('Fatal error');
         // REPOST_SUBMIT_NAME: 'falsify' propagated straight through to the
         // repost form's own submit button name (handle(), ~line 244-252).
-        expect($result['body'])->toContain('<input type="submit" value="Continue ongoing treatment" name="falsify">');
+        // 3 independent checks, not one literal <input ...> string -- P32's
+        // reformat put type/value/name on separate template-source lines.
+        expect($result['body'])->toContain('type="submit"');
+        expect($result['body'])->toContain('value="Continue ongoing treatment"');
+        expect($result['body'])->toContain('name="falsify"');
         // doTimeoutTreatment(): the loop broke before treating anyone, so
         // $treated_count stays 0 -- English plural picks msgstr[1] for n=0
         // ("Execution time exceeded, the treatment must continue...").
@@ -452,7 +456,11 @@ it('reports a repost for trueify with the estimated-time message when the sendma
 
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Fatal error');
-        expect($result['body'])->toContain('<input type="submit" value="Continue ongoing treatment" name="trueify">');
+        // 3 independent checks, not one literal <input ...> string -- same
+        // reasoning as the 'falsify' test above.
+        expect($result['body'])->toContain('type="submit"');
+        expect($result['body'])->toContain('value="Continue ongoing treatment"');
+        expect($result['body'])->toContain('name="trueify"');
         expect($result['body'])->toContain('Execution time exceeded, the treatment must continue [Estimated time: 0 seconds].');
     } finally {
         nbmSetUserMailNotificationRow(4, null);
@@ -480,7 +488,11 @@ it('reports a repost for send_submit with the batch-timing estimate when the sen
 
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Fatal error');
-        expect($result['body'])->toContain('<input type="submit" value="Continue ongoing treatment" name="send_submit">');
+        // 3 independent checks, not one literal <input ...> string -- same
+        // reasoning as the 'falsify' test above.
+        expect($result['body'])->toContain('type="submit"');
+        expect($result['body'])->toContain('value="Continue ongoing treatment"');
+        expect($result['body'])->toContain('name="send_submit"');
         expect($result['body'])->toContain('Execution time exceeded, the treatment must continue [Estimated time: 0 seconds].');
         expect($result['body'])->toContain('The time to send mail is limited. Others mails have been skipped.');
     } finally {
@@ -524,9 +536,18 @@ it('renders only the previously-selected user as checked when redisplaying the s
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Fatal error');
         // User 4's temp row was never part of send_selection[] -- its own
-        // {$u.CHECKED} slot renders as a literal empty string, leaving the
-        // two template-source spaces on either side of it adjacent.
-        expect($result['body'])->toContain('value="ct00sendlistun"  id="send_selection-ct00sendlistun"');
+        // {$u.CHECKED} slot renders as a literal empty string. P32's reformat
+        // put value/{$u.CHECKED}/id on 3 separate template-source lines, so
+        // the real gap between value="..." and id="..." is newlines +
+        // indentation, not "two adjacent spaces" -- checked directly here
+        // (not a literal multi-line string, which a future reformat could
+        // reshape again) rather than guessed.
+        $valuePos = strpos($result['body'], 'value="ct00sendlistun"');
+        $idPos = strpos($result['body'], 'id="send_selection-ct00sendlistun"');
+        expect($valuePos)->not->toBeFalse();
+        expect($idPos)->not->toBeFalse();
+        assert($valuePos !== false && $idPos !== false);
+        expect(substr($result['body'], $valuePos, $idPos - $valuePos))->not->toContain('checked');
     } finally {
         nbmSetUserMailNotificationRow(4, null);
         nbmSetUserMailAddress(4, $originalMailAddress);

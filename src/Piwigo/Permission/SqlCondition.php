@@ -6,6 +6,7 @@ namespace Piwigo\Permission;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Query\QueryBuilder;
 
 /**
  * Bound-parameter carrier for a SQL WHERE-clause fragment --
@@ -14,11 +15,11 @@ use Doctrine\DBAL\ParameterType;
  * that initially shipped alongside it (deleted once every real call
  * site had migrated here).
  *
- * Apply via `QueryBuilder::andWhere($condition->sql)->setParameters([
- * ...$condition->parameters])` (with `$condition->types` passed as the
- * matching `setParameter()` type per key, or via `setParameters()`'s own
- * `$types` argument), or as the 2nd/3rd args to `Connection::fetchOne()`/
- * `fetchAllAssociative()` for raw-`Connection`-based callers.
+ * Apply via {@see applyTo()} against a DBAL or ORM query builder, or splice
+ * {@see toWhereClause()} into hand-built SQL and pass `->parameters`/
+ * `->types` as the 2nd/3rd args to `Connection::fetchOne()`/
+ * `fetchAllAssociative()`. Both treat an empty fragment as "no filter"
+ * rather than requiring callers to substitute a `1=1` tautology.
  */
 final readonly class SqlCondition
 {
@@ -35,6 +36,40 @@ final readonly class SqlCondition
     public function isEmpty(): bool
     {
         return $this->sql === '';
+    }
+
+    /**
+     * Applies this fragment to a DBAL or ORM query builder, binding every
+     * parameter it carries. A no-op when empty, which is what lets callers
+     * drop the `1=1` placeholder they would otherwise need to keep a
+     * `WHERE` clause syntactically valid.
+     *
+     * Both builders expose the same andWhere()/setParameter() surface here;
+     * `Doctrine\ORM\QueryBuilder` is named in full because DBAL's is the
+     * one imported above.
+     */
+    public function applyTo(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb): void
+    {
+        if ($this->isEmpty()) {
+            return;
+        }
+
+        $qb->andWhere($this->sql);
+        foreach ($this->parameters as $name => $value) {
+            $qb->setParameter($name, $value, $this->types[$name] ?? ParameterType::STRING);
+        }
+    }
+
+    /**
+     * This fragment as a complete `WHERE` clause for splicing into raw SQL,
+     * or an empty string when there is nothing to filter on -- the raw-SQL
+     * counterpart of {@see applyTo()}, and the reason a caller building its
+     * query as text no longer has to seed the fragment list with `1=1` just
+     * to avoid emitting a bare `WHERE`.
+     */
+    public function toWhereClause(): string
+    {
+        return $this->isEmpty() ? '' : 'WHERE ' . $this->sql;
     }
 
     /**

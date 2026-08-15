@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
 
 test('isEmpty is true only for an empty sql string', function (): void {
@@ -87,4 +91,74 @@ test('combine respects a different glue', function (): void {
     $b = new SqlCondition('b = 2');
 
     expect(SqlCondition::combine('OR', $a, $b)->sql)->toBe('a = 1 OR b = 2');
+});
+
+test('toWhereClause renders a complete clause, or nothing when empty', function (): void {
+    expect(new SqlCondition('')->toWhereClause())
+        ->toBe('')
+        ->and(new SqlCondition('a = 1')->toWhereClause())
+        ->toBe('WHERE a = 1');
+});
+
+test('applyTo binds sql, parameters and types onto a DBAL query builder', function (): void {
+    $qb = DbConnection::build()
+        ->createQueryBuilder()
+        ->select('id')
+        ->from('images');
+
+    new SqlCondition('id IN (:ids) AND file = :file', [
+        'ids' => [1, 2],
+        'file' => 'fixture-photo-1.jpg',
+    ], [
+        'ids' => ArrayParameterType::INTEGER,
+    ])->applyTo($qb);
+
+    expect($qb->getSQL())
+        ->toContain('WHERE id IN (:ids) AND file = :file');
+    // The type map only covers 'ids'; 'file' falls back to STRING rather
+    // than binding untyped.
+    expect($qb->getParameter('ids'))
+        ->toBe([1, 2])
+        ->and($qb->getParameter('file'))
+        ->toBe('fixture-photo-1.jpg')
+        ->and($qb->getParameterType('ids'))
+        ->toBe(ArrayParameterType::INTEGER)
+        ->and($qb->getParameterType('file'))
+        ->toBe(ParameterType::STRING);
+});
+
+test('applyTo binds onto an ORM query builder too', function (): void {
+    $qb = EntityManagerFactory::build(DbConnection::build())
+        ->createQueryBuilder()
+        ->select('i.id')
+        ->from(ImageEntity::class, 'i');
+
+    new SqlCondition('i.id = :onlyId', [
+        'onlyId' => 3,
+    ])->applyTo($qb);
+
+    expect($qb->getDQL())
+        ->toContain('WHERE i.id = :onlyId');
+    expect($qb->getParameter('onlyId')?->getValue())
+        ->toBe(3);
+});
+
+test('applyTo is a no-op for an empty condition', function (): void {
+    $qb = DbConnection::build()
+        ->createQueryBuilder()
+        ->select('id')
+        ->from('images');
+    $before = $qb->getSQL();
+
+    new SqlCondition('')
+        ->applyTo($qb);
+
+    // No stray WHERE, and nothing bound -- this is what removes the need
+    // for callers to substitute a `1=1` tautology.
+    expect($qb->getSQL())
+        ->toBe($before)
+        ->and($qb->getSQL())
+        ->not->toContain('WHERE')
+        ->and($qb->getParameters())
+        ->toBe([]);
 });

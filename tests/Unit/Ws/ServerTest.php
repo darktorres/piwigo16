@@ -350,7 +350,7 @@ test('invoke returns a 401 when an active API key request targets a config-forbi
     $currentConfig->apiKeyForbiddenMethods = ['test.forbidden'];
     $apiKeyFlag = new ApiKeyRequestFlag();
     $apiKeyFlag->activate();
-    $server = new Server(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig);
+    $server = new Server(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig, Kernel::container());
     $server->addMethod('test.forbidden', fn (array $params, Server &$service): array => [
         'ok' => true,
     ]);
@@ -696,7 +696,7 @@ test('isAuthorizedMethodForAPIKEY blocks a config-forbidden method once the API 
     $currentConfig->apiKeyForbiddenMethods = ['pwg.users.setInfo'];
     $apiKeyFlag = new ApiKeyRequestFlag();
     $apiKeyFlag->activate();
-    $server = new Server(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig);
+    $server = new Server(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig, Kernel::container());
 
     expect($server->isAuthorizedMethodForAPIKEY('pwg.users.setInfo'))
         ->toBeFalse()
@@ -709,7 +709,7 @@ test('isAuthorizedMethodForAPIKEY also blocks via a ws_session_login_api_key ses
     $_SESSION['connected_with'] = 'ws_session_login_api_key';
     $currentConfig = new CurrentConfig();
     $currentConfig->apiKeyForbiddenMethods = ['pwg.users.setInfo'];
-    $server = new Server(new EventDispatcher(), pwgServerTestAccessControl(true), new ApiKeyRequestFlag(), $currentConfig);
+    $server = new Server(new EventDispatcher(), pwgServerTestAccessControl(true), new ApiKeyRequestFlag(), $currentConfig, Kernel::container());
 
     try {
         expect($server->isAuthorizedMethodForAPIKEY('pwg.users.setInfo'))

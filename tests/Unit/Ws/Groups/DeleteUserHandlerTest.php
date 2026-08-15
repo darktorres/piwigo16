@@ -60,7 +60,7 @@ function pwgGroupsDeleteUserHandlerTestServer(): Server
         new AccessLevelChecker($currentUser, $currentConfig),
     );
 
-    return new Server(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
+    return new Server(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig, Kernel::container());
 }
 
 beforeEach(function (): void {

@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Closure;
-use LogicException;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
@@ -56,7 +55,7 @@ final class Server
         private readonly AccessControl $accessControl,
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
         private readonly CurrentConfig $currentConfig,
-        private readonly ?ContainerInterface $container = null,
+        private readonly ContainerInterface $container,
     ) {}
 
     /**
@@ -83,18 +82,18 @@ final class Server
     /**
      *  Initializes the request handler.
      */
-    public function setHandler(string $requestFormat, ?RequestHandler &$requestHandler): void
+    public function setHandler(string $requestFormat, ?RequestHandler $requestHandler): void
     {
-        $this->requestHandler = &$requestHandler;
+        $this->requestHandler = $requestHandler;
         $this->requestFormat = $requestFormat;
     }
 
     /**
      *  Initializes the request handler.
      */
-    public function setEncoder(string $responseFormat, ?ResponseEncoder &$encoder): void
+    public function setEncoder(string $responseFormat, ?ResponseEncoder $encoder): void
     {
-        $this->responseEncoder = &$encoder;
+        $this->responseEncoder = $encoder;
         $this->responseFormat = $responseFormat;
     }
 
@@ -145,7 +144,6 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         );
 
         $this->eventDispatcher->dispatchNotify(new WsAddMethods($this));
-        uksort($this->methods, strnatcmp(...));
         $this->requestHandler()
             ->handleRequest($this);
     }
@@ -515,9 +513,6 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         if (! $is_error) {
             $handlerClass = $method['handlerClass'];
             if ($handlerClass !== null) {
-                if (! $this->container instanceof ContainerInterface) {
-                    throw new LogicException('Server::invoke() requires a container to dispatch a WsAction handler for ' . $handlerClass);
-                }
                 $handler = $this->container->get($handlerClass);
                 assert($handler instanceof WsAction);
                 try {

@@ -67,6 +67,7 @@ function pwgRestRequestHandlerTestServer(): Server
         pwgRestRequestHandlerTestAccessControl(),
         new ApiKeyRequestFlag(),
         new CurrentConfig(),
+        Kernel::container(),
     );
     $encoder = new JsonEncoder();
     $server->setEncoder('json', $encoder);

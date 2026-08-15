@@ -12,6 +12,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
@@ -412,13 +413,20 @@ final readonly class PictureModifyPageRenderer
                 $authorizeds_values = array_values($authorizeds);
                 $category = $authorizeds_values[random_int(0, count($authorizeds_values) - 1)];
 
+                // 'cat_names' holds CategoryIdNamePermalink DTOs; UrlService
+                // narrows a non-array `category` param to [] and then emits
+                // a category segment with no id, so the DTO is unwrapped to
+                // the plain-array shape it expects -- same unwrap
+                // HtmlService::getCatDisplayNameCache() does against this
+                // same cache.
                 $cat_names_raw = $this->processCache->get('cat_names');
                 $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
+                $cat_name = $cat_names[$category] ?? null;
                 $url_img = $this->urlService->makePictureUrl(
                     [
                         'image_id' => $image_id,
                         'image_file' => $image_file,
-                        'category' => $cat_names[$category] ?? null,
+                        'category' => $cat_name instanceof CategoryIdNamePermalink ? $cat_name->toArray() : [],
                     ]
                 );
 

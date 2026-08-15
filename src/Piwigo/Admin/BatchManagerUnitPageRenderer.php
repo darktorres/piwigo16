@@ -11,6 +11,7 @@ use Piwigo\Admin\Request\BatchManagerUnitRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
@@ -350,17 +351,20 @@ final readonly class BatchManagerUnitPageRenderer
                     )
                 );
 
-                // ProcessCache::get('cat_names') is populated as
-                // array<int|string, array<string, mixed>> by
+                // ProcessCache::get('cat_names') is populated by
                 // get_cat_display_name_cache() (already called above, for
-                // every $item in the while loop, before this point) --
-                // matches the established narrowing pattern in
-                // Piwigo\Admin\PictureModifyPageRenderer.
+                // every $item in the while loop, before this point) as
+                // array<int, CategoryIdNamePermalink> -- real DTOs, so each
+                // one is unwrapped via toArray() before being handed to
+                // UrlService, which narrows a non-array 'category' param to
+                // [] and would otherwise drop the whole category segment.
                 $cat_names_raw = $this->processCache->get('cat_names');
                 $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
 
-                $row_cat_id_raw = $row['cat_id'] ?? null;
-                $row_cat_id = (is_int($row_cat_id_raw) || is_string($row_cat_id_raw)) ? (string) $row_cat_id_raw : null;
+                // The active category filter, straight from the local scope
+                // that built this page's own image query -- not from $row,
+                // which has never carried a 'cat_id' column.
+                $row_cat_id = $is_category ? (string) $filter_category_id : null;
 
                 if ($row_cat_id !== null
                 and in_array($row_cat_id, $authorizeds, true)) {
@@ -368,7 +372,7 @@ final readonly class BatchManagerUnitPageRenderer
                         [
                             'image_id' => $row_id,
                             'image_file' => $image_file,
-                            'category' => $cat_names[$row_cat_id],
+                            'category' => self::categoryUrlParam($cat_names, $row_cat_id),
                         ]
                     );
                 } else {
@@ -377,7 +381,7 @@ final readonly class BatchManagerUnitPageRenderer
                             [
                                 'image_id' => $row_id, // utile ?
                                 'image_file' => $image_file,
-                                'category' => $cat_names[$category],
+                                'category' => self::categoryUrlParam($cat_names, $category),
                             ]
                         );
                         break;
@@ -461,5 +465,24 @@ final readonly class BatchManagerUnitPageRenderer
         $this->eventDispatcher->dispatchNotify(new LocEndElementSetUnit());
 
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_unit.latte');
+    }
+
+    /**
+     * One entry of ProcessCache's 'cat_names' map, in the plain-array shape
+     * {@see \Piwigo\Url\UrlService::makeSectionInUrl()} requires -- it
+     * narrows a non-array `category` param to [] and then emits a category
+     * segment with no id at all, so handing it the raw
+     * {@see CategoryIdNamePermalink} DTO silently loses the album from every
+     * URL built here. Same unwrap {@see \Piwigo\Html\HtmlService::getCatDisplayNameCache()}
+     * already does against this same cache.
+     *
+     * @param array<array-key, mixed> $catNames
+     * @return array{id: int, name: string, permalink: ?string}|array{}
+     */
+    private static function categoryUrlParam(array $catNames, int|string $categoryId): array
+    {
+        $cat = $catNames[$categoryId] ?? null;
+
+        return $cat instanceof CategoryIdNamePermalink ? $cat->toArray() : [];
     }
 }

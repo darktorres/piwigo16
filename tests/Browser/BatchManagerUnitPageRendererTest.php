@@ -419,15 +419,17 @@ it('sets the "see-out" jump-to link when the current admin is authorized for the
     H::assertNoServerErrors($page, 'batch_manager unit-mode jump-to link');
 
     // U_JUMPTO (and therefore the tpl's "see-out" link) is only assigned
-    // when $url_img got set inside the per-image loop's authorized-
-    // categories foreach -- since $row['cat_id'] is always null for real
-    // data, the *only* code path that
-    // can ever set it is the `else` branch's single-iteration foreach
-    // over $authorizeds, which this fresh public album + its one photo
-    // satisfies (the admin test user is authorized for every public
-    // category). A real "see-out" anchor rendering is therefore a real
-    // behavioral signal that foreach body -- through its terminal
-    // break -- actually ran, not just that the page returned 200.
+    // when $url_img got set inside the per-image loop. This request carries
+    // no category filter, so $row_cat_id is null and the `else` branch's
+    // single-iteration foreach over $authorizeds is what sets it -- which
+    // this fresh public album + its one photo satisfies (the admin test
+    // user is authorized for every public category). A real "see-out"
+    // anchor rendering is therefore a real behavioral signal that foreach
+    // body -- through its terminal break -- actually ran, not just that the
+    // page returned 200. The category segment carries a real album id: the
+    // renderer unwraps ProcessCache's CategoryIdNamePermalink DTO before
+    // handing it to UrlService, which would otherwise narrow the non-array
+    // param to [] and emit "/category/" with nothing after it.
     // H::settledContent(), not H::rawWebpage($page)->content() -- see that
     // method's own docblock for the known Playwright stale-pre-navigation
     // race.
@@ -443,4 +445,61 @@ it('sets the "see-out" jump-to link when the current admin is authorized for the
     $html = H::settledContent($page);
     expect($html)
         ->toContain('class="see-out" href="picture.php');
+    // The album actually reaches the URL -- before the DTO unwrap this
+    // rendered as a bare "/category/" with no id at all.
+    expect($html)
+        ->toContain('/category/' . $albumId);
+});
+
+it('scopes the see-out link to the filtered album for a photo in several albums', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    // Two albums, lowest id first: findCategoryIdsForImage() orders by
+    // category id, so the un-filtered `else` branch always picks album A.
+    // Filtering by album B is therefore the only way the link can point at
+    // B -- which is exactly what the $row_cat_id branch is for, and what
+    // never ran while it read a 'cat_id' column the query never produced.
+    $albumIds = [];
+    foreach (['A', 'B'] as $suffix) {
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Batch Unit Filtered Album ' . $suffix . ' ' . uniqid(),
+        ]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumIds[] = (int) $albumResult['id'];
+    }
+
+    [$albumA, $albumB] = $albumIds;
+    expect($albumA)->toBeLessThan($albumB);
+
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumA, 'Batch Unit Filtered Photo');
+    @unlink($image);
+
+    // pwg.images.addSimple() only links the upload album, so the second
+    // association is inserted directly -- same direct-SQL pattern the
+    // storage_category_id test above uses.
+    $db = H::connect();
+    H::dbQuery($db, sprintf('INSERT INTO image_category (image_id, category_id) VALUES (%d, %d)', $imageId, $albumB));
+    H::dbClose($db);
+
+    $filterResult = H::adminPost($page, '/admin.php?page=batch_manager', [
+        'pwg_token' => H::pwgToken($page),
+        'submitFilter' => '1',
+        'filter_category_use' => '1',
+        'filter_category' => (string) $albumB,
+    ]);
+    expect($filterResult['status'])->toBe(200);
+
+    $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'batch_manager unit-mode filtered see-out link');
+
+    $html = H::settledContent($page);
+    expect($html)
+        ->toContain('/category/' . $albumB);
+    expect($html)
+        ->not->toContain('/category/' . $albumA);
 });

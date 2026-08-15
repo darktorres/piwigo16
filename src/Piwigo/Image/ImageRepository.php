@@ -2232,6 +2232,13 @@ final class ImageRepository extends EntityRepository
                 ->from(ImageCategoryEntity::class, 'ic')
                 ->where('ic.imageId = :imageId')
                 ->setParameter('imageId', $imageId)
+                // Explicit order: row order is otherwise unguaranteed and
+                // MySQL/PostgreSQL differ, which real consumers notice --
+                // Admin\BatchManagerUnitPageRenderer picks the *first*
+                // authorized category out of this list to build a photo's
+                // "see out" link, so an unordered result makes that link's
+                // target album platform-dependent.
+                ->orderBy('ic.categoryId', 'ASC')
                 ->getQuery()
                 ->getSingleColumnResult()
         ));

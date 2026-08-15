@@ -4,9 +4,10 @@ Phase-by-phase record of `17.x-rewrite`'s development: what was planned,
 what actually shipped, and where the two diverge. One current status per
 phase, not several documents to cross-reference by hand.
 
-`17.x-rewrite` replays `16.x-rewrite`'s modernization in 46 strictly-sequential
-backbone phases (P0–P45, grouped into 10 epochs A–J — every backend phase
-sequenced before every frontend phase), rebuilt from `origin/16.x` rather
+`17.x-rewrite` replays `16.x-rewrite`'s modernization in 51 strictly-sequential
+backbone phases (P0–P50, grouped into 11 epochs A–K — every backend phase
+sequenced before every frontend phase, with Epoch K's templating/extension
+rewrite interleaved into Epoch J, see its own section), rebuilt from `origin/16.x` rather
 than upgraded in place. Dual-purpose: a *replay* of work with a reference
 implementation on `16.x-rewrite`, plus *greenfield* net-new capabilities
 with no counterpart there. Full conventions (REPLAY vs. GREENFIELD
@@ -25,7 +26,7 @@ correctly:
   2026-08-03). The *original* plan's P24 ("Vite + TypeScript conversion")
   is unaffected in scope but renumbered **P29**, moved after every backend
   phase so all frontend work sequences last — see the Phase detail
-  section below for the current P24–P45 order. What actually landed under
+  section below for the current P24–P50 order. What actually landed under
   the `p24` tag (plus, not `(p24)`-tagged but the same post-P23
   remediation effort in substance — a SQL bound-parameter sweep and the
   singleton/DI elimination campaign): retiring the `$GLOBALS`/
@@ -122,12 +123,13 @@ onto the original scope.
 | P29 | Browserslist decision + legacy back-compat removal | Not started | 0 |
 | P30 | Asset-pipeline foundation (ScriptLoader/CssLoader/FileCombiner retirement + ViteManifest resolution) | Not started | 0 |
 | P31 | Smarty → Latte template migration | Done — all 139 real templates converted, Smarty engine fully removed (`smarty/smarty` dropped, `Template.php` Latte-only). Deferred asset-pipeline items (`ViteManifest`, `<picture>`, ThumbHash) out of scope, pick up under P29/P30/P43 | 80 |
-| P32 | Latte lint/format | DONE. Format-half: `tools/latte-prettier/` (real Prettier plugin, 135/135 real-tree coverage, all 126 reformatted templates manually reviewed line-by-line). Lint-half: `composer lint:latte` + `precompile:templates` + a Piwigo-native phpstan-latte pipeline (`tools/phpstan/Latte/`, replacing an initially-vendored efabrica/phpstan-latte fork after a deep upstream review) — `bin/piwigo phpstan-latte:compile` compiles all 135 templates with typed `@var` injection + shim-rewritten filter/function calls into `_analysis/phpstan-latte/`, analysed by plain `phpstan analyse` (parallel, result-cached) with errors mapped back to real `.latte` lines via an `errorFormatter.table!` override. Two follow-up campaigns shrink the remaining scoped ignores: context-docblock enrichment (~1,400 mixed-flow findings across 130 TemplatePageContext classes) and template-source modernization (~450 loose-`==`/`empty()` findings) | 11 |
+| P32 | Latte lint/format | DONE. Format-half: `tools/latte-prettier/` (real Prettier plugin, 135/135 real-tree coverage, all 126 reformatted templates manually reviewed line-by-line). Lint-half: `composer lint:latte` + `precompile:templates` + a Piwigo-native phpstan-latte pipeline (`tools/phpstan/Latte/`, replacing an initially-vendored efabrica/phpstan-latte fork after a deep upstream review) — `bin/piwigo phpstan-latte:compile` compiles all 135 templates with typed `@var` injection + shim-rewritten filter/function calls into `_analysis/phpstan-latte/`, analysed by plain `phpstan analyse` (parallel, result-cached) with errors mapped back to real `.latte` lines via an `errorFormatter.table!` override. Two follow-up campaigns shrink the remaining scoped ignores: context-docblock enrichment (~1,400 mixed-flow findings across 130 TemplatePageContext classes) and template-source modernization (~450 loose-`==`/`empty()` findings). **Enforcement is partial, and the prose section below was stale on two counts** (corrected 2026-08-15): the 126-file reformat *was* committed (`4862a0f579`), not left pending; and of the lint-half scripts only `analyse:phpstan` actually gates anything — `lint:latte`, `precompile:templates` and `lint:vartype` are defined in `composer.json` but invoked by neither `.github/workflows/ci.yml` nor `lefthook.yml` | 11 |
 | P33 | Latte idiomatic modernization | Done — P33A done (P32's reformat applied for real, `Feature::Dedent`/`Feature::ScopedLoopVariables` enabled). P33B done (`{varType}` blocks generated from the live `VariableMap` + a `composer lint:vartype`/`lint:vartype:fix` check/fix pair, not a one-time hand pass — see `tools/phpstan/Latte/VarTypeSyncer.php`). P33C done (n:if/n:foreach sweep, 451 conversions/91 templates, AST-based tool not a manual sweep — 4 templates skipped, real structural edge case). P33D done (verification-only — `{spaceless}`'s runtime whitespace-collapse confirmed unaffected by Dedent/n:attribute work, directly inspected against the current golden-html baselines). P33F done (native `{_ ...}`/`{translate ...}` tags added to `PiwigoExtension::getTags()`, wired directly to the existing `translate()`/filter mechanism — additive, no existing `|translate`/`|l10n` call site converted yet). P33E done (`\|noescape` classified across all 1009 real sites via an AST walk cross-checked against a raw-text count — 11 provably-redundant sites removed, 379 `{='key'\|translate...\|noescape}` sites collapsed to the new `{_...}` tag syntax; the remaining ~234-site ambiguous bucket, the 14 `<script>`/`<style>`-embedded sites, and the broader ~2380-site `\|translate` rollout beyond the noescape overlap are explicitly deferred, not silently dropped — see the P33 prose section below). P33G done (`Engine::setLocale()` wired from `Lang::currentUserLanguage()`; all 4 real `\|number_format[:N]` sites converted to `\|number[:N]` — the original research found only 1, missed 3 more in `rating_user.latte`, a real gap closed here). P33H done (dev-only Tracy debug-bar integration — new `Piwigo\Bootstrap\TracyBootstrap`, gated behind a new `PIWIGO_TRACY_ENABLED` env var, `tracy/tracy` now a real `require-dev` dependency instead of an unresolved transitive reference). All 8 sub-items complete | 8 |
 | P34 | Inline JS extraction | Not started | 0 |
 | P35 | Inline CSS extraction | Not started | 0 |
 | P36 | JS → TS mechanical conversion | Not started (mixed-elimination work landed under P24 instead, see above) | 0 |
-| P37 | Typed page-data bridge + `any` reduction | Not started | 0 |
+| P37a | Typed page-data exposure (PHP half — typed payload + JSON island, replacing the 68 in-template `json_encode` uses and `BODY_DATA`). **Split out and re-sequenced ahead of P34** so P34 has a real data-passing mechanism to extract against instead of inventing an interim one | Not started | 0 |
+| P37b | `getPageData<T>()` typing + `any` reduction (TS half — stays after P36) | Not started | 0 |
 | P38 | Refactor TS into modules | Not started | 0 |
 | P39 | Remove jQuery | Not started | 0 |
 | P40 | Lit component catalog (conditional on P39) | Not started | 0 |
@@ -136,6 +138,11 @@ onto the original scope.
 | P43 | Picture pipeline (new feature — AVIF/WebP, ThumbHash) | Not started | 0 |
 | P44 | Dark mode (new feature) | Not started | 0 |
 | P45 | Real quality gates (Lighthouse assert + size-limit budgets) | Not started | 0 |
+| P46 | Event system rewrite (mutable payloads, single PSR-14 `dispatch()`, `symfony/event-dispatcher`, catalogue rename/relocate/prune + 6 missing hooks + legacy map). **Independent of Epoch J** — touches no template, asset or JS | Not started | 0 |
+| P47 | Typed per-template view objects + `Template` split (`{templateType}`, `#[Template]`, `render(View): Html`; deletes 93,420 `{varType}` lines, the `VarTypeSyncer` tooling and the template-extension feature). Depends on P30 + P37a + P34/P35 | Not started | 0 |
+| P48 | Shell-last rendering + `PageState` split (`@layout.latte` replacing header/footer; deletes `Template::$output`, both `COMBINED_*` placeholders and the `</head>` regex injection). Depends on P47; **shape depends on P30's fork** | Not started | 0 |
+| P49 | Latte API prune + typed contribution kinds + plugin-owned routes (no string region names, no escape hatch; `FieldOverride`/`FormProvider` kinds; stable DOM hooks; extensible `RouteDefinitions`) | Not started | 0 |
+| P50 | Escaping campaign (pre-escaped-URL residue after P34 and P47 shrink the 988 `\|noescape` population) | Not started | 0 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -1074,7 +1081,7 @@ class) lives in the campaign's own plan files, not reproduced here.
 **Typed-context/VO/DTO campaign — typed template contexts sub-campaign
 complete, 2026-08-08, 87 `feat(template)`-tagged commits.** This
 sub-campaign has its own internal phase numbering in its own plan file
-(unrelated to this doc's P0–P45 backbone numbers — its "Phase 13" is not
+(unrelated to this doc's P0–P50 backbone numbers — its "Phase 13" is not
 this doc's `P13`); referred to here only by what it did, not that
 number. Every one of the 96 files calling `Template::assign()` with a
 real (non-excluded) key converted to `final readonly class
@@ -1481,6 +1488,24 @@ multiple unrelated concerns) to 17. Two tracks: refactor/modernization
 new-feature track for anything that adds a genuinely new capability, then
 a closing gate phase.
 
+**Execution order within this epoch is not phase-number order** (reconciled
+2026-08-15 against Epoch K below, which depends on parts of it):
+
+```
+P29 → P30 → P37a → (P34 ∥ P35) → [Epoch K: P47 → P48 → P49] → P50
+                                  ↑ P42's Tailwind decision due before P47
+P36 → P37b → P38 → P39 → P40 → P41 · P42 · P43 · P44 · P45
+P46 (Epoch K) is independent of all of the above and can run in parallel
+```
+
+Three re-sequencings, each with a measured reason recorded in the phase text:
+**P37a** split out and moved ahead of P34 (P34 otherwise needs an interim
+data-passing mechanism); **P34 ∥ P35 moved ahead of all further
+template-content work** (100% of the 210 `escapeJavascript` sites live inside
+P34's scope, so earlier escaping work is discarded); **P42's Tailwind decision**
+pulled ahead of P47 (it would otherwise force a third pass over all 135
+templates).
+
 **Refactor/modernization track (same behavior — land first):**
 
 **P29 — Browserslist decision + legacy back-compat removal.** Not
@@ -1505,6 +1530,30 @@ driving everything except the `vitals` entry) for real `ViteManifest`
 resolution reading `dist/manifest.json`. No template content moves — this
 only builds the delivery mechanism P34/P35 need.
 
+**P30 owns one design decision that determines P48's shape** (recorded
+2026-08-15): do templates keep declaring their own assets mid-body (`{do
+combineScript(...)}` — 178 real sites, 87 `combineCss`, 80 `footerScript`,
+across 76 of 135 templates), or do assets become view-declared per-page Vite
+entries?
+
+- **Template-declared (status quo shape):** runtime collection is unavoidable,
+  because a `<head>` rendered before the body cannot see what the body
+  registered. P48 must then render **shell-last** (content → layout).
+- **View-declared per-page entries:** no runtime collection at all, so `<head>`
+  can render first and Latte's own `{layout}`/`{block}` inheritance becomes
+  usable immediately.
+
+Verified against Latte itself, not assumed: `Latte\Runtime\Template::render()`
+delegates to `createTemplate($this->parentName, …)->render()` when `{layout}`
+is present, so the layout's `<head>` genuinely precedes the child block.
+Only 10 of 158 registered scripts are `load: 'header'` (119 footer, 29 async),
+which bounds the problem. Counter-consideration: 76 templates register assets
+today and themes must keep that ability, so moving all of it into PHP would
+remove a real capability from theme authors.
+
+P47/P48 must therefore treat any `Assets` abstraction as a **thin seam P30
+deletes**, not a permanent design worth polishing.
+
 **P31 — Smarty → Latte template migration.** Done (80 `p31.x` commits).
 Scope narrowed from the original plan: the old "+ asset pipeline"
 clause is split out to P29/P30 above and P43 below — matches what
@@ -1524,7 +1573,26 @@ needed). The deferred asset-pipeline items (`ViteManifest`,
 were never part of this narrower scope — they pick up whenever
 P29/P30 (Vite adoption) actually start, tracked under P43.
 
-**P32 — Latte lint/format.** Format-half landed; lint-half not started. No Latte-native lint/format
+**P32 — Latte lint/format.** Done — **but this section was stale on two
+counts, corrected 2026-08-15.** (1) The 126-file reformat described at the end
+of this section as "deliberately left uncommitted" **was committed**, in
+`4862a0f579` ("style(templates): apply P32's Latte reformat across the real
+template tree"); the working tree is clean. (2) The lint half is **built**, not
+"not started": `tools/latte-lint.php` + `composer lint:latte`,
+`bin/piwigo precompile:templates` + `composer precompile:templates`, and the
+Piwigo-native phpstan-latte pipeline all exist.
+
+**What is genuinely still open is enforcement, not existence.** Of those, only
+`composer analyse:phpstan` is gated anywhere (CI `phpstan` job + a `lefthook`
+pre-push hook). `lint:latte`, `precompile:templates` and `lint:vartype` are
+real `composer` scripts that **neither `.github/workflows/ci.yml` nor
+`lefthook.yml` ever invokes** — `lefthook.yml` even says so in a comment.
+Wiring them up is deferred until after P49, because P49 changes
+`PiwigoExtension`'s filter set and `lint:latte` registers that extension;
+`lint:vartype` is deleted outright by P47 (it generates the `{varType}` blocks
+P47 removes), so it should never be gated at all.
+
+Original section text follows. No Latte-native lint/format
 tool is installed in this repo today, but `16.x-rewrite` (136 real
 `.latte` templates, unlike `16.x-v2` which has none at all) already built
 real prior art — REPLAY this, don't design from scratch:
@@ -1760,13 +1828,28 @@ would build a panel nothing ever renders when Tracy isn't enabled).
 embedded in a template moves to a plain `.js` file loaded through P30's
 manifest. Same behavior, proven via `composer test:visual`. No
 TypeScript, no modularization, no jQuery changes — separate phases below.
-Depends on P30 and P33 (extracting from the final, idiomatic `.latte`
+Depends on P30, P37a and P33 (extracting from the final, idiomatic `.latte`
 files).
 
+**Measured scope and re-sequencing (2026-08-15).** Inline JS is not only
+literal `<script>` blocks: 16 templates carry one, but **80 `footerScript(`
+captures across 61 templates** carry the rest. Critically, **all 210
+`escapeJavascript` call sites are inside that scope** — verified, 100%, none
+outside a `{capture}`/`<script>` region. Any escaping or filter cleanup done
+before P34 is therefore discarded work, which is why **P34 ∥ P35 must run
+ahead of P47–P50** and ahead of any further template-content pass.
+The P37a dependency is new: without a real page-data mechanism, P34 has to
+invent an interim one for extracted JS to read, which P37b would then replace.
+
 **P35 — Inline CSS extraction.** Not started. Every `<style>` block and
-`style="..."` attribute moves to a real `.css` file. Independent of
+`style="..."` attribute moves to a real `.css` file — **20 templates with
+`<style>`, 243 `style="` attributes** (measured 2026-08-15). Independent of
 P34 — different files, different lint tool (Stylelint vs. ESLint),
 parallelizable with it. Same dependencies as P34 (P30 + P33).
+P35 also settles whether `Template::htmlStyle()` (15 template call sites,
+accumulating runtime inline CSS) survives at all, or is fully superseded by
+real stylesheets plus the existing `local/css/*-rules.css` mechanism — P48
+should not carry it forward by default.
 
 **P36 — JS → TS mechanical conversion.** Not started as originally scoped
 — the 52 commits tagged `p25` are the PHP-side mixed-elimination work
@@ -1780,10 +1863,23 @@ jQuery removal yet. Vendored third-party files (`jquery.js`/`.min.js`/
 `jquery.geoip.js`) stay out of scope here — already ESLint-ignore-listed,
 decided in P39. Depends on P34.
 
-**P37 — Typed page-data bridge + `any` reduction.** Not started.
-`getPageData<T>()` replaces inline PHP→JS data dumps; TypeScript `any`
-driven to zero across P36's output. Split from P36 because this is real
-type-design work, not a mechanical rename. Depends on P36.
+**P37 — Typed page-data bridge + `any` reduction. Split into two halves
+(2026-08-15), because they belong at opposite ends of the order.**
+
+**P37a — typed page-data exposure (PHP half). Re-sequenced ahead of P34.**
+One typed payload per page, emitted as a JSON island, replacing the ad-hoc
+PHP→JS data smuggling: **68 in-template `json_encode` uses** plus
+`PageState::$bodyData`/`BODY_DATA`, and the string-into-JS-literal pattern the
+210 `escapeJavascript` sites represent. This has to exist *before* P34, or P34
+must invent an interim data-passing mechanism that P37b then replaces. It is
+also the natural PHP counterpart to P47's typed view objects — the same typed
+source feeds the template and the JSON island, so the two should be designed
+together even though P47 lands later.
+
+**P37b — `getPageData<T>()` typing + `any` reduction (TS half).** Unchanged
+scope, unchanged position: `getPageData<T>()` consumes P37a's island; TypeScript
+`any` driven to zero across P36's output. Real type-design work, not a
+mechanical rename. Depends on P36.
 
 **P38 — Refactor TS into modules.** Not started. Breaks up monolithic
 per-page scripts into proper ES modules (shared utils, per-feature entry
@@ -1809,6 +1905,12 @@ capability. Skipped entirely if P39 turns up nothing that needs it.
 **P41 — TS modernization.** Not started. Idiomatic pass over the
 now-modular, jQuery-free, fully-typed codebase from P36–P40. Same
 behavior.
+
+**P42's Tailwind *decision* is pulled forward (2026-08-15) — the decision, not
+the work.** If Tailwind is adopted it rewrites `class=` across all 135
+templates. P47/P48 restructure those same templates. Deciding late means
+touching every template a third time, so the adopt/don't-adopt call must be
+made **before P47 starts**, even though the implementation stays here in P42.
 
 **P42 — CSS architecture modernization.** Not started. `@container`
 queries, `@layer` cascade, Tailwind adoption evaluated (`@source`
@@ -1845,7 +1947,95 @@ Lighthouse perf/a11y/best-practices thresholds and real per-entry
 review — no automated tooling found) becomes a real automated check.
 Needs P29–P44's real bundles/templates/features to measure against.
 
-## Greenfield tracks (T3, cuttable — outside the P0–P45 backbone)
+### Epoch K — Templating & extension-surface rewrite (P46–P50)
+
+Added 2026-08-15. Cross-cutting rather than purely frontend, which is why it is
+its own epoch: P46 is backend, P47–P48 presentation, P49 reaches into routing
+and the plugin contract. Full evidence, measurements and decision rationale live
+in the campaign's own planning notes; the short version is that templating and
+events are both faithful 1:1 ports of Smarty-era / `trigger_notify`-era Piwigo —
+translated to Latte and to PHP classes, never redesigned.
+
+Two measurements motivate the whole epoch. **119,752 lines of `.latte`, of which
+93,420 (78%) are auto-generated `{varType}` boilerplate** — all 135 templates
+carry the same 692-line block while referencing 11.5 distinct variables on
+average, because `Template::$vars` is one request-global bag handed wholesale to
+every render. And **157 event classes, 21 with a production listener**, where
+the three features the bespoke dispatcher cites to justify itself
+(`addEventHandler`, `includePath`, `callablesEqual`) have **zero production
+callers**.
+
+**P46 — Event system rewrite.** Mutable event payloads (filterable fields lose
+`readonly`, context fields keep it); collapse `dispatchChange()`/
+`dispatchNotify()` into one PSR-14 `dispatch()` across 250 sites; adopt
+`symfony/event-dispatcher` and delete the 282-line bespoke dispatcher plus its
+~700-line test; then the catalogue — rename `Loc*` to tense-consistent module
+names, co-locate every event with its module, prune to evidence, add the **6
+real core hooks that have no class** (`invalidate_user_cache` 7 wild uses,
+`get_categories_menu_sql_where` 6, `user_list_columns` 3,
+`after_render_user_list` 2, `get_high_url` 2, `add_elements` 2), and ship
+`docs/events-legacy-map.md`. Keep the closure-based `subscribedEvents()` shape —
+Symfony's `EventSubscriberInterface` uses static method-name strings, which
+collide with this repo's PHPStan ban on variable method calls. **Independent of
+Epoch J**; can run immediately. The prune is per-event judgement, not a script:
+27% of `loc_*` handlers do non-contribution work, so a payload-less marker can
+still be load-bearing.
+
+**P47 — Typed view objects + `Template` split.** One `final readonly class
+XxxView` per template carrying `#[Template('index.latte')]`; the template header
+collapses to `{templateType …}`. Deletes all 93,420 `{varType}` lines,
+`toArray()` from 130 context classes (474 of 781 mapped keys are literally
+`'CAPS' => $this->camelCase`), `Core\TemplatePageContext`, the `ALL_CAPS`/`U_`/
+`F_` naming, `VarTypeSyncer` + its command + `lint:vartype`, and the
+template-extension feature (`setExtent`/`getExtent`,
+`ExtendForTemplatesPageRenderer`, `template-extension/` — which ships only
+samples and has 6 real uses in the wild). Splits `Template` (1,370 lines, 36
+public methods) into `Renderer` / `TemplateLocator` / `ThemeChain` / thin
+`Assets` / contribution registry. Adds a **round-trip check**: every template's
+`{templateType}` class must declare that template back via `#[Template]`.
+Depends on P30 + P37a + P34/P35.
+
+**P48 — Shell-last rendering + `PageState` split.** `header.latte` (834L) +
+`footer.latte` (744L) merge into `@layout.latte`; admin's 61
+`assignVarFromTemplate('ADMIN_CONTENT', …)` calls become the same composition.
+Deletes `Template::$output`, both `COMBINED_*` placeholders, the
+`preg_match('#\n[ \t]*</head>#')` injection, and the
+`pparse`/`flush`/`finalizeOutput`/`fetchOutput` quartet. Splits `PageState`
+(25+ public mutable properties, 225 mutation sites) by concern. **Shape depends
+on P30's fork** — if assets become view-declared, `{layout}`/`{block}`
+inheritance replaces shell-last composition.
+
+**P49 — Typed contributions + plugin-owned routes.** Prune the Latte API (18
+zero-use registrations; `math()` and its `eval()`, which has exactly 1 call
+site; Smarty duplicates onto Latte built-ins). Replace
+`addIndexButton`/`addPictureButton`/`concat('PLUGIN_INDEX_ACTIONS')` with a
+sealed set of ~13 typed contribution kinds where **the type determines the
+destination** — no string region names, so the failure mode
+`docs/design/extension-points.md` names against its own proposal ("a wrong
+*string* point name silently creates a disconnected point") is structurally
+impossible. Multi-destination kinds take a typed enum target; per-row cases take
+a typed field. Adds `FieldOverride` and `FormProvider` kinds, emits **stable DOM
+hooks** (`data-image-id`, stable form-control ids — this alone retires ~12% of
+historical `set_prefilter` demand), and makes `Bootstrap\RouteDefinitions`
+extensible so plugins can own routes. Deliberately **no escape hatch**: no
+loader-chain template override, no block override, no rendered-output filter.
+Plugin-owned routes are consequently required, not optional — they are the only
+remaining answer for page ownership.
+
+**P50 — Escaping campaign.** The residue after P34 removes the JS-context cases
+and P47 turns rendered-sub-template vars into `Html`-typed properties: the
+pre-escaped-URL population (`{$U_HOME|noescape}`, `{$F_ACTION|noescape}`), not
+the full 988. Size it after P47, not before. Kept separate so an escaping
+regression stays bisectable from a structural one; gated by the existing
+golden-HTML and visual-regression suites.
+
+**`docs/design/extension-points.md` is superseded by P49** — its diagnosis
+(two mechanisms for one need) holds; its proposed remedy (string-keyed
+`extensionPoint('name')` slots carrying raw HTML) is replaced by typed kinds
+after the field survey showed the real demand is 122 of 433 plugins using
+`set_prefilter`, across 211 callbacks, with a finite kind list.
+
+## Greenfield tracks (T3, cuttable — outside the P0–P50 backbone)
 
 T3·WEB (PWA, View Transitions, Speculation Rules, JSON-LD, SRI, resource
 hints — depends on P30 (asset pipeline), P31 (Latte templates), P42 (CSS
@@ -1871,7 +2061,7 @@ phase sections. If a specific comparison from that table is needed, it's
 recoverable from git history (`docs/PLAN-REPLAY.md` as it existed before
 this consolidation).
 
-## Execution approach for remaining phases (P24–P45)
+## Execution approach for remaining phases (P24–P50)
 
 Still the governing process for whoever picks up P24+:
 

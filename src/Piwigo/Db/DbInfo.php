@@ -74,9 +74,14 @@ final readonly class DbInfo
         // stopped being always-prefixed and could collide with a keyword.
         $quotedTable = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier($table);
+        // COALESCE, because an empty table makes MAX(lastmodified) NULL and
+        // CONCAT() returns NULL if any argument is NULL on both engines --
+        // so a fresh install fingerprinted as '' rather than as a
+        // fingerprint, and every empty table shared that one value. `0_0`
+        // is well-formed and still changes the moment a first row lands.
         $epochExpr = $this->conn->getDatabasePlatform() instanceof PostgreSQLPlatform
-            ? 'EXTRACT(EPOCH FROM MAX(lastmodified))::bigint'
-            : 'UNIX_TIMESTAMP(MAX(lastmodified))';
+            ? 'COALESCE(EXTRACT(EPOCH FROM MAX(lastmodified))::bigint, 0)'
+            : 'COALESCE(UNIX_TIMESTAMP(MAX(lastmodified)), 0)';
 
         $value = $this->conn->fetchOne(<<<SQL
             SELECT CONCAT(

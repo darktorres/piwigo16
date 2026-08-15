@@ -365,6 +365,15 @@ final class RateRepository extends EntityRepository
             default => null,
         };
 
+        // Tiebreaker for every branch above, including `default` (which
+        // orders by nothing at all). Each real branch sorts on a
+        // non-unique column or an aggregate -- two images readily share a
+        // score, an average or a rating count -- and this query is paged
+        // with setFirstResult(), so without a total order a row can appear
+        // on two pages or on none as $offset advances. `i.id` is in the
+        // GROUP BY, so it is unique per returned row.
+        $qb->addOrderBy('i.id', 'DESC');
+
         if ($categoryIds !== []) {
             $qb->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
                 ->andWhere('ic.categoryId IN (:categoryIds)')

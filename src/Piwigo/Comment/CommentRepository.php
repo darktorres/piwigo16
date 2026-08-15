@@ -512,6 +512,13 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * findForImage() above. Single-table, static WHERE/ORDER BY/LIMIT --
      * no join or aggregate here that DQL can't express.
      *
+     * `c.id` is a tiebreaker, not decoration: `comments.date` is a datetime
+     * and two comments on one image share a timestamp readily (a bulk
+     * import, or two posts in the same second). Paging an order that isn't
+     * total lets a row appear on two pages or none as $offset advances --
+     * the same reason findAllWithConditions()/findListForAdminWs() below
+     * already append their own primary-key tiebreaker.
+     *
      * @return list<CommentSummary>
      */
     public function findSummariesForImage(ImageId $imageId, bool $onlyValidated, int $limit, int $offset): array
@@ -523,6 +530,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->where('c.imageId = :imageId')
             ->setParameter('imageId', $imageId)
             ->orderBy('c.date', 'ASC')
+            ->addOrderBy('c.id', 'ASC')
             ->setMaxResults($limit)
             ->setFirstResult($offset);
 
@@ -621,6 +629,12 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * multi-auth column indirection (`$userIdColumn`/`$userEmailColumn`
      * parameters) is needed here.
      *
+     * `com.id` is a tiebreaker, not decoration: `comments.date` is a
+     * datetime and two comments on one image share a timestamp readily, so
+     * paging a non-total order lets a row appear on two pages or none as
+     * $offset advances. It follows $order's own direction so the secondary
+     * sort stays consistent with the primary one.
+     *
      * @param string $order 'ASC'|'asc'|'DESC'|'desc' only -- the caller must
      *   validate this before calling (matches the original's own
      *   in_array(strtoupper($x), ['ASC', 'DESC']) check), this method
@@ -651,6 +665,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->leftJoin(UserEntity::class, 'u', Join::WITH, 'u.id = com.authorId')
             ->where('com.imageId = :imageId')
             ->orderBy('com.date', $order)
+            ->addOrderBy('com.id', $order)
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->setParameter('imageId', $imageId);

@@ -307,6 +307,71 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertCount(1, $this->repo->findSummariesForImage(ImageId::from(5), false, 1, 0));
     }
 
+    /**
+     * Comments sharing one timestamp must still page as a stable partition:
+     * every row exactly once across successive offsets, none repeated, none
+     * dropped.
+     *
+     * `comments.date` is a datetime, so a bulk import or two posts in the
+     * same second collide readily. Ordering by `date` alone is not a total
+     * order, and the engine's choice among equal keys is *unspecified* --
+     * so before the `c.id` tiebreaker this assertion could pass or fail by
+     * luck. It pins the contract rather than reproducing a fixed failure.
+     */
+    public function testFindSummariesForImagePagesStablyWhenDatesCollide(): void
+    {
+        $commentIds = [];
+        foreach (['pc_a', 'pc_b', 'pc_c'] as $author) {
+            $commentIds[] = $this->repo->insert([
+                'author' => $author,
+                'authorId' => 1,
+                'anonymousId' => '10.40.0.40',
+                'content' => 'collision ' . $author,
+                'validated' => true,
+                'imageId' => 3,
+                'websiteUrl' => null,
+                'email' => null,
+            ]);
+        }
+
+        try {
+            $ids = array_map(static fn (CommentId $id): int => $id->value, $commentIds);
+
+            // Force an exact timestamp collision -- insert() stamps "now",
+            // which may or may not land in the same second.
+            $this->conn->executeStatement(
+                'UPDATE comments SET date = :date WHERE id IN (:ids)',
+                [
+                    'date' => '2020-01-01 00:00:00',
+                    'ids' => $ids,
+                ],
+                [
+                    'ids' => ArrayParameterType::INTEGER,
+                ],
+            );
+
+            $paged = [];
+            for ($offset = 0; $offset < 3; $offset++) {
+                $page = $this->repo->findSummariesForImage(ImageId::from(3), false, 1, $offset);
+                self::assertCount(1, $page, "offset {$offset} returned no row");
+                $paged[] = $page[0]->id->value;
+            }
+
+            sort($ids);
+            $sortedPaged = $paged;
+            sort($sortedPaged);
+
+            self::assertSame($ids, $sortedPaged, 'paging repeated or dropped a row');
+            self::assertSame($ids, $paged, 'equal dates must fall back to ascending id');
+        } finally {
+            // This suite shares one database across tests (per-test
+            // transaction isolation is Unit-only), and sibling tests assert
+            // exact per-image comment counts -- so these rows must not
+            // outlive this test.
+            $this->repo->delete($commentIds, null);
+        }
+    }
+
     public function testFindForImageReturnsMatchingRowsJoinedWithUserEmail(): void
     {
         // fixture: image 2 has comment 2, authored by regular_user, whose

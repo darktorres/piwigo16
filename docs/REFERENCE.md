@@ -169,7 +169,8 @@ visibility, retry, or purge path today.
 
 Delegates to `Piwigo\Bootstrap\CliBootstrap`, which boots the same
 Kernel/DI container as the HTTP path and resolves each command in
-`Piwigo\Bootstrap\CommandDefinitions` (autowired). `Piwigo\Core\ShutdownHandler` wires
+`Piwigo\Bootstrap\CommandDefinitions` (autowired).
+`Piwigo\Core\ShutdownHandler` wires
 `SIGTERM` (`ext-pcntl`, a hard `composer.json` requirement) to run
 registered cleanup callbacks — `Piwigo\Backup\BackupService` uses this so
 an interrupted `backup:create`/`restore` doesn't leave temp files behind.
@@ -408,7 +409,7 @@ the signature to that workflow run's GitHub Actions OIDC identity). Only
 runs on a published GitHub Release, never every push. Verify before
 deploying a pulled image:
 
-```
+```bash
 cosign verify \
   --certificate-identity-regexp "https://github.com/<owner>/<repo>/.github/workflows/release-image.yml@.*" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
@@ -417,7 +418,7 @@ cosign verify \
 
 ### Standalone / Compose / Kubernetes
 
-```
+```bash
 docker run -d --cap-drop=ALL --cap-add=NET_BIND_SERVICE --security-opt no-new-privileges \
   -p 8080:80 -e PIWIGO_DB_HOST=<host> -e PIWIGO_DB_USER=<user> \
   -e PIWIGO_DB_PASSWORD=<password> -e PIWIGO_DB_BASE=<database> \
@@ -432,7 +433,7 @@ when selected; not used for sessions — see Cache above).
 container — the PHP Integration/Contract/Browser/Visual suites stay on
 bare-metal CI (they need a live DB + webserver, or a full Chromium stack).
 
-```
+```bash
 helm install piwigo deploy/helm/piwigo \
   --set image.repository=<your-registry>/piwigo --set image.tag=<tag> \
   --set db.host=<mysql-service> --set db.existingSecret=<secret-name>
@@ -448,8 +449,9 @@ for external access.
 
 ### Runtime hardening
 
-Both Compose and Helm run: non-root (`www-data`, uid 33), `cap_drop: [ALL]`
-+ `cap_add: [NET_BIND_SERVICE]`, `security_opt: no-new-privileges`,
+Both Compose and Helm run: non-root (`www-data`, uid 33),
+`cap_drop: [ALL]` + `cap_add: [NET_BIND_SERVICE]`,
+`security_opt: no-new-privileges`,
 `seccompProfile: RuntimeDefault`, `readOnlyRootFilesystem` (`/tmp` as
 tmpfs/emptyDir, the four writable directories as the only other mounts).
 
@@ -546,7 +548,7 @@ file needs to exist inside the image.
 
 ### Setup
 
-```
+```bash
 composer install
 bun install
 node_modules/.bin/playwright install chromium
@@ -637,10 +639,12 @@ over curl, validating against JSON Schema files in `tests/Contract/schemas/`.
 39 `Ws*Test` classes lock the legacy WS response shapes for as long as the
 WS API exists — a later phase (not yet started) removes it in favor of a
 REST `/api/v1` and retires these in favor of REST contract tests.
+<!-- markdownlint-disable-next-line MD013 -->
 <!-- doc-drift-check: cmd='find tests/Contract -maxdepth 1 -iname "Ws*Test.php" | wc -l' expect="39" -->
 
 **Browser tests**: 95 files in `tests/Browser/` (93 E2E flows, plus the
 two special-purpose files below) via `pestphp/pest-plugin-browser`.
+<!-- markdownlint-disable-next-line MD013 -->
 <!-- doc-drift-check: cmd='find tests/Browser -maxdepth 1 -iname "*.php" | wc -l' expect="95" -->
 `tests/Browser/Helpers/BrowserTestHelpers.php` centralizes the shared
 patterns (`visitPwg()`/`loginAsAdmin()`, `navigateOk()`, `wsCall()`,
@@ -654,7 +658,7 @@ isolation** — `composer test:visual`, never bundled with CRUD-mutating
 Browser tests (those drift the sidebar's live counts, producing false
 diffs). Re-baseline after an intentional visual change:
 
-```
+```bash
 vendor/bin/pest tests/Browser/VisualRegressionTest.php --update-snapshots
 ```
 
@@ -771,7 +775,7 @@ authoritative lockfile.
 
 ### Bootstrap a clean checkout
 
-```
+```bash
 composer install && composer dump-autoload && bun install
 ```
 
@@ -837,7 +841,7 @@ proof. Real command-level (not just fixture-restore-level) proof of
 `restore()` against a scratch database, plus a corrupt-archive rejection
 test:
 
-```
+```bash
 bash tools/restore-drill.sh
 ```
 

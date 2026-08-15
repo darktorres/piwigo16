@@ -7,10 +7,10 @@ phase, not several documents to cross-reference by hand.
 `17.x-rewrite` replays `16.x-rewrite`'s modernization in 53 strictly-sequential
 backbone phases (P0–P52, grouped into 10 epochs A–J — every backend phase
 sequenced before every frontend phase; Epoch J's numbering was rebuilt
-2026-08-15 so phase-number order is execution order), rebuilt from `origin/16.x` rather
-than upgraded in place. Dual-purpose: a *replay* of work with a reference
-implementation on `16.x-rewrite`, plus *greenfield* net-new capabilities
-with no counterpart there. Full conventions (REPLAY vs. GREENFIELD
+2026-08-15 so phase-number order is execution order), rebuilt from
+`origin/16.x` rather than upgraded in place. Dual-purpose: a *replay* of
+work with a reference implementation on `16.x-rewrite`, plus *greenfield*
+net-new capabilities with no counterpart there. Full conventions (REPLAY vs. GREENFIELD
 tagging, T1/T2/T3 tiers, the "every landed commit green, baselines
 ratchet" working rule) carry forward unchanged from the original plan —
 see "Conventions" below.
@@ -490,6 +490,7 @@ open.
 
 **P14 — DB layer + Doctrine ORM.** Two real corrections, both since
 resolved:
+
 - The "repositories as real Doctrine ORM `EntityRepository` subclasses
   from day one" design was followed only for `ConfigRepository` itself —
   all domain repositories built in P17–21 used `AbstractRepository`+
@@ -660,6 +661,7 @@ zero-tolerance Arch test.
 
 **This fork deliberately diverged from the original P23 plan in real,
 documented ways**, not silently:
+
 - `include/` was **not** deleted entirely at the time — it kept a 4-file
   bootstrap seam (`common.inc.php`, `config_default.inc.php`,
   `env.inc.php`, an anti-listing stub) through P23's own batches, since
@@ -1337,7 +1339,7 @@ tests, the whole `Ws/` namespace, and every `l10n()`/URL-retarget note
 above that explicitly deferred a WS-specific event/function pending this
 phase are all still waiting on it.
 
-### Epoch H — Security (P26) — not started
+### Epoch H — Security (P26)
 
 **P26 — Security hardening** (WebAuthn/passkeys, OIDC SSO, nonce-based
 CSP, COOP/COEP, CSP reporting). Depends on P24 (the original plan's P27,
@@ -1346,7 +1348,7 @@ vs. commit-tag labels" above). Not started — `rate_limiter` (the one P11
 cache pool deliberately left unbuilt, "genuinely P26 scope") is the
 clearest concrete marker that this phase hasn't begun.
 
-### Epoch I — Plugins/Layering/Repo-restructure (P27–P28) — P27 in progress, P28 not started
+### Epoch I — Plugins/Layering/Repo-restructure (P27–P28)
 
 **P27 — Plugin / Theme contracts + bundled extensions + decomposition**
 (`PluginInterface`/`ThemeInterface`, JSON-schema manifests, 16
@@ -1400,7 +1402,8 @@ plugin/theme registration surface wired onto dispatch machinery that
 already exists. `ws_add_methods` (the WS extensibility hook) turns out
 to already be just another typed event (`Ws/Event/WsAddMethods.php`,
 carrying a live `Piwigo\Ws\Server` — `PwgServer` before the 2026-08-11 WS
-rename) — no separate WS plugin API needs designing. The 7 "bundled extensions" the original plan named
+rename) — no separate WS plugin API needs designing. The 7 "bundled
+extensions" the original plan named
 (AdminTools, LocalFilesEditor, TakeATour, language_switch, elegant,
 modus, smartpocket) are all confirmed to exist in the sibling catalogs,
 version-pinned in lockstep with a specific core release.
@@ -1635,6 +1638,7 @@ old-parse vs. new-parse with the *same* parser, so a systematic parser
 bug is invisible to them by construction). Found 3 more real bugs this
 way, all fixed and covered by the existing test/deep-review scripts
 after; full detail in `tools/latte-prettier/README.md`:
+
 - **The void-element fix above was too narrow.** `install.latte` had
   `<td>...</options>` (a typo — `<options>` is never opened anywhere in
   the tree), which isn't void, so it re-triggered the same

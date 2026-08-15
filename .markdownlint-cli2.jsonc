@@ -1,0 +1,52 @@
+{
+  // Markdown linting. Two populations of `.md` in this repo, with different
+  // regimes -- see `.prettierignore`:
+  //
+  //  - `tests/Fixtures/README.md`, `tools/latte-prettier/README.md` are
+  //    Prettier-managed, so Prettier owns their whitespace/emphasis/list
+  //    style and markdownlint only has to agree with it.
+  //  - `docs/PLAN.md`, `docs/REFERENCE.md` are deliberately Prettier-excluded
+  //    ("large hand-formatted docs (tables, deliberate line breaks)"), so
+  //    markdownlint is the only structural check they get.
+  //
+  // Rules below are therefore configured to match Prettier's own output where
+  // the two could disagree, rather than disabled -- a rule turned off stops
+  // covering the hand-formatted docs too.
+  "globs": ["**/*.md"],
+  "ignores": [
+    "vendor",
+    "node_modules",
+    "dist",
+    "_data",
+    "_analysis",
+    "local",
+    // Vendored third-party font kit, not hand-authored here. Already
+    // excluded from Prettier for the same reason (`themes/**/*.md`).
+    // `public/themes` is a symlink to `themes`, so the same files are
+    // reachable by a second path and need excluding twice.
+    "themes",
+    "public/themes"
+  ],
+  "config": {
+    // Prose in these docs hard-wraps at ~76. Tables and fenced command
+    // listings cannot be wrapped without destroying them, so they are
+    // exempt rather than the rule being switched off wholesale.
+    "MD013": {
+      "line_length": 80,
+      "tables": false,
+      "code_blocks": false
+    },
+    // Repeating a heading under a *different* parent is legitimate
+    // (`REFERENCE.md` documents "CI" under more than one subsystem);
+    // repeating one among siblings is the real defect.
+    "MD024": { "siblings_only": true }
+    // MD049/MD050 (emphasis/strong style) are deliberately left at their
+    // "consistent" default rather than pinned to a style. Pinning them to
+    // Prettier's output (`_emphasis_`) would flag ~100 sites in the two
+    // hand-formatted, Prettier-excluded docs, which consistently use `*` --
+    // churn on files Prettier will never touch. "consistent" instead asks
+    // each file to pick one and stick to it, which both populations satisfy:
+    // Prettier normalises the files it owns, and the hand-formatted docs are
+    // already internally uniform.
+  }
+}

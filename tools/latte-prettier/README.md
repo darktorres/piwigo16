@@ -10,7 +10,7 @@ separate, untouched PHP-side tooling with real prior art in `16.x-rewrite`.
 
 ## Usage
 
-```
+```bash
 bun run format:latte        # check
 bun run format:latte:fix    # write
 ```
@@ -95,14 +95,14 @@ real, root-caused construct at a time — never a guessed fix. Along the way:
   void-element case entirely (void elements are never pushed, so they
   always fail the stack check too). What to do once a tag is recognized as
   stray still depends on what it names: a void element never has a
-  legitimate open/close pair in *any* file, so it's dropped outright; any
+  legitimate open/close pair in _any_ file, so it's dropped outright; any
   other name is preserved as literal passthrough, because a single-file
   parse can't tell "genuine typo" from "the other half of this element is
   in a sibling file" (`header.latte`/`footer.latte`'s own split — first
   draft of this fix got this backwards and started silently deleting
   `footer.latte`'s real `</div>`/`</body>`/`</html>`, caught by re-running
   the fix across the whole tree and diffing before/after rather than
-  trusting the one file it was written against). Also fixed the *same*
+  trusting the one file it was written against). Also fixed the _same_
   bug, previously undetected, in `batch_manager_unit.latte`,
   `photos_add_direct.latte`, `picture_modify.latte`, and
   `search_filters.inc.latte` — all four have a legitimate `<a>`/`<div>`
@@ -115,12 +115,12 @@ real, root-caused construct at a time — never a guessed fix. Along the way:
   not chased further: because this parser doesn't implement HTML5's
   "starting a new same-context element implicitly closes the previous one"
   rule (e.g. a second `<td>` auto-closing the first), a stray tag sitting
-  between two such elements makes the second parse as a *nested child* of
+  between two such elements makes the second parse as a _nested child_ of
   the first instead of a sibling — `install.latte`'s fixed output nests
   `<td colspan="2">` one level inside the unclosed `<td>` rather than next
   to it, and the immediately-enclosing `<tr>`'s own closing tag ends up one
   indent level deeper than its opening tag. Confirmed cosmetic only: real
-  browsers apply that same auto-closing rule when *they* parse the output,
+  browsers apply that same auto-closing rule when _they_ parse the output,
   so the rendered DOM is unaffected either way — same class of caveat as
   the existing orphan-tag-indentation note.
 - **A real destructive bug**, also found by manual review, in three files
@@ -133,7 +133,7 @@ css.latte`, `mail-css-clear.latte`, `mail-css-dark.latte` — raw CSS meant
   collapses all internal whitespace (including every deliberate line
   break between CSS rules) down to single spaces — flattening
   hand-formatted, readable CSS onto one unreadable line. Confirmed
-  harmless to the *rendered* page (CSS is whitespace-insensitive between
+  harmless to the _rendered_ page (CSS is whitespace-insensitive between
   tokens) but a real loss of source readability and diffability, so fixed
   rather than accepted: a `Document` whose children are 100% plain text
   (no element, no Latte construct — checked directly, not inferred) is
@@ -145,20 +145,20 @@ css.latte`, `mail-css-clear.latte`, `mail-css-dark.latte` — raw CSS meant
   same way, at that Document-relative body's own print site.
 - **A real, if narrower, correctness bug in the same spirit**: `mail/text/
 plain/notification_by_mail.latte` (a `{contentType text}` template — its
-  output *is* the literal email body a recipient reads, not markup) lost
+  output _is_ the literal email body a recipient reads, not markup) lost
   meaningful leading whitespace on two lines nested inside `{if}`/
   `{foreach}` bodies — a signature line's indent dropped entirely, a
   bulleted list's indent changed from 2 to 4 spaces — because indentation
   there was, same as everywhere else, being re-derived from nesting depth.
   Verified against the real Latte compiler (this repo has it installed)
   that this is a genuine rendering difference, not just cosmetic: a line
-  that's *purely* whitespace + a control tag (`{if}`, `{foreach}`, `{/if}`)
+  that's _purely_ whitespace + a control tag (`{if}`, `{foreach}`, `{/if}`)
   is auto-trimmed by Latte regardless of its indentation, but a line
   carrying an output tag (`{$var}`) or literal text renders its leading
   whitespace verbatim — so reformatting is unconditionally safe for the
   former and unconditionally unsafe for the latter. Rather than special-
   case which lines qualify, fixed by making every gap inside a `{contentType
-  text}` document's `Document`/`{if}`/`{foreach}`/etc. bodies print the
+text}` document's `Document`/`{if}`/`{foreach}`/etc. bodies print the
   original captured whitespace byte-verbatim instead of a hardline
   recomputed from indent() depth (harmless on the auto-trimmed lines,
   required on the others) — the same "gaps between items" machinery

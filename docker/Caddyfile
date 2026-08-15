@@ -74,7 +74,7 @@
 	# SEC-01: deny direct access to sensitive root-level tooling configs and
 	# dependency manifests too — not just the directories above. Mirrors
 	# .htaccess's equivalent file-level rule.
-	@denied_files path /composer.json /composer.lock /package.json /bun.lock /phpstan.neon /psalm.xml /rector.php /ecs.php /knip.json /lefthook.yml /tsconfig.json /.stylelintrc.json /.prettierrc.json /lighthouserc.json /.size-limit.json /renovate.json /release-please-config.json /.release-please-manifest.json /eslint-suppressions.json /.editorconfig /.gitignore /.dockerignore /Dockerfile /docker-compose.yml /docker-compose.yaml /justfile /.env* /*.ts
+	@denied_files path /composer.json /composer.lock /package.json /bun.lock /phpstan.neon /psalm.xml /rector.php /ecs.php /knip.json /lefthook.yml /tsconfig.json /.stylelintrc.json /.prettierrc.json /.markdownlint-cli2.jsonc /lighthouserc.json /.size-limit.json /renovate.json /release-please-config.json /.release-please-manifest.json /eslint-suppressions.json /.editorconfig /.gitignore /.dockerignore /Dockerfile /docker-compose.yml /docker-compose.yaml /justfile /.env* /*.ts
 	respond @denied_files 403
 
 	# SEC-06: hashed Vite output never needs revalidation.

@@ -25,7 +25,7 @@ final class NamedArray
     /**
      * @var array<string, int>
      */
-    public array $xmlAttributes;
+    public private(set) array $xmlAttributes;
 
     /**
      * Constructs a named array
@@ -35,8 +35,8 @@ final class NamedArray
      *      xml attributes instead of xml child elements
      */
     public function __construct(
-        public array $content,
-        public string $itemName,
+        public private(set) array $content,
+        public private(set) string $itemName,
         array $xmlAttributes = []
     ) {
         $this->xmlAttributes = array_flip($xmlAttributes);

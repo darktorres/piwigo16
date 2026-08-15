@@ -25,7 +25,7 @@ final class NamedStruct
     /**
      * @var array<array-key, int>
      */
-    public array $xmlAttributes;
+    public private(set) array $xmlAttributes;
 
     /**
      * Constructs a named struct (usually returned by web service function
@@ -40,7 +40,7 @@ final class NamedStruct
      * @param string[]|null $xmlElements keys in $content to always treat as xml elements
      */
     public function __construct(
-        public array $content,
+        public private(set) array $content,
         ?array $xmlAttributes = null,
         ?array $xmlElements = null
     ) {

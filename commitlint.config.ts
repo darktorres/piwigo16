@@ -40,6 +40,10 @@ export default {
         "p31",
         "p32",
         "p33",
+        // Repo tooling that maps to no PLAN.md phase (linters, CI wiring,
+        // dev-dependency gates). Already used in history — `fix(tools)` —
+        // just never encoded here, so those commits failed the CI gate.
+        "tools",
       ],
     ],
     "scope-empty": [2, "never"],

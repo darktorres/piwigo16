@@ -833,8 +833,8 @@ final readonly class CategoryRepository
      * `ArrayParameterType::INTEGER` IN-lists (raw ints, not wrapped
      * through CategoryId -- the IN-clause array bind doesn't route
      * through a field's custom Doctrine Type reliably, same established
-     * convention as {@see deleteGroupAccessForCategories()} elsewhere in
-     * this class). `$excludeIds` is still spliced in unconditionally,
+     * convention as {@see deleteGroupAccessForGroupsAndCategories()}
+     * elsewhere in this class). `$excludeIds` is still spliced in unconditionally,
      * even when empty.
      */
     public function findNonOrphanImageIds(array $imageIds, array $excludeIds): array
@@ -890,80 +890,12 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @param  list<int>  $ids
-     *
-     * Real DQL -- single-table bulk DELETE; `image_category` is mapped
-     * ({@see ImageCategoryEntity}). Same "delete-by-ids clears the
-     * identity map afterward" contract as
-     * {@see deleteUserAccessForCategories()}/
-     * {@see deleteGroupAccessForCategories()} above. `$ids` is still
-     * spliced in unconditionally, even when empty.
-     */
-    public function deleteImageCategoryLinksForCategories(array $ids): void
-    {
-        $em = $this->em;
-        $em->createQueryBuilder()
-            ->delete(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
-            ->getQuery()
-            ->execute();
-        $em->clear();
-    }
-
-    /**
-     * @param  list<int>  $ids
-     */
-    public function deleteUserAccessForCategories(array $ids): void
-    {
-        if ($ids === []) {
-            return;
-        }
-
-        $em = $this->em;
-        $em->createQueryBuilder()
-            ->delete(UserAccessEntity::class, 'ua')
-            ->where('ua.catId IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
-            ->getQuery()
-            ->execute();
-        $em->clear();
-    }
-
-    /**
-     * @param  list<int>  $ids
-     */
-    public function deleteGroupAccessForCategories(array $ids): void
-    {
-        if ($ids === []) {
-            return;
-        }
-
-        // GroupAccessEntity's catId column is a custom-typed Piwigo\Db\Type\CategoryIdType
-        // field -- wrapping through CategoryId::from() validates every id
-        // reaching this shared entity, and the array bind unwraps back to
-        // raw ints with an explicit ArrayParameterType::INTEGER (Doctrine's
-        // IN-clause array binding doesn't route through a field's custom
-        // Type reliably).
-        $catIds = array_map(CategoryId::from(...), $ids);
-
-        $em = $this->em;
-        $em->createQueryBuilder()
-            ->delete(GroupAccessEntity::class, 'ga')
-            ->where('ga.catId IN (:ids)')
-            ->setParameter('ids', array_map(static fn (CategoryId $c): int => $c->value, $catIds), ArrayParameterType::INTEGER)
-            ->getQuery()
-            ->execute();
-        $em->clear();
-    }
-
-    /**
      * Revokes a specific set of users' access to a specific set of
      * categories -- CategoryAdminService::setCategoryPermissions()'s own
      * "if you forbid access to an album, all sub-albums become
-     * automatically forbidden too" deny path, narrower than {@see
-     * deleteUserAccessForCategories()} (which drops every grant on a
-     * category, not just $userIds').
+     * automatically forbidden too" deny path. Dropping every grant on a
+     * category needs no method of its own: fk_user_access_cat_id is
+     * ON DELETE CASCADE, so deleting the category removes them.
      *
      * @param  array<int>  $userIds
      * @param  array<int>  $catIds
@@ -988,8 +920,10 @@ final readonly class CategoryRepository
 
     /**
      * Same as {@see deleteUserAccessForUsersAndCategories()}, for groups.
-     * See {@see deleteGroupAccessForCategories()}'s own comment on why both
-     * arrays wrap through the VO before binding.
+     * Both arrays wrap through the VO before binding: GroupAccessEntity's
+     * columns are custom-typed, and the IN-clause array bind does not route
+     * through a field's Doctrine Type reliably, so the ints are unwrapped
+     * again with an explicit ArrayParameterType::INTEGER.
      *
      * @param  array<int>  $groupIds
      * @param  array<int>  $catIds

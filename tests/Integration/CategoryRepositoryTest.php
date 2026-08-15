@@ -436,26 +436,6 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([1, 2, 3], $ids);
         }
 
-        public function testDeleteUserAccessForCategoriesIsANoOpForNoIds(): void
-        {
-            $before = $this->countRows('user_access');
-
-            $this->repo->deleteUserAccessForCategories([]);
-
-            $after = $this->countRows('user_access');
-            self::assertSame($before, $after);
-        }
-
-        public function testDeleteGroupAccessForCategoriesIsANoOpForNoIds(): void
-        {
-            $before = $this->countRows('group_access');
-
-            $this->repo->deleteGroupAccessForCategories([]);
-
-            $after = $this->countRows('group_access');
-            self::assertSame($before, $after);
-        }
-
         public function testDeleteUserAccessForUsersAndCategoriesIsANoOpForNoUserIds(): void
         {
             $before = $this->countRows('user_access');
@@ -1142,25 +1122,6 @@ namespace Piwigo\Tests\Integration {
             $ids = $this->repo->findDistinctImageIdsInCategories([1]);
             sort($ids);
             self::assertSame([1, 2, 3], $ids);
-        }
-
-        public function testDeleteImageCategoryLinksForCategoriesRemovesOnlyTheGivenCategories(): void
-        {
-            $this->conn->beginTransaction();
-
-            try {
-                $this->repo->deleteImageCategoryLinksForCategories([1]);
-
-                $remaining = $this->conn->createQueryBuilder()
-                    ->select('DISTINCT category_id')
-                    ->from('image_category')
-                    ->executeQuery()
-                    ->fetchFirstColumn();
-
-                self::assertSame([2], array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $remaining));
-            } finally {
-                $this->conn->rollBack();
-            }
         }
 
         /**

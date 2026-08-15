@@ -1168,7 +1168,13 @@ final readonly class CategoryService
 
         $imageService = $this->imageService($activityLogger, $sessionService, $eventDispatcher, $entityManager);
 
-        // destruction of all photos physically linked to the category
+        // Photo deletion stays outside the transaction below, deliberately:
+        // deleteElements() interleaves unlink() with its DB writes, and the
+        // filesystem cannot participate in a database transaction. Rolling
+        // back would restore rows for files that are already gone. Making
+        // this genuinely atomic means separating the two -- commit the
+        // database change, then reconcile the filesystem from recorded
+        // state -- which is a larger change than this one.
         $elementIds = $this->repo->findStorageLinkedImageIds($ids);
         $imageService->deleteElements($elementIds, $urlService);
 
@@ -1188,17 +1194,28 @@ final readonly class CategoryService
             }
         }
 
-        // destruction of the links between images and this category
-        $this->repo->deleteImageCategoryLinksForCategories($ids);
-
-        // destruction of the access linked to the category
-        $this->repo->deleteUserAccessForCategories($ids);
-        $this->repo->deleteGroupAccessForCategories($ids);
-
-        // destruction of the category
-        $this->repo->deleteCategoriesByIds($ids);
-
-        $oldPermalinkRepo->deleteOldPermalinksForCategories($ids);
+        // image_category, user_access and group_access are NOT deleted
+        // here: fk_image_category_category_id, fk_user_access_cat_id and
+        // fk_group_access_cat_id are each ON DELETE CASCADE onto
+        // categories, so deleteCategoriesByIds() below removes those rows
+        // already. Doing it by hand first was duplicated work, and worse on
+        // PostgreSQL, where `cat_id` carries no index -- both the manual
+        // DELETE and the cascade then scan the child table.
+        //
+        // old_permalinks has no such constraint, so it still needs its own
+        // delete, and that is exactly why these two run together: without a
+        // transaction, a failure between them leaves permalinks pointing at
+        // categories that no longer exist, with no FK to clean them up.
+        //
+        // The connection is shared -- Connection::class and
+        // EntityManagerInterface::class are both single container entries,
+        // so $entityManager wraps the same connection $this->repo and
+        // $oldPermalinkRepo write through.
+        $entityManager->getConnection()
+            ->transactional(function () use ($ids, $oldPermalinkRepo): void {
+                $this->repo->deleteCategoriesByIds($ids);
+                $oldPermalinkRepo->deleteOldPermalinksForCategories($ids);
+            });
 
         $eventDispatcher->dispatch(new DeleteCategories($ids));
         $activityLogger->record('album', $ids, 'delete', [

@@ -17,7 +17,7 @@ use Piwigo\Common\ValueObject\GroupId;
  * (cross-cutting forbidden-category computation) via plain DBAL on the
  * shared connection -- it doesn't own or map it. Category\CategoryRepository
  * also maps this entity directly via its own DQL (findAccessGroupIds()/
- * deleteGroupAccessForCategories()/deleteGroupAccessForGroupsAndCategories())
+ * deleteGroupAccessForGroupsAndCategories())
  * -- wraps its own raw ints into GroupId/CategoryId at that boundary too.
  *
  * Both id columns use custom Doctrine Types ({@see \Piwigo\Db\Type\GroupIdType},

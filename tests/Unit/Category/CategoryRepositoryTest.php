@@ -486,28 +486,6 @@ test('findNonOrphanImageIds() keeps only images still linked outside the exclude
         ->toBe([1, 2, 3]);
 });
 
-test('deleteUserAccessForCategories() is a no-op for no ids', function (): void {
-    $conn = DbConnection::build();
-    $before = categoryTestCountRows('user_access', $conn);
-
-    categoryTestRepoForConn($conn)
-        ->deleteUserAccessForCategories([]);
-
-    expect(categoryTestCountRows('user_access', $conn))
-        ->toBe($before);
-});
-
-test('deleteGroupAccessForCategories() is a no-op for no ids', function (): void {
-    $conn = DbConnection::build();
-    $before = categoryTestCountRows('group_access', $conn);
-
-    categoryTestRepoForConn($conn)
-        ->deleteGroupAccessForCategories([]);
-
-    expect(categoryTestCountRows('group_access', $conn))
-        ->toBe($before);
-});
-
 test('deleteUserAccessForUsersAndCategories() is a no-op for no user ids', function (): void {
     $conn = DbConnection::build();
     $before = categoryTestCountRows('user_access', $conn);
@@ -1267,19 +1245,4 @@ test('findDistinctImageIdsInCategories() returns the linked images', function ()
     sort($ids);
     expect($ids)
         ->toBe([1, 2, 3]);
-});
-
-test('deleteImageCategoryLinksForCategories() removes only the given categories', function (): void {
-    $conn = DbConnection::build();
-    new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get())
-        ->deleteImageCategoryLinksForCategories([1]);
-
-    $remaining = $conn->createQueryBuilder()
-        ->select('DISTINCT category_id')
-        ->from('image_category')
-        ->executeQuery()
-        ->fetchFirstColumn();
-
-    expect(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $remaining))
-        ->toBe([2]);
 });

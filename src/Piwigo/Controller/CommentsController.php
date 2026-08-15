@@ -179,8 +179,10 @@ final readonly class CommentsController implements ControllerInterface
             ],
             4 => [
                 'label' => $this->lang->t('the beginning'),
-                'clause' => '1=1',
-            ], // stupid but generic
+                // "since the beginning" is no date restriction at all; the
+                // empty fragment is dropped when the clauses are combined.
+                'clause' => '',
+            ],
         ];
 
         $this->eventDispatcher->dispatchNotify(new LocBeginComments());

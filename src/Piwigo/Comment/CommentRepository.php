@@ -288,7 +288,6 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     {
         if ($criteria->search !== null && $criteria->search !== '') {
             return [
-                new SqlCondition('1=1'),
                 new SqlCondition('content LIKE :search', [
                     'search' => '%' . $criteria->search . '%',
                 ], [
@@ -297,7 +296,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ];
         }
 
-        $conditions = [new SqlCondition('1=1')];
+        $conditions = [];
 
         if ($includeAuthorId && $criteria->authorId instanceof UserId) {
             $conditions[] = new SqlCondition('author_id = :authorId', [

@@ -698,7 +698,12 @@ final readonly class SearchService
             return $combined->isEmpty() ? $combined : new SqlCondition('(' . $combined->sql . ')', $combined->parameters, $combined->types);
         }
 
-        return new SqlCondition('1=1');
+        // No preset and no custom range: nothing to filter on. An empty
+        // condition says exactly that, and every consumer combines it before
+        // use, so it disappears rather than contributing a tautology --
+        // matching the empty condition the custom-range branch above already
+        // returns when it finds no bounds.
+        return new SqlCondition('');
     }
 
     /**

@@ -3518,7 +3518,16 @@ final readonly class CategoryRepository
             $conditions[] = new SqlCondition("status = 'public' AND visible = {$visibleLiteral}");
         }
 
-        $combined = SqlCondition::combine('AND', new SqlCondition('1=1'), ...$conditions);
+        // The search term is another condition rather than a clause appended
+        // after the fact -- that keeps every filter in one fragment, so the
+        // WHERE can be rendered (or omitted entirely) in one place.
+        if ($searchTerm !== null) {
+            $conditions[] = new SqlCondition('name LIKE :searchTerm', [
+                'searchTerm' => '%' . $searchTerm . '%',
+            ]);
+        }
+
+        $combined = SqlCondition::combine('AND', ...$conditions);
         $params = $combined->parameters;
         $types = $combined->types;
 
@@ -3531,20 +3540,13 @@ final readonly class CategoryRepository
                 representative_picture_id,
                 image_order
             FROM categories
-            WHERE {$combined->sql}
+            {$combined->toWhereClause()}
             SQL;
 
-        if ($searchTerm !== null) {
-            $sql .= <<<SQL
-
-                AND name LIKE :searchTerm
-                SQL;
-            $params['searchTerm'] = '%' . $searchTerm . '%';
-            if ($limit === null) {
-                $sql .= ' LIMIT :searchLimit';
-                $params['searchLimit'] = $searchLimit;
-                $types['searchLimit'] = ParameterType::INTEGER;
-            }
+        if ($searchTerm !== null && $limit === null) {
+            $sql .= ' LIMIT :searchLimit';
+            $params['searchLimit'] = $searchLimit;
+            $types['searchLimit'] = ParameterType::INTEGER;
         }
 
         if ($limit !== null) {
@@ -3586,23 +3588,25 @@ final readonly class CategoryRepository
         $conn = $this->em
             ->getConnection();
 
-        $combined = SqlCondition::combine('AND', new SqlCondition('1=1'), $this->categoryScopeCondition($criteria->catId, $criteria->recursive));
+        $conditions = [$this->categoryScopeCondition($criteria->catId, $criteria->recursive)];
+        if ($searchTerm !== null) {
+            $conditions[] = new SqlCondition('name LIKE :searchTerm', [
+                'searchTerm' => '%' . $searchTerm . '%',
+            ]);
+        }
+
+        $combined = SqlCondition::combine('AND', ...$conditions);
         $params = $combined->parameters;
         $types = $combined->types;
 
         $sql = <<<SQL
             SELECT COUNT(*) OVER() AS total_count, id, name, comment, uppercats, global_rank, dir, status, image_order
             FROM categories
-            WHERE {$combined->sql}
+            {$combined->toWhereClause()}
             SQL;
 
         if ($searchTerm !== null) {
-            $sql .= <<<SQL
-
-                AND name LIKE :searchTerm
-                LIMIT :searchLimit
-                SQL;
-            $params['searchTerm'] = '%' . $searchTerm . '%';
+            $sql .= ' LIMIT :searchLimit';
             $params['searchLimit'] = $searchLimit;
             $types['searchLimit'] = ParameterType::INTEGER;
         }

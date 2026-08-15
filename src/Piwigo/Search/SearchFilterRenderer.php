@@ -190,20 +190,6 @@ final readonly class SearchFilterRenderer
         // 4-call combination here.
         $page['search_details']['forbidden'] = $this->searchService->forbiddenCondition();
 
-        // we want filters to be filled with values related to current items
-        // ONLY IF we have some filters filled
-        if ((bool) $page['search_details']['has_filters_filled']) {
-            $searchItems = [NoMatchSentinel::ID];
-            if ($page['items'] !== []) {
-                $searchItems = $page['items'];
-            }
-
-            $searchItemsClause = 'image_id IN (' . implode(',', $searchItems) . ')';
-        } else {
-            $searchItemsClause = '1=1';
-        }
-        unset($searchItemsClause); // unused local; not referenced downstream
-
         if (isset($searchFields['allwords']) and ! ((bool) $displayFilters['words']['access'])) {
             unset($searchFields['allwords']);
         }
@@ -534,7 +520,7 @@ final readonly class SearchFilterRenderer
             $searchDetailsRaw = $page['search_details'];
             $searchDetailsForbiddenRaw = is_array($searchDetailsRaw) ? ($searchDetailsRaw['forbidden'] ?? null) : null;
             $searchDetailsForbidden = $searchDetailsForbiddenRaw instanceof SqlCondition ? $searchDetailsForbiddenRaw : new SqlCondition('');
-            $allExtsCondition = SqlCondition::combine('AND', new SqlCondition('1=1'), $searchDetailsForbidden);
+            $allExtsCondition = $searchDetailsForbidden;
 
             // SUBSTRING_INDEX has no DQL/portable-SQL built-in equivalent
             // -- uses the custom SubstringIndexFunction
@@ -1181,7 +1167,7 @@ final readonly class SearchFilterRenderer
             $forbidden = $searchDetails['forbidden'] ?? null;
             $forbiddenCondition = $forbidden instanceof SqlCondition ? $forbidden : new SqlCondition('');
 
-            return SqlCondition::combine('AND', new SqlCondition('1=1'), $forbiddenCondition);
+            return $forbiddenCondition;
         }
 
         // getItemsForFilter() ultimately pulls its values from

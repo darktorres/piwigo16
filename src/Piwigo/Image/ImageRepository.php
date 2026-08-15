@@ -2891,7 +2891,7 @@ final class ImageRepository extends EntityRepository
             SELECT i.*, COUNT(*) OVER() AS total_count
             FROM images i
                 INNER JOIN image_category ON i.id=image_id
-            WHERE {$combined->sql}
+            {$combined->toWhereClause()}
             GROUP BY i.id
             {$orderByClause}
             LIMIT :limit

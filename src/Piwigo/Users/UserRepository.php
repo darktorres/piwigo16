@@ -1569,7 +1569,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ]);
         }
 
-        return SqlCondition::combine('AND', new SqlCondition('1=1'), ...$conditions);
+        return SqlCondition::combine('AND', ...$conditions);
     }
 
     /**
@@ -1652,8 +1652,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
                     ON u.id = ui.user_id
                 LEFT JOIN user_group AS ug
                     ON u.id = ug.user_id
-            WHERE
-                {$combined->sql}
+            {$combined->toWhereClause()}
             SQL;
 
         $total = null;

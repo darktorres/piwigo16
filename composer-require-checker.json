@@ -15,6 +15,9 @@
     "ComposerUnused\\ComposerUnused\\Configuration\\NamedFilter",
     "Symfony\\Component\\Yaml\\Yaml",
 
+    "Composer\\Autoload\\ClassLoader",
+    "Tracy\\Debugger",
+
     "exif_read_data",
     "imagick",
     "Imagick",
@@ -44,9 +47,12 @@
 
     "Piwigo\\Tools\\PhpStan\\Latte\\ContextVariableExtractor",
     "Piwigo\\Tools\\PhpStan\\Latte\\LatteTemplateCompiler",
+    "Piwigo\\Tools\\PhpStan\\Latte\\LatteTemplateFiles",
     "Piwigo\\Tools\\PhpStan\\Latte\\ShimClassGenerator",
     "Piwigo\\Tools\\PhpStan\\Latte\\TemplateCallSiteScanner",
     "Piwigo\\Tools\\PhpStan\\Latte\\VariableMapBuilder",
+    "Piwigo\\Tools\\PhpStan\\Latte\\VariableMapContext",
+    "Piwigo\\Tools\\PhpStan\\Latte\\VarTypeSyncer",
 
     "gzopen64",
 

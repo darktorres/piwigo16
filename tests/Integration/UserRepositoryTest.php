@@ -806,6 +806,25 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function testFindVisibleFavoriteImageIdsFallsBackToRawDbalForUnparseableOrderBy(): void
     {
+        // `comment` is a real images column but not one of the bounded
+        // $sort_fields tokens, so resolveDqlOrderBy() returns null and this
+        // must still return the right members via the raw-DBAL path.
+        $ids = $this->repo->findVisibleFavoriteImageIds(
+            UserId::from(1),
+            self::noPermissionRestriction(),
+            'ORDER BY comment ASC'
+        );
+        sort($ids);
+
+        self::assertSame(['1', '3', '5'], $ids);
+    }
+
+    public function testFindVisibleFavoriteImageIdsRunsARandomOrderAsDql(): void
+    {
+        // RAND() resolves to the registered RandFunction custom DQL function
+        // now, so this takes the DQL path against a real server -- which is
+        // what proves the generated SQL is valid on this provider. The order
+        // is random, so only membership can be asserted.
         $ids = $this->repo->findVisibleFavoriteImageIds(
             UserId::from(1),
             self::noPermissionRestriction(),

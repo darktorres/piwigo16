@@ -2077,12 +2077,6 @@ msgstr "恢复"
 msgid "Restore default configuration. You will lose your plugin settings!"
 msgstr "恢复默认的配置，您将失去您的插件的设置!"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "您不能设置默认的图片排序，因为您已在本地配置文件里有自定义设置。"
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "您已在本地配置文件里定义了 <i>$conf['order_by']</i>，此参数已不再使用了，请移除或者将其改名为 <i>$conf['order_by_custom']</i> ！"
-
 msgid "Thumbnails generation in progress..."
 msgstr "正在生成缩略图..."
 

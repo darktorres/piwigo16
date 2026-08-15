@@ -2170,12 +2170,6 @@ msgstr "Grafikbibliothek"
 msgid "Add a criteria"
 msgstr "Ein Kriterium hinzufügen"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Sie können keine Standardsortierung festlegen, da Sie eine benutzerdefinierte Einstellung in Ihrer lokalen Konfiguration vorgenommen haben."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Sie haben <i>$conf['order_by']</i> in ihrer lokalen Konfigurationsdatei festgelegt. Diese Einstellung ist überholt. Bitte entfernen Sie ihn oder benennen Sie ihn um in <i>$conf['order_by_custom']</i>!"
-
 msgid "Average rate"
 msgstr "Durchschnittliche Bewertung"
 

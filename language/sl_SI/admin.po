@@ -1711,9 +1711,6 @@ msgstr "Aktivirate lahko le eno mobilno temo."
 msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
 msgstr "Posodobitev na Piwigo %s je možna brez nadgradnje na Piwigo %s (priporočeno)."
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Ne morete določiti privzetega razvrščanja slik ker imate v vaši lokalni nastavitveni datoteki nastavljeno razvrščanje po vaši meri."
-
 msgid "You cannot delete your account"
 msgstr "Vašega računa ne morete izbrisati."
 
@@ -1722,9 +1719,6 @@ msgstr "Albuma ne morete premakniti v njegov pod-album"
 
 msgid "You have %d orphan tags: %s."
 msgstr "Imate %d osirotelih oznak: %s."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Določili ste <i>$conf['order_by']</i> v vaši lokalni nastavitveni datoteki. Ta parameter je opuščen zato ga prosimo odstranite ali spremenite v: <i>$conf['order_by_custom']</i> !"
 
 msgid "You have subscribed to receiving notifications by mail."
 msgstr "Naročili ste se na prejemanje obvestil na e-pošto."

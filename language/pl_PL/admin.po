@@ -2110,12 +2110,6 @@ msgstr "Dowiedz się więcej"
 msgid "Add a criteria"
 msgstr "Dodaj kryteria"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Nie możesz zdefiniować domyślnej kolejności zdjęć, gdyż stworzono własne ustawienia w konfiguracji plików lokalnych ."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Określiłeś <i>$conf['order_by']</i> w lokalnym plików konfiguracji. Parametr ten jest przestarzały. Usuń go lub zmień jego nazwę na <i>$conf['order_by_custom']</i> !"
-
 msgid "Piwigo Update"
 msgstr "Aktualizacja Piwigo"
 

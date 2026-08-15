@@ -2017,12 +2017,6 @@ msgstr "Restableix els valors de configuració predeterminats. Es perdran tots e
 msgid "Show menubar"
 msgstr "Visualitza la barra de menú"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "No es pot definir un ordre predeterminat de les fotos perquè hi ha establerta una configuració fet a mida a la configuració local de l'aplicació."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Heu especificat <i>$conf['order_by']</ i> en l'arxiu de configuració local. Aquest paràmetre està obsolet. Elimineu-lo o canvieu-li el nom a <i>$conf['order_by_custom']</ i>!"
-
 msgid "Updates"
 msgstr "Actualitzacions"
 

@@ -2482,9 +2482,6 @@ msgstr "Μπορείτε να ενεργοποιήσετε μόνο ένα κι�
 msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
 msgstr "Μπορείτε να ενημερώσετε σε Piwigo%, άμεσα, χωρίς την αναβάθμιση σε Piwigo %s (συνιστάται)."
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Δεν μπορείτε να ορίσετε μια προεπιλογή σειράς φωτογραφιών, επειδή έχετε μια προσαρμοσμένη ρύθμιση στην τοπική διαμόρφωση σας."
-
 msgid "You cannot delete your account"
 msgstr "Δεν μπορείτε να διαγράψετε το λογαριασμό σας"
 
@@ -2493,9 +2490,6 @@ msgstr "Δεν μπορείτε να μετακινήσετε ένα λεύκω�
 
 msgid "You have %d orphan tags: %s."
 msgstr "Έχετε %d ορφανές ετικέτες : %s."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Έχετε καθορίσε  <i>$conf['order_by']</i>  στο τοπικό αρχείο ρυθμίσεων σας, αυτή η παράμετρος είναι παρωχημένη, παρακαλούμε να την αφαιρέσετε ή να το μετονομάσετε σε <i>$conf['order_by_custom']</i> !"
 
 msgid "You have subscribed to receiving notifications by mail."
 msgstr "Έχετε εγγραφεί για να λαμβάνετε ειδοποιήσεις με e-mail."

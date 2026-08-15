@@ -1390,9 +1390,6 @@ msgstr "您正在使用Flash上傳器上傳；若有問題，您也可改用<a h
 msgid "You can activate only one mobile theme."
 msgstr "您最多只能啟用一個手機主題。"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "無法使用預設相片順序，因你在本機配置另有自訂設定。"
-
 msgid "You cannot delete your account"
 msgstr "你不能刪除自己本身帳號"
 
@@ -1401,9 +1398,6 @@ msgstr "您不能將一個相冊移動到其子相冊裡"
 
 msgid "You have %d orphan tags: %s."
 msgstr "您已 %d 無關聯標籤: %s。"
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "你已在本地設定檔選用 <i>$conf['order_by']</i>，造成參數矛盾，請將它移除或重新命名為 <i>$conf['order_by_custom']</i>！"
 
 msgid "You have subscribed to receiving notifications by mail."
 msgstr "你開通了郵件通知功能。"

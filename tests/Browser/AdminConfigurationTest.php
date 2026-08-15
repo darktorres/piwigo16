@@ -1276,7 +1276,11 @@ it('main tab: rejects an order_by submission that becomes empty after de-duplica
     }
 });
 
-it('main tab: shows the order-by-is-custom notice and disables the selector when order_by_custom is set', function (): void {
+it('main tab: keeps the photo-order selector usable even with a stale order_by_custom row present', function (): void {
+    // order_by_custom is gone: no form writes it, ConfigService no longer
+    // maps it, and hydrate() returns early for an unmapped param. A row
+    // left behind by a hand-edited database must therefore be completely
+    // inert -- not disable the selector the way it used to.
     $page = H::loginAsAdmin($this);
     $snapshot = H::snapshotConfig(['order_by_custom']);
 
@@ -1284,8 +1288,10 @@ it('main tab: shows the order-by-is-custom notice and disables the selector when
         H::setConfigValue('order_by_custom', H::jsonEncode('ORDER BY RAND()'));
 
         $page = H::navigateOk($page, ctConfigSection('main'));
-        $page->assertSee("You can't define a default photo order because you have a custom setting in your local configuration.");
-        $page->assertPresent('select[name="order_by[]"][disabled]');
+        $page->assertDontSee("You can't define a default photo order because you have a custom setting in your local configuration.");
+        $page->assertNotPresent('select[name="order_by[]"][disabled]');
+        $page->assertPresent('select[name="order_by[]"]');
+        $page->assertPresent('#order_filters .addFilter');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -1612,49 +1618,6 @@ it('main tab: falls back to "all" new-user notifications when a group filter has
         expect(H::configValue('email_admin_on_new_user'))->toBe(json_encode('all'));
     } finally {
         H::restoreConfig($snapshot);
-    }
-});
-
-it('main tab: warns about a deprecated $conf[\'order_by\'] set in a real local configuration file', function (): void {
-    $repoRoot = dirname(__DIR__, 2);
-    $localConfigPath = $repoRoot . '/local/config/config.inc.php';
-
-    // local/config/ is torres-owned in this dev environment (unlike
-    // local/watermarks/, created at runtime by the live www-data-run app --
-    // see this file's own watermark-upload tests above), so a plain direct
-    // file write is safe here -- the same direct-filesystem-fixture
-    // technique BrowserTestHelpers::setCustomLogo() already uses under
-    // `local/`, just targeting the actual file orderByIsLocal() itself
-    // @include()s (the live, container-bound Paths->local .
-    // 'config/config.inc.php'), not a config-table row. Every real
-    // @include site of this exact path
-    // (Admin\UserListPageRenderer, this controller, and BackupService's
-    // own file copy) confirms it is NEVER read
-    // into the live app's real runtime $conf during normal request
-    // bootstrap (ConfigLoader::applyDefaults()/applyEnvOverrides() are both
-    // no-ops) -- writing it here cannot affect any other concurrently-
-    // scoped behavior.
-    if (file_exists($localConfigPath)) {
-        throw new RuntimeException("Refusing to overwrite a pre-existing {$localConfigPath} -- clean up a prior failed run first.");
-    }
-
-    // Also sets $conf['local_dir_site'], the only thing that makes
-    // orderByIsLocal() take its second @include (of siteLocal's own
-    // config.inc.php) -- PIWIGO_LOCAL_DIR is unset in this test
-    // environment, so local === siteLocal and this second include re-reads
-    // the exact same file, but the source line itself only runs when this
-    // key is set, so this is needed to exercise that line at all.
-    file_put_contents(
-        $localConfigPath,
-        "<?php\n\$conf['order_by'] = 'ORDER BY id ASC';\n\$conf['local_dir_site'] = true;\n"
-    );
-
-    try {
-        $page = H::loginAsAdmin($this);
-        $page = H::navigateOk($page, ctConfigSection('main'));
-        $page->assertSee('in your local configuration file, this parameter in deprecated, please remove it or rename it into');
-    } finally {
-        @unlink($localConfigPath);
     }
 });
 

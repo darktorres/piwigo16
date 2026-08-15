@@ -11,12 +11,13 @@ use Piwigo\Permission\SqlCondition;
  * WHERE ...` text fragment and its DQL-property-path equivalent, computed
  * once by {@see CalendarService::buildInnerSql()} (the underlying
  * subcategory-id-resolution/`PermissionCriteria` calls run once; only the
- * final string assembly differs per target syntax). `CalendarRepository::
- * findImageIds()` alone stays on raw DBAL and needs the raw-SQL shape --
- * its own `$orderBySql` traces to `CurrentConfig::orderBy()`/
- * `orderByCustom()`, genuinely open-ended admin-typed raw SQL that can't
- * be safely expressed as DQL; every other `CalendarRepository` method is
- * real DQL and needs the DQL property paths instead.
+ * final string assembly differs per target syntax).
+ * {@see CalendarRepository::findImageIds()} alone can still need the
+ * raw-SQL shape: it takes an order fragment composed by
+ * {@see CalendarRenderer::render()}, and a `` `rank` `` entry in it has no
+ * `image_category` alias to resolve against in a calendar view. Every
+ * other `CalendarRepository` method is real DQL and needs the DQL property
+ * paths instead.
  */
 final readonly class CalendarQueryScope
 {

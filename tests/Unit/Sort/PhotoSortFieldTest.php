@@ -189,8 +189,12 @@ test('dqlOrderProperty maps every base field against the image alias', function 
         ->and(PhotoSortField::DateAvailable->dqlOrderProperty('i'))->toBe('i.dateAvailable');
 });
 
-test('dqlOrderProperty returns null for Random regardless of alias', function (): void {
-    expect(PhotoSortField::Random->dqlOrderProperty('i'))->toBeNull();
+test('dqlOrderProperty renders Random as the custom DQL function, unprefixed by any alias', function (): void {
+    // A function call, not a property path -- so it takes no table prefix,
+    // and the per-platform RAND()/RANDOM() spelling is RandFunction's job at
+    // SQL-walk time, not this method's.
+    expect(PhotoSortField::Random->dqlOrderProperty('i'))->toBe('RAND()')
+        ->and(PhotoSortField::Random->dqlOrderProperty('i', 'ic'))->toBe('RAND()');
 });
 
 test('dqlOrderProperty returns null for Rank without an image_category alias', function (): void {
@@ -210,8 +214,18 @@ test('resolveDqlOrderBy parses and maps a multi-field fragment in one step', fun
     ]);
 });
 
-test('resolveDqlOrderBy returns null for unparseable text', function (): void {
-    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY RAND()', 'i'))->toBeNull();
+test('resolveDqlOrderBy returns null for text outside the vocabulary', function (): void {
+    // `comment` is a real images column but not a $sort_fields token.
+    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY comment ASC', 'i'))->toBeNull();
+});
+
+test('resolveDqlOrderBy maps RAND() to the registered custom DQL function', function (): void {
+    // Doctrine accepts a FunctionDeclaration as an ORDER BY item, and RAND
+    // is registered in EntityManagerFactory -- so a random order resolves
+    // rather than pushing its caller onto raw DBAL.
+    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY RAND()', 'i'))->toEqual([
+        new OrderByClause('RAND()', 'ASC'),
+    ]);
 });
 
 test('resolveDqlOrderBy returns null when an entry has no property path in this query', function (): void {

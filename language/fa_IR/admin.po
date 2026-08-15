@@ -2386,12 +2386,6 @@ msgstr "در حال حاضر شما از آپلود کننده ی فلش است�
 msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
 msgstr "شما میتوانید مستقیم نگارش خود را به %s تغییر دهید، بدون آنکه %s را نصب کنید. (این روش پیشنهاد می شود)"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "شما می توانید ترتیب چیده شدن عکس های خود را به پیشفرض تغییر بدهید، در حال حاضر شما از تنظیمات سفارشی استفاده می کنید."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "شما <i>$conf['order_by']</i> را برای تنظیمات محلی (Local) خود تعیین کرده اید و این پارامتر در حال حاضر به مشکل برخورده است. خواهشمند است آن را پاک کرده یا نام آنرا به <i>$conf['order_by_custom']</i> تغییر دهید !"
-
 msgid "%d day"
 msgstr "%d روز"
 

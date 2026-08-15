@@ -2740,14 +2740,8 @@ msgstr "You cannot delete your account"
 msgid "You cannot move an album in its own sub album"
 msgstr "You cannot move an album in its own sub album"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "You can't define a default photo order because you have a custom setting in your local configuration."
-
 msgid "You have %d orphan tags: %s."
 msgstr "You have %d orphan tags: %s."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i>!"
 
 msgid "You have subscribed to receiving notifications by mail."
 msgstr "You have subscribed to receive notifications by mail."

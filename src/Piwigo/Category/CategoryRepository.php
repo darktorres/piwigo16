@@ -55,6 +55,7 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Sort\OrderByClause;
+use Piwigo\Sort\PhotoSortField;
 
 /**
  * Persistence layer for the category domain: tree/menu queries, permalink
@@ -89,8 +90,8 @@ use Piwigo\Sort\OrderByClause;
  * Doctrine's `EntityRepository` (whose `RepositoryFactory` always
  * constructs it via a fixed `(EntityManagerInterface $em, ClassMetadata
  * $class)` signature, which would block real constructor injection of
- * `CurrentConfig`, needed for its `CurrentConfig::orderBy()`/
- * `orderByCustom()` reads). `CategoryEntity`'s own `#[ORM\Entity]` mapping
+ * `CurrentConfig`, needed for its `CurrentConfig::orderBy()` reads).
+ * `CategoryEntity`'s own `#[ORM\Entity]` mapping
  * doesn't name this class as its `repositoryClass`, so
  * `$em->getRepository(CategoryEntity::class)` returns a generic
  * `Doctrine\ORM\EntityRepository<CategoryEntity>`. Every
@@ -410,14 +411,11 @@ final readonly class CategoryRepository
      * `level <= x` check in the old `getSqlConditionFandFAsCondition()`
      * mapping, so maxLevel applies here too, against `i.level`).
      *
-     * Runs real DQL whenever {@see resolveDqlOrderBy()} can parse the
-     * stored order-by fragment against the bounded `$sort_fields`
-     * vocabulary ({@see \Piwigo\Sort\PhotoSortField::parseOrderByFragment()}),
-     * falling back to the raw DBAL query below whenever `orderByCustom()`
-     * is active or the text doesn't parse -- `image_category` is mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but the raw
-     * `CurrentConfig::orderBy()` ORDER BY fragment can't always be
-     * expressed in DQL.
+     * Runs real DQL whenever {@see \Piwigo\Sort\OrderBy::toDql()} can
+     * express the configured order. The raw-DBAL query below is reached in
+     * exactly one case now: a `` `rank` `` entry with more than one category
+     * requested, where there is no single `ic` alias to resolve it against
+     * (see the comment on $dqlOrderBy below).
      */
     public function findImageIdsForCategories(
         array $catIds,
@@ -435,7 +433,7 @@ final readonly class CategoryRepository
         // ONLY_FULL_GROUP_BY needs `ic.rank` explicitly in the GROUP BY
         // list too (added below) since it can't infer the functional
         // dependency on `i.id` from the WHERE clause's IN-list cardinality.
-        $dqlOrderBy = $this->resolveDqlOrderBy('i', count($catIds) === 1 ? 'ic' : null);
+        $dqlOrderBy = $this->currentConfig->orderBy->toDql('i', count($catIds) === 1 ? 'ic' : null);
         if ($dqlOrderBy !== null) {
             return $this->findImageIdsForCategoriesViaDql($catIds, $mode, $criteria, $dqlOrderBy);
         }
@@ -462,23 +460,29 @@ final readonly class CategoryRepository
                 ->setParameter('catCount', count($catIds));
         }
 
-        // CurrentConfig::orderBy() is always applied -- no real caller
-        // ever supplies a genuinely different order, so there's nothing
-        // left to distinguish "no
-        // override" from "current config order" for. Its own raw "ORDER BY
-        // ..." SQL-fragment shape means QueryBuilder::orderBy() prepends its
-        // own "ORDER BY " keyword, so the prefix must be stripped here or
-        // the query becomes "ORDER BY ORDER BY ..." (a real syntax error).
-        // CurrentConfig::orderBy() is raw, sysadmin-settable SQL text
-        // (order_by/order_by_custom), commonly containing the well-known
-        // "RAND()" random-order value (Image\PhotoSortField::Random's own
-        // token). Unlike the DQL path above (routes through the portable
-        // DqlFunction\RandFunction automatically), this raw-DBAL fallback
-        // needs the literal translated by hand -- otherwise "function
-        // rand() does not exist" against a real Postgres server.
-        $qb->orderBy(str_ireplace(
-            'RAND()',
-            SqlDialect::randomFunction(),
+        // toSqlBody(), not toSql(): QueryBuilder::orderBy() prepends its own
+        // "ORDER BY " keyword, so passing a complete clause would build
+        // "ORDER BY ORDER BY ..." -- a real syntax error. The body already
+        // renders `RAND()` through SqlDialect::randomFunction() per platform
+        // (PhotoSortField::column()), so nothing needs translating here.
+        //
+        // `rank` does need translating. It is the only reason this fallback
+        // is reached at all, it lives on the join row rather than on
+        // `images`, and with more than one category an image has one rank
+        // per membership -- so a bare reference is both ambiguous and, under
+        // the sql_mode DbConnection pins, outright invalid against
+        // `GROUP BY id`:
+        //
+        //   Expression #1 of ORDER BY clause is not in GROUP BY clause and
+        //   contains nonaggregated column 'ic.rank' ... incompatible with
+        //   sql_mode=only_full_group_by
+        //
+        // MIN() picks each image's best manual position among the requested
+        // albums, which is the only reading that keeps one row per image.
+        $rankColumn = PhotoSortField::Rank->column();
+        $qb->orderBy(str_replace(
+            $rankColumn,
+            'MIN(' . $rankColumn . ')',
             $this->currentConfig->orderBy->toSqlBody()
         ));
 
@@ -489,27 +493,6 @@ final readonly class CategoryRepository
             static fn (mixed $id): int => (int) $id,
             array_filter($ids, is_numeric(...))
         ));
-    }
-
-    /**
-     * Resolves `CurrentConfig::orderBy()`'s stored fragment into a list of
-     * DQL property paths, or null to fall back to raw DBAL -- either the
-     * text doesn't parse ({@see \Piwigo\Sort\PhotoSortField::
-     * resolveDqlOrderBy()}), or `orderByCustom()`'s sysadmin-local-config
-     * override is active (checked here, not in that shared helper, since
-     * which custom flag applies -- or whether $orderBySql is even a plain
-     * config value to begin with -- is each call site's own decision; see
-     * that method's own docblock).
-     *
-     * @return list<OrderByClause>|null
-     */
-    private function resolveDqlOrderBy(string $imageAlias, ?string $imageCategoryAlias): ?array
-    {
-        if ($this->currentConfig->orderByCustom !== null) {
-            return null;
-        }
-
-        return $this->currentConfig->orderBy->toDql($imageAlias, $imageCategoryAlias);
     }
 
     /**
@@ -547,8 +530,8 @@ final readonly class CategoryRepository
         foreach ($dqlOrderBy as $entry) {
             if ($entry->property === 'ic.rank') {
                 // Needed alongside `i.id` for MySQL's ONLY_FULL_GROUP_BY --
-                // sound only because resolveDqlOrderBy() above never offers
-                // this property when count($catIds) > 1, so `ic.rank` is
+                // sound only because the toDql() call above only passes an
+                // `ic` alias when count($catIds) === 1, so `ic.rank` is
                 // already 1:1 with `i.id` here (the join's composite PK is
                 // (imageId, categoryId), and categoryId is pinned to one
                 // value by the WHERE clause).

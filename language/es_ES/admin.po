@@ -2071,12 +2071,6 @@ msgstr "Restablecer la configuración por defecto. Se perderán todos los ajuste
 msgid "Show menubar"
 msgstr "Mostrar barra de menú"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "No se puede definir un orden predeterminado para las fotos porque está establecida una configuración personalizada en la configuración local de la aplicación."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Ha especificado <i>$conf['order_by']</i> en su archivo de configuración local. Este parámetro está en desuso. Elimínelo o renómbrelo en <i>$conf['order_by_custom']</i>"
-
 msgid "Updates"
 msgstr "Actualizaciones"
 

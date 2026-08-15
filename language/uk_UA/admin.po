@@ -2320,9 +2320,6 @@ msgstr "Ви можете активувати тільки одну мобіл�
 msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
 msgstr "Ви можете оновити Piwigo %s напряму, без переходу на Piwigo %s (рекомендовано)."
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Ви не можете визначити порядок за замовчуванням фотографії, тому що у Вас є налаштування користувача у вашій локальній конфігурації."
-
 msgid "You cannot delete your account"
 msgstr "Ви не можете видалити свій аккаунт"
 
@@ -2331,9 +2328,6 @@ msgstr "Ви не можете переміщати альбом в свій п�
 
 msgid "You have %d orphan tags: %s."
 msgstr "У вас є %d теґи-пустишки: %s."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Ви вказали <i>$conf['order_by']</i> в локальному файлі конфігурації, цей параметр в застарів, будь ласка, видаліть його або перейменувати його в <i>$conf['order_by_custom']</i> !"
 
 msgid "You have subscribed to receiving notifications by mail."
 msgstr "Ви підписалися на отримання повідомлень електронною поштою."

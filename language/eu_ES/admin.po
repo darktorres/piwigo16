@@ -2155,17 +2155,11 @@ msgstr "Posta elektroniko bitartez ohartzeko harpidetu zara."
 msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
 msgstr "Piwigoren %s bertsiora zuzenean eguneratu dezakezu, Piwigoren %s bertsiora berritu barik (gomendatuta)."
 
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "<i>$conf['order_by']</i> zehaztu duzu zure konfigurazio lokalean, baina parametro hau zaharkituta dago. Kendu edo aldatu izena <i>$conf['order_by_custom']</i>era! "
-
 msgid "You have %d orphan tags: %s."
 msgstr "%d etiketa umezurtz dituzu: %s."
 
 msgid "You cannot move an album in its own sub album"
 msgstr "Ezin duzu mugitu album bat bere azpi-album batera"
-
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Ezin duzu definitu lehenetsitako argazkiak ordenatzeko irizpiderik konfigurazio lokalean pertsonalizatutako ezarpenen bat duzulako."
 
 msgid "You can activate only one mobile theme."
 msgstr "Mugikorrentzako gai bakarra baino ezin duzu aktibatu."

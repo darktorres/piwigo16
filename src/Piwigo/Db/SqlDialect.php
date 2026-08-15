@@ -40,8 +40,6 @@ final class SqlDialect
      * Returns the *complete* random-ordering expression (including its own
      * parens/arguments), not just the bare function name -- every real
      * caller (`Sort\OrderBy::toSqlBody()` -> `Sort\PhotoSortField::column()`,
-     * `CategoryRepository::findImageIdsForCategories()`'s raw-DBAL
-     * fallback for a `RAND()`-valued `order_by`/`order_by_custom` config,
      * `ImageRepository`, `UserRepository`, `CalendarRepository`,
      * `public/random.php`) previously appended `'()'` itself; they now
      * splice this return value directly.

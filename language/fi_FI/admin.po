@@ -3862,9 +3862,6 @@ msgstr "yksittäistila"
 msgid "You have %s1 orphan : %s2"
 msgstr "Sinulla on %s1 orpo: %s2"
 
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Olet määrittänyt <i>$conf['order_by']</i> paikallisessa määritystiedostossasi. Tämä parametri on vanhentunut – poista se tai nimeä se uudelleen muotoon <i>$conf['order_by_custom']</i>!"
-
 msgid "You have unsaved changes"
 msgstr "Sinulla on tallentamattomia muutoksia"
 
@@ -3960,9 +3957,6 @@ msgstr "Voit nyt vaihtaa pääkäyttäjän käyttäjästä %s käyttäjäksi %s.
 
 msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
 msgstr "Voit päivittää suoraan Piwigo-versioon %s ilman, että sinun tarvitsee ensin päivittää versioon %s (suositeltavaa)."
-
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Et voi määrittää oletuskuvajärjestystä, koska paikallisessa määrityksessäsi on mukautettu asetus."
 
 msgid "You cannot copy the password if the connection to this site is not secure."
 msgstr "Et voi kopioida salasanaa, jos yhteys tähän sivustoon ei ole suojattu."

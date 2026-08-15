@@ -2083,12 +2083,6 @@ msgstr "還原至預設設定。你會失去你的插件的設定！"
 msgid "Show menubar"
 msgstr "顯示選單列"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "無法使用預設相片順序，因你在本機配置另有自訂設定。"
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "你已在本地設定檔選用 <i>$conf['order_by']</i>，造成參數矛盾，請將它移除或重新命名為 <i>$conf['order_by_custom']</i>！"
-
 msgid "Thumbnails generation in progress..."
 msgstr "小圖製作中..."
 

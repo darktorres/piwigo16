@@ -206,7 +206,6 @@
 {varType int $NB_USERS}
 {varType string $NB_VIEWS}
 {varType ?string $OLD_NEWSLETTERS_URL}
-{varType ?bool $ORDER_BY_IS_CUSTOM}
 {varType string $OS}
 {varType string $PAGE_BANNER}
 {varType string $PAGE_TITLE}
@@ -723,7 +722,6 @@
   });
 }());
 
-{if !isset($ORDER_BY_IS_CUSTOM)}
 (function(){
   var max_fields = Math.ceil({$main['order_by_options']|count}/2);
 
@@ -754,7 +752,6 @@
 
   updateFilters();
 }());
-{/if}
 
 jQuery(".themeBoxes a").colorbox();
 
@@ -806,28 +803,14 @@ jQuery("input[name='email_admin_on_new_user_filter']").change(function() {
         <li id="order_filters">
           <label>{='Default photos order'|translate}</label>
 
-          <span
-            n:foreach="$main['order_by'] as $order"
-            class="filter {if isset($ORDER_BY_IS_CUSTOM)}transparent{/if}"
-          >
-            <select
-              name="order_by[]"
-              {if isset($ORDER_BY_IS_CUSTOM)}
-              disabled
-              {/if}
-            >
+          <span n:foreach="$main['order_by'] as $order" class="filter">
+            <select name="order_by[]">
               {=htmlOptions(options: $main['order_by_options'], selected: $order)}
             </select>
             <a class="removeFilter">{='delete'|translate}</a>
           </span>
 
-          {if !isset($ORDER_BY_IS_CUSTOM)}
-            <a class="addFilter">{='Add a criteria'|translate}</a>
-          {else}
-            <span
-              class="order_by_is_custom"
-            >{='You can\'t define a default photo order because you have a custom setting in your local configuration.'|translate}</span>
-          {/if}
+          <a class="addFilter">{='Add a criteria'|translate}</a>
         </li>
       </ul>
     </fieldset>

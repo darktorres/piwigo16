@@ -206,9 +206,7 @@ final readonly class ConfigService
         'no_photo_yet_url' => 'noPhotoYetUrl',
         'obligatory_user_mail_address' => 'obligatoryUserMailAddress',
         'order_by' => 'orderBy',
-        'order_by_custom' => 'orderByCustom',
         'order_by_inside_category' => 'orderByInsideCategory',
-        'order_by_inside_category_custom' => 'orderByInsideCategoryCustom',
         'original_resize' => 'originalResize',
         'original_resize_maxheight' => 'originalResizeMaxheight',
         'original_resize_maxwidth' => 'originalResizeMaxwidth',
@@ -505,7 +503,6 @@ final readonly class ConfigService
                     // The order-by pair is OrderBy-typed but stored (and
                     // written here) as the raw "ORDER BY ..." text.
                     'orderBy', 'orderByInsideCategory' => OrderBy::fromConfigFragment(is_string($value) ? $value : ''),
-                    'orderByCustom', 'orderByInsideCategoryCustom' => $value === null ? null : OrderBy::raw(is_string($value) ? $value : ''),
                     default => $value,
                 });
             }
@@ -612,16 +609,10 @@ final readonly class ConfigService
         // `null` $raw was already handled by the generic branch above this
         // one, so $decoded is always non-null past this point.
         // The order-by pair is stored as a JSON *string*, not an object, so
-        // it coerces through fromConfigFragment()/raw() rather than the
+        // it coerces through fromConfigFragment() rather than the
         // fromArray() the VO properties below use.
         if (in_array($propertyName, ['orderBy', 'orderByInsideCategory'], true)) {
             $property->setValue($this->currentConfig, OrderBy::fromConfigFragment(is_string($decoded) ? $decoded : ''));
-
-            return;
-        }
-
-        if (in_array($propertyName, ['orderByCustom', 'orderByInsideCategoryCustom'], true)) {
-            $property->setValue($this->currentConfig, OrderBy::raw(is_string($decoded) ? $decoded : ''));
 
             return;
         }

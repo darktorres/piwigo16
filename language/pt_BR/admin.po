@@ -2545,14 +2545,8 @@ msgstr "Você pode ativar somente um tema móbile."
 msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
 msgstr "Você pode atualizar para o Piwigo %s diretamente, sem atualizar para o Piwigo %s (recomendado)."
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Você não pode definir uma ordenação padrão das fotos porque você tem uma configuração personalizada na sua configuração local."
-
 msgid "You have %d orphan tags: %s."
 msgstr "Você tem %d tags órfãs: %s."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Você especificou <i>$conf['order_by']</i> no seu arquivo de configuração local, esse parâmetro está em desuso, por favor remova-o ou renomei-o dentro <i>$conf['order_by_custom']</i>!"
 
 msgid "Your configuration settings are saved"
 msgstr "Sua configuração foi salva"

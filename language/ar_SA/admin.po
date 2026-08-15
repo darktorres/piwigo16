@@ -2467,12 +2467,6 @@ msgstr "Shotwell برنامج مفتوح المصدر لتنظيم و إدارة
 msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
 msgstr "اضافة للنشر في Piwigo  تسمح لك بتصدير ومزامنة الصور من لايترووم مباشرة إلى معرض الصور الخاص بك Piwigo. "
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "لا يمكنك تحديد ترتيب الصورة الافتراضية لأنه لديك إعداد مخصص في التكوين الخاص بك "
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "لقد حددت   <i>$conf['order_by']</i>  في ملف التكوينات  ستم اهمال هذه التغيرات ، الرجاد تحزيك اوتغيير الاسم إلي <i>$conf['order_by_custom']</i> !"
-
 msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
 msgstr " Aperture برنامج بأدوات قوية لتحسين و ادارة الصور  خاص ببئة الماكنتوش"
 

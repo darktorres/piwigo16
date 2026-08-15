@@ -21,7 +21,6 @@ final readonly class ConfigurationMainPageContext implements TemplatePageContext
      * @param array<int, string> $groupOptions
      */
     public function __construct(
-        public ?bool $orderByIsCustom,
         public array $main,
         public array $groupOptions,
     ) {}
@@ -32,15 +31,9 @@ final readonly class ConfigurationMainPageContext implements TemplatePageContext
     #[Override]
     public function toArray(): array
     {
-        $result = [
+        return [
             'main' => $this->main,
             'group_options' => $this->groupOptions,
         ];
-
-        if ($this->orderByIsCustom !== null) {
-            $result['ORDER_BY_IS_CUSTOM'] = $this->orderByIsCustom;
-        }
-
-        return $result;
     }
 }

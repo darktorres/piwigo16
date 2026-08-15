@@ -2365,9 +2365,6 @@ msgstr "[%s] Vizitează albumul %s"
 msgid "Your configuration settings are saved"
 msgstr "Setările d-voastră de configurare sunt salvate"
 
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Ai specificat <i>$conf['order_by']</i> în fișierul tău local de configurație, acest parametru este perimat, șterge-l sau renumește-l în <i>$conf['order_by_custom']</i> !"
-
 msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
 msgstr "digiKam este un administrator avansat sursă libera de fotografii digitale pentru Linux, Windows și MacOSX."
 
@@ -2682,9 +2679,6 @@ msgstr "Schimbă la clar sau la culori întunecate pentru administrare."
 
 msgid "Time to send mail is limited. Others mails are skipped."
 msgstr "Timpul pentru a trimite e-mail-uril este limitat. Alte e-mail-luri au fost sărite."
-
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Nu poți defini o ordine implicită a fotografiilor, pentru că ai deja o setare personalizată în configurația locală."
 
 msgid "Hoverbox display"
 msgstr "Afișaj în fereastră flotantă"

@@ -2173,12 +2173,6 @@ msgstr "Thêm một tiêu chí"
 msgid "Default photos order"
 msgstr "Thứ tự ảnh mặc định"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Bạn không thể định ra một thứ tự ảnh mặc định vì đã có một thiết lập tùy chọn trong cấu hình cục bộ."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Bạn đã định ra <i>$conf['order_by']</i> trong tệp tin cấu hình cục bộ của bạn, tham số này không được chấp nhận, hãy xóa bỏ hoặc đổi tên trong mục <i>$conf['order_by_custom']</i> !"
-
 msgid "Average rate"
 msgstr "Xếp hạng trung bình"
 

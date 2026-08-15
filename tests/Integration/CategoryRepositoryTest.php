@@ -275,12 +275,13 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([3, 2, 1], $ids);
         }
 
-        public function testFindImageIdsForCategoriesFallsBackToRawDbalWhenOrderByCustomIsSet(): void
+        public function testFindImageIdsForCategoriesRunsARandomOrderAsDql(): void
         {
-            // A sysadmin-local-config override -- RequestBootstrap.php's own
-            // real bootstrap-time behavior copies its value into orderBy() too;
-            // mirrored here since this test bypasses that bootstrap step.
-            CurrentConfigTestFactory::get()->orderByCustom = OrderBy::raw('ORDER BY RAND()');
+            // RAND() resolves to the registered RandFunction custom DQL
+            // function now, so this stays on the DQL path -- against a real
+            // server, which is what proves the generated SQL is valid on this
+            // provider. The order itself is random, so only membership can be
+            // asserted.
             CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY RAND()');
 
             $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
@@ -289,17 +290,41 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([1, 2, 3], $ids);
         }
 
-        public function testFindImageIdsForCategoriesFallsBackToRawDbalForUnparseableOrderBy(): void
+        public function testFindImageIdsForCategoriesAppliesTheDefaultOrderForUnparseableOrderBy(): void
         {
-            // Not one of $sort_fields's own bounded tokens -- the parser must
-            // reject it and this must still return the right members via the
-            // original raw-DBAL path, not throw.
-            CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY comment ASC');
+            // `comment` is not one of $sort_fields's own bounded tokens, so
+            // OrderBy::fromConfigFragment() substitutes the default rather
+            // than splicing the text through. Compared against the same call
+            // with the default set explicitly, so it stays independent of the
+            // fixture's own date_available/file values.
+            CurrentConfigTestFactory::get()->orderBy = OrderBy::default();
+            $expected = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
 
+            CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY comment ASC');
             $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
+
+            self::assertSame($expected, $ids);
+            self::assertCount(3, $ids);
+        }
+
+        public function testFindImageIdsForCategoriesStillUsesRawDbalForRankAcrossSeveralCategories(): void
+        {
+            // The one remaining reason OrderBy::toDql() returns null: `rank`
+            // lives on the image_category join row, and more than one
+            // category means no single `ic` alias to resolve it against.
+            //
+            // The raw-DBAL fallback groups by `id`, so the rank term has to
+            // be aggregated -- an unaggregated join-row column there is
+            // invalid under the sql_mode DbConnection pins, and this query
+            // raised a real DriverException before that was handled.
+            // Categories 1 and 2 hold images 1,2,3 and 4,5; `OR` is their
+            // union.
+            CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY `rank` ASC');
+
+            $ids = $this->repo->findImageIdsForCategories([1, 2], 'OR', self::noPermissionRestriction());
             sort($ids);
 
-            self::assertSame([1, 2, 3], $ids);
+            self::assertSame([1, 2, 3, 4, 5], $ids);
         }
 
         public function testFindCommonCategoriesCountsMatchingImages(): void

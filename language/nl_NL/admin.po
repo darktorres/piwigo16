@@ -2110,12 +2110,6 @@ msgstr "De volgende plug-ins kunnen mogelijk niet compatibel zijn met de nieuwe 
 msgid "Add a criteria"
 msgstr "Voeg een criterium toe"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Je kunt geen standaard foto-volgorde definiëren in verband met aangepaste instelling in jouw persoonlijke configuratie"
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Je hebt <i>$conf['order_by']</i> in je lokale configuratie-bestand gespecificeerd. Deze parameter is verouderd, verwijder hem of hernoem hem naar <i>$conf['order_by_custom']</i> !"
-
 msgid "Following themes may not be compatible with the new version of Piwigo:"
 msgstr "De volgende thema's zijn mogelijk niet compatibel met de nieuwe versie van Piwigo:"
 

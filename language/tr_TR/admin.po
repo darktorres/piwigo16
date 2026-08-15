@@ -2257,14 +2257,8 @@ msgstr "Kendi hesabinizi silemezsiniz"
 msgid "You cannot move an album in its own sub album"
 msgstr "Bir albümü kendi alt bölümü içindeki albüme taşıyamazsınız"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Varsayılan resim sırasını tanımlayamazsınız, çünkü yerel yapılandırmada özel bir ayar var"
-
 msgid "You have %d orphan tags: %s."
 msgstr "%d etkisiz etiketleriniz: %s."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Yerel yapılandırma dosyasında <i>$conf['order_by']</i> belirttiniz, bu parametre olarak önerilmemektedir, lütfen bu parametreyi siliniz veya <i>$conf['order_by_custom']</i> olarak yeniden adlandırınız!"
 
 msgid "You have subscribed to receiving notifications by mail."
 msgstr "Posta yoluyla bildirimleri almak için abone oldunuz."

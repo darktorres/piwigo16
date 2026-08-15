@@ -10,20 +10,27 @@ use Piwigo\Db\SqlDialect;
  * A photo sort order, as a value rather than the `"ORDER BY file ASC, id
  * ASC"` string it used to be threaded around as.
  *
- * The vocabulary is closed: `Controller\Admin\ConfigurationSubController`
- * builds `order_by`/`order_by_inside_category` out of its own `$sort_fields`
- * allow-list, and {@see fromWsOrderParam()} maps the WS `order`
- * parameter through {@see PhotoSortField}. Both used to flatten that
- * structure into text immediately, leaving every consumer to parse it back
- * -- which is why the `RAND()` portability rewrite and the platform-specific
- * `rank` quoting had to be repeated at each call site, and why "can this run
- * as DQL?" was answered by a regex rather than by asking the value.
+ * The `order_by`/`order_by_inside_category` config vocabulary is closed:
+ * `Controller\Admin\ConfigurationSubController` builds them out of its own
+ * `$sort_fields` allow-list, and {@see fromWsOrderParam()} maps the WS
+ * `order` parameter through {@see PhotoSortField}. Both used to flatten
+ * that structure into text immediately, leaving every consumer to parse it
+ * back -- which is why the `RAND()` portability rewrite and the
+ * platform-specific `rank` quoting had to be repeated at each call site,
+ * and why "can this run as DQL?" was answered by a regex rather than by
+ * asking the value. Text outside that vocabulary in `order_by`/
+ * `order_by_inside_category` is invalid config data (the admin form is the
+ * only writer, and it validates against `$sort_fields`), so
+ * {@see fromConfigFragment()} substitutes {@see default()} for it rather
+ * than treating it as a caller-supplied override -- `order_by_custom`
+ * used to be that override, but it was reachable only as a `config` table
+ * row no code ever wrote and no form ever exposed, so it's gone.
  *
- * The one genuinely open-ended case is the sysadmin's filesystem-level
- * `$conf['order_by_custom']` override, which is not admin-UI-reachable and
- * can hold anything. {@see raw()} keeps it as opaque text and {@see isRaw()}
- * says so, so a caller can tell "an order I understand" from "an order I can
- * only splice".
+ * {@see raw()} is a real, separate escape hatch that still exists for a
+ * genuinely open-ended per-category source: `categories.image_order`,
+ * admin-settable free text with no `$sort_fields` validation of its own.
+ * {@see isRaw()} lets a caller tell "an order this class understands" from
+ * "an order it can only splice".
  */
 final readonly class OrderBy
 {
@@ -32,28 +39,39 @@ final readonly class OrderBy
      */
     private function __construct(
         private array $entries,
-        private ?string $raw,
+        private ?string $raw = null,
     ) {}
 
     public static function none(): self
     {
-        return new self([], null);
+        return new self([]);
     }
 
     /**
      * The default applied when no `order_by` has been configured -- matches
      * install/config.sql's own seed row.
+     *
+     * Parses the literal directly rather than through
+     * {@see fromConfigFragment()}: that method falls back to this one, so
+     * routing through it would recurse forever if the literal ever left the
+     * vocabulary. The `?? []` is that guard, not a reachable branch.
      */
     public static function default(): self
     {
-        return self::fromConfigFragment('ORDER BY date_available DESC, file ASC, id ASC');
+        return new self(PhotoSortField::parseOrderByFragment('ORDER BY date_available DESC, file ASC, id ASC') ?? []);
     }
 
     /**
-     * Parses a stored `order_by`/`order_by_inside_category` fragment. Text
-     * that doesn't match the known vocabulary is kept verbatim via
-     * {@see raw()} rather than dropped -- a sysadmin override reaches this
-     * same property.
+     * Parses a stored `order_by`/`order_by_inside_category` fragment.
+     *
+     * Text outside the vocabulary falls back to {@see default()} rather
+     * than being spliced through verbatim: the only writer is the admin
+     * form, which validates against `$sort_fields`, so unparseable text is
+     * a corrupt or hand-edited `config` row. Substituting the default is
+     * what an absent row already does, and matches how this config layer
+     * treats every other invalid stored value (see
+     * `CurrentConfig::$metadataKeywordSeparatorRegex`); throwing would take
+     * the gallery down over one row read on every page render.
      */
     public static function fromConfigFragment(string $fragment): self
     {
@@ -63,7 +81,7 @@ final readonly class OrderBy
 
         $parsed = PhotoSortField::parseOrderByFragment($fragment);
 
-        return $parsed === null ? self::raw($fragment) : new self($parsed, null);
+        return $parsed === null ? self::default() : new self($parsed);
     }
 
     /**
@@ -94,12 +112,13 @@ final readonly class OrderBy
             ];
         }
 
-        return new self($entries, null);
+        return new self($entries);
     }
 
     /**
-     * An order this class can't interpret -- the sysadmin
-     * `order_by_custom`/`order_by_inside_category_custom` override.
+     * An order this class can't interpret -- `categories.image_order`,
+     * admin-settable per-category free text with no `$sort_fields`
+     * validation of its own.
      */
     public static function raw(string $fragment): self
     {
@@ -127,10 +146,9 @@ final readonly class OrderBy
      * to be repeated by every raw-SQL consumer, each of which had to
      * remember. A raw fragment missing its own `ORDER BY` keyword (a caller
      * that stores just the bare field list, e.g. `categories.image_order`)
-     * gets one prepended -- {@see raw()}'s established caller
-     * (`CurrentConfig::$orderByCustom`) always stores it pre-included, but
-     * nothing enforces that for every caller, so this class adds it rather
-     * than silently emitting invalid SQL for the ones that don't.
+     * gets one prepended -- nothing enforces that every `raw()` caller
+     * pre-includes it, so this class adds it rather than silently emitting
+     * invalid SQL for the ones that don't.
      */
     public function toSql(?string $tableAlias = null): string
     {
@@ -200,7 +218,7 @@ final readonly class OrderBy
      */
     public function toDql(string $imageAlias, ?string $imageCategoryAlias = null): ?array
     {
-        if ($this->raw !== null || $this->entries === []) {
+        if ($this->entries === []) {
             return null;
         }
 

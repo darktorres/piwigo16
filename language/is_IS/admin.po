@@ -2374,9 +2374,6 @@ msgstr "Þú ert með %s óvirkar viðbætur"
 msgid "You have %s1 orphan : %s2"
 msgstr "Þú ert með %s1 munaðarlaus : %s2"
 
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Þú hefur tilgreint <i>$conf['order_by']</i> í staðbundnu uppsetningaskránni þinni, þessi færibreyta er úrelt, fjarlægðu hana eða endurnefndu hana í <i>$conf['order_by_custom']</i> !"
-
 msgid "You have subscribed to receiving notifications by mail."
 msgstr "Þú hefur gerst áskrifandi að tilkynningum með tölvupósti."
 
@@ -2463,9 +2460,6 @@ msgstr "Þú ert að nota Flash innflytjanda. Vandamál? Prófaðu <a href=\"%s\
 
 msgid "You can activate only one mobile theme."
 msgstr "Þú getur aðeins virkjað eitt farsímaþema"
-
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Þú getur ekki skilgreint sjálfgefna myndaröðun vegna þess að þú ert með sérsniðna stillingu í staðbundnu uppsetningunni þinni."
 
 msgid "You cannot delete your account"
 msgstr "Þú getur ekki eytt reikningnum þínum"

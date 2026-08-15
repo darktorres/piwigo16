@@ -12,8 +12,9 @@ use Piwigo\Db\SqlDialect;
  * `fromToken()` backs `OrderBy::fromWsOrderParam()`'s per-token parse of
  * the WS `order` param (8 real sortable tokens, each optionally suffixed
  * `asc`/`desc`(`ending`), comma-chained, plus the WS-only `rand`/`random`
- * and legacy `date_created`/`date_posted` aliases); `fromSortFieldToken()`
- * backs `OrderBy::fromConfigFragment()`'s parse of a stored `order_by`/
+ * and legacy `date_created`/`date_posted` aliases, replacing the legacy WS
+ * order-builder's own regex+switch parser); `fromSortFieldToken()` backs
+ * `OrderBy::fromConfigFragment()`'s parse of a stored `order_by`/
  * `order_by_inside_category` fragment against
  * `ConfigurationSubController.php`'s own `$sort_fields` vocabulary. Both
  * paths converge on this one enum for column names and platform-specific
@@ -21,29 +22,29 @@ use Piwigo\Db\SqlDialect;
  * repeating them per call site -- see `OrderBy`'s own class docblock for
  * why the structured value replaced the raw-string convention project-wide.
  *
+ * The two vocabularies overlap but are not identical, which is why they
+ * are separate methods: `rand`/`random` and the legacy `date_created`/
+ * `date_posted` names are WS-only, and `rank` is config-only.
+ *
  * `parseOrderByFragment()`/`dqlOrderProperty()` are an opt-in translation
  * used only inside a repository method's own DQL conversion, matching
  * {@see \Piwigo\Image\ImageRepository::findIdsWithConditions()}'s own
  * docblock.
  *
- * `orderByCustom()` is not admin-UI-reachable: `order_by_custom`/
- * `order_by_inside_category_custom` have no HTML form field anywhere
- * (`Bootstrap\RequestBootstrap.php`, `Controller\Admin\
- * ConfigurationSubController.php`); `orderByCustom() !== null` only ever
- * *suppresses* the validated `order_by` save handler and renders a
- * read-only "specified in your local configuration file" warning. It's
- * the sysadmin-filesystem-level `$conf['order_by_custom']` override, not
- * admin-UI-reachable text -- genuinely open-ended, falls back to raw
- * DBAL, but never a live injection surface either way (still trusted,
- * caller-typed text, same as always).
+ * There is no `order_by_custom`-style escape hatch in either vocabulary
+ * above -- that sysadmin-filesystem-level override was never admin-UI-
+ * reachable and is gone (see `OrderBy`'s own class docblock). `OrderBy::
+ * raw()` still exists, but only for `categories.image_order`, a genuinely
+ * open-ended, admin-settable per-category field this enum's own closed
+ * vocabulary was never meant to cover.
  *
  * `Rank`: `` `rank` ASC `` is the 8th, ASC-only entry in
  * `ConfigurationSubController.php`'s own `$sort_fields` vocabulary,
  * mapped to {@see \Piwigo\Image\ImageCategoryEntity::$rank} -- a join-row
  * property, not a column on `ImageEntity` itself, so
  * {@see dqlOrderProperty()} needs an `image_category` alias to express it
- * and returns null without one (the caller's own signal to fall back to
- * raw DBAL for that query).
+ * and returns null without one. That is the only remaining reason a
+ * parsed order can fail to become DQL.
  */
 enum PhotoSortField
 {
@@ -145,10 +146,9 @@ enum PhotoSortField
      * Parses a `CurrentConfig::orderBy()`/`orderByInsideCategory()`-shaped
      * `"ORDER BY field dir, field dir"` fragment into a structured list,
      * strictly against the bounded `$sort_fields` vocabulary. Returns null
-     * on anything that doesn't cleanly match -- callers must fall back to
-     * the existing raw-DBAL path unchanged for that case (mirrors
-     * `orderByCustom()`'s own always-null-here contract, since a sysadmin's
-     * local-config override is never one of these 15 known entries).
+     * on anything that doesn't cleanly match -- text outside the
+     * vocabulary is invalid config data, not an order to honour, and
+     * {@see OrderBy::fromConfigFragment()} substitutes the default.
      *
      * @return list<array{field: self, dir: 'ASC'|'DESC'}>|null
      */
@@ -197,14 +197,23 @@ enum PhotoSortField
     }
 
     /**
-     * DQL property path for this field within a query aliasing `ImageEntity`
-     * as $imageAlias and (optionally) `ImageCategoryEntity` as
-     * $imageCategoryAlias -- every field but `Rank` lives on the image row
-     * itself; `Rank` lives on the join row ({@see ImageCategoryEntity::
-     * $rank}) and returns null without an $imageCategoryAlias, the signal
-     * for that call site to fall back to raw DBAL rather than silently
-     * dropping the sort. `Random` has no property path (a function call,
-     * not sortable via a DQL property expression) and always returns null.
+     * DQL order expression for this field within a query aliasing
+     * `ImageEntity` as $imageAlias and (optionally) `ImageCategoryEntity`
+     * as $imageCategoryAlias -- every field but `Random` and `Rank` is a
+     * plain property path on the image row.
+     *
+     * `Random` is not a property path but a function call, and Doctrine's
+     * own grammar accepts a `FunctionDeclaration` as an ORDER BY item
+     * (`Query\Parser::OrderByItem()`), so the registered `RAND` custom
+     * numeric function ({@see \Piwigo\Db\DqlFunction\RandFunction},
+     * per-platform dispatch) expresses it -- the same `->orderBy('RAND()')`
+     * {@see \Piwigo\Category\CategoryRepository::
+     * findRandomRepresentativeIdAmongSubcategories()} already runs.
+     *
+     * `Rank` lives on the join row ({@see ImageCategoryEntity::$rank}) and
+     * returns null without an $imageCategoryAlias, the signal for that call
+     * site to fall back to raw DBAL rather than silently dropping the sort.
+     * It is the only case that can still return null.
      */
     public function dqlOrderProperty(string $imageAlias, ?string $imageCategoryAlias = null): ?string
     {
@@ -216,24 +225,23 @@ enum PhotoSortField
             self::RatingScore => $imageAlias . '.ratingScore',
             self::DateCreation => $imageAlias . '.dateCreation',
             self::DateAvailable => $imageAlias . '.dateAvailable',
-            self::Random => null,
+            self::Random => 'RAND()',
             self::Rank => $imageCategoryAlias === null ? null : $imageCategoryAlias . '.rank',
         };
     }
 
     /**
-     * Parses $orderBySql and maps every entry to a DQL property path in
-     * one step, for a query aliasing `ImageEntity`
-     * as $imageAlias and (optionally) `ImageCategoryEntity` as
-     * $imageCategoryAlias. Null means "fall back to raw DBAL for this
-     * call" (unparseable text, or an entry -- almost always `Rank` --
-     * this particular query has no alias to express), never "no order."
-     * Deliberately doesn't check `CurrentConfig::orderByCustom()`/
-     * `orderByInsideCategoryCustom()` itself -- which flag applies (or
-     * whether the caller's $orderBySql is a plain config value at all, as
-     * opposed to a dynamically-composed one like
-     * {@see \Piwigo\Calendar\CalendarRenderer::render()}'s own
-     * date-field-prepended fragment) is each call site's own decision.
+     * Parses $orderBySql and maps every entry to a DQL order expression in
+     * one step, for a query aliasing `ImageEntity` as $imageAlias and
+     * (optionally) `ImageCategoryEntity` as $imageCategoryAlias. Null means
+     * "fall back to raw DBAL for this call" -- text outside the vocabulary,
+     * or a `Rank` entry this particular query has no alias to express --
+     * never "no order."
+     *
+     * Takes a string rather than an {@see OrderBy} because its callers hand
+     * it a dynamically-composed fragment, not a plain config value: see
+     * {@see \Piwigo\Calendar\CalendarRenderer::render()}, which prepends the
+     * calendar's own date field ahead of the configured order.
      *
      * @return list<OrderByClause>|null
      */

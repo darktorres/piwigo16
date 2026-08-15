@@ -14,9 +14,9 @@ use Piwigo\Tests\Support\DbTransactionTestOverride;
 /**
  * Piwigo\Calendar\CalendarRepository -- has its own dedicated
  * tests/Integration/CalendarRepositoryTest.php, covering only
- * findImageIds() (its only method with $orderBySql tracing to
- * genuinely open-ended admin-typed raw SQL, per the class's own
- * docblock); this ports that same 7-test spec down to the Unit suite
+ * findImageIds() (its only method taking a caller-composed $orderBySql
+ * that can still miss the DQL path, per the class's own docblock);
+ * this ports that same spec down to the Unit suite
  * via the real-DB-no-HTTP ImageRepositoryTest.php pattern. The other 6
  * methods are all real DQL against the same fixture, exercised
  * transitively via tests/Integration/CalendarMonthlyTest.php and
@@ -316,9 +316,37 @@ test('findImageIds() DQL path only joins image_category when the scope asks for 
 });
 
 test('findImageIds() falls back to raw DBAL when a DQL scope is given but order by does not parse', function (): void {
-    // $orderBySql doesn't match the bounded $sort_fields vocabulary --
-    // must still return the right members via the raw-DBAL fallback,
-    // not throw, even though a $dqlScope is given.
+    // `comment` is a real images column but not one of the bounded
+    // $sort_fields tokens, so PhotoSortField::resolveDqlOrderBy() returns
+    // null and this must still return the right members via the raw-DBAL
+    // fallback, not throw, even though a $dqlScope is given.
+    $ids = calendarTestRepo()
+        ->findImageIds(
+            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
+            new SqlCondition(''),
+            'ORDER BY comment ASC',
+            new CalendarQueryScope(
+                new SqlCondition(''),
+                false,
+                new SqlCondition('i.id IN (:ids)', [
+                    'ids' => [1, 2, 3],
+                ], [
+                    'ids' => ArrayParameterType::INTEGER,
+                ])
+            ),
+            new SqlCondition('')
+        );
+    sort($ids);
+
+    expect($ids)
+        ->toBe([1, 2, 3]);
+});
+
+test('findImageIds() runs a random order as DQL when a scope is given', function (): void {
+    // `RAND()` parses into PhotoSortField::Random, which now resolves to the
+    // registered RandFunction custom DQL function instead of returning null
+    // -- so this takes the DQL path. The order is random, so only membership
+    // can be asserted.
     $ids = calendarTestRepo()
         ->findImageIds(
             new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),

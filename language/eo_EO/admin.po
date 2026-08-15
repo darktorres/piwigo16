@@ -2761,9 +2761,6 @@ msgstr "Uzi la aprioran fotan ordigan ordon"
 msgid "You are running on development sources, no check possible."
 msgstr "Vi estas uzanta la disvolviĝajn fontojn, ne eblas kontroli la lastan version."
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Vi ne povas difini aprioran fotoordon ĉar estas tajlorita agordo en via loka agordaro."
-
 msgid "for the file format"
 msgstr "por la dosieroformato"
 
@@ -2790,9 +2787,6 @@ msgstr "ReGalAndroid (RemoteGallery Android) estas malfermitkoda kliento (GPL v3
 
 msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
 msgstr "La publikiga kromaĵo de Piwigo por Lightroom permesas al vi eksporti kaj sinkronigi viajn fotojn de Lightroom al via Piwigo-galerio."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Vi precizigis <i>$conf['order_by']</i> en via loka agordodosiero, tiu parametro ne plu validas, bonvolu forigi ĝin aŭ renomi ĝin al <i>$conf['order_by_custom']</i>!"
 
 msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
 msgstr "digiKam estas ĉiesaĵo por altnivela administrado de ciferecaj fotoj por Linux, Windows kaj MacOSX."

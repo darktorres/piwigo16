@@ -2193,16 +2193,6 @@ final class CurrentConfig
         }
     }
 
-    // === order_by_custom ===
-    /**
-     * Sysadmin-defined sort order that overrides order_by when set. Not
-     * admin-UI-reachable -- it comes from $conf['order_by_custom'] in a
-     * local config file and can hold arbitrary SQL, which is why it arrives
-     * as {@see OrderBy::raw()}. Nullable, so a plain null default works and
-     * no hook is needed.
-     */
-    public ?OrderBy $orderByCustom = null;
-
     // === order_by_inside_category ===
     /**
      * Sort order applied within album listings (see order_by above). Unlike
@@ -2217,12 +2207,6 @@ final class CurrentConfig
             $this->orderByInsideCategoryStorage = $value;
         }
     }
-
-    // === order_by_inside_category_custom ===
-    /**
-     * Sysadmin override for order_by_inside_category (see order_by_custom).
-     */
-    public ?OrderBy $orderByInsideCategoryCustom = null;
 
     // === picture_ext ===
     /**
@@ -2584,28 +2568,6 @@ final class CurrentConfig
     public function dumpForLog(): array
     {
         return $this->all();
-    }
-
-    /**
-     * A small, explicit snapshot of the config defaults needed before a
-     * real `config` table exists to load from --
-     * Controller\Admin\ConfigurationSubController::orderByIsLocal() builds
-     * a bare `$conf` array from this, then overlays a site's
-     * local/config/config.inc.php on top. NOT a general mechanism: these
-     * are exactly the keys that real caller reads.
-     *
-     * @return array<string, mixed>
-     */
-    public static function defaultsArray(): array
-    {
-        return [
-            'data_location' => '_data/',
-            'default_user_id' => 2,
-            'guest_id' => 2,
-            'rate' => true,
-            'rate_anonymous' => true,
-            'webmaster_id' => 1,
-        ];
     }
 
     /**

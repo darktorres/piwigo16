@@ -149,21 +149,6 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
             $this->configService->confUpdateParam('last_major_update', $dbnow, updateGlobal: true);
         }
 
-        // users can have defined a custom order pattern, incompatible with GUI form.
-        // order_by_custom/order_by_inside_category_custom are raw "ORDER BY ..."
-        // SQL-fragment strings, same shape as order_by/order_by_inside_category
-        // themselves (not the structured {field,dir}[] shape the old SCHEMA
-        // entry implied) -- CurrentConfig::orderByCustom()/
-        // orderByInsideCategoryCustom() are real typed (nullable) accessors now.
-        $orderByCustom = $this->currentConfig->orderByCustom;
-        if ($orderByCustom !== null) {
-            $this->currentConfig->orderBy = $orderByCustom;
-        }
-        $orderByInsideCategoryCustom = $this->currentConfig->orderByInsideCategoryCustom;
-        if ($orderByInsideCategoryCustom !== null) {
-            $this->currentConfig->orderByInsideCategory = $orderByInsideCategoryCustom;
-        }
-
         if (LoungeMaintenance::needsEmptying($this->currentConfig, $this->entityManager)) {
             new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService($conn), $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService($conn))
                 ->emptyLounge();

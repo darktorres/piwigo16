@@ -2170,12 +2170,6 @@ msgstr "Aktivēt ikonu \"new\" (jauns) blakus albūmiem un attēliem"
 msgid "Add a criteria"
 msgstr "Pievienot kritēriju"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Nav iespējams izveidot foto kārtošanas secību pēc noklusējuma, jo jūsu izveidotajā lokālajā konfigurācijā ir jūsu pielāgotie iestatījumi."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Jūs savā  lokālajā konfigurācijas failā esat iestatīts  <i>$conf['order_by']</i>, šis parametrs ir novecojis, lūdzu izdzēšiet to vai pārdēvējiet to sekojoši : <i>$conf['order_by_custom']</i> !"
-
 msgid "Average rate"
 msgstr "Vidējais novērtejums"
 

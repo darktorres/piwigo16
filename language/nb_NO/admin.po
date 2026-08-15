@@ -2368,9 +2368,6 @@ msgstr "Lagre besøkshistorie for "
 msgid "You can activate only one mobile theme."
 msgstr "Du kan kun aktivere et mobilttema."
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Du kan ikke definere standard bilderekkefølge, fordi du har en tilpasset innstilling i den lokale konfigurasjon."
-
 msgid "simple visitors"
 msgstr "enkle besøkende"
 
@@ -2508,9 +2505,6 @@ msgstr "X Repetering"
 
 msgid "Y Position"
 msgstr "Y Posisjon"
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Du har <i>$conf['order_by']</i>i din lokale konfigurasjonsfil, denne parameteren er utdatert. Vennligst fjern den, eller gi den et nytt navn <i>$conf['order_by_custom']</i>!"
 
 msgid "add a new watermark"
 msgstr "legg til et nytt vannmerke"

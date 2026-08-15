@@ -2401,14 +2401,8 @@ msgstr "Možete aktivirati samo jednu pokretnu temu."
 msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
 msgstr "Možete nadograditi Piwigo %s direktno, bez nadogradnji na Piwigo %s (preporučeno)."
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Ne možete postaviti podrazumevani poredak fotografija jer je drugačije podešeno u vašem lokalnom podešavanju."
-
 msgid "You have %d orphan tags: %s."
 msgstr "Imate %d napuštenih oznaka: %s."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Označili ste  <i>$conf['order_by']</i> u svom lokalnom podešavanju, ovaj parametar je zastareo, molimo uklonite ga ili ga preimenujte u <i>$conf['order_by_custom']</i>!"
 
 msgid "Zoom"
 msgstr "Uvećaj"

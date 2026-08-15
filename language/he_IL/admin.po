@@ -2233,9 +2233,6 @@ msgstr "אתה משתמש בטעינה מהדפדפן. נסה <a href=\"%s\">ט�
 msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
 msgstr "אתה משתמש בטעינת פלאש. ישנה בעיה? נסה <a href=\"%s\">טעינה מהדפדפן</a> במקום."
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "אין באפשרותך לקבוע סדר תמונות ברירת מחדל מכיוון שאתה משתמש בהגדרות מותאמות אישית"
-
 msgid "Add to caddie"
 msgstr "הוסף לסל"
 
@@ -2646,9 +2643,6 @@ msgstr "עדכן אדמינים כאשר תגובה היא"
 
 msgid "Piwigo cannot retrieve upgrade file from server"
 msgstr "Piwigo לא יכולה לטעון את קבצי השדרוג מהשרת"
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
 
 msgid "This group will be set to default"
 msgstr "קבוצה זו תשמש כברירת מחדל"

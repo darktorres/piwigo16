@@ -1912,17 +1912,11 @@ msgstr "katalogai + failai"
 msgid "You are running on development sources, no check possible."
 msgstr "Veikia iš kūrėjų kodo, patikrinimas neįmanomas."
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Neįmanoma nustatyti numatytosios nuotraukų rūšiavimo tvarkos, nes tai padaryta jūsų vietinėje konfigūracijoje."
-
 msgid "You cannot move an album in its own sub album"
 msgstr "Negalima perkelti albumo į jo paties subalbumą"
 
 msgid "You have %d orphan tags: %s."
 msgstr "Jūs turite %d nesusietų žymų: %s."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Jūs esate nurodęs <i>$conf['order_by']</i> savo konfigūraciniame faile, šis parametras yra pasenęs, prašome jį pašalinti arba pervardinti į <i>$conf['order_by_custom']</i> !"
 
 msgid "You have subscribed to receiving notifications by mail."
 msgstr "Jūs esate užsisakęs pranešimų prenumeratą paštu."

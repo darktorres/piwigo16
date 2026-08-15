@@ -1549,12 +1549,6 @@ msgstr "N'haller ket diweredekaat an tem-se, un tem ho po ezhom d'an neubeutañ.
 msgid "Hoverbox display"
 msgstr "Diskwel boest-gournij"
 
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Lakaet ho peus <i>$conf['order_by']</i> en ho restr kefluniadur lec'hel, an arventenn-mañ a zo diamzeret, dilemit anezhañ pe cheñchit da <i>$conf['order_by_custom']</i> !"
-
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Ne c'hellit ket termenañ urzh al luc'hskeudennoù dre ziouer peogwir ez eus arventennoù personelaet en ho kefluniadur lec'hel."
-
 msgid "Use the default photo sort order"
 msgstr "Implij urzh rummañ al luc'skeudennoù dre ziouer"
 

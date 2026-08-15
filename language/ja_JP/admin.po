@@ -2749,12 +2749,6 @@ msgstr "%sから%s MBの間で"
 msgid "based on"
 msgstr "元"
 
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "ローカルの設定ファイルで<i>$conf['order_by']</i>が指定されています。このパラメーターは古く推奨されません。削除するか、<i>$conf['order_by_custom']</i>に置き換えてください!"
-
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "ローカルの設定により、デフォルトの写真の並び順を設定できません"
-
 msgid "Y Repeat"
 msgstr "Y リピート"
 

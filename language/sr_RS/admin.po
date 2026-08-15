@@ -2626,12 +2626,6 @@ msgstr "За извоз фотографија из програма digiKam у 
 msgid "Type here the name of the new group"
 msgstr "Овде унесите име групе"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Не можете да одредите подразумевани редослед слика јер су укључена произвољна подешавања у вашој локалној датотеци."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Одредили сте <i>$conf['order_by']</i> у локалној датотеци са подешавањима. Овај параметар се више не користи, па га уклоните или преименујте у <i>$conf['order_by_custom']</i> !"
-
 msgid "between %.2f and %.2f"
 msgstr "између %.2f и %.2f"
 

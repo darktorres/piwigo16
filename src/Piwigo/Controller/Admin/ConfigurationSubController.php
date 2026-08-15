@@ -94,10 +94,6 @@ use Psr\Http\Message\ServerRequestInterface;
  * (`?action=restore_settings`, resets `ImageStdParams` to Piwigo's built-in
  * defaults) is gated by both `isWebmaster()` and a CSRF token check, the
  * same as every other write path in this file.
- *
- * `orderByIsLocal()` is a private instance method (not a top-level
- * function) so that repeated same-process calls to `handle()` don't fatal
- * with `Cannot redeclare function`.
  */
 final class ConfigurationSubController implements AdminSubControllerInterface
 {
@@ -298,56 +294,54 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             switch ($page['section']) {
                 case 'main':
 
-                    if ($this->currentConfig->orderByCustom === null and $this->currentConfig->orderByInsideCategoryCustom === null) {
-                        if (! self::emptyValue($post['order_by'] ?? null)) {
-                            $this->inputValidator
-                                ->validate('order_by', $post, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
+                    if (! self::emptyValue($post['order_by'] ?? null)) {
+                        $this->inputValidator
+                            ->validate('order_by', $post, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
 
-                            // check_input_parameter() above fatal_error()s unless
-                            // $_POST['order_by'] is an array of scalars matching
-                            // $pattern, but that guarantee isn't visible to static
-                            // analysis; re-derive it into a local, string-only copy
-                            // (values from an HTTP request are always strings here).
-                            $post_order_by = $post['order_by'] ?? null;
-                            $order_by_input = [];
-                            if (is_array($post_order_by)) {
-                                foreach ($post_order_by as $raw_order_by_key => $raw_order_by_value) {
-                                    if (is_string($raw_order_by_value)) {
-                                        $order_by_input[$raw_order_by_key] = $raw_order_by_value;
-                                    }
+                        // check_input_parameter() above fatal_error()s unless
+                        // $_POST['order_by'] is an array of scalars matching
+                        // $pattern, but that guarantee isn't visible to static
+                        // analysis; re-derive it into a local, string-only copy
+                        // (values from an HTTP request are always strings here).
+                        $post_order_by = $post['order_by'] ?? null;
+                        $order_by_input = [];
+                        if (is_array($post_order_by)) {
+                            foreach ($post_order_by as $raw_order_by_key => $raw_order_by_value) {
+                                if (is_string($raw_order_by_value)) {
+                                    $order_by_input[$raw_order_by_key] = $raw_order_by_value;
                                 }
                             }
-
-                            $used = [];
-                            foreach ($order_by_input as $i => $val) {
-                                if (self::emptyValue($val) or isset($used[$val])) {
-                                    unset($order_by_input[$i]);
-                                } else {
-                                    $used[$val] = true;
-                                }
-                            }
-                            if (! (bool) count($order_by_input)) {
-                                $this->pageState->addError($this->lang->t('No order field selected'));
-                            } else {
-                                // limit to the number of available parameters
-                                $order_by = $order_by_inside_category = array_slice($order_by_input, 0, (int) ceil(count($sort_fields) / 2));
-
-                                // there is no rank outside categories
-                                if (($i = array_search('`rank` ASC', $order_by, true)) !== false) {
-                                    unset($order_by[$i]);
-                                }
-
-                                // must define a default order_by if user want to order by rank only
-                                if (count($order_by) === 0) {
-                                    $order_by = ['id ASC'];
-                                }
-
-                                $post['order_by'] = 'ORDER BY ' . implode(', ', $order_by);
-                                $post['order_by_inside_category'] = 'ORDER BY ' . implode(', ', $order_by_inside_category);
-                            }
-                        } else {
-                            $this->pageState->addError($this->lang->t('No order field selected'));
                         }
+
+                        $used = [];
+                        foreach ($order_by_input as $i => $val) {
+                            if (self::emptyValue($val) or isset($used[$val])) {
+                                unset($order_by_input[$i]);
+                            } else {
+                                $used[$val] = true;
+                            }
+                        }
+                        if (! (bool) count($order_by_input)) {
+                            $this->pageState->addError($this->lang->t('No order field selected'));
+                        } else {
+                            // limit to the number of available parameters
+                            $order_by = $order_by_inside_category = array_slice($order_by_input, 0, (int) ceil(count($sort_fields) / 2));
+
+                            // there is no rank outside categories
+                            if (($i = array_search('`rank` ASC', $order_by, true)) !== false) {
+                                unset($order_by[$i]);
+                            }
+
+                            // must define a default order_by if user want to order by rank only
+                            if (count($order_by) === 0) {
+                                $order_by = ['id ASC'];
+                            }
+
+                            $post['order_by'] = 'ORDER BY ' . implode(', ', $order_by);
+                            $post['order_by_inside_category'] = 'ORDER BY ' . implode(', ', $order_by_inside_category);
+                        }
+                    } else {
+                        $this->pageState->addError($this->lang->t('No order field selected'));
                     }
 
                     if (self::emptyValue($post['email_admin_on_new_user'] ?? null)) {
@@ -516,21 +510,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         switch ($page['section']) {
             case 'main':
 
-                if ($this->orderByIsLocal()) {
-                    $this->pageState->addWarning($this->lang->t('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
-                }
-
-                $order_by_is_custom = null;
-                if ($this->currentConfig->orderByCustom !== null or $this->currentConfig->orderByInsideCategoryCustom !== null) {
-                    $order_by = [''];
-                    $order_by_is_custom = true;
-                } else {
-                    // The form pre-selects from the same "<field> <dir>"
-                    // vocabulary $sort_fields is keyed by, which the order is
-                    // already structured as -- no need to take the rendered
-                    // SQL apart again.
-                    $order_by = $this->currentConfig->orderByInsideCategory->toSortFieldTokens();
-                }
+                // The form pre-selects from the same "<field> <dir>"
+                // vocabulary $sort_fields is keyed by, which the order is
+                // already structured as -- no need to take the rendered
+                // SQL apart again.
+                $order_by = $this->currentConfig->orderByInsideCategory->toSortFieldTokens();
 
                 $conf_gallery_title = $this->currentConfig->galleryTitle;
                 $conf_page_banner = $this->currentConfig->pageBanner;
@@ -566,7 +550,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
 
                 $template->assignContext(new ConfigurationMainPageContext(
-                    orderByIsCustom: $order_by_is_custom,
                     main: $main,
                     groupOptions: $groups,
                 ));
@@ -790,37 +773,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         ));
 
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'configuration_' . $page_section . '.latte');
-    }
-
-    /**
-     * Whether $conf['order_by']/$conf['order_by_inside_category'] were set
-     * by a site-owner-authored local config file (a deprecated pattern --
-     * see the warning message this feeds).
-     *
-     * PHPStan can't see local/config/config.inc.php's content, so it can't
-     * rule out either isset() genuinely being true -- no ignores needed
-     * here.
-     */
-    private function orderByIsLocal(): bool
-    {
-        // CurrentConfig::defaultsArray() never sets local_dir_site/order_by/
-        // order_by_inside_category -- local_dir_site has no SCHEMA entry
-        // at all, and order_by/order_by_inside_category are both
-        // 'custom' => true (computed accessors, no plain literal default),
-        // deliberately excluded from defaultsArray() (see its own
-        // docblock). They only ever come from an optional, site-owner-
-        // authored local/config/config.inc.php loaded at runtime, whose
-        // content isn't knowable statically. Whether $conf ends up with
-        // these keys genuinely depends on a file that may not exist and
-        // isn't part of this codebase.
-        $paths = $this->paths;
-        $conf = CurrentConfig::defaultsArray();
-        @include $paths->local . 'config/config.inc.php';
-        if (isset($conf['local_dir_site'])) {
-            @include $paths->siteLocal . 'config/config.inc.php';
-        }
-
-        return isset($conf['order_by']) or isset($conf['order_by_inside_category']);
     }
 
     /**

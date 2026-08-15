@@ -2173,12 +2173,6 @@ msgstr "Hodnocení"
 msgid "Add a criteria"
 msgstr "Přidání kritéria"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Nemužete definovat výchozí pořadí fotografií, protože máte nadefinováno vlastní nastavení v konfiguraci"
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Specifikovali jste <i>$conf['order_by']</i> v konfiguračním souboru, tento parametr je zastaralý, prosím odstraňte ho nebo přejmenujte na <i>$conf['order_by_custom']</i> !"
-
 msgid "Learn more"
 msgstr "Zjistit více"
 

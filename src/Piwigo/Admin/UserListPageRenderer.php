@@ -226,23 +226,15 @@ final class UserListPageRenderer
     private static function webmasterIdIsLocal(Paths $paths): bool
     {
         // A presence check ("did the site owner override webmaster_id in
-        // their OWN local/config/config.inc.php"), not a value read --
-        // deliberately does NOT merge in CurrentConfig::defaultsArray()
-        // first the way a value-reading caller would. webmaster_id
-        // has a real SCHEMA default (1) now; merging that in first would
-        // make isset($conf['webmaster_id']) true on every request even
-        // when the site file never touched it, permanently (and wrongly)
-        // showing the "please remove it" deprecation warning below. The
-        // former config_default.inc.php happened to never set
-        // local_dir_site/webmaster_id either, so this always was, and
-        // stays, a bare local-file-only read. Retiring
-        // config_default.inc.php caught this as a real near-miss bug
-        // (a naive CurrentConfig::
-        // defaultsArray()-first rewrite would have made this warning fire
-        // unconditionally, since webmaster_id does have a real SCHEMA
-        // default now). Note the deliberate absence of `global $conf;`
-        // here -- this $conf is a fresh local shadow the include below
-        // populates from scratch, never the real DB-synced global.
+        // their OWN local/config/config.inc.php"), not a value read, so
+        // $conf deliberately starts empty rather than pre-seeded with any
+        // default. webmaster_id has a real SCHEMA default (1); seeding it
+        // first would make isset($conf['webmaster_id']) true on every
+        // request even when the site file never touched it, permanently
+        // (and wrongly) showing the "please remove it" deprecation warning
+        // below. Note the deliberate absence of `global $conf;` here --
+        // this $conf is a fresh local shadow the include below populates
+        // from scratch, never the real DB-synced global.
         $conf = [];
         @include $paths->local . 'config/config.inc.php';
         // PHPStan can't see the @include above mutating $conf -- it's a

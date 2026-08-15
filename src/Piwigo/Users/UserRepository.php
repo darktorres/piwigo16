@@ -32,7 +32,6 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Sort\OrderByClause;
 use Piwigo\Sort\PhotoSortField;
 use Piwigo\Users\Event\GetWebmasterMailAddress;
 use Piwigo\Users\Projection\ActivationKeyRow;
@@ -68,8 +67,7 @@ use RuntimeException;
  * via a fixed `(EntityManagerInterface $em, ClassMetadata $class)`
  * signature, which would block this class from taking `CurrentConfig`/
  * `EventDispatcher` (its own 2 dependencies, getWebmasterMailAddress()'s
- * `CurrentConfig::webmasterId()`/`EventDispatcher::dispatch()`, and
- * findVisibleFavoriteImageIds()'s `CurrentConfig::orderByCustom()`) via
+ * `CurrentConfig::webmasterId()`/`EventDispatcher::dispatchChange()`) via
  * real constructor injection. It's a plain, container-shared service
  * instead; `UserInfoEntity`'s own `#[ORM\Entity]` mapping doesn't name
  * this class as its `repositoryClass`, so
@@ -1012,7 +1010,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      */
     public function findVisibleFavoriteImageIds(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
-        $dqlOrderBy = $this->resolveFavoritesDqlOrderBy($orderBySql);
+        $dqlOrderBy = PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
         if ($dqlOrderBy !== null) {
             $qb = $this->em
                 ->createQueryBuilder()
@@ -1079,26 +1077,12 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * @return list<OrderByClause>|null
-     */
-    private function resolveFavoritesDqlOrderBy(string $orderBySql): ?array
-    {
-        if ($this->currentConfig->orderByCustom !== null) {
-            return null;
-        }
-
-        return PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
-    }
-
-    /**
-     * $orderBySql is raw,
-     * sysadmin-settable SQL text (order_by/order_by_custom, or a plain
-     * "ORDER BY RAND()" fallback both real callers and this class's own
-     * unparseable-order-by test fixture use), commonly containing the
-     * well-known "RAND()" random-order value. Same real gap already fixed
-     * once for {@see \Piwigo\Category\CategoryRepository}'s own raw-DBAL
-     * fallback -- otherwise "function rand() does not exist"
-     * against a real Postgres server.
+     * $orderBySql is a caller-composed fragment that reaches the raw-DBAL
+     * path below, where a literal `RAND()` would fail against a real
+     * PostgreSQL server ("function rand() does not exist"). The DQL path
+     * routes through {@see \Piwigo\Db\DqlFunction\RandFunction} instead and
+     * needs no rewrite; this is the same gap already closed once for
+     * {@see \Piwigo\Category\CategoryRepository}'s own fallback.
      */
     private static function normalizeOrderBySql(string $orderBySql): string
     {

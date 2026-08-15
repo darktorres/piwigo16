@@ -22,11 +22,12 @@ use Piwigo\PluginConfig\EventDispatcher;
 
 const SCHEMA_INTEGRITY_BACKING_FIELDS = ['chmodValueStorage', 'recentPostDatesStorage', 'defaultFiltersViewsStorage', 'filterPagesStorage', 'orderByStorage', 'orderByInsideCategoryStorage'];
 
-const SCHEMA_INTEGRITY_STATIC_METHOD_ALLOW_LIST = [
-    // Bulk/legacy-bridge helper -- a small hand-picked snapshot, not backed
-    // by any single property.
-    'defaultsArray',
-];
+// There is deliberately no allow-list here any more: every public zero-arg
+// static method on CurrentConfig must be backed by a property of the same
+// name. The last exception, defaultsArray(), was a hand-picked defaults
+// snapshot read by exactly one caller
+// (ConfigurationSubController::orderByIsLocal()), and both went with
+// order_by_custom.
 
 // Never written from outside CurrentConfig today -- see the property-hooks
 // conversion this file's own tests below enforce. A property landing here
@@ -131,7 +132,7 @@ test('every config property is publicly readable, and write access matches the d
     }
 });
 
-test('every public zero-arg static method not backed by a property is on the allow-list', function (): void {
+test('every public zero-arg static method is backed by a property of the same name', function (): void {
     $propertyNames = array_map(static fn (ReflectionProperty $p): string => $p->getName(), schemaIntegrityConfigProperties());
 
     $reflection = new ReflectionClass(CurrentConfig::class);
@@ -141,14 +142,14 @@ test('every public zero-arg static method not backed by a property is on the all
             continue;
         }
         $name = $method->getName();
-        if (in_array($name, $propertyNames, true) || in_array($name, SCHEMA_INTEGRITY_STATIC_METHOD_ALLOW_LIST, true)) {
+        if (in_array($name, $propertyNames, true)) {
             continue;
         }
         $unlisted[] = $name;
     }
 
     expect($unlisted)
-        ->toBe([], 'Public static zero-arg method(s) have no matching property and aren\'t on SCHEMA_INTEGRITY_STATIC_METHOD_ALLOW_LIST: ' . implode(', ', $unlisted));
+        ->toBe([], 'Public static zero-arg method(s) on CurrentConfig have no matching property: ' . implode(', ', $unlisted));
 });
 
 test('hooks exist only on the documented properties, and each one writes its own state', function (): void {

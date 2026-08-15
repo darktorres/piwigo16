@@ -2158,12 +2158,6 @@ msgstr "Библиотека изображений"
 msgid "Add a criteria"
 msgstr "Добавить критерий"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Вы не можете определить порядок сортировки изображений по умолчанию, так как он переопределен в локальных настройках."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Вы использовали <i>$conf['order_by']</i> в качестве порядка сортировки в локальном файле конфигурации. Этот параметр не рекомендуется для использования. Пожалуйста, удалите его или переименуйте в <i>$conf['order_by_custom']</i> !"
-
 msgid "Learn more"
 msgstr "Узнать больше"
 

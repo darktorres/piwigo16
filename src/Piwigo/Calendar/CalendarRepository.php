@@ -57,10 +57,8 @@ final readonly class CalendarRepository
      * query has to be valid under it from the start, unlike the pre-DBAL
      * version.
      *
-     * The raw-DBAL blocker above is conditional: `orderByCustom()` is
-     * never actually admin-UI-reachable (see
-     * {@see \Piwigo\Sort\PhotoSortField}'s own docblock). $orderBySql
-     * traces to `CurrentConfig::orderBy()`, but {@see \Piwigo\Calendar\
+     * The raw-DBAL blocker above is conditional. $orderBySql traces to
+     * `CurrentConfig::orderBy()`, but {@see \Piwigo\Calendar\
      * CalendarRenderer::render()}'s own call site dynamically prepends
      * `$calendar->date_field` (always `date_available`/`date_creation`)
      * ahead of it -- {@see \Piwigo\Sort\PhotoSortField::

@@ -1978,17 +1978,11 @@ msgstr "Non podes mover un álbum dentro dun subálbum propio."
 msgid "You have %d orphan tags: %s."
 msgstr "Tes %d etiquetas orfas: %s"
 
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "Tes especificado <i>$conf['order_by']</i> no teu ficheiro de configuración local, este parámetro está obsoleto, elimínao ou renoméao a <i>$conf['order_by_custom']</i> !"
-
 msgid "You have subscribed to receiving notifications by mail."
 msgstr "Fostes subscrito para recibir notificacións por correo."
 
 msgid "You have unsubscribed from receiving notifications by mail."
 msgstr "Fostes dessubscrito para recibir notificacións por correo."
-
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Non se pode definir unha orde predeterminada para as fotos porque está establecida unha configuración personalizada na configuración local do aplicativo."
 
 msgid "You can activate only one mobile theme."
 msgstr "Só se pode activar un tema para dispositivos móbiles."

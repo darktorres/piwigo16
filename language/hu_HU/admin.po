@@ -2152,12 +2152,6 @@ msgstr "\"új\" ikon aktiválása az albumok és képek mellett"
 msgid "Default photos order"
 msgstr "Alapértelmezett kép sorrend"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "Az alapértelmezett kép sorrend nem határozható meg a helyi konfigurációban található egyéni beállítás miatt."
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "A helyi konfigurációs fájlban lévő <i>$conf['order_by']</i> paraméter elavult, távolítsa el, vagy nevezze át <i>$conf['order_by_custom']</i>-ra !"
-
 msgid "Add a criteria"
 msgstr "Feltétel hozzáadása"
 

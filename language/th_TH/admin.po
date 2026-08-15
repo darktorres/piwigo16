@@ -2002,14 +2002,8 @@ msgstr "คุณไม่สามารถลบบัญชีผู้ใช
 msgid "You cannot move an album in its own sub album"
 msgstr "คุณไม่สามารถย้ายอัลบั้มหลักเข้าไปในอัลบั้มย่อยได้"
 
-msgid "You can't define a default photo order because you have a custom setting in your local configuration."
-msgstr "คุณไม่สามารถกำหนดค่ารูปภาพเป็นค่าปกติได้ เพราะว่าคุณได้ปรับแต่งการตั้งค่าด้วยตนเองในส่วนของ การปรับแต่งการตั้งค่าระบบ."
-
 msgid "You have %d orphan tags: %s."
 msgstr "คุณมี %d แท็กที่ไม่ได้ใช้งาน: %s. แท็ก"
-
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "ชื่อจะต้องเป็นชื่อเฉพาะ <i>$conf['order_by']</i> ในไฟล์การตั้งค่าของคุณ, มันคือตัวแปรที่ปิดกั้นการดำเนินการ, กรุณาลบมันออก หรือ เปลี่ยนชื่อมันเป็นอย่างอื่น <i>$conf['order_by_custom']</i> !"
 
 msgid "You have subscribed to receiving notifications by mail."
 msgstr "คุณได้มีการบอกรับข่าวสารและจะได้รับข่าวสารและการแจ้งเตือนผ่านทางเมล."

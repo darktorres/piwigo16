@@ -52,7 +52,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  * fallback instance when Kernel isn't booted (same precedent as
  * PermalinkServiceTest.php et al.), so no Kernel::boot() is needed
  * here even though the Integration original resolves CurrentConfig via
- * the container. A handful of tests set orderBy/orderByCustom on it --
+ * the container. A handful of tests set orderBy on it --
  * the Integration original's own setUp() resets CurrentConfig fresh
  * before every test via the container; this file's own afterEach()
  * does the equivalent for the fallback instance instead.
@@ -312,11 +312,10 @@ test('findImageIdsForCategories() orders by rank', function (): void {
     }
 });
 
-test('findImageIdsForCategories() falls back to raw DBAL when orderByCustom is set', function (): void {
-    // A sysadmin-local-config override -- RequestBootstrap.php's own
-    // real bootstrap-time behavior copies its value into orderBy() too;
-    // mirrored here since this test bypasses that bootstrap step.
-    CurrentConfigTestFactory::get()->orderByCustom = OrderBy::raw('ORDER BY RAND()');
+test('findImageIdsForCategories() runs a random order as DQL rather than falling back', function (): void {
+    // RAND() resolves to the registered RandFunction custom DQL function
+    // now, so this stays on the DQL path -- the assertion is that it
+    // executes and returns the right members, since the order is random.
     CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY RAND()');
 
     $ids = categoryTestRepo()
@@ -327,18 +326,44 @@ test('findImageIdsForCategories() falls back to raw DBAL when orderByCustom is s
         ->toBe([1, 2, 3]);
 });
 
-test('findImageIdsForCategories() falls back to raw DBAL for an unparseable orderBy', function (): void {
-    // Not one of $sort_fields's own bounded tokens -- the parser must
-    // reject it and this must still return the right members via the
-    // original raw-DBAL path, not throw.
-    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY comment ASC');
+test('findImageIdsForCategories() applies the default order for an unparseable orderBy', function (): void {
+    // `comment` is not one of $sort_fields's own bounded tokens, so
+    // OrderBy::fromConfigFragment() substitutes the default rather than
+    // splicing the text through. Asserted against the same call made with
+    // the default set explicitly, so it stays independent of what the
+    // fixture's own date_available/file values happen to be.
+    CurrentConfigTestFactory::get()->orderBy = OrderBy::default();
+    $expected = categoryTestRepo()
+        ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());
 
+    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY comment ASC');
     $ids = categoryTestRepo()
         ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());
+
+    expect($ids)
+        ->toBe($expected)
+        ->and($ids)
+        ->toHaveCount(3);
+});
+
+test('findImageIdsForCategories() still takes the raw-DBAL path for rank across several categories', function (): void {
+    // The one remaining reason OrderBy::toDql() returns null: `rank` lives
+    // on the image_category join row, and more than one category means no
+    // single `ic` alias to resolve it against.
+    //
+    // The raw-DBAL fallback groups by `id`, so the rank term has to be
+    // aggregated -- an unaggregated join-row column there is invalid under
+    // the sql_mode DbConnection pins, and this query raised a real
+    // DriverException before that was handled. Categories 1 and 2 hold
+    // images 1,2,3 and 4,5 respectively; `OR` is their union.
+    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY `rank` ASC');
+
+    $ids = categoryTestRepo()
+        ->findImageIdsForCategories([1, 2], 'OR', categoryTestNoPermissionRestriction());
     sort($ids);
 
     expect($ids)
-        ->toBe([1, 2, 3]);
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('findCommonCategories() counts matching images', function (): void {

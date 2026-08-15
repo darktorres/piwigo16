@@ -261,9 +261,6 @@ msgstr "With no keyword"
 msgid "You are running on development sources, no check possible."
 msgstr "You are running a development version, no check possible."
 
-msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
-msgstr "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter is deprecated, please remove it or rename it to <i>$conf['order_by_custom']</i> !"
-
 msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
 msgstr "Please upgrade your system to take full advantage of the application, otherwise it might not work correctly, or not at all"
 

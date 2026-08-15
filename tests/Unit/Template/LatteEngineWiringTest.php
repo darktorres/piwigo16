@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use Latte\Runtime\Html;
+use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -133,6 +135,42 @@ test('{_...} auto-escapes by default and honors |noescape, exactly like the |tra
     expect($output)
         ->toContain('<p>&lt;b&gt;escaped&lt;/b&gt;</p>')
         ->toContain('<p><b>raw</b></p>');
+
+    latte_engine_wiring_test_rrmdir($tplDir);
+});
+
+test('{$X|number} formats locale-aware once the current user language is known, proving LatteEngine actually wires Engine::setLocale()', function (): void {
+    // fr_FR's ICU decimal format uses a narrow no-break space (U+202F) as
+    // its thousands separator, plus round-half-to-even (1234.5 -> "1 234")
+    // -- both visibly different from number_format()'s own default (','
+    // thousands, round-half-up giving "1,235"), so this proves the locale
+    // genuinely reached the engine, not just that rendering didn't crash.
+    LangTestFactory::get()->setDefaultLanguageProvider(new class implements DefaultLanguageProviderInterface {
+        public function getDefaultLanguage(): string
+        {
+            return 'fr_FR';
+        }
+
+        public function getCurrentLanguage(): ?string
+        {
+            return 'fr_FR';
+        }
+    });
+
+    $t = TemplateTestFactory::build();
+    $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));
+    mkdir($tplDir, 0o777, true);
+    file_put_contents($tplDir . '/fixture.latte', '{$N|number}');
+    $t->setTemplateDir($tplDir);
+    $t->assignContext(new AdHocPageContext([
+        'N' => 1234.5,
+    ]));
+
+    $output = $t->parse('fixture.latte', true);
+
+    expect($output)
+        ->not->toBe(number_format(1234.5))
+        ->toContain("1\u{202F}234");
 
     latte_engine_wiring_test_rrmdir($tplDir);
 });

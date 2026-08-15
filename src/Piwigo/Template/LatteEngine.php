@@ -26,7 +26,13 @@ final readonly class LatteEngine
 {
     private Engine $engine;
 
-    public function __construct(string $cacheDirectory, bool $autoRefresh, PiwigoExtension $extension)
+    /**
+     * @param ?string $locale a `LangCode`-shaped (`ll_RR`) ICU locale, or
+     *     null. Drives `|number`'s own locale-aware formatting (falls back
+     *     to a plain `number_format()` call when null, matching this
+     *     engine's pre-P33G behavior exactly -- see `Engine::setLocale()`).
+     */
+    public function __construct(string $cacheDirectory, bool $autoRefresh, PiwigoExtension $extension, ?string $locale)
     {
         $this->engine = new Engine();
         $this->engine->setCacheDirectory($cacheDirectory);
@@ -40,6 +46,7 @@ final readonly class LatteEngine
         // {/foreach} (a Smarty-era default this rewrite never relied on).
         $this->engine->setFeature(Feature::Dedent);
         $this->engine->setFeature(Feature::ScopedLoopVariables);
+        $this->engine->setLocale($locale);
     }
 
     /**

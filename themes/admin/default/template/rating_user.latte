@@ -899,8 +899,8 @@ $(document).ready( function(){
         <td class="usr">{$user}</td><td
           title="First: {$rating['first_date']}"
         >{$rating['last_date']}</td>
-        <td>{$rating['count']}</td><td>{$rating['avg']|number_format:2}</td>
-        <td>{$rating['cv']|number_format:3}</td><td>{$rating['cd']|number_format:3}</td><td>{if !empty($rating['cdtop'])}{$rating['cdtop']|number_format:3}{/if}</td>
+        <td>{$rating['count']}</td><td>{$rating['avg']|number:2}</td>
+        <td>{$rating['cv']|number:3}</td><td>{$rating['cd']|number:3}</td><td>{if !empty($rating['cdtop'])}{$rating['cdtop']|number:3}{/if}</td>
         {foreach $rating['rates'] as $rate => $rates}
           <td>{if !empty($rates)}
               {capture $rate_over}{foreach $rates as $rate_arr}{breakIf $iterator->counter0 > 29}<img src="{$image_urls[$rate_arr['id']]['tn']|noescape}" alt="thumb-{$rate_arr['id']}" width="{$TN_WIDTH}" height="{$TN_WIDTH}">{/foreach}{/capture}

@@ -1769,6 +1769,39 @@ final class ImageRepositoryTest extends IntegrationTestCase
     }
 
     /**
+     * `md5sum` hydrates as a Md5Sum value object, not a scalar, so the
+     * grouping key must handle Stringable. Treating an unrecognised value as
+     * null keyed every row identically and reported the whole table as one
+     * duplicate group -- the exact opposite of the correct answer, and
+     * invisible to a test that only groups on plain-typed columns.
+     */
+    public function testFindIdsGroupedByDuplicateFieldsHandlesValueObjectTypedColumns(): void
+    {
+        // Every fixture image has a distinct md5sum, so grouping on it alone
+        // must find nothing.
+        self::assertSame(
+            [],
+            $this->repo->findIdsGroupedByDuplicateFields([ImageDuplicateField::Md5sum]),
+            'distinct md5sums must not group together'
+        );
+
+        $this->conn->beginTransaction();
+
+        try {
+            $this->conn->executeStatement(
+                "UPDATE images SET md5sum = 'ffffffffffffffffffffffffffffffff' WHERE id IN (1, 2)"
+            );
+
+            $ids = $this->repo->findIdsGroupedByDuplicateFields([ImageDuplicateField::Md5sum]);
+            sort($ids);
+
+            self::assertSame([1, 2], $ids, 'images sharing an md5sum must group together');
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
+    /**
      * `GROUP BY` puts all NULLs in one group, while `=` is false for NULL --
      * so a self-join rewrite would silently drop NULL-keyed groups. This
      * pins that they are still detected.

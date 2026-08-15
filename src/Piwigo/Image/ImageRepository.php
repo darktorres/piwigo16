@@ -12,6 +12,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
+use LogicException;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -41,6 +42,7 @@ use Piwigo\Image\Projection\UploadInfo;
 use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
+use Stringable;
 
 /**
  * Persistence layer for the image domain's own data-touching function from
@@ -3269,6 +3271,14 @@ final class ImageRepository extends EntityRepository
      * alternative would not. Dates are normalised to a fixed format so two
      * equal instants always produce the same key.
      *
+     * `Stringable` is handled explicitly because several of these columns
+     * are custom-typed value objects, not scalars -- `md5sum` hydrates as
+     * {@see \Piwigo\Common\ValueObject\Md5Sum}. Treating an unrecognised
+     * value as null would key every row identically and report the entire
+     * table as one duplicate group, so an unknown type throws instead: a
+     * newly VO-typed column must be handled here deliberately rather than
+     * silently collapsing the grouping.
+     *
      * @param  array<string, mixed>  $row
      * @param  list<string>  $properties
      */
@@ -3280,8 +3290,13 @@ final class ImageRepository extends EntityRepository
             $tuple[] = match (true) {
                 $value === null => null,
                 $value instanceof DateTimeInterface => $value->format('Y-m-d H:i:s'),
+                $value instanceof Stringable => (string) $value,
                 is_scalar($value) => (string) $value,
-                default => null,
+                default => throw new LogicException(sprintf(
+                    'Cannot build a duplicate-grouping key from %s for column "%s".',
+                    get_debug_type($value),
+                    $property,
+                )),
             };
         }
 

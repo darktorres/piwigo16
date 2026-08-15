@@ -14,11 +14,14 @@ namespace Piwigo\Ws\Activity;
 use Piwigo\Ws\WsParams;
 
 /**
- * `pwg.activity.getList` input DTO. `page`: `WsParamType::INT|POSITIVE`,
- * null default -- int|null (never sent as '' by this method's own JS
- * caller, unlike uid/id below). `uid`/`id`: `WsParamType::ID`, null
- * default -- `Server::checkType()` deliberately skips type coercion for
- * an empty-string value on an OPTIONAL param (matches legacy
+ * `pwg.activity.getList` input DTO. `page` is a registered param
+ * (`WsParamType::INT|POSITIVE`, null default) but deliberately NOT a
+ * field here -- the god-class method this replaces already never read
+ * it (its own `$page_offset = $param['page']*$page_size;` line was
+ * commented out, superseded by `offset` directly), so there's nothing
+ * to read it into. `uid`/`id`: `WsParamType::ID`, null default --
+ * `Server::checkType()` deliberately skips type coercion for an
+ * empty-string value on an OPTIONAL param (matches legacy
  * ws_core.inc.php's own `PwgServer::checkType()` byte-for-byte), so a
  * present-but-empty 'uid'/'id' arrives here as the raw string '', not
  * int|null; a genuinely-provided value is coerced to int by that same
@@ -31,7 +34,6 @@ use Piwigo\Ws\WsParams;
 final readonly class GetListParams implements WsParams
 {
     public function __construct(
-        public ?int $page,
         public int $offset,
         public int|string|null $uid,
         public ?string $dateMin,
@@ -46,7 +48,6 @@ final readonly class GetListParams implements WsParams
      */
     public static function fromArray(array $raw): static
     {
-        $page = $raw['page'] ?? null;
         $offset = $raw['offset'] ?? null;
         $uid = $raw['uid'] ?? null;
         $dateMin = $raw['date_min'] ?? null;
@@ -56,7 +57,6 @@ final readonly class GetListParams implements WsParams
         $action = $raw['action'] ?? null;
 
         return new self(
-            page: is_int($page) ? $page : null,
             offset: is_int($offset) ? $offset : 0,
             uid: (is_int($uid) || is_string($uid)) ? $uid : null,
             dateMin: is_string($dateMin) ? $dateMin : null,

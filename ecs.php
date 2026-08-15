@@ -57,7 +57,6 @@ return ECSConfig::configure()
             __DIR__ . '/tests/Unit/Template/TemplateInstanceTestFakeStatStreamWrapper.php',
         ],
     ])
-    ->withRootFiles()
     ->withPreparedSets(
         cleanCode: true,
         common: true,

@@ -9,12 +9,9 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\ValueObject\CategoryId;
-use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\FilterState;
-use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
@@ -34,159 +31,11 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Tests\Unit\Category\CategoryServiceUnitTestFakeActivityLogger;
+use Piwigo\Tests\Unit\Category\CategoryServiceUnitTestFakeHtmlRendererDeniesAccess;
+use Piwigo\Tests\Unit\Category\CategoryServiceUnitTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
-
-/**
- * Real fake for the 4 write methods' per-call ActivityLoggerInterface
- * parameter -- same shape as the Integration original's own local class,
- * just declared once here for the whole Unit file.
- */
-final class CategoryServiceUnitTestFakeActivityLogger implements ActivityLoggerInterface
-{
-    /**
-     * @var list<array{object: string, objectId: int|string|array<int, int|string>, action: string, details: array<string, mixed>}>
-     */
-    public array $calls = [];
-
-    #[Override]
-    public function record(string $object, int|string|array $objectId, string $action, array $details = []): void
-    {
-        $this->calls[] = [
-            'object' => $object,
-            'objectId' => $objectId,
-            'action' => $action,
-            'details' => $details,
-        ];
-    }
-}
-
-/**
- * checkRestrictions()'s only real effect is delegating to
- * HtmlRenderingInterface::accessDenied() -- this fake short-circuits with
- * a distinctive marker exception instead of needing a real
- * RedirectServiceInterface all the way down to a genuine Response/exit
- * path. Every other interface method throws: none of them are reachable
- * through checkRestrictions().
- */
-final class CategoryServiceUnitTestFakeHtmlRendererDeniesAccess implements HtmlRenderingInterface
-{
-    #[Override]
-    public function getCatDisplayName(array $catInformations, ?string $url = ''): string
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function getCatDisplayNameCache(
-        string $uppercats,
-        ?string $url = '',
-        bool $singleLink = false,
-        ?string $linkClass = null,
-        ?string $authKey = null,
-    ): string {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function nameCompare(array $a, array $b): int
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function tagAlphaCompare(array $a, array $b): int
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function accessDenied(RedirectServiceInterface $redirectService): never
-    {
-        throw new RuntimeException('CATEGORY_SERVICE_ACCESS_DENIED_MARKER');
-    }
-
-    #[Override]
-    public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function getTagsContentTitle(array $tags): string
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function setStatusHeader(int $code, string $text = ''): void
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function renderElementName(array $info): string
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function renderElementDescription(array $info, string $param = ''): string
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-}
-
-/**
- * checkRestrictions() only ever reaches accessDenied() -- this
- * RedirectServiceInterface fake is never actually invoked (the
- * HtmlRenderingInterface fake above throws before touching it), so every
- * method just documents that.
- */
-final class CategoryServiceUnitTestFakeRedirectServiceNeverCalled implements RedirectServiceInterface
-{
-    #[Override]
-    public function redirectHttp(string $url, int $status = 302): never
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-
-    #[Override]
-    public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
-    {
-        throw new LogicException('not used by checkRestrictions()');
-    }
-}
 
 /**
  * Piwigo\Category\CategoryService -- has its own dedicated

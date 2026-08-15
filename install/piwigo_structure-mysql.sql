@@ -81,7 +81,7 @@ CREATE TABLE `categories` (
   `global_rank` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'full-tree sort key derived from rank along the ancestor path, used to order albums across different parents',
   `image_order` varchar(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'preferred ORDER BY expression for images in this album, inheritable to descendant albums',
   `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'unique URL-friendly slug for this album',
-  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
   PRIMARY KEY (`id`),
   UNIQUE KEY `categories_i3` (`permalink`),
   KEY `categories_i2` (`id_uppercat`),
@@ -185,7 +185,7 @@ CREATE TABLE `groups` (
   `id` smallint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'group display name, unique',
   `is_default` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'every newly registered user is automatically added to groups marked default',
-  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp, set on insert only',
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
   PRIMARY KEY (`id`),
   UNIQUE KEY `groups_ui1` (`name`),
   KEY `lastmodified` (`lastmodified`)
@@ -293,13 +293,13 @@ CREATE TABLE `images` (
   `rating_score` float(5,2) unsigned DEFAULT NULL COMMENT 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore',
   `path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'full relative filesystem path to the original file',
   `storage_category_id` smallint unsigned DEFAULT NULL COMMENT 'album the file is physically stored under, distinct from possibly multiple image_category memberships',
-  `level` tinyint unsigned NOT NULL DEFAULT '0' COMMENT 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels',
+  `level` tinyint unsigned NOT NULL DEFAULT '0' COMMENT 'minimum permission level required to view the image, see Images::setPrivacyLevel and available_permission_levels',
   `md5sum` char(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'MD5 checksum of the original file, computed lazily for duplicate detection',
   `added_by` mediumint unsigned DEFAULT NULL COMMENT 'uploading user id',
   `rotation` tinyint unsigned DEFAULT NULL COMMENT 'pending quarter-turn rotation to apply when rendering, 0 to 3',
   `latitude` double(8,6) DEFAULT NULL COMMENT 'GPS latitude, from EXIF',
   `longitude` double(9,6) DEFAULT NULL COMMENT 'GPS longitude, from EXIF',
-  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
   PRIMARY KEY (`id`),
   KEY `images_i2` (`date_available`),
   KEY `images_i3` (`rating_score`),
@@ -323,9 +323,9 @@ CREATE TABLE `images` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `integrity_ignored_anomalies` (
   `anomaly_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'add_anomaly()-generated md5 id, see CheckIntegrity',
-  `version` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Piwigo version the anomaly was ignored under',
+  `piwigo_version` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Piwigo version the anomaly was ignored under',
   `ignored_at` datetime NOT NULL COMMENT 'when the anomaly was dismissed',
-  PRIMARY KEY (`anomaly_id`,`version`)
+  PRIMARY KEY (`anomaly_id`,`piwigo_version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='integrity-check anomalies an admin dismissed, read and written by CheckIntegrity via IntegrityIgnoredAnomalyRepository';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -440,7 +440,7 @@ CREATE TABLE `tags` (
   `id` smallint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'tag display name',
   `url_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'URL-friendly slug derived from name',
-  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp, set on insert only',
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
   PRIMARY KEY (`id`),
   KEY `tags_i1` (`url_name`),
   KEY `lastmodified` (`lastmodified`),
@@ -541,7 +541,7 @@ CREATE TABLE `user_infos` (
   `activation_key_expire` datetime DEFAULT NULL COMMENT 'when activation_key stops being valid',
   `last_visit` datetime DEFAULT NULL COMMENT 'when the user was last seen, refreshed once per session length',
   `last_visit_from_history` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether last_visit was already backfilled from the history table, avoids repeating that lookup',
-  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
   `preferences` json DEFAULT NULL COMMENT 'generic per-user key-value bag for preferences with no dedicated column',
   PRIMARY KEY (`user_id`),
   KEY `lastmodified` (`lastmodified`),

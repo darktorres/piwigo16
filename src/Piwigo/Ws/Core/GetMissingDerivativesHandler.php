@@ -86,8 +86,13 @@ final readonly class GetMissingDerivativesHandler implements WsAction
         /** @var array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} */
         $filterParams = $params;
 
+        $filterCriteria = $this->wsHelper->stdImageSqlFilterCriteria($filterParams);
+        if ($filterCriteria instanceof WsErrorResponse) {
+            return $filterCriteria;
+        }
+
         $criteria = new MissingDerivativesCriteria(
-            filterCriteria: $this->wsHelper->stdImageSqlFilterCriteria($filterParams, $server),
+            filterCriteria: $filterCriteria,
             ids: $input->ids,
         );
 

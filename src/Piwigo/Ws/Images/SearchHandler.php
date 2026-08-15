@@ -23,6 +23,7 @@ use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\WsHelper;
 
 /**
@@ -41,10 +42,10 @@ final readonly class SearchHandler implements WsAction
 
     /**
      * @param array<mixed> $params
-     * @return array{paging: NamedStruct, images: NamedArray}
+     * @return WsErrorResponse|array{paging: NamedStruct, images: NamedArray}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = SearchParams::fromArray($params);
 
@@ -59,8 +60,11 @@ final readonly class SearchHandler implements WsAction
         $filterParams = $params;
 
         $images = [];
-        $filterCondition = $this->wsHelper->stdImageSqlFilterCriteria($filterParams, $server)
-            ->toSqlCondition('i.');
+        $filterCriteria = $this->wsHelper->stdImageSqlFilterCriteria($filterParams);
+        if ($filterCriteria instanceof WsErrorResponse) {
+            return $filterCriteria;
+        }
+        $filterCondition = $filterCriteria->toSqlCondition('i.');
         $order_by = $this->wsHelper->stdImageSqlOrder($filterParams, 'i.');
 
         $super_order_by = false;

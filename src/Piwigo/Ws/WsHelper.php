@@ -74,12 +74,11 @@ final readonly class WsHelper
      *
      * @param array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
      */
-    public function stdImageSqlFilterCriteria(array $params, Server $service): ImageFilterCriteria
+    public function stdImageSqlFilterCriteria(array $params): ImageFilterCriteria|WsErrorResponse
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
             if (isset($params[$datefield]) and ! DateHelper::isValidMysqlDatetime($params[$datefield])) {
-                $service->sendResponse(new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid ' . $datefield));
-                exit;
+                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
             }
         }
 

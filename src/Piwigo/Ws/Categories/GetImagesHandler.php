@@ -112,9 +112,14 @@ final readonly class GetImagesHandler implements WsAction
             /** @var array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, order: string|null, ...} $filterParams */
             $filterParams = $params;
 
+            $filterCriteria = $this->wsHelper->stdImageSqlFilterCriteria($filterParams);
+            if ($filterCriteria instanceof WsErrorResponse) {
+                return $filterCriteria;
+            }
+
             $permissionCriteria = $this->permissionService->getPermissionCriteria();
             $imagesCriteria = new CategoryImagesCriteria(
-                filterCriteria: $this->wsHelper->stdImageSqlFilterCriteria($filterParams, $server),
+                filterCriteria: $filterCriteria,
                 categoryIds: array_keys($cats),
                 // visible_images's own old fallthrough into forbidden_images
                 // (fieldName 'i.id' -> the images-table's own level check) --

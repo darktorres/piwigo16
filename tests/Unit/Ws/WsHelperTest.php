@@ -8,11 +8,10 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\SqlDialect;
-use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
@@ -20,18 +19,18 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 use Piwigo\Ws\NamedArray;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\WsHelper;
 
 /**
  * Piwigo\Ws\WsHelper -- shared web-service helpers, called from 2-4 of
  * the Ws\Pwg* classes each. No dedicated Integration/Browser spec of
- * its own -- `Piwigo\Tests\Contract\WsHelperTest.php` covers this same
- * class's `exit()`-terminated branch (its own confirmed exception in
- * the B4 audit -- `stdImageSqlFilterCriteria()`'s "invalid date field"
- * branch, one of only 2 real exit()/die() branches in the whole B4
- * bucket), which this file deliberately does not attempt.
+ * its own -- `Piwigo\Tests\Contract\WsHelperTest.php` covers
+ * `stdImageSqlFilterCriteria()`'s "invalid date field" branch (a
+ * `WsErrorResponse` return, not an `exit()` -- see
+ * `Piwigo\Ws\WsHelper::stdImageSqlFilterCriteria()`'s own docblock)
+ * through a real WS round-trip, which this file deliberately does not
+ * attempt.
  *
  * `stdGetUrls()` is not covered here -- it needs a real `SrcImage`/
  * `DerivativeImage::getAll()` pair, itself needing real `ImageStdParams`
@@ -145,7 +144,13 @@ test('stdImageSqlFilterCriteria builds the criteria from valid params, with no d
         'f_max_date_created' => null,
     ];
 
-    $criteria = $helper->stdImageSqlFilterCriteria($params, wsHelperTestServer());
+    $criteria = $helper->stdImageSqlFilterCriteria($params);
+
+    expect($criteria)
+        ->toBeInstanceOf(ImageFilterCriteria::class);
+    if (! $criteria instanceof ImageFilterCriteria) {
+        return;
+    }
 
     expect($criteria->minRate)
         ->toBe(1.5)
@@ -175,7 +180,13 @@ test('stdImageSqlFilterCriteria accepts a valid MySQL datetime for a date field'
         'f_max_date_created' => null,
     ];
 
-    $criteria = $helper->stdImageSqlFilterCriteria($params, wsHelperTestServer());
+    $criteria = $helper->stdImageSqlFilterCriteria($params);
+
+    expect($criteria)
+        ->toBeInstanceOf(ImageFilterCriteria::class);
+    if (! $criteria instanceof ImageFilterCriteria) {
+        return;
+    }
 
     expect($criteria->minDateAvailable)
         ->toBe('2026-01-01 00:00:00');
@@ -325,31 +336,3 @@ test('categoriesFlatlistToTree skips a row with a non-scalar id', function (): v
         ->toHaveCount(1)
         ->and($tree[0]['name'])->toBe('Root');
 });
-
-/**
- * None of the branches under test in this file's stdImageSqlFilterCriteria()
- * tests ever reach sendResponse()/exit() -- a bare, unregistered
- * Server only needs to satisfy the method's own type, same rationale
- * as PermissionsTest.php's own permissionsTestServer() helper.
- */
-function wsHelperTestServer(): Server
-{
-    $currentConfig = new CurrentConfig();
-    $currentUser = new CurrentUser($currentConfig);
-    $currentUser->set(new User(
-        id: UserId::from(1),
-        username: null,
-        email: null,
-        language: LangCode::from('en_UK'),
-        theme: ThemeId::from('default'),
-        status: UserStatus::Admin,
-        enabledHigh: false,
-    ));
-    $accessControl = new AccessControl(
-        HtmlServiceTestFactory::build(),
-        new AccessControlTestFakeRedirectServiceNeverCalled(),
-        new AccessLevelChecker($currentUser, $currentConfig),
-    );
-
-    return new Server(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig);
-}

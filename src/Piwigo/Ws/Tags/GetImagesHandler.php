@@ -25,6 +25,7 @@ use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\WsHelper;
 
 /**
@@ -42,10 +43,10 @@ final readonly class GetImagesHandler implements WsAction
 
     /**
      * @param array<mixed> $params
-     * @return array{paging: NamedStruct, images: NamedArray}
+     * @return WsErrorResponse|array{paging: NamedStruct, images: NamedArray}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = GetImagesParams::fromArray($params);
         $tagService = $this->tagService;
@@ -69,7 +70,10 @@ final readonly class GetImagesHandler implements WsAction
         /** @var array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, order: string|null, ...} */
         $filterParams = $params;
 
-        $filterCriteria = $this->wsHelper->stdImageSqlFilterCriteria($filterParams, $server);
+        $filterCriteria = $this->wsHelper->stdImageSqlFilterCriteria($filterParams);
+        if ($filterCriteria instanceof WsErrorResponse) {
+            return $filterCriteria;
+        }
 
         $order_by = $this->wsHelper->stdImageSqlOrder($filterParams, 'i.');
         if ($order_by !== '') {

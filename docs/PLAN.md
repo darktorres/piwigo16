@@ -123,7 +123,7 @@ onto the original scope.
 | P30 | Asset-pipeline foundation (ScriptLoader/CssLoader/FileCombiner retirement + ViteManifest resolution) | Not started | 0 |
 | P31 | Smarty → Latte template migration | Done — all 139 real templates converted, Smarty engine fully removed (`smarty/smarty` dropped, `Template.php` Latte-only). Deferred asset-pipeline items (`ViteManifest`, `<picture>`, ThumbHash) out of scope, pick up under P29/P30/P43 | 80 |
 | P32 | Latte lint/format | DONE. Format-half: `tools/latte-prettier/` (real Prettier plugin, 135/135 real-tree coverage, all 126 reformatted templates manually reviewed line-by-line). Lint-half: `composer lint:latte` + `precompile:templates` + a Piwigo-native phpstan-latte pipeline (`tools/phpstan/Latte/`, replacing an initially-vendored efabrica/phpstan-latte fork after a deep upstream review) — `bin/piwigo phpstan-latte:compile` compiles all 135 templates with typed `@var` injection + shim-rewritten filter/function calls into `_analysis/phpstan-latte/`, analysed by plain `phpstan analyse` (parallel, result-cached) with errors mapped back to real `.latte` lines via an `errorFormatter.table!` override. Two follow-up campaigns shrink the remaining scoped ignores: context-docblock enrichment (~1,400 mixed-flow findings across 130 TemplatePageContext classes) and template-source modernization (~450 loose-`==`/`empty()` findings) | 11 |
-| P33 | Latte idiomatic modernization | In progress — P33A done (P32's reformat applied for real, `Feature::Dedent`/`Feature::ScopedLoopVariables` enabled). P33B done (`{varType}` blocks generated from the live `VariableMap` + a `composer lint:vartype`/`lint:vartype:fix` check/fix pair, not a one-time hand pass — see `tools/phpstan/Latte/VarTypeSyncer.php`). P33C done (n:if/n:foreach sweep, 451 conversions/91 templates, AST-based tool not a manual sweep — 4 templates skipped, real structural edge case). P33D done (verification-only — `{spaceless}`'s runtime whitespace-collapse confirmed unaffected by Dedent/n:attribute work, directly inspected against the current golden-html baselines). P33F done (native `{_ ...}`/`{translate ...}` tags added to `PiwigoExtension::getTags()`, wired directly to the existing `translate()`/filter mechanism — additive, no existing `|translate`/`|l10n` call site converted yet). P33E done (`\|noescape` classified across all 1009 real sites via an AST walk cross-checked against a raw-text count — 11 provably-redundant sites removed, 379 `{='key'\|translate...\|noescape}` sites collapsed to the new `{_...}` tag syntax; the remaining ~234-site ambiguous bucket, the 14 `<script>`/`<style>`-embedded sites, and the broader ~2380-site `\|translate` rollout beyond the noescape overlap are explicitly deferred, not silently dropped — see the P33 prose section below). P33G done (`Engine::setLocale()` wired from `Lang::currentUserLanguage()`; all 4 real `\|number_format[:N]` sites converted to `\|number[:N]` — the original research found only 1, missed 3 more in `rating_user.latte`, a real gap closed here). P33H researched, not yet implemented | 8 |
+| P33 | Latte idiomatic modernization | Done — P33A done (P32's reformat applied for real, `Feature::Dedent`/`Feature::ScopedLoopVariables` enabled). P33B done (`{varType}` blocks generated from the live `VariableMap` + a `composer lint:vartype`/`lint:vartype:fix` check/fix pair, not a one-time hand pass — see `tools/phpstan/Latte/VarTypeSyncer.php`). P33C done (n:if/n:foreach sweep, 451 conversions/91 templates, AST-based tool not a manual sweep — 4 templates skipped, real structural edge case). P33D done (verification-only — `{spaceless}`'s runtime whitespace-collapse confirmed unaffected by Dedent/n:attribute work, directly inspected against the current golden-html baselines). P33F done (native `{_ ...}`/`{translate ...}` tags added to `PiwigoExtension::getTags()`, wired directly to the existing `translate()`/filter mechanism — additive, no existing `|translate`/`|l10n` call site converted yet). P33E done (`\|noescape` classified across all 1009 real sites via an AST walk cross-checked against a raw-text count — 11 provably-redundant sites removed, 379 `{='key'\|translate...\|noescape}` sites collapsed to the new `{_...}` tag syntax; the remaining ~234-site ambiguous bucket, the 14 `<script>`/`<style>`-embedded sites, and the broader ~2380-site `\|translate` rollout beyond the noescape overlap are explicitly deferred, not silently dropped — see the P33 prose section below). P33G done (`Engine::setLocale()` wired from `Lang::currentUserLanguage()`; all 4 real `\|number_format[:N]` sites converted to `\|number[:N]` — the original research found only 1, missed 3 more in `rating_user.latte`, a real gap closed here). P33H done (dev-only Tracy debug-bar integration — new `Piwigo\Bootstrap\TracyBootstrap`, gated behind a new `PIWIGO_TRACY_ENABLED` env var, `tracy/tracy` now a real `require-dev` dependency instead of an unresolved transitive reference). All 8 sub-items complete | 8 |
 | P34 | Inline JS extraction | Not started | 0 |
 | P35 | Inline CSS extraction | Not started | 0 |
 | P36 | JS → TS mechanical conversion | Not started (mixed-elimination work landed under P24 instead, see above) | 0 |
@@ -1691,11 +1691,11 @@ uncommitted** — this pass was format-and-review only, not "commit the
 reformat"; only the `tools/latte-prettier/` source fixes themselves are
 committed, one per bug found.
 
-**P33 — Latte idiomatic modernization.** In progress. A content pass over
+**P33 — Latte idiomatic modernization.** Done. A content pass over
 templates once formatting is enforced — idiomatic Latte constructs,
 cleaning up any Smarty-era patterns that survived P31's mechanical
-conversion. Same rendered output. Depends on P32. Broken into P33A-H;
-A, B, C, D, F, and E are done (`Feature::Dedent`/`Feature::ScopedLoopVariables`
+conversion. Same rendered output. Depends on P32. Broken into P33A-H, all
+8 complete (`Feature::Dedent`/`Feature::ScopedLoopVariables`
 enabled on a P32-reformatted tree; `{varType}` type hints generated from
 the same `VariableMap` the compiled-analysis `@var` docblocks already
 use, via `composer lint:vartype:fix`, not hand-authored; n:if/n:foreach
@@ -1737,7 +1737,24 @@ via a real unit test proving `fr_FR`'s ICU formatting genuinely diverges
 from `number_format()`'s output (narrow no-break-space thousands
 separator, round-half-to-even), not just "renders without crashing" —
 golden-html/VR stay byte-identical for the fixture's `en_US` locale, as
-expected. H (Tracy integration) remains.
+expected.
+
+**P33H done**: dev-only Tracy debug-bar integration. `tracy/tracy` added
+as a real `require-dev` dependency (previously an unresolved transitive
+reference only, per this section's original research). New
+`Piwigo\Bootstrap\TracyBootstrap` mirrors `SentryBootstrap`'s own "no-op
+unless explicitly opted in" shape — `Debugger::enable(Debugger::
+Development)` only runs when a new `PIWIGO_TRACY_ENABLED` env var
+(`Env::isTracyEnabled()`) is set, forcing dev mode explicitly rather than
+Tracy's own IP-based auto-detection. `Env::isTracyEnabled()` lives in
+`Piwigo\Core` (L1Infrastructure), not on `TracyBootstrap` itself
+(L4Integration) — `deptrac` forbids `LatteEngine` (L3Presentation) from
+depending upward on `Bootstrap`, same reasoning
+`DefaultLanguageProviderInterface`'s own docblock already documents for
+`Lang`. `LatteEngine` conditionally registers `Latte\Bridges\Tracy\
+TracyExtension` using that same check (its constructor unconditionally
+touches `Tracy\Debugger::getBar()`, so registering it unconditionally
+would build a panel nothing ever renders when Tracy isn't enabled).
 
 **P34 — Inline JS extraction.** Not started. Every `<script>` block
 embedded in a template moves to a plain `.js` file loaded through P30's

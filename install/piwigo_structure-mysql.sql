@@ -199,7 +199,7 @@ CREATE TABLE `history` (
   `time` time NOT NULL DEFAULT '00:00:00' COMMENT 'time of day of the visit',
   `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'visiting user id, the guest user id for anonymous visitors',
   `IP` char(39) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'REMOTE_ADDR of the request, truncated to fit an IPv6 address',
-  `section` enum('categories','tags','search','list','favorites','most_visited','best_rated','recent_pics','recent_cats') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'gallery navigation view the visit occurred in, plugin-defined sections are appended to this enum automatically',
+  `section` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'gallery navigation view the visit occurred in, plugin-defined sections stored as-is',
   `category_id` smallint unsigned DEFAULT NULL COMMENT 'album being viewed, set when section is a category-based view',
   `search_id` int unsigned DEFAULT NULL COMMENT 'search being viewed, set when section is search',
   `tag_ids` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'comma-separated tag ids being viewed, set when section is tags, truncated to fit',

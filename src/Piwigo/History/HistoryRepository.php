@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\History;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Override;
@@ -775,110 +774,41 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Stays on DBAL -- a `DESC <table>` schema-introspection statement, not
-     * a data query at all; DQL has no equivalent for reading a live column
-     * definition.
+     * The section names currently in use, for resolving a page section to
+     * its canonical casing.
      *
-     * Parses the `history`.`section` column's current ENUM options
-     * (`enum('blue','green','black')` -> `['blue', 'green', 'black']`) --
-     * no cross-driver-portable DBAL equivalent exists for reading a live
-     * ENUM definition.
+     * Stays on DBAL: `SELECT DISTINCT` over one column, no entity to
+     * hydrate.
      *
-     * `section` carries no CHECK constraint on PostgreSQL at all (see the
-     * baseline migration's own docblock on this column) -- there is no
-     * schema-level "currently allowed values" construct to introspect the
-     * way MySQL's live ENUM definition provides. The Postgres branch
-     * derives the "known" set from real data (`SELECT DISTINCT section`)
-     * -- a self-healing analog: once a row using a given section value
-     * exists, a later cold-cache read recognizes it as known, the same
-     * practical effect `alterSectionEnum()`'s MySQL-side schema widening
-     * provides, without a DDL step.
+     * `history.section` is a plain `VARCHAR` on both platforms, so there is
+     * no schema-level "currently allowed values" construct to read. The set
+     * is derived from the data instead, which is self-healing: once a row
+     * using a given section exists, later reads recognise it. That used to
+     * be the PostgreSQL-only branch, with MySQL parsing its live `ENUM`
+     * definition out of `DESC history` -- the ENUM is gone, so both
+     * platforms now share this one implementation.
      *
-     * A genuinely cold table (no row has ever used a given core section
-     * yet -- a fresh install, or an isolated test fixture) has nothing for
-     * `SELECT DISTINCT` to find, so even Piwigo's own built-in sections
-     * would read back as "unknown" on a first use, unlike MySQL's live
-     * ENUM definition (which always carries the original schema-defined
-     * member list regardless of what data exists). {@see BASE_SECTIONS}
-     * -- the exact same initial member list the MySQL schema's own
-     * `section` ENUM column was created with -- is unioned in so the
-     * built-in sections are always recognized, matching MySQL's real
-     * behavior; plugin-defined sections (never in this static list) rely
-     * on the self-healing DISTINCT-from-data lookup.
+     * A genuinely cold table (a fresh install, or an isolated test fixture)
+     * has nothing for `SELECT DISTINCT` to find, so even the built-in
+     * sections would read back as unknown on first use. {@see BASE_SECTIONS}
+     * -- the member list the `section` column was originally created with --
+     * is unioned in so they are always recognised; plugin-defined sections
+     * rely on the DISTINCT-from-data lookup.
      *
      * @return list<string>
      */
     public function getSectionEnumOptions(): array
     {
-        $conn = $this->getEntityManager()
-            ->getConnection();
-
-        if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
-            $sections = $conn->executeQuery(<<<SQL
+        $sections = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery(<<<SQL
                 SELECT DISTINCT section FROM history WHERE section IS NOT NULL
                 SQL)->fetchFirstColumn();
 
-            return array_values(array_unique([
-                ...self::BASE_SECTIONS,
-                ...array_filter($sections, is_string(...)),
-            ]));
-        }
-
-        $rows = $conn->executeQuery(<<<SQL
-            DESC history
-            SQL)->fetchAllAssociative();
-
-        foreach ($rows as $row) {
-            if (($row['Field'] ?? null) === 'section') {
-                $type = is_string($row['Type'] ?? null) ? $row['Type'] : '';
-                $options = explode(',', substr($type, 5, -1));
-
-                return array_map(static fn (string $option): string => str_replace('\'', '', $option), $options);
-            }
-        }
-
-        return [];
-    }
-
-    /**
-     * Stays on DBAL -- a DDL `ALTER TABLE` statement, not a
-     * DQL-expressible operation at all (DQL only targets
-     * SELECT/UPDATE/DELETE data queries, never schema DDL).
-     *
-     * Widens the `section` column's ENUM definition to include every
-     * option in $options -- $options is always getSectionEnumOptions()'s
-     * own DB-introspected values with one new value appended, that new
-     * value already regex-validated by the caller (HistoryService::
-     * logVisit(), `/^[a-zA-Z0-9_-]+$/`), never raw user input.
-     *
-     * A genuine no-op on PostgreSQL -- `section` has no CHECK constraint
-     * there (see `getSectionEnumOptions()`'s own docblock), so every value
-     * the caller's own regex already accepts is already storable without
-     * any schema change.
-     *
-     * @param  list<string>  $options
-     */
-    public function alterSectionEnum(array $options): void
-    {
-        $conn = $this->getEntityManager()
-            ->getConnection();
-        if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
-            return;
-        }
-
-        // Not a bind target -- an ENUM column definition has no
-        // bind-able parameter position in any SQL dialect (DDL, same
-        // carve-out as Admin\Maintenance\
-        // DbMaintenanceRepository::repairOptimizeAllTables()), and
-        // $options is already regex-gated by the one real caller (see
-        // this method's own docblock) rather than raw user input.
-        $enumList = implode(',', array_map(static fn (string $option): string => "'" . $option . "'", array_unique($options)));
-
-        $conn->executeStatement(
-            <<<SQL
-            ALTER TABLE history CHANGE section section enum({$enumList}) DEFAULT NULL
-            SQL
-        );
+        return array_values(array_unique([
+            ...self::BASE_SECTIONS,
+            ...array_filter($sections, is_string(...)),
+        ]));
     }
 
     /**

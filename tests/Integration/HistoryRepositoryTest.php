@@ -22,15 +22,9 @@ use Piwigo\History\Projection\HistorySummaryCount;
  * isolation discipline as CaddieRepositoryTest, needed here too since
  * tests within this class would otherwise share mutable state.
  *
- * getSectionEnumOptions()'s own "column not found" `return [];` fallback
- * is unreachable through any real call -- `DESC history` always finds the
- * real `section` column on this project's actual (Doctrine-Migrations-
- * created) schema. Not worth a forced test; see HistoryServiceTest's own
- * identical-shaped note for its 2 unreachable branches.
- * getSectionEnumOptions()'s "found" path and alterSectionEnum() (the real
- * ALTER TABLE) are both exercised by HistoryServiceTest::
- * test_log_visit_widens_the_section_enum_for_a_brand_new_section() instead
- * of here, since that's the one real call site that needs both together.
+ * getSectionEnumOptions() is exercised by HistoryServiceTest::
+ * test_log_visit_stores_a_brand_new_section_without_altering_the_schema()
+ * instead of here, since that is its one real call site.
  */
 final class HistoryRepositoryTest extends IntegrationTestCase
 {

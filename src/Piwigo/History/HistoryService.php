@@ -27,6 +27,15 @@ use Piwigo\Users\CurrentUser;
  */
 final readonly class HistoryService
 {
+    /**
+     * Matches `history.section`'s own column width on both platforms
+     * (`varchar(20)`). A longer plugin section name is dropped rather than
+     * silently truncated -- Postgres would reject it outright, and MySQL
+     * under a non-strict sql_mode would truncate it, so neither engine's
+     * default behaviour is one to rely on.
+     */
+    private const int SECTION_MAX_LENGTH = 20;
+
     public function __construct(
         private AccessControl $accessControl,
         private HistoryRepository $repo,
@@ -152,37 +161,30 @@ final readonly class HistoryService
         }
 
         $section = null;
-        // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
+        // A plugin may introduce its own section name. `history.section` is a
+        // plain VARCHAR on both platforms, so that needs no schema change:
+        // an unrecognised-but-well-formed name is simply stored, and
+        // getSectionEnumOptions()'s SELECT DISTINCT picks it up from the data
+        // afterwards.
+        //
+        // This used to issue `ALTER TABLE history CHANGE section section
+        // enum(...)` from inside a page view, which required ALTER privilege
+        // in production, took a metadata lock on a hot high-write table, and
+        // implicitly committed. The lookup below is only about canonical
+        // casing now, so a stale cache costs nothing.
         if ($pageSection !== null) {
-            // set cache if not available
-            if ($this->currentConfig->historySectionsCache === null) {
-                $this->configService->confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
-            }
-
-            // CurrentConfig::historySectionsCache() already unserializes internally
-            // and returns list<string>|null -- no further decoding needed.
             $cachedSections = $this->currentConfig->historySectionsCache;
             if (! is_array($cachedSections)) {
                 $cachedSections = $this->repo->getSectionEnumOptions();
+                $this->configService->confUpdateParam('history_sections_cache', $cachedSections, true);
+                $this->currentConfig->historySectionsCache = $cachedSections;
             }
 
-            $historySectionsCache = $cachedSections;
-
-            $this->currentConfig->historySectionsCache = $historySectionsCache;
-            $canonicalMatch = array_find($historySectionsCache, fn ($knownSection): bool => strtolower($knownSection) === strtolower($pageSection));
+            $canonicalMatch = array_find($cachedSections, fn ($knownSection): bool => strtolower($knownSection) === strtolower($pageSection));
 
             if ($canonicalMatch !== null) {
                 $section = $canonicalMatch;
-            } elseif ((bool) preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
-                $historySections = $this->repo->getSectionEnumOptions();
-                $historySections[] = $pageSection;
-
-                // alter history table structure, to include a new section
-                $this->repo->alterSectionEnum($historySections);
-
-                // and refresh cache
-                $this->configService->confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
-
+            } elseif ((bool) preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection) && strlen($pageSection) <= self::SECTION_MAX_LENGTH) {
                 $section = $pageSection;
             }
         }

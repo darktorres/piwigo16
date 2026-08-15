@@ -389,40 +389,69 @@ final class HistoryServiceTest extends IntegrationTestCase
     }
 
     /**
-     * A brand new page section (not in the enum at all, e.g. a plugin-
-     * registered one) widens the `section` column's ENUM definition on
-     * the fly via a real ALTER TABLE, then stores it -- restores the
-     * original enum list and clears the now-stale cache afterwards so
-     * later tests (and other test classes sharing this DB) see the
-     * schema exactly as the fixture left it.
+     * A brand new page section (a plugin-registered one, unknown to the
+     * schema) is stored **without any schema change**.
+     *
+     * This is the regression guard for the behaviour this replaced: the
+     * same call used to issue `ALTER TABLE history CHANGE section section
+     * enum(...)` from inside a page view. The column definition is captured
+     * before and after and asserted identical, so a reintroduced DDL path
+     * fails here rather than in production, where it would need ALTER
+     * privilege and would lock a hot table.
+     *
+     * The section is still discoverable afterwards --
+     * getSectionEnumOptions() derives the known set from the data via
+     * SELECT DISTINCT, so no widening is needed for it to be recognised.
      */
-    public function testLogVisitWidensTheSectionEnumForABrandNewSection(): void
+    public function testLogVisitStoresABrandNewSectionWithoutAlteringTheSchema(): void
     {
         $repo = EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class);
-        $originalOptions = $repo->getSectionEnumOptions();
-        self::assertNotContains('my_custom_section', $originalOptions);
+        self::assertNotContains('my_custom_section', $repo->getSectionEnumOptions());
+
+        $definitionBefore = $this->fetchSectionColumnDefinition();
 
         try {
             $this->service->logVisit(section: 'my_custom_section');
 
             self::assertSame('my_custom_section', $this->fetchLastHistoryColumn('section'));
             self::assertContains('my_custom_section', $repo->getSectionEnumOptions());
+            self::assertSame(
+                $definitionBefore,
+                $this->fetchSectionColumnDefinition(),
+                'logVisit() must not alter history.section'
+            );
         } finally {
-            // Restoring the narrower, original enum list while a row still
-            // holds 'my_custom_section' would itself fail under strict SQL
-            // mode ("Data truncated for column 'section'") -- confirmed
-            // live, MySQL must be able to fit every existing row's value
-            // into the new, narrower enum definition. Delete that row
-            // first.
+            // Only the row needs removing now -- there is no schema state to
+            // restore, which is the point of the change this guards.
             $this->conn->executeStatement(
                 "DELETE FROM history WHERE section = 'my_custom_section'"
             );
-            $repo->alterSectionEnum($originalOptions);
             $currentConfig = CurrentConfigTestFactory::get();
             $configService = new ConfigService($this->buildConfigRepository(), $currentConfig);
             $configService->confDeleteParam('history_sections_cache');
             $currentConfig->historySectionsCache = null;
         }
+    }
+
+    /**
+     * `history.section`'s live column definition, read through
+     * information_schema so the same query works on both platforms.
+     *
+     * @return array<string, mixed>
+     */
+    private function fetchSectionColumnDefinition(): array
+    {
+        $row = $this->conn->fetchAssociative(
+            'SELECT data_type, character_maximum_length
+             FROM information_schema.columns
+             WHERE table_name = :table AND column_name = :column',
+            [
+                'table' => 'history',
+                'column' => 'section',
+            ],
+        );
+
+        return $row === false ? [] : $row;
     }
 
     /**

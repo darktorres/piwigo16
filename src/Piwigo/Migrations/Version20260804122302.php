@@ -285,13 +285,12 @@ final class Version20260804122302 extends AbstractMigration
         $this->addSql("COMMENT ON COLUMN config.comment IS 'human-readable description of the param, seeded for built-in settings by install/config.sql'");
 
         // `section` deliberately has NO CHECK constraint, unlike every
-        // other enum-shaped column in this schema: `HistoryRepository::
-        // getSectionEnumOptions()`/`alterSectionEnum()` widen the MySQL
-        // native ENUM at runtime (`ALTER TABLE ... CHANGE section section
-        // enum(...)`) whenever a plugin introduces a new section value
-        // (`HistoryService`'s own real caller). A closed CHECK constraint
-        // would reject exactly the plugin-extensibility this column
-        // exists to support -- `image_type` right below has a real,
+        // other enum-shaped column in this schema: a plugin may introduce
+        // its own section value, and a closed CHECK constraint would reject
+        // exactly the extensibility this column exists to support. (When
+        // this baseline was written, MySQL carried a native ENUM here that
+        // was widened at runtime to the same end; Version20260815120000
+        // later converted that column to VARCHAR, matching this one.) -- `image_type` right below has a real,
         // closed, core-only value set (no equivalent widening mechanism
         // exists for it), so it keeps its CHECK constraint.
         $this->addSql(

@@ -24,12 +24,11 @@ use Piwigo\Users\UserInfoEntity;
  * matching the Integration original's own isolation discipline.
  *
  * findLastVisit() (LastVisitLookupInterface's own implementation) and
- * getSectionEnumOptions()/alterSectionEnum()/insert() aren't covered by
- * this repository's own Integration spec -- findLastVisit() is exercised
- * via AuthRepository's own caller test, getSectionEnumOptions()/
- * alterSectionEnum() via HistoryServiceTest's own
- * test_log_visit_widens_the_section_enum_for_a_brand_new_section() (see
- * that Integration test's own docblock), same as the original.
+ * getSectionEnumOptions()/insert() aren't covered by this repository's own
+ * Integration spec -- findLastVisit() is exercised via AuthRepository's own
+ * caller test, and getSectionEnumOptions() via HistoryServiceTest's own
+ * test_log_visit_stores_a_brand_new_section_without_altering_the_schema()
+ * (see that Integration test's own docblock), same as the original.
  *
  * Confirmed-equivalent mutations, not individually tested (all verified
  * live via sed-mutate-and-rerun, not just pattern-matched): every

@@ -14,20 +14,28 @@ namespace Piwigo\Ws\Users;
 use Piwigo\Ws\WsParams;
 
 /**
- * `pwg.users.setMyInfo` input DTO -- only extracts `pwg_token` for the
- * CSRF check. Every other registered key (`email`/`nb_image_page`/
- * `theme`/`language`/`recent_period`/`expand`/`show_nb_comments`/
- * `show_nb_hits`/`password`/`new_password`/`conf_new_password`) is read
- * and conditionally `unset()` directly off the raw `$params` array
- * before it's handed to `UserService::checkAndSaveUserInfos()`, same as
- * the god-class method this replaces -- see `SetInfoParams`'s own
- * docblock for why that method's loosely-typed `array $params` isn't
- * worth re-modeling here.
+ * `pwg.users.setMyInfo` input DTO. Every field but `pwgToken` is
+ * `optionalFlag()`-registered -- null means genuinely absent from the
+ * request. `newPassword`/`confNewPassword` aren't part of
+ * `UserService::checkAndSaveUserInfos()`'s own `UserInfoUpdateInput` --
+ * `SetMyInfoHandler` verifies them against the current password itself
+ * and folds the result into `UserInfoUpdateInput::$password`.
  */
 final readonly class SetMyInfoParams implements WsParams
 {
     public function __construct(
         public string $pwgToken,
+        public ?string $email = null,
+        public ?int $nbImagePage = null,
+        public ?string $theme = null,
+        public ?string $language = null,
+        public ?int $recentPeriod = null,
+        public ?bool $expand = null,
+        public ?bool $showNbComments = null,
+        public ?bool $showNbHits = null,
+        public ?string $password = null,
+        public ?string $newPassword = null,
+        public ?string $confNewPassword = null,
     ) {}
 
     /**
@@ -36,9 +44,31 @@ final readonly class SetMyInfoParams implements WsParams
     public static function fromArray(array $raw): static
     {
         $pwgToken = $raw['pwg_token'] ?? null;
+        $email = $raw['email'] ?? null;
+        $nbImagePage = $raw['nb_image_page'] ?? null;
+        $theme = $raw['theme'] ?? null;
+        $language = $raw['language'] ?? null;
+        $recentPeriod = $raw['recent_period'] ?? null;
+        $expand = $raw['expand'] ?? null;
+        $showNbComments = $raw['show_nb_comments'] ?? null;
+        $showNbHits = $raw['show_nb_hits'] ?? null;
+        $password = $raw['password'] ?? null;
+        $newPassword = $raw['new_password'] ?? null;
+        $confNewPassword = $raw['conf_new_password'] ?? null;
 
         return new self(
             pwgToken: is_string($pwgToken) ? $pwgToken : '',
+            email: is_string($email) ? $email : null,
+            nbImagePage: is_int($nbImagePage) ? $nbImagePage : null,
+            theme: is_string($theme) ? $theme : null,
+            language: is_string($language) ? $language : null,
+            recentPeriod: is_int($recentPeriod) ? $recentPeriod : null,
+            expand: is_bool($expand) ? $expand : null,
+            showNbComments: is_bool($showNbComments) ? $showNbComments : null,
+            showNbHits: is_bool($showNbHits) ? $showNbHits : null,
+            password: is_string($password) ? $password : null,
+            newPassword: is_string($newPassword) ? $newPassword : null,
+            confNewPassword: is_string($confNewPassword) ? $confNewPassword : null,
         );
     }
 }

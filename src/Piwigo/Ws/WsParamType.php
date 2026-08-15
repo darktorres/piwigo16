@@ -17,10 +17,11 @@ namespace Piwigo\Ws;
  * its old docblock gave (shared with `WsParamFlag`/`WsError`), that
  * method only ever references `WsError` directly; every real
  * `WsParamType`/`WsParamFlag` reference outside a docblock comment
- * already lived in `Piwigo\Ws\*`. `WsError` itself stays in
- * `Piwigo\Core` for now -- `checkAndSaveUserInfos()`'s real dependency
- * on it is the same untyped-boundary issue Stage 1 step 2's obstacle 2
- * tracks.
+ * already lived in `Piwigo\Ws\*`. `WsError` itself stayed in
+ * `Piwigo\Core` at the time -- `checkAndSaveUserInfos()`'s real
+ * dependency on it was the same untyped-boundary issue Stage 1 step 2's
+ * obstacle 2 tracked, since resolved (see `WsError`'s own docblock); the
+ * move just hasn't been revisited since.
  */
 final class WsParamType
 {

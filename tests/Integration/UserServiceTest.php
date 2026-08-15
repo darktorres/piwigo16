@@ -25,7 +25,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\InstallationFlag;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\ProcessCache;
-    use Piwigo\Core\WsError;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Group\GroupEntity;
@@ -45,6 +44,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Piwigo\Users\Projection\DefaultUserInfo;
     use Piwigo\Users\User;
+    use Piwigo\Users\UserInfoUpdateFailureReason;
+    use Piwigo\Users\UserInfoUpdateInput;
     use Piwigo\Users\UserRepository;
     use Piwigo\Users\UserService;
     use Piwigo\Users\UserStatus;
@@ -354,85 +355,61 @@ namespace Piwigo\Tests\Integration {
 
         public function testCheckAndSaveUserInfosRejectsAnEmptyUsername(): void
         {
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [4],
-                'username' => '   ',
-            ], PageStateTestFactory::get());
-
-            self::assertSame(
-                [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'Name field must not be empty',
-                    ],
-                ],
-                $result
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [4], username: '   '),
+                PageStateTestFactory::get()
             );
+
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
+            self::assertSame('Name field must not be empty', $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosRejectsANonexistentUserId(): void
         {
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [999999],
-            ], PageStateTestFactory::get());
-
-            self::assertSame(
-                [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'This user does not exist.',
-                    ],
-                ],
-                $result
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [999999]),
+                PageStateTestFactory::get()
             );
+
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
+            self::assertSame('This user does not exist.', $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosRejectsAUsernameAlreadyUsedByAnotherUser(): void
         {
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [4],
-                'username' => 'fixture_admin',
-            ], PageStateTestFactory::get());
-
-            self::assertSame(
-                [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => LangTestFactory::get()->t('this login is already used'),
-                    ],
-                ],
-                $result
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [4], username: 'fixture_admin'),
+                PageStateTestFactory::get()
             );
+
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
+            self::assertSame(LangTestFactory::get()->t('this login is already used'), $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosRejectsAUsernameContainingHtmlTags(): void
         {
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [4],
-                'username' => '<b>evil</b>',
-            ], PageStateTestFactory::get());
-
-            self::assertSame(
-                [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => LangTestFactory::get()->t('html tags are not allowed in login'),
-                    ],
-                ],
-                $result
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [4], username: '<b>evil</b>'),
+                PageStateTestFactory::get()
             );
+
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
+            self::assertSame(LangTestFactory::get()->t('html tags are not allowed in login'), $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosRejectsAnInvalidEmail(): void
         {
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [4],
-                'email' => 'not-an-email',
-            ], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [4], email: 'not-an-email'),
+                PageStateTestFactory::get()
+            );
 
-            self::assertArrayHasKey('error', $result);
-            self::assertIsArray($result['error']);
-            self::assertSame(WsError::InvalidParam->value, $result['error']['code']);
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
         }
 
         public function testCheckAndSaveUserInfosRejectsAPasswordChangeByANonWebmasterForAProtectedUser(): void
@@ -442,20 +419,14 @@ namespace Piwigo\Tests\Integration {
             // regardless of who the current user is -- the default guest
             // current user (id 2, per CurrentConfig::guestId() above)
             // suffices, no CurrentUserTestFactory::get()->set() needed.
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [1],
-                'password' => 'newpass123',
-            ], PageStateTestFactory::get());
-
-            self::assertSame(
-                [
-                    'error' => [
-                        'code' => 403,
-                        'message' => 'Only webmasters can change password of other "webmaster/admin" users',
-                    ],
-                ],
-                $result
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [1], password: 'newpass123'),
+                PageStateTestFactory::get()
             );
+
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::Forbidden, $result->failureReason);
+            self::assertSame('Only webmasters can change password of other "webmaster/admin" users', $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosAllowsAPasswordChangeByAWebmaster(): void
@@ -465,14 +436,13 @@ namespace Piwigo\Tests\Integration {
             CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Webmaster));
 
             try {
-                $result = $this->service->checkAndSaveUserInfos([
-                    'user_id' => [4],
-                    'password' => 'newpass123',
-                ], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos(
+                    new UserInfoUpdateInput(userIds: [4], password: 'newpass123'),
+                    PageStateTestFactory::get()
+                );
 
-                self::assertArrayNotHasKey('error', $result);
-                self::assertIsArray($result['account']);
-                self::assertArrayHasKey('password', $result['account']);
+                self::assertFalse($result->isFailure);
+                self::assertArrayHasKey('password', $result->account);
             } finally {
                 CurrentUserTestFactory::get()->reset();
                 $this->conn->executeStatement('UPDATE users SET password = ? WHERE id = 4', [$originalHash]);
@@ -481,77 +451,58 @@ namespace Piwigo\Tests\Integration {
 
         public function testCheckAndSaveUserInfosRejectsGrantingWebmasterStatusByANonWebmaster(): void
         {
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [4],
-                'status' => 'webmaster',
-            ], PageStateTestFactory::get());
-
-            // Real production typo: the array key is 'code ' (trailing
-            // space), not 'code'. Documented here, not "fixed" --
-            // out of scope here.
-            self::assertSame(
-                [
-                    'error' => [
-                        'code ' => 403,
-                        'message' => 'Only webmasters can grant "webmaster/admin" status',
-                    ],
-                ],
-                $result
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [4], status: 'webmaster'),
+                PageStateTestFactory::get()
             );
+
+            // Real production bug, fixed as a byproduct of standalone item A
+            // (P25 plan): the old raw-array error shape used the literal key
+            // 'code ' (trailing space) here, not 'code', so
+            // Ws\Users\SetInfoHandler/SetMyInfoHandler's own defensive
+            // `is_int($error['code'] ?? null)` narrowing silently fell back
+            // to WsError::InvalidParam->value (1003) instead of the intended
+            // 403 -- UserInfoUpdateFailureReason::Forbidden has no string key
+            // to typo, so this now returns the correct reason for real.
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::Forbidden, $result->failureReason);
+            self::assertSame('Only webmasters can grant "webmaster/admin" status', $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosRejectsAnInvalidStatusValue(): void
         {
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [4],
-                'status' => 'not-a-real-status',
-            ], PageStateTestFactory::get());
-
-            self::assertSame(
-                [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'Invalid status',
-                    ],
-                ],
-                $result
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [4], status: 'not-a-real-status'),
+                PageStateTestFactory::get()
             );
+
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
+            self::assertSame('Invalid status', $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosRejectsAnInvalidLevel(): void
         {
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [4],
-                'level' => 99,
-            ], PageStateTestFactory::get());
-
-            self::assertSame(
-                [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'Invalid level',
-                    ],
-                ],
-                $result
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [4], level: 99),
+                PageStateTestFactory::get()
             );
+
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
+            self::assertSame('Invalid level', $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosRejectsAnInvalidLanguage(): void
         {
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [4],
-                'language' => 'xx-not-real',
-            ], PageStateTestFactory::get());
-
-            self::assertSame(
-                [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'Invalid language',
-                    ],
-                ],
-                $result
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [4], language: 'xx-not-real'),
+                PageStateTestFactory::get()
             );
+
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
+            self::assertSame('Invalid language', $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosRejectsAnInvalidTheme(): void
@@ -561,20 +512,14 @@ namespace Piwigo\Tests\Integration {
             // table is otherwise empty -- 'anything' stays a genuinely
             // invalid value without needing an implausible-sounding fake
             // theme name.
-            $result = $this->service->checkAndSaveUserInfos([
-                'user_id' => [4],
-                'theme' => 'anything',
-            ], PageStateTestFactory::get());
-
-            self::assertSame(
-                [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'Invalid theme',
-                    ],
-                ],
-                $result
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [4], theme: 'anything'),
+                PageStateTestFactory::get()
             );
+
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
+            self::assertSame('Invalid theme', $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosUpdatesUsernameAndEmailForASingleUser(): void
@@ -584,23 +529,18 @@ namespace Piwigo\Tests\Integration {
             $newLogin = 'temp-login-' . bin2hex(random_bytes(4));
 
             try {
-                $result = $this->service->checkAndSaveUserInfos([
-                    'user_id' => [4],
-                    'username' => $newLogin,
-                    'email' => 'temp13@example.test',
-                ], PageStateTestFactory::get());
-
-                self::assertSame(
-                    [
-                        'user_id' => [4],
-                        'infos' => [],
-                        'account' => [
-                            'username' => $newLogin,
-                            'mail_address' => 'temp13@example.test',
-                        ],
-                    ],
-                    $result
+                $result = $this->service->checkAndSaveUserInfos(
+                    new UserInfoUpdateInput(userIds: [4], username: $newLogin, email: 'temp13@example.test'),
+                    PageStateTestFactory::get()
                 );
+
+                self::assertFalse($result->isFailure);
+                self::assertSame([4], $result->userIds);
+                self::assertSame([], $result->infos);
+                self::assertSame([
+                    'username' => $newLogin,
+                    'mail_address' => 'temp13@example.test',
+                ], $result->account);
                 $after = $this->conn->fetchAssociative('SELECT username, mail_address FROM users WHERE id = 4');
                 self::assertSame([
                     'username' => $newLogin,
@@ -622,18 +562,21 @@ namespace Piwigo\Tests\Integration {
             // method's own docblock -- so no themes row needs seeding
             // here for 'default' to validate.
             try {
-                $result = $this->service->checkAndSaveUserInfos([
-                    'user_id' => [4],
-                    'level' => 1,
-                    'language' => 'en_UK',
-                    'theme' => 'default',
-                    'nb_image_page' => 20,
-                    'recent_period' => 10,
-                    'expand' => true,
-                    'show_nb_comments' => true,
-                    'show_nb_hits' => false,
-                    'enabled_high' => true,
-                ], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos(
+                    new UserInfoUpdateInput(
+                        userIds: [4],
+                        level: 1,
+                        language: 'en_UK',
+                        theme: 'default',
+                        nbImagePage: 20,
+                        recentPeriod: 10,
+                        expand: true,
+                        showNbComments: true,
+                        showNbHits: false,
+                        enabledHigh: true,
+                    ),
+                    PageStateTestFactory::get()
+                );
 
                 $expectedInfos = [
                     'level' => 1,
@@ -646,11 +589,10 @@ namespace Piwigo\Tests\Integration {
                     'show_nb_hits' => 0,
                     'enabled_high' => 1,
                 ];
-                self::assertSame([
-                    'user_id' => [4],
-                    'infos' => $expectedInfos,
-                    'account' => [],
-                ], $result);
+                self::assertFalse($result->isFailure);
+                self::assertSame([4], $result->userIds);
+                self::assertSame($expectedInfos, $result->infos);
+                self::assertSame([], $result->account);
 
                 $after = $this->conn->fetchAssociative(
                     'SELECT level, language, theme, nb_image_page, recent_period, expand, show_nb_comments, show_nb_hits, enabled_high'
@@ -663,7 +605,7 @@ namespace Piwigo\Tests\Integration {
                 // MySQL. $expectedInfos's own 1/0 convention is preserved
                 // by normalizing $after's boolean-typed columns to match,
                 // rather than changing $expectedInfos itself (also
-                // compared above against $result['infos'], real
+                // compared above against $result->infos, real
                 // application-level int data unaffected by this).
                 foreach (['expand', 'show_nb_comments', 'show_nb_hits', 'enabled_high'] as $boolColumn) {
                     $after[$boolColumn] = (int) (bool) $after[$boolColumn];
@@ -700,19 +642,17 @@ namespace Piwigo\Tests\Integration {
                 // whole username/email/password validation block (and its
                 // "already used" rejection) never runs at all -- only
                 // 'level', a multi-user-safe field, applies.
-                $result = $this->service->checkAndSaveUserInfos([
-                    'user_id' => [3, 4],
-                    'username' => 'should-be-ignored',
-                    'level' => 2,
-                ], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos(
+                    new UserInfoUpdateInput(userIds: [3, 4], username: 'should-be-ignored', level: 2),
+                    PageStateTestFactory::get()
+                );
 
+                self::assertFalse($result->isFailure);
+                self::assertSame([3, 4], $result->userIds);
                 self::assertSame([
-                    'user_id' => [3, 4],
-                    'infos' => [
-                        'level' => 2,
-                    ],
-                    'account' => [],
-                ], $result);
+                    'level' => 2,
+                ], $result->infos);
+                self::assertSame([], $result->account);
 
                 $levels = $this->conn->fetchAllAssociative(
                     'SELECT user_id, level FROM user_infos WHERE user_id IN (3, 4) ORDER BY user_id'
@@ -732,12 +672,12 @@ namespace Piwigo\Tests\Integration {
         public function testCheckAndSaveUserInfosStatusGuestDeletesSessionsForTheAffectedUsers(): void
         {
             try {
-                $result = $this->service->checkAndSaveUserInfos([
-                    'user_id' => [4],
-                    'status' => 'guest',
-                ], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos(
+                    new UserInfoUpdateInput(userIds: [4], status: 'guest'),
+                    PageStateTestFactory::get()
+                );
 
-                self::assertArrayNotHasKey('error', $result);
+                self::assertFalse($result->isFailure);
                 $status = $this->conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 4');
                 self::assertSame('guest', $status);
             } finally {
@@ -757,15 +697,15 @@ namespace Piwigo\Tests\Integration {
             CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Admin));
 
             try {
-                $result = $this->service->checkAndSaveUserInfos([
-                    'user_id' => [1],
-                    'status' => 'normal',
-                ], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos(
+                    new UserInfoUpdateInput(userIds: [1], status: 'normal'),
+                    PageStateTestFactory::get()
+                );
             } finally {
                 CurrentUserTestFactory::get()->reset();
             }
 
-            self::assertArrayNotHasKey('error', $result);
+            self::assertFalse($result->isFailure);
             $status = $this->conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 1');
             self::assertSame('webmaster', $status);
         }
@@ -774,12 +714,12 @@ namespace Piwigo\Tests\Integration {
         {
             // Fixture: user 4 (power_user) starts in group 3 only.
             try {
-                $result = $this->service->checkAndSaveUserInfos([
-                    'user_id' => [4],
-                    'group_id' => [1, 2],
-                ], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos(
+                    new UserInfoUpdateInput(userIds: [4], groupIds: [1, 2]),
+                    PageStateTestFactory::get()
+                );
 
-                self::assertArrayNotHasKey('error', $result);
+                self::assertFalse($result->isFailure);
                 $groups = $this->conn->fetchFirstColumn(
                     'SELECT group_id FROM user_group WHERE user_id = 4 ORDER BY group_id'
                 );
@@ -793,12 +733,12 @@ namespace Piwigo\Tests\Integration {
         public function testCheckAndSaveUserInfosGroupIdWithOnlyANonexistentGroupClearsMembershipWithoutReinserting(): void
         {
             try {
-                $result = $this->service->checkAndSaveUserInfos([
-                    'user_id' => [4],
-                    'group_id' => [999999],
-                ], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos(
+                    new UserInfoUpdateInput(userIds: [4], groupIds: [999999]),
+                    PageStateTestFactory::get()
+                );
 
-                self::assertArrayNotHasKey('error', $result);
+                self::assertFalse($result->isFailure);
                 $groups = $this->conn->fetchFirstColumn('SELECT group_id FROM user_group WHERE user_id = 4');
                 self::assertSame([], $groups);
             } finally {

@@ -41,7 +41,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsError;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\User\DeleteUser;
 use Piwigo\Event\User\RegisterUser;
@@ -1127,40 +1126,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * Check all user infos and save parameters.
-     *
-     * @param mixed[] $params
-     *    @option string username (optional)
-     *    @option string password (optional)
-     *    @option string email (optional)
-     *    @option string status (optional)
-     *    @option int level (optional)
-     *    @option string language (optional)
-     *    @option string theme (optional)
-     *    @option int nb_image_page (optional)
-     *    @option int recent_period (optional)
-     *    @option bool expand (optional)
-     *    @option bool show_nb_comments (optional)
-     *    @option bool show_nb_hits (optional)
-     *    @option bool enabled_high (optional)
-     *    @option int[] group_id (optional)
-     *
-     * $params is Ws-method-parameter-shaped raw input (see the assert()
-     * calls below already narrowing individual keys).
-     *
-     * @return mixed[]
      */
-    public function checkAndSaveUserInfos(array $params, PageState $pageState): array
+    public function checkAndSaveUserInfos(UserInfoUpdateInput $input, PageState $pageState): UserInfoUpdateResult
     {
-        if (isset($params['username'])) {
-            $username_check = $params['username'];
-            assert(is_string($username_check));
-            if (strlen(str_replace(' ', '', $username_check)) === 0) {
-                return [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'Name field must not be empty',
-                    ],
-                ];
+        if ($input->username !== null) {
+            if (strlen(str_replace(' ', '', $input->username)) === 0) {
+                return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, 'Name field must not be empty');
             }
         }
 
@@ -1171,74 +1142,40 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $update_status = null;
         $user_ids_for_status = [];
 
-        // real callers (ws_users_setInfo/ws_users_setPreferences) always pass
-        // 'user_id' as a list of ints (WsParamType::ID-coerced) or numeric strings
-        // (the global $user['id'] raw DB value); normalize once here so every
-        // usage below is a well-typed int.
-        assert(is_array($params['user_id']));
-        $user_ids = [];
-        foreach ($params['user_id'] as $raw_user_id) {
-            assert(is_int($raw_user_id) || (is_string($raw_user_id) && is_numeric($raw_user_id)));
-            $user_ids[] = (int) $raw_user_id;
-        }
+        $user_ids = $input->userIds;
 
         if (count($user_ids) === 1) {
             if (! $this->getUsername(UserId::from($user_ids[0])) instanceof Username) {
-                return [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'This user does not exist.',
-                    ],
-                ];
+                return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, 'This user does not exist.');
             }
 
-            if (! self::emptyValue($params['username'] ?? null)) {
-                $username_param = $params['username'];
+            if (! self::emptyValue($input->username)) {
+                $username_param = $input->username;
                 assert(is_string($username_param));
                 $username_param_vo = Username::tryFrom($username_param);
                 if (! $username_param_vo instanceof Username) {
-                    return [
-                        'error' => [
-                            'code' => WsError::InvalidParam->value,
-                            'message' => $this->lang->t('invalid login format'),
-                        ],
-                    ];
+                    return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, $this->lang->t('invalid login format'));
                 }
                 $user_id = $this->getUserId($username_param_vo);
                 if ($user_id instanceof UserId and $user_id->value !== $user_ids[0]) {
-                    return [
-                        'error' => [
-                            'code' => WsError::InvalidParam->value,
-                            'message' => $this->lang->t('this login is already used'),
-                        ],
-                    ];
+                    return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, $this->lang->t('this login is already used'));
                 }
                 if ($username_param !== strip_tags($username_param)) {
-                    return [
-                        'error' => [
-                            'code' => WsError::InvalidParam->value,
-                            'message' => $this->lang->t('html tags are not allowed in login'),
-                        ],
-                    ];
+                    return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, $this->lang->t('html tags are not allowed in login'));
                 }
                 $username_update = $username_param_vo;
             }
 
-            if (! self::emptyValue($params['email'] ?? null)) {
-                $email_param = $params['email'] ?? null;
+            if (! self::emptyValue($input->email)) {
+                $email_param = $input->email;
                 assert(is_string($email_param));
                 if (($error = $this->validateMailAddress(UserId::from($user_ids[0]), $email_param)) !== '') {
-                    return [
-                        'error' => [
-                            'code' => WsError::InvalidParam->value,
-                            'message' => $error,
-                        ],
-                    ];
+                    return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, $error);
                 }
                 $email_update = Email::from($email_param);
             }
 
-            if (! self::emptyValue($params['password'] ?? null)) {
+            if (! self::emptyValue($input->password)) {
                 if (! $this->accessLevelChecker()->isWebmaster()) {
                     $password_protected_users = [$this->currentConfig->guestId];
 
@@ -1254,40 +1191,25 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                     $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id_str]));
 
                     if (in_array((string) $user_ids[0], array_map(strval(...), $password_protected_users), true)) {
-                        return [
-                            'error' => [
-                                'code' => 403,
-                                'message' => 'Only webmasters can change password of other "webmaster/admin" users',
-                            ],
-                        ];
+                        return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::Forbidden, 'Only webmasters can change password of other "webmaster/admin" users');
                     }
                 }
 
-                $password_param = $params['password'] ?? null;
+                $password_param = $input->password;
                 assert(is_string($password_param));
                 $password_update = $this->passwordService
                     ->hash($password_param);
             }
         }
 
-        if (! self::emptyValue($params['status'] ?? null)) {
-            $status_param = $params['status'] ?? null;
+        if (! self::emptyValue($input->status)) {
+            $status_param = $input->status;
             if (in_array($status_param, ['webmaster', 'admin'], true) and ! $this->accessLevelChecker()->isWebmaster()) {
-                return [
-                    'error' => [
-                        'code ' => 403,
-                        'message' => 'Only webmasters can grant "webmaster/admin" status',
-                    ],
-                ];
+                return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::Forbidden, 'Only webmasters can grant "webmaster/admin" status');
             }
 
             if (! in_array($status_param, ['guest', 'generic', 'normal', 'admin', 'webmaster'], true)) {
-                return [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'Invalid status',
-                    ],
-                ];
+                return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, 'Invalid status');
             }
 
             // conf's guest_id/webmaster_id are always scalar (int config
@@ -1317,70 +1239,54 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $update_status = $status_param;
         }
 
-        if (! self::emptyValue($params['level'] ?? null) or @($params['level'] ?? null) === 0) {
-            $level_param = $params['level'] ?? null;
+        if ($input->level !== null) {
             // \Piwigo\Config\CurrentConfig::availablePermissionLevels() defaults to [0, 1, 2, 4, 8]
             // (see include/config_default.inc.php), always an array
             $available_permission_levels = $this->currentConfig->availablePermissionLevels;
-            if (! in_array(is_numeric($level_param) ? (int) $level_param : null, $available_permission_levels, true)) {
-                return [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'Invalid level',
-                    ],
-                ];
+            if (! in_array($input->level, $available_permission_levels, true)) {
+                return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, 'Invalid level');
             }
-            $updates_infos['level'] = $level_param;
+            $updates_infos['level'] = $input->level;
         }
 
-        if (! self::emptyValue($params['language'] ?? null)) {
-            $language_param = $params['language'] ?? null;
+        if (! self::emptyValue($input->language)) {
+            $language_param = $input->language;
             if (! in_array($language_param, array_keys(LangService::getLanguages($this->paths, $this->entityManager)), true)) {
-                return [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'Invalid language',
-                    ],
-                ];
+                return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, 'Invalid language');
             }
             $updates_infos['language'] = $language_param;
         }
 
-        if (! self::emptyValue($params['theme'] ?? null)) {
-            $theme_param = $params['theme'] ?? null;
+        if (! self::emptyValue($input->theme)) {
+            $theme_param = $input->theme;
             if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang, $this->entityManager)), true)) {
-                return [
-                    'error' => [
-                        'code' => WsError::InvalidParam->value,
-                        'message' => 'Invalid theme',
-                    ],
-                ];
+                return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, 'Invalid theme');
             }
             $updates_infos['theme'] = $theme_param;
         }
 
-        if (! self::emptyValue($params['nb_image_page'] ?? null)) {
-            $updates_infos['nb_image_page'] = $params['nb_image_page'] ?? null;
+        if ($input->nbImagePage !== null) {
+            $updates_infos['nb_image_page'] = $input->nbImagePage;
         }
 
-        if (! self::emptyValue($params['recent_period'] ?? null) or @($params['recent_period'] ?? null) === 0) {
-            $updates_infos['recent_period'] = $params['recent_period'] ?? null;
+        if ($input->recentPeriod !== null) {
+            $updates_infos['recent_period'] = $input->recentPeriod;
         }
 
-        if (! self::emptyValue($params['expand'] ?? null) or @($params['expand'] ?? null) === false) {
-            $updates_infos['expand'] = SqlDialect::booleanToInt($params['expand'] ?? null);
+        if ($input->expand !== null) {
+            $updates_infos['expand'] = SqlDialect::booleanToInt($input->expand);
         }
 
-        if (! self::emptyValue($params['show_nb_comments'] ?? null) or @($params['show_nb_comments'] ?? null) === false) {
-            $updates_infos['show_nb_comments'] = SqlDialect::booleanToInt($params['show_nb_comments'] ?? null);
+        if ($input->showNbComments !== null) {
+            $updates_infos['show_nb_comments'] = SqlDialect::booleanToInt($input->showNbComments);
         }
 
-        if (! self::emptyValue($params['show_nb_hits'] ?? null) or @($params['show_nb_hits'] ?? null) === false) {
-            $updates_infos['show_nb_hits'] = SqlDialect::booleanToInt($params['show_nb_hits'] ?? null);
+        if ($input->showNbHits !== null) {
+            $updates_infos['show_nb_hits'] = SqlDialect::booleanToInt($input->showNbHits);
         }
 
-        if (! self::emptyValue($params['enabled_high'] ?? null) or @($params['enabled_high'] ?? null) === false) {
-            $updates_infos['enabled_high'] = SqlDialect::booleanToInt($params['enabled_high'] ?? null);
+        if ($input->enabledHigh !== null) {
+            $updates_infos['enabled_high'] = SqlDialect::booleanToInt($input->enabledHigh);
         }
 
         // perform updates
@@ -1433,14 +1339,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         // manage association to groups
-        if (! self::emptyValue($params['group_id'] ?? null)) {
-            $group_id_param = $params['group_id'] ?? null;
-            assert(is_array($group_id_param));
-            $group_ids_param = [];
-            foreach ($group_id_param as $raw_group_id) {
-                assert(is_int($raw_group_id) || (is_string($raw_group_id) && is_numeric($raw_group_id)));
-                $group_ids_param[] = (int) $raw_group_id;
-            }
+        if (! self::emptyValue($input->groupIds)) {
+            $group_ids_param = $input->groupIds ?? [];
 
             $this->groupRepo->removeAllMembershipsForUsers(
                 array_map(UserId::from(...), $user_ids)
@@ -1475,11 +1375,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             'mail_address' => $email_update?->value,
         ], static fn (?string $v): bool => $v !== null);
 
-        return [
-            'user_id' => $params['user_id'],
-            'infos' => $updates_infos,
-            'account' => $account_updates,
-        ];
+        return UserInfoUpdateResult::success($user_ids, $updates_infos, $account_updates);
     }
 
     /**

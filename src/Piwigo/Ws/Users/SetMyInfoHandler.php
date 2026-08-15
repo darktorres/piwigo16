@@ -20,6 +20,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\WsError;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserInfoUpdateFailureReason;
+use Piwigo\Users\UserInfoUpdateInput;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
@@ -62,79 +64,79 @@ final readonly class SetMyInfoHandler implements WsAction
 
         $currentUser = $this->currentUser->get();
 
+        $theme = $input->theme;
+        $language = $input->language;
+        $nbImagePage = $input->nbImagePage;
+        $recentPeriod = $input->recentPeriod;
+        $expand = $input->expand;
+        $showNbComments = $input->showNbComments;
+        $showNbHits = $input->showNbHits;
+        $password = $input->password;
+
         // ACTIVATE_COMMENTS
         if (! $this->currentConfig->activateComments) {
-            unset($params['show_nb_comments']);
+            $showNbComments = null;
         }
 
         // ALLOW_USER_CUSTOMIZATION
         if (! $this->currentConfig->allowUserCustomization) {
-            unset(
-                $params['nb_image_page'],
-                $params['theme'],
-                $params['language'],
-                $params['recent_period'],
-                $params['expand'],
-                $params['show_nb_comments'],
-                $params['show_nb_hits']
-            );
+            $nbImagePage = null;
+            $theme = null;
+            $language = null;
+            $recentPeriod = null;
+            $expand = null;
+            $showNbComments = null;
+            $showNbHits = null;
         }
 
         // SPECIAL_USER
         $special_user = in_array($currentUser->id->value, [$this->currentConfig->guestId, $this->currentConfig->defaultUserId], true);
         if ($special_user) {
-            unset(
-                $params['password'],
-                $params['theme'],
-                $params['language']
-            );
+            $password = null;
+            $theme = null;
+            $language = null;
         }
 
-        if (isset($params['password']) && $params['password'] !== '') {
-            if (($params['new_password'] ?? '') !== ($params['conf_new_password'] ?? '')) {
+        if ($password !== null && $password !== '') {
+            if (($input->newPassword ?? '') !== ($input->confNewPassword ?? '')) {
                 return new WsErrorResponse(403, $this->lang->t('The passwords do not match'));
             }
 
             $current_password = $this->authService->getPasswordHash($currentUser->id);
             $current_password ??= '';
 
-            // $params['password'] survived the isset()/!=='' check above, but
-            // the conditional unset($params['password']) in the SPECIAL_USER
-            // branch means PHPStan can't keep that offset's type precise
-            // after the merge, so it's read back as mixed here.
-            $params_password = is_string($params['password']) ? $params['password'] : '';
-
-            if (! $this->passwordService->verify($params_password, $current_password)) {
+            if (! $this->passwordService->verify($password, $current_password)) {
                 return new WsErrorResponse(403, $this->lang->t('Current password is wrong'));
             }
 
-            $params['password'] = $params['new_password'] ?? null;
+            $password = $input->newPassword;
         }
 
-        // Unset admin field also new and conf password
-        unset(
-            $params['new_password'],
-            $params['conf_new_password'],
-            $params['username'],
-            $params['status'],
-            $params['level'],
-            $params['group_id'],
-            $params['enabled_high']
-        );
+        // username/status/level/groupIds/enabledHigh are never populated
+        // below -- pwg.users.setMyInfo doesn't register those fields at
+        // all, so SetMyInfoParams never even reads them, the same
+        // allowlist effect the god-class method's own unconditional
+        // unset() achieved by hand.
+        $result = $this->userService->checkAndSaveUserInfos(new UserInfoUpdateInput(
+            userIds: [$currentUser->id->value],
+            password: $password,
+            email: $input->email,
+            language: $language,
+            theme: $theme,
+            nbImagePage: $nbImagePage,
+            recentPeriod: $recentPeriod,
+            expand: $expand,
+            showNbComments: $showNbComments,
+            showNbHits: $showNbHits,
+        ), $this->pageState);
 
-        $params['user_id'] = [$currentUser->id->value];
-        $updated_users = $this->userService->checkAndSaveUserInfos($params, $this->pageState);
-
-        if (isset($updated_users['error'])) {
-            // UserService::checkAndSaveUserInfos() is declared to return plain
-            // `array`; its error branches always
-            // populate error.code (int) and error.message (string), but that
-            // shape isn't statically expressed, so narrow defensively here
-            // rather than trust the mixed offsets.
-            $error = $updated_users['error'];
-            $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WsError::InvalidParam->value;
-            $error_message = is_array($error) && is_string($error['message'] ?? null) ? $error['message'] : 'Invalid parameters';
-            return new WsErrorResponse($error_code, $error_message);
+        if ($result->isFailure) {
+            assert($result->failureReason instanceof UserInfoUpdateFailureReason);
+            $errorCode = match ($result->failureReason) {
+                UserInfoUpdateFailureReason::Forbidden => 403,
+                UserInfoUpdateFailureReason::InvalidInput => WsError::InvalidParam->value,
+            };
+            return new WsErrorResponse($errorCode, $result->failureMessage);
         }
 
         return $this->lang->t('Your changes have been applied.');

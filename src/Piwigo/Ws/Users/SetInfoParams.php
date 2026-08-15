@@ -14,21 +14,35 @@ namespace Piwigo\Ws\Users;
 use Piwigo\Ws\WsParams;
 
 /**
- * `pwg.users.setInfo` input DTO -- only extracts `pwg_token` for the
- * CSRF check. Every other registered key (`user_id`/`username`/
- * `password`/`email`/`status`/`level`/`language`/`theme`/`group_id`/
- * `nb_image_page`/`recent_period`/`expand`/`show_nb_comments`/
- * `show_nb_hits`/`enabled_high`) is handed to
- * `UserService::checkAndSaveUserInfos()` as the raw `$params` array
- * unchanged, same as the god-class method this replaces -- that method's
- * own `array $params` parameter is intentionally loosely typed (it
- * already does its own per-field `isset()`/`assert()` narrowing), so
- * there's no benefit to re-modeling its whole consumed shape here.
+ * `pwg.users.setInfo` input DTO. `userIds` is mandatory
+ * (`ParamDefinition::required('user_id', ..., FORCE_ARRAY)`); every other
+ * field is `optionalFlag()`-registered -- null means genuinely absent
+ * from the request, matching `UserService::checkAndSaveUserInfos()`'s own
+ * `UserInfoUpdateInput` (which this maps onto 1:1 in `SetInfoHandler`).
  */
 final readonly class SetInfoParams implements WsParams
 {
+    /**
+     * @param list<int> $userIds
+     * @param list<int>|null $groupIds
+     */
     public function __construct(
         public string $pwgToken,
+        public array $userIds,
+        public ?string $username = null,
+        public ?string $password = null,
+        public ?string $email = null,
+        public ?string $status = null,
+        public ?int $level = null,
+        public ?string $language = null,
+        public ?string $theme = null,
+        public ?array $groupIds = null,
+        public ?int $nbImagePage = null,
+        public ?int $recentPeriod = null,
+        public ?bool $expand = null,
+        public ?bool $showNbComments = null,
+        public ?bool $showNbHits = null,
+        public ?bool $enabledHigh = null,
     ) {}
 
     /**
@@ -38,8 +52,57 @@ final readonly class SetInfoParams implements WsParams
     {
         $pwgToken = $raw['pwg_token'] ?? null;
 
+        $userIds = [];
+        if (is_array($raw['user_id'] ?? null)) {
+            foreach ($raw['user_id'] as $rawUserId) {
+                if (is_int($rawUserId) || (is_string($rawUserId) && is_numeric($rawUserId))) {
+                    $userIds[] = (int) $rawUserId;
+                }
+            }
+        }
+
+        $username = $raw['username'] ?? null;
+        $password = $raw['password'] ?? null;
+        $email = $raw['email'] ?? null;
+        $status = $raw['status'] ?? null;
+        $level = $raw['level'] ?? null;
+        $language = $raw['language'] ?? null;
+        $theme = $raw['theme'] ?? null;
+
+        $groupIds = null;
+        if (is_array($raw['group_id'] ?? null)) {
+            $groupIds = [];
+            foreach ($raw['group_id'] as $rawGroupId) {
+                if (is_int($rawGroupId) || (is_string($rawGroupId) && is_numeric($rawGroupId))) {
+                    $groupIds[] = (int) $rawGroupId;
+                }
+            }
+        }
+
+        $nbImagePage = $raw['nb_image_page'] ?? null;
+        $recentPeriod = $raw['recent_period'] ?? null;
+        $expand = $raw['expand'] ?? null;
+        $showNbComments = $raw['show_nb_comments'] ?? null;
+        $showNbHits = $raw['show_nb_hits'] ?? null;
+        $enabledHigh = $raw['enabled_high'] ?? null;
+
         return new self(
             pwgToken: is_string($pwgToken) ? $pwgToken : '',
+            userIds: $userIds,
+            username: is_string($username) ? $username : null,
+            password: is_string($password) ? $password : null,
+            email: is_string($email) ? $email : null,
+            status: is_string($status) ? $status : null,
+            level: is_int($level) ? $level : null,
+            language: is_string($language) ? $language : null,
+            theme: is_string($theme) ? $theme : null,
+            groupIds: $groupIds,
+            nbImagePage: is_int($nbImagePage) ? $nbImagePage : null,
+            recentPeriod: is_int($recentPeriod) ? $recentPeriod : null,
+            expand: is_bool($expand) ? $expand : null,
+            showNbComments: is_bool($showNbComments) ? $showNbComments : null,
+            showNbHits: is_bool($showNbHits) ? $showNbHits : null,
+            enabledHigh: is_bool($enabledHigh) ? $enabledHigh : null,
         );
     }
 }

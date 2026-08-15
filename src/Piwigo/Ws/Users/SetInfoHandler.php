@@ -14,6 +14,8 @@ namespace Piwigo\Ws\Users;
 use Override;
 use Piwigo\Core\PageState;
 use Piwigo\Core\WsError;
+use Piwigo\Users\UserInfoUpdateFailureReason;
+use Piwigo\Users\UserInfoUpdateInput;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
@@ -48,25 +50,36 @@ final readonly class SetInfoHandler implements WsAction
             return $csrfError;
         }
 
-        $updated_users = $this->userService->checkAndSaveUserInfos($params, $this->pageState);
+        $result = $this->userService->checkAndSaveUserInfos(new UserInfoUpdateInput(
+            userIds: $input->userIds,
+            username: $input->username,
+            password: $input->password,
+            email: $input->email,
+            status: $input->status,
+            level: $input->level,
+            language: $input->language,
+            theme: $input->theme,
+            groupIds: $input->groupIds,
+            nbImagePage: $input->nbImagePage,
+            recentPeriod: $input->recentPeriod,
+            expand: $input->expand,
+            showNbComments: $input->showNbComments,
+            showNbHits: $input->showNbHits,
+            enabledHigh: $input->enabledHigh,
+        ), $this->pageState);
 
-        if (isset($updated_users['error'])) {
-            // UserService::checkAndSaveUserInfos() is declared to return plain
-            // `array`; its error branches always
-            // populate error.code (int) and error.message (string), but that
-            // shape isn't statically expressed, so narrow defensively here
-            // rather than trust the mixed offsets.
-            $error = $updated_users['error'];
-            $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WsError::InvalidParam->value;
-            $error_message = is_array($error) && is_string($error['message'] ?? null) ? $error['message'] : 'Invalid parameters';
-            return new WsErrorResponse($error_code, $error_message);
+        if ($result->isFailure) {
+            assert($result->failureReason instanceof UserInfoUpdateFailureReason);
+            $errorCode = match ($result->failureReason) {
+                UserInfoUpdateFailureReason::Forbidden => 403,
+                UserInfoUpdateFailureReason::InvalidInput => WsError::InvalidParam->value,
+            };
+            return new WsErrorResponse($errorCode, $result->failureMessage);
         }
 
-        $updated_infos = is_array($updated_users['infos'] ?? null) ? $updated_users['infos'] : [];
-
         return $this->getListHandler->resolve([
-            'user_id' => $updated_users['user_id'],
-            'display' => 'basics,' . implode(',', array_keys($updated_infos)),
+            'user_id' => $result->userIds,
+            'display' => 'basics,' . implode(',', array_keys($result->infos)),
         ]);
     }
 }

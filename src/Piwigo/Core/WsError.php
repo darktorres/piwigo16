@@ -12,13 +12,17 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * Stays in `Piwigo\Core` (L1Infrastructure), unlike its former neighbors
- * `WsParamType`/`WsParamFlag` (moved to `Piwigo\Ws` in P25 Stage 1 step 5)
- * -- `Piwigo\Users\UserService::checkAndSaveUserInfos()` (L2aCoreDomain)
- * genuinely references `WsError::InvalidParam` directly for its own
- * WS-shaped error arrays, and L2aCoreDomain may not depend on
- * L4Integration. That coupling is the same untyped-boundary issue Stage 1
- * step 2's obstacle 2 tracks; this stays put until that's resolved.
+ * Stays in `Piwigo\Core` (L1Infrastructure) rather than moving to
+ * `Piwigo\Ws` alongside its former neighbors `WsParamType`/`WsParamFlag`
+ * (P25 Stage 1 step 5) -- not because anything still needs it to, but
+ * because nothing has needed it to move there yet.
+ * `Piwigo\Users\UserService::checkAndSaveUserInfos()` (L2aCoreDomain) used
+ * to reference `WsError::InvalidParam` directly for its own WS-shaped
+ * error arrays, which would have put an L2aCoreDomain class depending on
+ * L4Integration -- standalone item A (the P25 plan) rewrote that method
+ * around `UserInfoUpdateResult`/`UserInfoUpdateFailureReason` instead, so
+ * the coupling this docblock used to describe no longer exists. The move
+ * itself just hasn't been revisited since.
  */
 enum WsError: int
 {

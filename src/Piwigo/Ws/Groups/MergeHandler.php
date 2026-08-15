@@ -23,15 +23,16 @@ use Piwigo\Ws\WsHelper;
 /**
  * `pwg.groups.merge` -- merge groups into one other group.
  *
- * Both return values are `$server->invoke('pwg.groups.getList', ...)`'s
- * own result -- same by-name-dispatcher rationale as `AddHandler`/
- * `SetInfoHandler`.
+ * Both return values are `GetListHandler::resolve()`'s own result,
+ * called directly (P25 Stage 1's recursive-dispatch removal) rather than
+ * through `Server::invoke()`'s string-keyed dispatch.
  */
 final readonly class MergeHandler implements WsAction
 {
     public function __construct(
         private GroupService $groupService,
         private WsHelper $wsHelper,
+        private GetListHandler $getListHandler,
     ) {}
 
     /**
@@ -48,7 +49,7 @@ final readonly class MergeHandler implements WsAction
             return $csrfError;
         }
 
-        $merge_group_object = $server->invoke('pwg.groups.getList', [
+        $merge_group_object = $this->getListHandler->resolve([
             'group_id' => $input->mergeGroupIds,
         ]);
 
@@ -58,8 +59,8 @@ final readonly class MergeHandler implements WsAction
         }
 
         return [
-            'destination_group' => $server->invoke('pwg.groups.getList', [
-                'group_id' => $input->destinationGroupId,
+            'destination_group' => $this->getListHandler->resolve([
+                'group_id' => [$input->destinationGroupId],
             ]),
             'deleted_group' => $merge_group_object,
         ];

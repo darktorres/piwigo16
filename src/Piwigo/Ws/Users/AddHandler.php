@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Users;
 
-use LogicException;
 use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
@@ -38,12 +37,14 @@ final readonly class AddHandler implements WsAction
         private MailService $mailService,
         private Lang $lang,
         private WsHelper $wsHelper,
+        private GetListHandler $getListHandler,
     ) {}
 
     /**
      * @param array<mixed> $params
-     * @return WsErrorResponse|array<int|string, mixed> WsErrorResponse, or the result of
-     *   the pwg.users.getList invocation
+     * @return WsErrorResponse|array<int|string, mixed> the result of
+     *   GetListHandler::resolve(), called directly (P25 Stage 1's
+     *   recursive-dispatch removal)
      */
     #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
@@ -106,29 +107,8 @@ final readonly class AddHandler implements WsAction
             return new WsErrorResponse(WsError::INVALID_PARAM, $errors[0] ?? '');
         }
 
-        return $this->narrowGetListResult($server->invoke('pwg.users.getList', [
-            'user_id' => $user_id,
-        ]));
-    }
-
-    /**
-     * $server->invoke() is a genuine string-keyed dynamic dispatcher (see
-     * Server's own class docblock) -- its declared return type is
-     * `mixed` by design. This narrows it to the real shape this specific
-     * sub-invocation (always 'pwg.users.getList', which itself really
-     * does return WsErrorResponse|array<int|string, mixed>) is known to
-     * return, the same "resolve, narrow, or throw" idiom already used
-     * throughout this codebase for other statically-unknowable-but-
-     * really-fixed-shape values.
-     *
-     * @return WsErrorResponse|array<int|string, mixed>
-     */
-    private function narrowGetListResult(mixed $result): WsErrorResponse|array
-    {
-        if (! $result instanceof WsErrorResponse && ! is_array($result)) {
-            throw new LogicException('pwg.users.getList returned an unexpected type');
-        }
-
-        return $result;
+        return $this->getListHandler->resolve([
+            'user_id' => [$user_id],
+        ]);
     }
 }

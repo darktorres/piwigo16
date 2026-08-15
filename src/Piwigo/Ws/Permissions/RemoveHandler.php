@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Permissions;
 
-use LogicException;
 use Override;
 use Piwigo\Category\CategoryService;
+use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
@@ -27,15 +27,14 @@ final readonly class RemoveHandler implements WsAction
     public function __construct(
         private CategoryService $categoryService,
         private WsHelper $wsHelper,
+        private GetListHandler $getListHandler,
     ) {}
 
     /**
      * @param array<mixed> $params
-     * @return WsErrorResponse|array<array-key, mixed> WsErrorResponse, or the result of the
-     *   pwg.permissions.getList invocation (really always
-     *   array{categories: NamedArray} at runtime, but narrowGetListResult()
-     *   can't prove the sealed shape from a re-narrowed value, only that
-     *   it's a real array)
+     * @return WsErrorResponse|array{categories: NamedArray} the result of
+     *   GetListHandler::resolve(), called directly (P25 Stage 1's
+     *   recursive-dispatch removal)
      */
     #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
@@ -57,29 +56,8 @@ final readonly class RemoveHandler implements WsAction
             $this->categoryService->denyUserAccess($input->userIds, $cat_ids);
         }
 
-        return $this->narrowGetListResult($server->invoke('pwg.permissions.getList', [
+        return $this->getListHandler->resolve([
             'cat_id' => $input->categoryIds,
-        ]));
-    }
-
-    /**
-     * $server->invoke() is a genuine string-keyed dynamic dispatcher (see
-     * Server's own class docblock) -- its declared return type is
-     * `mixed` by design. This narrows it to the real shape this specific
-     * sub-invocation (always 'pwg.permissions.getList', which itself
-     * really does return WsErrorResponse|array{categories: NamedArray}) is
-     * known to return, the same "resolve, narrow, or throw" idiom already
-     * used throughout this codebase for other statically-unknowable-but-
-     * really-fixed-shape values.
-     *
-     * @return WsErrorResponse|array<array-key, mixed>
-     */
-    private function narrowGetListResult(mixed $result): WsErrorResponse|array
-    {
-        if (! $result instanceof WsErrorResponse && ! is_array($result)) {
-            throw new LogicException('pwg.permissions.getList returned an unexpected type');
-        }
-
-        return $result;
+        ]);
     }
 }

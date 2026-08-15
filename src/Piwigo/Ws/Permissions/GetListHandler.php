@@ -35,6 +35,23 @@ final readonly class GetListHandler implements WsAction
     #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
+        return $this->resolve($params);
+    }
+
+    /**
+     * Callable directly by any other handler that needs this method's own
+     * result without going through Server::invoke()'s string-keyed
+     * dispatch (P25 Stage 1's recursive-dispatch removal) -- $params uses
+     * the same raw wire shape GetListParams::fromArray() always expected,
+     * so a caller building this array itself must array-wrap any
+     * FORCE_ARRAY-flagged key (cat_id/group_id/user_id) exactly as
+     * Server::invoke()'s own coercion would have.
+     *
+     * @param array<mixed> $params
+     * @return WsErrorResponse|array{categories: NamedArray}
+     */
+    public function resolve(array $params): WsErrorResponse|array
+    {
         $providedCount = (array_key_exists('cat_id', $params) ? 1 : 0)
             + (array_key_exists('group_id', $params) ? 1 : 0)
             + (array_key_exists('user_id', $params) ? 1 : 0);

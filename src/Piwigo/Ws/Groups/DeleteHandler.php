@@ -14,13 +14,12 @@ namespace Piwigo\Ws\Groups;
 use Override;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\GroupId;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupService;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.groups.delete` -- deletes one or more groups. Users and photos are not deleted.
@@ -29,7 +28,7 @@ final readonly class DeleteHandler implements WsAction
 {
     public function __construct(
         private GroupService $groupService,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -40,8 +39,9 @@ final readonly class DeleteHandler implements WsAction
     {
         $input = DeleteParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $deleted_groups = $this->groupService->delete(array_map(GroupId::from(...), $input->groupIds));

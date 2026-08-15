@@ -16,6 +16,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\PhotoSortField;
@@ -33,6 +34,7 @@ final readonly class WsHelper
     public function __construct(
         private AccessControl $accessControl,
         private CurrentUser $currentUser,
+        private CsrfService $csrfService,
     ) {}
 
     /**
@@ -53,6 +55,35 @@ final readonly class WsHelper
         }
 
         return $event;
+    }
+
+    /**
+     * Checks a WS method's submitted `pwg_token` against the current
+     * session's real CSRF token. `$required` mirrors how the calling
+     * Handler registered `pwg_token`: `true` (default) for a
+     * mandatory param -- a missing/empty/mismatched token is always
+     * rejected; `false` for a genuinely optional one -- a `null`
+     * $submittedToken (no token submitted at all) is allowed through,
+     * only a present-but-wrong token is rejected.
+     *
+     * `$message` defaults to the plain, untranslated string every real
+     * call site but 4 (Comments\DeleteHandler/ValidateHandler,
+     * Users\EditApiKeyHandler/RevokeApiKeyHandler) already used -- those
+     * 4 pass their own `$this->lang->t('Invalid security token')`
+     * instead, a pre-existing inconsistency preserved as-is here, not
+     * silently dropped or extended to every other call site.
+     */
+    public function checkSecurityToken(?string $submittedToken, bool $required = true, ?string $message = null): ?WsErrorResponse
+    {
+        $message ??= 'Invalid security token';
+
+        if ($submittedToken === null) {
+            return $required ? new WsErrorResponse(403, $message) : null;
+        }
+
+        return $this->csrfService->getToken() !== $submittedToken
+            ? new WsErrorResponse(403, $message)
+            : null;
     }
 
     /**

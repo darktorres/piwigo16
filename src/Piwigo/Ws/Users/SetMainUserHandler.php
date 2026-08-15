@@ -16,13 +16,12 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.setMainUser` -- admin only, webmaster only. Sets a user as
@@ -34,7 +33,7 @@ final readonly class SetMainUserHandler implements WsAction
         private AccessControl $accessControl,
         private UserService $userService,
         private ConfigService $configService,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -51,8 +50,9 @@ final readonly class SetMainUserHandler implements WsAction
         $input = SetMainUserParams::fromArray($params);
 
         // check pwg_token
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $new_main_user_id = UserId::from($input->userId);

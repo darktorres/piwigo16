@@ -14,14 +14,13 @@ namespace Piwigo\Ws\Users;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.api_key.revoke` -- revokes an api key for the current user.
@@ -32,9 +31,9 @@ final readonly class RevokeApiKeyHandler implements WsAction
         private AccessControl $accessControl,
         private ApiKeyService $apiKeyService,
         private CurrentUser $currentUser,
-        private CurrentConfig $currentConfig,
         private CurrentLogger $currentLogger,
         private Lang $lang,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -51,8 +50,9 @@ final readonly class RevokeApiKeyHandler implements WsAction
 
         $input = RevokeApiKeyParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, $this->lang->t('Invalid security token'));
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken, message: $this->lang->t('Invalid security token'));
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $input->pkid)) {

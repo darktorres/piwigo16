@@ -14,7 +14,6 @@ namespace Piwigo\Ws\Users;
 use Override;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Lang\Translator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
@@ -22,6 +21,7 @@ use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.delete` -- admin only. Deletes one or more users. Photos owned by this user are not deleted.
@@ -33,6 +33,7 @@ final readonly class DeleteHandler implements WsAction
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
         private Translator $translator,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -43,8 +44,9 @@ final readonly class DeleteHandler implements WsAction
     {
         $input = DeleteParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $currentUser = $this->currentUser->get();

@@ -16,15 +16,14 @@ use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.categories.delete` -- admin only. Deletes album(s).
@@ -42,7 +41,7 @@ final readonly class DeleteHandler implements WsAction
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -53,8 +52,9 @@ final readonly class DeleteHandler implements WsAction
     {
         $input = DeleteParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $modes = ['no_delete', 'delete_orphans', 'force_delete'];

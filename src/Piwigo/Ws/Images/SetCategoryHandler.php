@@ -14,12 +14,11 @@ namespace Piwigo\Ws\Images;
 use Override;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\ImageService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.setCategory` -- admin only. Associates/Dissociates/Moves
@@ -32,7 +31,7 @@ final readonly class SetCategoryHandler implements WsAction
     public function __construct(
         private CategoryService $categoryService,
         private ImageService $imageService,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -43,8 +42,9 @@ final readonly class SetCategoryHandler implements WsAction
     {
         $input = SetCategoryParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         // does the category really exist?

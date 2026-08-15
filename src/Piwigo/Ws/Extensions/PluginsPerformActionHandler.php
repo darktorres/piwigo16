@@ -26,7 +26,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
@@ -37,6 +36,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.plugins.performAction` -- install/activate/deactivate/uninstall/delete a plugin.
@@ -60,6 +60,7 @@ final readonly class PluginsPerformActionHandler implements WsAction
         private PluginRegistry $pluginRegistry,
         private ThemeRegistry $themeRegistry,
         private EntityManagerInterface $entityManager,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -72,8 +73,9 @@ final readonly class PluginsPerformActionHandler implements WsAction
         $input = PluginsPerformActionParams::fromArray($params);
 
         /** @var Template $template */
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         if (! $this->accessControl->isWebmaster()) {

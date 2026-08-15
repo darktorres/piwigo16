@@ -17,13 +17,13 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.add` -- admin only. Registers a new user.
@@ -37,6 +37,7 @@ final readonly class AddHandler implements WsAction
         private UrlServiceInterface $urlService,
         private MailService $mailService,
         private Lang $lang,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -49,8 +50,9 @@ final readonly class AddHandler implements WsAction
     {
         $input = AddParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         if (strlen(str_replace(' ', '', $input->username)) === 0) {

@@ -14,11 +14,10 @@ namespace Piwigo\Ws\Permissions;
 use LogicException;
 use Override;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.permissions.remove` -- revoke per-album access from users/groups.
@@ -27,7 +26,7 @@ final readonly class RemoveHandler implements WsAction
 {
     public function __construct(
         private CategoryService $categoryService,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -43,8 +42,9 @@ final readonly class RemoveHandler implements WsAction
     {
         $input = RemoveParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $cat_ids = $this->categoryService->getSubcatIds($input->categoryIds);

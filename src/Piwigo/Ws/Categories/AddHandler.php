@@ -16,11 +16,11 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.categories.add` -- admin only. Adds an album.
@@ -32,6 +32,7 @@ final readonly class AddHandler implements WsAction
         private ActivityService $activityService,
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -43,8 +44,9 @@ final readonly class AddHandler implements WsAction
     {
         $input = AddParams::fromArray($params);
 
-        if ($input->pwgToken !== null and new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken, required: false);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         if (! in_array($input->position, [null, ''], true) and in_array($input->position, ['first', 'last'], true)) {

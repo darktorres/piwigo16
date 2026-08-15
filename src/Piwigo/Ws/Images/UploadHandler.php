@@ -20,7 +20,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
@@ -33,6 +32,7 @@ use Piwigo\Ws\Request\UploadedFileRequest;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.upload` -- admin only. Uploads a file, chunked or whole.
@@ -61,6 +61,7 @@ final readonly class UploadHandler implements WsAction
         private Paths $paths,
         private HtmlService $htmlService,
         private ImageStdParams $imageStdParams,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -80,8 +81,9 @@ final readonly class UploadHandler implements WsAction
 
         $format_ext = null;
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($params['pwg_token']);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         if (isset($params['format_of'])) {

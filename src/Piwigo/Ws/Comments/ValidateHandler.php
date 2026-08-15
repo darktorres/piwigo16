@@ -13,12 +13,11 @@ namespace Piwigo\Ws\Comments;
 
 use Override;
 use Piwigo\Comment\CommentService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.userComments.validate` -- admin bulk-validate user comments.
@@ -28,7 +27,7 @@ final readonly class ValidateHandler implements WsAction
     public function __construct(
         private CommentService $commentService,
         private Lang $lang,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -39,8 +38,9 @@ final readonly class ValidateHandler implements WsAction
     {
         $input = ValidateParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, $this->lang->t('Invalid security token'));
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken, message: $this->lang->t('Invalid security token'));
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $this->commentService->validateComment($input->commentIds);

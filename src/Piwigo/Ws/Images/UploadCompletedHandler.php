@@ -13,8 +13,6 @@ namespace Piwigo\Ws\Images;
 
 use Override;
 use Piwigo\Common\ValueObject\CategoryId;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Picture\WsImagesUploadCompleted;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageService;
@@ -22,6 +20,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.uploadCompleted` -- admin only. Notifies Piwigo you have
@@ -35,7 +34,7 @@ final readonly class UploadCompletedHandler implements WsAction
         private ImageService $imageService,
         private HtmlService $htmlService,
         private EventDispatcher $eventDispatcher,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -47,8 +46,9 @@ final readonly class UploadCompletedHandler implements WsAction
     {
         $input = UploadCompletedParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         // the list of images moved from the lounge might not be the same than

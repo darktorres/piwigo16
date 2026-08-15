@@ -13,14 +13,13 @@ namespace Piwigo\Ws\Users;
 
 use LogicException;
 use Override;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\PageState;
 use Piwigo\Core\WsError;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.setInfo` -- admin only. Updates a user. Leave a field blank to keep the current value.
@@ -29,8 +28,8 @@ final readonly class SetInfoHandler implements WsAction
 {
     public function __construct(
         private UserService $userService,
-        private CurrentConfig $currentConfig,
         private PageState $pageState,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -43,8 +42,9 @@ final readonly class SetInfoHandler implements WsAction
     {
         $input = SetInfoParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $updated_users = $this->userService->checkAndSaveUserInfos($params, $this->pageState);

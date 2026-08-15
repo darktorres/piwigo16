@@ -10,6 +10,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -57,7 +58,7 @@ function wsHelperTestSubject(bool $isAdmin, bool $guestAccess = true): WsHelper
         new AccessLevelChecker($currentUser, $currentConfig),
     );
 
-    return new WsHelper($accessControl, $currentUser);
+    return new WsHelper($accessControl, $currentUser, new CsrfService($currentConfig));
 }
 
 beforeEach(function (): void {
@@ -124,6 +125,109 @@ test('isInvokeAllowed permits a real method for a guest user when guestAccess is
 
     expect($result->value)
         ->toBeTrue();
+});
+
+// --------------------------------------------------------------- checkSecurityToken
+
+// Same uniqid()-based, per-process session id rationale as
+// Piwigo\Tests\Unit\Csrf\CsrfServiceTest.php's own csrfTestSessionId() --
+// avoids the shared /var/lib/php/sessions file-lock collision across
+// concurrent worktree test runs a literal hardcoded id would risk.
+// wsHelperTestSubject() builds its own internal CsrfService from a fresh
+// CurrentConfig (secretKey='' default, never overridden there), so the
+// "real" token for a given session id is reproduced here the same way
+// Piwigo\Tests\Unit\Csrf\CsrfServiceTest.php recomputes its own expected
+// hash directly, rather than needing a handle on WsHelper's own
+// internal CsrfService instance.
+function wsHelperTestSessionId(): string
+{
+    /** @var string|null */
+    static $id = null;
+    $id ??= str_replace('.', '-', uniqid('wshelper-test-', true));
+
+    return $id;
+}
+
+function wsHelperTestRealToken(): string
+{
+    return hash_hmac('sha256', wsHelperTestSessionId(), '');
+}
+
+// PHP refuses to change session_id() once a session is already active --
+// under the full parallel suite (not this file run in isolation), an
+// earlier test in the same worker process can leave a real session open
+// (e.g. anything routing through Http\Middleware\SessionMiddleware,
+// which calls session_start()), so session_id() below would otherwise
+// silently no-op and every test in this section would check against a
+// stale id instead of wsHelperTestSessionId()'s own value.
+function wsHelperTestSetSessionId(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    session_id(wsHelperTestSessionId());
+}
+
+test('checkSecurityToken accepts a matching submitted token', function (): void {
+    wsHelperTestSetSessionId();
+    $helper = wsHelperTestSubject(isAdmin: true);
+
+    expect($helper->checkSecurityToken(wsHelperTestRealToken()))
+        ->toBeNull();
+});
+
+test('checkSecurityToken rejects a mismatched submitted token, required defaults to true', function (): void {
+    wsHelperTestSetSessionId();
+    $helper = wsHelperTestSubject(isAdmin: true);
+
+    $result = $helper->checkSecurityToken('not-the-real-token');
+
+    expect($result)
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
+        expect($result->code())
+            ->toBe(403)
+            ->and($result->message())
+            ->toBe('Invalid security token');
+    }
+});
+
+test('checkSecurityToken rejects a null submitted token when required (the default)', function (): void {
+    wsHelperTestSetSessionId();
+    $helper = wsHelperTestSubject(isAdmin: true);
+
+    expect($helper->checkSecurityToken(null))
+        ->toBeInstanceOf(WsErrorResponse::class);
+});
+
+test('checkSecurityToken allows a null submitted token through when explicitly not required', function (): void {
+    wsHelperTestSetSessionId();
+    $helper = wsHelperTestSubject(isAdmin: true);
+
+    expect($helper->checkSecurityToken(null, required: false))
+        ->toBeNull();
+});
+
+test('checkSecurityToken still rejects a mismatched token even when not required', function (): void {
+    wsHelperTestSetSessionId();
+    $helper = wsHelperTestSubject(isAdmin: true);
+
+    expect($helper->checkSecurityToken('not-the-real-token', required: false))
+        ->toBeInstanceOf(WsErrorResponse::class);
+});
+
+test('checkSecurityToken uses the given custom message instead of the default', function (): void {
+    wsHelperTestSetSessionId();
+    $helper = wsHelperTestSubject(isAdmin: true);
+
+    $result = $helper->checkSecurityToken(null, message: 'a custom translated message');
+
+    expect($result)
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
+        expect($result->message())
+            ->toBe('a custom translated message');
+    }
 });
 
 // --------------------------------------------------------------- stdImageSqlFilterCriteria

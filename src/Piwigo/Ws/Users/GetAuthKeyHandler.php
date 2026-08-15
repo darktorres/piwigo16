@@ -13,12 +13,11 @@ namespace Piwigo\Ws\Users;
 
 use Override;
 use Piwigo\Auth\AuthService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.getAuthKey` -- admin only. Get a new authentication key for a user.
@@ -27,7 +26,7 @@ final readonly class GetAuthKeyHandler implements WsAction
 {
     public function __construct(
         private AuthService $authService,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -39,8 +38,9 @@ final readonly class GetAuthKeyHandler implements WsAction
     {
         $input = GetAuthKeyParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $authkey = $this->authService->createUserAuthKey($input->userId);

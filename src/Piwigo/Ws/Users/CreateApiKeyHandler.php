@@ -14,13 +14,12 @@ namespace Piwigo\Ws\Users;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.api_key.create` -- creates a new api key for the current user.
@@ -31,8 +30,8 @@ final readonly class CreateApiKeyHandler implements WsAction
         private AccessControl $accessControl,
         private ApiKeyService $apiKeyService,
         private CurrentUser $currentUser,
-        private CurrentConfig $currentConfig,
         private CurrentLogger $currentLogger,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -50,8 +49,9 @@ final readonly class CreateApiKeyHandler implements WsAction
 
         $input = CreateApiKeyParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         if ($input->duration < 1 or $input->duration > 999999) {

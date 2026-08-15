@@ -14,12 +14,11 @@ namespace Piwigo\Ws\Permissions;
 use LogicException;
 use Override;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.permissions.add` -- grant per-album access to users/groups.
@@ -33,7 +32,7 @@ final readonly class AddHandler implements WsAction
     public function __construct(
         private PermissionService $permissionService,
         private CategoryService $categoryService,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -49,8 +48,9 @@ final readonly class AddHandler implements WsAction
     {
         $input = AddParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         if ($input->groupIds !== []) {

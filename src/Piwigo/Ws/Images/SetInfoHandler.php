@@ -20,7 +20,6 @@ use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\Projection\Image;
@@ -29,6 +28,7 @@ use Piwigo\Ws\Request\TagListRequest;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.setInfo` -- admin only. Sets details of an image.
@@ -51,6 +51,7 @@ final readonly class SetInfoHandler implements WsAction
         private TagService $tagService,
         private ImageCategoryRelationsHelper $imageCategoryRelationsHelper,
         private EntityManagerInterface $entityManager,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -67,8 +68,12 @@ final readonly class SetInfoHandler implements WsAction
         /** @var array{image_id: int, file: string|null, name: string|null, author: string|null, date_creation: string|null, comment: string|null, categories: string|null, tag_ids: string|null, level: int|null, single_value_mode: string, multiple_value_mode: string, pwg_token?: string, ...} */
         $params = $params;
 
-        if (isset($params['pwg_token']) and new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken(
+            is_string($params['pwg_token'] ?? null) ? $params['pwg_token'] : null,
+            required: false,
+        );
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $imageId = ImageId::tryFrom($params['image_id']);

@@ -19,12 +19,12 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\WsError;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.setMyInfo` -- lets a logged-in (non-guest) user update their own info.
@@ -40,6 +40,7 @@ final readonly class SetMyInfoHandler implements WsAction
         private Lang $lang,
         private PageState $pageState,
         private PasswordService $passwordService,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -50,8 +51,9 @@ final readonly class SetMyInfoHandler implements WsAction
     {
         $input = SetMyInfoParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         if ($this->accessControl->isAGuest()) {

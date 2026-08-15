@@ -15,13 +15,12 @@ use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\Projection\ApiKeySummary;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.api_key.get` -- gets all api keys for the current user.
@@ -32,8 +31,8 @@ final readonly class GetApiKeyHandler implements WsAction
         private AccessControl $accessControl,
         private ApiKeyService $apiKeyService,
         private CurrentUser $currentUser,
-        private CurrentConfig $currentConfig,
         private Lang $lang,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -53,8 +52,9 @@ final readonly class GetApiKeyHandler implements WsAction
 
         $input = GetApiKeyParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         // ApiKeyService::get() takes a native int $userId, same as

@@ -15,9 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\TagId;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Tag\RenderTagUrl;
@@ -27,6 +25,7 @@ use Piwigo\Tag\TagService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.tags.rename` -- admin only. Rename tag.
@@ -38,7 +37,7 @@ final readonly class RenameHandler implements WsAction
         private ActivityService $activityService,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -50,8 +49,9 @@ final readonly class RenameHandler implements WsAction
     {
         $input = RenameParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $tag_id = $input->tagId;

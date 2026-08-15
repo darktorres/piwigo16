@@ -13,13 +13,12 @@ namespace Piwigo\Ws\Groups;
 
 use Override;
 use Piwigo\Common\ValueObject\GroupId;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.groups.merge` -- merge groups into one other group.
@@ -32,7 +31,7 @@ final readonly class MergeHandler implements WsAction
 {
     public function __construct(
         private GroupService $groupService,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -44,8 +43,9 @@ final readonly class MergeHandler implements WsAction
     {
         $input = MergeParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $merge_group_object = $server->invoke('pwg.groups.getList', [

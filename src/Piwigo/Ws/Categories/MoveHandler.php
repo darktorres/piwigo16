@@ -15,15 +15,14 @@ use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\PageState;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.categories.move` -- admin only. Move album(s). Set parent as 0 to
@@ -37,7 +36,7 @@ final readonly class MoveHandler implements WsAction
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
         private HtmlRenderingInterface $htmlRenderer,
-        private CurrentConfig $currentConfig,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -49,8 +48,9 @@ final readonly class MoveHandler implements WsAction
     {
         $input = MoveParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
-            return new WsErrorResponse(403, 'Invalid security token');
+        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        if ($csrfError instanceof WsErrorResponse) {
+            return $csrfError;
         }
 
         $category_ids = $input->categoryIds;

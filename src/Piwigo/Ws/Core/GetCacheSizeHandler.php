@@ -65,7 +65,10 @@ final readonly class GetCacheSizeHandler implements WsAction
         $infos['cache_size'] = null;
         if (function_exists('exec')) {
             $return_array_cache = [];
-            @exec('du -sk ' . $path_cache, $return_array_cache);
+            // [SEC-16] $path_cache is composed from CurrentConfig::dataLocation,
+            // an admin-settable config value -- escape it before it reaches the
+            // shell, same as ImageBackend's own escapeshellarg() sites.
+            @exec('du -sk ' . escapeshellarg($path_cache), $return_array_cache);
             if (
                 isset($return_array_cache[0]) && $return_array_cache[0] !== '' && $return_array_cache[0] !== '0'
                 and (bool) preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
@@ -114,7 +117,8 @@ final readonly class GetCacheSizeHandler implements WsAction
         $infos['tsizes'] = null;
         if (function_exists('exec')) {
             $return_array_template_c = [];
-            @exec('du -sk ' . $path_template_c, $return_array_template_c);
+            // [SEC-16] see the escapeshellarg() note on $path_cache above.
+            @exec('du -sk ' . escapeshellarg($path_template_c), $return_array_template_c);
             if (
                 isset($return_array_template_c[0]) && $return_array_template_c[0] !== '' && $return_array_template_c[0] !== '0'
                 and (bool) preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)

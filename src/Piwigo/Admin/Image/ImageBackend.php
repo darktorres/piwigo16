@@ -569,7 +569,8 @@ final class ImageBackend implements ImageInterface
             case 'ext_imagick':
                 $ext_imagick_dir = self::currentConfig()->extImagickDir;
                 $returnarray = [];
-                exec($ext_imagick_dir . self::getExtImagickCommand() . ' -version', $returnarray);
+                // [SEC-16] see the escapeshellarg() note on isExtImagick() above.
+                exec(escapeshellarg($ext_imagick_dir) . self::getExtImagickCommand() . ' -version', $returnarray);
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0] ?? '', $match)) {
                     $library .= '/' . $match[1];
                 }

@@ -134,7 +134,8 @@ final readonly class MaintenanceActionsPageRenderer
                 $library = 'External ImageMagick';
                 $ext_imagick_dir = $this->currentConfig->extImagickDir;
                 $returnarray = [];
-                exec($ext_imagick_dir . ImageBackend::getExtImagickCommand() . ' -version', $returnarray);
+                // [SEC-16] see ImageBackend::isExtImagick()'s own escapeshellarg() note.
+                exec(escapeshellarg($ext_imagick_dir) . ImageBackend::getExtImagickCommand() . ' -version', $returnarray);
                 $returnarray_line0 = $returnarray[0] ?? '';
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray_line0, $match)) {
                     $library .= ' ' . $match[1];

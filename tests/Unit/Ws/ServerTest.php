@@ -12,8 +12,6 @@ use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsError;
-use Piwigo\Core\WsParamFlag;
-use Piwigo\Core\WsParamType;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
@@ -27,6 +25,8 @@ use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsParamFlag;
+use Piwigo\Ws\WsParamType;
 
 /**
  * Piwigo\Ws\Server -- the WS framework's own generic method registry/

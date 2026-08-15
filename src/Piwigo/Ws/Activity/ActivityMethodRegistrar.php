@@ -11,10 +11,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Activity;
 
-use Piwigo\Core\WsParamType;
 use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsParamType;
 
 /**
  * Registers every `pwg.activity*`-ish WS method with the

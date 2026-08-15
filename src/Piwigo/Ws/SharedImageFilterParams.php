@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Piwigo\Core\WsParamType;
-
 /**
  * The shared images-table range-filter block merged into several WS
  * methods' own params -- moved out of the old WsDefaultMethods god-method

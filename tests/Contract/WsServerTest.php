@@ -9,11 +9,11 @@ use Override;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsError;
-use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
+use Piwigo\Ws\WsParamType;
 
 /**
  * Ws\Server -- the generic WS dispatcher itself (invoke()'s own gates,

@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Piwigo\Core\WsParamFlag;
-
 /**
  * Typed descriptor for a single WS method parameter, passed to
  * `MethodDefinition::$params`. Maps 1:1 onto the array-shape param

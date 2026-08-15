@@ -9,14 +9,18 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-namespace Piwigo\Core;
+namespace Piwigo\Ws;
 
 /**
- * Lives in `Piwigo\Core` (L1Infrastructure), not `Piwigo\Ws`
- * (L4Integration), because `Piwigo\Users\UserService::checkAndSaveUserInfos()`
- * (L2aCoreDomain) references these values directly for its WS-shaped
- * error arrays: L2aCoreDomain may not depend on L4Integration, but every
- * layer may depend on L1Infrastructure.
+ * P25 Stage 1 step 5: moved here from `Piwigo\Core` -- despite the
+ * `Piwigo\Users\UserService::checkAndSaveUserInfos()`-needs-it rationale
+ * its old docblock gave (shared with `WsParamFlag`/`WsError`), that
+ * method only ever references `WsError` directly; every real
+ * `WsParamType`/`WsParamFlag` reference outside a docblock comment
+ * already lived in `Piwigo\Ws\*`. `WsError` itself stays in
+ * `Piwigo\Core` for now -- `checkAndSaveUserInfos()`'s real dependency
+ * on it is the same untyped-boundary issue Stage 1 step 2's obstacle 2
+ * tracks.
  */
 final class WsParamType
 {

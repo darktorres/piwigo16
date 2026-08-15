@@ -13,13 +13,13 @@ namespace Piwigo\Ws\Images;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\WsParamFlag;
-use Piwigo\Core\WsParamType;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\SharedImageFilterParams;
+use Piwigo\Ws\WsParamFlag;
+use Piwigo\Ws\WsParamType;
 
 /**
  * Registers every `pwg.images*`-ish WS method with the

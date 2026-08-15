@@ -9,14 +9,14 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-namespace Piwigo\Core;
+namespace Piwigo\Ws;
 
 /**
  * The 'flags' half of `Server::addMethod()`'s per-param options
- * (`WsParamType` is the separate 'type' half). Lives in `Piwigo\Core`
- * (L1Infrastructure) alongside `WsParamType`/`WsError`; see
- * `WsParamType`'s own docblock for why (`Piwigo\Users\UserService` needs
- * to reach these values too).
+ * (`WsParamType` is the separate 'type' half). P25 Stage 1 step 5: moved
+ * here from `Piwigo\Core` alongside `WsParamType` -- see that class's
+ * own docblock for why (`WsError` is the one of the three that's
+ * genuinely still blocked from moving).
  *
  * `FORCE_ARRAY`'s value deliberately includes `ACCEPT_ARRAY`'s bit
  * (0x030000 = 0x010000 | 0x020000): `Server::hasFlag()` checks are

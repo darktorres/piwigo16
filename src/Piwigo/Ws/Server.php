@@ -18,8 +18,6 @@ use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\WsError;
-use Piwigo\Core\WsParamFlag;
-use Piwigo\Core\WsParamType;
 use Piwigo\Event\Ws\SendResponse;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Encoder\ResponseEncoder;

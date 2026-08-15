@@ -11,10 +11,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Extensions;
 
-use Piwigo\Core\WsParamType;
 use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsParamType;
 
 /**
  * Registers every `pwg.extensions*`-ish WS method with the

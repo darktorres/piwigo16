@@ -12,12 +12,12 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Tags;
 
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\WsParamFlag;
-use Piwigo\Core\WsParamType;
 use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\SharedImageFilterParams;
+use Piwigo\Ws\WsParamFlag;
+use Piwigo\Ws\WsParamType;
 
 /**
  * Registers every `pwg.tags*`-ish WS method with the

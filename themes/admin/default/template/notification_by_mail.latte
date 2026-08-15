@@ -828,7 +828,7 @@ jQuery(document).ready(function(){
   <fieldset n:if="isset($subscribe)">
       <legend>{='Subscribe/unsubscribe users'|translate}</legend>
       <p><i>{='Warning: subscribing or unsubscribing will send mails to users'|translate}</i></p>
-      {$DOUBLE_SELECT|noescape}
+      {$DOUBLE_SELECT}
     </fieldset>{* isset $subscribe*}
 
   {if isset($send)}

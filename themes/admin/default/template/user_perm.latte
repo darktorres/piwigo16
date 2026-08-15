@@ -706,7 +706,7 @@
   <legend>{='Other private albums'|translate}</legend>
 
   <form method="post" action="{$F_ACTION|noescape}">
-    {$DOUBLE_SELECT|noescape}
+    {$DOUBLE_SELECT}
     <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
   </form>
 </fieldset>

@@ -879,7 +879,7 @@
         <span n:if="$NB_ITEMS > 0" class="badge nb_items">{$NB_ITEMS}</span>
       </h2>
 
-      {$SELECTED_TAGS_TEMPLATE|noescape}
+      {$SELECTED_TAGS_TEMPLATE}
     </div>
 
     <div n:if="isset($chronology_views)" class="calendarViews">{='View'|translate}:
@@ -964,7 +964,7 @@
 
   {if !empty($CONTENT)}{$CONTENT|noescape}{/if}
 
-  {if !empty($CATEGORIES)}{$CATEGORIES|noescape}{/if}
+  {if !empty($CATEGORIES)}{$CATEGORIES}{/if}
 
   {if !empty($cats_navbar)}
     {include getExtent('navigation_bar.latte', 'navbar'), navbar: $cats_navbar}
@@ -980,7 +980,7 @@
       ></div>
 
     <ul class="thumbnails" id="thumbnails">
-      {$THUMBNAILS|noescape}
+      {$THUMBNAILS}
     </ul>
   {elseif !empty($SEARCH_ID)}
     <div class="mcs-no-result">

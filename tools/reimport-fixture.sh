@@ -80,6 +80,37 @@ set +a
 # from there) -- $(pwd)/ is this checkout's real Paths::$root value.
 real_root="$(pwd)/"
 
+# Rebuilds dist/ (Vite's own output -- see vite.config.ts) when it's either
+# never been built or stale relative to its own real inputs. PageTailRenderer
+# references dist/vitals.js unconditionally on every page, so a missing/stale
+# dist/ 403s in the browser on every request -- confirmed live. Compares every
+# build input's mtime against Vite's own manifest (dist/.vite/manifest.json,
+# the real output path for this project's installed Vite ^8.2.1 with
+# build.manifest: true) rather than just checking dist/ exists, so editing a
+# build/*.ts entry without remembering to rebuild is also covered; `find
+# -newer ... -print -quit` short-circuits at the first newer file, keeping
+# this cheap on a script that runs before every browser/integration/contract
+# test invocation. `find build -type f` recurses, so new entries P30 adds
+# under build/ are picked up automatically, no update needed here later.
+#
+# Only attempted when `bun` is actually on PATH: not every CI job that calls
+# this script installs it (browser/visual-regression do, for Playwright;
+# integration/contract/db-multi-provider don't, and have no confirmed need
+# for dist/ -- not reproduced as broken there), so this silently no-ops in
+# those jobs exactly as before, rather than breaking them outright.
+if command -v bun > /dev/null 2>&1; then
+  vite_manifest="dist/.vite/manifest.json"
+  needs_build=0
+  if [ ! -f "$vite_manifest" ]; then
+    needs_build=1
+  elif find build vite.config.ts package.json bun.lock -type f -newer "$vite_manifest" -print -quit 2>/dev/null | grep -q .; then
+    needs_build=1
+  fi
+  if [ "$needs_build" = "1" ]; then
+    bun run build
+  fi
+fi
+
 if [ "${PIWIGO_DB_DRIVER:-mysqli}" = "pgsql" ]; then
   psql_args=(-v ON_ERROR_STOP=1 -q -U"${PIWIGO_DB_USER}" -h"${PIWIGO_DB_HOST}" -d"${PIWIGO_DB_BASE}")
   if [ -n "${PIWIGO_DB_PASSWORD:-}" ]; then

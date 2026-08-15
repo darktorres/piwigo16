@@ -853,10 +853,18 @@ final class TagRepository extends EntityRepository
      * Comma-joined tag ids per image, for images linked to any of $tagIds
      * -- Ws\Tags::getImages()'s own "OR mode" per-image tag list.
      *
-     * Runs as real DQL: MySQL's `GROUP_CONCAT()` is exposed via a portable
-     * custom DQL function ({@see \Piwigo\Db\DqlFunction\GroupConcatFunction},
-     * per-platform dispatch, MySQL/MariaDB verified, PostgreSQL/SQLite
-     * unverified against a real install -- see that class's own docblock).
+     * The rows are joined here rather than by `GROUP_CONCAT(it.tagId)`,
+     * which this replaces. That aggregate truncates at
+     * `group_concat_max_len` (1024 bytes by default), so an image carrying
+     * roughly 170 or more tags silently lost the tail of its list -- and
+     * because truncation cuts at a *byte* boundary, the final surviving
+     * entry could be a fragment of a real id rather than a real id.
+     * Joining in PHP has no such ceiling.
+     *
+     * It also drops this method's dependency on
+     * {@see \Piwigo\Db\DqlFunction\GroupConcatFunction}, whose own docblock
+     * records PostgreSQL/SQLite dispatch as unverified against a real
+     * install.
      *
      * @param  list<int>  $tagIds
      * @param  list<int>  $imageIds
@@ -870,17 +878,18 @@ final class TagRepository extends EntityRepository
 
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('it.imageId AS image_id', 'GROUP_CONCAT(it.tagId) AS tag_ids')
+            ->select('it.imageId AS image_id', 'it.tagId AS tag_id')
             ->from(ImageTagEntity::class, 'it')
             ->where('it.tagId IN (:tagIds)')
             ->andWhere('it.imageId IN (:imageIds)')
             ->setParameter('tagIds', $tagIds, ArrayParameterType::INTEGER)
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
-            ->groupBy('it.imageId')
+            ->orderBy('it.imageId', 'ASC')
+            ->addOrderBy('it.tagId', 'ASC')
             ->getQuery()
             ->getArrayResult();
 
-        $byImageId = [];
+        $tagIdsByImageId = [];
         foreach ($rows as $row) {
             if (! is_array($row)) {
                 continue;
@@ -892,7 +901,18 @@ final class TagRepository extends EntityRepository
                 continue;
             }
 
-            $byImageId[$imageIdInt] = is_scalar($row['tag_ids'] ?? null) ? (string) $row['tag_ids'] : '';
+            $tagId = $row['tag_id'] ?? null;
+            $tagIdInt = $tagId instanceof TagId ? $tagId->value : (is_numeric($tagId) ? (int) $tagId : null);
+            if ($tagIdInt === null) {
+                continue;
+            }
+
+            $tagIdsByImageId[$imageIdInt][] = $tagIdInt;
+        }
+
+        $byImageId = [];
+        foreach ($tagIdsByImageId as $imageIdInt => $ids) {
+            $byImageId[$imageIdInt] = implode(',', $ids);
         }
 
         return $byImageId;

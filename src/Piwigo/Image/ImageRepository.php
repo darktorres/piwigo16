@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use DateTimeInterface;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\ParameterType;
@@ -3185,9 +3186,24 @@ final class ImageRepository extends EntityRepository
     /**
      * Ids of images that share the same value across every column in
      * $fields with at least one other image -- Admin\BatchManager\
-     * FilterResolver's own "duplicates" prefilter. GROUP_CONCAT truncates
-     * at 1024 chars by default, so a duplicate group larger than ~250 ids
-     * silently loses members.
+     * FilterResolver's own "duplicates" prefilter.
+     *
+     * The grouping is done here rather than by `GROUP_CONCAT(i.id)`, which
+     * this replaces. That aggregate truncates at `group_concat_max_len`
+     * (1024 bytes by default) and the result was parsed back with
+     * `explode(',', ...)`, so a large duplicate group did not merely lose
+     * members: truncation cuts at a *byte* boundary, so `...,12345` became
+     * `...,123` -- a syntactically valid id belonging to an unrelated
+     * image, which then passed the `is_numeric()` filter and entered the
+     * prefilter as a false positive.
+     *
+     * The database cannot express this cleanly either. DQL has no
+     * row-constructor `IN`, so the tuple subquery
+     * (`WHERE (file, md5sum) IN (SELECT ... HAVING COUNT(*) > 1)`) is not
+     * available; and a self-join on `=` would silently drop every group
+     * keyed on a NULL, because SQL equality is false for NULL while
+     * `GROUP BY` treats NULLs as one group. Grouping in PHP keeps the
+     * original `GROUP BY` semantics exactly, including that NULL case.
      *
      * @param list<ImageDuplicateField> $fields
      * @return list<int>
@@ -3198,17 +3214,8 @@ final class ImageRepository extends EntityRepository
             return [];
         }
 
-        $qb = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select('GROUP_CONCAT(i.id) AS ids')
-            ->from(ImageEntity::class, 'i');
-
-        if (in_array(ImageDuplicateField::Md5sum, $fields, true)) {
-            $qb->where('i.md5sum IS NOT NULL');
-        }
-
-        $groupByProperties = array_map(
-            static fn (ImageDuplicateField $field): string => 'i.' . match ($field) {
+        $properties = array_map(
+            static fn (ImageDuplicateField $field): string => match ($field) {
                 ImageDuplicateField::File => 'file',
                 ImageDuplicateField::Md5sum => 'md5sum',
                 ImageDuplicateField::DateCreation => 'dateCreation',
@@ -3218,25 +3225,67 @@ final class ImageRepository extends EntityRepository
             $fields
         );
 
-        $qb->groupBy(implode(', ', $groupByProperties))
-            ->having('COUNT(i.id) > 1');
+        $qb = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select(array_merge(
+                ['i.id'],
+                array_map(static fn (string $property): string => 'i.' . $property, $properties),
+            ))
+            ->from(ImageEntity::class, 'i');
 
-        $idLists = $qb->getQuery()
-            ->getSingleColumnResult();
+        if (in_array(ImageDuplicateField::Md5sum, $fields, true)) {
+            $qb->where('i.md5sum IS NOT NULL');
+        }
 
-        $ids = [];
-        foreach ($idLists as $idList) {
-            if (! is_string($idList)) {
+        $groups = [];
+        foreach ($qb->getQuery()->getArrayResult() as $row) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof ImageId) {
                 continue;
             }
-            foreach (explode(',', rtrim($idList, ',')) as $id) {
-                if (is_numeric($id)) {
-                    $ids[] = (int) $id;
+
+            $groups[self::duplicateGroupKey($row, $properties)][] = $row['id']->value;
+        }
+
+        $ids = [];
+        foreach ($groups as $groupIds) {
+            if (count($groupIds) > 1) {
+                foreach ($groupIds as $id) {
+                    $ids[] = $id;
                 }
             }
         }
 
+        sort($ids);
+
         return $ids;
+    }
+
+    /**
+     * A collision-free grouping key for one candidate row.
+     *
+     * JSON rather than a delimiter join: it keeps `null` distinct from the
+     * string `"null"` and from `""`, so a NULL column groups only with
+     * other NULLs -- matching `GROUP BY`, which the delimiter-join
+     * alternative would not. Dates are normalised to a fixed format so two
+     * equal instants always produce the same key.
+     *
+     * @param  array<string, mixed>  $row
+     * @param  list<string>  $properties
+     */
+    private static function duplicateGroupKey(array $row, array $properties): string
+    {
+        $tuple = [];
+        foreach ($properties as $property) {
+            $value = $row[$property] ?? null;
+            $tuple[] = match (true) {
+                $value === null => null,
+                $value instanceof DateTimeInterface => $value->format('Y-m-d H:i:s'),
+                is_scalar($value) => (string) $value,
+                default => null,
+            };
+        }
+
+        return json_encode($tuple, JSON_THROW_ON_ERROR);
     }
 
     /**

@@ -16,6 +16,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\CategoryImagesCriteria;
+use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageRepository;
@@ -1706,6 +1707,95 @@ final class ImageRepositoryTest extends IntegrationTestCase
                 [3, 2, 1],
                 self::unitRowIds($this->repo->findBatchManagerUnitRows([1, 2, 3], 1, $rankOrderBy, 100, 0))
             );
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
+    /**
+     * A duplicate group far larger than `group_concat_max_len` (1024 bytes
+     * by default) must return every member and nothing else.
+     *
+     * This is the case the previous `GROUP_CONCAT(i.id)` implementation got
+     * wrong twice over. Truncation cuts at a byte boundary, so the tail of
+     * the concatenated list was not merely lost: a cut mid-number turned
+     * `...,12345` into `...,123`, a valid id belonging to an unrelated
+     * image, which passed the `is_numeric()` filter and entered the
+     * prefilter as a false positive.
+     */
+    public function testFindIdsGroupedByDuplicateFieldsHandlesAGroupBeyondGroupConcatMaxLen(): void
+    {
+        $this->conn->beginTransaction();
+
+        try {
+            // 400 rows sharing one filename: ~6 bytes per id once the ids
+            // reach five digits, so the concatenated list runs well past
+            // 1024 bytes.
+            $expected = [];
+            for ($i = 0; $i < 400; $i++) {
+                $this->conn->executeStatement(
+                    "INSERT INTO images (file, date_available, path, md5sum, level, width, height)
+                     VALUES ('dupe-overflow.jpg', '2026-08-01 00:00:00', :path, :md5, 0, 200, 150)",
+                    [
+                        'path' => 'upload/dupe/' . $i . '.jpg',
+                        'md5' => str_pad((string) $i, 32, '0', STR_PAD_LEFT),
+                    ],
+                );
+                $expected[] = (int) $this->conn->lastInsertId();
+            }
+
+            $ids = $this->repo->findIdsGroupedByDuplicateFields([ImageDuplicateField::File]);
+
+            foreach ($expected as $id) {
+                self::assertContains($id, $ids, "duplicate group member {$id} was dropped");
+            }
+
+            // No fabricated members: every returned id must be a real row
+            // that genuinely shares a filename with another.
+            $realIds = array_map(
+                intval(...),
+                $this->conn->fetchFirstColumn(
+                    'SELECT id FROM images WHERE file IN (SELECT file FROM images GROUP BY file HAVING COUNT(*) > 1)'
+                )
+            );
+            sort($realIds);
+            $returned = $ids;
+            sort($returned);
+
+            self::assertSame($realIds, $returned, 'returned ids must match the real duplicate set exactly');
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
+    /**
+     * `GROUP BY` puts all NULLs in one group, while `=` is false for NULL --
+     * so a self-join rewrite would silently drop NULL-keyed groups. This
+     * pins that they are still detected.
+     */
+    public function testFindIdsGroupedByDuplicateFieldsGroupsNullValuesTogether(): void
+    {
+        $this->conn->beginTransaction();
+
+        try {
+            $ids = [];
+            foreach (['null-dupe-a', 'null-dupe-b'] as $index => $slug) {
+                $this->conn->executeStatement(
+                    "INSERT INTO images (file, date_available, path, level, width, height, date_creation)
+                     VALUES (:file, '2026-08-01 00:00:00', :path, 0, 200, 150, NULL)",
+                    [
+                        'file' => $slug . '.jpg',
+                        'path' => 'upload/' . $slug . '.jpg',
+                    ],
+                );
+                $ids[] = (int) $this->conn->lastInsertId();
+            }
+
+            $found = $this->repo->findIdsGroupedByDuplicateFields([ImageDuplicateField::DateCreation]);
+
+            foreach ($ids as $id) {
+                self::assertContains($id, $found, 'rows sharing a NULL date_creation must group together');
+            }
         } finally {
             $this->conn->rollBack();
         }

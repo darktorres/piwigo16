@@ -1828,8 +1828,8 @@ function get_first_selection_usernames(callback) {
             user_id: first_ids,
             exclude: [guest_id]
         },
+        dataType: "json",
         success:function(data) {
-            data = jQuery.parseJSON(data);
             let result = data.result.users;
             for (let i = 0; i < result.length;i++) {
                 let index = selection.findIndex(x => x.id === result[i].id);
@@ -1859,11 +1859,11 @@ function select_whole_set() {
             min_register: register_dates[$(".dates-select-bar .slider-bar-container").slider("option", "values")[0]],
             max_register: register_dates[$(".dates-select-bar .slider-bar-container").slider("option", "values")[1]],
         },
+        dataType: "json",
         beforeSend: function() {
             $("#checkActions .loading").show();
         },
         success:function(data) {
-            data = jQuery.parseJSON(data);
             selection = data.result.map((x) => {
                 return {id: x};
             });
@@ -1891,8 +1891,8 @@ function update_user_username() {
         url: "ws.php?format=json&method=pwg.users.setInfo",
         type: "POST",
         data: ajax_data,
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
+        dataType: "json",
+        success: (data) => {
             if (data.stat == 'ok') {
                 if (last_user_index != -1) {
                     current_users[last_user_index].username = data.result.users[0].username;
@@ -1923,8 +1923,8 @@ function update_user_password() {
         url: "ws.php?format=json&method=pwg.users.setInfo",
         type: "POST",
         data: ajax_data,
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
+        dataType: "json",
+        success: (data) => {
             if (data.stat == 'ok') {
                 $('.user-property-password-change-inputs').hide();
                 $('#edit_password_success_change').fadeIn();
@@ -1973,12 +1973,12 @@ function update_user_info() {
         url: "ws.php?format=json&method=pwg.users.setInfo",
         type: "POST",
         data: ajax_data,
+        dataType: "json",
         beforeSend: function() {
             $("#UserList .update-user-fail").fadeOut();
             $("#UserList .update-user-success").fadeOut();
         },
-        success: function(raw_data) {
-            data = jQuery.parseJSON(raw_data);
+        success: function(data) {
             if (data.stat === 'ok') {
                 let result_user = data.result.users[0];
                 if (last_user_index != -1) {
@@ -2022,8 +2022,8 @@ function get_guest_info() {
             display: "all",
             user_id: guest_id
         },
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
+        dataType: "json",
+        success: (data) => {
             if (data.stat == 'ok') {
                 guest_user = data.result.users[0];
                 fill_guest_edit();
@@ -2040,8 +2040,8 @@ function get_user_info(uid, callback=None) {
             display: "all",
             user_id: uid
         },
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
+        dataType: "json",
+        success: (data) => {
             if (data.stat == 'ok') {
                 let result_user = data.result.users[0];
                 fill_user_edit(result_user);
@@ -2068,8 +2068,8 @@ function update_guest_info() {
         url: "ws.php?format=json&method=pwg.users.setInfo",
         type: "POST",
         data: ajax_data,
-        success: function(raw_data) {
-            data = jQuery.parseJSON(raw_data);
+        dataType: "json",
+        success: function(data) {
             if (data.stat == 'ok') {
                 $("#GuestUserList .update-user-success").fadeIn().delay(1500).fadeOut(2500);
             }
@@ -2105,11 +2105,11 @@ function update_user_list() {
         url: "ws.php?format=json&method=pwg.users.getList",
         type: "POST",
         data: update_data,
+        dataType: "json",
         beforeSend: function () {
             $(".user-update-spinner").show();
         },
-        success: function (raw_data) {
-            data = jQuery.parseJSON(raw_data);
+        success: function (data) {
             if (data.stat === "fail") {
                 // console.log(data.message);
                 return;
@@ -2184,6 +2184,7 @@ function add_user() {
         url: "ws.php?format=json&method=pwg.users.add",
         type:"POST",
         data: data,
+        dataType: "json",
         beforeSend: function() {
             $("#AddUser .AddUserErrors").css("visibility", "hidden");
             if ($(".AddUserLabelUsername .user-property-input").val() == "") {
@@ -2213,7 +2214,7 @@ function add_user() {
             }
         },
         success: (raw_data) => {
-            let data = jQuery.parseJSON(raw_data);
+            let data = raw_data;
             if (data.stat == 'ok') {
                 let new_user_id = data.result.users[0].id;
                 const default_group = data.result.users[0].groups ?? [];
@@ -2240,8 +2241,9 @@ function add_infos_to_new_user(user_id, ajax_data) {
             enabled_high: ajax_data.enabled_high,
             pwg_token
         },
+        dataType: "json",
         success: function(response) {
-            const data = JSON.parse(response);
+            const data = response;
             if (data.stat == 'ok') {
                 let new_user_id = data.result.users[0].id;
                 update_user_list();

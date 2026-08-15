@@ -183,8 +183,9 @@ jQuery(document).ready(function() {
           data: {
             category_id: album_id,
           },
+          dataType: "json",
           success: function (raw_data) {
-            let data = JSON.parse(raw_data).result[0]
+            let data = raw_data.result[0]
 
             let message = "<p>" + str_delete_album_and_his_x_subalbums
               .replace("%s", "<strong>"+album_name+"</strong>")
@@ -276,8 +277,8 @@ jQuery(document).ready(function() {
       data: {
         category_id: album_id
       },
+      dataType: "json",
       success:function(data) {
-        var data = jQuery.parseJSON(data);
         if (data.stat == 'ok') {
           jQuery("#deleteRepresentative").show();
 
@@ -311,8 +312,8 @@ jQuery(document).ready(function() {
       data: {
         category_id: album_id
       },
+      dataType: "json",
       success:function(data) {
-        var data = jQuery.parseJSON(data);
         if (data.stat == 'ok') {
           jQuery("#deleteRepresentative").hide();
           jQuery(".cat-modify-representative")

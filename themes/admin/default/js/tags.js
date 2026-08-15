@@ -183,8 +183,8 @@ function addTag(name) {
       data: {
         name: name
       },
-      success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
+      dataType: "json",
+      success: function (data) {
         if (data.stat === "ok") {
           newTag = createTagBox(data.result.id, data.result.name, data.result.url_name, 0);
           $('.tag-container').prepend(newTag);
@@ -319,9 +319,8 @@ function removeTag(id, name) {
           tag_id: id,
           pwg_token: pwg_token
         },
-        success: function (raw_data) {
-          data = jQuery.parseJSON(raw_data);
-          
+        dataType: "json",
+        success: function (data) {
           if (data.stat === "ok") {
             $('.tag-box[data-id='+id+']').remove();
             //Update data
@@ -346,12 +345,12 @@ function renameTag(id, new_name) {
       url: "ws.php?format=json&method=pwg.tags.rename",
       type: "POST",
       data: {
-        tag_id: id, 
+        tag_id: id,
         new_name: new_name,
         pwg_token: pwg_token
       },
-      success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
+      dataType: "json",
+      success: function (data) {
         if (data.stat === "ok") {
           $('.tag-box[data-id='+id+'] p, .tag-box[data-id='+id+'] .tag-dropdown-header b').html(data.result.name);
           $('.tag-box[data-id='+id+'] .tag-name-editable').attr('value', data.result.name);
@@ -401,11 +400,11 @@ function duplicateTag(id, name) {
       type: "POST",
       data: {
         tag_id : id,
-        copy_name: copy_name, 
+        copy_name: copy_name,
         pwg_token: pwg_token
       },
-      success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
+      dataType: "json",
+      success: function (data) {
         if (data.stat === "ok") {
           newTag = createTagBox(data.result.id, data.result.name, data.result.url_name, data.result.count);
           newTag.insertAfter($('.tag-box[data-id='+id+']'));
@@ -699,9 +698,9 @@ function removeSelectedTags() {
           'pwg_token': pwg_token,
           'tag_id': selected
         },
-        success: function (raw_data) {
-          raw_data = raw_data.slice(raw_data.search('{'));
-          if (JSON.parse(raw_data).stat = 'ok') {
+        dataType: "json",
+        success: function (data) {
+          if (data.stat = 'ok') {
             selected.forEach(function(id) {
               $('.tag-box[data-id='+id+']').remove();
             })
@@ -714,7 +713,7 @@ function removeSelectedTags() {
             updateBadge();
             updateSearchInfo();
           } else {
-            return raw_data;
+            return data;
           }
         },
         error: function(message) {
@@ -756,9 +755,8 @@ function mergeGroups(destination_id, merge_ids) {
           'destination_tag_id': destination_id,
           'merge_tag_id': merge_ids
         },
-        success: function (raw_data) {
-          raw_data = raw_data.slice(raw_data.search('{'));
-          data = jQuery.parseJSON(raw_data);
+        dataType: "json",
+        success: function (data) {
           if (data.stat === "ok") {
             data.result.deleted_tag.forEach((id) => {
               if (data.result.destination_tag != id) {

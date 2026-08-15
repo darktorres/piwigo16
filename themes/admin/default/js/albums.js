@@ -168,8 +168,8 @@ $(document).ready(() => {
         category_id : catToEdit,
         name : $(".RenameAlbumLabelUsername input").val(),
       },
-      success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
+      dataType: "json",
+      success: function (data) {
         const node_id = $("#cat-"+catToEdit).find('.move-cat-toogler').attr('data-id');
         const node = $('.tree').tree('getNodeById', node_id);
         node.name = $(".RenameAlbumLabelUsername input").val();
@@ -231,8 +231,8 @@ $(document).ready(() => {
         parent : newAlbumParent,
         position : newAlbumPosition
       },
-      success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
+      dataType: "json",
+      success: function (data) {
         var parent_node = $('.tree').tree('getNodeById', newAlbumParent);
         if (parent_node && parent_node.load_on_demand && parent_node.haveChildren) {
           loadOnDemand(parent_node);
@@ -527,8 +527,9 @@ function triggerDeleteAlbum(cat_id) {
     data: {
       category_id: cat_id,
     },
+    dataType: "json",
     success: function (raw_data) {
-      let data = JSON.parse(raw_data).result[0]
+      let data = raw_data.result[0]
       if (data.nb_images_recursive == 0) {
         $(".deleteAlbumOptions").hide();
       } else {
@@ -809,8 +810,9 @@ function changeParent(node, parent, rank) {
       before: function () {
         oldParent = node.parent
       },
+      dataType: "json",
       success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
+        data = raw_data;
         if (data.stat === "ok") {
           changeRank(node, rank)
           const updated_cats = data.result.updated_cats;
@@ -843,8 +845,9 @@ function changeRank(node, rank) {
         category_id : node,
         rank : rank
       },
+      dataType: "json",
       success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
+        data = raw_data;
         if (data.stat === "ok") {
           res();
         } else {

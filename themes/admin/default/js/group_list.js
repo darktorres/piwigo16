@@ -93,9 +93,9 @@ jQuery(document).ready(function () {
           'name': name,
           'pwg_token': pwg_token,
         },
-        success: function (raw_data) {
+        dataType: "json",
+        success: function (data) {
           loadState.reverse();
-          data = jQuery.parseJSON(raw_data);
           if (data.stat === "ok") {
             $(".addGroupFormLabelAndInput input").val('');
             group = data.result.groups[0];
@@ -297,8 +297,8 @@ var deleteGroup = function (id) {
                   url: "ws.php?format=json&method=pwg.groups.delete",
                   type: "POST",
                   data: "group_id=" + id + "&pwg_token=" + pwg_token,
-                  success: function (raw_data) {
-                    data = jQuery.parseJSON(raw_data);
+                  dataType: "json",
+                  success: function (data) {
                     if (data.stat === "ok") {
                       $("#group-" + id).remove();
                       $(".DeleteGroupList div[data-id="+id+"]").remove()
@@ -333,8 +333,8 @@ var renameGroup = function(id, newName) {
       url: "ws.php?format=json&method=pwg.groups.setInfo",
       type: "POST",
       data: "group_id=" + id + "&pwg_token=" + pwg_token + "&name="+newName,
-      success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
+      dataType: "json",
+      success: function (data) {
         loadState.reverse();
         if (data.stat === "ok") {
           newName = data.result.groups[0].name;
@@ -388,8 +388,8 @@ var setDefaultGroup = function (id, is_default) {
     url: "ws.php?format=json&method=pwg.groups.setInfo",
     type: "POST",
     data: "group_id=" + id + "&pwg_token=" + pwg_token + "&is_default="+is_default,
-    success: function (raw_data) {
-      data = jQuery.parseJSON(raw_data);
+    dataType: "json",
+    success: function (data) {
       $("#group-"+id+" #GroupOptions").hide();
       if (data.stat === "ok") {
         if (is_default) {
@@ -451,8 +451,8 @@ var duplicateAction = function(id) {
     url: "ws.php?format=json&method=pwg.groups.duplicate",
     type: "POST",
     data: "group_id=" + id + "&pwg_token=" + pwg_token + "&copy_name=" + copy_name,
-    success: function (raw_data) {
-      data = jQuery.parseJSON(raw_data);
+    dataType: "json",
+    success: function (data) {
       loadState.reverse();
       if (data.stat === "ok") {
         $("#group-"+id+" #GroupOptions").hide();
@@ -612,9 +612,9 @@ $('.ConfirmMergeButton').on("click", function() {
     url: "ws.php?format=json&method=pwg.groups.merge",
     type: "POST",
     data: "destination_group_id=" + dest_grp + str_merge_group + "&pwg_token=" + pwg_token,
-    success: function (raw_data) {
+    dataType: "json",
+    success: function (data) {
       loadState.reverse();
-      data = jQuery.parseJSON(raw_data);
       if (data.stat === "ok") {
         updateSelectionPanel('Selection');
         merge_group.forEach(function(id) {
@@ -639,8 +639,8 @@ $('.ConfirmMergeButton').on("click", function() {
           url: "ws.php?format=json&method=pwg.users.getList",
           type: "POST",
           data: "group_id=" + dest_grp,
-          success: function (raw_data) {
-            data = jQuery.parseJSON(raw_data);
+          dataType: "json",
+          success: function (data) {
             let number = data.result.users.length;
             $("#group-"+dest_grp + " .group_number_users").html(
               number + " " + ((number > 1)? str_members_default:str_member_default)
@@ -680,8 +680,8 @@ $('.ConfirmDeleteButton').on("click", function() {
     url: "ws.php?format=json&method=pwg.groups.delete",
     type: "POST",
     data: str_id + "pwg_token=" + pwg_token,
-    success: function (raw_data) {
-      data = jQuery.parseJSON(raw_data);
+    dataType: "json",
+    success: function (data) {
       if (data.stat === "ok") {
         $(".DeleteGroupList div").each(function() {
             $(this).remove();
@@ -781,11 +781,11 @@ var openUserManager = function(grp_id) {
     url: "ws.php?format=json&method=pwg.users.getList",
     type: "POST",
     data: "group_id=" + grp_id,
-    success: function (raw_data) {
+    dataType: "json",
+    success: function (data) {
       loadState.reverse();
-      data = jQuery.parseJSON(raw_data);
       if (data.stat === "ok") {
-        //Set the popin name 
+        //Set the popin name
         $(".group-name-block p").html(
           $("#group-" + grp_id + " #group_name").html() + " / " + str_user_list
         )
@@ -848,8 +848,8 @@ var getUserDisplay = function(username, user_id, grp_id) {
       url: "ws.php?format=json&method=pwg.groups.deleteUser",
       type: "POST",
       data: "group_id=" + grp_id + "&user_id=" + user_id + "&pwg_token=" + pwg_token,
-      success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
+      dataType: "json",
+      success: function (data) {
         if (data.stat === "ok") {
           let str = str_user_dissociated.replace("%s", username)
           associateUserInfo.fadeOut();
@@ -904,9 +904,9 @@ $(".AddUserBlock button").on("click", function () {
       url: "ws.php?format=json&method=pwg.groups.addUser",
       type: "POST",
       data: "group_id=" + grp_id+ "&user_id=" + id + "&pwg_token=" + pwg_token,
-      success: function (raw_data) {
+      dataType: "json",
+      success: function (data) {
         loadState.reverse()
-        data = jQuery.parseJSON(raw_data);
 
         if (data.stat === "ok") {
           // Get the username

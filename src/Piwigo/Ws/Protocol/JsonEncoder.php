@@ -41,6 +41,6 @@ final class JsonEncoder extends ResponseEncoder
     #[Override]
     public function getContentType(): string
     {
-        return 'text/plain';
+        return 'application/json';
     }
 }

@@ -90,7 +90,7 @@ test('encodeResponse flattens a NamedArray to its plain list content, with no at
         ]);
 });
 
-test('getContentType returns text/plain', function (): void {
+test('getContentType returns application/json', function (): void {
     expect(new JsonEncoder()->getContentType())
-        ->toBe('text/plain');
+        ->toBe('application/json');
 });

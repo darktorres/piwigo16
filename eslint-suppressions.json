@@ -31,7 +31,7 @@
       "count": 43
     },
     "no-undef": {
-      "count": 180
+      "count": 172
     }
   },
   "themes/admin/default/js/batchManagerFilter.js": {
@@ -78,9 +78,6 @@
   "themes/admin/default/js/cat_modify.js": {
     "eqeqeq": {
       "count": 11
-    },
-    "no-redeclare": {
-      "count": 2
     },
     "no-undef": {
       "count": 45
@@ -146,7 +143,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 161
+      "count": 133
     }
   },
   "themes/admin/default/js/history.js": {
@@ -176,7 +173,7 @@
   },
   "themes/admin/default/js/maintenance.js": {
     "no-undef": {
-      "count": 12
+      "count": 5
     }
   },
   "themes/admin/default/js/maintenance_env.js": {
@@ -256,14 +253,8 @@
     "eqeqeq": {
       "count": 32
     },
-    "no-cond-assign": {
-      "count": 1
-    },
-    "no-constant-condition": {
-      "count": 1
-    },
     "no-undef": {
-      "count": 191
+      "count": 151
     }
   },
   "themes/admin/default/js/user_activity.js": {
@@ -282,7 +273,7 @@
       "count": 10
     },
     "no-undef": {
-      "count": 123
+      "count": 100
     }
   },
   "themes/default/js/mcs.js": {

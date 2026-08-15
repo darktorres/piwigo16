@@ -700,7 +700,7 @@ function removeSelectedTags() {
         },
         dataType: "json",
         success: function (data) {
-          if (data.stat = 'ok') {
+          if (data.stat === 'ok') {
             selected.forEach(function(id) {
               $('.tag-box[data-id='+id+']').remove();
             })

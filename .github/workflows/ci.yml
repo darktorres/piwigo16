@@ -851,7 +851,7 @@ jobs:
       - run: bash tools/restore-drill.sh
 
   lighthouse:
-    name: Lighthouse CI (collect only, budgets from P10)
+    name: Lighthouse CI (collect only, budgets from P52)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:

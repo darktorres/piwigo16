@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Notification;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
@@ -153,21 +152,9 @@ final readonly class NotificationRepository
                 ->setParameter('false', false, Types::BOOLEAN);
         }
 
-        self::applyCondition($qb, $restrictCondition);
+        $restrictCondition->applyTo($qb);
 
         return [$qb, $fieldId];
-    }
-
-    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
-    {
-        if ($condition->isEmpty()) {
-            return;
-        }
-
-        $qb->andWhere($condition->sql);
-        foreach ($condition->parameters as $name => $value) {
-            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
-        }
     }
 
     /**
@@ -182,7 +169,7 @@ final readonly class NotificationRepository
             ->groupBy('i.dateAvailable')
             ->orderBy('i.dateAvailable', 'DESC')
             ->setMaxResults($maxDates);
-        self::applyCondition($qb, $restrictCondition);
+        $restrictCondition->applyTo($qb);
 
         $rows = $qb->getQuery()
             ->getArrayResult();
@@ -244,7 +231,7 @@ final readonly class NotificationRepository
             ->orderBy('RAND()')
             ->setMaxResults($maxElements)
             ->setParameter('dateAvailable', $dateAvailable);
-        self::applyCondition($qb, $restrictCondition);
+        $restrictCondition->applyTo($qb);
 
         $ids = array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -293,7 +280,7 @@ final readonly class NotificationRepository
             ->orderBy('img_count', 'DESC')
             ->setMaxResults($maxCats)
             ->setParameter('dateAvailable', $dateAvailable);
-        self::applyCondition($qb, $restrictCondition);
+        $restrictCondition->applyTo($qb);
 
         $rows = $qb->getQuery()
             ->getArrayResult();

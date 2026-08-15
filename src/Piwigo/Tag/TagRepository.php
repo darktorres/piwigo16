@@ -97,27 +97,6 @@ final class TagRepository extends EntityRepository
      * (`Comment\CommentRepository::applyConditions()`'s plural sibling,
      * for the single-condition case).
      */
-    /**
-     * Accepts either query-builder flavor -- {@see SqlCondition}'s own
-     * `sql`/`parameters`/`types` shape (a raw fragment string + named
-     * bound parameters) applies identically via `andWhere()`/
-     * `setParameter()` on both; neither
-     * {@see PermissionCriteria} nor `SqlCondition` needed any new
-     * DQL-specific contract -- a DQL consumer just passes a DQL property
-     * path (e.g. `ic.categoryId`) instead of a raw SQL column
-     * (`ic.category_id`) into the same `*Condition()` methods.
-     */
-    private static function applyCondition(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, SqlCondition $condition): void
-    {
-        if ($condition->isEmpty()) {
-            return;
-        }
-
-        $qb->andWhere($condition->sql);
-        foreach ($condition->parameters as $name => $value) {
-            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
-        }
-    }
 
     /**
      * Count of distinct images per tag, restricted to visible/permitted
@@ -146,13 +125,13 @@ final class TagRepository extends EntityRepository
             ->innerJoin(ImageTagEntity::class, 'it', Join::WITH, 'ic.imageId = it.imageId')
             ->groupBy('it.tagId');
 
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('ic.categoryId'),
             $criteria->visibleCategoriesCondition('ic.categoryId'),
             $criteria->visibleImagesCondition('ic.imageId'),
             $criteria->imageAccessCondition('ic.imageId'),
-        ));
+        )->applyTo($qb);
 
         if ($tagIds !== []) {
             $qb->andWhere('it.tagId IN (:tagIds)')
@@ -312,13 +291,13 @@ final class TagRepository extends EntityRepository
             // visible_images's own old fallthrough into forbidden_images
             // (fieldName 'id' -> the images-table's own level check) -- see
             // PermissionCriteria's own docblock.
-            self::applyCondition($qb, SqlCondition::combine(
+            SqlCondition::combine(
                 'AND',
                 $criteria->forbiddenCategoriesCondition('ic.category_id'),
                 $criteria->visibleCategoriesCondition('ic.category_id'),
                 $criteria->visibleImagesCondition('i.id'),
                 $criteria->maxLevelCondition('i.level'),
-            ));
+            )->applyTo($qb);
         }
 
         if ($filterCriteria instanceof ImageFilterCriteria && ! $filterCriteria->isEmpty()) {

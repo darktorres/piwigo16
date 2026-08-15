@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
-use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
@@ -95,7 +94,7 @@ final readonly class CalendarRepository
                 $qb = $this->baseQueryBuilder($dqlScope)
                     ->select('i.id')
                     ->groupBy('i.id');
-                self::applyCondition($qb, $dqlDateWhere);
+                $dqlDateWhere->applyTo($qb);
                 foreach ($dqlOrderBy as $entry) {
                     $qb->addOrderBy($entry->property, $entry->dir);
                 }
@@ -128,26 +127,6 @@ final readonly class CalendarRepository
     }
 
     /**
-     * Applies a permission/scope/date `SqlCondition` via `andWhere()`,
-     * binding every one of its parameters. DQL-only: every consumer in
-     * this file uses real DQL, including {@see findImageIds()} above
-     * whenever its own conditional DQL attempt succeeds -- its raw-DBAL
-     * fallback path is a plain string-concatenated query and doesn't go
-     * through this helper.
-     */
-    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
-    {
-        if ($condition->isEmpty()) {
-            return;
-        }
-
-        $qb->andWhere($condition->sql);
-        foreach ($condition->parameters as $name => $value) {
-            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
-        }
-    }
-
-    /**
      * Builds the shared `FROM ImageEntity i [INNER JOIN ImageCategoryEntity
      * ic ...] WHERE $scope->dqlWhere` base every DQL method below starts
      * from.
@@ -161,7 +140,7 @@ final readonly class CalendarRepository
             $qb->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id');
         }
 
-        self::applyCondition($qb, $scope->dqlWhere);
+        $scope->dqlWhere->applyTo($qb);
 
         return $qb;
     }
@@ -208,7 +187,7 @@ final readonly class CalendarRepository
             ->distinct()
             ->groupBy('period')
             ->orderBy('period', 'ASC');
-        self::applyCondition($qb, $dateWhere);
+        $dateWhere->applyTo($qb);
 
         $result = [];
         foreach ($qb->getQuery()->getArrayResult() as $row) {
@@ -324,7 +303,7 @@ final readonly class CalendarRepository
             ->addGroupBy('mo')
             ->orderBy('yr', 'DESC')
             ->addOrderBy('mo', 'ASC');
-        self::applyCondition($qb, $dateWhere);
+        $dateWhere->applyTo($qb);
 
         $result = [];
         foreach ($qb->getQuery()->getArrayResult() as $row) {
@@ -357,7 +336,7 @@ final readonly class CalendarRepository
             ->select("DATE_FORMAT_MONTH_DAY({$dateFieldDql}) AS period", 'COUNT(DISTINCT i.id) AS count')
             ->groupBy('period')
             ->orderBy('period', 'ASC');
-        self::applyCondition($qb, $dateWhere);
+        $dateWhere->applyTo($qb);
 
         $result = [];
         foreach ($qb->getQuery()->getArrayResult() as $row) {
@@ -390,7 +369,7 @@ final readonly class CalendarRepository
             ->select("DAYOFMONTH({$dateFieldDql}) AS period", 'COUNT(DISTINCT i.id) AS count')
             ->groupBy('period')
             ->orderBy('period', 'ASC');
-        self::applyCondition($qb, $dateWhere);
+        $dateWhere->applyTo($qb);
 
         $result = [];
         foreach ($qb->getQuery()->getArrayResult() as $row) {
@@ -431,7 +410,7 @@ final readonly class CalendarRepository
             ->select('i.id AS id', "(DAYOFWEEK({$dateFieldDql}) - 1) AS dow")
             ->orderBy('RAND()')
             ->setMaxResults(1);
-        self::applyCondition($qb, $dateWhere);
+        $dateWhere->applyTo($qb);
 
         $picked = $qb->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);

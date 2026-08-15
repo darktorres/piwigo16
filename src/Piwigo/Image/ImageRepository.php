@@ -75,39 +75,6 @@ use Piwigo\Permission\SqlCondition;
 final class ImageRepository extends EntityRepository
 {
     /**
-     * Applies a permission/filter `SqlCondition` via `andWhere()`, binding
-     * every one of its parameters -- same shared-helper shape as
-     * `Notification\NotificationRepository::applyCondition()`/
-     * `Tag\TagRepository::applyCondition()`. Every real caller
-     * (isImageAccessibleWithCondition/findRowWithCondition/
-     * findRelatedCategoriesForImage/isImageCommentableWithCondition/
-     * findVisibleCategoriesForImage/hasAccessibleImageWithAuthor/
-     * isImageAccessibleViaCategoryWithCondition/
-     * findCategoryLinksForImageIdsWithCondition) takes a typed
-     * {@see \Piwigo\Permission\PermissionCriteria} DTO and translates it
-     * to a bound fragment via that DTO's own `*Condition()` builders
-     * before reaching this shared applier.
-     *
-     * Accepts either query-builder flavor -- {@see SqlCondition}'s own
-     * `sql`/`parameters`/`types` shape applies identically via
-     * `andWhere()`/`setParameter()` on both DBAL's and DQL's query
-     * builders: a DQL consumer passes a DQL property path (e.g. `i.id`)
-     * into the same {@see PermissionCriteria} `*Condition()` methods a
-     * DBAL consumer uses with a raw column name.
-     */
-    private static function applyCondition(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, SqlCondition $condition): void
-    {
-        if ($condition->isEmpty()) {
-            return;
-        }
-
-        $qb->andWhere($condition->sql);
-        foreach ($condition->parameters as $name => $value) {
-            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
-        }
-    }
-
-    /**
      * Deliberately avoids bumping `lastmodified` -- an image's "last
      * modified" timestamp should reflect real edits, not visit counting.
      * A DQL bulk `UPDATE` that never mentions `lastmodified` at all
@@ -2499,11 +2466,11 @@ final class ImageRepository extends EntityRepository
             ->setMaxResults(1)
             ->setParameter('imageId', $imageId);
 
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('ic.categoryId'),
             $criteria->maxLevelCondition('i.level'),
-        ));
+        )->applyTo($qb);
 
         return $qb->getQuery()
             ->getSingleColumnResult() !== [];
@@ -2538,11 +2505,11 @@ final class ImageRepository extends EntityRepository
             ->setMaxResults(1)
             ->setParameter('imageId', $imageId->value, ParameterType::INTEGER);
 
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->visibleImagesCondition('id'),
             $criteria->maxLevelCondition('level'),
-        ));
+        )->applyTo($qb);
 
         $row = $qb->executeQuery()
             ->fetchAssociative();
@@ -2575,7 +2542,8 @@ final class ImageRepository extends EntityRepository
             ->where('ic.imageId = :imageId')
             ->setParameter('imageId', $imageId);
 
-        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.categoryId'));
+        $criteria->forbiddenCategoriesCondition('ic.categoryId')
+            ->applyTo($qb);
 
         $result = [];
         foreach ($qb->getQuery()->getArrayResult() as $row) {
@@ -2617,13 +2585,13 @@ final class ImageRepository extends EntityRepository
             ->setParameter('true', true)
             ->setParameter('imageId', $imageId);
 
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('c.id'),
             $criteria->visibleCategoriesCondition('c.id'),
             $criteria->visibleImagesCondition('ic.imageId'),
             $criteria->imageAccessCondition('ic.imageId'),
-        ));
+        )->applyTo($qb);
 
         return $qb->getQuery()
             ->getSingleColumnResult() !== [];
@@ -2656,11 +2624,11 @@ final class ImageRepository extends EntityRepository
             ->where('ic.imageId = :imageId')
             ->setParameter('imageId', $imageId);
 
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('c.id'),
             $criteria->visibleCategoriesCondition('c.id'),
-        ));
+        )->applyTo($qb);
 
         $result = [];
         foreach ($qb->getQuery()->getArrayResult() as $row) {
@@ -2835,13 +2803,13 @@ final class ImageRepository extends EntityRepository
             ->andWhere('i.author IS NOT NULL')
             ->setMaxResults(1);
 
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('ic.categoryId'),
             $criteria->visibleCategoriesCondition('ic.categoryId'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
-        ));
+        )->applyTo($qb);
 
         return $qb->getQuery()
             ->getSingleColumnResult() !== [];
@@ -2868,11 +2836,11 @@ final class ImageRepository extends EntityRepository
             ->setMaxResults(1)
             ->setParameter('imageId', $imageId);
 
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('ic.categoryId'),
             $criteria->imageAccessCondition('ic.imageId'),
-        ));
+        )->applyTo($qb);
 
         return $qb->getQuery()
             ->getSingleColumnResult() !== [];
@@ -3014,7 +2982,8 @@ final class ImageRepository extends EntityRepository
             ->where('ic.imageId IN (:imageIds)')
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
 
-        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.categoryId'));
+        $criteria->forbiddenCategoriesCondition('ic.categoryId')
+            ->applyTo($qb);
 
         $result = [];
         foreach ($qb->getQuery()->getArrayResult() as $row) {

@@ -6,7 +6,6 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
-use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
@@ -96,47 +95,6 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     private function find(UserId $userId): ?UserInfoEntity
     {
         return $this->em->find(UserInfoEntity::class, $userId);
-    }
-
-    /**
-     * Applies a permission/filter `SqlCondition` via `andWhere()`, binding
-     * every one of its parameters -- same shared-helper shape as
-     * `Image\ImageRepository::applyCondition()`/`Notification\
-     * NotificationRepository::applyCondition()`/`Tag\TagRepository::
-     * applyCondition()`.
-     *
-     * This helper's own 3 callers (findAuthorizedFavoriteImageIds() /
-     * findVisibleFavoriteImageIds() / findVisibleFavoriteImages()) are all
-     * fed a `PermissionService::getSqlConditionFandFAsCondition()` result
-     * by their real caller ({@see \Piwigo\Ws\Users}/
-     * {@see \Piwigo\Section\SectionPopulator}), same genuinely dynamic,
-     * cross-cutting permission-condition blocker documented in
-     * {@see \Piwigo\Image\ImageRepository::applyCondition()}'s own
-     * docblock, not a small finite set of shapes a typed DTO could
-     * replace. 2 of the 3 also take a caller-composed `$orderBySql`
-     * tracing back to `WsHelper::stdImageSqlOrder()`/`CurrentConfig::
-     * orderBy()`, a second, independent cross-cutting blocker (see
-     * {@see \Piwigo\Image\ImageRepository::findIdsWithConditions()}'s own
-     * docblock).
-     *
-     * `$orderBySql` blocks findVisibleFavoriteImageIds()/
-     * findVisibleFavoriteImages() from converting, so those 2 stay on DBAL.
-     * findAuthorizedFavoriteImageIds() has no such blocker -- `image_category`
-     * is mapped ({@see \Piwigo\Image\ImageCategoryEntity}), so it converts
-     * to DQL below. Widened to accept either builder type for that one
-     * remaining DQL caller: `SqlCondition`'s `andWhere()`/`setParameter()`
-     * calls work identically on both.
-     */
-    private static function applyCondition(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, SqlCondition $condition): void
-    {
-        if ($condition->isEmpty()) {
-            return;
-        }
-
-        $qb->andWhere($condition->sql);
-        foreach ($condition->parameters as $name => $value) {
-            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
-        }
     }
 
     /**
@@ -890,7 +848,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->where('f.userId = :userId')
             ->setParameter('userId', $userId);
 
-        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.categoryId'));
+        $criteria->forbiddenCategoriesCondition('ic.categoryId')
+            ->applyTo($qb);
 
         return self::toIntList(array_values($qb->getQuery()->getSingleColumnResult()));
     }
@@ -1062,11 +1021,11 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
                 ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'f.imageId = i.id')
                 ->where('f.userId = :userId')
                 ->setParameter('userId', $userId);
-            self::applyCondition($qb, SqlCondition::combine(
+            SqlCondition::combine(
                 'AND',
                 $criteria->visibleImagesCondition('i.id'),
                 $criteria->maxLevelCondition('i.level'),
-            ));
+            )->applyTo($qb);
             foreach ($dqlOrderBy as $entry) {
                 $qb->addOrderBy($entry->property, $entry->dir);
             }

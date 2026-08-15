@@ -116,27 +116,6 @@ final readonly class CategoryRepository
         return $this->em->find(CategoryEntity::class, $id);
     }
 
-    /**
-     * Accepts either query-builder flavor -- {@see SqlCondition}'s own
-     * `sql`/`parameters`/`types` shape applies identically via
-     * `andWhere()`/`setParameter()` on both DBAL's and DQL's query
-     * builders: a DQL consumer
-     * just passes a DQL property path (e.g. `c.id`) into the same
-     * {@see PermissionCriteria} `*Condition()` methods a DBAL consumer
-     * already uses with a raw column name.
-     */
-    private static function applyCondition(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, SqlCondition $condition): void
-    {
-        if ($condition->isEmpty()) {
-            return;
-        }
-
-        $qb->andWhere($condition->sql);
-        foreach ($condition->parameters as $name => $value) {
-            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
-        }
-    }
-
     public function findById(int $id): ?Category
     {
         $catId = CategoryId::tryFrom($id);
@@ -329,13 +308,13 @@ final readonly class CategoryRepository
             ->orderBy('RAND()')
             ->setMaxResults(1)
             ->setParameter('catId', $catId);
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('c.id'),
             $criteria->visibleCategoriesCondition('c.id'),
             $criteria->visibleImagesCondition('ic.imageId'),
             $criteria->imageAccessCondition('ic.imageId'),
-        ));
+        )->applyTo($qb);
 
         if ($recursive) {
             $qb->setParameter('uppercatsLike', $uppercats . ',%');
@@ -470,13 +449,13 @@ final readonly class CategoryRepository
             ->where('category_id IN (:catIds)')
             ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
             ->groupBy('id');
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('ic.category_id'),
             $criteria->visibleCategoriesCondition('ic.category_id'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
-        ));
+        )->applyTo($qb);
 
         if ($mode === 'AND' && count($catIds) > 1) {
             $qb->having('COUNT(DISTINCT category_id) = :catCount')
@@ -552,13 +531,13 @@ final readonly class CategoryRepository
             ->where('ic.categoryId IN (:catIds)')
             ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
             ->groupBy('i.id');
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('ic.categoryId'),
             $criteria->visibleCategoriesCondition('ic.categoryId'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
-        ));
+        )->applyTo($qb);
 
         if ($mode === 'AND' && count($catIds) > 1) {
             $qb->having('COUNT(DISTINCT ic.categoryId) = :catCount')
@@ -614,11 +593,11 @@ final readonly class CategoryRepository
             ->where('ic.imageId IN (:itemIds)')
             ->setParameter('itemIds', $itemIds, ArrayParameterType::INTEGER)
             ->groupBy('c.id');
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('ic.categoryId'),
             $criteria->visibleCategoriesCondition('ic.categoryId'),
-        ));
+        )->applyTo($qb);
 
         if ($excludedCatIds !== []) {
             $qb->andWhere('ic.categoryId NOT IN (:excludedCatIds)')
@@ -2243,11 +2222,11 @@ final readonly class CategoryRepository
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank');
 
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('c.id'),
             $criteria->visibleCategoriesCondition('c.id'),
-        ));
+        )->applyTo($qb);
 
         // See findPrivateCategoriesGrantedToGroup()'s
         // own docblock for why this needs an explicit order.
@@ -2565,7 +2544,8 @@ final readonly class CategoryRepository
             ->orderBy('RAND()')
             ->setMaxResults(1);
 
-        self::applyCondition($qb, $criteria->visibleCategoriesCondition('c.id'));
+        $criteria->visibleCategoriesCondition('c.id')
+            ->applyTo($qb);
 
         $values = $qb->getQuery()
             ->getSingleColumnResult();
@@ -2606,12 +2586,12 @@ final readonly class CategoryRepository
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
             ->groupBy('ic.categoryId');
 
-        self::applyCondition($qb, SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->visibleCategoriesCondition('ic.categoryId'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
-        ));
+        )->applyTo($qb);
 
         $rows = $qb->getQuery()
             ->getArrayResult();

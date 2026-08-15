@@ -259,29 +259,17 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Applies a set of already-built SqlCondition fragments to $qb as
-     * ANDed WHERE clauses, binding each fragment's own parameters/types --
-     * shared by every $whereClauses-accepting method below. Empty
-     * fragments (SqlCondition::isEmpty()) are skipped rather than adding a
-     * vacuous `AND ()`.
-     *
-     * Accepts a DQL `Doctrine\ORM\QueryBuilder` as well as DBAL's
-     * `QueryBuilder` -- `SqlCondition`'s `sql`/`parameters`/`types` shape
-     * applies identically via `andWhere()`/`setParameter()` on both.
+     * Applies a set of already-built SqlCondition fragments to $qb as ANDed
+     * WHERE clauses -- shared by every $whereClauses-accepting method below.
+     * Each fragment binds itself via {@see SqlCondition::applyTo()}, which
+     * skips empties rather than adding a vacuous `AND ()`.
      *
      * @param array<array-key, SqlCondition> $conditions
      */
     private static function applyConditions(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, array $conditions): void
     {
         foreach ($conditions as $condition) {
-            if ($condition->isEmpty()) {
-                continue;
-            }
-
-            $qb->andWhere($condition->sql);
-            foreach ($condition->parameters as $name => $value) {
-                $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
-            }
+            $condition->applyTo($qb);
         }
     }
 

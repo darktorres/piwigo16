@@ -8,7 +8,6 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
-use Doctrine\ORM\QueryBuilder;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
@@ -69,18 +68,6 @@ final readonly class SectionRepository
         );
     }
 
-    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
-    {
-        if ($condition->isEmpty()) {
-            return;
-        }
-
-        $qb->andWhere($condition->sql);
-        foreach ($condition->parameters as $name => $value) {
-            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
-        }
-    }
-
     /**
      * Visible subcategory ids directly under $uppercatsPattern (a category's
      * own `uppercats` value, matched as `uppercats LIKE '$uppercatsPattern,%'`)
@@ -98,7 +85,7 @@ final readonly class SectionRepository
             ->from(CategoryEntity::class, 'c')
             ->andWhere('c.uppercats LIKE :uppercatsPattern')
             ->setParameter('uppercatsPattern', $uppercatsPattern . ',%');
-        self::applyCondition($qb, $permissionCondition);
+        $permissionCondition->applyTo($qb);
 
         return array_values(array_map(
             static fn (mixed $id): string => is_numeric($id) ? (string) $id : '',
@@ -177,7 +164,7 @@ SELECT id
             ->orderBy('i.hit', 'DESC')
             ->addOrderBy('i.id', 'DESC')
             ->setMaxResults($limit);
-        self::applyCondition($qb, $forbiddenCondition);
+        $forbiddenCondition->applyTo($qb);
 
         return array_values(array_map(
             static fn (mixed $id): string => is_numeric($id) ? (string) $id : '',
@@ -204,7 +191,7 @@ SELECT id
             ->orderBy('i.ratingScore', 'DESC')
             ->addOrderBy('i.id', 'DESC')
             ->setMaxResults($limit);
-        self::applyCondition($qb, $forbiddenCondition);
+        $forbiddenCondition->applyTo($qb);
 
         return array_values(array_map(
             static fn (mixed $id): string => is_numeric($id) ? (string) $id : '',

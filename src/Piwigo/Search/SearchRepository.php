@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
-use Doctrine\ORM\QueryBuilder;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -223,18 +221,6 @@ final readonly class SearchRepository
         return $result;
     }
 
-    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
-    {
-        if ($condition->isEmpty()) {
-            return;
-        }
-
-        $qb->andWhere($condition->sql);
-        foreach ($condition->parameters as $name => $value) {
-            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
-        }
-    }
-
     /**
      * Shared "images matching this WHERE fragment" executor for every
      * `SearchService::getRegularSearchResults()` advanced-search criterion
@@ -252,7 +238,7 @@ final readonly class SearchRepository
             ->select('DISTINCT i.id')
             ->from(ImageEntity::class, 'i')
             ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id');
-        self::applyCondition($qb, $whereDql);
+        $whereDql->applyTo($qb);
 
         return array_values(array_map(
             static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0,
@@ -280,7 +266,7 @@ final readonly class SearchRepository
             ->from(ImageEntity::class, 'i')
             ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
             ->groupBy($groupAlias);
-        self::applyCondition($qb, $condition);
+        $condition->applyTo($qb);
         if ($orderByCounterDesc) {
             $qb->orderBy('counter', 'DESC');
         }
@@ -306,7 +292,7 @@ final readonly class SearchRepository
             ->select('DISTINCT i.id', ...$selectExprs)
             ->from(ImageEntity::class, 'i')
             ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id');
-        self::applyCondition($qb, $condition);
+        $condition->applyTo($qb);
 
         return self::castRows($qb->getQuery()->getArrayResult());
     }
@@ -330,7 +316,7 @@ final readonly class SearchRepository
             ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
             ->groupBy($dqlPath)
             ->orderBy($dqlPath, 'ASC');
-        self::applyCondition($qb, $condition);
+        $condition->applyTo($qb);
 
         return array_values(array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
@@ -354,7 +340,7 @@ final readonly class SearchRepository
         $qb = $this->em->createQueryBuilder()
             ->select('c.id', 'c.uppercats')
             ->from(CategoryEntity::class, 'c');
-        self::applyCondition($qb, $condition);
+        $condition->applyTo($qb);
 
         $rows = $qb->getQuery()
             ->getArrayResult();

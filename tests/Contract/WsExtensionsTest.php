@@ -211,6 +211,28 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
+    /**
+     * SEC finding 4: unlike pwg.plugins.performAction above, this method
+     * had no webmaster-status guard of its own -- an admin who is not
+     * webmaster could activate/deactivate/delete/set-default a theme
+     * through the WS layer even though every admin-UI route to theme
+     * actions checks isWebmaster() first.
+     */
+    public function testThemesPerformActionNonWebmasterReturnsError(): void
+    {
+        $token = $this->loginAsNonWebmasterAdmin();
+
+        $response = $this->callWs('pwg.themes.performAction', [
+            'action' => 'activate',
+            'theme' => 'ct_fake_theme',
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('Webmaster status is required.', $response['message']);
+    }
+
     public function testThemesPerformActionDeleteWithInstallDisabledReturnsError(): void
     {
         $this->setConfigBool('enable_extensions_install', false);

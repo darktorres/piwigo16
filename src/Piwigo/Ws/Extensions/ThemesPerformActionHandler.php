@@ -19,6 +19,7 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -39,9 +40,7 @@ use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.themes.performAction` -- activate/deactivate/delete/set_default a
- * theme. Unlike `PluginsPerformActionHandler`, this method has no
- * webmaster-status guard of its own -- preserved exactly, not a gap to
- * close here.
+ * theme.
  */
 final readonly class ThemesPerformActionHandler implements WsAction
 {
@@ -50,6 +49,7 @@ final readonly class ThemesPerformActionHandler implements WsAction
         private UrlServiceInterface $urlService,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentTemplate $currentTemplate,
+        private AccessControl $accessControl,
         private CurrentConfig $currentConfig,
         private ConfigService $configService,
         private ActivityService $activityService,
@@ -77,6 +77,10 @@ final readonly class ThemesPerformActionHandler implements WsAction
         $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
+        }
+
+        if (! $this->accessControl->isWebmaster()) {
+            return new WsErrorResponse(403, $this->lang->t('Webmaster status is required.'));
         }
 
         if (! $this->currentConfig->enableExtensionsInstall and $input->action === 'delete') {

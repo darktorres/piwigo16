@@ -37,7 +37,8 @@ test('check mode fails and leaves the file untouched when a block is missing', f
     $tester = new CommandTester(new PhpStanLatteSyncVarTypeCommand(Paths::fromRoot($this->root)));
     $exit = $tester->execute([]);
 
-    expect($exit)->toBe(Command::FAILURE);
+    expect($exit)
+        ->toBe(Command::FAILURE);
     expect($tester->getDisplay())
         ->toContain('page.latte')
         ->toContain('needs its {varType} block updated');
@@ -49,10 +50,14 @@ test('--fix writes the block and a second run is clean', function (): void {
     file_put_contents($this->root . '/themes/default/template/page.latte', "{\$ROOT_URL}\n");
 
     $tester = new CommandTester(new PhpStanLatteSyncVarTypeCommand(Paths::fromRoot($this->root)));
-    $fixExit = $tester->execute(['--fix' => true]);
+    $fixExit = $tester->execute([
+        '--fix' => true,
+    ]);
 
-    expect($fixExit)->toBe(Command::SUCCESS);
-    expect($tester->getDisplay())->toContain('1 changed, 0 unchanged');
+    expect($fixExit)
+        ->toBe(Command::SUCCESS);
+    expect($tester->getDisplay())
+        ->toContain('1 changed, 0 unchanged');
 
     $written = (string) file_get_contents($this->root . '/themes/default/template/page.latte');
     expect($written)
@@ -62,8 +67,10 @@ test('--fix writes the block and a second run is clean', function (): void {
         ->toContain('{$ROOT_URL}');
 
     $checkExit = $tester->execute([]);
-    expect($checkExit)->toBe(Command::SUCCESS);
-    expect($tester->getDisplay())->toContain('0 changed, 1 unchanged');
+    expect($checkExit)
+        ->toBe(Command::SUCCESS);
+    expect($tester->getDisplay())
+        ->toContain('0 changed, 1 unchanged');
 });
 
 test('surfaces scanner and extractor notices instead of swallowing them', function (): void {
@@ -80,7 +87,9 @@ test('surfaces scanner and extractor notices instead of swallowing them', functi
     file_put_contents($this->root . '/themes/default/template/real.latte', "real\n");
 
     $tester = new CommandTester(new PhpStanLatteSyncVarTypeCommand(Paths::fromRoot($this->root)));
-    $tester->execute(['--fix' => true]);
+    $tester->execute([
+        '--fix' => true,
+    ]);
 
     expect($tester->getDisplay())
         ->toContain("notice: unresolvable template 'does_not_exist_anywhere.latte'");

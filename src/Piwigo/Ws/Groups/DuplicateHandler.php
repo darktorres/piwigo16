@@ -20,8 +20,8 @@ use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.groups.duplicate` -- creates a copy of a group.
@@ -30,7 +30,7 @@ final readonly class DuplicateHandler implements WsAction
 {
     public function __construct(
         private GroupService $groupService,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
         private GetListHandler $getListHandler,
     ) {}
 
@@ -45,7 +45,7 @@ final readonly class DuplicateHandler implements WsAction
     {
         $input = DuplicateParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

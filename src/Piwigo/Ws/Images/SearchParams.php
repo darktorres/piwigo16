@@ -18,14 +18,14 @@ use Piwigo\Ws\WsParams;
  * shared `f_*` image-filter params (merged into this method's own
  * registration via ws.php's `$f_params`) stay in the raw `$params`
  * array and are read directly by
- * `WsHelper::stdImageSqlFilterCriteria()`/`stdImageSqlOrder()`, same as
+ * `ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()`/`stdImageSqlOrder()`, same as
  * the god-class method this replaces -- no need to duplicate their
  * shape here.
  *
  * `query`: no 'default' key -- mandatory, always a plain string.
  * `per_page`/`page`: non-null int defaults -- always present. `order`:
  * not a field here -- read directly off raw `$params` by
- * `WsHelper::stdImageSqlOrder()`, same as the `f_*` fields.
+ * `ImageSqlOrderBuilder::stdImageSqlOrder()`, same as the `f_*` fields.
  */
 final readonly class SearchParams implements WsParams
 {

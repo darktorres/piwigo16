@@ -27,8 +27,8 @@ use Piwigo\Tag\TagService;
 use Piwigo\Ws\Request\TagListRequest;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.setInfo` -- admin only. Sets details of an image.
@@ -51,7 +51,7 @@ final readonly class SetInfoHandler implements WsAction
         private TagService $tagService,
         private ImageCategoryRelationsHelper $imageCategoryRelationsHelper,
         private EntityManagerInterface $entityManager,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -68,7 +68,7 @@ final readonly class SetInfoHandler implements WsAction
         /** @var array{image_id: int, file: string|null, name: string|null, author: string|null, date_creation: string|null, comment: string|null, categories: string|null, tag_ids: string|null, level: int|null, single_value_mode: string, multiple_value_mode: string, pwg_token?: string, ...} */
         $params = $params;
 
-        $csrfError = $this->wsHelper->checkSecurityToken(
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken(
             is_string($params['pwg_token'] ?? null) ? $params['pwg_token'] : null,
         );
         if ($csrfError instanceof WsErrorResponse) {

@@ -19,8 +19,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.api_key.edit` -- edits an api key for the current user.
@@ -33,7 +33,7 @@ final readonly class EditApiKeyHandler implements WsAction
         private CurrentUser $currentUser,
         private CurrentLogger $currentLogger,
         private Lang $lang,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -54,7 +54,7 @@ final readonly class EditApiKeyHandler implements WsAction
 
         $input = EditApiKeyParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken, message: $this->lang->t('Invalid security token'));
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken, message: $this->lang->t('Invalid security token'));
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

@@ -72,7 +72,7 @@ function pwgThemesPerformActionHandlerTestSessionId(): string
  * PHP refuses to change session_id() once a session is already active --
  * under the full parallel suite, an earlier test in the same worker
  * process can leave a real session open, same guard as
- * Tests\Unit\Ws\WsHelperTest.php's own wsHelperTestSetSessionId().
+ * Tests\Unit\Ws\WsCsrfGuardTest.php's own wsCsrfGuardTestSetSessionId().
  */
 function pwgThemesPerformActionHandlerTestRealToken(): string
 {

@@ -21,8 +21,8 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.categories.setInfo` -- admin only. Changes properties of an album.
@@ -34,7 +34,7 @@ final readonly class SetInfoHandler implements WsAction
         private CategoryRepository $categoryRepository,
         private ActivityService $activityService,
         private CurrentConfig $currentConfig,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -45,7 +45,7 @@ final readonly class SetInfoHandler implements WsAction
     {
         $input = SetInfoParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

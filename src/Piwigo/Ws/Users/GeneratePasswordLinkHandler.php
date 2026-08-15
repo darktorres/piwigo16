@@ -27,8 +27,8 @@ use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.generatePasswordLink` -- admin only. Returns the reset
@@ -46,7 +46,7 @@ final readonly class GeneratePasswordLinkHandler implements WsAction
         private MailService $mailService,
         private UrlServiceInterface $urlService,
         private EntityManagerInterface $entityManager,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -58,7 +58,7 @@ final readonly class GeneratePasswordLinkHandler implements WsAction
     {
         $input = GeneratePasswordLinkParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

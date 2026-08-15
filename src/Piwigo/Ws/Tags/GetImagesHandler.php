@@ -21,12 +21,15 @@ use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Image\ImageEntity;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagService;
+use Piwigo\Ws\ImageFilterCriteriaBuilder;
+use Piwigo\Ws\ImageSqlOrderBuilder;
+use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
+use Piwigo\Ws\XmlAttributeLists;
 
 /**
  * `pwg.tags.getImages` -- returns elements for the corresponding tags.
@@ -38,7 +41,10 @@ final readonly class GetImagesHandler implements WsAction
         private UrlServiceInterface $urlService,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
-        private WsHelper $wsHelper,
+        private ImageFilterCriteriaBuilder $imageFilterCriteriaBuilder,
+        private ImageSqlOrderBuilder $imageSqlOrderBuilder,
+        private ImageUrlBuilder $imageUrlBuilder,
+        private XmlAttributeLists $xmlAttributeLists,
     ) {}
 
     /**
@@ -70,12 +76,12 @@ final readonly class GetImagesHandler implements WsAction
         /** @var array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, order: string|null, ...} */
         $filterParams = $params;
 
-        $filterCriteria = $this->wsHelper->stdImageSqlFilterCriteria($filterParams);
+        $filterCriteria = $this->imageFilterCriteriaBuilder->stdImageSqlFilterCriteria($filterParams);
         if ($filterCriteria instanceof WsErrorResponse) {
             return $filterCriteria;
         }
 
-        $order_by = $this->wsHelper->stdImageSqlOrder($filterParams, 'i.');
+        $order_by = $this->imageSqlOrderBuilder->stdImageSqlOrder($filterParams, 'i.');
         if ($order_by !== '') {
             $order_by = 'ORDER BY ' . $order_by;
         }
@@ -111,7 +117,7 @@ final readonly class GetImagesHandler implements WsAction
                 // Unboxed here rather than kept as the typed object -- this
                 // loop rebuilds a differently-shaped $image array from
                 // $row's fields and separately passes the whole row to
-                // WsHelper::stdGetUrls(array $image_row, ...), both of
+                // ImageUrlBuilder::stdGetUrls(array $image_row, ...), both of
                 // which need real array semantics.
                 $row = $imageRow->toArray();
 
@@ -133,7 +139,7 @@ final readonly class GetImagesHandler implements WsAction
                 $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
                 $image['comment'] = $descriptionEvent->elementDescription;
 
-                $image = array_merge($image, $this->wsHelper->stdGetUrls($row, $urlService));
+                $image = array_merge($image, $this->imageUrlBuilder->stdGetUrls($row, $urlService));
 
                 $image_tag_ids = $input->tagModeAnd ? $tag_ids : $image_tag_map[$row_id];
                 $image_tags = [];
@@ -160,7 +166,7 @@ final readonly class GetImagesHandler implements WsAction
                     ];
                 }
 
-                $image['tags'] = new NamedArray($image_tags, 'tag', $this->wsHelper->stdGetTagXmlAttributes());
+                $image['tags'] = new NamedArray($image_tags, 'tag', $this->xmlAttributeLists->stdGetTagXmlAttributes());
                 $images[] = $image;
             }
 
@@ -180,7 +186,7 @@ final readonly class GetImagesHandler implements WsAction
             'images' => new NamedArray(
                 $images,
                 'image',
-                $this->wsHelper->stdGetImageXmlAttributes()
+                $this->xmlAttributeLists->stdGetImageXmlAttributes()
             ),
         ];
     }

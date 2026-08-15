@@ -31,13 +31,14 @@ use Piwigo\Rate\RateService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Encoder\ResponseEncoder;
+use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Request\WsFormatRequest;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
+use Piwigo\Ws\XmlAttributeLists;
 
 /**
  * `pwg.images.getInfo` -- returns detailed information for an element.
@@ -47,7 +48,8 @@ final readonly class GetInfoHandler implements WsAction
     public function __construct(
         private ImageService $imageService,
         private PermissionService $permissionService,
-        private WsHelper $wsHelper,
+        private ImageUrlBuilder $imageUrlBuilder,
+        private XmlAttributeLists $xmlAttributeLists,
         private EventDispatcher $eventDispatcher,
         private TagService $tagService,
         private HtmlService $htmlService,
@@ -94,15 +96,15 @@ final readonly class GetInfoHandler implements WsAction
         assert(is_numeric($image_row['id']));
         $image_id = (int) $image_row['id'];
 
-        // array_merge() with WsHelper::stdGetUrls()'s mixed-valued return widens
+        // array_merge() with ImageUrlBuilder::stdGetUrls()'s mixed-valued return widens
         // PHPStan's tracked shape for every other key of the original
         // fetchAssociative() row -- restate the columns this function reads
         // below (id: 'images' NOT NULL primary key, native int under
         // DBAL; file: NOT NULL; name/comment/rating_score: nullable) plus an
         // open tail for the rest of the row and the page_url/element_url/
-        // download_url/derivatives keys WsHelper::stdGetUrls() injects.
+        // download_url/derivatives keys ImageUrlBuilder::stdGetUrls() injects.
         /** @var array{id: int, file: string, name: string|null, comment: string|null, rating_score: string|null, ...} $image_row */
-        $image_row = array_merge($image_row, $this->wsHelper->stdGetUrls($image_row, $this->urlService));
+        $image_row = array_merge($image_row, $this->imageUrlBuilder->stdGetUrls($image_row, $this->urlService));
 
         $image_row['name_raw'] = $image_row['name'];
         $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image_row['name']) ? $image_row['name'] : '', 'getInfo'));
@@ -243,7 +245,7 @@ final readonly class GetInfoHandler implements WsAction
         $ret['tags'] = new NamedArray(
             $related_tags,
             'tag',
-            $this->wsHelper->stdGetTagXmlAttributes()
+            $this->xmlAttributeLists->stdGetTagXmlAttributes()
         );
         if (isset($comment_post_data)) {
             $ret['comment_post'] = [

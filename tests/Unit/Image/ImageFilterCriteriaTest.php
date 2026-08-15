@@ -7,9 +7,9 @@ use Piwigo\Image\ImageFilterCriteria;
 
 /**
  * Piwigo\Image\ImageFilterCriteria -- typed replacement for
- * WsHelper::stdImageSqlFilterCriteria()'s own former raw SqlCondition
- * return. Pure logic, no I/O -- no dedicated Integration/Browser spec
- * of its own.
+ * Ws\ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()'s own former
+ * raw SqlCondition return. Pure logic, no I/O -- no dedicated
+ * Integration/Browser spec of its own.
  */
 test('isEmpty is true when every field is null', function (): void {
     $criteria = new ImageFilterCriteria();

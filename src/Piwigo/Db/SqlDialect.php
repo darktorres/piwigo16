@@ -39,7 +39,7 @@ final class SqlDialect
     /**
      * Returns the *complete* random-ordering expression (including its own
      * parens/arguments), not just the bare function name -- every real
-     * caller (`Ws\WsHelper::stdImageSqlOrder()` -> `Image\PhotoSortField::column()`,
+     * caller (`Ws\ImageSqlOrderBuilder::stdImageSqlOrder()` -> `Image\PhotoSortField::column()`,
      * `CategoryRepository::findImageIdsForCategories()`'s raw-DBAL
      * fallback for a `RAND()`-valued `order_by`/`order_by_custom` config,
      * `ImageRepository`, `UserRepository`, `CalendarRepository`,

@@ -17,7 +17,7 @@ use Piwigo\Tag\TagService;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
-use Piwigo\Ws\WsHelper;
+use Piwigo\Ws\XmlAttributeLists;
 
 /**
  * `pwg.tags.getAdminList` -- admin only. Returns the list of tags as you
@@ -29,7 +29,7 @@ final readonly class GetAdminListHandler implements WsAction
     public function __construct(
         private TagService $tagService,
         private HtmlRenderingInterface $htmlRenderer,
-        private WsHelper $wsHelper,
+        private XmlAttributeLists $xmlAttributeLists,
     ) {}
 
     /**
@@ -45,7 +45,7 @@ final readonly class GetAdminListHandler implements WsAction
             'tags' => new NamedArray(
                 $this->tagService->getAllTags($this->htmlRenderer),
                 'tag',
-                $this->wsHelper->stdGetTagXmlAttributes()
+                $this->xmlAttributeLists->stdGetTagXmlAttributes()
             ),
         ];
     }

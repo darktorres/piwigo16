@@ -17,8 +17,8 @@ use Piwigo\Core\WsError;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.setInfo` -- admin only. Updates a user. Leave a field blank to keep the current value.
@@ -28,7 +28,7 @@ final readonly class SetInfoHandler implements WsAction
     public function __construct(
         private UserService $userService,
         private PageState $pageState,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
         private GetListHandler $getListHandler,
     ) {}
 
@@ -43,7 +43,7 @@ final readonly class SetInfoHandler implements WsAction
     {
         $input = SetInfoParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

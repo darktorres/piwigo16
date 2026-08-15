@@ -8,7 +8,7 @@ use Piwigo\Ws\WsErrorResponse;
 
 /**
  * Typed event for the legacy `ws_invoke_allowed` filter. Registered by
- * src/Piwigo/Ws/WsInitializer.php (WsHelper::isInvokeAllowed()) at the
+ * src/Piwigo/Ws/WsInitializer.php (WsInvokeAuthorizer::isInvokeAllowed()) at the
  * default priority -- mutable, per the currently-registered-handler rule.
  *
  * Namespace override (Piwigo\Ws\Event\, not the default Piwigo\Event\Ws\):

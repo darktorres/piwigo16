@@ -31,8 +31,8 @@ use Piwigo\Ws\Request\ChunkedUploadRequest;
 use Piwigo\Ws\Request\UploadedFileRequest;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.upload` -- admin only. Uploads a file, chunked or whole.
@@ -61,7 +61,7 @@ final readonly class UploadHandler implements WsAction
         private Paths $paths,
         private HtmlService $htmlService,
         private ImageStdParams $imageStdParams,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -81,7 +81,7 @@ final readonly class UploadHandler implements WsAction
 
         $format_ext = null;
 
-        $csrfError = $this->wsHelper->checkSecurityToken($params['pwg_token']);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($params['pwg_token']);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

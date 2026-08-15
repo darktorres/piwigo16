@@ -1345,7 +1345,7 @@ final class ImageRepository extends EntityRepository
      * Applies an {@see ImageFilterCriteria}'s own up-to-11 range
      * predicates as `andWhere()`s against $alias's own columns -- shared by
      * every DQL-based consumer of the shared f_* WS filter set (see
-     * {@see \Piwigo\Ws\WsHelper::stdImageSqlFilterCriteria()}'s own
+     * {@see \Piwigo\Ws\ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()}'s own
      * docblock). Each entry is independently optional (null = no
      * restriction on that dimension).
      */

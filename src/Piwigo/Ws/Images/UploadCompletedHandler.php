@@ -19,8 +19,8 @@ use Piwigo\Image\ImageService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.uploadCompleted` -- admin only. Notifies Piwigo you have
@@ -34,7 +34,7 @@ final readonly class UploadCompletedHandler implements WsAction
         private ImageService $imageService,
         private HtmlService $htmlService,
         private EventDispatcher $eventDispatcher,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -46,7 +46,7 @@ final readonly class UploadCompletedHandler implements WsAction
     {
         $input = UploadCompletedParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

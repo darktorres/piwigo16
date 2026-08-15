@@ -18,7 +18,7 @@ use Piwigo\Ws\WsParams;
  * only. The shared `f_*` image-filter params (merged into this method's
  * own registration via `SharedImageFilterParams::get()`)
  * stay in the raw `$params` array and are read directly by
- * `WsHelper::stdImageSqlFilterCriteria()`, same as the god-class method
+ * `ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()`, same as the god-class method
  * this replaces -- no need to duplicate their shape here.
  *
  * `types`/`ids`: `FORCE_ARRAY` with a null default -- `makeArrayParam()`

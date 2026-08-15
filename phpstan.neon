@@ -193,7 +193,7 @@ parameters:
             # reports the column as float, making the cast look redundant
             # from that one connection's view alone.
             identifier: cast.useless
-            path: tests/Contract/WsHelperTest.php
+            path: tests/Contract/ImageFilterCriteriaBuilderTest.php
 
         # ------------------------------------------------------------------
         # Generated Latte analysis files (_analysis/phpstan-latte/, written

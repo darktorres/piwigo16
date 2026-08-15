@@ -20,12 +20,14 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
 use Piwigo\Sort\OrderBy;
+use Piwigo\Ws\ImageFilterCriteriaBuilder;
+use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
+use Piwigo\Ws\XmlAttributeLists;
 
 /**
  * `pwg.images.search` -- returns a list of elements corresponding to a query search.
@@ -33,7 +35,9 @@ use Piwigo\Ws\WsHelper;
 final readonly class SearchHandler implements WsAction
 {
     public function __construct(
-        private WsHelper $wsHelper,
+        private ImageFilterCriteriaBuilder $imageFilterCriteriaBuilder,
+        private ImageUrlBuilder $imageUrlBuilder,
+        private XmlAttributeLists $xmlAttributeLists,
         private CurrentConfig $currentConfig,
         private SearchService $searchService,
         private UrlServiceInterface $urlService,
@@ -61,7 +65,7 @@ final readonly class SearchHandler implements WsAction
         $filterParams = $params;
 
         $images = [];
-        $filterCriteria = $this->wsHelper->stdImageSqlFilterCriteria($filterParams);
+        $filterCriteria = $this->imageFilterCriteriaBuilder->stdImageSqlFilterCriteria($filterParams);
         if ($filterCriteria instanceof WsErrorResponse) {
             return $filterCriteria;
         }
@@ -114,7 +118,7 @@ final readonly class SearchHandler implements WsAction
                 // Unboxed here rather than kept as the typed object -- this
                 // loop rebuilds a differently-shaped $image array from
                 // $row's fields and separately passes the whole row to
-                // WsHelper::stdGetUrls(array $image_row, ...), both of
+                // ImageUrlBuilder::stdGetUrls(array $image_row, ...), both of
                 // which need real array semantics.
                 $row = $imageRow->toArray();
                 $image = [];
@@ -133,7 +137,7 @@ final readonly class SearchHandler implements WsAction
                 $descriptionEvent2 = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', 'search'));
                 $image['comment'] = $descriptionEvent2->elementDescription;
 
-                $image = array_merge($image, $this->wsHelper->stdGetUrls($row, $this->urlService));
+                $image = array_merge($image, $this->imageUrlBuilder->stdGetUrls($row, $this->urlService));
                 $images[$image_ids[$image['id']]] = $image;
             }
             ksort($images, SORT_NUMERIC);
@@ -152,7 +156,7 @@ final readonly class SearchHandler implements WsAction
             'images' => new NamedArray(
                 $images,
                 'image',
-                $this->wsHelper->stdGetImageXmlAttributes()
+                $this->xmlAttributeLists->stdGetImageXmlAttributes()
             ),
         ];
     }

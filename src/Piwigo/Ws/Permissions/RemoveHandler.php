@@ -16,8 +16,8 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.permissions.remove` -- revoke per-album access from users/groups.
@@ -26,7 +26,7 @@ final readonly class RemoveHandler implements WsAction
 {
     public function __construct(
         private CategoryService $categoryService,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
         private GetListHandler $getListHandler,
     ) {}
 
@@ -41,7 +41,7 @@ final readonly class RemoveHandler implements WsAction
     {
         $input = RemoveParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

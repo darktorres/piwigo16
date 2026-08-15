@@ -21,8 +21,8 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.tags.duplicate` -- admin only. Creates a copy of a tag.
@@ -38,7 +38,7 @@ final readonly class DuplicateHandler implements WsAction
         private ActivityService $activityService,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -50,7 +50,7 @@ final readonly class DuplicateHandler implements WsAction
     {
         $input = DuplicateParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

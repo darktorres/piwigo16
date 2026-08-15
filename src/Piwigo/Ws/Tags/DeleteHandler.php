@@ -17,8 +17,8 @@ use Piwigo\Core\WsError;
 use Piwigo\Tag\TagService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.tags.delete` -- admin only. Delete tag(s) by ID.
@@ -27,7 +27,7 @@ final readonly class DeleteHandler implements WsAction
 {
     public function __construct(
         private TagService $tagService,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -39,7 +39,7 @@ final readonly class DeleteHandler implements WsAction
     {
         $input = DeleteParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

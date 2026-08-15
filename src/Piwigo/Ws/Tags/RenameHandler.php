@@ -24,8 +24,8 @@ use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\TagService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.tags.rename` -- admin only. Rename tag.
@@ -37,7 +37,7 @@ final readonly class RenameHandler implements WsAction
         private ActivityService $activityService,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -49,7 +49,7 @@ final readonly class RenameHandler implements WsAction
     {
         $input = RenameParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

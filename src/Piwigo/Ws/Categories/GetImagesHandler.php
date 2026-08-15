@@ -22,12 +22,15 @@ use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Ws\ImageFilterCriteriaBuilder;
+use Piwigo\Ws\ImageSqlOrderBuilder;
+use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
+use Piwigo\Ws\XmlAttributeLists;
 
 /**
  * `pwg.categories.getImages` -- returns elements for the corresponding categories.
@@ -41,7 +44,10 @@ final readonly class GetImagesHandler implements WsAction
         private UrlServiceInterface $urlService,
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
-        private WsHelper $wsHelper,
+        private ImageFilterCriteriaBuilder $imageFilterCriteriaBuilder,
+        private ImageSqlOrderBuilder $imageSqlOrderBuilder,
+        private ImageUrlBuilder $imageUrlBuilder,
+        private XmlAttributeLists $xmlAttributeLists,
     ) {}
 
     /**
@@ -112,7 +118,7 @@ final readonly class GetImagesHandler implements WsAction
             /** @var array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, order: string|null, ...} $filterParams */
             $filterParams = $params;
 
-            $filterCriteria = $this->wsHelper->stdImageSqlFilterCriteria($filterParams);
+            $filterCriteria = $this->imageFilterCriteriaBuilder->stdImageSqlFilterCriteria($filterParams);
             if ($filterCriteria instanceof WsErrorResponse) {
                 return $filterCriteria;
             }
@@ -131,7 +137,7 @@ final readonly class GetImagesHandler implements WsAction
                 ),
             );
 
-            $order_by = $this->wsHelper->stdImageSqlOrder($filterParams, 'i.');
+            $order_by = $this->imageSqlOrderBuilder->stdImageSqlOrder($filterParams, 'i.');
             if ($order_by === ''
                   and count($cat_ids) === 1
                   and ($cats[$cat_ids[0]]->imageOrder ?? null) !== null
@@ -173,7 +179,7 @@ final readonly class GetImagesHandler implements WsAction
                 $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
                 $image['comment'] = $descriptionEvent->elementDescription;
 
-                $image = array_merge($image, $this->wsHelper->stdGetUrls($image_row, $urlService));
+                $image = array_merge($image, $this->imageUrlBuilder->stdGetUrls($image_row, $urlService));
 
                 $images[] = $image;
             }
@@ -259,7 +265,7 @@ final readonly class GetImagesHandler implements WsAction
             'images' => new NamedArray(
                 $images,
                 'image',
-                $this->wsHelper->stdGetImageXmlAttributes()
+                $this->xmlAttributeLists->stdGetImageXmlAttributes()
             ),
         ];
     }

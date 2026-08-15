@@ -22,8 +22,8 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.categories.delete` -- admin only. Deletes album(s).
@@ -41,7 +41,7 @@ final readonly class DeleteHandler implements WsAction
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -52,7 +52,7 @@ final readonly class DeleteHandler implements WsAction
     {
         $input = DeleteParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

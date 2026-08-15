@@ -17,8 +17,8 @@ use Piwigo\Core\WsError;
 use Piwigo\Group\GroupService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.groups.merge` -- merge groups into one other group.
@@ -31,7 +31,7 @@ final readonly class MergeHandler implements WsAction
 {
     public function __construct(
         private GroupService $groupService,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
         private GetListHandler $getListHandler,
     ) {}
 
@@ -44,7 +44,7 @@ final readonly class MergeHandler implements WsAction
     {
         $input = MergeParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

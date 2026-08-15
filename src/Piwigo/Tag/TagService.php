@@ -298,7 +298,7 @@ final readonly class TagService
      * mode supported.
      *
      * $filterCriteria is only ever populated by Ws\Tags::getImages()'s
-     * own `WsHelper::stdImageSqlFilterCriteria()` output -- see
+     * own `ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()` output -- see
      * {@see ImageFilterCriteria}'s own docblock.
      *
      * @param list<TagId> $tagIds

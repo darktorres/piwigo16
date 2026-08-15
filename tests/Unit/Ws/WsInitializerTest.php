@@ -26,7 +26,7 @@ use Piwigo\Ws\WsInitializer;
  *
  * `init()`'s own event-handler registrations (`WsAddMethods`/
  * `WsInvokeAllowed`/`GetHistory`) are not asserted on directly here --
- * they wire `WsDefaultMethods::register()`/`WsHelper::isInvokeAllowed()`/
+ * they wire `WsDefaultMethods::register()`/`WsInvokeAuthorizer::isInvokeAllowed()`/
  * `Core::historyGet()`, each already deferred/covered on their own
  * terms elsewhere in the B4 bucket.
  */

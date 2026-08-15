@@ -35,8 +35,8 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.themes.performAction` -- activate/deactivate/delete/set_default a
@@ -61,7 +61,7 @@ final readonly class ThemesPerformActionHandler implements WsAction
         private PluginRegistry $pluginRegistry,
         private ThemeRegistry $themeRegistry,
         private EntityManagerInterface $entityManager,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -74,7 +74,7 @@ final readonly class ThemesPerformActionHandler implements WsAction
         $input = ThemesPerformActionParams::fromArray($params);
 
         /** @var Template $template */
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

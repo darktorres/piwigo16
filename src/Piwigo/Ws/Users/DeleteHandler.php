@@ -20,8 +20,8 @@ use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.delete` -- admin only. Deletes one or more users. Photos owned by this user are not deleted.
@@ -33,7 +33,7 @@ final readonly class DeleteHandler implements WsAction
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
         private Translator $translator,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -44,7 +44,7 @@ final readonly class DeleteHandler implements WsAction
     {
         $input = DeleteParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

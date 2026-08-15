@@ -18,11 +18,13 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Piwigo\Ws\ImageSqlOrderBuilder;
+use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
-use Piwigo\Ws\WsHelper;
+use Piwigo\Ws\XmlAttributeLists;
 
 /**
  * `pwg.users.favorites.getList` -- returns the favorite images of the current user.
@@ -36,7 +38,9 @@ final readonly class FavoritesGetListHandler implements WsAction
         private PermissionService $permissionService,
         private UrlServiceInterface $urlService,
         private CurrentConfig $currentConfig,
-        private WsHelper $wsHelper,
+        private ImageSqlOrderBuilder $imageSqlOrderBuilder,
+        private ImageUrlBuilder $imageUrlBuilder,
+        private XmlAttributeLists $xmlAttributeLists,
     ) {}
 
     /**
@@ -61,7 +65,7 @@ final readonly class FavoritesGetListHandler implements WsAction
         /** @var array{order: string|null, ...} $orderParams */
         $orderParams = $params;
 
-        $order_by = $this->wsHelper->stdImageSqlOrder($orderParams, 'i.');
+        $order_by = $this->imageSqlOrderBuilder->stdImageSqlOrder($orderParams, 'i.');
         $order_by = $order_by === '' ? $this->currentConfig->orderBy->toSql() : 'ORDER BY ' . $order_by;
 
         $permission_condition = $this->permissionService->getPermissionCriteria();
@@ -80,7 +84,7 @@ final readonly class FavoritesGetListHandler implements WsAction
                 $image[$k] = $row[$k] ?? null;
             }
 
-            $images[] = array_merge($image, $this->wsHelper->stdGetUrls($row, $this->urlService));
+            $images[] = array_merge($image, $this->imageUrlBuilder->stdGetUrls($row, $this->urlService));
         }
 
         $count = count($images);
@@ -97,7 +101,7 @@ final readonly class FavoritesGetListHandler implements WsAction
             'images' => new NamedArray(
                 $images,
                 'image',
-                $this->wsHelper->stdGetImageXmlAttributes()
+                $this->xmlAttributeLists->stdGetImageXmlAttributes()
             ),
         ];
     }

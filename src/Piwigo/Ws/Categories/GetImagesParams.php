@@ -18,7 +18,7 @@ use Piwigo\Ws\WsParams;
  * only. The shared `f_*` image-filter params (merged into this method's
  * own registration) plus `order` stay in the raw `$params` array and
  * are read directly by
- * `WsHelper::stdImageSqlFilterCriteria()`/`stdImageSqlOrder()`, same as
+ * `ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()`/`stdImageSqlOrder()`, same as
  * the god-class method this replaces -- no need to duplicate their
  * shape here.
  *

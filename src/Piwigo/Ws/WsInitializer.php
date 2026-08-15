@@ -33,7 +33,7 @@ use Psr\Container\ContainerInterface;
  * caller receives the same Server instance from init()'s return value.
  *
  * Server is passed as a real parameter to
- * WsHelper::stdImageSqlFilterCriteria()/UploadService::addUploadedFile()
+ * ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()/UploadService::addUploadedFile()
  * rather than read from a global.
  */
 final class WsInitializer
@@ -45,7 +45,7 @@ final class WsInitializer
         private readonly WsDefaultMethods $wsDefaultMethods,
         private readonly GetHistoryListener $getHistoryListener,
         private readonly UrlServiceInterface $urlService,
-        private readonly WsHelper $wsHelper,
+        private readonly WsInvokeAuthorizer $wsInvokeAuthorizer,
         private readonly AccessControl $accessControl,
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
         private readonly CurrentConfig $currentConfig,
@@ -59,7 +59,7 @@ final class WsInitializer
         }
 
         $this->eventDispatcher->addTypedHandler(WsAddMethods::class, $this->wsDefaultMethods->register(...));
-        $this->eventDispatcher->addTypedHandler(WsInvokeAllowed::class, $this->wsHelper->isInvokeAllowed(...));
+        $this->eventDispatcher->addTypedHandler(WsInvokeAllowed::class, $this->wsInvokeAuthorizer->isInvokeAllowed(...));
         // Registers unconditionally, once per WS request -- must run before
         // History\SearchHandler dispatches its GetHistory event, since
         // GetHistoryListener needs to already be listening.

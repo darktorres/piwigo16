@@ -21,8 +21,8 @@ use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.groups.add` -- creates a group and returns the new group record.
@@ -33,7 +33,7 @@ final readonly class AddHandler implements WsAction
         private GroupService $groupService,
         private CurrentUser $currentUser,
         private AuditService $auditService,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
         private GetListHandler $getListHandler,
     ) {}
 
@@ -48,7 +48,7 @@ final readonly class AddHandler implements WsAction
     {
         $input = AddParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

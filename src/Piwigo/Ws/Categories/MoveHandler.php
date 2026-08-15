@@ -21,8 +21,8 @@ use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.categories.move` -- admin only. Move album(s). Set parent as 0 to
@@ -36,7 +36,7 @@ final readonly class MoveHandler implements WsAction
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
         private HtmlRenderingInterface $htmlRenderer,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -48,7 +48,7 @@ final readonly class MoveHandler implements WsAction
     {
         $input = MoveParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

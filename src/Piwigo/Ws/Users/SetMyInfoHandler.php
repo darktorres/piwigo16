@@ -23,8 +23,8 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.setMyInfo` -- lets a logged-in (non-guest) user update their own info.
@@ -40,7 +40,7 @@ final readonly class SetMyInfoHandler implements WsAction
         private Lang $lang,
         private PageState $pageState,
         private PasswordService $passwordService,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -51,7 +51,7 @@ final readonly class SetMyInfoHandler implements WsAction
     {
         $input = SetMyInfoParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

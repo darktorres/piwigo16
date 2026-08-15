@@ -9,7 +9,7 @@ use Piwigo\Sort\PhotoSortField;
 
 /**
  * Piwigo\Sort\PhotoSortField -- the typed replacement for
- * Ws\WsHelper::stdImageSqlOrder()'s own per-token field allowlist. Every
+ * Ws\ImageSqlOrderBuilder::stdImageSqlOrder()'s own per-token field allowlist. Every
  * one of the 8 real WS `order` tokens, its 2 aliases, and one invalid
  * token.
  */

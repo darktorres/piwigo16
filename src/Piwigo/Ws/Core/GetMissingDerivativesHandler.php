@@ -19,10 +19,10 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\MissingDerivativesCriteria;
 use Piwigo\Image\SrcImage;
+use Piwigo\Ws\ImageFilterCriteriaBuilder;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.getMissingDerivatives` -- admin only. Returns a list of missing derivatives (not generated yet).
@@ -33,7 +33,7 @@ final readonly class GetMissingDerivativesHandler implements WsAction
         private ImageService $imageService,
         private CurrentConfig $currentConfig,
         private ImageStdParams $imageStdParams,
-        private WsHelper $wsHelper,
+        private ImageFilterCriteriaBuilder $imageFilterCriteriaBuilder,
     ) {}
 
     /**
@@ -86,7 +86,7 @@ final readonly class GetMissingDerivativesHandler implements WsAction
         /** @var array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} */
         $filterParams = $params;
 
-        $filterCriteria = $this->wsHelper->stdImageSqlFilterCriteria($filterParams);
+        $filterCriteria = $this->imageFilterCriteriaBuilder->stdImageSqlFilterCriteria($filterParams);
         if ($filterCriteria instanceof WsErrorResponse) {
             return $filterCriteria;
         }

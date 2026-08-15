@@ -20,8 +20,8 @@ use Piwigo\Core\WsError;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.setMainUser` -- admin only, webmaster only. Sets a user as
@@ -33,7 +33,7 @@ final readonly class SetMainUserHandler implements WsAction
         private AccessControl $accessControl,
         private UserService $userService,
         private ConfigService $configService,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -50,7 +50,7 @@ final readonly class SetMainUserHandler implements WsAction
         $input = SetMainUserParams::fromArray($params);
 
         // check pwg_token
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

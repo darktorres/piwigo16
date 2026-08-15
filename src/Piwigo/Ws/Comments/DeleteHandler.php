@@ -16,8 +16,8 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Core\Lang;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.userComments.delete` -- admin bulk-delete user comments.
@@ -27,7 +27,7 @@ final readonly class DeleteHandler implements WsAction
     public function __construct(
         private CommentService $commentService,
         private Lang $lang,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -38,7 +38,7 @@ final readonly class DeleteHandler implements WsAction
     {
         $input = DeleteParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken, message: $this->lang->t('Invalid security token'));
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken, message: $this->lang->t('Invalid security token'));
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

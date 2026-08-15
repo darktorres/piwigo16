@@ -448,8 +448,8 @@ final class WsTopLevelTest extends ContractTestCase
      * bayesian/shrinkage estimator's own global-mean input shifts while
      * the extra rate briefly exists, and doesn't reliably land back on
      * the exact original float afterward), corrupting later tests that
-     * read fixture rating_score values (WsHelperTest's own f_min_rate/
-     * f_max_rate assertions). Same "avoid nudging the shared fixture's
+     * read fixture rating_score values (ImageFilterCriteriaBuilderTest's
+     * own f_min_rate/f_max_rate assertions). Same "avoid nudging the shared fixture's
      * rating_score, which other test files also read" rationale this
      * class's own test_ratesDelete_with_anonymous_id_only_removes_the_matching_rate()
      * and WsImagesMutationTest::insertThrowawayImage() already established

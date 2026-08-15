@@ -17,8 +17,8 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Image\ImageService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.setCategory` -- admin only. Associates/Dissociates/Moves
@@ -31,7 +31,7 @@ final readonly class SetCategoryHandler implements WsAction
     public function __construct(
         private CategoryService $categoryService,
         private ImageService $imageService,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -42,7 +42,7 @@ final readonly class SetCategoryHandler implements WsAction
     {
         $input = SetCategoryParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

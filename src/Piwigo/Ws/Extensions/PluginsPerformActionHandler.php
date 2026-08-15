@@ -35,8 +35,8 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.plugins.performAction` -- install/activate/deactivate/uninstall/delete a plugin.
@@ -60,7 +60,7 @@ final readonly class PluginsPerformActionHandler implements WsAction
         private PluginRegistry $pluginRegistry,
         private ThemeRegistry $themeRegistry,
         private EntityManagerInterface $entityManager,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -73,7 +73,7 @@ final readonly class PluginsPerformActionHandler implements WsAction
         $input = PluginsPerformActionParams::fromArray($params);
 
         /** @var Template $template */
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

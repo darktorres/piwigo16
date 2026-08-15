@@ -19,8 +19,8 @@ use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.formats.delete` -- admin only. Removes a format from the
@@ -34,7 +34,7 @@ final readonly class FormatsDeleteHandler implements WsAction
         private ImageService $imageService,
         private UrlServiceInterface $urlService,
         private Paths $paths,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -45,7 +45,7 @@ final readonly class FormatsDeleteHandler implements WsAction
     {
         $input = FormatsDeleteParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

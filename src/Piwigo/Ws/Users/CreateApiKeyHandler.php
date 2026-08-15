@@ -18,8 +18,8 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.api_key.create` -- creates a new api key for the current user.
@@ -31,7 +31,7 @@ final readonly class CreateApiKeyHandler implements WsAction
         private ApiKeyService $apiKeyService,
         private CurrentUser $currentUser,
         private CurrentLogger $currentLogger,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -49,7 +49,7 @@ final readonly class CreateApiKeyHandler implements WsAction
 
         $input = CreateApiKeyParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

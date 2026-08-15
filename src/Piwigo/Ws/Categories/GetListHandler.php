@@ -36,11 +36,12 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Piwigo\Ws\CategoryTreeBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
+use Piwigo\Ws\XmlAttributeLists;
 
 /**
  * `pwg.categories.getList` -- returns a list of categories.
@@ -60,7 +61,8 @@ final readonly class GetListHandler implements WsAction
         private CurrentUser $currentUser,
         private AccessControl $accessControl,
         private ImageStdParams $imageStdParams,
-        private WsHelper $wsHelper,
+        private CategoryTreeBuilder $categoryTreeBuilder,
+        private XmlAttributeLists $xmlAttributeLists,
         private PermissionsCachePool $permissionsCachePool,
         private CategoryTreeCachePool $categoryTreeCachePool,
     ) {}
@@ -472,13 +474,13 @@ final readonly class GetListHandler implements WsAction
         // management of the album thumbnail -- stops here
 
         if ($input->treeOutput) {
-            return $this->wsHelper->categoriesFlatlistToTree($cats);
+            return $this->categoryTreeBuilder->categoriesFlatlistToTree($cats);
         }
 
         $output['categories'] = new NamedArray(
             $cats,
             'category',
-            $this->wsHelper->stdGetCategoryXmlAttributes()
+            $this->xmlAttributeLists->stdGetCategoryXmlAttributes()
         );
 
         return $output;

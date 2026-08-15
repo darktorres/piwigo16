@@ -18,7 +18,7 @@ use Piwigo\Tag\TagService;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
-use Piwigo\Ws\WsHelper;
+use Piwigo\Ws\XmlAttributeLists;
 
 /**
  * `pwg.tags.getList` -- retrieves a list of available tags.
@@ -29,7 +29,7 @@ final readonly class GetListHandler implements WsAction
         private TagService $tagService,
         private HtmlRenderingInterface $htmlRenderer,
         private UrlServiceInterface $urlService,
-        private WsHelper $wsHelper,
+        private XmlAttributeLists $xmlAttributeLists,
     ) {}
 
     /**
@@ -62,7 +62,7 @@ final readonly class GetListHandler implements WsAction
             'tags' => new NamedArray(
                 $tags,
                 'tag',
-                $this->wsHelper->stdGetTagXmlAttributes()
+                $this->xmlAttributeLists->stdGetTagXmlAttributes()
             ),
         ];
     }

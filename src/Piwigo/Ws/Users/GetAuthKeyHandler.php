@@ -16,8 +16,8 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Core\WsError;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.users.getAuthKey` -- admin only. Get a new authentication key for a user.
@@ -26,7 +26,7 @@ final readonly class GetAuthKeyHandler implements WsAction
 {
     public function __construct(
         private AuthService $authService,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -38,7 +38,7 @@ final readonly class GetAuthKeyHandler implements WsAction
     {
         $input = GetAuthKeyParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

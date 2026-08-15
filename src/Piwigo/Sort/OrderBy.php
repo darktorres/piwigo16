@@ -12,7 +12,7 @@ use Piwigo\Db\SqlDialect;
  *
  * The vocabulary is closed: `Controller\Admin\ConfigurationSubController`
  * builds `order_by`/`order_by_inside_category` out of its own `$sort_fields`
- * allow-list, and `Ws\WsHelper::stdImageSqlOrder()` maps the WS `order`
+ * allow-list, and `Ws\ImageSqlOrderBuilder::stdImageSqlOrder()` maps the WS `order`
  * parameter through {@see PhotoSortField}. Both used to flatten that
  * structure into text immediately, leaving every consumer to parse it back
  * -- which is why the `RAND()` portability rewrite and the platform-specific

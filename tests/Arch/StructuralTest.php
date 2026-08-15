@@ -1144,7 +1144,7 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // ServerTimingMiddleware's header silently skipped on every
         // redirect/error page).
 
-        // Ws/WsHelper.php's own former exit() site
+        // Ws/ImageFilterCriteriaBuilder.php's own former exit() site
         // (stdImageSqlFilterCriteria()'s invalid-date-field branch) is
         // gone -- it now returns a WsErrorResponse and lets the standard
         // Server::invoke() -> sendResponse() flow carry it out, the same

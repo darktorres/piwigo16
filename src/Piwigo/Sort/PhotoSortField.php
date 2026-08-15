@@ -8,7 +8,7 @@ use Piwigo\Db\DbCredentials;
 use Piwigo\Db\SqlDialect;
 
 /**
- * Typed replacement for {@see \Piwigo\Ws\WsHelper::stdImageSqlOrder()}'s
+ * Typed replacement for {@see \Piwigo\Ws\ImageSqlOrderBuilder::stdImageSqlOrder()}'s
  * own regex+switch-based per-token sort-field parser -- the WS `order`
  * param's 8 real sortable tokens, each optionally suffixed
  * `asc`/`desc`(`ending`), comma-chained.
@@ -29,7 +29,7 @@ use Piwigo\Db\SqlDialect;
  * `$sortByColumn`/`$sortOrder`), not an injection risk needing binding.
  * Forcing those call sites to parse individual tokens they've never needed
  * to parse would be pure unnecessary churn with no functional or security
- * benefit. `WsHelper::stdImageSqlOrder()` is different: it's the one real
+ * benefit. `ImageSqlOrderBuilder::stdImageSqlOrder()` is different: it's the one real
  * place that already does per-token parsing (the WS `order` param can name
  * more than one field), so it's the one place a typed parser pays for
  * itself.
@@ -133,7 +133,7 @@ enum PhotoSortField
      * own `$sort_fields` vocabulary -- the exact 8 field slugs it validates
      * `order_by`/`order_by_inside_category` entries against.
      * Deliberately separate from {@see fromToken()}: that one carries
-     * `WsHelper::stdImageSqlOrder()`'s own legacy WS-param aliases
+     * `ImageSqlOrderBuilder::stdImageSqlOrder()`'s own legacy WS-param aliases
      * (`date_created`/`date_posted`/`rand`/`random`), none of which are
      * valid `$sort_fields` entries, and `$sort_fields` has `rank`, which
      * isn't a valid WS `order` token either -- the two vocabularies

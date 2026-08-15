@@ -20,8 +20,8 @@ use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.syncMetadata` -- admin only. Synchronizes metadatas of
@@ -34,7 +34,7 @@ final readonly class SyncMetadataHandler implements WsAction
         private MetadataService $metadataService,
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -46,7 +46,7 @@ final readonly class SyncMetadataHandler implements WsAction
     {
         $input = SyncMetadataParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

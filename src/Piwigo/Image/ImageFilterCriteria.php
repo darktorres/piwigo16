@@ -9,7 +9,7 @@ use Piwigo\Permission\SqlCondition;
 
 /**
  * Typed replacement for
- * {@see \Piwigo\Ws\WsHelper::stdImageSqlFilterCriteria()}'s own former raw
+ * {@see \Piwigo\Ws\ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()}'s own former raw
  * `Piwigo\Permission\SqlCondition` return -- the shared "f_*" range-filter
  * set merged into every WS method that exposes generic image filtering
  * (`pwg.images.search`, `pwg.categories.getImages`,

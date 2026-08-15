@@ -17,8 +17,8 @@ use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.extensions.ignoreUpdate` -- webmaster-only. Ignores an extension if it needs update.
@@ -28,7 +28,7 @@ final readonly class IgnoreUpdateHandler implements WsAction
     public function __construct(
         private AccessControl $accessControl,
         private ExtensionUpdateChecker $extensionUpdateChecker,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -48,7 +48,7 @@ final readonly class IgnoreUpdateHandler implements WsAction
 
         $input = IgnoreUpdateParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

@@ -20,8 +20,8 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.tags.merge` -- admin only. Merge tags in one other tag.
@@ -32,7 +32,7 @@ final readonly class MergeHandler implements WsAction
         private TagService $tagService,
         private ActivityService $activityService,
         private EventDispatcher $eventDispatcher,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -44,7 +44,7 @@ final readonly class MergeHandler implements WsAction
     {
         $input = MergeParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

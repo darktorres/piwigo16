@@ -19,7 +19,7 @@ namespace Piwigo\Ws;
  * $content is genuinely arbitrary by design -- this wraps any WS method's
  * own response content generically for encoding, same rationale as
  * NamedStruct/Encoder\ResponseEncoder. Left fully `public` (not
- * `private(set)` like $xmlAttributes/$itemName below): WsHelper::
+ * `private(set)` like $xmlAttributes/$itemName below): CategoryTreeBuilder::
  * categoriesFlatlistToTree() genuinely mutates it after construction
  * (`$sub_categories->content[] = &$node;`), building a category tree
  * in a single pass via by-ref array append -- the one real external

@@ -310,7 +310,7 @@ final class WsServerTest extends ContractTestCase
             self::assertSame('Access denied', $response['message']);
 
             // 'pwg.session.*' methods are explicitly exempted by
-            // WsHelper::isInvokeAllowed() -- still reachable even with
+            // WsInvokeAuthorizer::isInvokeAllowed() -- still reachable even with
             // guest access disabled site-wide.
             $status = $this->ws('pwg.session.getStatus');
             self::assertSame('ok', $status['stat']);

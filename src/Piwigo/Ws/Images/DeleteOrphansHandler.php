@@ -17,8 +17,8 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsHelper;
 
 /**
  * `pwg.images.deleteOrphans` -- admin only. Deletes orphan photos, by
@@ -30,7 +30,7 @@ final readonly class DeleteOrphansHandler implements WsAction
     public function __construct(
         private ImageService $imageService,
         private UrlServiceInterface $urlService,
-        private WsHelper $wsHelper,
+        private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
     /**
@@ -42,7 +42,7 @@ final readonly class DeleteOrphansHandler implements WsAction
     {
         $input = DeleteOrphansParams::fromArray($params);
 
-        $csrfError = $this->wsHelper->checkSecurityToken($input->pwgToken);
+        $csrfError = $this->wsCsrfGuard->checkSecurityToken($input->pwgToken);
         if ($csrfError instanceof WsErrorResponse) {
             return $csrfError;
         }

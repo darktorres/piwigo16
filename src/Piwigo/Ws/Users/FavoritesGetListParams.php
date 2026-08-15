@@ -16,7 +16,7 @@ use Piwigo\Ws\WsParams;
 /**
  * `pwg.users.favorites.getList` input DTO -- the pagination fields only.
  * `order` stays in the raw `$params` array and is read directly by
- * `WsHelper::stdImageSqlOrder()`, same as the god-class method this
+ * `ImageSqlOrderBuilder::stdImageSqlOrder()`, same as the god-class method this
  * replaces -- no need to duplicate its shape here. `per_page`/`page`:
  * non-null default, always present.
  */

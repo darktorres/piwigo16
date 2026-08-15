@@ -19,10 +19,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * BatchManagerUnitPageRenderer (?page=batch_manager&mode=unit),
  * AdminPopuphelpController (admin/popuphelp.php), RatingUserSubController
  * (?page=rating_user), PluginSubController (?page=plugin), and
- * ThemeSubController (?page=theme&theme=..., the per-theme admin config
- * include -- singular "theme", distinct from the "themes" tab-dispatch
- * shell above; no real caller of the former appeared anywhere in this
- * project's test suite before this file).
+ * ThemeSubController (?page=theme&theme=..., the per-theme
+ * SettingsPageInterface dispatch, P27.15 -- singular "theme", distinct
+ * from the "themes" tab-dispatch shell above; no real caller of the
+ * former appeared anywhere in this project's test suite before this
+ * file).
  *
  * Unlike AdminExtendedSmokeTest.php's "clean (no errors)" checks, every
  * test here also asserts on real, specific rendered content. The
@@ -54,17 +55,22 @@ it('help page renders a non-default section when one is requested', function ():
     $page->assertSee('Permissions on albums');
 });
 
-it('languages add-new tab connects to the real mirror but finds no 17.0.0-compatible language', function (): void {
-    // piwigo16-languages' manifest genuinely has zero entries whose
-    // piwigo_compat includes '17.0.0' (unlike plugins/themes, no language
-    // has ever been ported) -- "There is no other language available." is
-    // therefore the real, correct empty-catalog message, not the old
-    // connection-failure one.
+it('languages add-new tab connects to the real mirror and lists a real 17.0.0-compatible language', function (): void {
+    // piwigo16-languages' manifest.json was bulk-ported to <code>_17.0.0/
+    // entries for all 62 locales on 2026-08-14 (see that repo's own
+    // CLAUDE.md, "The one real migration that did need to happen"),
+    // matching the plugins/themes mirrors' own already-ported convention
+    // -- "There is no other language available." was the real, correct
+    // message only before that port existed. af_ZA ("Afrikaans [ZA]") is
+    // a stable, always-present entry to assert against, the same way the
+    // plugins/themes add-new tests below assert on their own one
+    // deterministic real entry ("Language Switch"/"Clear").
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=languages&tab=new');
 
     $page->assertSee('Add New Language');
-    $page->assertSee('There is no other language available.');
+    $page->assertSee('Afrikaans');
+    $page->assertDontSee('There is no other language available.');
     $page->assertDontSee('Connection to server unavailable.');
 });
 
@@ -97,64 +103,133 @@ it('theme page rejects a theme id that ExtensionScanner never found on disk', fu
         ->toContain('Invalid theme');
 });
 
-it('theme page reports a missing admin.inc.php for a real, scanned theme', function (): void {
+it('theme page reports "no settings page" for a real, scanned theme with none', function (): void {
     // 'default' is a genuine ExtensionScanner-recognized theme in this
     // fixture (themes/default/theme.json exists), so it clears the
-    // "theme not found" gate above and reaches the 2nd real branch:
-    // neither bundled theme (default/standard_pages) ships its own
-    // admin/admin.inc.php, so
-    // this is the furthest of ThemeSubController's 3 branches reachable
-    // without a theme this fork doesn't ship.
+    // "theme not found" gate above and reaches ThemeSubController's 2nd
+    // real branch: neither bundled theme (default/standard_pages)
+    // implements PluginConfig\SettingsPageInterface -- P27.15
+    // (970e2c77e8) replaced the old raw include_once/"Missing file"
+    // dispatch this test used to assert with this fatalError() instead.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=theme&theme=default');
 
     expect($page->content())
-        ->toContain('Missing file')
-        ->and($page->content())
-        ->toContain('default/admin/admin.inc.php');
+        ->toContain('Theme default has no settings page');
 });
 
 /**
- * Closes ThemeSubController's 3rd, remaining branch (the real
- * `include_once $filename;`, line ~47): needs a theme with BOTH a
- * theme.json (so ExtensionScanner::scan() finds it -- a pure filesystem
- * scan, `is_dir()` + `file_exists()` + a tolerant `json_decode()`, never
- * `include`d itself, so its content only needs to be valid JSON, not
- * valid PHP) AND its own admin/admin.inc.php, which neither bundled
- * theme ships (see the test above). Same throwaway-fixture-under-the-
- * live-root technique as the plugin fixture tests above -- unlike
- * ThemesInstalledPageRendererTest.php's own documented reason for
- * avoiding this (a real activate/deactivate/delete STATE transition,
- * visible to every other test that lists installed/active themes), this
- * never touches the `theme` config row or any DB table at all --
- * ExtensionScanner::scan() is a pure filesystem read, so a
- * same-it()-scoped, finally-cleaned-up directory carries none of that
- * cross-test state risk.
+ * Covers ThemeSubController's happy-path branch: a real theme whose
+ * main class implements both ExtensionInterface and
+ * SettingsPageInterface (P27.15) -- neither bundled theme does, and
+ * this fork's own Unit-suite ThemeSubControllerTest.php explicitly
+ * leaves this branch uncovered ("needs a real theme directory with a
+ * marker theme.json on disk, not attempted here"). Same
+ * throwaway-fixture-under-the-live-root technique the original
+ * (pre-P27.15) version of this test used -- ThemeRegistry::
+ * bootForSettingsPage() never checks "installed" state (see its own
+ * docblock), so this never touches the `theme` config row or any DB
+ * table, unlike ThemesInstalledPageRendererTest.php's own documented
+ * reason for avoiding a live theme directory.
  */
 function themeSubThemesPath(): string
 {
     return dirname(__DIR__, 2) . '/themes/';
 }
 
-function themeSubWriteFixtureTheme(string $themeId): void
+function themeSubWriteFixtureTheme(string $themeId, string $namespaceSuffix): string
 {
     $dir = themeSubThemesPath() . $themeId;
-    $adminDir = $dir . '/admin';
-    if (! is_dir($adminDir)) {
-        mkdir($adminDir, 0o777, true);
-    }
+    mkdir($dir . '/src', 0o777, true);
+    mkdir($dir . '/template', 0o777, true);
+
+    $namespace = 'PiwigoTestFixture\\ThemeSettings' . $namespaceSuffix;
+    $className = 'Theme' . $namespaceSuffix;
+    $templatePath = $dir . '/template/admin.latte';
+    file_put_contents($templatePath, 'CT_THEMESUB_INCLUDED');
+
     file_put_contents($dir . '/theme.json', json_encode([
+        'id' => $themeId,
         'name' => $themeId,
-    ], JSON_THROW_ON_ERROR));
-    file_put_contents($adminDir . '/admin.inc.php', "<?php\necho '<!--CT_THEMESUB_INCLUDED-->';\n");
+        'version' => '1.0.0',
+        'description' => 'Test-only fixture theme (tests/Browser/AdminUncoveredPagesSmokeTest.php).',
+        'license' => 'MIT',
+        'minPiwigo' => '16.3.0',
+        'main' => $namespace . '\\' . $className,
+        'hasSettings' => true,
+        'autoload' => [
+            'psr-4' => [
+                $namespace . '\\' => 'src/',
+            ],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+    // handleSettingsRequest() renders via ExtensionContext::template()->
+    // assignVarFromTemplate('ADMIN_CONTENT', ...), the same real
+    // mechanism SettingsPageInterface's own docblock documents and
+    // Tests/Integration/PluginSettingsPageDispatchTest.php's own
+    // writeFixtureSettingsPlugin() already exercises for plugins -- this
+    // embeds the marker inside the normal admin page chrome (a real DOM
+    // descendant of <html>), unlike the pre-P27.15 raw include_once
+    // mechanism this test used to work around via H::rawGet().
+    file_put_contents($dir . '/src/' . $className . '.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use LogicException;
+        use Piwigo\\PluginConfig\\ExtensionContext;
+        use Piwigo\\PluginConfig\\ExtensionInterface;
+        use Piwigo\\PluginConfig\\SettingsPageInterface;
+        use Psr\\Http\\Message\\ServerRequestInterface;
+
+        final class {$className} implements ExtensionInterface, SettingsPageInterface
+        {
+            private ?ExtensionContext \$context = null;
+
+            public function boot(ExtensionContext \$context): void
+            {
+                \$this->context = \$context;
+            }
+
+            public function install(): void {}
+            public function activate(): void {}
+            public function deactivate(): void {}
+            public function uninstall(): void {}
+            public function update(string \$oldVersion, string \$newVersion): void {}
+
+            public function subscribedEvents(): array
+            {
+                return [];
+            }
+
+            public function handleSettingsRequest(ServerRequestInterface \$request): void
+            {
+                if (\$this->context === null) {
+                    throw new LogicException('boot() was never called');
+                }
+
+                \$this->context->template()->assignVarFromTemplate('ADMIN_CONTENT', '{$templatePath}');
+            }
+        }
+
+        PHP);
+
+    return $namespace . '\\' . $className;
 }
 
-function themeSubRemoveFixtureTheme(string $themeId): void
+function themeSubRemoveFixtureTheme(string $themeId, string $namespaceSuffix): void
 {
     $dir = themeSubThemesPath() . $themeId;
-    @unlink($dir . '/admin/admin.inc.php');
-    if (is_dir($dir . '/admin')) {
-        rmdir($dir . '/admin');
+    @unlink($dir . '/src/Theme' . $namespaceSuffix . '.php');
+    if (is_dir($dir . '/src')) {
+        rmdir($dir . '/src');
+    }
+    @unlink($dir . '/template/admin.latte');
+    if (is_dir($dir . '/template')) {
+        rmdir($dir . '/template');
     }
     @unlink($dir . '/theme.json');
     if (is_dir($dir)) {
@@ -162,28 +237,19 @@ function themeSubRemoveFixtureTheme(string $themeId): void
     }
 }
 
-it('theme page includes a real admin.inc.php for a theme that ships one', function (): void {
+it('theme page dispatches to a real SettingsPageInterface theme and renders its content', function (): void {
     $themeId = 'ct-themesub-active-' . uniqid();
-    themeSubWriteFixtureTheme($themeId);
+    $suffix = str_replace('-', '', $themeId);
+    themeSubWriteFixtureTheme($themeId, $suffix);
 
     try {
         $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=theme&theme=' . $themeId);
 
-        // H::rawGet(), not navigateOk()+content():
-        // ThemeSubController::handle() echoes this marker via include_once
-        // *before* the surrounding admin template's own <!DOCTYPE html> is
-        // ever emitted, which really is present in the raw HTTP response
-        // body, but Playwright's page.content() returns
-        // document.documentElement.outerHTML (a DOM serialization), not
-        // the raw response -- a comment positioned before <html> is a
-        // sibling of the <html> element in the parsed document, not a
-        // descendant, so outerHTML never includes it. rawGet()'s in-browser
-        // fetch().text() reads the real, unparsed response body instead.
-        $result = H::rawGet($page, '/admin.php?page=theme&theme=' . $themeId);
-        expect($result['status'])->toBe(200);
-        expect($result['body'])->toContain('CT_THEMESUB_INCLUDED');
+        expect($page->content())
+            ->toContain('CT_THEMESUB_INCLUDED');
     } finally {
-        themeSubRemoveFixtureTheme($themeId);
+        themeSubRemoveFixtureTheme($themeId, $suffix);
     }
 });
 
@@ -366,9 +432,9 @@ function pluginSubPluginsPath(): string
  * placeholder (this helper's pre-P27.4 shape) no longer makes a plugin
  * "active" for its purposes -- a real manifest + PSR-4 class is required
  * even though neither call site below needs any actual boot() behavior.
- * `ct_settings.php` is unrelated to the plugin/theme contract entirely --
- * `PluginSubController` `include_once`s it by raw path, independent of
- * ExtensionScanner/PluginRegistry.
+ * Deliberately does NOT implement SettingsPageInterface -- reused as-is
+ * by the "no settings page" test below; the happy-path test uses its own
+ * separate writer (pluginSubWriteFixtureSettingsPlugin()) instead.
  */
 function pluginSubWriteFixturePlugin(string $pluginId): void
 {
@@ -421,8 +487,6 @@ function pluginSubWriteFixturePlugin(string $pluginId): void
         }
 
         PHP);
-
-    file_put_contents($dir . '/ct_settings.php', "<?php\necho '<!--CT_PLUGINSUB_INCLUDED-->';\n");
 }
 
 function pluginSubRemoveFixturePlugin(string $pluginId): void
@@ -437,15 +501,114 @@ function pluginSubRemoveFixturePlugin(string $pluginId): void
     if (file_exists($dir . '/plugin.json')) {
         unlink($dir . '/plugin.json');
     }
-    if (file_exists($dir . '/ct_settings.php')) {
-        unlink($dir . '/ct_settings.php');
-    }
     if (is_dir($dir)) {
         rmdir($dir);
     }
 }
 
-it('plugin page includes a real settings file from an active on-disk plugin', function (): void {
+/**
+ * Covers PluginSubController's happy-path branch: a real, active plugin
+ * whose main class implements both ExtensionInterface and
+ * SettingsPageInterface (P27.15) -- this fork's own Unit-suite
+ * PluginSubControllerTest.php explicitly leaves this branch uncovered
+ * ("needs a real, booted plugin instance, not attempted here"), and
+ * Tests/Integration/PluginSettingsPageDispatchTest.php covers the
+ * controller layer directly (bypassing a real HTTP request/admin.php
+ * dispatch, which this Browser-level test adds). Same
+ * assignVarFromTemplate('ADMIN_CONTENT', ...) mechanism that Integration
+ * test's own writeFixtureSettingsPlugin() uses.
+ */
+function pluginSubWriteFixtureSettingsPlugin(string $pluginId, string $namespaceSuffix): void
+{
+    $dir = pluginSubPluginsPath() . $pluginId;
+    mkdir($dir . '/src', 0o777, true);
+    mkdir($dir . '/template', 0o777, true);
+
+    $namespace = 'PiwigoTestFixture\\PluginSettings' . $namespaceSuffix;
+    $className = 'Plugin' . $namespaceSuffix;
+    $templatePath = $dir . '/template/admin.latte';
+    file_put_contents($templatePath, 'CT_PLUGINSUB_INCLUDED');
+
+    file_put_contents($dir . '/plugin.json', json_encode([
+        'id' => $pluginId,
+        'name' => $pluginId,
+        'version' => '1.0.0',
+        'description' => 'Test-only fixture settings plugin (tests/Browser/AdminUncoveredPagesSmokeTest.php).',
+        'license' => 'MIT',
+        'minPiwigo' => '16.3.0',
+        'main' => $namespace . '\\' . $className,
+        'hasSettings' => true,
+        'autoload' => [
+            'psr-4' => [
+                $namespace . '\\' => 'src/',
+            ],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+    file_put_contents($dir . '/src/' . $className . '.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use LogicException;
+        use Piwigo\\PluginConfig\\ExtensionContext;
+        use Piwigo\\PluginConfig\\ExtensionInterface;
+        use Piwigo\\PluginConfig\\SettingsPageInterface;
+        use Psr\\Http\\Message\\ServerRequestInterface;
+
+        final class {$className} implements ExtensionInterface, SettingsPageInterface
+        {
+            private ?ExtensionContext \$context = null;
+
+            public function boot(ExtensionContext \$context): void
+            {
+                \$this->context = \$context;
+            }
+
+            public function install(): void {}
+            public function activate(): void {}
+            public function deactivate(): void {}
+            public function uninstall(): void {}
+            public function update(string \$oldVersion, string \$newVersion): void {}
+
+            public function subscribedEvents(): array
+            {
+                return [];
+            }
+
+            public function handleSettingsRequest(ServerRequestInterface \$request): void
+            {
+                if (\$this->context === null) {
+                    throw new LogicException('boot() was never called');
+                }
+
+                \$this->context->template()->assignVarFromTemplate('ADMIN_CONTENT', '{$templatePath}');
+            }
+        }
+
+        PHP);
+}
+
+function pluginSubRemoveFixtureSettingsPlugin(string $pluginId, string $namespaceSuffix): void
+{
+    $dir = pluginSubPluginsPath() . $pluginId;
+    @unlink($dir . '/src/Plugin' . $namespaceSuffix . '.php');
+    if (is_dir($dir . '/src')) {
+        rmdir($dir . '/src');
+    }
+    @unlink($dir . '/template/admin.latte');
+    if (is_dir($dir . '/template')) {
+        rmdir($dir . '/template');
+    }
+    @unlink($dir . '/plugin.json');
+    if (is_dir($dir)) {
+        rmdir($dir);
+    }
+}
+
+it('plugin page dispatches to a real SettingsPageInterface plugin and renders its content', function (): void {
     // AdminShellRequest::fromArrays()'s own 'section' validation (top-level,
     // ahead of PluginSectionRequest's plugin-specific check) is a faithful
     // port of legacy Piwigo's own /^[a-z]+[a-z_\/-]*(\.php)?$/i -- no
@@ -453,37 +616,28 @@ it('plugin page includes a real settings file from an active on-disk plugin', fu
     // it (real 401/hacking-attempt page), so the digits
     // get mapped to letters here instead of dropping uniqueness.
     $pluginId = 'ct-pluginsub-active-' . strtr(uniqid(), '0123456789', 'abcdefghij');
-    pluginSubWriteFixturePlugin($pluginId);
+    $suffix = str_replace('-', '', $pluginId);
+    pluginSubWriteFixtureSettingsPlugin($pluginId, $suffix);
     $db = pluginSubDb();
     H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0')", H::dbEscape($db, $pluginId)));
     H::dbClose($db);
 
     try {
         $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=plugin&section=' . $pluginId);
 
-        // H::rawGet(), not navigateOk()+content():
-        // PluginSubController::handle() echoes this marker via
-        // include_once *before* the surrounding admin template's own
-        // <!DOCTYPE html> is ever emitted, which really is present in the
-        // raw HTTP response body, but Playwright's page.content() returns
-        // document.documentElement.outerHTML (a DOM serialization), not
-        // the raw response -- a comment positioned before <html> is a
-        // sibling of the <html> element in the parsed document, not a
-        // descendant, so outerHTML never includes it. rawGet()'s in-browser
-        // fetch().text() reads the real, unparsed response body instead.
-        $result = H::rawGet($page, '/admin.php?page=plugin&section=' . $pluginId . '/ct_settings.php');
-        expect($result['status'])->toBe(200);
-        expect($result['body'])->toContain('CT_PLUGINSUB_INCLUDED');
+        expect($page->content())
+            ->toContain('CT_PLUGINSUB_INCLUDED');
     } finally {
         $db = pluginSubDb();
         H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         H::dbClose($db);
-        pluginSubRemoveFixturePlugin($pluginId);
+        pluginSubRemoveFixtureSettingsPlugin($pluginId, $suffix);
     }
 });
 
-it('plugin page fatal-errors on a missing section file for a real active plugin', function (): void {
-    // Same reasoning as the plugin-page-includes test above -- 'section'
+it('plugin page reports "no settings page" for a real active plugin with none', function (): void {
+    // Same reasoning as the plugin-page-dispatches test above -- 'section'
     // must stay digit-free.
     $pluginId = 'ct-pluginsub-missing-' . strtr(uniqid(), '0123456789', 'abcdefghij');
     pluginSubWriteFixturePlugin($pluginId);
@@ -493,13 +647,10 @@ it('plugin page fatal-errors on a missing section file for a real active plugin'
 
     try {
         $page = H::loginAsAdmin($this);
-        // ct_missing.php is deliberately never written to disk.
-        $page = H::navigateOk($page, '/admin.php?page=plugin&section=' . $pluginId . '/ct_missing.php');
+        $page = H::navigateOk($page, '/admin.php?page=plugin&section=' . $pluginId);
 
         expect($page->content())
-            ->toContain('Missing file')
-            ->and($page->content())
-            ->toContain($pluginId . '/ct_missing.php');
+            ->toContain('Plugin ' . $pluginId . ' has no settings page');
     } finally {
         $db = pluginSubDb();
         H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));

@@ -215,17 +215,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         return $this->repo->findIdByEmail($email);
     }
 
-    /**
-     * The stripslashes() call here is a real, already-established
-     * precedent in this same file, not legacy cruft -- stripslashes()
-     * only ever removes chars, so a value that was already a valid
-     * Username (it came from this exact column) stays valid.
-     */
     public function getUsername(UserId $userId): ?Username
     {
         $username = $this->repo->findUsernameById($userId);
 
-        return $username instanceof Username ? Username::from(stripslashes($username->value)) : null;
+        return $username instanceof Username ? Username::from($username->value) : null;
     }
 
     /**
@@ -550,7 +544,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $adminUrl = $urlService->getAbsoluteRootUrl() . 'admin.php?page=user_list&user_id=' . $userId->value;
 
         $keyargsContent = [
-            $this->lang->buildArgs('User: %s', stripslashes($login)),
+            $this->lang->buildArgs('User: %s', $login),
             $this->lang->buildArgs('Email: %s', $mailAddress),
             $this->lang->buildArgs(''),
             $this->lang->buildArgs('Admin: %s', $adminUrl),
@@ -563,7 +557,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         $mailer->mailNotificationAdmins(
-            $this->lang->buildArgs('Registration of %s', stripslashes($login)),
+            $this->lang->buildArgs('Registration of %s', $login),
             $keyargsContent,
             true,
             $groupId
@@ -575,13 +569,13 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $length = mt_rand(10, 15);
         $keyargsContent = [
-            $this->lang->buildArgs('Hello %s,', stripslashes($login)),
+            $this->lang->buildArgs('Hello %s,', $login),
             $this->lang->buildArgs('Thank you for registering at %s!', $this->currentConfig->galleryTitle),
             $this->lang->buildArgs('', ''),
             $this->lang->buildArgs('Here are your connection settings', ''),
             $this->lang->buildArgs('', ''),
             $this->lang->buildArgs('Link: %s', $urlService->getAbsoluteRootUrl()),
-            $this->lang->buildArgs('Username: %s', stripslashes($login)),
+            $this->lang->buildArgs('Username: %s', $login),
             $this->lang->buildArgs('Password: %s', str_repeat('*', $length)),
             $this->lang->buildArgs('Email: %s', $mailAddress),
             $this->lang->buildArgs('', ''),

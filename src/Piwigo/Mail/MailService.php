@@ -542,7 +542,7 @@ final class MailService implements MailerInterface
             $username = $this->currentUser->get()
                 ->username->value ?? '';
             $tplVars['TECHNICAL'] = [
-                'username' => stripslashes($username),
+                'username' => $username,
                 'ip' => IpAddress::fromRemoteAddr()->value ?? '',
                 'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
             ];
@@ -1058,7 +1058,7 @@ final class MailService implements MailerInterface
             $langCode = $this->lang->langInfo()['code'] ?? null;
             $langCode = is_string($langCode) ? $langCode : '';
 
-            $filename = $dir . '/mail.' . stripslashes($username) . '.' . $langCode . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
+            $filename = $dir . '/mail.' . $username . '.' . $langCode . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
             $filename .= $args['content_format'] === 'text/plain' ? '.txt' : '.html';
 
             $file = fopen($filename, 'w+');

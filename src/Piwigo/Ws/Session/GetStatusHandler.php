@@ -47,7 +47,7 @@ final readonly class GetStatusHandler implements WsAction
     {
         $currentUser = $this->currentUser->get();
         $res = [];
-        $res['username'] = $this->accessControl->isAGuest() ? 'guest' : stripslashes($currentUser->username->value ?? '');
+        $res['username'] = $this->accessControl->isAGuest() ? 'guest' : ($currentUser->username->value ?? '');
         $res['status'] = $currentUser->status->value;
         $res['theme'] = $currentUser->theme->value;
         $res['language'] = $currentUser->language->value;

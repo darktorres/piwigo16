@@ -116,7 +116,7 @@ final readonly class FeedController implements ControllerInterface
         $user_username = $this->currentUser->get()
             ->username->value ?? '';
 
-        $rss_title = $conf_gallery_title . ' (as ' . stripslashes($user_username) . ')';
+        $rss_title = $conf_gallery_title . ' (as ' . $user_username . ')';
         $rss_link = $this->urlService->getGalleryHomeUrl();
         $rss_items = [];
 

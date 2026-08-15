@@ -24,7 +24,7 @@ use SensitiveParameter;
  * string. `login`/`mailAddress` are exposed once and reused by both the
  * original's in-block read (passed to `UserService::registerUser()`) and
  * its separate post-submit re-read (redisplayed via
- * `htmlspecialchars(stripslashes(...))`), rather than reading
+ * `htmlspecialchars(...)`), rather than reading
  * `$_POST['login']`/`$_POST['mail_address']` from the superglobal twice.
  */
 final readonly class RegisterSubmitRequest

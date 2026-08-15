@@ -309,7 +309,7 @@ final class PictureCommentRenderer
                     'email' => $pictureCommentSubmitRequest->email,
                 ];
                 foreach ($postValues as $k => $postValue) {
-                    $tplVar[strtoupper($k)] = $postValue !== null ? htmlspecialchars(stripslashes($postValue)) : '';
+                    $tplVar[strtoupper($k)] = $postValue !== null ? htmlspecialchars($postValue) : '';
                 }
             }
             $template->assignContext(new PictureCommentAddPageContext($tplVar));

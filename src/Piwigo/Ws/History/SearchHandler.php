@@ -296,7 +296,7 @@ final readonly class SearchHandler implements WsAction
         if (count($user_ids) > 0) {
             $username_of = [];
             foreach ($this->userService->getUsernamesByIds(array_map(strval(...), array_keys($user_ids))) as $id => $username) {
-                $username_of[(string) $id] = stripslashes($username);
+                $username_of[(string) $id] = $username;
             }
         }
 

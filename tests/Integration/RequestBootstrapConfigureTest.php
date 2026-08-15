@@ -18,9 +18,12 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
  * none of the "shared PHPUnit process" risk those two would.
  *
  * Covers the 2 red branches:
- *  - the $_SERVER['PATH_INFO'] addslashes() sanitization (every existing
- *    caller of *anything* in this bootstrap chain runs through a request
- *    with no PATH_INFO set at all).
+ *  - $_SERVER['PATH_INFO'] is left byte-for-byte untouched (SEC-10 --
+ *    configure() used to run every superglobal, PATH_INFO included,
+ *    through addslashes(); real values ended up backslash-escaped in
+ *    the database with no compensating unescape on write, only on read.
+ *    This is a regression guard for that fix, not coverage of a live
+ *    branch).
  *  - the "not installed" redirect-to-install.php branch (every existing
  *    caller always points at this project's own already-installed root).
  *
@@ -38,18 +41,18 @@ final class RequestBootstrapConfigureTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function testConfigureAddslashesANonEmptyStringPathInfo(): void
+    public function testConfigureLeavesANonEmptyStringPathInfoUntouched(): void
     {
         $_SERVER['PATH_INFO'] = "O'Brien's/path";
 
         RequestBootstrap::configure(Paths::fromRoot(dirname(__DIR__, 2)), microtime(true));
 
-        self::assertSame("O\\'Brien\\'s/path", $_SERVER['PATH_INFO']);
+        self::assertSame("O'Brien's/path", $_SERVER['PATH_INFO']);
         self::assertTrue(Kernel::isBooted());
         // The real project root's own local/.installed.test stamp exists
         // -- proves this reached (and passed through) the install-sentinel
         // check without throwing, not just that PATH_INFO happened to get
-        // sanitised before some earlier unrelated failure. Paths::fromRoot()
+        // left alone before some earlier unrelated failure. Paths::fromRoot()
         // always normalizes to a trailing slash.
         self::assertSame(dirname(__DIR__, 2) . '/', CurrentPathsTestFactory::get()->root);
     }

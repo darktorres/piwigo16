@@ -203,7 +203,7 @@ final readonly class GetInfoHandler implements WsAction
         ) {
             $username = $this->currentUser->get()
                 ->username->value ?? '';
-            $comment_post_data['author'] = stripslashes($username);
+            $comment_post_data['author'] = $username;
             $comment_post_data['key'] = new EphemeralKeyService($this->currentConfig)->generate(2, (string) $input->imageId);
         }
 

@@ -55,7 +55,7 @@ final readonly class RenameHandler implements WsAction
         }
 
         $tag_id = $input->tagId;
-        $tag_name = strip_tags(stripslashes($input->newName));
+        $tag_name = strip_tags($input->newName);
 
         // does the tag exist ?
         if (! $this->tagService->existsById($tag_id)) {

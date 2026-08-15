@@ -89,7 +89,6 @@ final class LatteAnalysisShims
         'json_encode',
         'json_decode',
         'htmlspecialchars',
-        'stripslashes',
         'in_array',
         'ucfirst',
         'strstr',
@@ -567,11 +566,6 @@ final class LatteAnalysisShims
     }
 
     public static function htmlspecialchars(string $string, int $flags = 11, ?string $encoding = null, bool $double_encode = true): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function stripslashes(string $string): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

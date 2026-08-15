@@ -242,7 +242,7 @@ final class NotificationByMailSender
         $this->sentMailCount++;
 
         $msgInfo = $this->msgInfo ?? 'Mail sent to %s [%s].';
-        $this->pageState->addInfo(sprintf($msgInfo, stripslashes($nbmUser->username), $nbmUser->mailAddress));
+        $this->pageState->addInfo(sprintf($msgInfo, $nbmUser->username, $nbmUser->mailAddress));
     }
 
     public function incMailSentFailed(UserMailNotification $nbmUser): void
@@ -250,7 +250,7 @@ final class NotificationByMailSender
         $this->errorOnMailCount++;
 
         $msgError = $this->msgError ?? 'Error when sending email to %s [%s].';
-        $this->pageState->addError(sprintf($msgError, stripslashes($nbmUser->username), $nbmUser->mailAddress));
+        $this->pageState->addError(sprintf($msgError, $nbmUser->username, $nbmUser->mailAddress));
     }
 
     public function displayCounterInfo(): void
@@ -294,7 +294,7 @@ final class NotificationByMailSender
             ->getMailTemplate($emailFormat);
 
         $mailTemplate->assignContext(new NbmMailContentPageContext(
-            username: stripslashes($nbmUser->username),
+            username: $nbmUser->username,
             sendAsName: $this->sendAsName,
             unsubscribeLink: $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
                 'unsubscribe' => $nbmUser->checkKey,
@@ -380,7 +380,7 @@ final class NotificationByMailSender
                     $ret = $this->mailer
                         ->mail(
                             [
-                                'name' => stripslashes($nbmUser->username),
+                                'name' => $nbmUser->username,
                                 'email' => $nbmUser->mailAddress,
                             ],
                             [
@@ -408,10 +408,10 @@ final class NotificationByMailSender
                         'enabled' => $enabledValue,
                     ];
                     ++$updatedDataCount;
-                    $this->pageState->addInfo(sprintf($msgInfo, stripslashes($nbmUser->username), $nbmUser->mailAddress));
+                    $this->pageState->addInfo(sprintf($msgInfo, $nbmUser->username, $nbmUser->mailAddress));
                 } else {
                     ++$errorOnUpdatedDataCount;
-                    $this->pageState->addError(sprintf($msgError, stripslashes($nbmUser->username), $nbmUser->mailAddress));
+                    $this->pageState->addError(sprintf($msgError, $nbmUser->username, $nbmUser->mailAddress));
                 }
             }
 
@@ -629,7 +629,7 @@ final class NotificationByMailSender
                                 $ret = $this->mailer
                                     ->mail(
                                         [
-                                            'name' => stripslashes($nbmUser->username),
+                                            'name' => $nbmUser->username,
                                             'email' => $nbmUser->mailAddress,
                                         ],
                                         $mailArgs

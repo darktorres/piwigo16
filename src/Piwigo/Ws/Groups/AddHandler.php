@@ -42,7 +42,7 @@ final readonly class AddHandler implements WsAction
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = AddParams::fromArray($params);
-        $name = strip_tags(stripslashes($input->name));
+        $name = strip_tags($input->name);
 
         try {
             $inserted_id = $this->groupService->create($name, $input->isDefault);

@@ -384,7 +384,7 @@ final readonly class ProfileFormHandler
 
         $template->assignContext(new ProfileFormPageContext(
             templatePrefixe: $template_prefixe ?? '',
-            username: stripslashes(is_string($userdata['username']) ? $userdata['username'] : ''),
+            username: is_string($userdata['username']) ? $userdata['username'] : '',
             email: Email::tryFrom($userdata['email'] ?? null),
             allowUserCustomization: $this->currentConfig->allowUserCustomization,
             activateComments: $this->currentConfig->activateComments,

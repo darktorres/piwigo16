@@ -101,7 +101,7 @@ final readonly class AuthService
             ];
         }
 
-        $username = stripslashes($found->username);
+        $username = $found->username;
         $data = $time . $userId . $username;
         // secret_key is a random string generated at install time (see
         // install/index.php), always a string in a working install
@@ -239,7 +239,7 @@ final readonly class AuthService
         if (isset($_COOKIE[$remember_me_name])) {
             $remember_me_cookie = $_COOKIE[$remember_me_name];
             if (is_string($remember_me_cookie)) {
-                $cookie = explode('-', stripslashes($remember_me_cookie));
+                $cookie = explode('-', $remember_me_cookie);
                 if (
                     count($cookie) === 3
                     && is_numeric($cookie[0]) /* user id */
@@ -257,7 +257,7 @@ final readonly class AuthService
                             $_SESSION['connected_with'] = 'pwg_ui';
                         }
                         $this->logUser($cookie[0], true);
-                        $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom(stripslashes($calculated['username']))));
+                        $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom($calculated['username'])));
 
                         return true;
                     }
@@ -361,7 +361,7 @@ final readonly class AuthService
         // exists -- it doesn't depend on the lookup at all.
         if ($ip !== '' && $this->failedLoginRepo->countRecentByIp($ip, $windowStart) >= $maxAttempts) {
             $this->failedLoginRepo->recordFailure(null, $ip, $nowFormatted);
-            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom(stripslashes($username))));
+            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom($username)));
             return $event;
         }
 
@@ -378,7 +378,7 @@ final readonly class AuthService
         // still provides for every not-yet-locked-out attempt.
         if ($userId !== null && $this->failedLoginRepo->countRecentByUserId($userId, $windowStart) >= $maxAttempts) {
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
-            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom(stripslashes($username))));
+            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom($username)));
             return $event;
         }
 
@@ -409,7 +409,7 @@ final readonly class AuthService
                 $this->activityLogger->record('user', $user_found->id, 'login_failure_wrong_password');
             }
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
-            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom(stripslashes($username))));
+            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom($username)));
             return $event;
         }
 
@@ -452,7 +452,7 @@ final readonly class AuthService
         if (! $can_login) {
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
             $this->activityLogger->record('user', $user_found->id, $reason ?? 'login_failure_before_log_user');
-            $this->eventDispatcher->dispatchNotify(new LoginFailureBeforeLogUser(Username::tryFrom(stripslashes($username))));
+            $this->eventDispatcher->dispatchNotify(new LoginFailureBeforeLogUser(Username::tryFrom($username)));
             return $event;
         }
 
@@ -463,7 +463,7 @@ final readonly class AuthService
         }
 
         $this->clearFakeUserCache();
-        $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom(stripslashes($username))));
+        $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom($username)));
         $event->success = true;
 
         return $event;

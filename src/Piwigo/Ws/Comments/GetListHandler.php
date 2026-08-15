@@ -166,7 +166,7 @@ final readonly class GetListHandler implements WsAction
                 $author_name = $row_author;
             } else {
                 $row_username = $row['username'];
-                $author_name = stripslashes((is_string($row_username) ? $row_username : null) ?? $row_author ?? $this->lang->t('guest'));
+                $author_name = (is_string($row_username) ? $row_username : null) ?? $row_author ?? $this->lang->t('guest');
             }
 
             // date/date_available are both nullable columns on their

@@ -225,7 +225,7 @@ final readonly class CommentService
             }
         } else {
             $user = $this->currentUser->get();
-            $comm['author'] = addslashes($user->username->value ?? '');
+            $comm['author'] = $user->username->value ?? '';
             $comm['author_id'] = $user->id->value;
         }
 
@@ -338,9 +338,9 @@ final readonly class CommentService
                 $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $id->value;
 
                 $keyargsContent = [
-                    $this->lang->buildArgs('Author: %s', stripslashes($author)),
-                    $this->lang->buildArgs('Email: %s', stripslashes($email ?? '')),
-                    $this->lang->buildArgs('Comment: %s', stripslashes($content)),
+                    $this->lang->buildArgs('Author: %s', $author),
+                    $this->lang->buildArgs('Email: %s', $email ?? ''),
+                    $this->lang->buildArgs('Comment: %s', $content),
                     $this->lang->buildArgs(''),
                     $this->lang->buildArgs('Manage this user comment: %s', $commentUrl),
                 ];
@@ -350,7 +350,7 @@ final readonly class CommentService
                 }
 
                 $this->mailer->mailNotificationAdmins(
-                    $this->lang->buildArgs('Comment by %s', stripslashes($author)),
+                    $this->lang->buildArgs('Comment by %s', $author),
                     $keyargsContent
                 );
             }
@@ -495,22 +495,22 @@ final readonly class CommentService
                 $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $commentId->value;
 
                 $keyargsContent = [
-                    $this->lang->buildArgs('Author: %s', stripslashes($username)),
-                    $this->lang->buildArgs('Comment: %s', stripslashes($content)),
+                    $this->lang->buildArgs('Author: %s', $username),
+                    $this->lang->buildArgs('Comment: %s', $content),
                     $this->lang->buildArgs(''),
                     $this->lang->buildArgs('Manage this user comment: %s', $commentUrl),
                     $this->lang->buildArgs('(!) This comment requires validation'),
                 ];
 
                 $this->mailer->mailNotificationAdmins(
-                    $this->lang->buildArgs('Comment by %s', stripslashes($username)),
+                    $this->lang->buildArgs('Comment by %s', $username),
                     $keyargsContent
                 );
             } elseif ($updated) {
                 // just mail admin
                 $this->emailAdmin('edit', [
                     'author' => $username,
-                    'content' => stripslashes($content),
+                    'content' => $content,
                 ]);
             }
         }

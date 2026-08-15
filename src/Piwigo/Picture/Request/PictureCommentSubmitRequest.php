@@ -15,7 +15,7 @@ namespace Piwigo\Picture\Request;
  * `author`/`content`/`websiteUrl`/`email` are each read twice by the
  * original at 2 different points -- once (trimmed, emptiness-collapsed
  * to `''`) to build the comment insert array, and again (untrimmed,
- * `htmlspecialchars(stripslashes(...))`'d) to redisplay the submitted
+ * `htmlspecialchars(...)`'d) to redisplay the submitted
  * values after a 'reject' outcome -- both call sites only ever care
  * about `is_string(...)`, so one narrowed field each covers both reads.
  */

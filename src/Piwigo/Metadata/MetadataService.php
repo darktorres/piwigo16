@@ -310,10 +310,6 @@ final readonly class MetadataService
             $iptc['keywords'] = $this->metadataNormalizeKeywordsString($iptc['keywords']);
         }
 
-        foreach ($iptc as $pwgKey => $value) {
-            $iptc[$pwgKey] = addslashes($value);
-        }
-
         return $iptc;
     }
 
@@ -354,7 +350,7 @@ final readonly class MetadataService
                 continue;
             }
 
-            $result[$pwgKey] = addslashes(is_scalar($current) ? (string) $current : '');
+            $result[$pwgKey] = is_scalar($current) ? (string) $current : '';
         }
 
         return $result;

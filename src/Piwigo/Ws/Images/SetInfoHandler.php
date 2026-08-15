@@ -202,7 +202,7 @@ final readonly class SetInfoHandler implements WsAction
             // escaping is needed here.
             $cleaned_tag_list = [];
             foreach ($tagListRequest->items as $tag_candidate) {
-                $cleaned_tag_list[] = strip_tags(stripslashes(is_string($tag_candidate) ? $tag_candidate : ''));
+                $cleaned_tag_list[] = strip_tags(is_string($tag_candidate) ? $tag_candidate : '');
             }
 
             $tag_list = $tagService->getTagIds($cleaned_tag_list);

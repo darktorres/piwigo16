@@ -69,7 +69,7 @@ final class RatingPageRenderer
         $usernames_by_id = $rate_repository->findUsernamesById();
         $users = [];
         foreach ($usernames_by_id as $user_id => $username) {
-            $users[$user_id] = stripslashes($username);
+            $users[$user_id] = $username;
         }
 
         $filterUserId = $filter_user_id === null ? null : UserId::from($filter_user_id);

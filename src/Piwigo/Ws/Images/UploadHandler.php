@@ -197,7 +197,7 @@ final readonly class UploadHandler implements WsAction
                 ];
             }
 
-            $name = stripslashes((string) $params['name']);
+            $name = (string) $params['name'];
             $id_image = null; // null by default
 
             if ($params['update_mode']) {

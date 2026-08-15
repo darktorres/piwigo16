@@ -86,7 +86,6 @@ final class PiwigoExtension extends Extension
             'json_encode' => json_encode(...),
             'json_decode' => json_decode(...),
             'htmlspecialchars' => htmlspecialchars(...),
-            'stripslashes' => stripslashes(...),
             'in_array' => in_array(...),
             'ucfirst' => ucfirst(...),
             'strstr' => strstr(...),

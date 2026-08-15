@@ -267,13 +267,6 @@ final class RequestBootstrap
         // every other consumer reads from instead.
         self::pageState()->requestStart = $requestStart;
 
-        array_walk_recursive($_GET, self::sanitizeMysqlKv(...));
-        array_walk_recursive($_POST, self::sanitizeMysqlKv(...));
-        array_walk_recursive($_COOKIE, self::sanitizeMysqlKv(...));
-        if (! in_array($_SERVER['PATH_INFO'] ?? null, [null, false, 0, '0', '', []], true) && is_string($_SERVER['PATH_INFO'])) {
-            $_SERVER['PATH_INFO'] = addslashes($_SERVER['PATH_INFO']);
-        }
-
         Env::loadEnvFile($paths->root);
 
         // Piwigo\Config\Config::* accessors used further down in this
@@ -1527,20 +1520,6 @@ final class RequestBootstrap
         }
 
         return $uploadService;
-    }
-
-    /**
-     * Leaf values recursed into by array_walk_recursive() from $_GET/
-     * $_POST/$_COOKIE are always strings in practice (HTTP request data
-     * never contains scalars other than strings; arrays are recursed
-     * into rather than passed to the callback), but the parameter is
-     * typed mixed so we narrow rather than force-cast it.
-     */
-    private static function sanitizeMysqlKv(mixed &$v, int|string $k): void
-    {
-        if (is_string($v)) {
-            $v = addslashes($v);
-        }
     }
 
     /**

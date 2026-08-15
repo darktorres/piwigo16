@@ -185,7 +185,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                     $check_key_treated = $nbmSender->sendMailNotifications(
                         'send',
                         array_values($post['send_selection']),
-                        stripslashes($post['send_customize_mail_content'])
+                        $post['send_customize_mail_content']
                     );
                     $must_repost = $this->doTimeoutTreatment($nbmSender, 'send_selection', $post, $check_key_treated);
                 }
@@ -237,12 +237,12 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                 $opt_false_selected = [];
                 foreach ($data_users as $nbm_user) {
                     if ($nbm_user->enabled) {
-                        $opt_true[$nbm_user->checkKey] = stripslashes($nbm_user->username) . '[' . $nbm_user->mailAddress . ']';
+                        $opt_true[$nbm_user->checkKey] = $nbm_user->username . '[' . $nbm_user->mailAddress . ']';
                         if (isset($post['falsify']) and isset($post['cat_true']) and is_array($post['cat_true']) and in_array($nbm_user->checkKey, $post['cat_true'], true)) {
                             $opt_true_selected[] = $nbm_user->checkKey;
                         }
                     } else {
-                        $opt_false[$nbm_user->checkKey] = stripslashes($nbm_user->username) . '[' . $nbm_user->mailAddress . ']';
+                        $opt_false[$nbm_user->checkKey] = $nbm_user->username . '[' . $nbm_user->mailAddress . ']';
                         if (isset($post['trueify']) and isset($post['cat_false']) and is_array($post['cat_false']) and in_array($nbm_user->checkKey, $post['cat_false'], true)) {
                             $opt_false_selected[] = $nbm_user->checkKey;
                         }
@@ -269,7 +269,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
 
                 $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
                   (isset($post['send_customize_mail_content']) and is_string($post['send_customize_mail_content']))
-                    ? stripslashes($post['send_customize_mail_content'])
+                    ? $post['send_customize_mail_content']
                     : $this->currentConfig->nbmComplementaryMailContent;
 
                 $post_send_selection = (isset($post['send_selection']) and is_array($post['send_selection']))
@@ -289,7 +289,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                                       isset($post['send_selection']) and // not init
                                       ! in_array($nbm_user->checkKey, $post_send_selection, true) // not selected
                                   ) ? '' : 'checked="checked"',
-                                  'USERNAME' => stripslashes($nbm_user->username),
+                                  'USERNAME' => $nbm_user->username,
                                   'EMAIL' => $nbm_user->mailAddress,
                                   'LAST_SEND' => $nbm_user->lastSend,
                               ];
@@ -418,7 +418,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                 $nbm_username = is_scalar($nbm_username) ? (string) $nbm_username : '';
                 $this->pageState->addInfo($lang->t(
                     'User %s [%s] added.',
-                    stripslashes($nbm_username),
+                    $nbm_username,
                     $nbm_user['mail_address']
                 ));
             }

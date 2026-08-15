@@ -108,7 +108,7 @@ final readonly class ApiKeyService
 
         $results = [];
         foreach ($api_keys as $api_key_row) {
-            $apikey_name = stripslashes($api_key_row->apikeyName ?? '');
+            $apikey_name = $api_key_row->apikeyName ?? '';
 
             // created_on/expired_on are real NOT NULL columns -- Projection\
             // ApiKey::fromRow() already guarantees a string, no assert() needed.

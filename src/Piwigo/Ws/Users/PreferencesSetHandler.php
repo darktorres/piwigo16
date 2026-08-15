@@ -44,7 +44,7 @@ final readonly class PreferencesSetHandler implements WsAction
             return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid param name #' . $input->param . '#');
         }
 
-        $value = stripslashes($input->value ?? '');
+        $value = $input->value ?? '';
         $decoded_value = $input->isJson ? json_decode($value, true) : $value;
 
         $this->preferencesService->updateParam($input->param, $decoded_value);

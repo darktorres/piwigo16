@@ -661,10 +661,10 @@ final readonly class TagService
 
             $insertedId = $this->repo->insert($tagName, $urlName);
 
-            return TagCreateOutcome::success($this->lang->t('Tag "%s" was added', stripslashes($tagName)), $insertedId->value);
+            return TagCreateOutcome::success($this->lang->t('Tag "%s" was added', $tagName), $insertedId->value);
         }
 
-        return TagCreateOutcome::failure($this->lang->t('Tag "%s" already exists', stripslashes($tagName)));
+        return TagCreateOutcome::failure($this->lang->t('Tag "%s" already exists', $tagName));
     }
 
     /**

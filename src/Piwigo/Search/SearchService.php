@@ -1464,7 +1464,7 @@ final readonly class SearchService
      */
     public function getQuickSearchResultsNoCache(string $q, array $options): array
     {
-        $q = trim(stripslashes($q));
+        $q = trim($q);
         $searchResults = [
             'items' => [],
             'qs' => [

@@ -136,7 +136,7 @@ final readonly class AlbumNotificationPageRenderer
                             ],
                         ]
                     ),
-                    'CPL_CONTENT' => $mail_content === '' ? '' : stripslashes($mail_content),
+                    'CPL_CONTENT' => $mail_content === '' ? '' : $mail_content,
                 ],
             ];
 

@@ -310,8 +310,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             $commentAdd = CurrentTemplateTestFactory::get()->get()->getTemplateVars('comment_add');
             self::assertIsArray($commentAdd);
             self::assertSame('Some Author', $commentAdd['AUTHOR']);
-            // stripslashes() is a no-op here (no backslashes); htmlspecialchars()
-            // escapes the tag markup.
+            // htmlspecialchars() escapes the tag markup.
             self::assertSame('Rejected &lt;b&gt;content&lt;/b&gt;.', $commentAdd['CONTENT']);
             self::assertSame('', $commentAdd['WEBSITE_URL']);
             self::assertSame('', $commentAdd['EMAIL']);

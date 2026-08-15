@@ -53,7 +53,7 @@ final readonly class FormatsSearchImageHandler implements WsAction
 
         $logger->debug('formatsSearchImage', 'WS', $params);
 
-        $candidates = json_decode(stripslashes($input->filenameList), true);
+        $candidates = json_decode($input->filenameList, true);
         if (! is_array($candidates)) {
             $candidates = [];
         }

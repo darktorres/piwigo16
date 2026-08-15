@@ -16,7 +16,7 @@ use Piwigo\Validation\InputValidator;
  * value (the submit-handling block's own `$data[...]` assignment, and
  * the later, unconditional display-default computation) -- the two
  * sites apply different downstream transforms to the same raw value
- * (`strip_tags()` vs. `stripslashes()`), not different raw reads.
+ * (`strip_tags()` vs. no transform at all), not different raw reads.
  * `nameField`/`authorField`/`commentField` stay nullable (`null` for
  * absent/non-string) rather than defaulting to `''`: the display site's
  * own fallback-to-row-value logic keys off `is_string(...)`, not

@@ -605,8 +605,8 @@ final readonly class CommentsController implements ControllerInterface
 
         $template->assignContext(new CommentsPageContext(
             fAction: $this->urlService->getRootUrl() . 'comments.php',
-            fKeyword: $keyword_param !== null ? htmlspecialchars(stripslashes($keyword_param)) : '',
-            fAuthor: $author_param !== null ? htmlspecialchars(stripslashes($author_param)) : '',
+            fKeyword: $keyword_param !== null ? htmlspecialchars($keyword_param) : '',
+            fAuthor: $author_param !== null ? htmlspecialchars($author_param) : '',
             sinceOptions: $since_options_tpl,
             sinceOptionsSelected: $since,
             sortByOptions: $sort_by,

@@ -707,7 +707,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('2023-1-1', $result['date_creation']);
         }
 
-        public function testGetSyncIptcDataNormalizesKeywordsAndEscapesQuotes(): void
+        public function testGetSyncIptcDataNormalizesKeywordsAndLeavesQuotesUnescaped(): void
         {
             CurrentConfigTestFactory::get()->useIptcMapping = [
                 'keywords' => '2#025',
@@ -726,10 +726,13 @@ namespace Piwigo\Tests\Integration {
             $result = $this->service->getSyncIptcData($path);
 
             self::assertSame('nature,travel', $result['keywords']);
-            // addslashes() on a value with no non-ASCII bytes never reaches
-            // cleanIptcValue()'s own charset-conversion branch -- the quotes
-            // are escaped by getSyncIptcData()'s own final addslashes() pass.
-            self::assertSame(addslashes($titleValue), $result['title']);
+            // SEC-10 regression guard: getSyncIptcData() used to run its
+            // final pass through addslashes() before returning, which wrote
+            // backslash-escaped quotes straight into the images table via
+            // a parameterized (already-safe) query -- pure corruption, no
+            // compensating unescape on write. The value must now round-trip
+            // byte-for-byte.
+            self::assertSame($titleValue, $result['title']);
         }
 
         // -------------------------------------------------------- getSyncExifData()

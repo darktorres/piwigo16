@@ -49,7 +49,7 @@ final readonly class SetInfoHandler implements WsAction
 
         $updates = [];
         if ($input->name !== null) {
-            $updates['name'] = strip_tags(stripslashes($input->name));
+            $updates['name'] = strip_tags($input->name);
         }
 
         if ($input->isDefault !== null) {

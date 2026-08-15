@@ -88,6 +88,7 @@ function pwgServerTestServer(bool $isAdmin = true, ?CurrentConfig $currentConfig
         pwgServerTestAccessControl($isAdmin),
         new ApiKeyRequestFlag(),
         $currentConfig ?? new CurrentConfig(),
+        Kernel::container(),
     );
 }
 

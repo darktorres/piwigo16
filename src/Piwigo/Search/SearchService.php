@@ -33,6 +33,7 @@ use Piwigo\Search\Event\QsearchResults;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\Projection\Search;
 use Piwigo\Session\SessionService;
+use Piwigo\Sort\OrderBy;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
@@ -1419,17 +1420,25 @@ final readonly class SearchService
      * Same "widened by the qsearch_results plugin hook" rationale as
      * getQuickSearchResultsNoCache() below.
      *
+     * $orderByOverride, when given, is used instead of
+     * `$this->currentConfig->orderBy` for this call only -- callers that
+     * need a request-scoped sort order (e.g. Ws\Images\SearchHandler's own
+     * `order` param) pass it explicitly instead of mutating the shared
+     * CurrentConfig instance, which would otherwise leak into every other
+     * consumer for the rest of the request (and across requests under
+     * worker mode).
+     *
      * @param  array<string, mixed>  $options
      * @return array<string, mixed>
      */
-    public function getQuickSearchResults(string $q, array $options): array
+    public function getQuickSearchResults(string $q, array $options, ?OrderBy $orderByOverride = null): array
     {
         $user = $this->currentUser->get();
 
         $pool = $this->searchResultsCachePool;
         $cacheKey = md5(serialize([
             strtolower($q),
-            $this->currentConfig->orderBy,
+            $orderByOverride ?? $this->currentConfig->orderBy,
             $user->id->value,
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             $options['images_where'] ?? '',
@@ -1443,7 +1452,7 @@ final readonly class SearchService
             }
         }
 
-        $res = $this->getQuickSearchResultsNoCache($q, $options);
+        $res = $this->getQuickSearchResultsNoCache($q, $options, $orderByOverride);
         unset($res['debug']);
 
         if ((bool) count($res['items'])) {
@@ -1459,10 +1468,12 @@ final readonly class SearchService
      * (arbitrary plugin-supplied `mixed`, see the `trigger_change()` merge
      * below) -- not narrowable further than this.
      *
+     * $orderByOverride: see getQuickSearchResults()'s own docblock.
+     *
      * @param  array<string, mixed>  $options
      * @return array{items: array<int, mixed>, qs: array<string, mixed>, debug: list<string>, ...<string, mixed>}
      */
-    public function getQuickSearchResultsNoCache(string $q, array $options): array
+    public function getQuickSearchResultsNoCache(string $q, array $options, ?OrderBy $orderByOverride = null): array
     {
         $q = trim($q);
         $searchResults = [
@@ -1654,7 +1665,8 @@ final readonly class SearchService
         // its own docblock), so `GROUP BY id` (functionally dependent via
         // the primary key) replaces DISTINCT here, same fix as
         // CalendarRepository::findImageIds().
-        $orderBy = $this->currentConfig->orderBy->toSql();
+        $orderBy = ($orderByOverride ?? $this->currentConfig->orderBy)
+            ->toSql();
         $whereSql = (string) $this->repo->expressionBuilder()
             ->and(...$whereClauses);
         $ids = $this->repo->findIdsByClause('id', $from, $whereSql . "\nGROUP BY id\n" . $orderBy, $params);

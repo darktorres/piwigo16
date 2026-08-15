@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Images;
 
 use Override;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
@@ -38,7 +37,6 @@ final readonly class SearchHandler implements WsAction
         private ImageFilterCriteriaBuilder $imageFilterCriteriaBuilder,
         private ImageUrlBuilder $imageUrlBuilder,
         private XmlAttributeLists $xmlAttributeLists,
-        private CurrentConfig $currentConfig,
         private SearchService $searchService,
         private UrlServiceInterface $urlService,
         private ImageRepository $imageRepository,
@@ -74,12 +72,14 @@ final readonly class SearchHandler implements WsAction
         $orderBy = OrderBy::fromWsOrderParam($order ?? '');
 
         $super_order_by = false;
+        $orderByOverride = null;
         if (! $orderBy->isEmpty()) {
-            // Communicates the effective order to SearchService::
-            // getQuickSearchResults()/getRegularSearchResults() etc, which
-            // read it back from $this->currentConfig-> for the rest of this
-            // request -- an in-memory-only override, not a DB write.
-            $this->currentConfig->orderBy = $orderBy;
+            // Passed straight to SearchService::getQuickSearchResults()
+            // as an explicit argument now, rather than mutated onto the
+            // shared CurrentConfig instance -- that would otherwise leak
+            // into every other consumer for the rest of this request (and
+            // across requests under worker mode).
+            $orderByOverride = $orderBy;
             $super_order_by = true; // quick_search_result might be faster
         }
 
@@ -88,7 +88,8 @@ final readonly class SearchHandler implements WsAction
             [
                 'super_order_by' => $super_order_by,
                 'images_where' => $filterCondition,
-            ]
+            ],
+            $orderByOverride
         );
 
         // get_quick_search_results()'s return type is a generic array<string,

@@ -15,6 +15,7 @@ use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeUrlStyleOverride;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\MissingDerivativesCriteria;
@@ -70,9 +71,15 @@ final readonly class GetMissingDerivativesHandler implements WsAction
 
         $uid = '&b=' . time();
 
-        $this->currentConfig->questionMarkInUrls = true;
-        $this->currentConfig->phpExtensionInUrls = true;
-        $this->currentConfig->derivativeUrlStyle = 2; // script
+        // Passed explicitly to DerivativeImage below instead of mutated
+        // onto the shared CurrentConfig instance -- that would otherwise
+        // leak into every other consumer for the rest of this request (and
+        // across requests under worker mode).
+        $urlStyleOverride = new DerivativeUrlStyleOverride(
+            questionMarkInUrls: true,
+            phpExtensionInUrls: true,
+            derivativeUrlStyle: 2, // script
+        );
 
         $qlimit = (int) min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
 
@@ -109,7 +116,7 @@ final readonly class GetMissingDerivativesHandler implements WsAction
                 }
 
                 foreach ($types as $type) {
-                    $derivative = new DerivativeImage($type, $src_image, $this->currentConfig);
+                    $derivative = new DerivativeImage($type, $src_image, $this->currentConfig, $urlStyleOverride);
                     if ($type !== $derivative->getType()) {
                         continue;
                     }

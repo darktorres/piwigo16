@@ -17,6 +17,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
+use Piwigo\Image\DerivativeUrlStyleOverride;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -83,18 +84,23 @@ final readonly class PictureCoiPageRenderer
             new DerivativeCacheService($this->currentConfig, $this->paths)
                 ->deleteElementDerivatives($derivative_infos, ImageStdParams::CUSTOM);
             $uid = '&b=' . time();
-            $this->currentConfig->questionMarkInUrls = true;
-            $this->currentConfig->phpExtensionInUrls = true;
-            if ($this->currentConfig->derivativeUrlStyle === 1) {
-                $this->currentConfig->derivativeUrlStyle = 0; // auto
-            }
+            // Passed explicitly to DerivativeImage below instead of mutated
+            // onto the shared CurrentConfig instance -- that would
+            // otherwise leak into every other consumer for the rest of
+            // this request (and across requests under worker mode).
+            $urlStyleOverride = new DerivativeUrlStyleOverride(
+                questionMarkInUrls: true,
+                phpExtensionInUrls: true,
+                derivativeUrlStyle: $this->currentConfig->derivativeUrlStyle === 1 ? 0 : null, // auto
+            );
         } else {
             $uid = '';
+            $urlStyleOverride = null;
         }
 
         $title = $htmlRenderer->renderElementName($row);
         $alt = $row['file'];
-        $imgUrl = DerivativeImage::url(ImageStdParams::LARGE, $row);
+        $imgUrl = DerivativeImage::url(ImageStdParams::LARGE, $row, $urlStyleOverride);
 
         $coi_raw = $row['coi'];
         $row_coi = is_string($coi_raw) ? $coi_raw : '';
@@ -111,7 +117,7 @@ final readonly class PictureCoiPageRenderer
         $cropped_derivatives = [];
         foreach ($this->imageStdParams->getDefinedTypeMap() as $params) {
             if ($params->sizing->max_crop !== 0.0) {
-                $derivative = new DerivativeImage($params, new SrcImage($row), $this->currentConfig);
+                $derivative = new DerivativeImage($params, new SrcImage($row), $this->currentConfig, $urlStyleOverride);
                 $cropped_derivatives[] = [
                     'U_IMG' => $derivative->getUrl() . $uid,
                     'HTM_SIZE' => $derivative->getSizeHtm(),

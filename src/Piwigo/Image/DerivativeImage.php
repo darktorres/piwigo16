@@ -132,6 +132,7 @@ final class DerivativeImage
         string|DerivativeParams $type,
         public SrcImage $src_image,
         private readonly CurrentConfig $currentConfig,
+        ?DerivativeUrlStyleOverride $urlStyleOverride = null,
     ) {
         if (is_string($type)) {
             $this->params = self::imageStdParams()->getByType($type);
@@ -139,7 +140,7 @@ final class DerivativeImage
             $this->params = $type;
         }
 
-        self::build($this->src_image, $this->currentConfig, $this->params, $this->rel_path, $this->rel_url, $this->is_cached);
+        self::build($this->src_image, $this->currentConfig, $this->params, $this->rel_path, $this->rel_url, $this->is_cached, $urlStyleOverride);
     }
 
     /**
@@ -159,13 +160,13 @@ final class DerivativeImage
      *    ImageStdParams size-type constant) or a DerivativeParams object
      * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage
      */
-    public static function url(string|DerivativeParams $type, array|SrcImage $infos): string
+    public static function url(string|DerivativeParams $type, array|SrcImage $infos, ?DerivativeUrlStyleOverride $urlStyleOverride = null): string
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
         $params = is_string($type) ? self::imageStdParams()->getByType($type) : $type;
         $rel_path = '';
         $rel_url = '';
-        self::build($src_image, self::currentConfig(), $params, $rel_path, $rel_url);
+        self::build($src_image, self::currentConfig(), $params, $rel_path, $rel_url, urlStyleOverride: $urlStyleOverride);
         if (! $params instanceof DerivativeParams) {
             return $src_image->getUrl();
         }
@@ -245,7 +246,7 @@ final class DerivativeImage
      * @param string $rel_url by-ref out-param
      * @param bool $is_cached by-ref out-param; not bound to a real variable when omitted (uses its default)
      */
-    private static function build(SrcImage $src, CurrentConfig $currentConfig, ?DerivativeParams &$params, string &$rel_path, string &$rel_url, bool &$is_cached = false): void
+    private static function build(SrcImage $src, CurrentConfig $currentConfig, ?DerivativeParams &$params, string &$rel_path, string &$rel_url, bool &$is_cached = false, ?DerivativeUrlStyleOverride $urlStyleOverride = null): void
     {
         // every real call site (the constructor, url(), and this method's
         // own recursive call below) passes a freshly-resolved, non-null
@@ -272,7 +273,7 @@ final class DerivativeImage
                             $smaller = self::imageStdParams()->getByType($defined_types[$i]);
                             if ($smaller->sizing->max_crop === $params->sizing->max_crop && $smaller->isIdentity($src_size)) {
                                 $params = $smaller;
-                                self::build($src, $currentConfig, $params, $rel_path, $rel_url, $is_cached);
+                                self::build($src, $currentConfig, $params, $rel_path, $rel_url, $is_cached, $urlStyleOverride);
                                 return;
                             }
                         }
@@ -303,7 +304,7 @@ final class DerivativeImage
 
         $rel_path = $currentConfig->derivativeDir . $loc;
 
-        $url_style = $currentConfig->derivativeUrlStyle;
+        $url_style = $urlStyleOverride->derivativeUrlStyle ?? $currentConfig->derivativeUrlStyle;
         if (! (bool) $url_style) {
             $abs_path = self::paths()->root . $rel_path;
             $mtime = file_exists($abs_path) ? filemtime($abs_path) : false;
@@ -317,10 +318,10 @@ final class DerivativeImage
 
         if ($url_style === 2) {
             $rel_url = 'i';
-            if ($currentConfig->phpExtensionInUrls) {
+            if ($urlStyleOverride->phpExtensionInUrls ?? $currentConfig->phpExtensionInUrls) {
                 $rel_url .= '.php';
             }
-            if ($currentConfig->questionMarkInUrls) {
+            if ($urlStyleOverride->questionMarkInUrls ?? $currentConfig->questionMarkInUrls) {
                 $rel_url .= '?';
             }
             $rel_url .= '/' . $loc;

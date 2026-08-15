@@ -128,6 +128,16 @@ else
     mysql_args+=(-p"${PIWIGO_DB_PASSWORD}")
   fi
 
+  # Recreate the schema rather than loading over whatever is there. The
+  # fixture drops and creates tables one at a time, in alphabetical order,
+  # so a table created early can bind a foreign key to a *surviving* old
+  # table -- and MySQL rejects that outright if the column types no longer
+  # match ("Referencing column 'performed_by' and referenced column 'id' ...
+  # are incompatible"), which is exactly what happens the first time a
+  # database carrying a previous schema meets a fixture with changed column
+  # types. Dropping first makes the reimport independent of prior state.
+  mysql "${mysql_args[@]}" -e "DROP DATABASE IF EXISTS \`${PIWIGO_DB_BASE}\`; CREATE DATABASE \`${PIWIGO_DB_BASE}\`;"
+
   mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" < tests/Fixtures/piwigo-17.0.sql
 
   until mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "SELECT COUNT(*) FROM images;" > /dev/null 2>&1; do

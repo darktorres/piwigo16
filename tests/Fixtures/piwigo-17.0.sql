@@ -24,11 +24,11 @@ DROP TABLE IF EXISTS `activity`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `activity` (
-  `activity_id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `activity_id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `object` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'entity type the action applies to, e.g. user, photo, album, tag, plugin',
-  `object_id` int unsigned NOT NULL COMMENT 'id of the affected object, or the target user id on a logout action',
+  `object_id` int NOT NULL COMMENT 'id of the affected object, or the target user id on a logout action',
   `action` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'action verb, e.g. add, delete, login, logout, autoupdate',
-  `performed_by` mediumint unsigned DEFAULT NULL COMMENT 'acting user id, null for an unresolved or system actor',
+  `performed_by` int DEFAULT NULL COMMENT 'acting user id, null for an unresolved or system actor',
   `session_idx` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'PHP session id active during the request, or none if there was no session',
   `ip_address` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'REMOTE_ADDR of the request that triggered the action',
   `occured_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'when the action was recorded',
@@ -58,11 +58,11 @@ DROP TABLE IF EXISTS `audit_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `audit_log` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
-  `actor_id` mediumint unsigned DEFAULT NULL COMMENT 'acting user id, null for an unattributed or system action',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `actor_id` int DEFAULT NULL COMMENT 'acting user id, null for an unattributed or system action',
   `action` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'action verb, e.g. delete, grant, revoke',
   `entity_type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'audited entity type, e.g. group, permission',
-  `entity_id` int unsigned DEFAULT NULL COMMENT 'id of the audited entity, null when not applicable',
+  `entity_id` int DEFAULT NULL COMMENT 'id of the audited entity, null when not applicable',
   `before_json` json DEFAULT NULL COMMENT 'entity-agnostic snapshot before the change, null for a creation, folded into row_hash so must stay exactly what was recorded',
   `after_json` json DEFAULT NULL COMMENT 'entity-agnostic snapshot after the change, null for a deletion, folded into row_hash so must stay exactly what was recorded',
   `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'REMOTE_ADDR of the request that performed the action',
@@ -95,8 +95,8 @@ DROP TABLE IF EXISTS `caddie`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `caddie` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'owning user id',
-  `element_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'image id added to the caddie',
+  `user_id` int NOT NULL DEFAULT '0' COMMENT 'owning user id',
+  `element_id` int NOT NULL DEFAULT '0' COMMENT 'image id added to the caddie',
   PRIMARY KEY (`user_id`,`element_id`),
   KEY `fk_caddie_element_id` (`element_id`),
   CONSTRAINT `fk_caddie_element_id` FOREIGN KEY (`element_id`) REFERENCES `images` (`id`) ON DELETE CASCADE,
@@ -121,16 +121,16 @@ DROP TABLE IF EXISTS `categories`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `categories` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'album display name',
-  `id_uppercat` smallint unsigned DEFAULT NULL COMMENT 'parent album id, null for a root album',
+  `id_uppercat` int DEFAULT NULL COMMENT 'parent album id, null for a root album',
   `comment` text COLLATE utf8mb4_unicode_ci COMMENT 'album description shown on its page',
   `dir` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'filesystem subdirectory name for a physical, synchronized album, null for a virtual album',
-  `rank` smallint unsigned DEFAULT NULL COMMENT 'sibling display order within the same parent, distinct from global_rank',
+  `rank` int DEFAULT NULL COMMENT 'sibling display order within the same parent, distinct from global_rank',
   `status` enum('public','private') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'public' COMMENT 'private albums require an explicit user_access or group_access grant to view',
-  `site_id` tinyint unsigned DEFAULT NULL COMMENT 'owning site id, resolves to sites.galleries_url for a physical album',
+  `site_id` smallint DEFAULT NULL COMMENT 'owning site id, resolves to sites.galleries_url for a physical album',
   `visible` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'whether the album is shown in navigation, forced false at creation if its parent is not visible',
-  `representative_picture_id` mediumint unsigned DEFAULT NULL COMMENT 'image id used as the album thumbnail',
+  `representative_picture_id` int DEFAULT NULL COMMENT 'image id used as the album thumbnail',
   `uppercats` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'comma-separated ancestor album id path, from root to this album',
   `commentable` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'whether photo comments are allowed for images in this album',
   `global_rank` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'full-tree sort key derived from rank along the ancestor path, used to order albums across different parents',
@@ -166,12 +166,12 @@ DROP TABLE IF EXISTS `comments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `comments` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'commented image id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `image_id` int NOT NULL DEFAULT '0' COMMENT 'commented image id',
   `date` datetime DEFAULT NULL COMMENT 'when the comment was submitted',
   `author` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'display name shown with the comment, the account username for a logged-in user or the guest-entered name otherwise',
   `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'guest-provided email address',
-  `author_id` mediumint unsigned DEFAULT NULL COMMENT 'commenting user id, null for a guest comment',
+  `author_id` int DEFAULT NULL COMMENT 'commenting user id, null for a guest comment',
   `anonymous_id` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'full IP address of a guest commenter, used for anti-flood throttling',
   `website_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'guest-provided homepage link',
   `content` longtext COLLATE utf8mb4_unicode_ci COMMENT 'comment body',
@@ -310,8 +310,8 @@ DROP TABLE IF EXISTS `favorites`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `favorites` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'owning user id',
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'image the user marked as a favorite',
+  `user_id` int NOT NULL DEFAULT '0' COMMENT 'owning user id',
+  `image_id` int NOT NULL DEFAULT '0' COMMENT 'image the user marked as a favorite',
   PRIMARY KEY (`user_id`,`image_id`),
   KEY `fk_favorites_image_id` (`image_id`),
   CONSTRAINT `fk_favorites_image_id` FOREIGN KEY (`image_id`) REFERENCES `images` (`id`) ON DELETE CASCADE,
@@ -337,8 +337,8 @@ DROP TABLE IF EXISTS `group_access`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `group_access` (
-  `group_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'granted group id',
-  `cat_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'private album the group is granted access to',
+  `group_id` int NOT NULL DEFAULT '0' COMMENT 'granted group id',
+  `cat_id` int NOT NULL DEFAULT '0' COMMENT 'private album the group is granted access to',
   PRIMARY KEY (`group_id`,`cat_id`),
   KEY `fk_group_access_cat_id` (`cat_id`),
   CONSTRAINT `fk_group_access_cat_id` FOREIGN KEY (`cat_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
@@ -364,7 +364,7 @@ DROP TABLE IF EXISTS `groups`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `groups` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'group display name, unique',
   `is_default` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'every newly registered user is automatically added to groups marked default',
   `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
@@ -392,19 +392,19 @@ DROP TABLE IF EXISTS `history`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `history` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `date` date DEFAULT NULL COMMENT 'calendar date of the visit',
   `time` time NOT NULL DEFAULT '00:00:00' COMMENT 'time of day of the visit',
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'visiting user id, the guest user id for anonymous visitors',
+  `user_id` int NOT NULL DEFAULT '0' COMMENT 'visiting user id, the guest user id for anonymous visitors',
   `IP` char(39) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'REMOTE_ADDR of the request, truncated to fit an IPv6 address',
   `section` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'gallery navigation view the visit occurred in, plugin-defined sections stored as-is',
-  `category_id` smallint unsigned DEFAULT NULL COMMENT 'album being viewed, set when section is a category-based view',
-  `search_id` int unsigned DEFAULT NULL COMMENT 'search being viewed, set when section is search',
+  `category_id` int DEFAULT NULL COMMENT 'album being viewed, set when section is a category-based view',
+  `search_id` int DEFAULT NULL COMMENT 'search being viewed, set when section is search',
   `tag_ids` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'comma-separated tag ids being viewed, set when section is tags, truncated to fit',
-  `image_id` mediumint unsigned DEFAULT NULL COMMENT 'viewed image id, null for a listing/section page-view',
+  `image_id` int DEFAULT NULL COMMENT 'viewed image id, null for a listing/section page-view',
   `image_type` enum('picture','high','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'size the image was viewed at',
-  `format_id` int unsigned DEFAULT NULL COMMENT 'image_format row downloaded or viewed, when applicable',
-  `auth_key_id` int unsigned DEFAULT NULL COMMENT 'API auth key the request was authenticated with, if any',
+  `format_id` int DEFAULT NULL COMMENT 'image_format row downloaded or viewed, when applicable',
+  `auth_key_id` int DEFAULT NULL COMMENT 'API auth key the request was authenticated with, if any',
   PRIMARY KEY (`id`),
   KEY `idx_history_date_desc` (`date` DESC,`id` DESC),
   KEY `fk_history_image_id` (`image_id`),
@@ -439,14 +439,14 @@ DROP TABLE IF EXISTS `history_summary`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `history_summary` (
-  `summary_id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `summary_id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `year` smallint NOT NULL DEFAULT '0' COMMENT 'rollup year',
   `month` tinyint DEFAULT NULL COMMENT 'rollup month, null for a year-level summary row',
   `day` tinyint DEFAULT NULL COMMENT 'rollup day, null for a year- or month-level summary row',
   `hour` tinyint DEFAULT NULL COMMENT 'rollup hour, null for a year-, month-, or day-level summary row',
   `nb_pages` int DEFAULT NULL COMMENT 'number of history page-views folded into this summary row',
-  `history_id_from` int unsigned DEFAULT NULL COMMENT 'lowest history.id folded into this summary row',
-  `history_id_to` int unsigned DEFAULT NULL COMMENT 'highest history.id folded into this summary row, the next run resumes past this id',
+  `history_id_from` int DEFAULT NULL COMMENT 'lowest history.id folded into this summary row',
+  `history_id_to` int DEFAULT NULL COMMENT 'highest history.id folded into this summary row, the next run resumes past this id',
   PRIMARY KEY (`summary_id`),
   UNIQUE KEY `history_summary_ymdh` (`year`,`month`,`day`,`hour`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='year/month/day/hour rollup of history, one row per granularity level, letting old detail rows be purged';
@@ -469,9 +469,9 @@ DROP TABLE IF EXISTS `image_category`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `image_category` (
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'member image id',
-  `category_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'album the image belongs to',
-  `rank` mediumint unsigned DEFAULT NULL COMMENT 'manual sort position of the image within this specific album',
+  `image_id` int NOT NULL DEFAULT '0' COMMENT 'member image id',
+  `category_id` int NOT NULL DEFAULT '0' COMMENT 'album the image belongs to',
+  `rank` int DEFAULT NULL COMMENT 'manual sort position of the image within this specific album',
   PRIMARY KEY (`image_id`,`category_id`),
   KEY `image_category_i1` (`category_id`),
   CONSTRAINT `fk_image_category_category_id` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
@@ -497,10 +497,10 @@ DROP TABLE IF EXISTS `image_format`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `image_format` (
-  `format_id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'image this alternate format file belongs to',
+  `format_id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `image_id` int NOT NULL DEFAULT '0' COMMENT 'image this alternate format file belongs to',
   `ext` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'file extension of this alternate format, e.g. a RAW file stored alongside the main JPEG',
-  `filesize` mediumint unsigned DEFAULT NULL COMMENT 'file size of this alternate format in KB',
+  `filesize` int DEFAULT NULL COMMENT 'file size of this alternate format in KB',
   PRIMARY KEY (`format_id`),
   KEY `fk_image_format_image_id` (`image_id`),
   CONSTRAINT `fk_image_format_image_id` FOREIGN KEY (`image_id`) REFERENCES `images` (`id`) ON DELETE CASCADE
@@ -524,8 +524,8 @@ DROP TABLE IF EXISTS `image_tag`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `image_tag` (
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'tagged image id',
-  `tag_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'tag applied to the image',
+  `image_id` int NOT NULL DEFAULT '0' COMMENT 'tagged image id',
+  `tag_id` int NOT NULL DEFAULT '0' COMMENT 'tag applied to the image',
   PRIMARY KEY (`image_id`,`tag_id`),
   KEY `image_tag_i1` (`tag_id`),
   CONSTRAINT `fk_image_tag_image_id` FOREIGN KEY (`image_id`) REFERENCES `images` (`id`) ON DELETE CASCADE,
@@ -551,27 +551,27 @@ DROP TABLE IF EXISTS `images`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `images` (
-  `id` mediumint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'base filename of the original file',
   `date_available` datetime DEFAULT NULL COMMENT 'date the photo is considered added/visible in the gallery, can be mapped from EXIF/IPTC or admin-edited',
   `date_creation` datetime DEFAULT NULL COMMENT 'date the photo was taken, typically synced from EXIF/IPTC metadata',
   `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'display title, distinct from the filename',
   `comment` text COLLATE utf8mb4_unicode_ci COMMENT 'photo description shown on its page',
   `author` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'photographer/author credit',
-  `hit` int unsigned NOT NULL DEFAULT '0' COMMENT 'view counter',
-  `filesize` mediumint unsigned DEFAULT NULL COMMENT 'original file size in KB',
-  `width` smallint unsigned DEFAULT NULL COMMENT 'original pixel width',
-  `height` smallint unsigned DEFAULT NULL COMMENT 'original pixel height',
+  `hit` int NOT NULL DEFAULT '0' COMMENT 'view counter',
+  `filesize` int DEFAULT NULL COMMENT 'original file size in KB',
+  `width` int DEFAULT NULL COMMENT 'original pixel width',
+  `height` int DEFAULT NULL COMMENT 'original pixel height',
   `coi` char(4) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'center of interest',
   `representative_ext` varchar(4) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'file extension of a separate representative thumbnail, for formats that cannot be thumbnailed directly, e.g. PDF/video',
   `date_metadata_update` date DEFAULT NULL COMMENT 'date the row was last synced from the file EXIF/IPTC metadata, null if never synced',
-  `rating_score` float(5,2) unsigned DEFAULT NULL COMMENT 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore',
+  `rating_score` float(5,2) DEFAULT NULL COMMENT 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore',
   `path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'full relative filesystem path to the original file',
-  `storage_category_id` smallint unsigned DEFAULT NULL COMMENT 'album the file is physically stored under, distinct from possibly multiple image_category memberships',
-  `level` tinyint unsigned NOT NULL DEFAULT '0' COMMENT 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels',
+  `storage_category_id` int DEFAULT NULL COMMENT 'album the file is physically stored under, distinct from possibly multiple image_category memberships',
+  `level` smallint NOT NULL DEFAULT '0' COMMENT 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels',
   `md5sum` char(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'MD5 checksum of the original file, computed lazily for duplicate detection',
-  `added_by` mediumint unsigned DEFAULT NULL COMMENT 'uploading user id',
-  `rotation` tinyint unsigned DEFAULT NULL COMMENT 'pending quarter-turn rotation to apply when rendering, 0 to 3',
+  `added_by` int DEFAULT NULL COMMENT 'uploading user id',
+  `rotation` smallint DEFAULT NULL COMMENT 'pending quarter-turn rotation to apply when rendering, 0 to 3',
   `latitude` double(8,6) DEFAULT NULL COMMENT 'GPS latitude, from EXIF',
   `longitude` double(9,6) DEFAULT NULL COMMENT 'GPS longitude, from EXIF',
   `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
@@ -662,8 +662,8 @@ DROP TABLE IF EXISTS `lounge`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `lounge` (
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'newly uploaded image pending album association',
-  `category_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'album the image is intended for once the lounge is emptied',
+  `image_id` int NOT NULL DEFAULT '0' COMMENT 'newly uploaded image pending album association',
+  `category_id` int NOT NULL DEFAULT '0' COMMENT 'album the image is intended for once the lounge is emptied',
   PRIMARY KEY (`image_id`,`category_id`),
   KEY `fk_lounge_category_id` (`category_id`),
   CONSTRAINT `fk_lounge_category_id` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
@@ -688,11 +688,11 @@ DROP TABLE IF EXISTS `old_permalinks`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `old_permalinks` (
-  `cat_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'album the removed permalink used to point to',
+  `cat_id` int NOT NULL DEFAULT '0' COMMENT 'album the removed permalink used to point to',
   `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'the retired URL slug, kept so it is not immediately reusable by another album',
   `date_deleted` datetime DEFAULT NULL COMMENT 'when the permalink was retired',
   `last_hit` datetime DEFAULT NULL COMMENT 'when the dead permalink was last visited',
-  `hit` int unsigned NOT NULL DEFAULT '0' COMMENT 'visit count against the dead permalink',
+  `hit` int NOT NULL DEFAULT '0' COMMENT 'visit count against the dead permalink',
   PRIMARY KEY (`permalink`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='retired album permalinks, kept to block reuse and shown on the admin permalinks page';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -763,10 +763,10 @@ DROP TABLE IF EXISTS `rate`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `rate` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'rating user id, the guest user id for anonymous visitors',
-  `element_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'rated image id',
+  `user_id` int NOT NULL DEFAULT '0' COMMENT 'rating user id, the guest user id for anonymous visitors',
+  `element_id` int NOT NULL DEFAULT '0' COMMENT 'rated image id',
   `anonymous_id` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'truncated IP address identifying an anonymous rater, from the anonymous_rater cookie',
-  `rate` tinyint unsigned NOT NULL DEFAULT '0' COMMENT 'submitted rating value, restricted to the configured rate_items',
+  `rate` smallint NOT NULL DEFAULT '0' COMMENT 'submitted rating value, restricted to the configured rate_items',
   `date` date DEFAULT NULL COMMENT 'date the rate was submitted',
   PRIMARY KEY (`element_id`,`user_id`,`anonymous_id`),
   KEY `fk_rate_user_id` (`user_id`),
@@ -793,11 +793,11 @@ DROP TABLE IF EXISTS `search`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `search` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `search_uuid` char(23) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'public, shareable identifier for this saved search, used in URLs instead of id',
   `created_on` datetime DEFAULT NULL COMMENT 'when the search was saved',
-  `created_by` mediumint unsigned DEFAULT NULL COMMENT 'user id who saved the search, null for an anonymous search',
-  `forked_from` int unsigned DEFAULT NULL COMMENT 'search this one was refined/derived from, null for an original search',
+  `created_by` int DEFAULT NULL COMMENT 'user id who saved the search, null for an anonymous search',
+  `forked_from` int DEFAULT NULL COMMENT 'search this one was refined/derived from, null for an original search',
   `rules` json DEFAULT NULL COMMENT 'encoded search criteria (query terms, filters) evaluated by SearchService',
   PRIMARY KEY (`id`),
   KEY `fk_search_created_by` (`created_by`),
@@ -873,7 +873,7 @@ DROP TABLE IF EXISTS `sites`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sites` (
-  `id` tinyint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key, referenced by categories.site_id',
+  `id` smallint NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key, referenced by categories.site_id',
   `galleries_url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'base path or URL this site synchronizes photos from, local or remote (see UrlService::urlIsRemote)',
   PRIMARY KEY (`id`),
   UNIQUE KEY `sites_ui1` (`galleries_url`)
@@ -898,7 +898,7 @@ DROP TABLE IF EXISTS `tags`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tags` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'tag display name',
   `url_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'URL-friendly slug derived from name',
   `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
@@ -951,8 +951,8 @@ DROP TABLE IF EXISTS `user_access`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_access` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'granted user id',
-  `cat_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'private album the user is granted access to',
+  `user_id` int NOT NULL DEFAULT '0' COMMENT 'granted user id',
+  `cat_id` int NOT NULL DEFAULT '0' COMMENT 'private album the user is granted access to',
   PRIMARY KEY (`user_id`,`cat_id`),
   KEY `fk_user_access_cat_id` (`cat_id`),
   CONSTRAINT `fk_user_access_cat_id` FOREIGN KEY (`cat_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
@@ -977,12 +977,12 @@ DROP TABLE IF EXISTS `user_auth_keys`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_auth_keys` (
-  `auth_key_id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `auth_key_id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `auth_key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'the token value: a random persistent-login token for key_type=auth_key, or the public pkid-... identifier for key_type=api_key',
   `apikey_secret` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'hashed secret half of a key_type=api_key pair, null for auth_key rows',
-  `user_id` mediumint unsigned NOT NULL COMMENT 'owning user id',
+  `user_id` int NOT NULL COMMENT 'owning user id',
   `created_on` datetime NOT NULL COMMENT 'when the key was issued',
-  `duration` int unsigned DEFAULT NULL COMMENT 'requested key lifetime, seconds for auth_key rows or days for api_key rows, see expired_on for the actual cutoff',
+  `duration` int DEFAULT NULL COMMENT 'requested key lifetime, seconds for auth_key rows or days for api_key rows, see expired_on for the actual cutoff',
   `expired_on` datetime NOT NULL COMMENT 'when the key stops being valid',
   `apikey_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'user-given label for a key_type=api_key row, null for auth_key rows',
   `key_type` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'auth_key for a persistent-login/URL-login token, api_key for a personal API key',
@@ -1012,8 +1012,8 @@ DROP TABLE IF EXISTS `user_failed_logins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_failed_logins` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
-  `user_id` mediumint unsigned DEFAULT NULL COMMENT 'targeted user id, if the attempted username resolved to a real account',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `user_id` int DEFAULT NULL COMMENT 'targeted user id, if the attempted username resolved to a real account',
   `ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'REMOTE_ADDR the failed login attempt came from',
   `attempted_at` datetime NOT NULL COMMENT 'when the failed attempt occurred',
   PRIMARY KEY (`id`),
@@ -1041,7 +1041,7 @@ DROP TABLE IF EXISTS `user_feed`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_feed` (
   `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'private feed token, passed as ?feed= to authenticate as the owning user without a login',
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'user this feed token authenticates as',
+  `user_id` int NOT NULL DEFAULT '0' COMMENT 'user this feed token authenticates as',
   `last_check` datetime DEFAULT NULL COMMENT 'when this feed URL was last polled',
   PRIMARY KEY (`id`),
   KEY `fk_user_feed_user_id` (`user_id`),
@@ -1066,8 +1066,8 @@ DROP TABLE IF EXISTS `user_group`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_group` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'member user id',
-  `group_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'group the user belongs to',
+  `user_id` int NOT NULL DEFAULT '0' COMMENT 'member user id',
+  `group_id` int NOT NULL DEFAULT '0' COMMENT 'group the user belongs to',
   PRIMARY KEY (`group_id`,`user_id`),
   KEY `fk_user_group_user_id` (`user_id`),
   CONSTRAINT `fk_user_group_group_id` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE,
@@ -1093,18 +1093,18 @@ DROP TABLE IF EXISTS `user_infos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_infos` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'the owning users.id row, application-assigned, never auto-generated here',
-  `nb_image_page` smallint unsigned NOT NULL DEFAULT '15' COMMENT 'photos per page preference',
+  `user_id` int NOT NULL DEFAULT '0' COMMENT 'the owning users.id row, application-assigned, never auto-generated here',
+  `nb_image_page` int NOT NULL DEFAULT '15' COMMENT 'photos per page preference',
   `status` enum('webmaster','admin','normal','generic','guest') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'guest' COMMENT 'account role, gates admin access and permission checks',
   `language` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_UK' COMMENT 'interface language, references languages.id',
   `expand` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether the album tree auto-expands in the menu',
   `show_nb_comments` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether comment counts are shown alongside thumbnails',
   `show_nb_hits` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether view counts are shown alongside thumbnails',
-  `recent_period` tinyint unsigned NOT NULL DEFAULT '7' COMMENT 'number of days considered recent for the recent photos/albums views',
+  `recent_period` smallint NOT NULL DEFAULT '7' COMMENT 'number of days considered recent for the recent photos/albums views',
   `theme` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'modus' COMMENT 'interface theme, references themes.id',
   `registration_date` datetime DEFAULT NULL COMMENT 'account creation date',
   `enabled_high` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'whether the user may view/download the original, high-definition photo',
-  `level` tinyint unsigned NOT NULL DEFAULT '0' COMMENT 'effective permission level, gates access to images.level-restricted photos',
+  `level` smallint NOT NULL DEFAULT '0' COMMENT 'effective permission level, gates access to images.level-restricted photos',
   `activation_key` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'hashed password-reset token, see AuthService::setActivationKey and password.php',
   `activation_key_expire` datetime DEFAULT NULL COMMENT 'when activation_key stops being valid',
   `last_visit` datetime DEFAULT NULL COMMENT 'when the user was last seen, refreshed once per session length',
@@ -1135,7 +1135,7 @@ DROP TABLE IF EXISTS `user_mail_notification`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_mail_notification` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'subscribing user id',
+  `user_id` int NOT NULL DEFAULT '0' COMMENT 'subscribing user id',
   `check_key` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'private token used in subscribe/unsubscribe confirmation email links',
   `enabled` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether the user currently receives new-photo notification emails',
   `last_send` datetime DEFAULT NULL COMMENT 'when a notification email was last sent to this user',
@@ -1163,7 +1163,7 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
-  `id` mediumint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key, referenced by user_id everywhere else',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key, referenced by user_id everywhere else',
   `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'login name, unique',
   `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'hashed login password',
   `mail_address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'account email address',

@@ -184,7 +184,7 @@ SET default_table_access_method = heap;
 CREATE TABLE public.activity (
     activity_id integer NOT NULL,
     object character varying(255) NOT NULL,
-    object_id bigint NOT NULL,
+    object_id integer NOT NULL,
     action character varying(255) NOT NULL,
     performed_by integer,
     session_idx character varying(255) NOT NULL,
@@ -297,7 +297,7 @@ CREATE TABLE public.audit_log (
     actor_id integer,
     action character varying(64) NOT NULL,
     entity_type character varying(64) NOT NULL,
-    entity_id bigint,
+    entity_id integer,
     before_json jsonb,
     after_json jsonb,
     ip_address character varying(45) DEFAULT NULL::character varying,
@@ -1081,12 +1081,12 @@ CREATE TABLE public.history (
     ip character(39) DEFAULT ''::bpchar NOT NULL,
     section character varying(20) DEFAULT NULL::character varying,
     category_id integer,
-    search_id bigint,
+    search_id integer,
     tag_ids character varying(50) DEFAULT NULL::character varying,
     image_id integer,
     image_type character varying(10) DEFAULT NULL::character varying,
-    format_id bigint,
-    auth_key_id bigint,
+    format_id integer,
+    auth_key_id integer,
     CONSTRAINT history_image_type_check CHECK (((image_type IS NULL) OR ((image_type)::text = ANY ((ARRAY['picture'::character varying, 'high'::character varying, 'other'::character varying])::text[]))))
 );
 
@@ -1216,8 +1216,8 @@ CREATE TABLE public.history_summary (
     day smallint,
     hour smallint,
     nb_pages integer,
-    history_id_from bigint,
-    history_id_to bigint
+    history_id_from integer,
+    history_id_to integer
 );
 
 
@@ -1449,7 +1449,7 @@ CREATE TABLE public.images (
     name character varying(255) DEFAULT NULL::character varying,
     comment text,
     author character varying(255) DEFAULT NULL::character varying,
-    hit bigint DEFAULT 0 NOT NULL,
+    hit integer DEFAULT 0 NOT NULL,
     filesize integer,
     width integer,
     height integer,
@@ -1786,7 +1786,7 @@ CREATE TABLE public.old_permalinks (
     permalink character varying(64) DEFAULT ''::character varying NOT NULL COLLATE pg_catalog."C",
     date_deleted timestamp(0) without time zone DEFAULT NULL::timestamp without time zone,
     last_hit timestamp without time zone,
-    hit bigint DEFAULT 0 NOT NULL
+    hit integer DEFAULT 0 NOT NULL
 );
 
 
@@ -1983,7 +1983,7 @@ CREATE TABLE public.search (
     search_uuid character(23) DEFAULT NULL::bpchar,
     created_on timestamp(0) without time zone DEFAULT NULL::timestamp without time zone,
     created_by integer,
-    forked_from bigint,
+    forked_from integer,
     rules jsonb
 );
 
@@ -2330,7 +2330,7 @@ CREATE TABLE public.user_auth_keys (
     apikey_secret character varying(255) DEFAULT NULL::character varying,
     user_id integer NOT NULL,
     created_on timestamp(0) without time zone NOT NULL,
-    duration bigint,
+    duration integer,
     expired_on timestamp(0) without time zone NOT NULL,
     apikey_name character varying(100) DEFAULT NULL::character varying,
     key_type character varying(40) DEFAULT NULL::character varying,

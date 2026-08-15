@@ -306,6 +306,34 @@ test('mergeIntoEnvFile drops an existing line whose key extraction genuinely fai
         ->toBe("NEW_KEY=new\nGOOD_KEY=value\n");
 });
 
+test('isTracyEnabled is false when PIWIGO_TRACY_ENABLED is unset, empty, or "0"', function (): void {
+    $original = getenv('PIWIGO_TRACY_ENABLED');
+
+    try {
+        putenv('PIWIGO_TRACY_ENABLED');
+        expect(Env::isTracyEnabled())->toBeFalse();
+
+        putenv('PIWIGO_TRACY_ENABLED=');
+        expect(Env::isTracyEnabled())->toBeFalse();
+
+        putenv('PIWIGO_TRACY_ENABLED=0');
+        expect(Env::isTracyEnabled())->toBeFalse();
+    } finally {
+        putenv($original === false ? 'PIWIGO_TRACY_ENABLED' : 'PIWIGO_TRACY_ENABLED=' . $original);
+    }
+});
+
+test('isTracyEnabled is true for any other real value', function (): void {
+    $original = getenv('PIWIGO_TRACY_ENABLED');
+
+    try {
+        putenv('PIWIGO_TRACY_ENABLED=1');
+        expect(Env::isTracyEnabled())->toBeTrue();
+    } finally {
+        putenv($original === false ? 'PIWIGO_TRACY_ENABLED' : 'PIWIGO_TRACY_ENABLED=' . $original);
+    }
+});
+
 /**
  * Also confirmed-equivalent (both verified live via
  * temporary sed-applied mutations against a fresh-file merge): line

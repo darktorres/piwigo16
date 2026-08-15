@@ -100,6 +100,7 @@
     "staabm/phpstan-dba": "dev-main",
     "symfony/yaml": "^8.1",
     "symplify/easy-coding-standard": "^13.1",
+    "tracy/tracy": "^2.12",
     "vimeo/psalm": "7.x-dev"
   },
   "autoload": {

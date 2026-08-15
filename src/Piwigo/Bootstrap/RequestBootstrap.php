@@ -174,6 +174,7 @@ final class RequestBootstrap
     {
         CoverageCollector::registerIfActive($paths);
         SentryBootstrap::init();
+        TracyBootstrap::init();
 
         $t2 = microtime(true);
 
@@ -203,6 +204,7 @@ final class RequestBootstrap
     public static function bootConfigOnly(Paths $paths): void
     {
         SentryBootstrap::init();
+        TracyBootstrap::init();
         $bootStart = microtime(true);
 
         ConfigLoader::applyDefaults();

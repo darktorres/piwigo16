@@ -20,6 +20,7 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Sentry\SentrySdk;
+use Tracy\Debugger;
 
 /**
  * A mutation-testing sweep found 2 confirmed-equivalent RemoveMethodCall
@@ -57,6 +58,7 @@ beforeEach(function (): void {
     TranslatorTestFactory::get()->reset();
     SentrySdk::init();
     putenv('SENTRY_DSN');
+    putenv('PIWIGO_TRACY_ENABLED');
 });
 
 afterEach(function (): void {
@@ -79,6 +81,7 @@ afterEach(function (): void {
     TranslatorTestFactory::get()->reset();
     SentrySdk::init();
     putenv('SENTRY_DSN');
+    putenv('PIWIGO_TRACY_ENABLED');
 });
 
 test('bootConfigOnly boots the Kernel', function (): void {
@@ -133,6 +136,20 @@ test('bootConfigOnly initializes Sentry when SENTRY_DSN is set', function (): vo
 
     // Same reasoning as SentryBootstrapTest's own "binds a client" test --
     // a real DSN registers real global PHP error/exception handlers.
+    restore_error_handler();
+    restore_exception_handler();
+});
+
+test('bootConfigOnly enables Tracy when PIWIGO_TRACY_ENABLED is set', function (): void {
+    // A dedicated test (not combined with the Sentry one above) so each
+    // real SDK touch registers and restores its own handlers independently
+    // -- same reasoning as TracyBootstrapTest.php's own closing comment.
+    putenv('PIWIGO_TRACY_ENABLED=1');
+
+    RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
+
+    expect(Debugger::isEnabled())->toBeTrue();
+
     restore_error_handler();
     restore_exception_handler();
 });

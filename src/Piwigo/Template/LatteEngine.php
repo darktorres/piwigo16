@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Latte\Bridges\Tracy\TracyExtension;
 use Latte\Engine;
 use Latte\Feature;
+use Piwigo\Core\Env;
 use Piwigo\Template\Latte\PiwigoExtension;
 
 /**
@@ -47,6 +49,13 @@ final readonly class LatteEngine
         $this->engine->setFeature(Feature::Dedent);
         $this->engine->setFeature(Feature::ScopedLoopVariables);
         $this->engine->setLocale($locale);
+        // TracyExtension's own constructor calls Tracy\Debugger::getBar()
+        // unconditionally -- only worth registering when Debugger::enable()
+        // has actually run (see Piwigo\Bootstrap\TracyBootstrap's own
+        // docblock), otherwise it's a panel nothing ever renders.
+        if (Env::isTracyEnabled()) {
+            $this->engine->addExtension(new TracyExtension());
+        }
     }
 
     /**

@@ -118,6 +118,22 @@ final class Env
     }
 
     /**
+     * Whether Tracy's debug bar should be enabled -- `PIWIGO_TRACY_ENABLED`
+     * unset/empty/`'0'` means disabled, matching `SentryBootstrap`'s own
+     * "no-op unless explicitly opted in" shape for `SENTRY_DSN`. Lives here
+     * (L1Infrastructure), not on `Piwigo\Bootstrap\TracyBootstrap` (L4), so
+     * `Piwigo\Template\LatteEngine` (L3) can read it too -- same reasoning
+     * as `DefaultLanguageProviderInterface`'s own docblock: a lower layer
+     * can't reach upward for something a higher layer would otherwise own.
+     */
+    public static function isTracyEnabled(): bool
+    {
+        $value = getenv('PIWIGO_TRACY_ENABLED');
+
+        return $value !== false && $value !== '' && $value !== '0';
+    }
+
+    /**
      * Atomically writes/updates $values (KEY => value) into $envFile,
      * preserving every other line already there (a re-installing site's own
      * unrelated vars -- e.g. PIWIGO_TEST_NOW, see now() above -- must not be

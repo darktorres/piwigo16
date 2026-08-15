@@ -1128,7 +1128,6 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // else, so upload errors honor the request's real format=/
         // protocol instead of hardcoding raw JSON regardless.
         'Ws/Server.php' => 1,
-        'Ws/WsHelper.php' => 1,
         'Controller/WsController.php' => 1,
         'Bootstrap/UserBootstrap.php' => 2,
 
@@ -1144,6 +1143,13 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // SentryMiddleware's performance transaction unfinished and
         // ServerTimingMiddleware's header silently skipped on every
         // redirect/error page).
+
+        // Ws/WsHelper.php's own former exit() site
+        // (stdImageSqlFilterCriteria()'s invalid-date-field branch) is
+        // gone -- it now returns a WsErrorResponse and lets the standard
+        // Server::invoke() -> sendResponse() flow carry it out, the same
+        // real error-response mechanism Ws/Images.php's own upload-error
+        // sites (above) already use instead of a raw die().
 
         // AJAX/JSON action endpoints: echo a JSON (or CSV/file) body
         // directly and stop, deliberately not falling through to the

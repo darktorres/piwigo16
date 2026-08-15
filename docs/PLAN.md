@@ -1883,7 +1883,7 @@ mechanical rename. Depends on P36.
 
 **P38 — Refactor TS into modules.** Not started. Breaks up monolithic
 per-page scripts into proper ES modules (shared utils, per-feature entry
-points) — one Vite entry per real page bundle. Depends on P37.
+points) — one Vite entry per real page bundle. Depends on P37b.
 
 **P39 — Remove jQuery.** Not started. Explicit per-surface decision, not
 a blanket removal: first-party call sites (native DOM/fetch APIs), the

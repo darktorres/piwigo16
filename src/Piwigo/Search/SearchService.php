@@ -506,7 +506,7 @@ final readonly class SearchService
         if (count($items) > 1) {
             // CurrentConfig::orderBy() (the typed SCHEMA accessor) models a
             // structured {field,dir}[] shape that no real code writes --
-            $orderBy = $this->currentConfig->orderBy;
+            $orderBy = $this->currentConfig->orderBy->toSql();
             $items = $this->repo->findIdsByClause('id', 'images i', 'id IN (' . implode(',', array_fill(0, count($items), '?')) . ') ' . $orderBy, $items);
         }
 
@@ -1225,7 +1225,7 @@ final readonly class SearchService
                 }
             } elseif (isset($token->scope) && $token->scope->id === 'tag' && strlen($token->term) === 0) {
                 if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
-                    $qsr->tag_iids[$i] = $this->repo->findIdsByClause('DISTINCT image_id', 'image_tag', '1=1');
+                    $qsr->tag_iids[$i] = $this->repo->findIdsByClause('DISTINCT image_id', 'image_tag');
                 } else {
                     $qsr->tag_iids[$i] = $this->repo->findIdsByClause(
                         'id',
@@ -1335,7 +1335,7 @@ final readonly class SearchService
                 }
             } elseif (isset($token->scope) && $token->scope->id === 'category' && strlen($token->term) === 0) {
                 if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
-                    $qsr->cat_iids[$i] = $this->repo->findIdsByClause('DISTINCT image_id', 'image_category', '1=1');
+                    $qsr->cat_iids[$i] = $this->repo->findIdsByClause('DISTINCT image_id', 'image_category');
                 } else {
                     $qsr->cat_iids[$i] = $this->repo->findIdsByClause(
                         'id',
@@ -1654,7 +1654,7 @@ final readonly class SearchService
         // its own docblock), so `GROUP BY id` (functionally dependent via
         // the primary key) replaces DISTINCT here, same fix as
         // CalendarRepository::findImageIds().
-        $orderBy = $this->currentConfig->orderBy;
+        $orderBy = $this->currentConfig->orderBy->toSql();
         $whereSql = (string) $this->repo->expressionBuilder()
             ->and(...$whereClauses);
         $ids = $this->repo->findIdsByClause('id', $from, $whereSql . "\nGROUP BY id\n" . $orderBy, $params);

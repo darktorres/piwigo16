@@ -100,7 +100,7 @@ final readonly class SectionPopulator
         // this method's section-specific branches below and read back by
         // several others -- a single local variable threaded through the
         // whole method, seeded from CurrentConfig::orderBy().
-        $order_by = $this->currentConfig->orderBy;
+        $order_by = $this->currentConfig->orderBy->toSql();
 
         $page['items'] = [];
         $page['start'] = $page['startcat'] = 0;
@@ -190,7 +190,7 @@ final readonly class SectionPopulator
         // and not as a category set because we can't use the #image_category.rank :
         // displayed images are not directly linked to the displayed category
         if ($section === Section::Categories and ! isset($page['flat'])) {
-            $order_by = $this->currentConfig->orderByInsideCategory;
+            $order_by = $this->currentConfig->orderByInsideCategory->toSql();
         }
 
         $image_order_id = $this->sessionService->getImageOrder() ?? 0;
@@ -226,9 +226,6 @@ final readonly class SectionPopulator
             $permissionCriteria->visibleImagesCondition('id'),
             $permissionCriteria->maxLevelCondition('level'),
         );
-        $forbidden = $forbiddenCondition->isEmpty() ? '' : ' AND ' . $forbiddenCondition->sql;
-        $forbidden_params = $forbiddenCondition->parameters;
-        $forbidden_types = $forbiddenCondition->types;
 
         // most_visited/best_rated's own findTopByHitsImageIds()/
         // findTopRatedImageIds() run as real DQL (their own $order_by is a
@@ -351,16 +348,16 @@ final readonly class SectionPopulator
                             $flatCriteria->visibleImagesCondition('id'),
                             $flatCriteria->maxLevelCondition('level'),
                         );
-                        $forbidden = $forbiddenCondition->isEmpty() ? '' : ' AND ' . $forbiddenCondition->sql;
-                        $forbidden_params = $forbiddenCondition->parameters;
-                        $forbidden_types = $forbiddenCondition->types;
                     } else {
                         $user = $this->currentUser->get();
                         $user_id_for_cache = $user->id->value;
                         $cache_item = $this->sectionImageIdsCachePool
                             ->getItem('all_iids_' . $user_id_for_cache . '_' . md5($order_by));
                         unset($page['is_homepage']);
-                        $where_sql = '1=1';
+                        // Whole-gallery flat mode: no category restriction at
+                        // all, so the scope fragment stays empty and the
+                        // repository omits it from the WHERE.
+                        $where_sql = '';
                     }
                 }
                 // normal mode
@@ -394,7 +391,7 @@ final readonly class SectionPopulator
                     // here, same fix as CalendarRepository::findImageIds()/
                     // SearchService::getQuickSearchResultsNoCache() -- `id`
                     // and `image_id` are equal per the JOIN condition.
-                    $page['items'] = $this->repo->findSectionImageIds($where_sql, $forbidden, $order_by, array_merge($where_params, $forbidden_params), array_merge($where_types, $forbidden_types));
+                    $page['items'] = $this->repo->findSectionImageIds(new SqlCondition($where_sql, $where_params, $where_types), $forbiddenCondition, $order_by);
 
                     if ($cache_item instanceof CacheItemInterface) {
                         $cache_item->set($page['items']);
@@ -543,13 +540,7 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . $this->lang->t('Recent photos') . '</a>',
-                        'items' => $this->repo->findRecentImageIds(
-                            $recentCondition->sql,
-                            $forbidden,
-                            $order_by,
-                            array_merge($recentCondition->parameters, $forbidden_params),
-                            array_merge($recentCondition->types, $forbidden_types)
-                        ),
+                        'items' => $this->repo->findRecentImageIds($recentCondition, $forbiddenCondition, $order_by),
                     ]
                 );
             } elseif ($section === Section::RecentCats) {
@@ -608,7 +599,7 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . $this->lang->t('Random photos') . '</a>',
-                        'items' => $this->repo->findImageIdsAmongList($list_ids, $forbidden, $order_by, $forbidden_params, $forbidden_types),
+                        'items' => $this->repo->findImageIdsAmongList($list_ids, $forbiddenCondition, $order_by),
                     ]
                 );
             }

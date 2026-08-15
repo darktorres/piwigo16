@@ -26,6 +26,19 @@ final readonly class CalendarService
     ) {}
 
     /**
+     * $condition as an indented WHERE line for the query being assembled
+     * below, or nothing at all when it carries no restriction -- that query
+     * is built as text, so an empty condition has to contribute no line
+     * rather than a bare `WHERE`.
+     */
+    private static function whereFragment(SqlCondition $condition): string
+    {
+        $clause = $condition->toWhereClause();
+
+        return $clause === '' ? '' : "\n    " . $clause;
+    }
+
+    /**
      * Null return means "nothing to do", for an empty sub-category set or
      * an empty non-category item list.
      *
@@ -49,12 +62,15 @@ final readonly class CalendarService
      */
     public function buildInnerSql(string $section, bool $hasCategoryContext, int|string|null $categoryId, string $forbiddenCategories, array $items): ?CalendarQueryScope
     {
-        $imagesTable = 'images';
-        $sql = " FROM {$imagesTable}";
+        $sql = <<<SQL
+             FROM images
+            SQL;
 
         if ($section === 'categories') {
-            $imageCategoryTable = 'image_category';
-            $sql .= "\nINNER JOIN {$imageCategoryTable} ON id = image_id";
+            $sql .= <<<SQL
+
+                INNER JOIN image_category ON id = image_id
+                SQL;
 
             if ($hasCategoryContext) {
                 $subIds = $categoryId === null ? [] : array_diff($this->categoryService->getSubcatIds([$categoryId]), explode(',', $forbiddenCategories));
@@ -64,28 +80,23 @@ final readonly class CalendarService
 
                 $subIdsInt = array_values(array_map(intval(...), $subIds));
 
-                $sql .= "\nWHERE category_id IN (:innerSubIds)";
-                $params = [
-                    'innerSubIds' => $subIdsInt,
-                ];
-                $types = [
-                    'innerSubIds' => ArrayParameterType::INTEGER,
-                ];
-
                 $criteria = $this->permissionService->getPermissionCriteria();
                 // visible_images's own old fallthrough into forbidden_images
                 // (fieldName 'id' -> the images-table's own level check) --
                 // see PermissionCriteria's own docblock.
-                $permissionCondition = SqlCondition::combine(
+                $where = SqlCondition::combine(
                     'AND',
+                    new SqlCondition('category_id IN (:innerSubIds)', [
+                        'innerSubIds' => $subIdsInt,
+                    ], [
+                        'innerSubIds' => ArrayParameterType::INTEGER,
+                    ]),
                     $criteria->visibleImagesCondition('id'),
                     $criteria->maxLevelCondition('level'),
                 );
-                if (! $permissionCondition->isEmpty()) {
-                    $sql .= "\n    AND {$permissionCondition->sql}";
-                    $params = [...$params, ...$permissionCondition->parameters];
-                    $types = [...$types, ...$permissionCondition->types];
-                }
+                $sql .= self::whereFragment($where);
+                $params = $where->parameters;
+                $types = $where->types;
 
                 $dqlPermissionCondition = SqlCondition::combine(
                     'AND',
@@ -110,19 +121,12 @@ final readonly class CalendarService
                     $criteria->visibleImagesCondition('id'),
                     $criteria->maxLevelCondition('level'),
                 );
-                // The old $forceOneCondition: true guaranteed a non-empty
-                // fragment here -- this WHERE clause is spliced unconditionally
-                // below (no isEmpty() guard around it), so an empty criteria
-                // (no real restriction for this user) would otherwise produce
-                // a bare "WHERE" with nothing after it, a real SQL syntax error.
-                $whereSql = $permissionCondition->isEmpty() ? '1 = 1' : $permissionCondition->sql;
-                $sql .= "\n    WHERE {$whereSql}";
+                // An empty criteria (no real restriction for this user)
+                // renders as no WHERE at all rather than a `1 = 1` stand-in.
+                $sql .= self::whereFragment($permissionCondition);
                 $params = $permissionCondition->parameters;
                 $types = $permissionCondition->types;
 
-                // No '1 = 1' fallback needed on the DQL side: CalendarRepository's
-                // own applyCondition() helper already skips an empty SqlCondition
-                // (no andWhere() call at all) rather than requiring non-empty text.
                 $dqlWhere = SqlCondition::combine(
                     'AND',
                     $criteria->forbiddenCategoriesCondition('ic.categoryId'),
@@ -139,7 +143,10 @@ final readonly class CalendarService
             return null;
         }
 
-        $sql .= "\nWHERE id IN (:innerItems)";
+        $sql .= <<<SQL
+
+            WHERE id IN (:innerItems)
+            SQL;
 
         return new CalendarQueryScope(
             new SqlCondition($sql, [

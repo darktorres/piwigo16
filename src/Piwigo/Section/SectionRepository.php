@@ -95,53 +95,48 @@ final readonly class SectionRepository
     }
 
     /**
-     * Image ids for the current category/flat-mode section, given
-     * $whereSql (either a plain `category_id = X` or the flat-mode
-     * `category_id IN (...)` SectionPopulator already resolved) --
-     * SectionPopulator's own main categories-section query. $whereSql/
-     * $forbiddenSql/$orderBySql are already-built, trusted SQL fragments;
-     * any real value they reference is bound via $params/$types.
+     * Image ids for the current category/flat-mode section --
+     * SectionPopulator's own main categories-section query. $scope is either
+     * a plain `category_id = X` or the flat-mode `category_id IN (...)` it
+     * already resolved; $forbidden carries the visibility restriction.
+     * $orderBySql stays a raw fragment (admin-configurable order_by text).
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function findSectionImageIds(string $whereSql, string $forbiddenSql, string $orderBySql, array $params = [], array $types = []): array
+    public function findSectionImageIds(SqlCondition $scope, SqlCondition $forbidden, string $orderBySql): array
     {
-        return $this->queryColumn('
-SELECT id
-  FROM image_category' . '
-    INNER JOIN images' . ' ON id = image_id
-  WHERE
-    ' . $whereSql . '
-' . $forbiddenSql . '
-  GROUP BY id
-  ' . $orderBySql . '
-;', $params, $types);
+        $where = SqlCondition::combine('AND', $scope, $forbidden);
+
+        return $this->queryColumn(<<<SQL
+            SELECT id
+            FROM image_category
+                INNER JOIN images ON id = image_id
+            {$where->toWhereClause()}
+            GROUP BY id
+            {$orderBySql}
+            SQL
+            , $where->parameters, $where->types);
     }
 
     /**
-     * Image ids for the "recent_pics" section -- $recentSql is
-     * UserService::getRecentPhotosCondition()'s own SqlCondition->sql
-     * fragment (its ->parameters/->types are merged into $params/$types by
-     * the caller, alongside the forbidden-categories condition's own).
+     * Image ids for the "recent_pics" section -- $recent is
+     * UserService::getRecentPhotosCondition()'s own condition.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function findRecentImageIds(string $recentSql, string $forbiddenSql, string $orderBySql, array $params = [], array $types = []): array
+    public function findRecentImageIds(SqlCondition $recent, SqlCondition $forbidden, string $orderBySql): array
     {
-        return $this->queryColumn('
-SELECT id
-  FROM images' . '
-    INNER JOIN image_category' . ' AS ic ON id = ic.image_id
-  WHERE '
-  . $recentSql . '
-  ' . $forbiddenSql . '
-  GROUP BY id
-  ' . $orderBySql . '
-;', $params, $types);
+        $where = SqlCondition::combine('AND', $recent, $forbidden);
+
+        return $this->queryColumn(<<<SQL
+            SELECT id
+            FROM images
+                INNER JOIN image_category AS ic ON id = ic.image_id
+            {$where->toWhereClause()}
+            GROUP BY id
+            {$orderBySql}
+            SQL
+            , $where->parameters, $where->types);
     }
 
     /**
@@ -205,24 +200,29 @@ SELECT id
      * random-photos block), restricted to $imageIds and visibility.
      *
      * @param list<string> $imageIds
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function findImageIdsAmongList(array $imageIds, string $forbiddenSql, string $orderBySql, array $params = [], array $types = []): array
+    public function findImageIdsAmongList(array $imageIds, SqlCondition $forbidden, string $orderBySql): array
     {
-        $params['imageIds'] = $imageIds;
-        $types['imageIds'] = ArrayParameterType::STRING;
+        $where = SqlCondition::combine(
+            'AND',
+            new SqlCondition('image_id IN (:imageIds)', [
+                'imageIds' => $imageIds,
+            ], [
+                'imageIds' => ArrayParameterType::STRING,
+            ]),
+            $forbidden,
+        );
 
-        return $this->queryColumn('
-SELECT id
-  FROM images' . '
-    INNER JOIN image_category' . ' AS ic ON id = ic.image_id
-  WHERE image_id IN (:imageIds)
-    ' . $forbiddenSql . '
-  GROUP BY id
-  ' . $orderBySql . '
-;', $params, $types);
+        return $this->queryColumn(<<<SQL
+            SELECT id
+            FROM images
+                INNER JOIN image_category AS ic ON id = ic.image_id
+            {$where->toWhereClause()}
+            GROUP BY id
+            {$orderBySql}
+            SQL
+            , $where->parameters, $where->types);
     }
 
     /**

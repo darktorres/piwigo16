@@ -219,14 +219,14 @@ test('buildInnerSql browses everything visible when there is no category context
         ]);
 });
 
-test('buildInnerSql falls back to a forced 1 = 1 condition when no permission clause applies at all', function (): void {
-    // getSqlConditionFandF()'s own $forceOneCondition=true (this call's
-    // literal third argument) is only ever consulted when every one of
-    // the 3 requested conditions comes back empty -- both existing
-    // "browse everything visible" tests above always produce at least a
-    // level<=X clause (image_access_type !== 'NOT IN' by default), so
-    // neither can distinguish forceOneCondition=true from a mutated
-    // false. A user with no forbidden categories, no FilterState
+test('buildInnerSql omits the WHERE entirely when no permission clause applies at all', function (): void {
+    // This is the branch that used to need a forced `1 = 1`: every one of
+    // the 3 requested conditions comes back empty, and the query is
+    // assembled as text, so something had to follow the hardcoded WHERE.
+    // Both existing "browse everything visible" tests above always produce
+    // at least a level<=X clause (image_access_type !== 'NOT IN' by
+    // default), so neither reaches it. A user with no forbidden
+    // categories, no FilterState
     // restriction, and image_access_type exactly 'NOT IN' with an empty
     // image_access_list empties every one of the 3 conditions passed
     // here (see PermissionService::getSqlConditionFandF()'s own
@@ -252,13 +252,12 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
     expect($scope->rawSqlFromWhere->sql)
         ->toBe(
             " FROM images\nINNER JOIN " . 'image_category ON id = image_id'
-                . "\n    WHERE 1 = 1"
         )->and($scope->rawSqlFromWhere->parameters)
         ->toBe([]);
 
-    // No '1 = 1' fallback needed on the DQL side -- CalendarRepository's
-    // own applyCondition() helper skips an empty SqlCondition entirely
-    // (no andWhere() call at all) rather than requiring non-empty text.
+    // The DQL side always behaved this way -- SqlCondition::applyTo() skips
+    // an empty condition entirely (no andWhere() call at all); the raw-SQL
+    // side now matches it via toWhereClause().
     expect($scope->dqlWhere->isEmpty())
         ->toBeTrue();
 });

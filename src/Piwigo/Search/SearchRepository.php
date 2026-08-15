@@ -369,15 +369,20 @@ final readonly class SearchRepository
      * when the value has to be embedded inline in a larger OR-joined
      * fragment), never string-concatenate raw user input.
      *
+     * An empty $whereSql means "no restriction" and omits the WHERE
+     * entirely, so callers matching everything pass nothing rather than a
+     * `1=1` stand-in.
+     *
      * @param  list<mixed>  $params
      * @return list<int>
      */
-    public function findIdsByClause(string $selectSql, string $fromSql, string $whereSql, array $params = []): array
+    public function findIdsByClause(string $selectSql, string $fromSql, string $whereSql = '', array $params = []): array
     {
+        $where = $whereSql === '' ? '' : 'WHERE ' . $whereSql;
         $ids = $this->em->getConnection()
             ->executeQuery(
                 <<<SQL
-                SELECT {$selectSql} FROM {$fromSql} WHERE {$whereSql}
+                SELECT {$selectSql} FROM {$fromSql} {$where}
                 SQL
                 ,
                 $params
@@ -408,12 +413,13 @@ final readonly class SearchRepository
      * @param  list<mixed>  $params
      * @return list<array<string, mixed>>
      */
-    public function findRowsByClause(string $fromSql, string $whereSql, array $params = []): array
+    public function findRowsByClause(string $fromSql, string $whereSql = '', array $params = []): array
     {
+        $where = $whereSql === '' ? '' : 'WHERE ' . $whereSql;
         $rows = $this->em->getConnection()
             ->executeQuery(
                 <<<SQL
-                SELECT * FROM {$fromSql} WHERE {$whereSql}
+                SELECT * FROM {$fromSql} {$where}
                 SQL
                 ,
                 $params

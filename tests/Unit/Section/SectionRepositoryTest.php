@@ -88,12 +88,11 @@ test('findTopByHitsImageIds() returns empty when no image has a hit', function (
 test('findSectionImageIds() returns image ids for a category, as real numeric strings via the raw-SQL/queryColumn() path', function (): void {
     $ids = sectionTestRepo()
         ->findSectionImageIds(
-            whereSql: 'category_id = :catId',
-            forbiddenSql: '',
-            orderBySql: 'ORDER BY id ASC',
-            params: [
+            scope: new SqlCondition('category_id = :catId', [
                 'catId' => 1,
-            ],
+            ]),
+            forbidden: new SqlCondition(''),
+            orderBySql: 'ORDER BY id ASC',
         );
 
     expect($ids)
@@ -103,12 +102,11 @@ test('findSectionImageIds() returns image ids for a category, as real numeric st
 test('findSectionImageIds() returns empty for a category with no images', function (): void {
     $ids = sectionTestRepo()
         ->findSectionImageIds(
-            whereSql: 'category_id = :catId',
-            forbiddenSql: '',
-            orderBySql: 'ORDER BY id ASC',
-            params: [
+            scope: new SqlCondition('category_id = :catId', [
                 'catId' => 999999,
-            ],
+            ]),
+            forbidden: new SqlCondition(''),
+            orderBySql: 'ORDER BY id ASC',
         );
 
     expect($ids)

@@ -200,13 +200,15 @@ test('findRowsByClause() strips tsv_-prefixed columns', function (): void {
     // filter runs on every driver rather than only against Postgres's own
     // generated columns -- see the Integration counterpart for the full
     // rationale.
-    $rows = searchTestRepo()->findRowsByClause(
-        '(SELECT id, name, 1 AS tsv_fake FROM tags WHERE id = ?) t',
-        '1=1',
-        [1]
-    );
+    $rows = searchTestRepo()
+        ->findRowsByClause(
+            '(SELECT id, name, 1 AS tsv_fake FROM tags WHERE id = ?) t',
+            '',
+            [1]
+        );
 
-    expect($rows)->toHaveCount(1);
+    expect($rows)
+        ->toHaveCount(1);
     expect($rows[0])->toHaveKey('name');
     expect($rows[0])->not->toHaveKey('tsv_fake');
 });

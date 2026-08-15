@@ -117,7 +117,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
         // name whatever relation they like.
         $rows = $this->repo->findRowsByClause(
             '(SELECT id, name, 1 AS tsv_fake FROM tags WHERE id = ?) t',
-            '1=1',
+            '',
             [1]
         );
 

@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
-use LogicException;
 use Override;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -62,14 +61,15 @@ final readonly class UploadAsyncHandler implements WsAction
         private CurrentUser $currentUser,
         private Paths $paths,
         private StorageRegistry $storageRegistry,
+        private GetInfoHandler $getInfoHandler,
     ) {}
 
     /**
      * @param array<mixed> $params
      * @return WsErrorResponse|array<array-key, mixed> WsErrorResponse, an in-progress
      *   {message: string} status while chunks are still arriving, or the
-     *   result of the pwg.images.getInfo invocation once the upload is
-     *   complete
+     *   result of GetInfoHandler::resolve(), called directly (P25 Stage 1's
+     *   recursive-dispatch removal), once the upload is complete
      */
     #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
@@ -317,22 +317,8 @@ final readonly class UploadAsyncHandler implements WsAction
             }
         }
 
-        $result = $server->invoke('pwg.images.getInfo', [
+        return $this->getInfoHandler->resolve([
             'image_id' => $image_id,
         ]);
-        // Server::invoke() is a genuine string-keyed dynamic dispatcher
-        // (see Server's own class docblock) -- its declared return type
-        // is `mixed` by design. This narrows it to the real shape this
-        // specific sub-invocation (always 'pwg.images.getInfo', which
-        // itself really does return WsErrorResponse|array<string, mixed>) is
-        // known to return, the same "resolve, narrow, or throw" idiom
-        // already used throughout this codebase for other statically-
-        // unknowable-but-really-fixed-shape values (e.g. ImageBackend::
-        // currentConfig()'s container resolve).
-        if (! $result instanceof WsErrorResponse && ! is_array($result)) {
-            throw new LogicException('pwg.images.getInfo returned an unexpected type');
-        }
-
-        return $result;
     }
 }

@@ -33,6 +33,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
+use Piwigo\Ws\Request\WsFormatRequest;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
@@ -64,6 +65,19 @@ final readonly class GetInfoHandler implements WsAction
      */
     #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
+    {
+        return $this->resolve($params);
+    }
+
+    /**
+     * Callable directly by any other handler that needs this method's own
+     * result without going through Server::invoke()'s string-keyed
+     * dispatch (P25 Stage 1's recursive-dispatch removal).
+     *
+     * @param array<mixed> $params
+     * @return WsErrorResponse|array<string, mixed>
+     */
+    public function resolve(array $params): WsErrorResponse|array
     {
         $input = GetInfoParams::fromArray($params);
 
@@ -250,7 +264,7 @@ final readonly class GetInfoHandler implements WsAction
             ['id', 'date']
         );
 
-        if ($server->responseFormat !== 'rest') {
+        if (WsFormatRequest::fromGlobals()->responseFormat !== 'rest') {
             return $ret; // for backward compatibility only
         } else {
             return [

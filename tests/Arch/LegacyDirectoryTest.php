@@ -157,6 +157,11 @@ test('install/ contains only data files and the anti-listing stub', function ():
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/install'))->toBe([
         'config.sql',
         'index.php',
+        // One generated snapshot per provider. MariaDB has its own rather
+        // than sharing MySQL's: the two differ at the engine level (no
+        // native JSON type, `int(11)` display widths), so a shared file
+        // made the CI drift guard unsatisfiable on that leg.
+        'piwigo_structure-mariadb.sql',
         'piwigo_structure-mysql.sql',
         'piwigo_structure-pgsql.sql',
     ]);

@@ -74,6 +74,7 @@ test('params() sets utf8mb4 charset and native int/float driverOptions for the m
         ->and($params)
         ->toHaveKey('driverOptions', [
             MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true,
+            MYSQLI_INIT_COMMAND => "SET SESSION sql_mode='STRICT_TRANS_TABLES,ONLY_FULL_GROUP_BY,NO_ZERO_DATE,NO_ZERO_IN_DATE,NO_ENGINE_SUBSTITUTION'",
         ]);
 });
 
@@ -160,4 +161,46 @@ test('params() carries an explicit port through for the pgsql driver', function 
         ->toHaveKey('port', 6432)
         ->and($params)
         ->toHaveKey('host', 'pg.example.test');
+});
+
+/**
+ * The session sql_mode is pinned on connect rather than inherited from the
+ * server, because this codebase depends on strict mode for correctness --
+ * out-of-range integers must be rejected rather than clamped, zero-date
+ * sentinels must stay unwritable, and every query was written to be valid
+ * under ONLY_FULL_GROUP_BY.
+ *
+ * MYSQLI_INIT_COMMAND rather than a `SET SESSION` issued after connecting:
+ * it also runs on reconnect.
+ */
+test('params() pins the session sql_mode for the mysqli driver', function (): void {
+    putenv('PIWIGO_DB_DRIVER=mysqli');
+    putenv('PIWIGO_DB_HOST=db.example.test');
+    putenv('PIWIGO_DB_USER=piwigo_app');
+    putenv('PIWIGO_DB_PASSWORD=secret');
+    putenv('PIWIGO_DB_BASE=piwigo_prod');
+
+    $params = DbConnection::params();
+
+    expect($params['driverOptions'])
+        ->toHaveKey(MYSQLI_INIT_COMMAND)
+        ->and($params['driverOptions'][MYSQLI_INIT_COMMAND])
+        ->toContain('STRICT_TRANS_TABLES')
+        ->toContain('ONLY_FULL_GROUP_BY')
+        ->toContain('NO_ZERO_DATE');
+});
+
+/**
+ * PostgreSQL has no sql_mode concept at all, so the pgsql branch must not
+ * grow a mysqli-only driver option.
+ */
+test('params() adds no sql_mode option for the pgsql driver', function (): void {
+    putenv('PIWIGO_DB_DRIVER=pgsql');
+    putenv('PIWIGO_DB_HOST=pg.example.test');
+    putenv('PIWIGO_DB_USER=piwigo_app');
+    putenv('PIWIGO_DB_PASSWORD=secret');
+    putenv('PIWIGO_DB_BASE=piwigo_prod');
+
+    expect(DbConnection::params())
+        ->not->toHaveKey('driverOptions');
 });

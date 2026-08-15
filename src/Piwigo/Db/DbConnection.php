@@ -11,16 +11,23 @@ use Piwigo\Core\Kernel;
 /**
  * Factory for the shared Doctrine DBAL connection.
  *
- * Deliberately does NOT touch the session-level ONLY_FULL_GROUP_BY
- * server-mode setting the way the reference implementation's equivalent
- * DbConnection does -- a literal grep gate bans exactly
- * that class of session-mode mutation from `src/`, which this docblock
- * deliberately avoids tripping by not spelling
- * out the setting's name here. Unlike the reference implementation, this
- * repo carries no legacy procedural dblayer to fall back on -- every
- * caller was rewritten instead to stay valid under the strict, unmodified
- * session mode (see e.g. SearchService, SectionPopulator,
- * CategoryRepository, CalendarRepository, CommentRepository).
+ * Pins the session `sql_mode` to {@see SQL_MODE} on every MySQL/MariaDB
+ * connection, rather than inheriting whatever the server is configured
+ * with.
+ *
+ * This does NOT relax the mode the way the reference implementation's
+ * equivalent DbConnection does -- that one drops ONLY_FULL_GROUP_BY to let
+ * invalid GROUP BY queries through. It does the opposite: every caller here
+ * was rewritten to stay valid under strict mode (see e.g. SearchService,
+ * SectionPopulator, CategoryRepository, CalendarRepository,
+ * CommentRepository), and pinning makes that a guarantee instead of an
+ * assumption about someone else's server configuration.
+ *
+ * An earlier version of this docblock claimed "a literal grep gate bans
+ * exactly that class of session-mode mutation from `src/`". No such gate
+ * exists anywhere in this repository -- not in tests/Arch, CI, lefthook or
+ * tools -- and the same paragraph named the setting it claimed to be
+ * avoiding naming. Removed rather than reproduced.
  *
  * Also deliberately does NOT call Kernel::service() (the reference's
  * DbConnection::get() does) -- v17's own architectural rule bans the
@@ -29,6 +36,24 @@ use Piwigo\Core\Kernel;
  */
 final class DbConnection
 {
+    /**
+     * The session `sql_mode` every MySQL/MariaDB connection is pinned to.
+     *
+     * This is MySQL 8.4's own default minus `ERROR_FOR_DIVISION_BY_ZERO`,
+     * which that version deprecates (its behaviour is folded into strict
+     * mode). Verified accepted verbatim, and normalised identically, by both
+     * MySQL 8.4 and MariaDB 12.
+     *
+     * Pinning matters most for MariaDB, whose default is materially weaker:
+     * `STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,
+     * NO_ENGINE_SUBSTITUTION` -- no `ONLY_FULL_GROUP_BY` and no
+     * `NO_ZERO_DATE`/`NO_ZERO_IN_DATE`. Without this, a query invalid under
+     * `ONLY_FULL_GROUP_BY` fails on MySQL but passes on MariaDB, and the
+     * zero-date sentinel that `Version20260809083506` exists to eliminate
+     * remains writable there.
+     */
+    private const string SQL_MODE = 'STRICT_TRANS_TABLES,ONLY_FULL_GROUP_BY,NO_ZERO_DATE,NO_ZERO_IN_DATE,NO_ENGINE_SUBSTITUTION';
+
     /**
      * Test-only -- restricted to tests/ by an arch test (see
      * StructuralTest.php's own "X::reset() is only called from tests/"
@@ -131,6 +156,15 @@ final class DbConnection
             // re-cast.
             'driverOptions' => [
                 MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true,
+                // Pin the session sql_mode instead of inheriting the
+                // server's. This codebase depends on strict mode for
+                // correctness -- see this class's own docblock -- and that
+                // dependency was previously an unverified assumption about
+                // someone else's server configuration.
+                //
+                // Runs on connect *and* on reconnect, which a one-off
+                // `SET SESSION` after connecting would not.
+                MYSQLI_INIT_COMMAND => "SET SESSION sql_mode='" . self::SQL_MODE . "'",
             ],
         ];
 

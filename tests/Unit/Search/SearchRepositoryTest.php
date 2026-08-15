@@ -41,11 +41,13 @@ use Piwigo\Tests\Support\DbTransactionTestOverride;
  * (sed-mutate-and-rerun: disabling it still returns `[]` for an empty
  * `$ids`, DBAL's own `ArrayParameterType` expansion of an empty array
  * already matches nothing on this driver, same root cause as
- * PermalinkRepositoryTest.php's own findPermalinkMatches() finding);
- * findRowsByClause()'s own `tsv_` key-prefix filter is Postgres-only --
- * MySQL/mysqli's real schema has no `tsv_search`/`tsv_author` generated
- * columns for any `SELECT *` here to ever pick up, so the filter body
- * never has a real key to actually drop on this driver.
+ * PermalinkRepositoryTest.php's own findPermalinkMatches() finding).
+ *
+ * findRowsByClause()'s `tsv_` key-prefix filter used to be listed above as
+ * untestable here, on the grounds that MySQL's schema has no
+ * `tsv_search`/`tsv_author` generated columns for it to drop. It has its own
+ * test now: the column is synthesized by a derived table, so the real filter
+ * runs on this driver too.
  */
 function searchTestRepo(): SearchRepository
 {
@@ -191,6 +193,22 @@ test('findRowsByClause() returns full rows', function (): void {
         ->toHaveCount(1)
         ->and($rows[0]['id'])->toBe(1)
         ->and($rows[0]['name'])->toBe('nature');
+});
+
+test('findRowsByClause() strips tsv_-prefixed columns', function (): void {
+    // A derived table synthesizes the tsv_-prefixed column, so the real
+    // filter runs on every driver rather than only against Postgres's own
+    // generated columns -- see the Integration counterpart for the full
+    // rationale.
+    $rows = searchTestRepo()->findRowsByClause(
+        '(SELECT id, name, 1 AS tsv_fake FROM tags WHERE id = ?) t',
+        '1=1',
+        [1]
+    );
+
+    expect($rows)->toHaveCount(1);
+    expect($rows[0])->toHaveKey('name');
+    expect($rows[0])->not->toHaveKey('tsv_fake');
 });
 
 test('findRowsByClause() returns empty for no match', function (): void {

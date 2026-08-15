@@ -106,6 +106,26 @@ final class SearchRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findRowsByClause('tags', 'name = ?', ['no-such-tag']));
     }
 
+    public function testFindRowsByClauseStripsTsvPrefixedColumns(): void
+    {
+        // The real `tsv_search`/`tsv_author` columns this filter exists for
+        // are Postgres-only generated columns, so on any other driver the
+        // stripping code has nothing to act on and goes unverified. A
+        // derived table synthesizes a tsv_-prefixed column on every driver,
+        // exercising the real filter rather than a stand-in for it -- the
+        // method takes $fromSql as a raw fragment precisely so callers can
+        // name whatever relation they like.
+        $rows = $this->repo->findRowsByClause(
+            '(SELECT id, name, 1 AS tsv_fake FROM tags WHERE id = ?) t',
+            '1=1',
+            [1]
+        );
+
+        self::assertCount(1, $rows);
+        self::assertArrayHasKey('name', $rows[0]);
+        self::assertArrayNotHasKey('tsv_fake', $rows[0]);
+    }
+
     public function testQuoteEscapesAValueForSafeInlineEmbedding(): void
     {
         // [SEC-18] real driver escaping (Connection::quote()), not

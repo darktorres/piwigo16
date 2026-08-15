@@ -695,28 +695,28 @@
 {capture $tmpFooterScript}
 var data = {=json_encode($album_data)|noescape};
 var pwg_token = "{$CSRF_TOKEN}";
-var str_show_sub = "{='Show sub-albums'|translate|escapeJavascript|noescape}";
-var str_hide_sub = "{='Hide sub-albums'|translate|escapeJavascript|noescape}";
-var str_manage_sub_album = "{='Manage sub-albums'|translate|escapeJavascript|noescape}";
-var str_apply_order_raw = "{='apply automatic sort order'|translate|escapeJavascript|noescape}";
+var str_show_sub = "{_ 'Show sub-albums'|escapeJavascript|noescape}";
+var str_hide_sub = "{_ 'Hide sub-albums'|escapeJavascript|noescape}";
+var str_manage_sub_album = "{_ 'Manage sub-albums'|escapeJavascript|noescape}";
+var str_apply_order_raw = "{_ 'apply automatic sort order'|escapeJavascript|noescape}";
 var str_apply_order = str_apply_order_raw.charAt(0).toUpperCase() + str_apply_order_raw.slice(1);
-var str_edit = "{='Edit album'|translate|escapeJavascript|noescape}";
-var str_are_you_sure = "{='The status of the album \'%s\' and its sub-albums will change to private. Are you sure?'|translate|escapeJavascript|noescape}";
-var str_yes_change_parent = "{='Yes change parent anyway'|translate|escapeJavascript|noescape}";
-var str_no_change_parent = "{='No, don\'t move this album here'|translate|escapeJavascript|noescape}";
-var str_root = "{='Root'|translate|escapeJavascript|noescape}";
+var str_edit = "{_ 'Edit album'|escapeJavascript|noescape}";
+var str_are_you_sure = "{_ 'The status of the album \'%s\' and its sub-albums will change to private. Are you sure?'|escapeJavascript|noescape}";
+var str_yes_change_parent = "{_ 'Yes change parent anyway'|escapeJavascript|noescape}";
+var str_no_change_parent = "{_ 'No, don\'t move this album here'|escapeJavascript|noescape}";
+var str_root = "{_ 'Root'|escapeJavascript|noescape}";
 var openCat = {$open_cat};
 var nb_albums = {$nb_albums};
 var light_album_manager = {$light_album_manager};
 
-var x_nb_subcats = "{='%d sub-albums'|translate|escapeJavascript|noescape}";
-var x_nb_images = "{='%d photos'|translate|escapeJavascript|noescape}";
-var x_nb_sub_photos = "{='%d pictures in sub-albums'|translate|escapeJavascript|noescape}";
+var x_nb_subcats = "{_ '%d sub-albums'|escapeJavascript|noescape}";
+var x_nb_images = "{_ '%d photos'|escapeJavascript|noescape}";
+var x_nb_sub_photos = "{_ '%d pictures in sub-albums'|escapeJavascript|noescape}";
 
-var str_albums_found = '{="<b>%d</b> albums found"|translate|escapeJavascript|noescape}';
-var str_album_found = '{="<b>1</b> album found"|translate|escapeJavascript|noescape}';
-var str_result_limit = '{="<b>%d+</b> albums found, try to refine the search"|translate|escapeJavascript|noescape}';
-const str_albs_drag_drop = '{="Drag and drop to reorder albums"|translate|escapeJavascript|noescape}';
+var str_albums_found = '{_ "<b>%d</b> albums found"|escapeJavascript|noescape}';
+var str_album_found = '{_ "<b>1</b> album found"|escapeJavascript|noescape}';
+var str_result_limit = '{_ "<b>%d+</b> albums found, try to refine the search"|escapeJavascript|noescape}';
+const str_albs_drag_drop = '{_ "Drag and drop to reorder albums"|escapeJavascript|noescape}';
 
 var delay_autoOpen = {$delay_before_autoOpen}
 
@@ -732,26 +732,26 @@ const categoriesforSearch = Object.values(data);
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 
 {capture $tmpFooterScript2}
-const delete_album_with_name = '{='Delete album "%s".'|translate|escapeJavascript|noescape}';
-const delete_album_with_subs = '{='Delete album "%s" and its %d sub-albums.'|translate|escapeJavascript|noescape}'
-const has_images_associated_outside = '{="delete album and all %d photos, even the %d associated to other albums"|translate|escapeJavascript|noescape}';
-const has_images_becomming_orphans = '{='delete album and the %d orphan photos'|translate|escapeJavascript|noescape}';
-const has_images_recursives = '{='delete only album, not photos'|translate|escapeJavascript|noescape}';
-const rename_item = '{='Rename "%s"'|translate|escapeJavascript|noescape}';
+const delete_album_with_name = '{_ 'Delete album "%s".'|escapeJavascript|noescape}';
+const delete_album_with_subs = '{_ 'Delete album "%s" and its %d sub-albums.'|escapeJavascript|noescape}'
+const has_images_associated_outside = '{_ "delete album and all %d photos, even the %d associated to other albums"|escapeJavascript|noescape}';
+const has_images_becomming_orphans = '{_ 'delete album and the %d orphan photos'|escapeJavascript|noescape}';
+const has_images_recursives = '{_ 'delete only album, not photos'|escapeJavascript|noescape}';
+const rename_item = '{_ 'Rename "%s"'|escapeJavascript|noescape}';
 
-const str_add_album = '{='Add Album'|translate|escapeJavascript|noescape}';
-const str_edit_album = '{='Edit album'|translate|escapeJavascript|noescape}';
-const str_add_photo = '{='Add Photos'|translate|escapeJavascript|noescape}';
-const str_visit_gallery = '{='Visit Gallery'|translate|escapeJavascript|noescape}';
-const str_sort_order = '{='Automatic sort order'|translate|escapeJavascript|noescape}';
-const str_delete_album = '{='Delete album'|translate|escapeJavascript|noescape}';
-const str_root_order = '{='Apply to root albums'|translate|escapeJavascript|noescape}';
-str_sub_album_order = '{='Apply to direct sub-albums'|translate|escapeJavascript|noescape}';
-str_album_name_empty = '{='Album name must not be empty'|translate|escapeJavascript|noescape}'
+const str_add_album = '{_ 'Add Album'|escapeJavascript|noescape}';
+const str_edit_album = '{_ 'Edit album'|escapeJavascript|noescape}';
+const str_add_photo = '{_ 'Add Photos'|escapeJavascript|noescape}';
+const str_visit_gallery = '{_ 'Visit Gallery'|escapeJavascript|noescape}';
+const str_sort_order = '{_ 'Automatic sort order'|escapeJavascript|noescape}';
+const str_delete_album = '{_ 'Delete album'|escapeJavascript|noescape}';
+const str_root_order = '{_ 'Apply to root albums'|escapeJavascript|noescape}';
+str_sub_album_order = '{_ 'Apply to direct sub-albums'|escapeJavascript|noescape}';
+str_album_name_empty = '{_ 'Album name must not be empty'|escapeJavascript|noescape}'
 
-const add_album_root_title = '{='Create a new album at root'|translate|escapeJavascript|noescape}';
-const add_sub_album_of = '{='Create a sub-album of "%s"'|translate|escapeJavascript|noescape}';
-const tiptip_locked_album = "{='Locked album'|translate|escapeJavascript|noescape}";
+const add_album_root_title = '{_ 'Create a new album at root'|escapeJavascript|noescape}';
+const add_sub_album_of = '{_ 'Create a sub-album of "%s"'|escapeJavascript|noescape}';
+const tiptip_locked_album = "{_ 'Locked album'|escapeJavascript|noescape}";
 {/capture}
 {do footerScript($tmpFooterScript2)}
 
@@ -778,49 +778,49 @@ const tiptip_locked_album = "{='Locked album'|translate|escapeJavascript|noescap
         <label class="font-checkbox">
           <span class="icon-dot-circled"></span>
           <input type="radio" value="name ASC" name="order" checked>
-          {='Album name, A &rarr; Z'|translate|noescape}
+          {_ 'Album name, A &rarr; Z'|noescape}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"></span>
           <input type="radio" value="name DESC" name="order">
-          {='Album name, Z &rarr; A'|translate|noescape}
+          {_ 'Album name, Z &rarr; A'|noescape}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"></span>
           <input type="radio" value="natural_order ASC" name="order">
-          {='Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100'|translate|noescape}
+          {_ 'Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100'|noescape}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"></span>
           <input type="radio" value="natural_order DESC" name="order">
-          {='Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1'|translate|noescape}
+          {_ 'Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1'|noescape}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"></span>
           <input type="radio" value="date_creation DESC" name="order">
-          {='Date created, new &rarr; old'|translate|noescape}
+          {_ 'Date created, new &rarr; old'|noescape}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"></span>
           <input type="radio" value="date_creation ASC" name="order">
-          {='Date created, old &rarr; new'|translate|noescape}
+          {_ 'Date created, old &rarr; new'|noescape}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"></span>
           <input type="radio" value="date_available DESC" name="order">
-          {='Date posted, new &rarr; old'|translate|noescape}
+          {_ 'Date posted, new &rarr; old'|noescape}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"></span>
           <input type="radio" value="date_available ASC" name="order">
-          {='Date posted, old &rarr; new'|translate|noescape}
+          {_ 'Date posted, old &rarr; new'|noescape}
         </label>
       </div>
       <input

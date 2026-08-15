@@ -723,14 +723,14 @@ var tagsCache = new TagsCache({
 });
 
 tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
-  'Add': '{='Create'|translate|noescape}'
+  'Add': '{_ 'Create'|noescape}'
 }});
 
 {* <!-- DATEPICKER --> *}
 jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
   jQuery('[data-datepicker]').pwgDatepicker({
     showTimepicker: true,
-    cancelButton: '{='Cancel'|translate|noescape}'
+    cancelButton: '{_ 'Cancel'|noescape}'
   });
 });
 
@@ -739,11 +739,11 @@ jQuery("a.preview-box").colorbox({
   photo: true
 });
 
-str_are_you_sure = '{='Are you sure?'|translate|escapeJavascript|noescape}';
-str_yes = '{='Yes, delete'|translate|escapeJavascript|noescape}';
-str_no = '{='No, I have changed my mind'|translate|escapeJavascript|noescape}';
+str_are_you_sure = '{_ 'Are you sure?'|escapeJavascript|noescape}';
+str_yes = '{_ 'Yes, delete'|escapeJavascript|noescape}';
+str_no = '{_ 'No, I have changed my mind'|escapeJavascript|noescape}';
 url_delete = '{$U_DELETE|noescape}';
-str_orphan = '{='This photo is an orphan'|translate|escapeJavascript|noescape}';
+str_orphan = '{_ 'This photo is an orphan'|escapeJavascript|noescape}';
 
 
 related_categories_ids = {$related_categories_ids|json_encode|noescape};
@@ -778,7 +778,7 @@ $('#action-delete-picture').on('click', function() {
 })
 
 }());
-const str_assoc_album_ab = '{='Associate to album'|translate|escapeJavascript|noescape}';
+const str_assoc_album_ab = '{_ 'Associate to album'|escapeJavascript|noescape}';
 {/capture}
 {do footerScript($tmpFooterScript)}
 

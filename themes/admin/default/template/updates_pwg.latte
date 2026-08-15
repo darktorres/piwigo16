@@ -695,7 +695,7 @@
 {capture $tmpFooterScript}
 jQuery(document).ready(function() {
   jQuery('input[name="submit"]').click(function() {
-    if(!confirm('{='Are you sure?'|translate|noescape}'))
+    if(!confirm('{_ 'Are you sure?'|noescape}'))
       return false;
     jQuery(this).hide();
     jQuery('.autoupdate_bar').show();

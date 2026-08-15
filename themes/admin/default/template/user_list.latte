@@ -710,56 +710,56 @@
 {capture $tmpFooterScript}
 
 /* Translates */
-const title_msg = '{='Are you sure you want to delete the user "%s"?'|translate|escapeJavascript|noescape}';
-const are_you_sure_msg  = '{='Are you sure?'|translate|escapeJavascript|noescape}';
-const confirm_msg = '{='Yes, I am sure'|translate|htmlspecialchars|noescape}';
-const cancel_msg = '{='No, I have changed my mind'|translate|htmlspecialchars|noescape}';
-const str_and_others_tags = '{='and %s others'|translate|escapeJavascript|noescape}';
-const missingConfirm = "{='You need to confirm deletion'|translate|escapeJavascript|noescape}";
-const missingUsername = "{='Please, enter a login'|translate|escapeJavascript|noescape}";
-const missingPassword = "{='Password is missing. Please enter the password.'|translate|escapeJavascript|noescape}";
-const missingConfPassword = "{='Password confirmation is missing. Please confirm the chosen password.'|translate|escapeJavascript|noescape}";
-const fieldNotEmpty = "{='Name field must not be empty'|translate|escapeJavascript|noescape}"
-const noMatchPassword = "{='The passwords do not match'|translate|escapeJavascript|noescape}";
-const missingField = "{='Please complete all fields'|translate|escapeJavascript|noescape}";
-const passwordUpdated = "{='Password updated'|translate|escapeJavascript|noescape}";
-const passwordCopied = "{='Password copied'|translate|escapeJavascript|noescape}";
-const copyPassword = "{='Copy password'|translate|escapeJavascript|noescape}";
-const mailSentAt = "{='Mail sent to %s [%s].'|translate|escapeJavascript|noescape}";
-const errorMailSent = "{='Error sending email'|translate|escapeJavascript|noescape}";
-const cannotSendMail = "{='Cannot send an email to this user because he doesn\'t have an email address'|translate|escapeJavascript|noescape}";
-const mainUserContinue = "{='You are about to set %s as main user instead of %s, do you wish to continue ?'|translate|escapeJavascript|noescape}";
-const mainUserRewrite = "{='To be sure, please rewrite the word “%s” below'|translate|escapeJavascript|noescape}";
-const mainUserValidate = "{='You can now change the main user from %s to %s.'|translate|escapeJavascript|noescape}";
-const mainUserSuccess = "{='%s is the new main user'|translate|escapeJavascript|noescape}";
-const mainUserStr = "{='Main user'|translate|escapeJavascript|noescape}";
-const mainAskWebmaster = "{='You are not authorised to change the main user, please ask your webmaster'|translate|escapeJavascript|noescape}";
-const mainUserSet = "{='Set as main user'|translate|escapeJavascript|noescape}";
-const mainUserUpgradeWebmaster = "{='This user must first be defined as the webmaster before it can be upgraded to the main user'|translate|escapeJavascript|noescape}";
-const errorStr = "{='an error happened'|translate|escapeJavascript|noescape}";
-const copyLinkStr = "{='Copied link'|translate|escapeJavascript|noescape}";
-const cantCopy = "{='You cannot copy the password if the connection to this site is not secure.'|translate|escapeJavascript|noescape}";
-const validLinkMail = "{='An activation link valid for %s has been sent to "%s". If the user doesn\'t receive the link, you can generate and copy a new one by editing the user and managing her password.'|translate|escapeJavascript|noescape}";
-const validLinkWithoutMail = "{='Copy the link below and send it to the user so the password can be set.'|translate|escapeJavascript|noescape}";
-const errorMailSentMsg = "{='An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.'|translate|escapeJavascript|noescape}";
+const title_msg = '{_ 'Are you sure you want to delete the user "%s"?'|escapeJavascript|noescape}';
+const are_you_sure_msg  = '{_ 'Are you sure?'|escapeJavascript|noescape}';
+const confirm_msg = '{_ 'Yes, I am sure'|htmlspecialchars|noescape}';
+const cancel_msg = '{_ 'No, I have changed my mind'|htmlspecialchars|noescape}';
+const str_and_others_tags = '{_ 'and %s others'|escapeJavascript|noescape}';
+const missingConfirm = "{_ 'You need to confirm deletion'|escapeJavascript|noescape}";
+const missingUsername = "{_ 'Please, enter a login'|escapeJavascript|noescape}";
+const missingPassword = "{_ 'Password is missing. Please enter the password.'|escapeJavascript|noescape}";
+const missingConfPassword = "{_ 'Password confirmation is missing. Please confirm the chosen password.'|escapeJavascript|noescape}";
+const fieldNotEmpty = "{_ 'Name field must not be empty'|escapeJavascript|noescape}"
+const noMatchPassword = "{_ 'The passwords do not match'|escapeJavascript|noescape}";
+const missingField = "{_ 'Please complete all fields'|escapeJavascript|noescape}";
+const passwordUpdated = "{_ 'Password updated'|escapeJavascript|noescape}";
+const passwordCopied = "{_ 'Password copied'|escapeJavascript|noescape}";
+const copyPassword = "{_ 'Copy password'|escapeJavascript|noescape}";
+const mailSentAt = "{_ 'Mail sent to %s [%s].'|escapeJavascript|noescape}";
+const errorMailSent = "{_ 'Error sending email'|escapeJavascript|noescape}";
+const cannotSendMail = "{_ 'Cannot send an email to this user because he doesn\'t have an email address'|escapeJavascript|noescape}";
+const mainUserContinue = "{_ 'You are about to set %s as main user instead of %s, do you wish to continue ?'|escapeJavascript|noescape}";
+const mainUserRewrite = "{_ 'To be sure, please rewrite the word “%s” below'|escapeJavascript|noescape}";
+const mainUserValidate = "{_ 'You can now change the main user from %s to %s.'|escapeJavascript|noescape}";
+const mainUserSuccess = "{_ '%s is the new main user'|escapeJavascript|noescape}";
+const mainUserStr = "{_ 'Main user'|escapeJavascript|noescape}";
+const mainAskWebmaster = "{_ 'You are not authorised to change the main user, please ask your webmaster'|escapeJavascript|noescape}";
+const mainUserSet = "{_ 'Set as main user'|escapeJavascript|noescape}";
+const mainUserUpgradeWebmaster = "{_ 'This user must first be defined as the webmaster before it can be upgraded to the main user'|escapeJavascript|noescape}";
+const errorStr = "{_ 'an error happened'|escapeJavascript|noescape}";
+const copyLinkStr = "{_ 'Copied link'|escapeJavascript|noescape}";
+const cantCopy = "{_ 'You cannot copy the password if the connection to this site is not secure.'|escapeJavascript|noescape}";
+const validLinkMail = "{_ 'An activation link valid for %s has been sent to "%s". If the user doesn\'t receive the link, you can generate and copy a new one by editing the user and managing her password.'|escapeJavascript|noescape}";
+const validLinkWithoutMail = "{_ 'Copy the link below and send it to the user so the password can be set.'|escapeJavascript|noescape}";
+const errorMailSentMsg = "{_ 'An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.'|escapeJavascript|noescape}";
 
-const registered_str = '{="Registered"|translate|escapeJavascript|noescape}';
-const last_visit_str = '{="Last visit"|translate|escapeJavascript|noescape}';
-const dates_infos = '{='between %s and %s'|translate|escapeJavascript|noescape}'
-const hide_str = '{='Hide'|translate|escapeJavascript|noescape}';
-const show_str = '{='Show'|translate|escapeJavascript|noescape}';
-const user_added_str = '{='User %s added'|translate|escapeJavascript|noescape}';
-const str_popin_update_btn = '{='Update'|translate|escapeJavascript|noescape}';
-const filtered_users = '{='<b>%d</b> filtered users'|translate|escapeJavascript|noescape}';
-const filtered_user = '{='<b>%d</b> filtered user'|translate|escapeJavascript|noescape}';
+const registered_str = '{_ "Registered"|escapeJavascript|noescape}';
+const last_visit_str = '{_ "Last visit"|escapeJavascript|noescape}';
+const dates_infos = '{_ 'between %s and %s'|escapeJavascript|noescape}'
+const hide_str = '{_ 'Hide'|escapeJavascript|noescape}';
+const show_str = '{_ 'Show'|escapeJavascript|noescape}';
+const user_added_str = '{_ 'User %s added'|escapeJavascript|noescape}';
+const str_popin_update_btn = '{_ 'Update'|escapeJavascript|noescape}';
+const filtered_users = '{_ '<b>%d</b> filtered users'|escapeJavascript|noescape}';
+const filtered_user = '{_ '<b>%d</b> filtered user'|escapeJavascript|noescape}';
 const history_base_url = "{$U_HISTORY|noescape}";
 
 const status_to_str = {
-  'webmaster': "{='user_status_webmaster'|translate|noescape}",
-  'admin': "{='user_status_admin'|translate|noescape}",
-  'normal': "{='user_status_normal'|translate|noescape}",
-  'generic': "{='user_status_generic'|translate|noescape}",
-  'guest': "{='user_status_guest'|translate|noescape}",
+  'webmaster': "{_ 'user_status_webmaster'|noescape}",
+  'admin': "{_ 'user_status_admin'|noescape}",
+  'normal': "{_ 'user_status_normal'|noescape}",
+  'generic': "{_ 'user_status_generic'|noescape}",
+  'guest': "{_ 'user_status_guest'|noescape}",
 }
 
 const view_selector = '{$view_selector}';
@@ -767,18 +767,18 @@ const pagination = '{$pagination}';
 per_page = parseInt(pagination);
 
 months = [
-  "{='Jan'|translate|noescape}",
-  "{='Feb'|translate|noescape}",
-  "{='Mar'|translate|noescape}",
-  "{='Apr'|translate|noescape}",
-  "{='May'|translate|noescape}",
-  "{='Jun'|translate|noescape}",
-  "{='Jul'|translate|noescape}",
-  "{='Aug'|translate|noescape}",
-  "{='Sep'|translate|noescape}",
-  "{='Oct'|translate|noescape}",
-  "{='Nov'|translate|noescape}",
-  "{='Dec'|translate|noescape}"
+  "{_ 'Jan'|noescape}",
+  "{_ 'Feb'|noescape}",
+  "{_ 'Mar'|noescape}",
+  "{_ 'Apr'|noescape}",
+  "{_ 'May'|noescape}",
+  "{_ 'Jun'|noescape}",
+  "{_ 'Jul'|noescape}",
+  "{_ 'Aug'|noescape}",
+  "{_ 'Sep'|noescape}",
+  "{_ 'Oct'|noescape}",
+  "{_ 'Nov'|noescape}",
+  "{_ 'Dec'|noescape}"
 ];
 
 /* Template variables */
@@ -790,10 +790,10 @@ let groups_arr_name = [{$groups_arr_name|noescape}];
 let groups_arr_id = [{$groups_arr_id|noescape}];
 groups_arr = groups_arr_id.map((elem, index) => [elem, groups_arr_name[index]]);
 guest_id = {$guest_id};
-nb_days = "{='%d days'|translate|noescape}";
+nb_days = "{_ '%d days'|noescape}";
 //per page is too long for the popin
-nb_photos = "{='%d photos'|translate|noescape}";
-nb_photos_per_page = "{='%d photos per page'|translate|noescape}";
+nb_photos = "{_ '%d photos'|noescape}";
+nb_photos_per_page = "{_ '%d photos per page'|noescape}";
 pwg_token = '{$CSRF_TOKEN}';
 has_group = "{$filter_group|noescape}";
 

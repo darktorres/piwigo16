@@ -697,21 +697,21 @@
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 {capture $tmpFooterScript}
-const confirm_msg = '{='Yes, I am sure'|translate|noescape}';
-const cancel_msg = "{='No, I have changed my mind'|translate|noescape}";
-const no_time_elapsed = "{='right now'|translate|noescape}";
-const unit_MB = "{='%s MB'|translate|noescape}"
+const confirm_msg = '{_ 'Yes, I am sure'|noescape}';
+const cancel_msg = "{_ 'No, I have changed my mind'|noescape}";
+const no_time_elapsed = "{_ 'right now'|noescape}";
+const unit_MB = "{_ '%s MB'|noescape}"
 let selected = [];
 $(".lock-gallery-button").each(function() {
-  const gallery_tip = '{='A locked gallery is only visible to administrators'|translate|escapeJavascript|noescape}';
+  const gallery_tip = '{_ 'A locked gallery is only visible to administrators'|escapeJavascript|noescape}';
   {if isset($U_MAINT_LOCK_GALLERY)}
-    let title = '{='Are you sure you want to lock the gallery?'|translate|noescape}';
+    let title = '{_ 'Are you sure you want to lock the gallery?'|noescape}';
   {else}
-    let title = '{='Are you sure you want to unlock the gallery?'|translate|noescape}';
+    let title = '{_ 'Are you sure you want to unlock the gallery?'|noescape}';
   {/if}
 
-  let confirm_msg_gallery = '{='Yes, I want to lock the gallery'|translate|noescape}';
-  let cancel_msg_gallery = '{='Keep it unlocked'|translate|noescape}';
+  let confirm_msg_gallery = '{_ 'Yes, I want to lock the gallery'|noescape}';
+  let cancel_msg_gallery = '{_ 'Keep it unlocked'|noescape}';
   $(this).pwg_jconfirm_follow_href({
     alert_title: title,
     alert_confirm: confirm_msg,
@@ -720,7 +720,7 @@ $(".lock-gallery-button").each(function() {
   });
 });
 $(".purge-history-detail-button").each(function() {
-  const title = '{='Purge history detail'|translate|escapeJavascript|noescape}';
+  const title = '{_ 'Purge history detail'|escapeJavascript|noescape}';
   $(this).pwg_jconfirm_follow_href({
     alert_title: title,
     alert_confirm: confirm_msg,
@@ -728,7 +728,7 @@ $(".purge-history-detail-button").each(function() {
   });
 });
 $(".purge-history-summary-button").each(function() {
-  const title = '{='Purge history summary'|translate|escapeJavascript|noescape}';
+  const title = '{_ 'Purge history summary'|escapeJavascript|noescape}';
   $(this).pwg_jconfirm_follow_href({
     alert_title: title,
     alert_confirm: confirm_msg,
@@ -736,7 +736,7 @@ $(".purge-history-summary-button").each(function() {
   });
 });
 $(".purge-search-history-button").each(function() {
-  const title = '{='Purge search history'|translate|escapeJavascript|noescape}';
+  const title = '{_ 'Purge search history'|escapeJavascript|noescape}';
   $(this).pwg_jconfirm_follow_href({
     alert_title: title,
     alert_confirm: confirm_msg,
@@ -744,7 +744,7 @@ $(".purge-search-history-button").each(function() {
   });
 });
 $(".delete-all-sizes-button").each(function() {
-  const title = '{='Are you sure you want to delete all sizes?'|translate|escapeJavascript|noescape}';
+  const title = '{_ 'Are you sure you want to delete all sizes?'|escapeJavascript|noescape}';
   $(this).pwg_jconfirm_follow_href({
     alert_title: title,
     alert_confirm: confirm_msg,

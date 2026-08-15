@@ -697,16 +697,16 @@
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {capture $tmpFooterScript}
-const str_yes_delete_confirmation = "{='Yes, delete'|translate|escapeJavascript|noescape}"
-const str_no_delete_confirmation = "{='No, I have changed my mind'|translate|escapeJavascript|noescape}"
-const str_delete = "{='Are you sure you want to delete comment #%s?'|translate|escapeJavascript|noescape}"
-const str_deletes = "{='Are you sure you want to delete "%d" comments?'|translate|escapeJavascript|noescape}"
-const str_no_comments_selected = "{='No comments selected, no actions possible.'|translate|escapeJavascript|noescape}"
+const str_yes_delete_confirmation = "{_ 'Yes, delete'|escapeJavascript|noescape}"
+const str_no_delete_confirmation = "{_ 'No, I have changed my mind'|escapeJavascript|noescape}"
+const str_delete = "{_ 'Are you sure you want to delete comment #%s?'|escapeJavascript|noescape}"
+const str_deletes = "{_ 'Are you sure you want to delete "%d" comments?'|escapeJavascript|noescape}"
+const str_no_comments_selected = "{_ 'No comments selected, no actions possible.'|escapeJavascript|noescape}"
 const pwg_token = "{$CSRF_TOKEN}"
-const str_an_error_has = "{='An error has occured'|translate|escapeJavascript|noescape}"
-const str_comment_validated = "{='The comment has been validated.'|translate|escapeJavascript|noescape}"
-const str_comments_validated = "{='The comments have been validated.'|translate|escapeJavascript|noescape}"
-const str_and_others = "{='and %s others'|translate|noescape}"
+const str_an_error_has = "{_ 'An error has occured'|escapeJavascript|noescape}"
+const str_comment_validated = "{_ 'The comment has been validated.'|escapeJavascript|noescape}"
+const str_comments_validated = "{_ 'The comments have been validated.'|escapeJavascript|noescape}"
+const str_and_others = "{_ 'and %s others'|noescape}"
 {/capture}
 {do footerScript($tmpFooterScript)}
 <style>

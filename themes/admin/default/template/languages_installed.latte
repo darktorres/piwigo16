@@ -697,9 +697,9 @@
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {capture $tmpFooterScript}
 $(".delete-lang-button").each(function() {
-  let title_msg = '{='Are you sure you want to delete the language "%s"?'|translate|escapeJavascript|noescape}';
-  const confirm_msg = '{='Yes, I am sure'|translate|noescape}';
-  const cancel_msg = '{='No, I have changed my mind'|translate|escapeJavascript|noescape}';
+  let title_msg = '{_ 'Are you sure you want to delete the language "%s"?'|escapeJavascript|noescape}';
+  const confirm_msg = '{_ 'Yes, I am sure'|noescape}';
+  const cancel_msg = '{_ 'No, I have changed my mind'|escapeJavascript|noescape}';
   let lang_name = $(this).closest(".languageBox").find('.languageName').html();
   $(this).pwg_jconfirm_follow_href({
     alert_title: title_msg.replace("%s", lang_name),

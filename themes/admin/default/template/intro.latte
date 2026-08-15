@@ -697,15 +697,15 @@
 {do combineScript(id: 'jquery.cluetip', load: 'async', require: 'jquery', path: 'themes/default/js/plugins/jquery.cluetip.js')}
 
 {capture $tmpFooterScript}
-var piwigo_need_update_msg = '<a href="admin.php?page=updates">{='A new version of Piwigo is available.'|translate|escapeJavascript|noescape} <i class="icon-right"></i></a>';
-var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">{='Some upgrades are available for extensions.'|translate|escapeJavascript|noescape} <i class="icon-right"></i></a>';
-const str_gb_used = "{='%s GB used'|translate|noescape}";
-const str_mb_used = "{='%s MB used'|translate|noescape}";
-const str_gb = "{='%sGB'|translate|noescape}".replace(' ', '&nbsp;');
-const str_mb = "{='%sMB'|translate|noescape}".replace(' ', '&nbsp;');
+var piwigo_need_update_msg = '<a href="admin.php?page=updates">{_ 'A new version of Piwigo is available.'|escapeJavascript|noescape} <i class="icon-right"></i></a>';
+var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">{_ 'Some upgrades are available for extensions.'|escapeJavascript|noescape} <i class="icon-right"></i></a>';
+const str_gb_used = "{_ '%s GB used'|noescape}";
+const str_mb_used = "{_ '%s MB used'|noescape}";
+const str_gb = "{_ '%sGB'|noescape}".replace(' ', '&nbsp;');
+const str_mb = "{_ '%sMB'|noescape}".replace(' ', '&nbsp;');
 const storage_total = {$STORAGE_TOTAL};
 const storage_details = {$STORAGE_CHART_DATA|json_encode|noescape};
-const translate_files = "{='%d files'|translate|escapeJavascript|noescape}";
+const translate_files = "{_ '%d files'|escapeJavascript|noescape}";
 let translate_type = {};
 {if isset($SUBSCRIBE_BASE_URL)}
   const newsletter_base_url = "{$SUBSCRIBE_BASE_URL}";
@@ -746,16 +746,16 @@ jQuery().ready(function(){
       <img class="promote-image" src="themes/admin/default/images/promote-newsletter.png">
 
       <div class="promote-newsletter-content">
-        <span class="promote-newsletter-title">{='Subscribe to our newsletter and stay updated!'|translate|escapeJavascript|noescape}</span>
+        <span class="promote-newsletter-title">{_ 'Subscribe to our newsletter and stay updated!'|escapeJavascript|noescape}</span>
         <div class="promote-content subscribe-newsletter">
           <input type="text" id="newsletterSubscribeInput" value="{$EMAIL}" class="left-side">
-          <a href="{$SUBSCRIBE_BASE_URL}{$EMAIL}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">{='Sign up to the newsletter'|translate|escapeJavascript|noescape}</a>
+          <a href="{$SUBSCRIBE_BASE_URL}{$EMAIL}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">{_ 'Sign up to the newsletter'|escapeJavascript|noescape}</a>
         </div>
-        <a href="{$OLD_NEWSLETTERS_URL}" class="promote-link">{='See previous newsletters'|translate|escapeJavascript|noescape}</a>
+        <a href="{$OLD_NEWSLETTERS_URL}" class="promote-link">{_ 'See previous newsletters'|escapeJavascript|noescape}</a>
       </div>
 
     </div>
-    <a href="#" class="dont-show-again icon-cancel tiptip newsletter-hide" title="{='Understood, do not show again'|translate|escapeJavascript|noescape}"></a>
+    <a href="#" class="dont-show-again icon-cancel tiptip newsletter-hide" title="{_ 'Understood, do not show again'|escapeJavascript|noescape}"></a>
   </div>`);
 
 {/if}

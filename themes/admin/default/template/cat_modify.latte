@@ -700,9 +700,9 @@
 {do combineScript(id: 'jquery.tipTip', load: 'footer', path: 'themes/default/js/plugins/jquery.tipTip.minified.js')}
 
 {capture $tmpFooterScript}
-const has_images_associated_outside = '{='delete album and all %d photos, even the %d associated to other albums'|translate|escapeJavascript|noescape}';
-const has_images_becomming_orphans = '{='delete album and the %d orphan photos'|translate|escapeJavascript|noescape}';
-const has_images_recursives = '{='delete only album, not photos'|translate|escapeJavascript|noescape}';
+const has_images_associated_outside = '{_ 'delete album and all %d photos, even the %d associated to other albums'|escapeJavascript|noescape}';
+const has_images_becomming_orphans = '{_ 'delete album and the %d orphan photos'|escapeJavascript|noescape}';
+const has_images_recursives = '{_ 'delete only album, not photos'|escapeJavascript|noescape}';
 const cat_nav = '{$CATEGORIES_NAV|escapeJavascript|noescape}';
 const album_id = {$CAT_ID}
 var parent_album = {$PARENT_CAT_ID}
@@ -714,19 +714,19 @@ const u_delete = '{$U_DELETE|noescape}'
 var is_visible = '{$IS_VISIBLE}'
 let related_categories_ids = ["{$CAT_ID}", "{$PARENT_CAT_ID}"];
 
-const str_cancel = '{='No, I have changed my mind'|translate|htmlspecialchars|noescape}'
-const str_delete_album = '{='Delete album'|translate|escapeJavascript|noescape}'
-const str_delete_album_and_his_x_subalbums = '{='Delete album "%s" and its %d sub-albums.'|translate|escapeJavascript|noescape}'
-const str_just_now = '{='Just now'|translate|escapeJavascript|noescape}'
+const str_cancel = '{_ 'No, I have changed my mind'|htmlspecialchars|noescape}'
+const str_delete_album = '{_ 'Delete album'|escapeJavascript|noescape}'
+const str_delete_album_and_his_x_subalbums = '{_ 'Delete album "%s" and its %d sub-albums.'|escapeJavascript|noescape}'
+const str_just_now = '{_ 'Just now'|escapeJavascript|noescape}'
 
-const str_dont_delete_photos = '{='delete only album, not photos'|translate|escapeJavascript|noescape}';
-const str_delete_orphans = '{='delete album and the %d orphan photos'|translate|escapeJavascript|noescape}';
-const str_delete_all_photos = '{='delete album and all %d photos, even the %d associated to other albums'|translate|escapeJavascript|noescape}';
+const str_dont_delete_photos = '{_ 'delete only album, not photos'|escapeJavascript|noescape}';
+const str_delete_orphans = '{_ 'delete album and the %d orphan photos'|escapeJavascript|noescape}';
+const str_delete_all_photos = '{_ 'delete album and all %d photos, even the %d associated to other albums'|escapeJavascript|noescape}';
 
-str_orphan = '{='This photo is an orphan'|translate|escapeJavascript|noescape}';
-str_album_comment_allow = '{='Comments allowed for sub-albums'|translate|escapeJavascript|noescape}';
-str_album_comment_disallow = '{='Comments disallowed for sub-albums'|translate|escapeJavascript|noescape}';
-const str_modal_ab = '{='New parent album'|translate|noescape}';
+str_orphan = '{_ 'This photo is an orphan'|escapeJavascript|noescape}';
+str_album_comment_allow = '{_ 'Comments allowed for sub-albums'|escapeJavascript|noescape}';
+str_album_comment_disallow = '{_ 'Comments disallowed for sub-albums'|escapeJavascript|noescape}';
+const str_modal_ab = '{_ 'New parent album'|noescape}';
 {/capture}
 {do footerScript($tmpFooterScript)}
 

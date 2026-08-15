@@ -730,21 +730,21 @@ opt_hits: {$DEFAULT_USER_VALUES['show_nb_hits']},
 const selected_date = "{$API_SELECTED_EXPIRATION}";
 const can_manage_api = {=($API_CAN_MANAGE) ? "true" : "false"};
 
-const str_copy_key_id = "{="ID copied."|translate|escapeJavascript|noescape}";
-const str_copy_key_secret = "{="Secret copied. Keep it in a safe place."|translate|escapeJavascript|noescape}";
-const str_cant_copy = "{="Impossible to copy automatically. Please copy manually."|translate|escapeJavascript|noescape}";
-const str_api_added = "{="The api key has been successfully created."|translate|escapeJavascript|noescape}";
-const str_revoked = "{="Revoked"|translate|escapeJavascript|noescape}";
-const str_show_expired = "{="Show expired keys"|translate|escapeJavascript|noescape}";
-const str_hide_expired = "{="Hide expired keys"|translate|escapeJavascript|noescape}";
-const str_handle_error = "{="An error has occured"|translate|escapeJavascript|noescape}";
-const str_expires_in = "{="Expires in"|translate|escapeJavascript|noescape}";
-const str_expires_on = "{="Expired on"|translate|escapeJavascript|noescape}";
-const str_revoke_key = "{='Do you really want to revoke the "%s" API key?'|translate|escapeJavascript|noescape}";
-const str_api_revoked = "{="API Key has been successfully revoked."|translate|escapeJavascript|noescape}";
-const str_api_edited = "{="API Key has been successfully edited."|translate|escapeJavascript|noescape}";
-const no_time_elapsed = "{="right now"|translate|escapeJavascript|noescape}";
-const str_must_not_empty = "{='must not be empty'|translate|escapeJavascript|noescape}";
+const str_copy_key_id = "{_ "ID copied."|escapeJavascript|noescape}";
+const str_copy_key_secret = "{_ "Secret copied. Keep it in a safe place."|escapeJavascript|noescape}";
+const str_cant_copy = "{_ "Impossible to copy automatically. Please copy manually."|escapeJavascript|noescape}";
+const str_api_added = "{_ "The api key has been successfully created."|escapeJavascript|noescape}";
+const str_revoked = "{_ "Revoked"|escapeJavascript|noescape}";
+const str_show_expired = "{_ "Show expired keys"|escapeJavascript|noescape}";
+const str_hide_expired = "{_ "Hide expired keys"|escapeJavascript|noescape}";
+const str_handle_error = "{_ "An error has occured"|escapeJavascript|noescape}";
+const str_expires_in = "{_ "Expires in"|escapeJavascript|noescape}";
+const str_expires_on = "{_ "Expired on"|escapeJavascript|noescape}";
+const str_revoke_key = "{_ 'Do you really want to revoke the "%s" API key?'|escapeJavascript|noescape}";
+const str_api_revoked = "{_ "API Key has been successfully revoked."|escapeJavascript|noescape}";
+const str_api_edited = "{_ "API Key has been successfully edited."|escapeJavascript|noescape}";
+const no_time_elapsed = "{_ "right now"|escapeJavascript|noescape}";
+const str_must_not_empty = "{_ 'must not be empty'|escapeJavascript|noescape}";
 {/capture}
 {do footerScript($tmpFooterScript)}
 

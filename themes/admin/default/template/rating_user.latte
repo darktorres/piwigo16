@@ -831,9 +831,9 @@ function uidFromCell(cell){
 $(document).ready( function(){
   $("#rateTable").on( "click", ".del", function(e) {
     e.preventDefault();
-    const title_msg  = '{='Are you sure you want to delete the ratings of the user "%s"?'|translate|escapeJavascript|noescape}';
-    const confirm_msg = '{='Yes, I am sure'|translate|noescape}';
-    const cancel_msg = "{='No, I have changed my mind'|translate|noescape}";
+    const title_msg  = '{_ 'Are you sure you want to delete the ratings of the user "%s"?'|escapeJavascript|noescape}';
+    const confirm_msg = '{_ 'Yes, I am sure'|noescape}';
+    const cancel_msg = "{_ 'No, I have changed my mind'|noescape}";
     let usr_name = $(this).closest("tr").find(".usr").html();
     $.confirm({
       title: title_msg.replace("%s", usr_name),
@@ -883,10 +883,10 @@ $(document).ready( function(){
       <th class="dtc_stat">{='Variation'|translate}</th>
       <th
         class="dtc_stat"
-      >{='Consensus deviation'|translate|replace:' ','<br>'|noescape}</th>
+      >{_ 'Consensus deviation'|replace:' ','<br>'|noescape}</th>
       <th
         class="dtc_stat"
-      >{='Consensus deviation'|translate|replace:' ','<br>'|noescape} {$CONSENSUS_TOP_NUMBER}</th>
+      >{_ 'Consensus deviation'|replace:' ','<br>'|noescape} {$CONSENSUS_TOP_NUMBER}</th>
       {foreach $available_rates as $rate}
         <th class="dtc_rate">{$rate}</th>
       {/foreach}

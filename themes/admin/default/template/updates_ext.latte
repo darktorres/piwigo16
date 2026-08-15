@@ -699,11 +699,11 @@
 {capture $tmpFooterScript}
 var pwg_token = '{$CSRF_TOKEN}';
 var extType = '{$EXT_TYPE}';
-var confirmMsg  = '{='Are you sure?'|translate|escapeJavascript|noescape}';
-var errorHead   = '{='ERROR'|translate|escapeJavascript|noescape}';
-var successHead = '{='Update Complete'|translate|escapeJavascript|noescape}';
-var errorMsg    = '{='an error happened'|translate|escapeJavascript|noescape}';
-var restoreMsg  = '{='Reset ignored updates'|translate|escapeJavascript|noescape}';
+var confirmMsg  = '{_ 'Are you sure?'|escapeJavascript|noescape}';
+var errorHead   = '{_ 'ERROR'|escapeJavascript|noescape}';
+var successHead = '{_ 'Update Complete'|escapeJavascript|noescape}';
+var errorMsg    = '{_ 'an error happened'|escapeJavascript|noescape}';
+var restoreMsg  = '{_ 'Reset ignored updates'|escapeJavascript|noescape}';
 
 var todo = 0;
 var queuedManager = $.manageAjax.create('queued', {
@@ -855,11 +855,11 @@ checkFieldsets();
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {capture $tmpFooterScript2}
 
-const are_you_sure_msg  = '{='Are you sure?'|translate|escapeJavascript|noescape}';
-const confirm_msg = '{='Yes, I am sure'|translate|noescape}';
-const cancel_msg = "{='No, I have changed my mind'|translate|noescape}";
+const are_you_sure_msg  = '{_ 'Are you sure?'|escapeJavascript|noescape}';
+const confirm_msg = '{_ 'Yes, I am sure'|noescape}';
+const cancel_msg = "{_ 'No, I have changed my mind'|noescape}";
 $("#update_all").click(function() {
-  const title_msg = "{='Are you sure you want to update all extensions?'|translate|noescape}";
+  const title_msg = "{_ 'Are you sure you want to update all extensions?'|noescape}";
   $.confirm({
       title: title_msg,
       buttons: {

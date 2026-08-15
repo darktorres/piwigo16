@@ -714,7 +714,7 @@ var tagsCache = new TagsCache({
   rootUrl: '{$ROOT_URL}'
 });
 tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
-  'Add': '{='Create'|translate|noescape}'
+  'Add': '{_ 'Create'|noescape}'
 }});
 
 {* <!-- CATEGORIES --> *}
@@ -751,7 +751,7 @@ window.categoriesCache = new CategoriesCache({
 jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
   jQuery('[data-datepicker]').pwgDatepicker({
     showTimepicker: true,
-    cancelButton: '{='Cancel'|translate|noescape}'
+    cancelButton: '{_ 'Cancel'|noescape}'
   });
 });
 
@@ -760,13 +760,13 @@ jQuery("a.preview-box").colorbox( {
   photo: true
 });
 
-str_are_you_sure = "{='Are you sure?'|translate|escapeJavascript|noescape}";
-str_yes = "{='Yes, delete'|translate|escapeJavascript|noescape}";
-str_no = "{='No, I have changed my mind'|translate|escapeJavascript|noescape}";
-str_orphan = "{='This photo is an orphan'|translate|escapeJavascript|noescape}";
-str_meta_warning = "{='Warning ! Unsaved changes will be lost'|translate|escapeJavascript|noescape}";
-str_meta_yes = "{='I want to continue'|translate|escapeJavascript|noescape}";
-const str_title_ab = "{='Associate to album'|translate|noescape}";
+str_are_you_sure = "{_ 'Are you sure?'|escapeJavascript|noescape}";
+str_yes = "{_ 'Yes, delete'|escapeJavascript|noescape}";
+str_no = "{_ 'No, I have changed my mind'|escapeJavascript|noescape}";
+str_orphan = "{_ 'This photo is an orphan'|escapeJavascript|noescape}";
+str_meta_warning = "{_ 'Warning ! Unsaved changes will be lost'|escapeJavascript|noescape}";
+str_meta_yes = "{_ 'I want to continue'|escapeJavascript|noescape}";
+const str_title_ab = "{_ 'Associate to album'|noescape}";
 
 let b_current_picture_id;
 {* Check Skeleton extension for more details about extensibility *}

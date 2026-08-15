@@ -695,26 +695,26 @@
 {include 'include/colorbox.inc.latte'}
 {capture $tmpFooterScript}
 var pwg_token = "{$CSRF_TOKEN}";
-var str_member_default = "{='member'|translate|escapeJavascript|noescape}"
-var str_members_default = "{='members'|translate|escapeJavascript|noescape}"
-var str_group_created = "{='Group added'|translate|escapeJavascript|noescape}"
-var str_renaming_done = "{='Group renamed'|translate|escapeJavascript|noescape}"
-var str_name_taken = "{='Name is already taken'|translate|escapeJavascript|noescape}"
-var str_name_not_empty = "{='Name field must not be empty'|translate|escapeJavascript|noescape}"
-var str_group_deleted = '{='Group "%s" succesfully deleted'|translate|escapeJavascript|noescape}'
-var str_groups_deleted = '{='Groups {%s} succesfully deleted'|translate|noescape}'
-var str_set_default = "{='Set as group for new users'|translate|escapeJavascript|noescape}"
-var str_unset_default = "{='Unset as group for new users'|translate|escapeJavascript|noescape}"
-var str_delete = '{='Are you sure you want to delete group "%s"?'|translate|escapeJavascript|noescape}'
-var str_yes_delete_confirmation = "{='Yes, delete'|translate|escapeJavascript|noescape}"
-var str_no_delete_confirmation = "{='No, I have changed my mind'|translate|escapeJavascript|noescape}"
-var str_user_associated = "{='User associated'|translate|escapeJavascript|noescape}"
-var str_user_dissociate = "{='Dissociate user from this group'|translate|escapeJavascript|noescape}"
-var str_user_dissociated = '{='User "%s" dissociated from this group'|translate|escapeJavascript|noescape}'
-var str_user_list = "{='Manage the members'|translate|escapeJavascript|noescape}"
-var str_merged_into = '{='Group(s) {%s1} succesfully merged into "%s2"'|translate|noescape}'
-var str_copy = '{=' (copy)'|translate|escapeJavascript|noescape}'
-var str_other_copy = '{=' (copy %s)'|translate|escapeJavascript|noescape}'
+var str_member_default = "{_ 'member'|escapeJavascript|noescape}"
+var str_members_default = "{_ 'members'|escapeJavascript|noescape}"
+var str_group_created = "{_ 'Group added'|escapeJavascript|noescape}"
+var str_renaming_done = "{_ 'Group renamed'|escapeJavascript|noescape}"
+var str_name_taken = "{_ 'Name is already taken'|escapeJavascript|noescape}"
+var str_name_not_empty = "{_ 'Name field must not be empty'|escapeJavascript|noescape}"
+var str_group_deleted = '{_ 'Group "%s" succesfully deleted'|escapeJavascript|noescape}'
+var str_groups_deleted = '{_ 'Groups {%s} succesfully deleted'|noescape}'
+var str_set_default = "{_ 'Set as group for new users'|escapeJavascript|noescape}"
+var str_unset_default = "{_ 'Unset as group for new users'|escapeJavascript|noescape}"
+var str_delete = '{_ 'Are you sure you want to delete group "%s"?'|escapeJavascript|noescape}'
+var str_yes_delete_confirmation = "{_ 'Yes, delete'|escapeJavascript|noescape}"
+var str_no_delete_confirmation = "{_ 'No, I have changed my mind'|escapeJavascript|noescape}"
+var str_user_associated = "{_ 'User associated'|escapeJavascript|noescape}"
+var str_user_dissociate = "{_ 'Dissociate user from this group'|escapeJavascript|noescape}"
+var str_user_dissociated = '{_ 'User "%s" dissociated from this group'|escapeJavascript|noescape}'
+var str_user_list = "{_ 'Manage the members'|escapeJavascript|noescape}"
+var str_merged_into = '{_ 'Group(s) {%s1} succesfully merged into "%s2"'|noescape}'
+var str_copy = '{_ ' (copy)'|escapeJavascript|noescape}'
+var str_other_copy = '{_ ' (copy %s)'|escapeJavascript|noescape}'
 
 var serverKey = '{$CACHE_KEYS['users']}'
 var serverId = '{$CACHE_KEYS['_hash']}'

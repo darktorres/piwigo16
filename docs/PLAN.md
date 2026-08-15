@@ -2005,22 +2005,45 @@ Deletes `Template::$output`, both `COMBINED_*` placeholders, the
 on P30's fork** — if assets become view-declared, `{layout}`/`{block}`
 inheritance replaces shell-last composition.
 
-**P49 — Typed contributions + plugin-owned routes.** Prune the Latte API (18
-zero-use registrations; `math()` and its `eval()`, which has exactly 1 call
-site; Smarty duplicates onto Latte built-ins). Replace
-`addIndexButton`/`addPictureButton`/`concat('PLUGIN_INDEX_ACTIONS')` with a
-sealed set of ~13 typed contribution kinds where **the type determines the
-destination** — no string region names, so the failure mode
-`docs/design/extension-points.md` names against its own proposal ("a wrong
-*string* point name silently creates a disconnected point") is structurally
-impossible. Multi-destination kinds take a typed enum target; per-row cases take
-a typed field. Adds `FieldOverride` and `FormProvider` kinds, emits **stable DOM
-hooks** (`data-image-id`, stable form-control ids — this alone retires ~12% of
-historical `set_prefilter` demand), and makes `Bootstrap\RouteDefinitions`
-extensible so plugins can own routes. Deliberately **no escape hatch**: no
-loader-chain template override, no block override, no rendered-output filter.
-Plugin-owned routes are consequently required, not optional — they are the only
-remaining answer for page ownership.
+**P49 — Typed contributions + plugin-owned routes.**
+
+*The problem.* Core ships **two** mechanisms for one need, on the same page:
+`Template::addIndexButton()`/`parseIndexButtons()` (a ranked collector flushed
+into `PLUGIN_INDEX_BUTTONS` by an explicit controller call right before render)
+and `Template::concat()` writing `PLUGIN_INDEX_ACTIONS` (used by
+`language_switch`'s `LocEndIndex` listener). Two names, two shapes, one need —
+what happens when each need is solved locally. The `addX()`/`parseX()` split is
+itself a Smarty vestige: it exists because Smarty could only read what was
+assigned before render, which Latte does not require.
+
+*Why the obvious fix is not enough.* A string-keyed slot registry
+(`extensionPoint('index_buttons')`) unifies those two, but a field survey of the
+sibling repos shows the real demand is an order of magnitude larger: **122 of
+433 plugins (28%) use `set_prefilter`, across 211 distinct callbacks**, and it
+resolves into a *finite* list of kinds — admin form field ~32, picture info row
+~21, profile/register field ~15, auth buttons ~13, thumbnail overlay ~9,
+picture action ~8, menu item ~6, and a short tail.
+
+*The design.* Because the kinds are finite, contributions become **typed value
+objects**, not string-keyed slots carrying raw HTML, so **the type determines
+the destination** and there is no point name to pass. That structurally removes
+the one risk a string-keyed registry carries — a mistyped point name silently
+creating a disconnected point that never renders. A wrong kind is a type error;
+a wrong target is an invalid enum case. Multi-destination kinds take a typed
+enum target; per-row cases take a typed field (`themeId`), never a composed key.
+Core/theme renders every contribution, so themes can restyle them.
+
+Also in scope: prune the Latte API (18 zero-use registrations; `math()` and its
+`eval()`, which has exactly 1 call site; Smarty duplicates onto Latte built-ins);
+add `FieldOverride` and `FormProvider` kinds; emit **stable DOM hooks**
+(`data-image-id`, stable form-control ids — this alone retires ~12% of
+historical `set_prefilter` demand, which exists only because core emits nothing
+stable to hook onto); make `Bootstrap\RouteDefinitions` extensible.
+
+Deliberately **no escape hatch**: no loader-chain template override, no block
+override, no rendered-output filter. Plugin-owned routes are consequently
+required, not optional — they are the only remaining answer for page ownership
+(`tag_groups`, `piwigo_masonry_grid`, `PWG_Stuffs`).
 
 **P50 — Escaping campaign.** The residue after P34 removes the JS-context cases
 and P47 turns rendered-sub-template vars into `Html`-typed properties: the
@@ -2028,12 +2051,6 @@ pre-escaped-URL population (`{$U_HOME|noescape}`, `{$F_ACTION|noescape}`), not
 the full 988. Size it after P47, not before. Kept separate so an escaping
 regression stays bisectable from a structural one; gated by the existing
 golden-HTML and visual-regression suites.
-
-**`docs/design/extension-points.md` is superseded by P49** — its diagnosis
-(two mechanisms for one need) holds; its proposed remedy (string-keyed
-`extensionPoint('name')` slots carrying raw HTML) is replaced by typed kinds
-after the field survey showed the real demand is 122 of 433 plugins using
-`set_prefilter`, across 211 callbacks, with a finite kind list.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P50 backbone)
 

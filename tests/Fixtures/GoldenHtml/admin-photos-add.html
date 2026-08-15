@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/rw1dgp.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -31,7 +31,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -633,7 +633,7 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/h9jwog.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 const formatMode = false;
@@ -645,7 +645,7 @@ const chunk_size = '500kb';
 const max_file_size = '1000mb';
 const format_update_warning = "This format already exists, it will be overwritten !";
 const format_remove = "Remove";
-var pwg_token = '2bd43e2f9806d312ff06062f2e8232110512e79002181a7f4da06fca64e727b6';
+var pwg_token = '{{TOKEN}}';
 const photosAdded_label = "%d photos uploaded";
 const photosUpdated_label = "%d photos updated";
 const formatsAdded_label = "%d formats added for %d photos";

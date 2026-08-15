@@ -16,7 +16,7 @@
       href="themes/default/icon/favicon.ico"
     >
 
-    <link rel="start" title="Home" href="/piwigo17-4/">
+    <link rel="start" title="Home" href="{{BASE_PATH}}/">
     <link
       rel="search"
       title="Search"
@@ -32,7 +32,7 @@
 <link rel="stylesheet" type="text/css" href="themes/default/fix-ie7.css">
 <![endif]-->
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/174b7fc.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     
     <!-- END get_combined -->
@@ -147,7 +147,7 @@
   <div class="titrePage">
     <ul class="categoryActions"></ul>
     <h2><a
-        href="/piwigo17-4/"
+        href="{{BASE_PATH}}/"
       >Home</a> / Profile</h2>
   </div>
 
@@ -162,7 +162,7 @@
 >
   <fieldset>
     <legend>Registration</legend>
-    <input type="hidden" name="redirect" value="/piwigo17-4/">
+    <input type="hidden" name="redirect" value="{{BASE_PATH}}/">
     <ul>
       <li>
         <span class="property">Username</span>
@@ -271,7 +271,7 @@
 
 
   <p class="bottomButtons">
-    <input type="hidden" name="pwg_token" value="9a1acd5c5723e759cb17a2e5ab66234fed0341159841e7145791841787fe974e">
+    <input type="hidden" name="pwg_token" value="{{TOKEN}}">
     <input
       class="submit"
       type="submit"

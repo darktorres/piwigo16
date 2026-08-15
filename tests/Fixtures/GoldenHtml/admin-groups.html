@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/1s1z96e.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -29,7 +29,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -303,7 +303,7 @@
               onclick="hideAddGroupForm()"
             >Cancel</a>
           </div>
-          <input type="hidden" name="pwg_token" value="b0c4dc681ae590884d267a7d91c70d8eb86644efcb9fe54658fee15bd1bb00ac">
+          <input type="hidden" name="pwg_token" value="{{TOKEN}}">
         </fieldset>
       </form>
     </div>
@@ -856,10 +856,10 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/pjscpq.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-var pwg_token = "b0c4dc681ae590884d267a7d91c70d8eb86644efcb9fe54658fee15bd1bb00ac";
+var pwg_token = "{{TOKEN}}";
 var str_member_default = "member"
 var str_members_default = "members"
 var str_group_created = "Group added"
@@ -882,7 +882,7 @@ var str_copy = ' (copy)'
 var str_other_copy = ' (copy %s)'
 
 var serverKey = '1785553200_4'
-var serverId = 'dda54766ec207d793317d8d6ae40a754'
+var serverId = '{{TOKEN}}'
 var rootUrl = ''
 
 $(document).on('keydown', function (e) {
@@ -898,7 +898,7 @@ $(document).on('click', function (e) {
 
 var usersCache = new UsersCache({
   serverKey: '1785553200_4',
-  serverId: 'dda54766ec207d793317d8d6ae40a754',
+  serverId: '{{TOKEN}}',
   rootUrl: ''
 });
 

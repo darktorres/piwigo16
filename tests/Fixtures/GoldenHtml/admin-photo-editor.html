@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/4l6bpn.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -29,7 +29,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -227,7 +227,7 @@
     ></a>
     <a
       class="icon-download"
-      href="action.php?id=1&amp;part=e&amp;pwg_token=3c57a6b38148d3be99d8b129f64988f8105e52e1fdbc063663764329eb9f4d7c"
+      href="action.php?id=1&amp;part=e&amp;pwg_token={{TOKEN}}"
       title="download"
     ></a>
     <a
@@ -242,7 +242,7 @@
     ></a>
     <a
         class="icon-arrows-cw"
-        href="admin.php?page=photo-1-properties&amp;sync_metadata=1&amp;pwg_token=3c57a6b38148d3be99d8b129f64988f8105e52e1fdbc063663764329eb9f4d7c"
+        href="admin.php?page=photo-1-properties&amp;sync_metadata=1&amp;pwg_token={{TOKEN}}"
         title="Synchronize metadata"
       ></a>
     <a
@@ -398,7 +398,7 @@
     <div class="savebar-footer">
       <div class="savebar-footer-start">
         <div class="savebar-footer-block">
-          <a class="savebar-see-out" href="picture.php?/1/category/"><i
+          <a class="savebar-see-out" href="picture.php?/1/category/1"><i
                 class="icon-left-open"
               ></i>Open in gallery</a>
         </div>
@@ -411,7 +411,7 @@
             ></i> Save Settings</button>
         </div>
       </div>
-      <input type="hidden" name="pwg_token" value="3c57a6b38148d3be99d8b129f64988f8105e52e1fdbc063663764329eb9f4d7c">
+      <input type="hidden" name="pwg_token" value="{{TOKEN}}">
     </div>
   </div>
 </form>
@@ -642,7 +642,7 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/18f1iv2.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 jQuery(document).ready(function(){
@@ -653,7 +653,7 @@ jQuery(document).ready(function(){
 (function(){
 var categoriesCache = new CategoriesCache({
   serverKey: '1785639600_2',
-  serverId: 'dda54766ec207d793317d8d6ae40a754',
+  serverId: '{{TOKEN}}',
   rootUrl: ''
 });
 
@@ -661,7 +661,7 @@ categoriesCache.selectize(jQuery('[data-selectize=categories]'));
 
 var tagsCache = new TagsCache({
   serverKey: '1785553200_3',
-  serverId: 'dda54766ec207d793317d8d6ae40a754',
+  serverId: '{{TOKEN}}',
   rootUrl: ''
 });
 
@@ -683,7 +683,7 @@ jQuery("a.preview-box").colorbox({
 str_are_you_sure = 'Are you sure?';
 str_yes = 'Yes, delete';
 str_no = 'No, I have changed my mind';
-url_delete = 'admin.php?page=photo-1-properties&amp;delete=1&amp;pwg_token=3c57a6b38148d3be99d8b129f64988f8105e52e1fdbc063663764329eb9f4d7c';
+url_delete = 'admin.php?page=photo-1-properties&amp;delete=1&amp;pwg_token={{TOKEN}}';
 str_orphan = 'This photo is an orphan';
 
 

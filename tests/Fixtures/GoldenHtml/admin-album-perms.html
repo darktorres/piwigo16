@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/g4cry6.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -29,7 +29,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -343,7 +343,7 @@
           ></i> Save Settings</button>
       </div>
     </div>
-    <input type="hidden" name="pwg_token" value="b12da5fba8c660cb3ee0c8a6ff4669e5564587aec3d18de1ba12e7e5fca19464">
+    <input type="hidden" name="pwg_token" value="{{TOKEN}}">
   </div>
 </form>
 
@@ -428,14 +428,14 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/96dvw8.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 const cat_nav = '<a href=\"admin.php?page=album-1\">Sample Album<\/a>';
 (function(){
 var groupsCache = new GroupsCache({
   serverKey: '1785553200_3',
-  serverId: 'dda54766ec207d793317d8d6ae40a754',
+  serverId: '{{TOKEN}}',
   rootUrl: ''
 });
 
@@ -443,7 +443,7 @@ groupsCache.selectize(jQuery('[data-selectize=groups]'));
 
 var usersCache = new UsersCache({
   serverKey: '1785553200_4',
-  serverId: 'dda54766ec207d793317d8d6ae40a754',
+  serverId: '{{TOKEN}}',
   rootUrl: ''
 });
 

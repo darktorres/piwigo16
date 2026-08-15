@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/1bilb4f.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -29,7 +29,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -225,7 +225,7 @@
 
   
 <form action="admin.php?page=album&amp;cat_id=1&amp;tab=sort_order" method="post" id="element_set_ranks">
-  <input type="hidden" name="pwg_token" value="ca247cc4b9d7d7441a2f7c1108f3295fb730dfc889cb2ba3c6eca2d7c269832a">
+  <input type="hidden" name="pwg_token" value="{{TOKEN}}">
   <fieldset>
       <legend><span
           class="icon-sort-alt-down icon-blue"
@@ -505,7 +505,7 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/z8ihc2.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 const cat_nav = ' <a href=\"admin.php?page=album-1\">Sample Album<\/a>';

@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/r28lgs.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -40,7 +40,7 @@ span.errors {
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -238,7 +238,7 @@ span.errors {
 
 
 <form action="admin.php?page=album-1-notification" method="post" id="categoryNotify">
-  <input type="hidden" name="pwg_token" value="1883bd0b2f2c5b7e7afb4118d305c36459870c18f8976969271053fbb133c5db">
+  <input type="hidden" name="pwg_token" value="{{TOKEN}}">
 
   <fieldset id="emailCatInfo">
     <legend><span
@@ -399,7 +399,7 @@ span.errors {
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/y0nyw7.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 const cat_nav = '<a href=\"admin.php?page=album-1\">Sample Album<\/a>';

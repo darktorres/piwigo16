@@ -161,6 +161,15 @@ function goldenHtmlDir(): string
  *    have no Home link at all) -- confirmed live: admin-photo-editor's
  *    base path leaked through unnormalized until this second anchor was
  *    added.
+ *  - The checkout's own absolute filesystem path (`{{ROOT_PATH}}`), which
+ *    real pages print rather than merely link: a site's `galleries_url` is
+ *    seeded as an absolute path, so admin-site-manager/admin-site-update
+ *    render it in full. Baselines captured in one worktree otherwise carry
+ *    that worktree's `$HOME`-rooted path and fail everywhere else --
+ *    confirmed live, with baselines captured under `piwigo17-rewrite-4`
+ *    failing in `-2` on nothing but the path. Taken from `__DIR__`, not
+ *    from config, so it holds for another checkout, another user's home,
+ *    or a CI runner just the same.
  *  - `_data/combined/*.{css,js}` bundle filenames: a content hash of
  *    `FileCombiner`'s own combine step, not template output -- differs
  *    run to run whenever the combined input set's mtimes/order differ,
@@ -221,6 +230,18 @@ function goldenHtmlNormalize(string $html): string
     $html = preg_replace('#[0-9]{9,11}(?:\.[0-9]+)?:[0-9]+:\{\{TOKEN\}\}#', '{{ANTIBOT_KEY}}', $html) ?? $html;
     $html = preg_replace('#feed=[A-Za-z0-9]{40,60}#', 'feed={{FEED_TOKEN}}', $html) ?? $html;
     $html = preg_replace('#(psk-[0-9]{8}-)[A-Za-z0-9]{10}#', '$1{{SEARCH_SUFFIX}}', $html) ?? $html;
+
+    // This checkout's own absolute filesystem path, which real pages do
+    // print: a site's `galleries_url` is seeded as an absolute path by
+    // InstallWizard, so admin-site-manager/admin-site-update render it
+    // verbatim. Derived from __DIR__ rather than any config value, so it
+    // holds wherever the checkout lives -- another worktree, another user's
+    // home, or a CI runner.
+    $rootPath = rtrim(dirname(__DIR__, 2), '/');
+    if ($rootPath !== '') {
+        $html = str_replace($rootPath, '{{ROOT_PATH}}', $html);
+        $html = str_replace(rawurlencode($rootPath), '{{ROOT_PATH}}', $html);
+    }
 
     $basePath = null;
     if (preg_match('#<link\s+rel="start"\s+title="Home"\s+href="(/[^"]*?)/?"#', $html, $m) === 1) {
@@ -306,8 +327,22 @@ function goldenHtmlAssertOrWrite(string $name, string $body): void
         return;
     }
 
+    $normalizedFresh = goldenHtmlNormalize($body);
+
+    // The baseline is stored already-normalized, so the committed file is
+    // exactly what gets asserted rather than a raw capture with a
+    // transformation hidden between it and the comparison. That keeps the
+    // fixture stable across checkouts: regenerating it in another worktree,
+    // on another machine, or in CI produces a byte-identical file for an
+    // unchanged page, so any real diff in review is a real behaviour change
+    // -- not a different $HOME, a fresh CSRF token or a new bundle hash.
+    // Reading an existing baseline still normalizes it, which is a no-op for
+    // a current file. That read-side pass only rewrites values belonging to
+    // *this* checkout, though -- a legacy raw baseline captured elsewhere
+    // carries a root path this checkout can't recognise, so it has to be
+    // regenerated once rather than self-healing.
     if (getenv('GOLDEN_HTML_UPDATE') === '1') {
-        file_put_contents($path, $body);
+        file_put_contents($path, $normalizedFresh);
 
         return;
     }
@@ -317,7 +352,6 @@ function goldenHtmlAssertOrWrite(string $name, string $body): void
         throw new RuntimeException("Failed to read existing golden file: {$path}");
     }
 
-    $normalizedFresh = goldenHtmlNormalize($body);
     $normalizedExisting = goldenHtmlNormalize($existing);
 
     $message = "{$name}'s golden HTML changed. Review the diff; if intentional, "

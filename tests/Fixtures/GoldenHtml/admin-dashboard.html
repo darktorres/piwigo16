@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/6nnbt7.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -37,7 +37,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -518,7 +518,7 @@
 
 <p class="showCreateAlbum">
   <a
-      href="admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=c4cb61da82584bfa20413b416d68202a6fe3e4e94afb414f3d9b63e72dd440ad"
+      href="admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token={{TOKEN}}"
       class="icon-exchange"
     >Quick Local Synchronization</a>
 </p>
@@ -605,7 +605,7 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/r2ya7j.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 var piwigo_need_update_msg = '<a href="admin.php?page=updates">A new version of Piwigo is available. <i class="icon-right"></i></a>';

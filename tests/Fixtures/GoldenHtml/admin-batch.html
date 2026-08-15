@@ -17,9 +17,9 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/1bzanog.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
-    <script type="text/javascript" src="_data/combined/1o8d4sk.js"></script>
+    <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
     <!-- END get_combined -->
 
   </head>
@@ -29,7 +29,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -253,7 +253,7 @@
 <div id="batchManagerGlobal">
   <form action="admin.php?page=batch_manager" method="post">
     <input type="hidden" name="start" value="0">
-    <input type="hidden" name="pwg_token" value="953942509bf7822096e84cb0ea946574f2ff8977f003354e8513c0cf81b320df">
+    <input type="hidden" name="pwg_token" value="{{TOKEN}}">
 
 
 <fieldset>
@@ -340,7 +340,7 @@
         </select>
         <a
           id="empty_caddie"
-          href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token=953942509bf7822096e84cb0ea946574f2ff8977f003354e8513c0cf81b320df"
+          href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token={{TOKEN}}"
           style=""
         >Empty caddie</a>
 
@@ -1729,7 +1729,7 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/16f4avx.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 var lang = {
@@ -1744,7 +1744,7 @@ jQuery(document).ready(function() {
 
   var tagsCache = new TagsCache({
     serverKey: '1785553200_3',
-    serverId: 'dda54766ec207d793317d8d6ae40a754',
+    serverId: '{{TOKEN}}',
     rootUrl: ''
   });
 
@@ -1754,7 +1754,7 @@ jQuery(document).ready(function() {
 
   window.categoriesCache = new CategoriesCache({
     serverKey: '1785639600_2',
-    serverId: 'dda54766ec207d793317d8d6ae40a754',
+    serverId: '{{TOKEN}}',
     rootUrl: ''
   });
 
@@ -2147,7 +2147,7 @@ function show_user_whats_new() {
 <script type="text/javascript">
 (function() {
 var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
-s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='_data/combined/1h0xzzu.js';
+s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='_data/combined/{{HASH}}.js';
 after = after.parentNode.insertBefore(s, after);
 })();
 </script>

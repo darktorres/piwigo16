@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/fhiiwc.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -38,7 +38,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -1452,7 +1452,7 @@
         class="sizeDetails"
       >
         <a
-          href="admin.php?page=configuration&amp;section=sizes&action=restore_settings&pwg_token=94f935f40b2c735fafebc566387540b00073a28d48ada7c7d79199ecf1467036"
+          href="admin.php?page=configuration&amp;section=sizes&action=restore_settings&pwg_token={{TOKEN}}"
           class="restore-settings-button"
         >Reset to default values</a>
       </p>
@@ -1471,7 +1471,7 @@
         ><i class="icon-floppy"></i> Save Settings</button>
       </div>
     </div>
-    <input type="hidden" name="pwg_token" value="94f935f40b2c735fafebc566387540b00073a28d48ada7c7d79199ecf1467036">
+    <input type="hidden" name="pwg_token" value="{{TOKEN}}">
   </div>
 </form>
 
@@ -1556,7 +1556,7 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/1oby2gq.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 const title_msg = 'Are you sure you want to restore to default settings?';

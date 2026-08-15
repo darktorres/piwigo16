@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/6jb2ze.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -29,7 +29,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -1108,7 +1108,7 @@
         ><i class="icon-floppy"></i> Save Settings</button>
       </div>
     </div>
-    <input type="hidden" name="pwg_token" value="4985c31d04e9c715c77e868ff2b945302253651973ccdd0fd4b30f926a60a5f2">
+    <input type="hidden" name="pwg_token" value="{{TOKEN}}">
   </div>
 </form>
 
@@ -1193,7 +1193,7 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/1drm5dn.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 const filters_names = ["tags","album","ratio","width","words","author","expert","height","rating","added_by","file_size","file_type","post_date","creation_date"];

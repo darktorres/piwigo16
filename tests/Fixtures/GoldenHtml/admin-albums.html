@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/uu0q2e.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -29,7 +29,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -933,11 +933,11 @@ input[name="position"] {
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/25l1rs.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 var data = [{"rank":1,"name":"Sample Album","status":"public","id":"1","visible":"true","uppercats":"1","nb_images":3,"last_updates":"1 day in the future","has_not_access":false,"nb_sub_photos":2,"nb_subcats":1,"children":[{"rank":1,"name":"Nested Sub Album","status":"public","id":"2","visible":"true","uppercats":"1,2","nb_images":2,"last_updates":"1 day in the future","has_not_access":false,"nb_sub_photos":0}]}];
-var pwg_token = "0e9a06fd5573d5a750d49823d9f93f28a78b664bdb1946e460223694de402828";
+var pwg_token = "{{TOKEN}}";
 var str_show_sub = "Show sub-albums";
 var str_hide_sub = "Hide sub-albums";
 var str_manage_sub_album = "Manage sub-albums";

@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/6nnbt7.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -34,7 +34,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -271,7 +271,7 @@ form fieldset p.actionButtons { margin-bottom:0}
       <a href="#" id="addPermalinkClose">Cancel</a>
     </p>
   </fieldset>
-  <input type="hidden" name="pwg_token" value="e2b2c30678ee9129d594605a48e1d16ceea7c0a0def3544e06108aa18ebe0d59">
+  <input type="hidden" name="pwg_token" value="{{TOKEN}}">
 </form>
 
 <fieldset>
@@ -280,9 +280,9 @@ form fieldset p.actionButtons { margin-bottom:0}
     ></span>Permalinks</legend>
   <table class="table2" style="margin:0">
     <tr class="throw">
-      <td>Id <a href="/piwigo17-4/admin.php?page=permalinks&amp;psf=id" title="Sort order">↓</a></td>
-      <td>Album <a href="/piwigo17-4/admin.php?page=permalinks" title="Sort order"><em>↓</em></a></td>
-      <td>Permalink <a href="/piwigo17-4/admin.php?page=permalinks&amp;psf=permalink" title="Sort order">↓</a></td>
+      <td>Id <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;psf=id" title="Sort order">↓</a></td>
+      <td>Album <a href="{{BASE_PATH}}/admin.php?page=permalinks" title="Sort order"><em>↓</em></a></td>
+      <td>Permalink <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;psf=permalink" title="Sort order">↓</a></td>
     </tr>
   </table>
 </fieldset>
@@ -295,12 +295,12 @@ form fieldset p.actionButtons { margin-bottom:0}
     ></a></legend>
   <table class="table2" style="margin:0">
     <tr class="throw">
-      <td>Id <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=cat_id#old_permalinks" title="Sort order">↓</a></td>
+      <td>Id <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;dpsf=cat_id#old_permalinks" title="Sort order">↓</a></td>
       <td>Album</td>
-      <td>Permalink <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=permalink#old_permalinks" title="Sort order">↓</a></td>
-      <td>Deleted on <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=date_deleted#old_permalinks" title="Sort order">↓</a></td>
-      <td>Last hit <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=last_hit#old_permalinks" title="Sort order">↓</a></td>
-      <td>Hit <a href="/piwigo17-4/admin.php?page=permalinks&amp;dpsf=hit#old_permalinks" title="Sort order">↓</a></td>
+      <td>Permalink <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;dpsf=permalink#old_permalinks" title="Sort order">↓</a></td>
+      <td>Deleted on <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;dpsf=date_deleted#old_permalinks" title="Sort order">↓</a></td>
+      <td>Last hit <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;dpsf=last_hit#old_permalinks" title="Sort order">↓</a></td>
+      <td>Hit <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;dpsf=hit#old_permalinks" title="Sort order">↓</a></td>
       <td style="width:5px;"></td>
     </tr>
     <tr style="line-height:1.5em;">
@@ -311,7 +311,7 @@ form fieldset p.actionButtons { margin-bottom:0}
         <td>2026-08-01 00:00:00</td>
         <td>2026-08-01 00:00:00</td>
         <td>42</td>
-        <td><a href="admin.php?page=permalinks&amp;delete_permanent=old-sample-album&amp;pwg_token=e2b2c30678ee9129d594605a48e1d16ceea7c0a0def3544e06108aa18ebe0d59"><img
+        <td><a href="admin.php?page=permalinks&amp;delete_permanent=old-sample-album&amp;pwg_token={{TOKEN}}"><img
               src="themes/admin/clear/icon/delete.png"
               alt="[Delete]"
             ></a></td>
@@ -400,7 +400,7 @@ form fieldset p.actionButtons { margin-bottom:0}
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/xh70rl.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 jQuery(document).ready(function(){

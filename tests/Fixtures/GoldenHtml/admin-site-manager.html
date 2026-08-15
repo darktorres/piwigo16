@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/1ws3rbr.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -29,7 +29,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -221,8 +221,8 @@
         class="row2"
       ><td>
           <a
-            href="/home/torres/piwigo17-rewrite-4/galleries/"
-          >/home/torres/piwigo17-rewrite-4/galleries/</a><br>(Local, 0 Albums, 0 photos)
+            href="{{ROOT_PATH}}/galleries/"
+          >{{ROOT_PATH}}/galleries/</a><br>(Local, 0 Albums, 0 photos)
         </td><td>
           [<a
             href="admin.php?page=site_update&amp;site=1"
@@ -241,7 +241,7 @@
   id="createSite"
   style="display:none"
 >
-  <input type="hidden" name="pwg_token" value="e6ebdd0491a1cdbe3427d06e850d97ddcd4073e803cf11947f61dc155dd05ecb">
+  <input type="hidden" name="pwg_token" value="{{TOKEN}}">
   <fieldset>
     <legend>create a new site</legend>
 
@@ -340,7 +340,7 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/pw50ib.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 jQuery(document).ready(function(){

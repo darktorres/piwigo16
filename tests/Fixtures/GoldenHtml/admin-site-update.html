@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/6nnbt7.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -29,7 +29,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -218,7 +218,7 @@
 
   
 <div class="selectedAlbum site-url-path">
-  <span class="icon-folder-open selectedAlbum-first">/home/torres/piwigo17-rewrite-4/galleries/</span>
+  <span class="icon-folder-open selectedAlbum-first">{{ROOT_PATH}}/galleries/</span>
 </div>
 
 
@@ -226,7 +226,7 @@
 
 
 <form action="" method="post" id="update">
-    <input type="hidden" name="pwg_token" value="38995d0de046259fe83d09187fbbd93bf9b0b1cb4464bfc8505082ca1404368f">
+    <input type="hidden" name="pwg_token" value="{{TOKEN}}">
 
     <fieldset id="syncFiles">
       <legend><span
@@ -435,7 +435,7 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/1d9r3eu.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 $('#syncFiles label').click(function () {

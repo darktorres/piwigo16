@@ -17,7 +17,7 @@
 
 
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/6nnbt7.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
@@ -29,7 +29,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17-4/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -230,7 +230,7 @@
   id="notification_by_mail"
   action="admin.php?page=notification_by_mail"
 >
-  <input type="hidden" name="pwg_token" value="3ab19d72fe500817ec5db1fa1da9c18570c1496afc63cd2e7b344f96dc13f7aa">
+  <input type="hidden" name="pwg_token" value="{{TOKEN}}">
 
 
   <p>There is no subscribers to be notified by mail.</p>
@@ -321,7 +321,7 @@
 
 
 <!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/4pwf9z.js"></script>
+<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 jQuery(document).ready(function(){

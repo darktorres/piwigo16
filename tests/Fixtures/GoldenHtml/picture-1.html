@@ -20,7 +20,7 @@
       href="themes/default/icon/favicon.ico"
     >
 
-    <link rel="start" title="Home" href="/piwigo17-4/">
+    <link rel="start" title="Home" href="{{BASE_PATH}}/">
     <link
       rel="search"
       title="Search"
@@ -59,7 +59,7 @@
 <link rel="stylesheet" type="text/css" href="themes/default/fix-ie7.css">
 <![endif]-->
     <!-- BEGIN get_combined -->
-    <link rel="stylesheet" type="text/css" href="_data/combined/174b7fc.css">
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
 
     
     <!-- END get_combined -->
@@ -89,7 +89,7 @@
 
   <div id="imageHeaderBar">
     <div class="browsePath">
-      <a href="/piwigo17-4/">Home</a> / <a href="index.php?/category/1">Sample Album</a><span
+      <a href="{{BASE_PATH}}/">Home</a> / <a href="index.php?/category/1">Sample Album</a><span
         class="browsePathSeparator"
       > / </span><h2>Photo 1</h2>
     </div>
@@ -246,7 +246,7 @@ var _pwgRatingAutoQueue = _pwgRatingAutoQueue||[];
 <script type="text/javascript">
 (function() {
 var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
-s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='_data/combined/13vjo51.js';
+s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='_data/combined/{{HASH}}.js';
 after = after.parentNode.insertBefore(s, after);
 })();
 </script>

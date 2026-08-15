@@ -346,7 +346,11 @@ it("applies a valid, different lang cookie: switches CurrentUser's language, loa
         // is real, translated body content, not just metadata.
         expect($result['body'])->toContain('Connexion');
         // current_language template var reflects CurrentUser::updateLanguage().
-        expect($result['body'])->toContain('id="selected-language">Français<');
+        // Two independent checks, not one literal HTML-shaped string -- P32's
+        // reformat wraps this <span>'s id attribute onto its own line, so the
+        // closing '>' is never adjacent to the attribute in the real output.
+        expect($result['body'])->toContain('id="selected-language"');
+        expect($result['body'])->toContain('>Français<');
     } finally {
         H::setGuestTheme('default');
         identRemoveLanguage('fr_FR');

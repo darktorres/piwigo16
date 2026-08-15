@@ -63,14 +63,20 @@ final readonly class BatchWriter
     private function buildInsertSql(string $protectedTable, string $columnsSql, string $placeholdersSql, bool $ignore): string
     {
         if (! $ignore) {
-            return "INSERT INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})";
+            return <<<SQL
+                INSERT INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
+                SQL;
         }
 
         if ($this->conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
-            return "INSERT INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql}) ON CONFLICT DO NOTHING";
+            return <<<SQL
+                INSERT INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql}) ON CONFLICT DO NOTHING
+                SQL;
         }
 
-        return "INSERT IGNORE INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})";
+        return <<<SQL
+            INSERT IGNORE INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
+            SQL;
     }
 
     /**

@@ -200,8 +200,12 @@ final readonly class DbMaintenanceRepository
 
         if ($platform instanceof PostgreSQLPlatform) {
             foreach ($allTables as $table) {
-                $conn->executeStatement("VACUUM (ANALYZE) {$table}");
-                $conn->executeStatement("REINDEX TABLE {$table}");
+                $conn->executeStatement(<<<SQL
+                    VACUUM (ANALYZE) {$table}
+                    SQL);
+                $conn->executeStatement(<<<SQL
+                    REINDEX TABLE {$table}
+                    SQL);
             }
 
             return;

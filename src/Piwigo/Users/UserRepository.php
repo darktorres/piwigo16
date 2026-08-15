@@ -1658,7 +1658,11 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         $total = null;
         if ($includeTotalCount) {
             $totalRaw = $conn->fetchOne(
-                "SELECT COUNT(DISTINCT u.id)\n{$joinSql}",
+                <<<SQL
+                SELECT COUNT(DISTINCT u.id)
+                {$joinSql}
+                SQL
+                ,
                 $params,
                 $types
             );
@@ -1685,7 +1689,10 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             $types['offset'] = ParameterType::INTEGER;
         }
 
-        $sql .= ';';
+        $sql .= <<<SQL
+
+            ;
+            SQL;
 
         $rows = $conn->fetchAllAssociative($sql, $params, $types);
 

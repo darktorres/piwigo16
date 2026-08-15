@@ -32,18 +32,27 @@ final class AdvisorySessionLock
             return self::acquirePostgres($conn, $lockName, $timeoutSeconds);
         }
 
-        return $conn->fetchOne('SELECT GET_LOCK(?, ?)', [$lockName, $timeoutSeconds]) === 1;
+        return $conn->fetchOne(<<<SQL
+            SELECT GET_LOCK(?, ?)
+            SQL
+            , [$lockName, $timeoutSeconds]) === 1;
     }
 
     public static function release(Connection $conn, string $lockName): void
     {
         if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
-            $conn->fetchOne('SELECT pg_advisory_unlock(?)', [self::key($lockName)]);
+            $conn->fetchOne(<<<SQL
+                SELECT pg_advisory_unlock(?)
+                SQL
+                , [self::key($lockName)]);
 
             return;
         }
 
-        $conn->fetchOne('SELECT RELEASE_LOCK(?)', [$lockName]);
+        $conn->fetchOne(<<<SQL
+            SELECT RELEASE_LOCK(?)
+            SQL
+            , [$lockName]);
     }
 
     private static function acquirePostgres(Connection $conn, string $lockName, int $timeoutSeconds): bool
@@ -52,7 +61,10 @@ final class AdvisorySessionLock
         $deadline = microtime(true) + $timeoutSeconds;
 
         while (true) {
-            $acquired = (bool) $conn->fetchOne('SELECT pg_try_advisory_lock(?)', [$key]);
+            $acquired = (bool) $conn->fetchOne(<<<SQL
+                SELECT pg_try_advisory_lock(?)
+                SQL
+                , [$key]);
             if ($acquired || microtime(true) >= $deadline) {
                 return $acquired;
             }

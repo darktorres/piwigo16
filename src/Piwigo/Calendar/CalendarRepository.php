@@ -118,7 +118,12 @@ final readonly class CalendarRepository
 
         $ids = $this->em->getConnection()
             ->executeQuery(
-                'SELECT id ' . $fromWhere->sql . ' ' . $dateWhere->sql . ' GROUP BY id ' . $orderBySql,
+                <<<SQL
+                SELECT id {$fromWhere->sql} {$dateWhere->sql}
+                GROUP BY id
+                {$orderBySql}
+                SQL
+                ,
                 [...$fromWhere->parameters, ...$dateWhere->parameters],
                 [...$fromWhere->types, ...$dateWhere->types]
             )->fetchFirstColumn();

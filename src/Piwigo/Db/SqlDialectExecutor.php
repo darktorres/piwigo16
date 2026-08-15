@@ -71,7 +71,9 @@ final readonly class SqlDialectExecutor
         // so the branch for the other engine always fails here -- both are
         // correct for their own platform.
         // @phpstan-ignore dba.syntaxError
-        $value = $this->conn->fetchOne('SELECT ' . $expr);
+        $value = $this->conn->fetchOne(<<<SQL
+            SELECT {$expr}
+            SQL);
 
         return is_string($value) ? $value : '';
     }

@@ -52,7 +52,6 @@ use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\OrderByClause;
-use Piwigo\Image\PhotoSortField;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 
@@ -479,7 +478,7 @@ final readonly class CategoryRepository
         $qb->orderBy(str_ireplace(
             'RAND()',
             SqlDialect::randomFunction(),
-            str_replace('ORDER BY ', '', $this->currentConfig->orderBy)
+            $this->currentConfig->orderBy->toSqlBody()
         ));
 
         $ids = $qb->executeQuery()
@@ -509,7 +508,7 @@ final readonly class CategoryRepository
             return null;
         }
 
-        return PhotoSortField::resolveDqlOrderBy($this->currentConfig->orderBy, $imageAlias, $imageCategoryAlias);
+        return $this->currentConfig->orderBy->toDql($imageAlias, $imageCategoryAlias);
     }
 
     /**
@@ -3374,15 +3373,10 @@ final readonly class CategoryRepository
      *
      * $conditions is a list of caller-built SqlCondition fragments (its
      * one real caller combines a dynamically-sized per-`cat_id` OR-chain
-     * with a {@see \Piwigo\Permission\PermissionCriteria} fragment);
-     * unlike the `applyCondition()` family, this method splices
-     * `{$combined->sql}` directly into a required `WHERE` clause with no
-     * `isEmpty()` guard, so it falls back to `1 = 1` itself when every
-     * condition is empty (e.g. no `cat_id` filter and no permission
-     * restriction for this user) -- the old caller-side
-     * `forceOneCondition: true` was load-bearing for exactly this case,
-     * not a no-op; moved here so the guarantee lives with the method
-     * that actually needs it.
+     * with a {@see \Piwigo\Permission\PermissionCriteria} fragment). All of
+     * them may be empty at once -- no `cat_id` filter and no permission
+     * restriction for this user -- in which case the query runs unfiltered
+     * rather than against a `1 = 1` stand-in.
      *
      * Real DQL -- single-table, no join. The caller's own `RLIKE`/`REGEXP`
      * operator splice is solved by
@@ -3393,16 +3387,10 @@ final readonly class CategoryRepository
      */
     public function findIdsAndImageOrderWithConditions(array $conditions): array
     {
-        $combined = SqlCondition::combine('AND', ...$conditions);
-        $whereDql = $combined->isEmpty() ? '1 = 1' : $combined->sql;
-
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
-            ->select('c.id', 'c.imageOrder')
-            ->where($whereDql);
+            ->select('c.id', 'c.imageOrder');
 
-        foreach ($combined->parameters as $name => $value) {
-            $qb->setParameter($name, $value, $combined->types[$name] ?? ParameterType::STRING);
-        }
+        SqlCondition::combine('AND', ...$conditions)->applyTo($qb);
 
         $rows = $qb->getQuery()
             ->getArrayResult();
@@ -3544,7 +3532,10 @@ final readonly class CategoryRepository
             SQL;
 
         if ($searchTerm !== null && $limit === null) {
-            $sql .= ' LIMIT :searchLimit';
+            $sql .= <<<SQL
+
+                LIMIT :searchLimit
+                SQL;
             $params['searchLimit'] = $searchLimit;
             $types['searchLimit'] = ParameterType::INTEGER;
         }
@@ -3606,7 +3597,10 @@ final readonly class CategoryRepository
             SQL;
 
         if ($searchTerm !== null) {
-            $sql .= ' LIMIT :searchLimit';
+            $sql .= <<<SQL
+
+                LIMIT :searchLimit
+                SQL;
             $params['searchLimit'] = $searchLimit;
             $types['searchLimit'] = ParameterType::INTEGER;
         }

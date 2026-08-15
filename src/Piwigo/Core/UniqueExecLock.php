@@ -93,7 +93,10 @@ final class UniqueExecLock
             return self::isRunningPostgres($conn, $tokenName);
         }
 
-        return $conn->fetchOne('SELECT IS_USED_LOCK(?)', [self::lockName($tokenName)]) !== null;
+        return $conn->fetchOne(<<<SQL
+            SELECT IS_USED_LOCK(?)
+            SQL
+            , [self::lockName($tokenName)]) !== null;
     }
 
     public static function ends(Logger $logger, string $tokenName): void

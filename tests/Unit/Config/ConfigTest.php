@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Config\NotificationConfig;
 use Piwigo\Config\UpdateNotification;
+use Piwigo\Image\OrderBy;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 beforeEach(function (): void {
@@ -59,11 +60,17 @@ test('the recentPostDates custom accessor returns a NotificationConfig VO', func
         ->toBe(9);
 });
 
-test('orderBy is a plain raw SQL-fragment string, not a structured {field,dir}[] shape', function (): void {
-    expect(CurrentConfigTestFactory::get()->orderBy)->toBe('ORDER BY date_available DESC, file ASC, id ASC');
+test('orderBy is an OrderBy value that renders back to its SQL fragment', function (): void {
+    // Hooked property: the default materializes on first read, since PHP
+    // can't give a property an object default.
+    expect(CurrentConfigTestFactory::get()->orderBy->toSql())
+        ->toBe('ORDER BY date_available DESC, file ASC, id ASC');
 
-    CurrentConfigTestFactory::get()->orderBy = 'ORDER BY id ASC';
-    expect(CurrentConfigTestFactory::get()->orderBy)->toBe('ORDER BY id ASC');
+    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY id ASC');
+    expect(CurrentConfigTestFactory::get()->orderBy->toSql())
+        ->toBe('ORDER BY id ASC')
+        ->and(CurrentConfigTestFactory::get()->orderBy->isRaw())
+        ->toBeFalse();
 });
 
 test('dumpForLog redacts sensitive properties', function (): void {
@@ -119,15 +126,18 @@ test('chmodValue falls back to the plain SAPI-dependent default outside test mod
     }
 });
 
-test('orderByCustom/orderByInsideCategoryCustom are plain nullable raw-SQL-fragment strings', function (): void {
+test('orderByCustom/orderByInsideCategoryCustom are nullable raw OrderBy overrides', function (): void {
     expect(CurrentConfigTestFactory::get()->orderByCustom)->toBeNull()
         ->and(CurrentConfigTestFactory::get()->orderByInsideCategoryCustom)->toBeNull();
 
-    CurrentConfigTestFactory::get()->orderByCustom = 'ORDER BY hit DESC';
-    CurrentConfigTestFactory::get()->orderByInsideCategoryCustom = 'ORDER BY file ASC';
+    CurrentConfigTestFactory::get()->orderByCustom = OrderBy::raw('ORDER BY hit DESC');
+    CurrentConfigTestFactory::get()->orderByInsideCategoryCustom = OrderBy::raw('ORDER BY file ASC');
 
-    expect(CurrentConfigTestFactory::get()->orderByCustom)->toBe('ORDER BY hit DESC')
-        ->and(CurrentConfigTestFactory::get()->orderByInsideCategoryCustom)->toBe('ORDER BY file ASC');
+    // raw(): sysadmin-supplied text this class deliberately doesn't parse,
+    // so it round-trips verbatim and reports itself as raw.
+    expect(CurrentConfigTestFactory::get()->orderByCustom->toSql())->toBe('ORDER BY hit DESC')
+        ->and(CurrentConfigTestFactory::get()->orderByCustom->isRaw())->toBeTrue()
+        ->and(CurrentConfigTestFactory::get()->orderByInsideCategoryCustom->toSql())->toBe('ORDER BY file ASC');
 });
 
 test('setAvailablePermissionLevels falls back to the hardcoded default set when given an empty list', function (): void {

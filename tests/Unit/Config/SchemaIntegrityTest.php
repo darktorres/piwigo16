@@ -15,13 +15,12 @@ use Piwigo\PluginConfig\EventDispatcher;
 // pass-through.
 //
 // CurrentConfig's config-key properties are instance members (not static).
-// This file's own reflection filters those out, plus the 4 private backing
-// fields (chmodValueStorage/recentPostDatesStorage/
-// defaultFiltersViewsStorage/filterPagesStorage) behind chmodValue/
-// recentPostDates/defaultFiltersViews/filterPages -- implementation detail
-// of those 4 hooked properties, not config keys of their own.
+// This file's own reflection filters those out, plus the private backing
+// fields behind the fully-hooked properties (chmodValue/recentPostDates/
+// defaultFiltersViews/filterPages/orderBy/orderByInsideCategory) --
+// implementation detail of those properties, not config keys of their own.
 
-const SCHEMA_INTEGRITY_BACKING_FIELDS = ['chmodValueStorage', 'recentPostDatesStorage', 'defaultFiltersViewsStorage', 'filterPagesStorage'];
+const SCHEMA_INTEGRITY_BACKING_FIELDS = ['chmodValueStorage', 'recentPostDatesStorage', 'defaultFiltersViewsStorage', 'filterPagesStorage', 'orderByStorage', 'orderByInsideCategoryStorage'];
 
 const SCHEMA_INTEGRITY_STATIC_METHOD_ALLOW_LIST = [
     // Bulk/legacy-bridge helper -- a small hand-picked snapshot, not backed
@@ -76,6 +75,7 @@ const SCHEMA_INTEGRITY_HOOKED_LIST = [
     'extentsForTemplates', 'fileExtensions', 'filterPages', 'formatExtensions',
     'headerNotes', 'historySectionsCache', 'links', 'metadataKeywordSeparatorRegex',
     'pictureExtensions', 'pictureInformations', 'randomIndexRedirect', 'rateItems',
+    'orderBy', 'orderByInsideCategory',
     'recentPostDates', 'showExifFields', 'showIptcMapping', 'syncCharsRegex',
     'syncExcludeFolders', 'themesPath', 'useExifMapping', 'useIptcMapping',
 ];
@@ -176,7 +176,7 @@ test('hooks exist only on the documented properties, and each one writes its own
         // their own private backing field (…Storage), not $this->{name}
         // directly -- see CurrentConfig's own docblocks for why (a fully
         // hooked property can't hold its own storage under its own name).
-        $expectedTarget = in_array($name, ['chmodValue', 'recentPostDates', 'defaultFiltersViews', 'filterPages'], true) ? "{$name}Storage" : $name;
+        $expectedTarget = in_array($name, ['chmodValue', 'recentPostDates', 'defaultFiltersViews', 'filterPages', 'orderBy', 'orderByInsideCategory'], true) ? "{$name}Storage" : $name;
         expect(str_contains($body, "\$this->{$expectedTarget}"))
             ->toBeTrue("CurrentConfig::\${$name}'s set hook doesn't write to its own state.");
     }

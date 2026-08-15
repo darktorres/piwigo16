@@ -20,6 +20,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Image\OrderBy;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
@@ -209,7 +210,9 @@ final readonly class ExtensionContext
     {
         $value = $this->configService->confGetParam($key, $default);
 
-        return $value instanceof NotificationConfig ? $default : $value;
+        // VO-typed config values have no plain-scalar form to hand a plugin,
+        // so they read back as the caller's own default.
+        return $value instanceof NotificationConfig || $value instanceof OrderBy ? $default : $value;
     }
 
     /**

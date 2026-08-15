@@ -10,6 +10,7 @@ use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\Projection\ConfigParamValue;
 use Piwigo\Core\Kernel;
 use Piwigo\Event\Lifecycle\LoadConf;
+use Piwigo\Image\OrderBy;
 use Piwigo\PluginConfig\EventDispatcher;
 use ReflectionNamedType;
 use ReflectionProperty;
@@ -381,14 +382,14 @@ final readonly class ConfigService
      * (reads the live property), just isn't the preferred surface.
      *
      * @param array<mixed>|string|int|float|bool|null $defaultValue
-     * @return array<mixed>|string|int|float|bool|NotificationConfig|null
+     * @return array<mixed>|string|int|float|bool|NotificationConfig|OrderBy|null
      */
-    public function confGetParam(string $param, array|string|int|float|bool|null $defaultValue = null): array|string|int|float|bool|NotificationConfig|null
+    public function confGetParam(string $param, array|string|int|float|bool|null $defaultValue = null): array|string|int|float|bool|NotificationConfig|OrderBy|null
     {
         $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
         if ($propertyName !== null) {
             $value = new ReflectionProperty(CurrentConfig::class, $propertyName)->getValue($this->currentConfig);
-            /** @var array<mixed>|string|int|float|bool|NotificationConfig|null $value every mapped property's declared type */
+            /** @var array<mixed>|string|int|float|bool|NotificationConfig|OrderBy|null $value every mapped property's declared type */
 
             return $value ?? $defaultValue;
         }
@@ -506,6 +507,10 @@ final readonly class ConfigService
                     'filtersViews' => $value === null ? null : FilterViewsSelection::fromArray(is_array($value) ? $value : []),
                     'updateNotifyLastNotification' => $value === null ? null : UpdateNotification::fromArray(is_array($value) ? $value : []),
                     'cacheSizes' => $value === null ? null : CacheSizesSnapshot::fromArray(is_array($value) ? $value : []),
+                    // The order-by pair is OrderBy-typed but stored (and
+                    // written here) as the raw "ORDER BY ..." text.
+                    'orderBy', 'orderByInsideCategory' => OrderBy::fromConfigFragment(is_string($value) ? $value : ''),
+                    'orderByCustom', 'orderByInsideCategoryCustom' => $value === null ? null : OrderBy::raw(is_string($value) ? $value : ''),
                     default => $value,
                 });
             }
@@ -527,7 +532,7 @@ final readonly class ConfigService
                 continue;
             }
 
-            if (in_array($propertyName, ['chmodValue', 'recentPostDates', 'defaultFiltersViews', 'filterPages'], true)) {
+            if (in_array($propertyName, ['chmodValue', 'recentPostDates', 'defaultFiltersViews', 'filterPages', 'orderBy', 'orderByInsideCategory'], true)) {
                 // All 4 are fully-hooked properties (get + set) -- Reflection
                 // reports no usable default for those (see CurrentConfig's
                 // own reset()), so "deleted" means nulling the private
@@ -611,6 +616,21 @@ final readonly class ConfigService
         // is coerced here, same reasoning as recentPostDates above. A real
         // `null` $raw was already handled by the generic branch above this
         // one, so $decoded is always non-null past this point.
+        // The order-by pair is stored as a JSON *string*, not an object, so
+        // it coerces through fromConfigFragment()/raw() rather than the
+        // fromArray() the VO properties below use.
+        if (in_array($propertyName, ['orderBy', 'orderByInsideCategory'], true)) {
+            $property->setValue($this->currentConfig, OrderBy::fromConfigFragment(is_string($decoded) ? $decoded : ''));
+
+            return;
+        }
+
+        if (in_array($propertyName, ['orderByCustom', 'orderByInsideCategoryCustom'], true)) {
+            $property->setValue($this->currentConfig, OrderBy::raw(is_string($decoded) ? $decoded : ''));
+
+            return;
+        }
+
         if (in_array($propertyName, ['filtersViews', 'updateNotifyLastNotification', 'cacheSizes'], true)) {
             $value = is_array($decoded) ? $decoded : [];
             $property->setValue($this->currentConfig, match ($propertyName) {

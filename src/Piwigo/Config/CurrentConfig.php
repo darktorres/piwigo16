@@ -7,6 +7,7 @@ namespace Piwigo\Config;
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
+use Piwigo\Image\OrderBy;
 use ReflectionClass;
 
 /**
@@ -2172,34 +2173,56 @@ final class CurrentConfig
     public float $nbmMaxTreatmentTimeoutPercent = 0.8;
 
     // === order_by ===
-    // A raw SQL "ORDER BY ..." fragment string, not a structured
-    // {field,dir}[] shape -- every real reader across BatchManager*/
-    // SearchService/CategoryService/CalendarRenderer/TagService/
-    // SectionPopulator/Ws/Categories/GalleryController treats it as one.
-    // Default matches install/config.sql's seed row.
-    public string $orderBy = 'ORDER BY date_available DESC, file ASC, id ASC';
+    /**
+     * The active photo sort order, as an {@see OrderBy} value rather than
+     * the raw "ORDER BY ..." text the DB stores -- consumers ask it for SQL
+     * or DQL instead of parsing it back themselves.
+     *
+     * Hooked with a nullable backing field because PHP has no way to give a
+     * property an object default; the default materializes on first read,
+     * same shape as recentPostDates below. That also makes it one of the
+     * "fully hooked" properties ConfigService's own reset path lists, since
+     * Reflection can report no usable default for it.
+     */
+    private ?OrderBy $orderByStorage = null;
+
+    public OrderBy $orderBy {
+        get => $this->orderByStorage ??= OrderBy::default();
+        set(OrderBy $value) {
+            $this->orderByStorage = $value;
+        }
+    }
 
     // === order_by_custom ===
     /**
-     * Admin-defined custom sort order that overrides order_by when set --
-     * a raw "ORDER BY ..." SQL fragment string, same real shape as order_by
-     * itself (see its own docblock).
+     * Sysadmin-defined sort order that overrides order_by when set. Not
+     * admin-UI-reachable -- it comes from $conf['order_by_custom'] in a
+     * local config file and can hold arbitrary SQL, which is why it arrives
+     * as {@see OrderBy::raw()}. Nullable, so a plain null default works and
+     * no hook is needed.
      */
-    public ?string $orderByCustom = null;
+    public ?OrderBy $orderByCustom = null;
 
     // === order_by_inside_category ===
     /**
-     * Active sort order applied within album listings -- a raw
-     * "ORDER BY ..." SQL fragment string (see order_by's own docblock).
+     * Sort order applied within album listings (see order_by above). Unlike
+     * order_by this one may legitimately sort on `rank`, which lives on the
+     * image_category join row rather than on images.
      */
-    public string $orderByInsideCategory = 'ORDER BY date_available DESC, file ASC, id ASC';
+    private ?OrderBy $orderByInsideCategoryStorage = null;
+
+    public OrderBy $orderByInsideCategory {
+        get => $this->orderByInsideCategoryStorage ??= OrderBy::default();
+        set(OrderBy $value) {
+            $this->orderByInsideCategoryStorage = $value;
+        }
+    }
 
     // === order_by_inside_category_custom ===
     /**
-     * Admin-defined custom sort order that overrides order_by_inside_category
-     * when set (see order_by's own docblock).
+     * Sysadmin override for order_by_inside_category (see order_by_custom).
      */
-    public ?string $orderByInsideCategoryCustom = null;
+    public ?OrderBy $orderByInsideCategoryCustom = null;
 
     // === picture_ext ===
     /**
@@ -2604,20 +2627,20 @@ final class CurrentConfig
                 continue;
             }
             $name = $property->getName();
-            if (in_array($name, ['chmodValueStorage', 'recentPostDatesStorage', 'defaultFiltersViewsStorage', 'filterPagesStorage'], true)) {
+            if (in_array($name, ['chmodValueStorage', 'recentPostDatesStorage', 'defaultFiltersViewsStorage', 'filterPagesStorage', 'orderByStorage', 'orderByInsideCategoryStorage'], true)) {
                 $property->setValue($this, null);
                 continue;
             }
-            // chmodValue/recentPostDates/defaultFiltersViews/filterPages
-            // themselves: already reset via their own backing field above
-            // -- their `set` hook only accepts a real
-            // int/NotificationConfig/array, not the null getDefaultValue()
-            // would otherwise try to pass it (a fully get+set hooked
-            // property reports no usable default). themesPath/combinedDir/
-            // derivativeDir have no backing state of their own at all --
-            // get-only, computed from themesDir/dataLocation, which reset
-            // normally on their own turn.
-            if (in_array($name, ['chmodValue', 'recentPostDates', 'defaultFiltersViews', 'filterPages', 'themesPath', 'combinedDir', 'derivativeDir'], true)) {
+            // chmodValue/recentPostDates/defaultFiltersViews/filterPages/
+            // orderBy/orderByInsideCategory themselves: already reset via
+            // their own backing field above -- their `set` hook only accepts
+            // a real int/NotificationConfig/array/OrderBy, not the null
+            // getDefaultValue() would otherwise try to pass it (a fully
+            // get+set hooked property reports no usable default).
+            // themesPath/combinedDir/derivativeDir have no backing state of
+            // their own at all -- get-only, computed from themesDir/
+            // dataLocation, which reset normally on their own turn.
+            if (in_array($name, ['chmodValue', 'recentPostDates', 'defaultFiltersViews', 'filterPages', 'orderBy', 'orderByInsideCategory', 'themesPath', 'combinedDir', 'derivativeDir'], true)) {
                 continue;
             }
             $property->setValue($this, $property->getDefaultValue());

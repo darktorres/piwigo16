@@ -51,9 +51,9 @@ use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
-use Piwigo\Image\OrderByClause;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Sort\OrderByClause;
 
 /**
  * Persistence layer for the category domain: tree/menu queries, permalink
@@ -411,7 +411,7 @@ final readonly class CategoryRepository
      *
      * Runs real DQL whenever {@see resolveDqlOrderBy()} can parse the
      * stored order-by fragment against the bounded `$sort_fields`
-     * vocabulary ({@see \Piwigo\Image\PhotoSortField::parseOrderByFragment()}),
+     * vocabulary ({@see \Piwigo\Sort\PhotoSortField::parseOrderByFragment()}),
      * falling back to the raw DBAL query below whenever `orderByCustom()`
      * is active or the text doesn't parse -- `image_category` is mapped
      * ({@see \Piwigo\Image\ImageCategoryEntity}), but the raw
@@ -493,7 +493,7 @@ final readonly class CategoryRepository
     /**
      * Resolves `CurrentConfig::orderBy()`'s stored fragment into a list of
      * DQL property paths, or null to fall back to raw DBAL -- either the
-     * text doesn't parse ({@see \Piwigo\Image\PhotoSortField::
+     * text doesn't parse ({@see \Piwigo\Sort\PhotoSortField::
      * resolveDqlOrderBy()}), or `orderByCustom()`'s sysadmin-local-config
      * override is active (checked here, not in that shared helper, since
      * which custom flag applies -- or whether $orderBySql is even a plain

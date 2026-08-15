@@ -140,7 +140,7 @@ final class GroupRepository extends EntityRepository
      * real regex (`/^(rand(om)?|[a-z_]+(\s+(asc|desc))?)(\s*,\s*...)*$/i`)
      * matches any `[a-z_]+` token, not a small fixed vocabulary --
      * genuinely open-ended, same "caller composes trusted ORDER BY text"
-     * architecture as {@see \Piwigo\Image\PhotoSortField}'s own documented
+     * architecture as {@see \Piwigo\Sort\PhotoSortField}'s own documented
      * exception, so no enum can replace it here.
      *
      * @param list<GroupId> $groupIds when non-empty, restricts to these ids

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Piwigo\Image;
+namespace Piwigo\Sort;
 
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\SqlDialect;
@@ -195,7 +195,7 @@ enum PhotoSortField
             }
 
             $field = self::fromSortFieldToken(strtolower($matches[1]));
-            if (! $field instanceof \Piwigo\Image\PhotoSortField) {
+            if (! $field instanceof \Piwigo\Sort\PhotoSortField) {
                 return null;
             }
 

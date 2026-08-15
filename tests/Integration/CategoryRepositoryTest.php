@@ -21,8 +21,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Image\OrderBy;
     use Piwigo\Permission\PermissionCriteria;
+    use Piwigo\Sort\OrderBy;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
     /**

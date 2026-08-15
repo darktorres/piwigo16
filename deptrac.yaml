@@ -45,10 +45,21 @@ deptrac:
     # class would have no layer at all and every dependency touching it
     # would go unchecked. Any future class added to this namespace needs
     # the same deliberate placement, not a silent gap.
+    # Piwigo\Sort\{OrderBy,OrderByClause,PhotoSortField} is the photo
+    # sort-order vocabulary and its SQL/DQL rendering. It lives here, not in
+    # L2aCoreDomain, because it meets this layer's own criterion exactly:
+    # its only dependencies are Piwigo\Db\{SqlDialect,DbCredentials}, and
+    # what it actually produces is SQL column names, dialect-specific
+    # functions (RAND()/RANDOM()) and DQL property paths -- persistence
+    # rendering, not domain logic. It previously sat in Piwigo\Image\ purely
+    # by namespace, which made L1 Config\{CurrentConfig,ConfigService}
+    # depend upward on L2a once the order-by config properties became typed
+    # (16 violations). Moving it here fixes that at the layer level rather
+    # than exempting the edge.
     - name: L1Infrastructure
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Lang|Storage|Audit|Validation)\\.*
+          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Lang|Sort|Storage|Audit|Validation)\\.*
         - type: classLike
           value: ^Piwigo\\PluginConfig\\(EventDispatcher|EventHandler)$
     # L2a Core Domain — Piwigo\Group\GroupRepository/GroupService sits at

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Image\OrderBy;
+use Piwigo\Sort\OrderBy;
 
 /**
- * Piwigo\Image\OrderBy -- the structured photo sort order behind
+ * Piwigo\Sort\OrderBy -- the structured photo sort order behind
  * CurrentConfig's own order_by/order_by_inside_category pair.
  *
  * The platform-dependent spellings (`RAND()` vs `random()`, backticked vs

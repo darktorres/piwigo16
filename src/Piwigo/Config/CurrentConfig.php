@@ -7,7 +7,7 @@ namespace Piwigo\Config;
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
-use Piwigo\Image\OrderBy;
+use Piwigo\Sort\OrderBy;
 use ReflectionClass;
 
 /**

@@ -26,7 +26,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Event\Search\QsearchGetScopes;
     use Piwigo\Group\GroupEntity;
-    use Piwigo\Image\OrderBy;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Permission\SqlCondition;
@@ -42,6 +41,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Search\SearchService;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
+    use Piwigo\Sort\OrderBy;
     use Piwigo\Tag\TagService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;

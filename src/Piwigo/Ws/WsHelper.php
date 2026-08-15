@@ -19,8 +19,8 @@ use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageFilterCriteria;
-use Piwigo\Image\PhotoSortField;
 use Piwigo\Image\SrcImage;
+use Piwigo\Sort\PhotoSortField;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 
@@ -132,7 +132,7 @@ final readonly class WsHelper
      * returns a "standard" (for our web service) ORDER BY sql clause for images
      *
      * Each token in $params['order'] is resolved via
-     * {@see \Piwigo\Image\PhotoSortField::fromToken()}; see that enum's own
+     * {@see \Piwigo\Sort\PhotoSortField::fromToken()}; see that enum's own
      * docblock for why this is scoped to just this one method.
      *
      * @param array{order: string|null, ...} $params order has no WS_TYPE flag

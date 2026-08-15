@@ -13,8 +13,8 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
-use Piwigo\Image\PhotoSortField;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Sort\PhotoSortField;
 
 /**
  * Persistence layer for `CalendarRenderer::render()`'s own final "list of
@@ -59,11 +59,11 @@ final readonly class CalendarRepository
      *
      * The raw-DBAL blocker above is conditional: `orderByCustom()` is
      * never actually admin-UI-reachable (see
-     * {@see \Piwigo\Image\PhotoSortField}'s own docblock). $orderBySql
+     * {@see \Piwigo\Sort\PhotoSortField}'s own docblock). $orderBySql
      * traces to `CurrentConfig::orderBy()`, but {@see \Piwigo\Calendar\
      * CalendarRenderer::render()}'s own call site dynamically prepends
      * `$calendar->date_field` (always `date_available`/`date_creation`)
-     * ahead of it -- {@see \Piwigo\Image\PhotoSortField::
+     * ahead of it -- {@see \Piwigo\Sort\PhotoSortField::
      * resolveDqlOrderBy()} doesn't care about that, it just parses
      * whatever string it's handed. $dqlScope/$dqlDateWhere are the
      * DQL-shaped counterparts of $fromWhere/$dateWhere (already computed

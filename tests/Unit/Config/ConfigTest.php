@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Config\NotificationConfig;
 use Piwigo\Config\UpdateNotification;
-use Piwigo\Image\OrderBy;
+use Piwigo\Sort\OrderBy;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 beforeEach(function (): void {

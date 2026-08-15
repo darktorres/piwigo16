@@ -22,7 +22,6 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageTextField;
 use Piwigo\Image\ImageUniquenessColumn;
 use Piwigo\Image\MissingDerivativesCriteria;
-use Piwigo\Image\PhotoSortField;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageCategoryLink;
 use Piwigo\Image\Projection\ImageFormat;
@@ -31,6 +30,7 @@ use Piwigo\Image\Projection\MissingDerivativeRow;
 use Piwigo\Image\Projection\MostRecentCategoryInfo;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Sort\PhotoSortField;
 
 final class ImageRepositoryTest extends IntegrationTestCase
 {

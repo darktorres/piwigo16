@@ -14,8 +14,8 @@ use Piwigo\Category\Projection\ComputedCategoryRollupRow;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Image\OrderBy;
 use Piwigo\Permission\PermissionCriteria;
+use Piwigo\Sort\OrderBy;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**

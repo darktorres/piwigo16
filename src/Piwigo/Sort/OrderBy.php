@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Piwigo\Image;
+namespace Piwigo\Sort;
 
 use Piwigo\Db\SqlDialect;
 

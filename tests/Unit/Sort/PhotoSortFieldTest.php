@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Image\OrderByClause;
-use Piwigo\Image\PhotoSortField;
+use Piwigo\Sort\OrderByClause;
+use Piwigo\Sort\PhotoSortField;
 
 /**
- * Piwigo\Image\PhotoSortField -- the typed replacement for
+ * Piwigo\Sort\PhotoSortField -- the typed replacement for
  * Ws\WsHelper::stdImageSqlOrder()'s own per-token field allowlist. Every
  * one of the 8 real WS `order` tokens, its 2 aliases, and one invalid
  * token.

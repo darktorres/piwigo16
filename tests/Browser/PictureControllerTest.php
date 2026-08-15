@@ -2130,7 +2130,8 @@ it('wraps around to the first photo via meta-refresh when a repeating slideshow 
     // http-equiv= and content= sit on separate template-source lines
     // after P32's reformat, so only the content= attribute (still intact
     // on its own line) is regex-matched here.
-    expect($body)->toContain('http-equiv="refresh"');
+    expect($body)
+        ->toContain('http-equiv="refresh"');
     expect($body)
         ->toMatch('/content="\d+;url=[^"]*\/' . $idA . '\/[^"]*"/');
 });
@@ -2204,7 +2205,8 @@ it('falls back to the medium derivative size, without warnings, when the picture
     // rel="prefetch" marker rather than hardcoding the literal
     // multi-line gap, which a future reformat could reshape again.
     $prefetchPos = strpos($result['body'], 'rel="prefetch"');
-    expect($prefetchPos)->not->toBeFalse();
+    expect($prefetchPos)
+        ->not->toBeFalse();
     assert($prefetchPos !== false);
     expect(substr($result['body'], $prefetchPos, 300))->toMatch('/href="[^"]+"/');
 });

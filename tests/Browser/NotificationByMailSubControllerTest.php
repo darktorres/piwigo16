@@ -544,8 +544,10 @@ it('renders only the previously-selected user as checked when redisplaying the s
         // reshape again) rather than guessed.
         $valuePos = strpos($result['body'], 'value="ct00sendlistun"');
         $idPos = strpos($result['body'], 'id="send_selection-ct00sendlistun"');
-        expect($valuePos)->not->toBeFalse();
-        expect($idPos)->not->toBeFalse();
+        expect($valuePos)
+            ->not->toBeFalse();
+        expect($idPos)
+            ->not->toBeFalse();
         assert($valuePos !== false && $idPos !== false);
         expect(substr($result['body'], $valuePos, $idPos - $valuePos))->not->toContain('checked');
     } finally {

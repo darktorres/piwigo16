@@ -62,7 +62,7 @@ final readonly class FavoritesGetListHandler implements WsAction
         $orderParams = $params;
 
         $order_by = $this->wsHelper->stdImageSqlOrder($orderParams, 'i.');
-        $order_by = $order_by === '' ? $this->currentConfig->orderBy : 'ORDER BY ' . $order_by;
+        $order_by = $order_by === '' ? $this->currentConfig->orderBy->toSql() : 'ORDER BY ' . $order_by;
 
         $permission_condition = $this->permissionService->getPermissionCriteria();
 

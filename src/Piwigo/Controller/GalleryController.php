@@ -459,7 +459,7 @@ final readonly class GalleryController implements ControllerInterface
             $order_idx = $this->sessionService->getImageOrder() ?? 0;
 
             // get first order field and direction
-            $order_by = $this->currentConfig->orderBy;
+            $order_by = $this->currentConfig->orderBy->toSql();
             $first_order = substr($order_by, 9);
             if (($pos = strpos($first_order, ',')) !== false) {
                 $first_order = substr($first_order, 0, $pos);

@@ -381,7 +381,7 @@ final readonly class GetListHandler implements WsAction
             // management of the album thumbnail -- stops here
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = str_replace('ORDER BY ', '', $this->currentConfig->orderBy);
+                $row['image_order'] = $this->currentConfig->orderBy->toSqlBody();
             }
 
             $cats[] = $row;

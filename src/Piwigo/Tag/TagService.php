@@ -314,7 +314,7 @@ final readonly class TagService
             return [];
         }
 
-        $orderBySql = in_array($orderBy, [null, ''], true) ? $this->currentConfig->orderBy : $orderBy;
+        $orderBySql = in_array($orderBy, [null, ''], true) ? $this->currentConfig->orderBy->toSql() : $orderBy;
 
         return $this->repo->findImageIdsForTags(
             array_map(static fn (TagId $id): int => $id->value, $tagIds),

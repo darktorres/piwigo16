@@ -26,6 +26,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Event\Search\QsearchGetScopes;
     use Piwigo\Group\GroupEntity;
+    use Piwigo\Image\OrderBy;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Permission\SqlCondition;
@@ -347,7 +348,7 @@ namespace Piwigo\Tests\Integration {
                     'default' => false,
                 ],
             ]);
-            $currentConfig->orderBy = 'ORDER BY id ASC';
+            $currentConfig->orderBy = OrderBy::fromConfigFragment('ORDER BY id ASC');
             $currentConfig->calendarDatefield = 'date_creation';
             $currentConfig->quickSearchIncludeSubAlbums = false;
             $currentConfig->rateEnabled = true;

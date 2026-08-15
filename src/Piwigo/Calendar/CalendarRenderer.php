@@ -270,7 +270,7 @@ final readonly class CalendarRenderer
         } // end category calling
 
         if ($must_show_list) {
-            $conf_order_by = $this->currentConfig->orderBy;
+            $conf_order_by = $this->currentConfig->orderBy->toSql();
 
             if ($superOrderBy) {
                 $order_by = $conf_order_by;

@@ -138,7 +138,7 @@ final readonly class GetImagesHandler implements WsAction
             ) {
                 $order_by = $cats[$cat_ids[0]]->imageOrder;
             }
-            $order_by = $order_by === '' ? $this->currentConfig->orderBy : 'ORDER BY ' . $order_by;
+            $order_by = $order_by === '' ? $this->currentConfig->orderBy->toSql() : 'ORDER BY ' . $order_by;
             $favorite_ids = $urlService->getUserFavorites();
 
             $paginated_images = $this->imageService->getWithConditionsPaginated(

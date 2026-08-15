@@ -93,7 +93,7 @@ final readonly class GetAdminListHandler implements WsAction
             $row['comment'] = $adminDescriptionEvent->categoryDescription;
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = str_replace('ORDER BY ', '', $this->currentConfig->orderBy);
+                $row['image_order'] = $this->currentConfig->orderBy->toSqlBody();
             }
 
             if (in_array('full_name_with_admin_links', $additional_output, true)) {

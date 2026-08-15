@@ -121,7 +121,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             ->id;
 
         $available_permission_levels = $this->currentConfig->availablePermissionLevels;
-        $conf_order_by = $this->currentConfig->orderBy;
+        $conf_order_by = $this->currentConfig->orderBy->toSql();
 
         // used both for the action-specific redirects below and for the
         // "category no longer exists" redirect further down

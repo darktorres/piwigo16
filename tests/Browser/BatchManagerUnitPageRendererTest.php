@@ -472,7 +472,8 @@ it('scopes the see-out link to the filtered album for a photo in several albums'
     }
 
     [$albumA, $albumB] = $albumIds;
-    expect($albumA)->toBeLessThan($albumB);
+    expect($albumA)
+        ->toBeLessThan($albumB);
 
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumA, 'Batch Unit Filtered Photo');

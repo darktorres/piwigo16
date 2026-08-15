@@ -17,6 +17,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\OrderBy;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
 use Piwigo\Ws\NamedArray;
@@ -65,16 +66,16 @@ final readonly class SearchHandler implements WsAction
             return $filterCriteria;
         }
         $filterCondition = $filterCriteria->toSqlCondition('i.');
-        $order_by = $this->wsHelper->stdImageSqlOrder($filterParams, 'i.');
+        $order = $filterParams['order'];
+        $orderBy = OrderBy::fromWsOrderParam($order ?? '');
 
         $super_order_by = false;
-        if ($order_by !== '') {
-            // Communicates the effective order_by to SearchService::
+        if (! $orderBy->isEmpty()) {
+            // Communicates the effective order to SearchService::
             // getQuickSearchResults()/getRegularSearchResults() etc, which
-            // read it back from $this->currentConfig-> for the rest of this request --
-            // an in-memory-only override ($this->currentConfig->orderBy = ), not a
-            // DB write.
-            $this->currentConfig->orderBy = 'ORDER BY ' . $order_by;
+            // read it back from $this->currentConfig-> for the rest of this
+            // request -- an in-memory-only override, not a DB write.
+            $this->currentConfig->orderBy = $orderBy;
             $super_order_by = true; // quick_search_result might be faster
         }
 

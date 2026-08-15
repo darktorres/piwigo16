@@ -524,10 +524,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $order_by = [''];
                     $order_by_is_custom = true;
                 } else {
-                    $out = [];
-                    $order_by = trim($this->currentConfig->orderByInsideCategory);
-                    $order_by = str_replace('ORDER BY ', '', $order_by);
-                    $order_by = explode(', ', $order_by);
+                    // The form pre-selects from the same "<field> <dir>"
+                    // vocabulary $sort_fields is keyed by, which the order is
+                    // already structured as -- no need to take the rendered
+                    // SQL apart again.
+                    $order_by = $this->currentConfig->orderByInsideCategory->toSortFieldTokens();
                 }
 
                 $conf_gallery_title = $this->currentConfig->galleryTitle;

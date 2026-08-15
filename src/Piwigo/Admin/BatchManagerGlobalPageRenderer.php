@@ -531,13 +531,13 @@ final readonly class BatchManagerGlobalPageRenderer
             } else {
                 // order_by is a raw "ORDER BY ..." SQL fragment string --
                 // see CurrentConfig::orderBy()'s own docblock.
-                $order_by = $this->currentConfig->orderBy;
+                $order_by = $this->currentConfig->orderBy->toSql();
             }
 
             if ($is_category) {
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
-                $order_by = $this->currentConfig->orderByInsideCategory;
+                $order_by = $this->currentConfig->orderByInsideCategory->toSql();
                 $category_image_order = $category_info instanceof CategoryInfo ? $category_info->imageOrder : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;

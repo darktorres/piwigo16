@@ -14,6 +14,7 @@ use Piwigo\Category\Projection\ComputedCategoryRollupRow;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Image\OrderBy;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
@@ -271,7 +272,7 @@ test('findImageIdsForCategories() orders by CurrentConfig orderBy', function ():
     // The real DQL path -- a single bounded-vocabulary field, not
     // sorted before comparing, to prove the parsed order is what
     // actually reaches the query rather than incidental id order.
-    CurrentConfigTestFactory::get()->orderBy = 'ORDER BY id DESC';
+    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY id DESC');
 
     $ids = categoryTestRepo()
         ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());
@@ -297,7 +298,7 @@ test('findImageIdsForCategories() orders by rank', function (): void {
         // this raw config string never round-trips through column()'s own
         // (now driver-aware) quoted output, so a bare, unquoted field name
         // parses identically on both platforms.
-        CurrentConfigTestFactory::get()->orderBy = 'ORDER BY rank ASC';
+        CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY rank ASC');
 
         $ids = categoryTestRepo()
             ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());
@@ -315,8 +316,8 @@ test('findImageIdsForCategories() falls back to raw DBAL when orderByCustom is s
     // A sysadmin-local-config override -- RequestBootstrap.php's own
     // real bootstrap-time behavior copies its value into orderBy() too;
     // mirrored here since this test bypasses that bootstrap step.
-    CurrentConfigTestFactory::get()->orderByCustom = 'ORDER BY RAND()';
-    CurrentConfigTestFactory::get()->orderBy = 'ORDER BY RAND()';
+    CurrentConfigTestFactory::get()->orderByCustom = OrderBy::raw('ORDER BY RAND()');
+    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY RAND()');
 
     $ids = categoryTestRepo()
         ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());
@@ -330,7 +331,7 @@ test('findImageIdsForCategories() falls back to raw DBAL for an unparseable orde
     // Not one of $sort_fields's own bounded tokens -- the parser must
     // reject it and this must still return the right members via the
     // original raw-DBAL path, not throw.
-    CurrentConfigTestFactory::get()->orderBy = 'ORDER BY comment ASC';
+    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY comment ASC');
 
     $ids = categoryTestRepo()
         ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());

@@ -3241,6 +3241,9 @@ final class ImageRepository extends EntityRepository
 
         $groups = [];
         foreach ($qb->getQuery()->getArrayResult() as $row) {
+            // `id` arrives as an ImageId: array hydration does apply a
+            // field's custom Doctrine Type (probed live -- both `id` and
+            // `md5sum` come back as their value objects, not scalars).
             if (! is_array($row) || ! ($row['id'] ?? null) instanceof ImageId) {
                 continue;
             }
@@ -3279,7 +3282,11 @@ final class ImageRepository extends EntityRepository
      * newly VO-typed column must be handled here deliberately rather than
      * silently collapsing the grouping.
      *
-     * @param  array<string, mixed>  $row
+     * $row is keyed by DQL alias, but only ever read through $properties, so
+     * the key type is left open rather than narrowed to string -- the caller
+     * has an `is_array()` check, which proves nothing more specific.
+     *
+     * @param  array<array-key, mixed>  $row
      * @param  list<string>  $properties
      */
     private static function duplicateGroupKey(array $row, array $properties): string

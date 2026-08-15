@@ -118,7 +118,10 @@ final class DbConnection
      * wire protocol as MySQL, so it shares the mysqli branch; there is no
      * separate 'mariadb' driver value.
      *
-     * @return array{driver: 'mysqli', user: string, password: string, dbname: string, charset: string, driverOptions: array<int, bool>, host?: string, unix_socket?: string, port?: int}|array{driver: 'pgsql', user: string, password: string, dbname: string, host: string, port?: int}
+     * `driverOptions` carries a bool (MYSQLI_OPT_INT_AND_FLOAT_NATIVE) and a
+     * string (MYSQLI_INIT_COMMAND), hence the `bool|string` value type.
+     *
+     * @return array{driver: 'mysqli', user: string, password: string, dbname: string, charset: string, driverOptions: array<int, bool|string>, host?: string, unix_socket?: string, port?: int}|array{driver: 'pgsql', user: string, password: string, dbname: string, host: string, port?: int}
      */
     public static function params(): array
     {

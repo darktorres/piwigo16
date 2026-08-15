@@ -115,18 +115,24 @@ final class Version20260815180000 extends AbstractMigration
      */
     private function upPostgres(): void
     {
-        $rows = $this->connection->fetchAllAssociative(
+        // fetchAllNumeric(), not fetchAllAssociative(): `information_schema`
+        // spells its own column names differently per engine -- lowercase on
+        // PostgreSQL, uppercase on MySQL -- and static analysis resolves this
+        // query against whichever engine it is configured with, so keying by
+        // name here reports a missing offset for the branch that is correct.
+        // Positional access is true on both.
+        $rows = $this->connection->fetchAllNumeric(
             "SELECT table_name, column_name
              FROM information_schema.columns
              WHERE table_schema = 'public' AND data_type = 'bigint'
              ORDER BY table_name, column_name"
         );
 
-        foreach ($rows as $row) {
+        foreach ($rows as [$table, $column]) {
             $this->addSql(sprintf(
                 'ALTER TABLE %s ALTER COLUMN %s TYPE integer',
-                (string) $row['table_name'],
-                (string) $row['column_name'],
+                $table,
+                (string) $column,
             ));
         }
     }
@@ -151,7 +157,7 @@ final class Version20260815180000 extends AbstractMigration
         foreach ($constraints as $fk) {
             $this->addSql(sprintf(
                 'ALTER TABLE `%s` DROP FOREIGN KEY `%s`',
-                (string) $fk['TABLE_NAME'],
+                $fk['TABLE_NAME'],
                 (string) $fk['CONSTRAINT_NAME'],
             ));
         }
@@ -163,13 +169,13 @@ final class Version20260815180000 extends AbstractMigration
         foreach ($constraints as $fk) {
             $this->addSql(sprintf(
                 'ALTER TABLE `%s` ADD CONSTRAINT `%s` FOREIGN KEY (`%s`) REFERENCES `%s` (`%s`) ON DELETE %s ON UPDATE %s',
-                (string) $fk['TABLE_NAME'],
+                $fk['TABLE_NAME'],
                 (string) $fk['CONSTRAINT_NAME'],
                 (string) $fk['COLUMN_NAME'],
                 (string) $fk['REFERENCED_TABLE_NAME'],
                 (string) $fk['REFERENCED_COLUMN_NAME'],
-                (string) $fk['DELETE_RULE'],
-                (string) $fk['UPDATE_RULE'],
+                $fk['DELETE_RULE'],
+                $fk['UPDATE_RULE'],
             ));
         }
     }
@@ -194,7 +200,11 @@ final class Version20260815180000 extends AbstractMigration
      */
     private static function formatDefault(mixed $default): ?string
     {
-        if ($default === null) {
+        // COLUMN_DEFAULT is a string or null on both engines; anything else
+        // means the introspection returned a shape this does not model, and
+        // emitting a stringified array/object into DDL would be worse than
+        // emitting no DEFAULT clause at all.
+        if (! is_scalar($default)) {
             return null;
         }
 
@@ -233,7 +243,7 @@ final class Version20260815180000 extends AbstractMigration
 
         $statements = [];
         foreach ($rows as $row) {
-            $columnType = (string) $row['COLUMN_TYPE'];
+            $columnType = $row['COLUMN_TYPE'];
             $base = strtok($columnType, '( ');
             if (! is_string($base) || ! isset(self::TYPE_MAP[$base])) {
                 // float(5,2) unsigned -- keeps its precision, just loses the
@@ -256,15 +266,15 @@ final class Version20260815180000 extends AbstractMigration
                 $definition .= ' AUTO_INCREMENT';
             }
 
-            $comment = (string) $row['COLUMN_COMMENT'];
+            $comment = $row['COLUMN_COMMENT'];
             if ($comment !== '') {
                 $definition .= " COMMENT '" . str_replace("'", "''", $comment) . "'";
             }
 
             $statements[] = sprintf(
                 'ALTER TABLE `%s` MODIFY `%s` %s',
-                (string) $row['TABLE_NAME'],
-                (string) $row['COLUMN_NAME'],
+                $row['TABLE_NAME'],
+                $row['COLUMN_NAME'],
                 $definition,
             );
         }

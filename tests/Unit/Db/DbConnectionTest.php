@@ -182,6 +182,11 @@ test('params() pins the session sql_mode for the mysqli driver', function (): vo
 
     $params = DbConnection::params();
 
+    // params() returns a union; only the mysqli arm carries driverOptions.
+    expect($params['driver'])
+        ->toBe('mysqli');
+    assert($params['driver'] === 'mysqli');
+
     expect($params['driverOptions'])
         ->toHaveKey(MYSQLI_INIT_COMMAND)
         ->and($params['driverOptions'][MYSQLI_INIT_COMMAND])

@@ -205,6 +205,40 @@ parameters:
             # from that one connection's view alone.
             identifier: cast.useless
             path: tests/Contract/ImageFilterCriteriaBuilderTest.php
+        -
+            # images.rating_score is declared FLOAT on MySQL (DBAL returns
+            # a native float) but numeric(5,4) on Postgres (DBAL returns a
+            # string, to preserve exact decimal precision) -- the (float)
+            # cast is required for Postgres portability even though
+            # phpstan-dba's currently-configured mysqli connection already
+            # reports the column as float, making the cast look redundant
+            # from that one connection's view alone.
+            identifier: cast.useless
+            path: tests/Contract/WsHelperTest.php
+        -
+            # ImageRepository::findIdsGroupedByDuplicateFields() is inferred
+            # as returning `array{}` -- but only when called with an inline
+            # literal naming Md5sum. Narrowed by experiment: the identical
+            # call returns `list<int>` for [File] and for [Width, Height],
+            # and also for [Md5sum] the moment the argument is assigned to a
+            # variable first. What differs is the one conditional
+            # `->where('i.md5sum IS NOT NULL')` that argument switches on, so
+            # this is constant-argument folding interacting with a
+            # conditionally-built query, not a property of the method body.
+            #
+            # The body itself analyses correctly: dumpType() reports $groups
+            # as array<string, non-empty-list<int>> and the returned $ids as
+            # list<int>. Runtime disagrees with the folded result outright --
+            # the three findIdsGroupedByDuplicateFields tests pass with 408
+            # assertions, and a direct probe confirms array hydration applies
+            # the custom Doctrine types (id => ImageId, md5sum => Md5Sum,
+            # both Stringable), which is exactly what the method expects.
+            #
+            # Scoped to this one assertion's file: no code change can satisfy
+            # an inference that contradicts the verified runtime value, and
+            # weakening the assertion would drop the real coverage.
+            identifier: staticMethod.impossibleType
+            path: tests/Integration/ImageRepositoryTest.php
 
         # ------------------------------------------------------------------
         # Generated Latte analysis files (_analysis/phpstan-latte/, written

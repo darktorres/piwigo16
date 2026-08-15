@@ -27,7 +27,7 @@ final class RestRequestHandler extends RequestHandler
 
         if ($wsRequest->method === null) {
             $service->sendResponse(
-                new WsErrorResponse(WsError::INVALID_METHOD, 'Missing "method" name')
+                new WsErrorResponse(WsError::InvalidMethod->value, 'Missing "method" name')
             );
             return;
         }

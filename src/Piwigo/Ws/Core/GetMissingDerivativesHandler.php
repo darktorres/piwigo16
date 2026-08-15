@@ -50,7 +50,7 @@ final readonly class GetMissingDerivativesHandler implements WsAction
         } else {
             $types = array_intersect(array_keys($this->imageStdParams->getDefinedTypeMap()), $input->types);
             if (count($types) === 0) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid types');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid types');
             }
         }
 

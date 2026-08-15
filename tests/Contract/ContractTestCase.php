@@ -333,7 +333,7 @@ abstract class ContractTestCase extends IntegrationTestCase
      * Same as callWs(), but without the HTTP-status sanity check --
      * WsErrorResponse's constructor mirrors any WS err code >= 400 onto the real
      * HTTP response status (HtmlService::setStatusHeader()), so a
-     * deliberately-triggered WS error >= 500 (e.g. WsError::INVALID_METHOD
+     * deliberately-triggered WS error >= 500 (e.g. WsError::InvalidMethod
      * = 501, or the many business-rule `new WsErrorResponse(500, ...)` returns
      * across the Ws\Pwg* classes) is a real, correct HTTP 500/501 response,
      * not the server-crashed condition callWs()'s guard exists to catch.

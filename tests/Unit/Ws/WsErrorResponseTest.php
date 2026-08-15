@@ -146,7 +146,7 @@ test('code just past the HTTP range (600) does not call setStatusHeader', functi
 });
 
 test('code comfortably outside the HTTP range (1003) does not call setStatusHeader', function (): void {
-    // WsError::INVALID_PARAM-style application error codes (>= 1000) are
+    // WsError::InvalidParam-style application error codes (>= 1000) are
     // the class's other real-world usage (see SerialPhpEncoderTest.php's
     // own docblock) -- confirms the guard also holds well clear of the
     // upper boundary, not just immediately past it.

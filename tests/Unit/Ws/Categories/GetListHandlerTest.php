@@ -101,7 +101,7 @@ test('rejects an unknown thumbnail_size', function (): void {
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($result instanceof WsErrorResponse) {
         expect($result->code())
-            ->toBe(WsError::INVALID_PARAM)
+            ->toBe(WsError::InvalidParam->value)
             ->and($result->message())
             ->toBe('Invalid thumbnail_size');
     }
@@ -126,7 +126,7 @@ test('rejects recursive combined with a non-null limit', function (): void {
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($result instanceof WsErrorResponse) {
         expect($result->code())
-            ->toBe(WsError::INVALID_PARAM)
+            ->toBe(WsError::InvalidParam->value)
             ->and($result->message())
             ->toBe('Cannot use both recursive and limit parameters at the same time');
     }

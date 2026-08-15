@@ -56,7 +56,7 @@ final readonly class GetListHandler implements WsAction
             + (array_key_exists('group_id', $params) ? 1 : 0)
             + (array_key_exists('user_id', $params) ? 1 : 0);
         if ($providedCount > 1) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Too many parameters, provide cat_id OR user_id OR group_id');
         }
 
         $input = GetListParams::fromArray($params);

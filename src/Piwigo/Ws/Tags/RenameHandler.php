@@ -59,13 +59,13 @@ final readonly class RenameHandler implements WsAction
 
         // does the tag exist ?
         if (! $this->tagService->existsById($tag_id)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'This tag does not exist.');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'This tag does not exist.');
         }
 
         $existing_names = $this->tagService->getOtherNames($tag_id);
 
         if (in_array($tag_name, $existing_names, true)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'This name is already token');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'This name is already token');
         }
 
         $this->activityService->record('tag', $tag_id, 'edit');

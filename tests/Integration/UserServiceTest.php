@@ -362,7 +362,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(
                 [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'Name field must not be empty',
                     ],
                 ],
@@ -379,7 +379,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(
                 [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'This user does not exist.',
                     ],
                 ],
@@ -397,7 +397,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(
                 [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => LangTestFactory::get()->t('this login is already used'),
                     ],
                 ],
@@ -415,7 +415,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(
                 [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => LangTestFactory::get()->t('html tags are not allowed in login'),
                     ],
                 ],
@@ -432,7 +432,7 @@ namespace Piwigo\Tests\Integration {
 
             self::assertArrayHasKey('error', $result);
             self::assertIsArray($result['error']);
-            self::assertSame(WsError::INVALID_PARAM, $result['error']['code']);
+            self::assertSame(WsError::InvalidParam->value, $result['error']['code']);
         }
 
         public function testCheckAndSaveUserInfosRejectsAPasswordChangeByANonWebmasterForAProtectedUser(): void
@@ -510,7 +510,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(
                 [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'Invalid status',
                     ],
                 ],
@@ -528,7 +528,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(
                 [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'Invalid level',
                     ],
                 ],
@@ -546,7 +546,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(
                 [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'Invalid language',
                     ],
                 ],
@@ -569,7 +569,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(
                 [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'Invalid theme',
                     ],
                 ],

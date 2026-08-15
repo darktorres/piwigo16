@@ -67,7 +67,7 @@ final readonly class GeneratePasswordLinkHandler implements WsAction
 
         // check if user exist
         if (! $this->userService->getUsername($lost_user_id) instanceof Username) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'This user does not exist.');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'This user does not exist.');
         }
 
         // UserService::getUserData() is declared to return

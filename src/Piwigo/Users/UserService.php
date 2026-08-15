@@ -1157,7 +1157,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             if (strlen(str_replace(' ', '', $username_check)) === 0) {
                 return [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'Name field must not be empty',
                     ],
                 ];
@@ -1186,7 +1186,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             if (! $this->getUsername(UserId::from($user_ids[0])) instanceof Username) {
                 return [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'This user does not exist.',
                     ],
                 ];
@@ -1199,7 +1199,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                 if (! $username_param_vo instanceof Username) {
                     return [
                         'error' => [
-                            'code' => WsError::INVALID_PARAM,
+                            'code' => WsError::InvalidParam->value,
                             'message' => $this->lang->t('invalid login format'),
                         ],
                     ];
@@ -1208,7 +1208,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                 if ($user_id instanceof UserId and $user_id->value !== $user_ids[0]) {
                     return [
                         'error' => [
-                            'code' => WsError::INVALID_PARAM,
+                            'code' => WsError::InvalidParam->value,
                             'message' => $this->lang->t('this login is already used'),
                         ],
                     ];
@@ -1216,7 +1216,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                 if ($username_param !== strip_tags($username_param)) {
                     return [
                         'error' => [
-                            'code' => WsError::INVALID_PARAM,
+                            'code' => WsError::InvalidParam->value,
                             'message' => $this->lang->t('html tags are not allowed in login'),
                         ],
                     ];
@@ -1230,7 +1230,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                 if (($error = $this->validateMailAddress(UserId::from($user_ids[0]), $email_param)) !== '') {
                     return [
                         'error' => [
-                            'code' => WsError::INVALID_PARAM,
+                            'code' => WsError::InvalidParam->value,
                             'message' => $error,
                         ],
                     ];
@@ -1284,7 +1284,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             if (! in_array($status_param, ['guest', 'generic', 'normal', 'admin', 'webmaster'], true)) {
                 return [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'Invalid status',
                     ],
                 ];
@@ -1325,7 +1325,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             if (! in_array(is_numeric($level_param) ? (int) $level_param : null, $available_permission_levels, true)) {
                 return [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'Invalid level',
                     ],
                 ];
@@ -1338,7 +1338,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             if (! in_array($language_param, array_keys(LangService::getLanguages($this->paths, $this->entityManager)), true)) {
                 return [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'Invalid language',
                     ],
                 ];
@@ -1351,7 +1351,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang, $this->entityManager)), true)) {
                 return [
                     'error' => [
-                        'code' => WsError::INVALID_PARAM,
+                        'code' => WsError::InvalidParam->value,
                         'message' => 'Invalid theme',
                     ],
                 ];

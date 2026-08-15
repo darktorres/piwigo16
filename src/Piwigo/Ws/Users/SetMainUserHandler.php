@@ -59,7 +59,7 @@ final readonly class SetMainUserHandler implements WsAction
 
         // checl if user exist
         if (! $this->userService->getUsername($new_main_user_id) instanceof Username) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'This user does not exist.');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'This user does not exist.');
         }
 
         $new_main_user = $this->userService->getUserData($new_main_user_id);

@@ -193,7 +193,7 @@ final readonly class SetInfoHandler implements WsAction
         $tagListRequest = TagListRequest::fromGlobals();
         if ($tagListRequest->present) {
             if (isset($params['tag_ids'])) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Do not use tag_list and tag_ids at the same time.');
             }
 
             // TagService::getTagIds()/tagIdFromTagName() go through

@@ -86,7 +86,7 @@ final readonly class UploadAsyncHandler implements WsAction
 
         // additional check for some parameters
         if (! (bool) preg_match('/^[a-fA-F0-9]{32}$/', $params['original_sum'])) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid original_sum');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid original_sum');
         }
 
         if ($params['image_id'] > 0) {

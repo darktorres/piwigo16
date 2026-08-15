@@ -142,11 +142,11 @@ final readonly class GetListHandler implements WsAction
         $categoryService = $this->categoryService;
 
         if (! in_array($input->thumbnailSize, array_keys($this->imageStdParams->getDefinedTypeMap()), true)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid thumbnail_size');
         }
 
         if (! in_array($input->limit, [null, 0], true) and $input->recursive) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Cannot use both recursive and limit parameters at the same time');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Cannot use both recursive and limit parameters at the same time');
         }
 
         $output = [];

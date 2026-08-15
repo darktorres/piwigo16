@@ -45,7 +45,7 @@ final readonly class AddHandler implements WsAction
         $creation_output = $this->tagService->createTag($input->name);
 
         if ($creation_output->error !== null) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, $creation_output->error);
+            return new WsErrorResponse(WsError::InvalidParam->value, $creation_output->error);
         }
 
         // success()'s own contract guarantees info/id are non-null whenever

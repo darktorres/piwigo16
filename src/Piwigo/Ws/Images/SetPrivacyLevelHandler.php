@@ -45,7 +45,7 @@ final readonly class SetPrivacyLevelHandler implements WsAction
         $available_permission_levels = $this->currentConfig->availablePermissionLevels;
 
         if (! in_array($input->level, $available_permission_levels, true)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid level');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid level');
         }
 
         $affected_rows = $this->imageService->updateLevelForImages($input->imageIds, $input->level);

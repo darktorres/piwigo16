@@ -369,14 +369,14 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
             if (self::hasFlag($type, WsParamType::BOOL)) {
                 foreach ($param as &$value) {
                     if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
-                        return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must only contain booleans');
+                        return new WsErrorResponse(WsError::InvalidParam->value, $name . ' must only contain booleans');
                     }
                 }
                 unset($value);
             } elseif (self::hasFlag($type, WsParamType::INT)) {
                 foreach ($param as &$value) {
                     if (($value = filter_var($value, FILTER_VALIDATE_INT, $opts)) === false) {
-                        return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must only contain' . $msg . ' integers');
+                        return new WsErrorResponse(WsError::InvalidParam->value, $name . ' must only contain' . $msg . ' integers');
                     }
                 }
                 unset($value);
@@ -386,7 +386,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
                         ($value = filter_var($value, FILTER_VALIDATE_FLOAT)) === false
                         or (isset($opts['options']['min_range']) and $value < $opts['options']['min_range'])
                     ) {
-                        return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must only contain' . $msg . ' floats');
+                        return new WsErrorResponse(WsError::InvalidParam->value, $name . ' must only contain' . $msg . ' floats');
                     }
                 }
                 unset($value);
@@ -394,18 +394,18 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         } elseif ($param !== '') {
             if (self::hasFlag($type, WsParamType::BOOL)) {
                 if (($param = filter_var($param, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must be a boolean');
+                    return new WsErrorResponse(WsError::InvalidParam->value, $name . ' must be a boolean');
                 }
             } elseif (self::hasFlag($type, WsParamType::INT)) {
                 if (($param = filter_var($param, FILTER_VALIDATE_INT, $opts)) === false) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must be an' . $msg . ' integer');
+                    return new WsErrorResponse(WsError::InvalidParam->value, $name . ' must be an' . $msg . ' integer');
                 }
             } elseif (self::hasFlag($type, WsParamType::FLOAT)) {
                 if (
                     ($param = filter_var($param, FILTER_VALIDATE_FLOAT)) === false
                     or (isset($opts['options']['min_range']) and $param < $opts['options']['min_range'])
                 ) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must be a' . $msg . ' float');
+                    return new WsErrorResponse(WsError::InvalidParam->value, $name . ' must be a' . $msg . ' float');
                 }
             }
         }
@@ -427,7 +427,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
     public function invoke(string $methodName, array $params): mixed
     {
         if (! isset($this->methods[$methodName])) {
-            return new WsErrorResponse(WsError::INVALID_METHOD, 'Method name is not valid');
+            return new WsErrorResponse(WsError::InvalidMethod->value, 'Method name is not valid');
         }
 
         $method = $this->methods[$methodName];
@@ -475,7 +475,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
                 $the_param = $params[$name];
 
                 if (is_array($the_param) and ! self::hasFlag($flags, WsParamFlag::ACCEPT_ARRAY)) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, $name . ' must be scalar');
+                    return new WsErrorResponse(WsError::InvalidParam->value, $name . ' must be scalar');
                 }
 
                 if (self::hasFlag($flags, WsParamFlag::FORCE_ARRAY)) {
@@ -501,7 +501,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         }
 
         if ((bool) count($missing_params)) {
-            return new WsErrorResponse(WsError::MISSING_PARAM, 'Missing parameters: ' . implode(',', $missing_params));
+            return new WsErrorResponse(WsError::MissingParam->value, 'Missing parameters: ' . implode(',', $missing_params));
         }
 
         $result = $this->eventDispatcher->dispatchChange(new WsInvokeAllowed(true, $methodName, $params))
@@ -571,7 +571,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         // never coerces it; narrow it here instead of trusting the raw
         // request value.
         if (! is_string($methodName) or ! $service->hasMethod($methodName)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Requested method does not exist');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Requested method does not exist');
         }
 
         $res = [

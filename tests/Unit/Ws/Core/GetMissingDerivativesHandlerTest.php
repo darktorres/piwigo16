@@ -96,7 +96,7 @@ test('getMissingDerivatives rejects a types list with no real defined type match
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($result instanceof WsErrorResponse) {
         expect($result->code())
-            ->toBe(WsError::INVALID_PARAM)
+            ->toBe(WsError::InvalidParam->value)
             ->and($result->message())
             ->toBe('Invalid types');
     }

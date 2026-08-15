@@ -70,12 +70,12 @@ final readonly class FilteredSearchCreateHandler implements WsAction
         $search_info = null;
         if (isset($filterParams['search_id'])) {
             if (in_array(SearchService::getSearchIdPattern($filterParams['search_id']), [null, ''], true)) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid search_id input parameter.');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid search_id input parameter.');
             }
 
             $search_info = $searchService->getValidatedSearchInfo($filterParams['search_id'], null);
             if (! $search_info instanceof Search) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'This search does not exist.');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'This search does not exist.');
             }
         }
 
@@ -99,7 +99,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
                 $filterParams['allwords_mode'] = 'AND';
             }
             if (! (bool) preg_match('/^(OR|AND)$/', $filterParams['allwords_mode'])) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter allwords_mode');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid parameter allwords_mode');
             }
             $search['fields']['allwords']['mode'] = $filterParams['allwords_mode'];
 
@@ -109,7 +109,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
             }
             foreach ($filterParams['allwords_fields'] as $field) {
                 if (! in_array($field, $allwords_fields_available, true)) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter allwords_fields');
+                    return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid parameter allwords_fields');
                 }
             }
             $search['fields']['allwords']['fields'] = $filterParams['allwords_fields'];
@@ -120,7 +120,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
         if (isset($filterParams['tags'])) {
             foreach ($filterParams['tags'] as $tag_id) {
                 if (! (bool) preg_match('/^\d+$/', (string) $tag_id)) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter tags');
+                    return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid parameter tags');
                 }
             }
 
@@ -128,7 +128,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
                 $filterParams['tags_mode'] = 'AND';
             }
             if (! (bool) preg_match('/^(OR|AND)$/', $filterParams['tags_mode'])) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter tags_mode');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid parameter tags_mode');
             }
 
             $search['fields']['tags'] = [
@@ -140,7 +140,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
         if (isset($filterParams['categories'])) {
             foreach ($filterParams['categories'] as $cat_id) {
                 if (! (bool) preg_match('/^\d+$/', (string) $cat_id)) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter categories');
+                    return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid parameter categories');
                 }
             }
 
@@ -166,7 +166,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
         if (isset($filterParams['filetypes'])) {
             foreach ($filterParams['filetypes'] as $ext) {
                 if (! (bool) preg_match('/^[a-z0-9]+$/i', $ext)) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter filetypes');
+                    return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid parameter filetypes');
                 }
             }
 
@@ -176,7 +176,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
         if (isset($filterParams['added_by'])) {
             foreach ($filterParams['added_by'] as $user_id) {
                 if (! (bool) preg_match('/^\d+$/', (string) $user_id)) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter added_by');
+                    return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid parameter added_by');
                 }
             }
 
@@ -185,19 +185,19 @@ final readonly class FilteredSearchCreateHandler implements WsAction
 
         if (isset($filterParams['date_posted_preset'])) {
             if (! (bool) preg_match('/^(24h|7d|30d|3m|6m|custom|)$/', $filterParams['date_posted_preset'])) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter date_posted_preset');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid parameter date_posted_preset');
             }
 
             @$search['fields']['date_posted']['preset'] = $filterParams['date_posted_preset'];
 
             if ($search['fields']['date_posted']['preset'] === 'custom' and (! isset($filterParams['date_posted_custom']) or $filterParams['date_posted_custom'] === [])) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'date_posted_custom is missing');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'date_posted_custom is missing');
             }
         }
 
         if (isset($filterParams['date_posted_custom'])) {
             if (! isset($search['fields']['date_posted']['preset']) or $search['fields']['date_posted']['preset'] !== 'custom') {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'date_posted_custom provided date_posted_preset is not custom');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'date_posted_custom provided date_posted_preset is not custom');
             }
 
             foreach ($filterParams['date_posted_custom'] as $date) {
@@ -225,7 +225,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
                 }
 
                 if (! $correct_format) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, 'date_posted_custom, invalid option ' . $date);
+                    return new WsErrorResponse(WsError::InvalidParam->value, 'date_posted_custom, invalid option ' . $date);
                 }
 
                 @$search['fields']['date_posted']['custom'][] = $date;
@@ -234,19 +234,19 @@ final readonly class FilteredSearchCreateHandler implements WsAction
 
         if (isset($filterParams['date_created_preset'])) {
             if (! (bool) preg_match('/^(7d|30d|3m|6m|12m|custom|)$/', $filterParams['date_created_preset'])) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter date_created_preset');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid parameter date_created_preset');
             }
 
             @$search['fields']['date_created']['preset'] = $filterParams['date_created_preset'];
 
             if ($search['fields']['date_created']['preset'] === 'custom' and (! isset($filterParams['date_created_custom']) or $filterParams['date_created_custom'] === [])) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'date_created_custom is missing');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'date_created_custom is missing');
             }
         }
 
         if (isset($filterParams['date_created_custom'])) {
             if (! isset($search['fields']['date_created']['preset']) or $search['fields']['date_created']['preset'] !== 'custom') {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'date_created_custom provided date_created_preset is not custom');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'date_created_custom provided date_created_preset is not custom');
             }
 
             foreach ($filterParams['date_created_custom'] as $date) {
@@ -274,7 +274,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
                 }
 
                 if (! $correct_format) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, 'date_created_custom, invalid option ' . $date);
+                    return new WsErrorResponse(WsError::InvalidParam->value, 'date_created_custom, invalid option ' . $date);
                 }
 
                 @$search['fields']['date_created']['custom'][] = $date;
@@ -284,7 +284,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
         if (isset($filterParams['ratios'])) {
             foreach ($filterParams['ratios'] as $ext) {
                 if (! (bool) preg_match('/^[a-z0-9]+$/i', $ext)) {
-                    return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid parameter ratios');
+                    return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid parameter ratios');
                 }
             }
 

@@ -90,7 +90,7 @@ test('getList rejects an unparsable date_min', function (): void {
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($result instanceof WsErrorResponse) {
         expect($result->code())
-            ->toBe(WsError::INVALID_PARAM)
+            ->toBe(WsError::InvalidParam->value)
             ->and($result->message())
             ->toBe('Invalid date_min');
     }

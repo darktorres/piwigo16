@@ -52,7 +52,7 @@ final readonly class DeleteUserHandler implements WsAction
 
         $removed = $this->groupService->removeMembers(GroupId::from($input->groupId), array_map(UserId::from(...), $input->userIds));
         if (! $removed) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'This group does not exist.');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'This group does not exist.');
         }
 
         return $this->getListHandler->resolve([

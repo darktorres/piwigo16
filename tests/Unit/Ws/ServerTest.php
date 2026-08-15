@@ -48,7 +48,7 @@ use Piwigo\Ws\WsParamType;
  *
  * Kernel::boot() is required file-wide (same reasoning as WsErrorResponseTest.php):
  * several WsErrorResponse codes constructed by invoke() itself (401, 405, and
- * WsError::INVALID_METHOD = 501) fall in the HTTP range, which routes
+ * WsError::InvalidMethod = 501) fall in the HTTP range, which routes
  * WsErrorResponse's own constructor through PresentationAccessor::htmlService(),
  * needing a booted DI container.
  */
@@ -232,7 +232,7 @@ test('checkType rejects an invalid scalar of each type with a descriptive WsErro
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($error instanceof WsErrorResponse) {
         expect($error->code())
-            ->toBe(WsError::INVALID_PARAM)
+            ->toBe(WsError::InvalidParam->value)
             ->and($error->message())
             ->toBe('flag must be a boolean');
     }
@@ -306,7 +306,7 @@ test('invoke returns INVALID_METHOD for an unregistered method name', function (
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($result instanceof WsErrorResponse) {
         expect($result->code())
-            ->toBe(WsError::INVALID_METHOD);
+            ->toBe(WsError::InvalidMethod->value);
     }
 });
 
@@ -374,7 +374,7 @@ test('invoke returns MISSING_PARAM when a required param is absent, and again wh
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($absent instanceof WsErrorResponse) {
         expect($absent->code())
-            ->toBe(WsError::MISSING_PARAM)
+            ->toBe(WsError::MissingParam->value)
             ->and($absent->message())
             ->toBe('Missing parameters: name');
     }
@@ -386,7 +386,7 @@ test('invoke returns MISSING_PARAM when a required param is absent, and again wh
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($empty instanceof WsErrorResponse) {
         expect($empty->code())
-            ->toBe(WsError::MISSING_PARAM);
+            ->toBe(WsError::MissingParam->value);
     }
 });
 
@@ -422,7 +422,7 @@ test('invoke rejects an array value for a param that does not accept arrays', fu
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($result instanceof WsErrorResponse) {
         expect($result->code())
-            ->toBe(WsError::INVALID_PARAM)
+            ->toBe(WsError::InvalidParam->value)
             ->and($result->message())
             ->toBe('name must be scalar');
     }
@@ -466,7 +466,7 @@ test('invoke rejects a param that fails its declared type check', function (): v
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($result instanceof WsErrorResponse) {
         expect($result->code())
-            ->toBe(WsError::INVALID_PARAM);
+            ->toBe(WsError::InvalidParam->value);
     }
 });
 
@@ -634,7 +634,7 @@ test('wsGetMethodDetails returns INVALID_PARAM for a non-existent method name', 
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($result instanceof WsErrorResponse) {
         expect($result->code())
-            ->toBe(WsError::INVALID_PARAM);
+            ->toBe(WsError::InvalidParam->value);
     }
 });
 

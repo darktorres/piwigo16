@@ -55,7 +55,7 @@ final readonly class MergeHandler implements WsAction
 
         $merged = $this->groupService->merge(GroupId::from($input->destinationGroupId), array_map(GroupId::from(...), $input->mergeGroupIds));
         if (! $merged) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'All groups does not exist.');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'All groups does not exist.');
         }
 
         return [

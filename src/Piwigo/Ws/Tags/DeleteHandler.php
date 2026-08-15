@@ -45,7 +45,7 @@ final readonly class DeleteHandler implements WsAction
         }
 
         if ($this->tagService->countExistingIds($input->tagIds) !== count($input->tagIds)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'All tags does not exist.');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'All tags does not exist.');
         }
 
         $tag_ids = $input->tagIds;

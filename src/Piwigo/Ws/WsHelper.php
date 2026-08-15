@@ -109,7 +109,7 @@ final readonly class WsHelper
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
             if (isset($params[$datefield]) and ! DateHelper::isValidMysqlDatetime($params[$datefield])) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid ' . $datefield);
             }
         }
 

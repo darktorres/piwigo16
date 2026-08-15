@@ -53,7 +53,7 @@ final readonly class AddCommentHandler implements WsAction
         $permissionCriteria = $this->permissionService->getPermissionCriteria();
 
         if (! $this->imageService->isImageCommentableWithCondition(ImageId::from($input->imageId), $permissionCriteria)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid image_id');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid image_id');
         }
 
         $comm = [

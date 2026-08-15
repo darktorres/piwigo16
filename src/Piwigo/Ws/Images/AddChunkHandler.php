@@ -49,10 +49,10 @@ final readonly class AddChunkHandler implements WsAction
         // arbitrary-directory write with a forced extension, not
         // arbitrary-file overwrite).
         if (! (bool) preg_match('/^[a-fA-F0-9]{32}$/', $input->originalSum)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid original_sum');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid original_sum');
         }
         if (! in_array($input->type, ['file', 'high', 'thumb'], true)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid type');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid type');
         }
 
         $logger = $this->currentLogger->get();

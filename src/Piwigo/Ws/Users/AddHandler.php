@@ -57,12 +57,12 @@ final readonly class AddHandler implements WsAction
         }
 
         if (strlen(str_replace(' ', '', $input->username)) === 0) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Name field must not be empty');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Name field must not be empty');
         }
 
         if ($this->currentConfig->doublePasswordTypeInAdmin) {
             if (($input->password ?? '') !== ($input->passwordConfirm ?? '')) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, $this->lang->t('The passwords do not match'));
+                return new WsErrorResponse(WsError::InvalidParam->value, $this->lang->t('The passwords do not match'));
             }
         }
 
@@ -76,7 +76,7 @@ final readonly class AddHandler implements WsAction
         // otherwise reach it with null and crash inside pwg_password_hash() ->
         // password_hash() (a real string-typed native function).
         if ($password === null) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, $this->lang->t('Please, enter a password'));
+            return new WsErrorResponse(WsError::InvalidParam->value, $this->lang->t('Please, enter a password'));
         }
 
         // Preserves the pre-SEC-31 behavior for this real caller (admin-
@@ -104,7 +104,7 @@ final readonly class AddHandler implements WsAction
         $user_id = $result->userId ?? false;
 
         if (! (bool) $user_id) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, $errors[0] ?? '');
+            return new WsErrorResponse(WsError::InvalidParam->value, $errors[0] ?? '');
         }
 
         return $this->getListHandler->resolve([

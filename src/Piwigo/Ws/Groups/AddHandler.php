@@ -58,7 +58,7 @@ final readonly class AddHandler implements WsAction
         try {
             $inserted_id = $this->groupService->create($name, $input->isDefault);
         } catch (InvalidArgumentException $e) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, $e->getMessage());
+            return new WsErrorResponse(WsError::InvalidParam->value, $e->getMessage());
         }
 
         // [SEC-57]

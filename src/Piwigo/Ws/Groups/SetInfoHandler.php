@@ -62,7 +62,7 @@ final readonly class SetInfoHandler implements WsAction
         try {
             $this->groupService->update(GroupId::from($input->groupId), $updates);
         } catch (InvalidArgumentException $e) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, $e->getMessage());
+            return new WsErrorResponse(WsError::InvalidParam->value, $e->getMessage());
         }
 
         return $this->getListHandler->resolve([

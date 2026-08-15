@@ -418,7 +418,7 @@ final class WsServerTest extends ContractTestCase
         $result = Server::checkType($param, WsParamType::BOOL, 'flags');
 
         self::assertInstanceOf(WsErrorResponse::class, $result);
-        self::assertSame(WsError::INVALID_PARAM, $result->code());
+        self::assertSame(WsError::InvalidParam->value, $result->code());
         self::assertSame('flags must only contain booleans', $result->message());
     }
 
@@ -455,7 +455,7 @@ final class WsServerTest extends ContractTestCase
         $result = Server::checkType($param, WsParamType::FLOAT | WsParamType::POSITIVE, 'ratios');
 
         self::assertInstanceOf(WsErrorResponse::class, $result);
-        self::assertSame(WsError::INVALID_PARAM, $result->code());
+        self::assertSame(WsError::InvalidParam->value, $result->code());
         self::assertSame('ratios must only contain positive floats', $result->message());
     }
 

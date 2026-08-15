@@ -61,7 +61,7 @@ final readonly class GetListHandler implements WsAction
             'date_max' => $input->dateMax,
         ] as $datefield => $datefield_value) {
             if (! in_array($datefield_value, [null, ''], true) and ! DateHelper::isValidMysqlDatetime($datefield_value)) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid ' . $datefield);
             }
         }
 

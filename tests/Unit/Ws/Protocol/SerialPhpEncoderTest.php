@@ -15,7 +15,7 @@ use Piwigo\Ws\WsErrorResponse;
  * into the class under test), then matched to what encodeResponse()
  * should produce.
  *
- * WsError::INVALID_PARAM-style codes (>= 1000) are used for the
+ * WsError::InvalidParam-style codes (>= 1000) are used for the
  * WsErrorResponse fixture, not an HTTP-range code (400-599), because
  * WsErrorResponse's constructor calls PresentationAccessor::htmlService() for
  * HTTP-range codes, which needs a booted container this Unit test

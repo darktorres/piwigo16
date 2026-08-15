@@ -92,7 +92,7 @@ test('rejects more than one of cat_id/group_id/user_id at once', function (): vo
         ->toBeInstanceOf(WsErrorResponse::class);
     if ($result instanceof WsErrorResponse) {
         expect($result->code())
-            ->toBe(WsError::INVALID_PARAM)
+            ->toBe(WsError::InvalidParam->value)
             ->and($result->message())
             ->toBe('Too many parameters, provide cat_id OR user_id OR group_id');
     }

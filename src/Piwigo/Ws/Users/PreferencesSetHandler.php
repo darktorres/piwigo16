@@ -41,7 +41,7 @@ final readonly class PreferencesSetHandler implements WsAction
         $input = PreferencesSetParams::fromArray($params);
 
         if (! (bool) preg_match('/^[a-zA-Z0-9_-]+$/', $input->param)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid param name #' . $input->param . '#');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid param name #' . $input->param . '#');
         }
 
         $value = $input->value ?? '';

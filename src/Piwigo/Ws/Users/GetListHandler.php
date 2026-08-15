@@ -79,7 +79,7 @@ final readonly class GetListHandler implements WsAction
         $available_permission_levels = $this->currentConfig->availablePermissionLevels;
 
         if (! (bool) preg_match(ValidationPattern::ORDER, $input->order)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter order');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid input parameter order');
         }
 
         // Insensitive case sort order
@@ -116,7 +116,7 @@ final readonly class GetListHandler implements WsAction
         $minRegister = null;
         if ($input->minRegister !== null) {
             if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $input->minRegister)) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter min_register');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid input parameter min_register');
             }
 
             $date_tokens = explode('-', $input->minRegister);
@@ -134,14 +134,14 @@ final readonly class GetListHandler implements WsAction
             try {
                 $minRegister = SqlDateTime::from($min_date . ' 00:00:00');
             } catch (InvalidArgumentException) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter min_register');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid input parameter min_register');
             }
         }
 
         $maxRegister = null;
         if ($input->maxRegister !== null) {
             if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $input->maxRegister)) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter max_register');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid input parameter max_register');
             }
 
             $max_date_tokens = explode('-', $input->maxRegister);
@@ -163,7 +163,7 @@ final readonly class GetListHandler implements WsAction
             try {
                 $maxRegister = SqlDateTime::from($max_date . ' 23:59:59');
             } catch (InvalidArgumentException) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter max_register');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid input parameter max_register');
             }
         }
 
@@ -181,7 +181,7 @@ final readonly class GetListHandler implements WsAction
         $minLevel = null;
         if ($input->minLevel !== 0) {
             if (! in_array($input->minLevel, $available_permission_levels, true)) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid level');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid level');
             }
             $minLevel = $input->minLevel;
         }
@@ -194,7 +194,7 @@ final readonly class GetListHandler implements WsAction
         $raw_max_level = $params['max_level'] ?? null;
         if (! in_array($raw_max_level, [null, false, 0, '0', '', []], true)) {
             if (! in_array(is_numeric($raw_max_level) ? (int) $raw_max_level : null, $available_permission_levels, true)) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid level');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid level');
             }
             $maxLevel = is_numeric($raw_max_level) ? (int) $raw_max_level : 0;
         }

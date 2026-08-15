@@ -60,7 +60,7 @@ final readonly class SetInfoHandler implements WsAction
 
         if (! in_array($input->status, [null, ''], true)) {
             if (! in_array($input->status, ['private', 'public'], true)) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid status, only public/private');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid status, only public/private');
             }
 
             if ($input->status !== $category->status) {
@@ -77,7 +77,7 @@ final readonly class SetInfoHandler implements WsAction
             'commentable' => $input->commentable,
         ] as $param_name => $value) {
             if ($value !== null and ! (bool) preg_match('/^(true|false)$/i', $value)) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid param ' . $param_name . ' : ' . $value);
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid param ' . $param_name . ' : ' . $value);
             }
         }
 

@@ -13,7 +13,7 @@ use Piwigo\Ws\WsErrorResponse;
  * fixture rationale, reused verbatim here). No dedicated Integration/
  * Browser spec of its own.
  *
- * WsError::INVALID_PARAM-style codes (>= 1000) are used for the WsErrorResponse
+ * WsError::InvalidParam-style codes (>= 1000) are used for the WsErrorResponse
  * fixture, not an HTTP-range code (400-599), for the same reason as
  * SerialPhpEncoderTest.php: WsErrorResponse's constructor calls
  * PresentationAccessor::htmlService() for HTTP-range codes, which needs

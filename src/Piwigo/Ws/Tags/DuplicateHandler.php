@@ -60,11 +60,11 @@ final readonly class DuplicateHandler implements WsAction
 
         // does the tag exist ?
         if (! $this->tagService->existsById($tag_id)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'This tag does not exist.');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'This tag does not exist.');
         }
 
         if ($this->tagService->existsByName($copy_name)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'This name is already taken.');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'This name is already taken.');
         }
 
         $copyUrlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($copy_name));

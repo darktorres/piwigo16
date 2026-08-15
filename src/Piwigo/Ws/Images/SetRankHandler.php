@@ -62,12 +62,12 @@ final readonly class SetRankHandler implements WsAction
         $image_id = $input->imageIds[0] ?? null;
 
         if ($image_id === null) {
-            return new WsErrorResponse(WsError::MISSING_PARAM, 'image_id is missing');
+            return new WsErrorResponse(WsError::MissingParam->value, 'image_id is missing');
         }
 
         $rank = $input->rank;
         if ($rank === null || $rank === 0) {
-            return new WsErrorResponse(WsError::MISSING_PARAM, 'rank is missing');
+            return new WsErrorResponse(WsError::MissingParam->value, 'rank is missing');
         }
 
         $imageId = ImageId::from($image_id);

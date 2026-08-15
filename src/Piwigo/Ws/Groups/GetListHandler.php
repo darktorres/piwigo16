@@ -60,7 +60,7 @@ final readonly class GetListHandler implements WsAction
         $input = GetListParams::fromArray($params);
 
         if (! (bool) preg_match(ValidationPattern::ORDER, $input->order)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid input parameter order');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid input parameter order');
         }
 
         $groups = $this->entityManager->getRepository(GroupEntity::class)

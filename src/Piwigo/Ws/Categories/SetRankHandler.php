@@ -57,7 +57,7 @@ final readonly class SetRankHandler implements WsAction
             $cat_asc = $this->categoryService->getIdsByParentOrderedById($parent_id);
 
             if (strcmp(implode(',', $cat_asc), implode(',', $order_new_by_id)) !== 0) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'you need to provide all sub-category ids for a given category');
             }
         } else {
             $category_id_str = implode('', $input->categoryIds);

@@ -56,7 +56,7 @@ final readonly class MergeHandler implements WsAction
         $merge_tag = array_diff($input->mergeTagIds, [$input->destinationTagId]);
 
         if ($this->tagService->countExistingIds(array_values($all_tags)) !== count($all_tags)) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'All tags does not exist.');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'All tags does not exist.');
         }
 
         $image_in_merge_tags = array_values(array_unique(

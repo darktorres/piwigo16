@@ -56,14 +56,14 @@ final readonly class SyncMetadataHandler implements WsAction
             $image_id = trim($image_id);
 
             if (! (bool) preg_match(ValidationPattern::ID, $image_id)) {
-                return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid image_id "' . $image_id . '"');
+                return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid image_id "' . $image_id . '"');
             }
 
             $image_ids[] = $image_id;
         }
 
         if ($image_ids === []) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'Invalid image_id (no value after filters)');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid image_id (no value after filters)');
         }
 
         $image_ids = $this->imageService->getExistingIds($image_ids);

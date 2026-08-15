@@ -132,7 +132,7 @@ final readonly class SetMyInfoHandler implements WsAction
             // shape isn't statically expressed, so narrow defensively here
             // rather than trust the mixed offsets.
             $error = $updated_users['error'];
-            $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WsError::INVALID_PARAM;
+            $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WsError::InvalidParam->value;
             $error_message = is_array($error) && is_string($error['message'] ?? null) ? $error['message'] : 'Invalid parameters';
             return new WsErrorResponse($error_code, $error_message);
         }

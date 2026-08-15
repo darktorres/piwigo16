@@ -46,7 +46,7 @@ final readonly class GetAuthKeyHandler implements WsAction
         $authkey = $this->authService->createUserAuthKey($input->userId);
 
         if ($authkey === false) {
-            return new WsErrorResponse(WsError::INVALID_PARAM, 'invalid user_id');
+            return new WsErrorResponse(WsError::InvalidParam->value, 'invalid user_id');
         }
 
         return $authkey;

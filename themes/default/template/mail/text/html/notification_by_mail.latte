@@ -696,22 +696,34 @@
   <h2>{='Notification'|translate}</h2>
   <p>{='Hello'|translate} {$USERNAME},</p>
 
-  <p n:if="isset($subscribe_by_admin)">{='The webmaster has subscribed you to receiving notifications by mail.'|translate}</p>
-  <p n:if="isset($subscribe_by_himself)">{='You have subscribed to receiving notifications by mail.'|translate}</p>
-  <p n:if="isset($unsubscribe_by_admin)">{='The webmaster has unsubscribed you from receiving notifications by mail.'|translate}</p>
-  <p n:if="isset($unsubscribe_by_himself)">{='You have unsubscribed from receiving notifications by mail.'|translate}</p>
-  <p n:if="isset($content_new_elements_single)">{='New photos were added'|translate} {='on'|translate} {$content_new_elements_single['DATE_SINGLE']}.</p>
-  <p n:if="isset($content_new_elements_between)">{='New photos were added'|translate} {='between'|translate} {$content_new_elements_between['DATE_BETWEEN_1']} {='and'|translate} {$content_new_elements_between['DATE_BETWEEN_2']}.</p>
+  <p
+    n:if="isset($subscribe_by_admin)"
+  >{='The webmaster has subscribed you to receiving notifications by mail.'|translate}</p>
+  <p
+    n:if="isset($subscribe_by_himself)"
+  >{='You have subscribed to receiving notifications by mail.'|translate}</p>
+  <p
+    n:if="isset($unsubscribe_by_admin)"
+  >{='The webmaster has unsubscribed you from receiving notifications by mail.'|translate}</p>
+  <p
+    n:if="isset($unsubscribe_by_himself)"
+  >{='You have unsubscribed from receiving notifications by mail.'|translate}</p>
+  <p
+    n:if="isset($content_new_elements_single)"
+  >{='New photos were added'|translate} {='on'|translate} {$content_new_elements_single['DATE_SINGLE']}.</p>
+  <p
+    n:if="isset($content_new_elements_between)"
+  >{='New photos were added'|translate} {='between'|translate} {$content_new_elements_between['DATE_BETWEEN_1']} {='and'|translate} {$content_new_elements_between['DATE_BETWEEN_2']}.</p>
 
   <ul n:if="!empty($global_new_lines)" id="nbm_new_line">
-      <li n:foreach="$global_new_lines as $line">{$line|noescape}</li>
-    </ul>
+    <li n:foreach="$global_new_lines as $line">{$line|noescape}</li>
+  </ul>
 
   <p n:if="!empty($custom_mail_content)">{$custom_mail_content|noescape}</p>
 
   <p n:if="!empty($GOTO_GALLERY_TITLE)">{='Go to'|translate} <a
-        href="{$GOTO_GALLERY_URL|noescape}"
-      >{$GOTO_GALLERY_TITLE}</a>.</p>
+      href="{$GOTO_GALLERY_URL|noescape}"
+    >{$GOTO_GALLERY_TITLE}</a>.</p>
   <p>{='See you soon,'|translate}</p>
   <p style="text-align:center">{$SEND_AS_NAME}</p>
   <hr>

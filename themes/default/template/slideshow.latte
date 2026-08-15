@@ -712,7 +712,10 @@
   <div id="content">
     <div id="theImage">
       {$ELEMENT_CONTENT|noescape}
-      <p n:if="isset($COMMENT_IMG)" class="showlegend">{$COMMENT_IMG|noescape}</p>
+      <p
+        n:if="isset($COMMENT_IMG)"
+        class="showlegend"
+      >{$COMMENT_IMG|noescape}</p>
     </div>
   </div>
 </div>

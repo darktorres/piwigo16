@@ -805,13 +805,15 @@ $(window).bind("load", function() {
           title="{$theme['NAME']}"
         ><img src="{$theme['SCREENSHOT']|noescape}" alt=""></a></div>
       <div class="themeName" title="{$theme['NAME']}">
-        {$theme['NAME']} <i n:if="isset($theme['IS_DEFAULT']) and $theme['IS_DEFAULT']"
-            class="icon-star"
-            title="{='default'|translate}"
-          ></i> <i n:if="$theme['IS_MOBILE']"
-            class="icon-mobile"
-            title="{='Mobile'|translate}"
-          ></i>
+        {$theme['NAME']} <i
+          n:if="isset($theme['IS_DEFAULT']) and $theme['IS_DEFAULT']"
+          class="icon-star"
+          title="{='default'|translate}"
+        ></i> <i
+          n:if="$theme['IS_MOBILE']"
+          class="icon-mobile"
+          title="{='Mobile'|translate}"
+        ></i>
         <a n:if="$isWebmaster == 1" class="icon-ellipsis-v showInfo"></a>
       </div>
       <div class="showInfo-dropdown dropdown">
@@ -837,11 +839,12 @@ $(window).bind("load", function() {
             >{='Delete'|translate}</span>
           {/if}
         {/if}
-        <a n:if="isset($theme['DEACTIVABLE']) and $theme['DEACTIVABLE']"
-            href="{$deactivate_baseurl|noescape}{$theme['ID']}"
-            class="showInfo-dropdown-action tiptip icon-cancel-circled"
-            title="{='Forbid this theme to users'|translate}"
-          >{='Deactivate'|translate}</a>
+        <a
+          n:if="isset($theme['DEACTIVABLE']) and $theme['DEACTIVABLE']"
+          href="{$deactivate_baseurl|noescape}{$theme['ID']}"
+          class="showInfo-dropdown-action tiptip icon-cancel-circled"
+          title="{='Forbid this theme to users'|translate}"
+        >{='Deactivate'|translate}</a>
       </div>
       {if $isWebmaster == 1}
         <div class="themeActions">

@@ -695,12 +695,12 @@
 <h2>{$TITLE}</h2>
 
 <fieldset n:if="isset($categories_because_of_groups)">
-    <legend>{='Albums authorized thanks to group associations'|translate}</legend>
+  <legend>{='Albums authorized thanks to group associations'|translate}</legend>
 
-    <ul>
-      <li n:foreach="$categories_because_of_groups as $cat">{$cat|noescape}</li>
-    </ul>
-  </fieldset>
+  <ul>
+    <li n:foreach="$categories_because_of_groups as $cat">{$cat|noescape}</li>
+  </ul>
+</fieldset>
 
 <fieldset>
   <legend>{='Other private albums'|translate}</legend>

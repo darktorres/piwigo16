@@ -744,11 +744,12 @@ const str_modal_ab = '{_ 'New parent album'|noescape}';
         title="{='Activity'|translate}"
       ></a>
 
-      <a n:if="isset($U_MANAGE_ELEMENTS)"
-          class="icon-th tiptip"
-          href="{$U_MANAGE_ELEMENTS|noescape}"
-          title="{='Manage album photos'|translate}"
-        ></a>
+      <a
+        n:if="isset($U_MANAGE_ELEMENTS)"
+        class="icon-th tiptip"
+        href="{$U_MANAGE_ELEMENTS|noescape}"
+        title="{='Manage album photos'|translate}"
+      ></a>
 
       <a
         class="icon-plus-circled tiptip"
@@ -762,17 +763,19 @@ const str_modal_ab = '{_ 'New parent album'|noescape}';
         title="{='Manage sub-albums'|translate}"
       ></a>
 
-      <a n:if="isset($U_SYNC)"
-          class="icon-exchange tiptip"
-          href="{$U_SYNC|noescape}"
-          title="{='Synchronize'|translate}"
-        ></a>
+      <a
+        n:if="isset($U_SYNC)"
+        class="icon-exchange tiptip"
+        href="{$U_SYNC|noescape}"
+        title="{='Synchronize'|translate}"
+      ></a>
 
-      <a n:if="isset($U_DELETE)"
-          class="icon-trash deleteAlbum tiptip"
-          href="#"
-          title="{='Delete album'|translate}"
-        ></a>
+      <a
+        n:if="isset($U_DELETE)"
+        class="icon-trash deleteAlbum tiptip"
+        href="#"
+        title="{='Delete album'|translate}"
+      ></a>
 
       {* <a class="icon-ellipsis-vert tiptip" href="#" title="{'Comments'|@translate}"></a> *}
 
@@ -819,16 +822,16 @@ const str_modal_ab = '{_ 'New parent album'|noescape}';
         <span class="cat-modify-info-subcontent">{$INFO_SUBCATS}</span>
       </div>
       <div n:if="isset($U_SYNC)" class="cat-modify-info-card">
-          <span class="cat-modify-info-title">Directory</span>
-          <span
-            class="cat-modify-info-content directory"
-            title="{$CAT_DIR_NAME}"
-          >{$CAT_DIR_NAME}</span>
-          <span
-            class="cat-modify-info-subcontent directory"
-            title="{$CAT_FULL_DIR}"
-          >{$CAT_MIN_DIR}</span>
-        </div>
+        <span class="cat-modify-info-title">Directory</span>
+        <span
+          class="cat-modify-info-content directory"
+          title="{$CAT_DIR_NAME}"
+        >{$CAT_DIR_NAME}</span>
+        <span
+          class="cat-modify-info-subcontent directory"
+          title="{$CAT_FULL_DIR}"
+        >{$CAT_MIN_DIR}</span>
+      </div>
     </div>
 
     <div
@@ -840,25 +843,30 @@ const str_modal_ab = '{_ 'New parent album'|noescape}';
       style="background-image:url('{$representant['picture']['src']|noescape}')"
       {/if}
     >
-      <div n:if="isset($representant) and ($representant['ALLOW_SET_RANDOM'] || $representant['ALLOW_SET_RANDOM'])" class="cat-modify-representative-actions">
-          <a n:if="$representant['ALLOW_SET_RANDOM']"
-              class="refreshRepresentative buttonLike"
-              id="refreshRepresentative"
-              title="{='Find a new representant by random'|translate}"
-            >
-              <i class="icon-ccw"></i>
-              {='Refresh thumbnail'|translate}
-            </a>
-          <a n:if="isset($representant['ALLOW_DELETE'])"
-              class="deleteRepresentative buttonLike"
-              id="deleteRepresentative"
-              title="{='Delete Representant'|translate}"
-              style="{if !isset($representant['picture'])}display:none{/if}"
-            >
-              <i class="icon-cancel"></i>
-              {='Remove thumbnail'|translate}
-            </a>
-        </div>
+      <div
+        n:if="isset($representant) and ($representant['ALLOW_SET_RANDOM'] || $representant['ALLOW_SET_RANDOM'])"
+        class="cat-modify-representative-actions"
+      >
+        <a
+          n:if="$representant['ALLOW_SET_RANDOM']"
+          class="refreshRepresentative buttonLike"
+          id="refreshRepresentative"
+          title="{='Find a new representant by random'|translate}"
+        >
+          <i class="icon-ccw"></i>
+          {='Refresh thumbnail'|translate}
+        </a>
+        <a
+          n:if="isset($representant['ALLOW_DELETE'])"
+          class="deleteRepresentative buttonLike"
+          id="deleteRepresentative"
+          title="{='Delete Representant'|translate}"
+          style="{if !isset($representant['picture'])}display:none{/if}"
+        >
+          <i class="icon-cancel"></i>
+          {='Remove thumbnail'|translate}
+        </a>
+      </div>
     </div>
 
     <div class="cat-modify-form">
@@ -893,29 +901,29 @@ const str_modal_ab = '{_ 'New parent album'|noescape}';
       {include 'include/album_selector.inc.latte'}
 
       <div n:if="isset($CAT_COMMENTABLE)" class="cat-modify-switch-container">
-          <div class="switch-input">
-            <label class="switch">
-              <input
-                type="checkbox"
-                name="commentable"
-                id="cat-commentable"
-                value="true"
-                {if $CAT_COMMENTABLE == "true"}
-                checked
-                {/if}
-              >
-              <span class="slider round"></span>
-            </label>
-          </div>
-          <label
-            class="switch-label"
-            for="cat-commentable"
-          ><span>{='Authorize comments'|translate}</span> <i
-              class="icon-help-circled tiptip"
-              title="{='A photo can receive comments from your visitors if it belongs to an album with comments activated.'|translate}"
-              style="cursor:help"
-            ></i></label>
+        <div class="switch-input">
+          <label class="switch">
+            <input
+              type="checkbox"
+              name="commentable"
+              id="cat-commentable"
+              value="true"
+              {if $CAT_COMMENTABLE == "true"}
+              checked
+              {/if}
+            >
+            <span class="slider round"></span>
+          </label>
         </div>
+        <label
+          class="switch-label"
+          for="cat-commentable"
+        ><span>{='Authorize comments'|translate}</span> <i
+            class="icon-help-circled tiptip"
+            title="{='A photo can receive comments from your visitors if it belongs to an album with comments activated.'|translate}"
+            style="cursor:help"
+          ></i></label>
+      </div>
 
       <div class="cat-modify-switch-container">
         <div class="switch-input">

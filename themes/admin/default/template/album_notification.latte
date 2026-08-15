@@ -834,18 +834,18 @@ span.errors {
     </p>
 
     <p n:if="isset($auth_key_duration)">
-        {='Each email sent will contain its own automatic authentication key on links, valid for %s.'|translate:$auth_key_duration}
-        <br>{='For security reason, authentication keys do not work for administrators.'|translate}
-      </p>
+      {='Each email sent will contain its own automatic authentication key on links, valid for %s.'|translate:$auth_key_duration}
+      <br>{='For security reason, authentication keys do not work for administrators.'|translate}
+    </p>
 
     <div class="savebar-footer">
       <div class="savebar-footer-start"></div>
       <div class="savebar-footer-end">
         <div n:if="isset($save_success)" class="savebar-footer-block">
-            <div class="badge info-message">
-              <i class="icon-ok"></i>{$save_success}
-            </div>
+          <div class="badge info-message">
+            <i class="icon-ok"></i>{$save_success}
           </div>
+        </div>
 
         <div class="savebar-footer-block">
           <button class="buttonLike" type="submit" name="submitEmail"><i

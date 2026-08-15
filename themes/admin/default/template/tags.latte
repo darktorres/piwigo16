@@ -861,9 +861,10 @@ if (!$.cookie("pwg_tags_per_page")) {
     <a id="selectNone">{='None'|translate}</a>
     <a id="selectInvert">{='Invert'|translate}</a>
   </div>
-  <div n:if='$warning_tags != ""'
-      class='info-warning tag-info icon-attention not-in-selection-mode'
-    ><p> {$warning_tags|noescape} </p></div>
+  <div
+    n:if='$warning_tags != ""'
+    class='info-warning tag-info icon-attention not-in-selection-mode'
+  ><p> {$warning_tags|noescape} </p></div>
   <div
     class='info-message tag-info  icon-ok not-in-selection-mode'
     {if $message_tags != ""}
@@ -923,13 +924,18 @@ if (!$.cookie("pwg_tags_per_page")) {
   data-tags='{$data|json_encode|noescape}'
   data-per_page="{$per_page}"
 >
-  <div n:foreach="$first_tags as $tag" class='tag-box' data-id='{$tag['id']}' data-selected='0'>
-      {if isset($tag['counter'])}
-        {include tagContent, tag_name: $tag['name'], tag_U_VIEW: sprintf('index.php?/tags/%s-%s', $tag['id'], $tag['url_name']), tag_U_EDIT: sprintf('admin.php?page=batch_manager&amp;filter=tag-%s', $tag['id']), has_image: $tag['counter'] > 0, tag_count: $tag['counter'], tag_raw_name: $tag['raw_name']}
-      {else}
-        {include tagContent, tag_name: $tag['name'], tag_U_VIEW: sprintf('index.php?/tags/%s-%s', $tag['id'], $tag['url_name']), tag_U_EDIT: sprintf('admin.php?page=batch_manager&amp;filter=tag-%s', $tag['id']), has_image: false, tag_count: 0, tag_raw_name: $tag['raw_name']}
-      {/if}
-    </div>
+  <div
+    n:foreach="$first_tags as $tag"
+    class='tag-box'
+    data-id='{$tag['id']}'
+    data-selected='0'
+  >
+    {if isset($tag['counter'])}
+      {include tagContent, tag_name: $tag['name'], tag_U_VIEW: sprintf('index.php?/tags/%s-%s', $tag['id'], $tag['url_name']), tag_U_EDIT: sprintf('admin.php?page=batch_manager&amp;filter=tag-%s', $tag['id']), has_image: $tag['counter'] > 0, tag_count: $tag['counter'], tag_raw_name: $tag['raw_name']}
+    {else}
+      {include tagContent, tag_name: $tag['name'], tag_U_VIEW: sprintf('index.php?/tags/%s-%s', $tag['id'], $tag['url_name']), tag_U_EDIT: sprintf('admin.php?page=batch_manager&amp;filter=tag-%s', $tag['id']), has_image: false, tag_count: 0, tag_raw_name: $tag['raw_name']}
+    {/if}
+  </div>
 </div>
 <div class="emptyResearch"> {='No tag found'|translate} </div>
 <div class="tag-pagination">

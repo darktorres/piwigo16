@@ -742,71 +742,71 @@
   </fieldset>
 
   <fieldset n:if="$ALLOW_USER_CUSTOMIZATION">
-      <legend>{='Preferences'|translate}</legend>
+    <legend>{='Preferences'|translate}</legend>
 
-      <ul>
-        <li>
-          <span class="property">
-            <label
-              for="nb_image_page"
-            >{='Number of photos per page'|translate}</label>
-          </span>
-          <input
-            type="text"
-            size="4"
-            maxlength="3"
-            name="nb_image_page"
-            id="nb_image_page"
-            value="{$NB_IMAGE_PAGE}"
-          >
-        </li>
-        <li>
-          <span class="property">
-            <label for="template">{='Theme'|translate}</label>
-          </span>
-          {=htmlOptions(name: 'theme', options: $template_options, selected: $template_selection)}
-        </li>
-        <li>
-          <span class="property">
-            <label for="Language">{='Language'|translate}</label>
-          </span>
-          {=htmlOptions(name: 'language', options: $language_options, selected: $language_selection)}
-        </li>
-        <li>
-          <span class="property">
-            <label for="Recent period">{='Recent period'|translate}</label>
-          </span>
-          <input
-            type="text"
-            size="3"
-            maxlength="2"
-            name="recent_period"
-            id="recent_period"
-            value="{$RECENT_PERIOD}"
-          >
-        </li>
-        <li>
-          <span class="property">{='Expand all albums'|translate}</span>
-          {=htmlRadios(name: 'expand', options: $radio_options, selected: $EXPAND)}
-        </li>
-        <li n:if="$ACTIVATE_COMMENTS">
-            <span class="property">{='Show number of comments'|translate}</span>
-            {=htmlRadios(name: 'show_nb_comments', options: $radio_options, selected: $NB_COMMENTS)}
-          </li>
-        <li>
-          <span class="property">{='Show number of hits'|translate}</span>
-          {=htmlRadios(name: 'show_nb_hits', options: $radio_options, selected: $NB_HITS)}
-        </li>
-      </ul>
-    </fieldset>
+    <ul>
+      <li>
+        <span class="property">
+          <label
+            for="nb_image_page"
+          >{='Number of photos per page'|translate}</label>
+        </span>
+        <input
+          type="text"
+          size="4"
+          maxlength="3"
+          name="nb_image_page"
+          id="nb_image_page"
+          value="{$NB_IMAGE_PAGE}"
+        >
+      </li>
+      <li>
+        <span class="property">
+          <label for="template">{='Theme'|translate}</label>
+        </span>
+        {=htmlOptions(name: 'theme', options: $template_options, selected: $template_selection)}
+      </li>
+      <li>
+        <span class="property">
+          <label for="Language">{='Language'|translate}</label>
+        </span>
+        {=htmlOptions(name: 'language', options: $language_options, selected: $language_selection)}
+      </li>
+      <li>
+        <span class="property">
+          <label for="Recent period">{='Recent period'|translate}</label>
+        </span>
+        <input
+          type="text"
+          size="3"
+          maxlength="2"
+          name="recent_period"
+          id="recent_period"
+          value="{$RECENT_PERIOD}"
+        >
+      </li>
+      <li>
+        <span class="property">{='Expand all albums'|translate}</span>
+        {=htmlRadios(name: 'expand', options: $radio_options, selected: $EXPAND)}
+      </li>
+      <li n:if="$ACTIVATE_COMMENTS">
+        <span class="property">{='Show number of comments'|translate}</span>
+        {=htmlRadios(name: 'show_nb_comments', options: $radio_options, selected: $NB_COMMENTS)}
+      </li>
+      <li>
+        <span class="property">{='Show number of hits'|translate}</span>
+        {=htmlRadios(name: 'show_nb_hits', options: $radio_options, selected: $NB_HITS)}
+      </li>
+    </ul>
+  </fieldset>
 
   {if isset($PLUGINS_PROFILE)}
     <fieldset n:foreach="$PLUGINS_PROFILE as $plugin_block">
-        <legend>{$plugin_block['name']}</legend>
-        <div class="plugins fields">
-          {include $plugin_block['template'], plugin_block: $plugin_block}
-        </div>
-      </fieldset>
+      <legend>{$plugin_block['name']}</legend>
+      <div class="plugins fields">
+        {include $plugin_block['template'], plugin_block: $plugin_block}
+      </div>
+    </fieldset>
   {/if}
 
   <p class="bottomButtons">
@@ -823,11 +823,12 @@
       name="reset"
       value="{='Reset'|translate}"
     >
-    <input n:if="$ALLOW_USER_CUSTOMIZATION"
-        class="submit"
-        type="submit"
-        name="reset_to_default"
-        value="{='Reset to default values'|translate}"
-      >
+    <input
+      n:if="$ALLOW_USER_CUSTOMIZATION"
+      class="submit"
+      type="submit"
+      name="reset_to_default"
+      value="{='Reset to default values'|translate}"
+    >
   </p>
 </form>

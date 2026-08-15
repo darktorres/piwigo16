@@ -724,25 +724,29 @@
     title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|strip_tags:false|replace:'"',' '}{else}{$current['TITLE_ESC']|noescape} - {$ALT_IMG}{/if}"
   >
 
-  <div n:if="isset($current['path_ext']) and $current['path_ext'] == 'pdf' and $current['filesize'] > $PDF_VIEWER_FILESIZE_THRESHOLD" class="pdf-too-heavy">
-      {='The PDF you requested is too large to display on this page.'|translate}
-      <a
-        href="{$ROOT_URL}{$current['path']|noescape}"
-        target="_blank"
-      >{='Click here to display it'|translate}</a>
-    </div>
+  <div
+    n:if="isset($current['path_ext']) and $current['path_ext'] == 'pdf' and $current['filesize'] > $PDF_VIEWER_FILESIZE_THRESHOLD"
+    class="pdf-too-heavy"
+  >
+    {='The PDF you requested is too large to display on this page.'|translate}
+    <a
+      href="{$ROOT_URL}{$current['path']|noescape}"
+      target="_blank"
+    >{='Click here to display it'|translate}</a>
+  </div>
 {/if}
 
 {foreach $current['unique_derivatives'] as $derivative_type => $derivative}{spaceless}
     <map name="map{$derivative->getType()}">
       {var $size = $derivative->getSize()}
-      <area n:if="isset($previous)"
-          shape="rect"
-          coords="0,0,{($size[0] / 4)|intval},{$size[1]}"
-          href="{$previous['U_IMG']|noescape}"
-          title="{='Previous'|translate} : {$previous['TITLE_ESC']|noescape}"
-          alt="{$previous['TITLE_ESC']|noescape}"
-        >
+      <area
+        n:if="isset($previous)"
+        shape="rect"
+        coords="0,0,{($size[0] / 4)|intval},{$size[1]}"
+        href="{$previous['U_IMG']|noescape}"
+        title="{='Previous'|translate} : {$previous['TITLE_ESC']|noescape}"
+        alt="{$previous['TITLE_ESC']|noescape}"
+      >
       <area
         shape="rect"
         coords="{($size[0] / 4)|intval},0,{($size[0] / 1.34)|intval},{($size[1] / 4)|intval}"
@@ -750,12 +754,13 @@
         title="{='Thumbnails'|translate}"
         alt="{='Thumbnails'|translate}"
       >
-      <area n:if="isset($next)"
-          shape="rect"
-          coords="{($size[0] / 1.33)|intval},0,{$size[0]},{$size[1]}"
-          href="{$next['U_IMG']|noescape}"
-          title="{='Next'|translate} : {$next['TITLE_ESC']|noescape}"
-          alt="{$next['TITLE_ESC']|noescape}"
-        >
+      <area
+        n:if="isset($next)"
+        shape="rect"
+        coords="{($size[0] / 1.33)|intval},0,{$size[0]},{$size[1]}"
+        href="{$next['U_IMG']|noescape}"
+        title="{='Next'|translate} : {$next['TITLE_ESC']|noescape}"
+        alt="{$next['TITLE_ESC']|noescape}"
+      >
     </map>
   {/spaceless}{/foreach}

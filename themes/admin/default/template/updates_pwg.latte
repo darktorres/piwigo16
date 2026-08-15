@@ -748,12 +748,15 @@ p.release .errors { margin:0 }
 {/capture}
 {do htmlHead($tmpHtmlHead)}
 
-<div n:if="isset($MINOR_RELEASE_PHP_REQUIRED) and isset($MAJOR_RELEASE_PHP_REQUIRED)" class="warnings">
-    <i class="eiw-icon icon-attention"></i>
-    <ul>
-      <li> {='Please upgrade your PHP version before any update.'|translate} </li>
-    </ul>
-  </div>
+<div
+  n:if="isset($MINOR_RELEASE_PHP_REQUIRED) and isset($MAJOR_RELEASE_PHP_REQUIRED)"
+  class="warnings"
+>
+  <i class="eiw-icon icon-attention"></i>
+  <ul>
+    <li> {='Please upgrade your PHP version before any update.'|translate} </li>
+  </ul>
+</div>
 
 {if isset($PIWIGO_CURRENT_VERSION) and !isset($CONTAINER_VERSION)}
   <p><i
@@ -776,66 +779,66 @@ p.release .errors { margin:0 }
 {/if}
 
 <fieldset n:if="$STEP == 1">
-    {if isset($CONTAINER_VERSION)}
-      <legend><span
-          class="icon-ok icon-purple"
-        ></span>{='Two container updates are available'|translate}</legend>
+  {if isset($CONTAINER_VERSION)}
+    <legend><span
+        class="icon-ok icon-purple"
+      ></span>{='Two container updates are available'|translate}</legend>
+  {else}
+    <legend><span
+        class="icon-ok icon-purple"
+      ></span>{='Two updates are available'|translate}</legend>
+  {/if}
+  <p class="release release-minor">
+    <a
+      href="{$MINOR_RELEASE_URL}"
+      target="_blank"
+      class="badge-release icon-green icon-tags"
+    >{$MINOR_VERSION}</a>
+    {='This is a minor update, with only bug corrections.'|translate}
+    {if isset($MINOR_RELEASE_PHP_REQUIRED)}
+      <span
+        class="errors icon-block"
+      >{='Requires PHP %s'|translate:$MINOR_RELEASE_PHP_REQUIRED}</span>
     {else}
-      <legend><span
-          class="icon-ok icon-purple"
-        ></span>{='Two updates are available'|translate}</legend>
-    {/if}
-    <p class="release release-minor">
-      <a
-        href="{$MINOR_RELEASE_URL}"
-        target="_blank"
-        class="badge-release icon-green icon-tags"
-      >{$MINOR_VERSION}</a>
-      {='This is a minor update, with only bug corrections.'|translate}
-      {if isset($MINOR_RELEASE_PHP_REQUIRED)}
-        <span
-          class="errors icon-block"
-        >{='Requires PHP %s'|translate:$MINOR_RELEASE_PHP_REQUIRED}</span>
-      {else}
-        {if isset($CONTAINER_VERSION)}
-          <a
-            href="{$DOCKER_UPDATE_GUIDE_URL}"
-            target="_blank"
-            class="icon-arrows-cw goto-update-page"
-          >{='Follow the update guide'|translate}</a>
-        {else}
-          <a
-            href="admin.php?page=updates&amp;step=2&amp;to={$MINOR_VERSION}"
-            class="icon-arrows-cw goto-update-page"
-          >{='Update to Piwigo %s'|translate:$MINOR_VERSION}</a>
-        {/if}
-      {/if}
-    </p>
-
-    <p class="release release-major">
-      <a
-        href="{if isset($CONTAINER_VERSION)} {$MAJOR_DOCKER_RELEASE_URL} {else} {$MAJOR_RELEASE_URL} {/if}"
-        target="_blank"
-        class="badge-release icon-blue icon-tags"
-      >{$MAJOR_VERSION}</a>
-      {='This is a major update, with <a href="%s">new exciting features</a>.'|translate:$MAJOR_RELEASE_URL|noescape}
-      {='Some themes and plugins may be not available yet.'|translate}
-      {if isset($MAJOR_RELEASE_PHP_REQUIRED)}
-        <span
-          class="errors icon-block"
-        >{='Requires PHP %s'|translate:$MAJOR_RELEASE_PHP_REQUIRED}</span>
+      {if isset($CONTAINER_VERSION)}
+        <a
+          href="{$DOCKER_UPDATE_GUIDE_URL}"
+          target="_blank"
+          class="icon-arrows-cw goto-update-page"
+        >{='Follow the update guide'|translate}</a>
       {else}
         <a
-          href="admin.php?page=updates&amp;step=3&amp;to={$MAJOR_VERSION}"
+          href="admin.php?page=updates&amp;step=2&amp;to={$MINOR_VERSION}"
           class="icon-arrows-cw goto-update-page"
-        >{='Update to Piwigo %s'|translate:$MAJOR_VERSION}</a>
+        >{='Update to Piwigo %s'|translate:$MINOR_VERSION}</a>
       {/if}
-    </p>
-    <p class="update-recommendation">
-      <span class="icon-info-circled-1"></span>
-      {='You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended).'|translate:$MAJOR_VERSION,$MINOR_VERSION}
-    </p>
-  </fieldset>
+    {/if}
+  </p>
+
+  <p class="release release-major">
+    <a
+      href="{if isset($CONTAINER_VERSION)} {$MAJOR_DOCKER_RELEASE_URL} {else} {$MAJOR_RELEASE_URL} {/if}"
+      target="_blank"
+      class="badge-release icon-blue icon-tags"
+    >{$MAJOR_VERSION}</a>
+    {='This is a major update, with <a href="%s">new exciting features</a>.'|translate:$MAJOR_RELEASE_URL|noescape}
+    {='Some themes and plugins may be not available yet.'|translate}
+    {if isset($MAJOR_RELEASE_PHP_REQUIRED)}
+      <span
+        class="errors icon-block"
+      >{='Requires PHP %s'|translate:$MAJOR_RELEASE_PHP_REQUIRED}</span>
+    {else}
+      <a
+        href="admin.php?page=updates&amp;step=3&amp;to={$MAJOR_VERSION}"
+        class="icon-arrows-cw goto-update-page"
+      >{='Update to Piwigo %s'|translate:$MAJOR_VERSION}</a>
+    {/if}
+  </p>
+  <p class="update-recommendation">
+    <span class="icon-info-circled-1"></span>
+    {='You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended).'|translate:$MAJOR_VERSION,$MINOR_VERSION}
+  </p>
+</fieldset>
 
 {if $STEP == 2}
   <p>
@@ -866,9 +869,10 @@ p.release .errors { margin:0 }
           disabled
           {/if}
         >
-        <span n:if="isset($MINOR_RELEASE_PHP_REQUIRED)"
-            class="errors icon-block"
-          >{='Requires PHP %s'|translate:$MINOR_RELEASE_PHP_REQUIRED}</span>
+        <span
+          n:if="isset($MINOR_RELEASE_PHP_REQUIRED)"
+          class="errors icon-block"
+        >{='Requires PHP %s'|translate:$MINOR_RELEASE_PHP_REQUIRED}</span>
       {/if}
     </p>
     <p
@@ -916,22 +920,24 @@ p.release .errors { margin:0 }
       {if !empty($missing['plugins'])}
         <p><i>{='Following plugins may not be compatible with the new version of Piwigo:'|translate}</i></p>
         <p><ul><li n:foreach="$missing['plugins'] as $plugin"><a
-                  href="{$plugin['uri']}"
-                  class="externalLink"
-                >{$plugin['name']}</a></li></ul><br></p>
+                href="{$plugin['uri']}"
+                class="externalLink"
+              >{$plugin['name']}</a></li></ul><br></p>
       {/if}
       {if !empty($missing['themes'])}
         <p><i>{='Following themes may not be compatible with the new version of Piwigo:'|translate}</i></p>
         <p><ul><li n:foreach="$missing['themes'] as $theme"><a
-                  href="{$theme['uri']}"
-                  class="externalLink"
-                >{$theme['name']}</a></li></ul><br></p>
+                href="{$theme['uri']}"
+                class="externalLink"
+              >{$theme['name']}</a></li></ul><br></p>
       {/if}
       <p>
-        <p n:if="!empty($missing['plugins']) or !empty($missing['themes'])"><label><input
-                type="checkbox"
-                name="understand"
-              > &nbsp;{='I decide to update anyway'|translate}</label></p>
+        <p
+          n:if="!empty($missing['plugins']) or !empty($missing['themes'])"
+        ><label><input
+              type="checkbox"
+              name="understand"
+            > &nbsp;{='I decide to update anyway'|translate}</label></p>
         {if isset($CONTAINER_VERSION)}
           <p><a
               class="icon-right goto-update-guide {if !empty($missing['plugins']) or !empty($missing['themes'])} goto-update-guide-disabled{/if}"
@@ -948,9 +954,10 @@ p.release .errors { margin:0 }
               {/if}
             >
           {/if}
-        <span n:if="isset($MAJOR_RELEASE_PHP_REQUIRED)"
-            class="errors icon-block"
-          >{='Requires PHP %s'|translate:$MAJOR_RELEASE_PHP_REQUIRED}</span>
+        <span
+          n:if="isset($MAJOR_RELEASE_PHP_REQUIRED)"
+          class="errors icon-block"
+        >{='Requires PHP %s'|translate:$MAJOR_RELEASE_PHP_REQUIRED}</span>
       </p>
       <p
         class="autoupdate_bar"

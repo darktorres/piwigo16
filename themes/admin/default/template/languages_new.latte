@@ -716,27 +716,30 @@ jQuery().ready(function(){
           <td>{='Actions'|translate}</td>
         </tr>
       </thead>
-      <tr n:foreach="$languages as $language" class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}">
-          <td><a
-              href="{$language['EXT_URL']|noescape}"
-              class="externalLink cluetip"
-              title="{$language['EXT_NAME']}|{$language['EXT_DESC']|htmlspecialchars|nl2br|noescape}"
-            >{$language['EXT_NAME']}</a></td>
-          <td style="text-align:center;"><a
-              href="{$language['EXT_URL']|noescape}"
-              class="externalLink cluetip"
-              title="{$language['EXT_NAME']}|{$language['VER_DESC']|htmlspecialchars|nl2br|noescape}"
-            >{$language['VERSION']}</a></td>
-          <td>{$language['DATE']}</td>
-          <td>{$language['AUTHOR']}</td>
-          <td style="text-align:center;"><a
-              href="{$language['URL_INSTALL']|noescape}"
-            >{='Install'|translate}</a>
-            / <a
-              href="{$language['URL_DOWNLOAD']|noescape}"
-            >{='Download'|translate}</a>
-          </td>
-        </tr>
+      <tr
+        n:foreach="$languages as $language"
+        class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
+      >
+        <td><a
+            href="{$language['EXT_URL']|noescape}"
+            class="externalLink cluetip"
+            title="{$language['EXT_NAME']}|{$language['EXT_DESC']|htmlspecialchars|nl2br|noescape}"
+          >{$language['EXT_NAME']}</a></td>
+        <td style="text-align:center;"><a
+            href="{$language['EXT_URL']|noescape}"
+            class="externalLink cluetip"
+            title="{$language['EXT_NAME']}|{$language['VER_DESC']|htmlspecialchars|nl2br|noescape}"
+          >{$language['VERSION']}</a></td>
+        <td>{$language['DATE']}</td>
+        <td>{$language['AUTHOR']}</td>
+        <td style="text-align:center;"><a
+            href="{$language['URL_INSTALL']|noescape}"
+          >{='Install'|translate}</a>
+          / <a
+            href="{$language['URL_DOWNLOAD']|noescape}"
+          >{='Download'|translate}</a>
+        </td>
+      </tr>
     </table>
   {else}
     <p>{='There is no other language available.'|translate}</p>

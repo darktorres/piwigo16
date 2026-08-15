@@ -855,111 +855,117 @@ const str_from_begining = "{='since the beginning'|translate}";
   <div id="availablePlugins">
     {var $color_tab = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"]}
 
-    <div n:foreach="$plugins as $plugin"
-        class="pluginBox pluginBigBox"
-        id="plugin_{$plugin['ID']}"
-        data-id="{$plugin['ID']}"
-        data-date="{$plugin['ID']}"
-        data-name="{$plugin['EXT_NAME']}"
-        data-revision="{$plugin['REVISION_DATE']}"
-        data-downloads="{$plugin['DOWNLOADS']}"
-        data-author="{$plugin['AUTHOR']}"
-        data-tags="{$plugin['TAGS']|join:", "}"
-      >
-        <div class="pluginContent">
-          <div class="pluginImage">
-            {if $plugin['SCREENSHOT'] == ''}
-              <span class="noImage {$color_tab[$plugin['ID'] % 5]}"><i
-                  class="icon-puzzle"
-                ></i></span>
-            {else}
-              <span
-                class="screenshot"
-                style="background-image: url({$plugin['SCREENSHOT']|noescape});"
-              ></span>
-            {/if}
-          </div>
-          <div class="pluginInfo">
-            <div>
-              <div class="pluginName">
-                <span title="{$plugin['EXT_NAME']}">{$plugin['EXT_NAME']}</span>
-                <i
-                  class="certification tiptip"
-                  data-certification="{$plugin['CERTIFICATION']}"
-                  {if $plugin['CERTIFICATION'] == 3}
-                  title="{='This plugin have been updated recently'|translate}"
-                  {elseif $plugin['CERTIFICATION'] == 2}
-                  title="{='This plugin was updated less than 6 months ago'|translate}"
-                  {elseif $plugin['CERTIFICATION'] == 1}
-                  title="{='This plugin has no recent update'|translate}"
-                  {elseif $plugin['CERTIFICATION'] == 0}
-                  title="{='This plugin have no update since 3 years ! It may be outdated'|translate}"
-                  {elseif $plugin['CERTIFICATION'] == -1}
-                  title="{='This plugin is incompatible with your version'|translate}"
-                  {/if}
-                ></i>
-              </div>
-              <div
-                class="pluginAuthorVersion"
-              >{='by %s'|translate:$plugin['AUTHOR']}</div>
+    <div
+      n:foreach="$plugins as $plugin"
+      class="pluginBox pluginBigBox"
+      id="plugin_{$plugin['ID']}"
+      data-id="{$plugin['ID']}"
+      data-date="{$plugin['ID']}"
+      data-name="{$plugin['EXT_NAME']}"
+      data-revision="{$plugin['REVISION_DATE']}"
+      data-downloads="{$plugin['DOWNLOADS']}"
+      data-author="{$plugin['AUTHOR']}"
+      data-tags="{$plugin['TAGS']|join:", "}"
+    >
+      <div class="pluginContent">
+        <div class="pluginImage">
+          {if $plugin['SCREENSHOT'] == ''}
+            <span class="noImage {$color_tab[$plugin['ID'] % 5]}"><i
+                class="icon-puzzle"
+              ></i></span>
+          {else}
+            <span
+              class="screenshot"
+              style="background-image: url({$plugin['SCREENSHOT']|noescape});"
+            ></span>
+          {/if}
+        </div>
+        <div class="pluginInfo">
+          <div>
+            <div class="pluginName">
+              <span title="{$plugin['EXT_NAME']}">{$plugin['EXT_NAME']}</span>
+              <i
+                class="certification tiptip"
+                data-certification="{$plugin['CERTIFICATION']}"
+                {if $plugin['CERTIFICATION'] == 3}
+                title="{='This plugin have been updated recently'|translate}"
+                {elseif $plugin['CERTIFICATION'] == 2}
+                title="{='This plugin was updated less than 6 months ago'|translate}"
+                {elseif $plugin['CERTIFICATION'] == 1}
+                title="{='This plugin has no recent update'|translate}"
+                {elseif $plugin['CERTIFICATION'] == 0}
+                title="{='This plugin have no update since 3 years ! It may be outdated'|translate}"
+                {elseif $plugin['CERTIFICATION'] == -1}
+                title="{='This plugin is incompatible with your version'|translate}"
+                {/if}
+              ></i>
             </div>
-
-            <div>
-              <div n:if="!is_null($plugin['RATING'])"
-                  class="pluginRating tiptip"
-                  data-rating="{$plugin['RATING']}"
-                  title="{='On %d rating(s)'|translate:$plugin['NB_RATINGS']}"
-                >
-                  <div class="rating-star-container">
-                    <span data-star="0"><i></i></span>
-                    <span data-star="1"><i></i></span>
-                    <span data-star="2"><i></i></span>
-                    <span data-star="3"><i></i></span>
-                    <span data-star="4"><i></i></span>
-                  </div>
-                  <span class="rating">{$plugin['RATING']}</span>
-                </div>
-              <div
-                class="pluginDownload tiptip"
-                title="{$plugin['DOWNLOADS']} {='Downloads'|translate}"
-              ><i class="icon-download">{$plugin['DOWNLOADS']}</i></div>
-              <div
-                class="pluginVersion tiptip"
-                title="{$plugin['REVISION_FORMATED_DATE']}"
-              ><i
-                  class="icon-flow-branch"
-                ></i>{='Version %s'|translate:$plugin['VERSION']}</div>
-              <a class="pluginLink" href="{$plugin['EXT_URL']|noescape}"><i
-                  class="icon-link"
-                ></i>{='Website'|translate}</a>
-            </div>
-
-            <div class="pluginInstall">
-              <a
-                class="buttonLike buttonInstall"
-                href="{$plugin['URL_INSTALL']|noescape}"
-              ><i class="icon-plus-circled"></i>{='Add'|translate}</a>
-            </div>
-          </div>
-          <div class="pluginMoreInfo">
             <div
-              class="pluginTags tiptip"
-              title="{='Tags'|translate} : {$plugin['TAGS']|join:", "}"
+              class="pluginAuthorVersion"
+            >{='by %s'|translate:$plugin['AUTHOR']}</div>
+          </div>
+
+          <div>
+            <div
+              n:if="!is_null($plugin['RATING'])"
+              class="pluginRating tiptip"
+              data-rating="{$plugin['RATING']}"
+              title="{='On %d rating(s)'|translate:$plugin['NB_RATINGS']}"
             >
-              <span n:foreach="$plugin['TAGS'] as $tag_id => $tag_label" data-id="{$tag_id}">{$tag_label}</span>
+              <div class="rating-star-container">
+                <span data-star="0"><i></i></span>
+                <span data-star="1"><i></i></span>
+                <span data-star="2"><i></i></span>
+                <span data-star="3"><i></i></span>
+                <span data-star="4"><i></i></span>
+              </div>
+              <span class="rating">{$plugin['RATING']}</span>
             </div>
-            <div class="pluginDesc">
-              {$plugin['BIG_DESC']|nl2br|noescape}
-            </div>
+            <div
+              class="pluginDownload tiptip"
+              title="{$plugin['DOWNLOADS']} {='Downloads'|translate}"
+            ><i class="icon-download">{$plugin['DOWNLOADS']}</i></div>
+            <div
+              class="pluginVersion tiptip"
+              title="{$plugin['REVISION_FORMATED_DATE']}"
+            ><i
+                class="icon-flow-branch"
+              ></i>{='Version %s'|translate:$plugin['VERSION']}</div>
+            <a class="pluginLink" href="{$plugin['EXT_URL']|noescape}"><i
+                class="icon-link"
+              ></i>{='Website'|translate}</a>
+          </div>
+
+          <div class="pluginInstall">
+            <a
+              class="buttonLike buttonInstall"
+              href="{$plugin['URL_INSTALL']|noescape}"
+            ><i class="icon-plus-circled"></i>{='Add'|translate}</a>
+          </div>
+        </div>
+        <div class="pluginMoreInfo">
+          <div
+            class="pluginTags tiptip"
+            title="{='Tags'|translate} : {$plugin['TAGS']|join:", "}"
+          >
+            <span
+              n:foreach="$plugin['TAGS'] as $tag_id => $tag_label"
+              data-id="{$tag_id}"
+            >{$tag_label}</span>
+          </div>
+          <div class="pluginDesc">
+            {$plugin['BIG_DESC']|nl2br|noescape}
           </div>
         </div>
       </div>
+    </div>
   </div>
 {else}
   <p>{='There is no other plugin available.'|translate}
-    <a n:if="isset($BETA_URL)"
-        href="{$BETA_URL|noescape}"
-        class="buttonLike icon-fire"
-      >{='Show beta test plugins'|translate}</a>
+    <a
+      n:if="isset($BETA_URL)"
+      href="{$BETA_URL|noescape}"
+      class="buttonLike icon-fire"
+    >{='Show beta test plugins'|translate}</a>
   </p>
 {/if}

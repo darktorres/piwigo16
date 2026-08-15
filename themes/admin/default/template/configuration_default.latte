@@ -703,8 +703,8 @@
 >
   <div id="configContent">
     <fieldset n:if="$GUEST_USERNAME != 'guest'">
-        {='The settings for the guest are from the %s user'|translate:$GUEST_USERNAME}
-      </fieldset>
+      {='The settings for the guest are from the %s user'|translate:$GUEST_USERNAME}
+    </fieldset>
 
     <fieldset>
       <legend>{='Preferences'|translate}</legend>
@@ -747,9 +747,9 @@
         </li>
 
         <li n:if="$GUEST_ACTIVATE_COMMENTS">
-            <span class="property">{='Show number of comments'|translate}</span>
-            {=htmlRadios(name: 'show_nb_comments', options: $radio_options, selected: $GUEST_NB_COMMENTS)}
-          </li>
+          <span class="property">{='Show number of comments'|translate}</span>
+          {=htmlRadios(name: 'show_nb_comments', options: $radio_options, selected: $GUEST_NB_COMMENTS)}
+        </li>
 
         <li>
           <span class="property">{='Show number of hits'|translate}</span>

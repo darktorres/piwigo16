@@ -711,8 +711,8 @@
 {/if}
 
 <div n:if="isset($debug['QUERIES_LIST'])" id="debug">
-    {$debug['QUERIES_LIST']|noescape}
-  </div>
+  {$debug['QUERIES_LIST']|noescape}
+</div>
 
 <div id="footer">
   <div>
@@ -721,14 +721,15 @@
       href="{$APP_URL}"
       title="{='Visit Piwigo project website'|translate}"
     ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-    <span n:if="isset($DISPLAY_BELL) and $DISPLAY_BELL"
-        id="whats_new_notification"
-        class="icon-blue tiptip"
-        onclick="show_user_whats_new()"
-        title="{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}"
-      >
-        <i class="icon-bell"></i>
-      </span>
+    <span
+      n:if="isset($DISPLAY_BELL) and $DISPLAY_BELL"
+      id="whats_new_notification"
+      class="icon-blue tiptip"
+      onclick="show_user_whats_new()"
+      title="{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}"
+    >
+      <i class="icon-bell"></i>
+    </span>
   </div>
   <div id="pageInfos">
     {if isset($debug['TIME'])}
@@ -743,49 +744,49 @@
 </div>{* <!-- footer --> *}
 </div>{* <!-- the_page --> *}
 
-<div n:if="(isset($SHOW_WHATS_NEW) and $SHOW_WHATS_NEW) or (isset($DISPLAY_BELL) and $DISPLAY_BELL)" id="whats_new">
-    <div id="whats_new_popin">
-      <a
-        class="icon-cancel close_whats_new"
-        onClick="hide_user_whats_new()"
-      ></a>
-      <h3>{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}</h3>
-      <div>
-        <div class="whats_new_block_container">
-          <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a
-                href="{$RELEASE_NOTE_URL|noescape}"
-                target="_blank"
-              >{='Brand new login & preferences with Standard pages !'|translate}</a></h4>
-          </div>
-          <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a
-                href="{$RELEASE_NOTE_URL|noescape}"
-                target="_blank"
-              >{='Two factor authentication is here'|translate}</a></h4>
-          </div>
+<div
+  n:if="(isset($SHOW_WHATS_NEW) and $SHOW_WHATS_NEW) or (isset($DISPLAY_BELL) and $DISPLAY_BELL)"
+  id="whats_new"
+>
+  <div id="whats_new_popin">
+    <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+    <h3>{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}</h3>
+    <div>
+      <div class="whats_new_block_container">
+        <div class="whats_new_block icon-blue whats_new_block_w_60">
+          <h4><a
+              href="{$RELEASE_NOTE_URL|noescape}"
+              target="_blank"
+            >{='Brand new login & preferences with Standard pages !'|translate}</a></h4>
         </div>
-        <div class="whats_new_block_container">
-          <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a
-                href="{$RELEASE_NOTE_URL|noescape}"
-                target="_blank"
-              >{='UI redesigns that make a difference'|translate}</a></h4>
-          </div>
+        <div class="whats_new_block icon-purple whats_new_block_w_40">
+          <h4><a
+              href="{$RELEASE_NOTE_URL|noescape}"
+              target="_blank"
+            >{='Two factor authentication is here'|translate}</a></h4>
         </div>
       </div>
-      <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i
-            class="icon-thumbs-up"
-          ></i> {='Ok, got it!'|translate}</button>
-        <a
-          class="buttonLike"
-          href="{$RELEASE_NOTE_URL|noescape}"
-          target="_blank"
-        ><i class="icon-book"></i> {='Read the release note'|translate}</a>
+      <div class="whats_new_block_container">
+        <div class="whats_new_block icon-green whats_new_block_w_100">
+          <h4><a
+              href="{$RELEASE_NOTE_URL|noescape}"
+              target="_blank"
+            >{='UI redesigns that make a difference'|translate}</a></h4>
+        </div>
       </div>
     </div>
+    <div class="whats_new_buttons">
+      <button onClick="hide_user_whats_new()"><i
+          class="icon-thumbs-up"
+        ></i> {='Ok, got it!'|translate}</button>
+      <a
+        class="buttonLike"
+        href="{$RELEASE_NOTE_URL|noescape}"
+        target="_blank"
+      ><i class="icon-book"></i> {='Read the release note'|translate}</a>
+    </div>
   </div>
+</div>
 
 <style>
 
@@ -832,7 +833,11 @@ function show_user_whats_new() {
 {=getCombinedScripts('footer')}
 <!-- END get_combined -->
 
-<script n:if="isset($VITALS_SCRIPT_URL)" type="module" src="{$VITALS_SCRIPT_URL}"></script>
+<script
+  n:if="isset($VITALS_SCRIPT_URL)"
+  type="module"
+  src="{$VITALS_SCRIPT_URL}"
+></script>
 
 </body>
 </html>

@@ -836,19 +836,19 @@ const guest_id = {$guest_id};
 </form>
 
 <fieldset n:if="isset($search_summary)">
-    <legend>{='Summary'|translate}</legend>
+  <legend>{='Summary'|translate}</legend>
 
-    <ul>
-      <li>{$search_summary['NB_LINES']}, {$search_summary['FILESIZE']}</li>
-      <li>
-        {$search_summary['USERS']}
-        <ul>
-          <li>{$search_summary['MEMBERS']}</li>
-          <li>{$search_summary['GUESTS']}</li>
-        </ul>
-      </li>
-    </ul>
-  </fieldset>
+  <ul>
+    <li>{$search_summary['NB_LINES']}, {$search_summary['FILESIZE']}</li>
+    <li>
+      {$search_summary['USERS']}
+      <ul>
+        <li>{$search_summary['MEMBERS']}</li>
+        <li>{$search_summary['GUESTS']}</li>
+      </ul>
+    </li>
+  </ul>
+</fieldset>
 
 {* Used to be copied in JS *}
 <span id="-2" class="icon-green summary-user-item hide">

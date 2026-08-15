@@ -719,46 +719,50 @@ $(".delete-site-button").each(function() {
 {do footerScript($tmpFooterScript2)}
 
 <div n:if="!empty($remote_output)" class="remoteOutput">
-    <ul>
-      <li n:foreach="$remote_output as $remote_line" class="{$remote_line['CLASS']}">{$remote_line['CONTENT']}</li>
-    </ul>
-  </div>
+  <ul>
+    <li
+      n:foreach="$remote_output as $remote_line"
+      class="{$remote_line['CLASS']}"
+    >{$remote_line['CONTENT']}</li>
+  </ul>
+</div>
 
 <table n:if="!empty($sites)" class="table2">
-    <tr class="throw">
-      <td>{='Directory'|translate}</td>
-      <td>{='Actions'|translate}</td>
-    </tr>
-    <tr n:foreach="$sites as $site"
-        style="text-align:left"
-        class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
-      ><td>
-          <a
-            href="{$site['NAME']}"
-          >{$site['NAME']}</a><br>({$site['TYPE']}, {$site['CATEGORIES']} {='Albums'|translate}, {$site['IMAGES']|translate_dec:'%d photo','%d photos'})
-        </td><td>
+  <tr class="throw">
+    <td>{='Directory'|translate}</td>
+    <td>{='Actions'|translate}</td>
+  </tr>
+  <tr
+    n:foreach="$sites as $site"
+    style="text-align:left"
+    class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
+  ><td>
+      <a
+        href="{$site['NAME']}"
+      >{$site['NAME']}</a><br>({$site['TYPE']}, {$site['CATEGORIES']} {='Albums'|translate}, {$site['IMAGES']|translate_dec:'%d photo','%d photos'})
+    </td><td>
+      [<a
+        href="{$site['U_SYNCHRONIZE']|noescape}"
+        title="{='update the database from files'|translate}"
+      >{='Synchronize'|translate}</a>]
+      {if isset($site['U_DELETE'])}
+        [<a
+          class="delete-site-button"
+          href="{$site['U_DELETE']|noescape}"
+          title="{='delete this site and all its attached elements'|translate}"
+        >{='delete'|translate}</a>]
+      {/if}
+      {if !empty($site['plugin_links'])}
+        <br>
+        {foreach $site['plugin_links'] as $plugin_link}
           [<a
-            href="{$site['U_SYNCHRONIZE']|noescape}"
-            title="{='update the database from files'|translate}"
-          >{='Synchronize'|translate}</a>]
-          {if isset($site['U_DELETE'])}
-            [<a
-              class="delete-site-button"
-              href="{$site['U_DELETE']|noescape}"
-              title="{='delete this site and all its attached elements'|translate}"
-            >{='delete'|translate}</a>]
-          {/if}
-          {if !empty($site['plugin_links'])}
-            <br>
-            {foreach $site['plugin_links'] as $plugin_link}
-              [<a
-                href="{$plugin_link['U_HREF']}"
-                title='{$plugin_link['U_HINT']}'
-              >{$plugin_link['U_CAPTION']}</a>]
-            {/foreach}
-          {/if}
-        </td></tr>
-  </table>
+            href="{$plugin_link['U_HREF']}"
+            title='{$plugin_link['U_HINT']}'
+          >{$plugin_link['U_CAPTION']}</a>]
+        {/foreach}
+      {/if}
+    </td></tr>
+</table>
 
 <p id="showCreateSite" style="text-align:left;margin-left:1em;">
   <a href="#">{='create a new site'|translate}</a>

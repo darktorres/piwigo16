@@ -743,24 +743,29 @@
             </a>
           </span>
           <span n:if="$SHOW_THUMBNAIL_CAPTION" class="thumbLegend">
-              <span class="thumbName">{$thumbnail['NAME']|noescape}</span>
-              <img n:if="!empty($thumbnail['icon_ts'])"
-                  title="{$thumbnail['icon_ts']['TITLE']}"
-                  src="{$ROOT_URL}{$themeconf['icon_dir']}/recent.png"
-                  alt="(!)"
-                >
-              <span n:if="isset($thumbnail['NB_COMMENTS'])"
-                  class="{if 0 == $thumbnail['NB_COMMENTS']}zero {/if}nb-comments"
-                >
-                  <br>
-                  {$thumbnail['NB_COMMENTS']|translate_dec:'%d comment','%d comments'}
-                </span>
-
-              <span n:if="isset($thumbnail['NB_HITS'])" class="{if 0 == $thumbnail['NB_HITS']}zero {/if}nb-hits">
-                  <br>
-                  {$thumbnail['NB_HITS']|translate_dec:'%d hit','%d hits'}
-                </span>
+            <span class="thumbName">{$thumbnail['NAME']|noescape}</span>
+            <img
+              n:if="!empty($thumbnail['icon_ts'])"
+              title="{$thumbnail['icon_ts']['TITLE']}"
+              src="{$ROOT_URL}{$themeconf['icon_dir']}/recent.png"
+              alt="(!)"
+            >
+            <span
+              n:if="isset($thumbnail['NB_COMMENTS'])"
+              class="{if 0 == $thumbnail['NB_COMMENTS']}zero {/if}nb-comments"
+            >
+              <br>
+              {$thumbnail['NB_COMMENTS']|translate_dec:'%d comment','%d comments'}
             </span>
+
+            <span
+              n:if="isset($thumbnail['NB_HITS'])"
+              class="{if 0 == $thumbnail['NB_HITS']}zero {/if}nb-hits"
+            >
+              <br>
+              {$thumbnail['NB_HITS']|translate_dec:'%d hit','%d hits'}
+            </span>
+          </span>
         </span>
       </li>
     {/foreach}{/spaceless}

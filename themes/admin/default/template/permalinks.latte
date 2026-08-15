@@ -775,14 +775,15 @@ form fieldset p.actionButtons { margin-bottom:0}
       <td>{='Album'|translate} {$SORT_NAME|noescape}</td>
       <td>{='Permalink'|translate} {$SORT_PERMALINK|noescape}</td>
     </tr>
-    <tr n:foreach="$permalinks as $permalink"
-        class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
-        style="line-height:1.5em;"
-      >
-        <td style="text-align:center;">{$permalink['id']}</td>
-        <td>{$permalink['name']|noescape}</td>
-        <td>{$permalink['permalink']}</td>
-      </tr>
+    <tr
+      n:foreach="$permalinks as $permalink"
+      class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
+      style="line-height:1.5em;"
+    >
+      <td style="text-align:center;">{$permalink['id']}</td>
+      <td>{$permalink['name']|noescape}</td>
+      <td>{$permalink['permalink']}</td>
+    </tr>
   </table>
 </fieldset>
 
@@ -802,17 +803,20 @@ form fieldset p.actionButtons { margin-bottom:0}
       <td>{='Hit'|translate} {$SORT_OLD_HIT|noescape}</td>
       <td style="width:5px;"></td>
     </tr>
-    <tr n:foreach="$deleted_permalinks as $permalink" style="line-height:1.5em;">
-        <td style="text-align:center;">{$permalink['cat_id']}</td>
-        <td>{$permalink['name']|noescape}</td>
-        <td>{$permalink['permalink']}</td>
-        <td>{$permalink['date_deleted']}</td>
-        <td>{$permalink['last_hit']}</td>
-        <td>{$permalink['hit']}</td>
-        <td><a href="{$permalink['U_DELETE']|noescape}"><img
-              src="{$ROOT_URL}{$themeconf['admin_icon_dir']}/delete.png"
-              alt="[{='Delete'|translate}]"
-            ></a></td>
-      </tr>
+    <tr
+      n:foreach="$deleted_permalinks as $permalink"
+      style="line-height:1.5em;"
+    >
+      <td style="text-align:center;">{$permalink['cat_id']}</td>
+      <td>{$permalink['name']|noescape}</td>
+      <td>{$permalink['permalink']}</td>
+      <td>{$permalink['date_deleted']}</td>
+      <td>{$permalink['last_hit']}</td>
+      <td>{$permalink['hit']}</td>
+      <td><a href="{$permalink['U_DELETE']|noescape}"><img
+            src="{$ROOT_URL}{$themeconf['admin_icon_dir']}/delete.png"
+            alt="[{='Delete'|translate}]"
+          ></a></td>
+    </tr>
   </table>
 </fieldset>

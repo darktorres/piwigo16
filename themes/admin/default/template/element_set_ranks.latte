@@ -739,30 +739,30 @@ jQuery('.thumbnail').tipTip({
 <form action="{$F_ACTION|noescape}" method="post" id="element_set_ranks">
   <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
   <fieldset n:if="!empty($thumbnails)">
-      <legend><span
-          class="icon-sort-alt-down icon-blue"
-        ></span>{='Manual order'|translate}</legend>
-      {if !empty($thumbnails)}
-        <p>{='Drag to re-order'|translate}</p>
-        <ul class="thumbnails">
-          <li n:foreach="$thumbnails as $thumbnail" class="rank-of-image">
-              <img
-                src="{$thumbnail['TN_SRC']|noescape}"
-                class="thumbnail"
-                alt="{$thumbnail['NAME']}"
-                title="{$thumbnail['NAME']}"
-                style="width:{$thumbnail['SIZE'][0]}px; height:{$thumbnail['SIZE'][1]}px; "
-              >
-              <input
-                type="text"
-                name="rank_of_image[{$thumbnail['ID']}]"
-                value="{$thumbnail['RANK']}"
-                style="display:none"
-              >
-            </li>
-        </ul>
-      {/if}
-    </fieldset>
+    <legend><span
+        class="icon-sort-alt-down icon-blue"
+      ></span>{='Manual order'|translate}</legend>
+    {if !empty($thumbnails)}
+      <p>{='Drag to re-order'|translate}</p>
+      <ul class="thumbnails">
+        <li n:foreach="$thumbnails as $thumbnail" class="rank-of-image">
+          <img
+            src="{$thumbnail['TN_SRC']|noescape}"
+            class="thumbnail"
+            alt="{$thumbnail['NAME']}"
+            title="{$thumbnail['NAME']}"
+            style="width:{$thumbnail['SIZE'][0]}px; height:{$thumbnail['SIZE'][1]}px; "
+          >
+          <input
+            type="text"
+            name="rank_of_image[{$thumbnail['ID']}]"
+            value="{$thumbnail['RANK']}"
+            style="display:none"
+          >
+        </li>
+      </ul>
+    {/if}
+  </fieldset>
 
   <fieldset>
     <legend><span
@@ -814,10 +814,10 @@ jQuery('.thumbnail').tipTip({
       </label>
       <div id="image_order_user_define_options">
         <p n:foreach="$image_order as $order" class="field">
-            <select name="image_order[]">
-              {=htmlOptions(options: $image_order_options, selected: $order)}
-            </select>
-          </p>
+          <select name="image_order[]">
+            {=htmlOptions(options: $image_order_options, selected: $order)}
+          </select>
+        </p>
       </div>
     </fieldset>
 
@@ -842,10 +842,10 @@ jQuery('.thumbnail').tipTip({
     </div>
     <div class="savebar-footer-end">
       <div n:if="isset($save_success)" class="savebar-footer-block">
-          <div class="badge info-message">
-            <i class="icon-ok"></i>{$save_success}
-          </div>
+        <div class="badge info-message">
+          <i class="icon-ok"></i>{$save_success}
         </div>
+      </div>
 
       <div class="savebar-footer-block">
         <button

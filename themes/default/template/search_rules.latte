@@ -717,23 +717,23 @@
     {/if}
 
     <li n:if="isset($SEARCH_TAGS_MODE)">
-        <p>{if 'AND' == $SEARCH_TAGS_MODE}{='All tags'|translate}{else}{='Any tag'|translate}{/if}</p>
-        <ul>
-          <li n:foreach="$search_tags as $v">{$v|noescape}</li>
-        </ul>
-      </li>
+      <p>{if 'AND' == $SEARCH_TAGS_MODE}{='All tags'|translate}{else}{='Any tag'|translate}{/if}</p>
+      <ul>
+        <li n:foreach="$search_tags as $v">{$v|noescape}</li>
+      </ul>
+    </li>
 
     <li n:if="isset($DATE_CREATION)">{$DATE_CREATION|noescape}</li>
 
     <li n:if="isset($DATE_AVAILABLE)">{$DATE_AVAILABLE|noescape}</li>
 
     <li n:if="isset($search_categories)">
-        <p>{='Albums'|translate}</p>
+      <p>{='Albums'|translate}</p>
 
-        <ul>
-          <li n:foreach="$search_categories as $v">{$v|noescape}</li>
-        </ul>
-      </li>
+      <ul>
+        <li n:foreach="$search_categories as $v">{$v|noescape}</li>
+      </ul>
+    </li>
   </ul>
 
   <p>

@@ -835,11 +835,11 @@ var actionInfos_tags_moved = "{_ '%d tags moved'|noescape}";
             <span class='username_filter'>---</span>
           </option>
           <option n:foreach="$ulist as $user" value="{$user['id']}">
-              <span class='username_filter'>{$user['username']}</span>
-              <span class='nb_lines_str'>
-                {='(%d)'|translate:$user['nb_lines']}
-              </span>
-            </option>
+            <span class='username_filter'>{$user['username']}</span>
+            <span class='nb_lines_str'>
+              {='(%d)'|translate:$user['nb_lines']}
+            </span>
+          </option>
         </select>
       </div>
 
@@ -851,17 +851,17 @@ var actionInfos_tags_moved = "{_ '%d tags moved'|noescape}";
             <span class='action_filter'>---</span>
           </option>
           <option n:foreach="$ACTIONS as $action" value="{$action['value']}">
-              <span class='action_filter'>
-                {=ucfirst($action['object'])|translate}
-                /
-                {if $action['action'] == 'delete'}
-                  {='deletion'|translate:$action['object']}
-                {else}
-                  {$action['action']|translate}
-                {/if}
-                {=' (%d)'|translate:$action['counter']}
-              </span>
-            </option>
+            <span class='action_filter'>
+              {=ucfirst($action['object'])|translate}
+              /
+              {if $action['action'] == 'delete'}
+                {='deletion'|translate:$action['object']}
+              {else}
+                {$action['action']|translate}
+              {/if}
+              {=' (%d)'|translate:$action['counter']}
+            </span>
+          </option>
         </select>
       </div>
 
@@ -890,21 +890,21 @@ var actionInfos_tags_moved = "{_ '%d tags moved'|noescape}";
       </div>
 
       <div n:if="$ADDITIONAL_FILT['type']" class="additional-filters-section">
-          <div class="additional-filters-info">
-            {='Additional filters'|translate}
-          </div>
-          <div class="additional-filters">
-            <div class="activity-filter-container">
-              {if $ADDITIONAL_FILT['type'] == 'photo'}
-                <span class="icon-picture">{$ADDITIONAL_FILT['name']}</span>
-              {elseif $ADDITIONAL_FILT['type'] == 'album'}
-                <span class="icon-folder-open">{$ADDITIONAL_FILT['name']}</span>
-              {else}
-                <span class="icon-group">{$ADDITIONAL_FILT['name']}</span>
-              {/if}
-            </div>
+        <div class="additional-filters-info">
+          {='Additional filters'|translate}
+        </div>
+        <div class="additional-filters">
+          <div class="activity-filter-container">
+            {if $ADDITIONAL_FILT['type'] == 'photo'}
+              <span class="icon-picture">{$ADDITIONAL_FILT['name']}</span>
+            {elseif $ADDITIONAL_FILT['type'] == 'album'}
+              <span class="icon-folder-open">{$ADDITIONAL_FILT['name']}</span>
+            {else}
+              <span class="icon-group">{$ADDITIONAL_FILT['name']}</span>
+            {/if}
           </div>
         </div>
+      </div>
     </div>
   </div>
 

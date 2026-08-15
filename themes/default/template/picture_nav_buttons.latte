@@ -730,24 +730,26 @@
         </span>
       {/if}
     {/if}
-    <a n:if="isset($slideshow['U_START_REPEAT'])"
-        href="{$slideshow['U_START_REPEAT']|noescape}"
-        title="{='Repeat the slideshow'|translate}"
-        class="pwg-state-default pwg-button"
-      >
-        <span class="pwg-icon pwg-icon-repeat-play"></span><span
-          class="pwg-button-text"
-        >{='Repeat the slideshow'|translate}</span>
-      </a>
-    <a n:if="isset($slideshow['U_STOP_REPEAT'])"
-        href="{$slideshow['U_STOP_REPEAT']|noescape}"
-        title="{='Not repeat the slideshow'|translate}"
-        class="pwg-state-default pwg-button"
-      >
-        <span class="pwg-icon pwg-icon-repeat-stop"></span><span
-          class="pwg-button-text"
-        >{='Not repeat the slideshow'|translate}</span>
-      </a>
+    <a
+      n:if="isset($slideshow['U_START_REPEAT'])"
+      href="{$slideshow['U_START_REPEAT']|noescape}"
+      title="{='Repeat the slideshow'|translate}"
+      class="pwg-state-default pwg-button"
+    >
+      <span class="pwg-icon pwg-icon-repeat-play"></span><span
+        class="pwg-button-text"
+      >{='Repeat the slideshow'|translate}</span>
+    </a>
+    <a
+      n:if="isset($slideshow['U_STOP_REPEAT'])"
+      href="{$slideshow['U_STOP_REPEAT']|noescape}"
+      title="{='Not repeat the slideshow'|translate}"
+      class="pwg-state-default pwg-button"
+    >
+      <span class="pwg-icon pwg-icon-repeat-stop"></span><span
+        class="pwg-button-text"
+      >{='Not repeat the slideshow'|translate}</span>
+    </a>
     {*<!--{spaceless}{if isset($first)}
   <a href="{$first['U_IMG']}" title="{='First'|translate} : {$first['TITLE']}" class="pwg-state-default pwg-button">
     <span class="pwg-icon pwg-icon-arrowstop-w">&nbsp;</span><span class="pwg-button-text">{='First'|translate}</span>
@@ -757,15 +759,16 @@
     <span class="pwg-icon pwg-icon-arrowstop-w">&nbsp;</span><span class="pwg-button-text">{='First'|translate}</span>
   </span>
 {/if}{/spaceless}-->*}
-    {spaceless}<a n:if="isset($U_UP) and !isset($slideshow)"
-          href="{$U_UP|noescape}"
-          title="{='Thumbnails'|translate}"
-          class="pwg-state-default pwg-button"
-        >
-          <span class="pwg-icon pwg-icon-arrow-n"></span><span
-            class="pwg-button-text"
-          >{='Thumbnails'|translate}</span>
-        </a>{/spaceless}
+    {spaceless}<a
+        n:if="isset($U_UP) and !isset($slideshow)"
+        href="{$U_UP|noescape}"
+        title="{='Thumbnails'|translate}"
+        class="pwg-state-default pwg-button"
+      >
+        <span class="pwg-icon pwg-icon-arrow-n"></span><span
+          class="pwg-button-text"
+        >{='Thumbnails'|translate}</span>
+      </a>{/spaceless}
     {spaceless}{if isset($previous)}
         <a
           href="{$previous['U_IMG']|noescape}"
@@ -783,24 +786,26 @@
           >{='Previous'|translate}</span>
         </span>
       {/if}{/spaceless}
-    <a n:if="isset($slideshow['U_START_PLAY'])"
-        href="{$slideshow['U_START_PLAY']|noescape}"
-        title="{='Play of slideshow'|translate}"
-        class="pwg-state-default pwg-button"
-      >
-        <span class="pwg-icon pwg-icon-play"></span><span
-          class="pwg-button-text"
-        >{='Play of slideshow'|translate}</span>
-      </a>
-    <a n:if="isset($slideshow['U_STOP_PLAY'])"
-        href="{$slideshow['U_STOP_PLAY']|noescape}"
-        title="{='Pause of slideshow'|translate}"
-        class="pwg-state-default pwg-button"
-      >
-        <span class="pwg-icon pwg-icon-pause"></span><span
-          class="pwg-button-text"
-        >{='Pause of slideshow'|translate}</span>
-      </a>
+    <a
+      n:if="isset($slideshow['U_START_PLAY'])"
+      href="{$slideshow['U_START_PLAY']|noescape}"
+      title="{='Play of slideshow'|translate}"
+      class="pwg-state-default pwg-button"
+    >
+      <span class="pwg-icon pwg-icon-play"></span><span
+        class="pwg-button-text"
+      >{='Play of slideshow'|translate}</span>
+    </a>
+    <a
+      n:if="isset($slideshow['U_STOP_PLAY'])"
+      href="{$slideshow['U_STOP_PLAY']|noescape}"
+      title="{='Pause of slideshow'|translate}"
+      class="pwg-state-default pwg-button"
+    >
+      <span class="pwg-icon pwg-icon-pause"></span><span
+        class="pwg-button-text"
+      >{='Pause of slideshow'|translate}</span>
+    </a>
     {spaceless}{if isset($next)}
         <a
           href="{$next['U_IMG']|noescape}"

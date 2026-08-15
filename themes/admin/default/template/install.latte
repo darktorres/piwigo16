@@ -862,16 +862,16 @@ jQuery().ready(function(){
         <h2>{='Version'|translate} {$RELEASE} - {='Installation'|translate}</h2>
 
         <div n:if="isset($errors)" class="errors">
-            <ul>
-              <li n:foreach="$errors as $error">{$error}</li>
-            </ul>
-          </div>
+          <ul>
+            <li n:foreach="$errors as $error">{$error}</li>
+          </ul>
+        </div>
 
         <div n:if="isset($infos)" class="infos">
-            <ul>
-              <li n:foreach="$infos as $info">{$info}</li>
-            </ul>
-          </div>
+          <ul>
+            <li n:foreach="$infos as $info">{$info}</li>
+          </ul>
+        </div>
 
         {if isset($install)}
           <form method="POST" action="{$F_ACTION|noescape}" name="install_form">

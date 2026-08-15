@@ -770,74 +770,75 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
     </div>
   {else}
     <div n:if="count($setup_warnings) > 0" class="warnings">
-        <ul>
-          <li n:foreach="$setup_warnings as $warning">{$warning}</li>
-        </ul>
-        <div class="hideButton" style="text-align:center"><a
-            href="{$hide_warnings_link|noescape}"
-          >{='Hide'|translate}</a></div>
-      </div>
+      <ul>
+        <li n:foreach="$setup_warnings as $warning">{$warning}</li>
+      </ul>
+      <div class="hideButton" style="text-align:center"><a
+          href="{$hide_warnings_link|noescape}"
+        >{='Hide'|translate}</a></div>
+    </div>
   {/if} {* $setup_errors *}
 
   <div n:if="$PROMOTE_MOBILE_APPS" class="promote-apps">
-      <div class="promote-content">
-        <div class="left-side">
-          <img
-            src="https://sandbox.piwigo.com/uploads/4/y/1/4y1zzhnrnw//2023/01/24/20230124175152-015bc1e3.png"
-          >
-        </div>
-        <div class="promote-text">
-          <span>{='Piwigo is also on mobile.'|translate}</span>
-          <span>{='Try now !'|translate}</span>
-        </div>
-        <div class="right-side">
-          <div>
-            <a href="{$APP_URL}/mobile-applications" target="_blank"><span
-                class="go-to-porg icon-link-1"
-              >{='Discover'|translate}</span></a>
-          </div>
+    <div class="promote-content">
+      <div class="left-side">
+        <img
+          src="https://sandbox.piwigo.com/uploads/4/y/1/4y1zzhnrnw//2023/01/24/20230124175152-015bc1e3.png"
+        >
+      </div>
+      <div class="promote-text">
+        <span>{='Piwigo is also on mobile.'|translate}</span>
+        <span>{='Try now !'|translate}</span>
+      </div>
+      <div class="right-side">
+        <div>
+          <a href="{$APP_URL}/mobile-applications" target="_blank"><span
+              class="go-to-porg icon-link-1"
+            >{='Discover'|translate}</span></a>
         </div>
       </div>
-      <span
-        class="dont-show-again icon-cancel tiptip"
-        title="{='Understood, do not show again'|translate}"
-      ></span>
     </div>
+    <span
+      class="dont-show-again icon-cancel tiptip"
+      title="{='Understood, do not show again'|translate}"
+    ></span>
+  </div>
 
   <div n:if="$ENABLE_FORMATS and $can_upload" class="format-mode-group-manager">
-      <label
-        class="switch"
-        onClick="window.location.replace({$SWITCH_FORMAT_MODE_URL}); $('.switch .slider').addClass('loading');"
-      >
-        <input
-          type="checkbox"
-          id="toggleFormatMode"
-          {if $DISPLAY_FORMATS}
-          checked
-          {/if}
-        >
-        <span class="slider round"></span>
-      </label>
-      <p>{='Upload Formats'|translate}</p>
-    </div>
-
-  <div n:if="!$DISPLAY_FORMATS"
-      class="addAlbumEmptyCenter"
-      {if $NB_ALBUMS > 0}
-      style="display:none;"
-      {/if}
+    <label
+      class="switch"
+      onClick="window.location.replace({$SWITCH_FORMAT_MODE_URL}); $('.switch .slider').addClass('loading');"
     >
-      <div class="addAlbumEmpty">
-        <div class="addAlbumEmptyTitle">{='Welcome!'|translate}</div>
-        <p
-          class="addAlbumEmptyInfos"
-        >{='Piwigo requires an album to add photos.'|translate}</p>
-        <a
-          class="buttonLike"
-          id="btnFirstAlbum"
-        >{='Create a first album'|translate}</a>
-      </div>
+      <input
+        type="checkbox"
+        id="toggleFormatMode"
+        {if $DISPLAY_FORMATS}
+        checked
+        {/if}
+      >
+      <span class="slider round"></span>
+    </label>
+    <p>{='Upload Formats'|translate}</p>
+  </div>
+
+  <div
+    n:if="!$DISPLAY_FORMATS"
+    class="addAlbumEmptyCenter"
+    {if $NB_ALBUMS > 0}
+    style="display:none;"
+    {/if}
+  >
+    <div class="addAlbumEmpty">
+      <div class="addAlbumEmptyTitle">{='Welcome!'|translate}</div>
+      <p
+        class="addAlbumEmptyInfos"
+      >{='Piwigo requires an album to add photos.'|translate}</p>
+      <a
+        class="buttonLike"
+        id="btnFirstAlbum"
+      >{='Create a first album'|translate}</a>
     </div>
+  </div>
 
   <div class="infos" style="display:none"><i class="eiw-icon icon-ok"></i></div>
   <div class="errors" style="display:none"><i
@@ -918,7 +919,9 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
             <div
               class='info-framed-title'
             >{$FORMATS_ORIGINAL_INFO['name']}</div>
-            <div n:if="isset($FORMATS_ORIGINAL_INFO['formats'])">{$FORMATS_ORIGINAL_INFO['formats']}</div>
+            <div
+              n:if="isset($FORMATS_ORIGINAL_INFO['formats'])"
+            >{$FORMATS_ORIGINAL_INFO['formats']}</div>
             <div>{$FORMATS_ORIGINAL_INFO['ext']}</div>
           </div>
         </a>
@@ -941,21 +944,29 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
           <span
             class="icon-file-image icon-yellow"
           ></span>{='Select files'|translate}
-          <div n:if="!$DISPLAY_FORMATS" id="uploadOptions" class="upload-options">
-              <span
-                class="icon-equalizer rotate-element upload-options-icon"
-              ></span>{='Options'|translate}
-            </div>
-        </div>
-        <div n:if="!$DISPLAY_FORMATS" class="upload-options-content" id="uploadOptionsContent">
-            <label class="switch">
-              <input type="checkbox" id="toggleUpdateMode">
-              <span class="slider round"></span>
-            </label>
-            <div style="margin-left: 6px;">
-              <p>{='If a photo in this album has the same filename, update the file without changing the photo\'s properties'|translate}</p>
-            </div>
+          <div
+            n:if="!$DISPLAY_FORMATS"
+            id="uploadOptions"
+            class="upload-options"
+          >
+            <span
+              class="icon-equalizer rotate-element upload-options-icon"
+            ></span>{='Options'|translate}
           </div>
+        </div>
+        <div
+          n:if="!$DISPLAY_FORMATS"
+          class="upload-options-content"
+          id="uploadOptionsContent"
+        >
+          <label class="switch">
+            <input type="checkbox" id="toggleUpdateMode">
+            <span class="slider round"></span>
+          </label>
+          <div style="margin-left: 6px;">
+            <p>{='If a photo in this album has the same filename, update the file without changing the photo\'s properties'|translate}</p>
+          </div>
+        </div>
       </legend>
 
       <div class="selectFilesButtonBlock">
@@ -969,15 +980,18 @@ let related_categories_ids = {$selected_category|json_encode|noescape};
           {if !$DISPLAY_FORMATS}{='Add Photos'|translate}{else}{='Add formats'|translate}{/if}
         </button>
         <div class="selectFilesinfo">
-          <p n:if="isset($original_resize_maxheight)"
-              class="uploadInfo"
-            >{='The picture dimensions will be reduced to %dx%d pixels.'|translate:$original_resize_maxwidth,$original_resize_maxheight}</p>
+          <p
+            n:if="isset($original_resize_maxheight)"
+            class="uploadInfo"
+          >{='The picture dimensions will be reduced to %dx%d pixels.'|translate:$original_resize_maxwidth,$original_resize_maxheight}</p>
           <p id="uploadWarningsSummary">
             {if !$DISPLAY_FORMATS}
               {='Allowed file types: %s.'|translate:$upload_file_types}
             {else}
               {='Allowed file types: %s.'|translate:$str_format_ext}
-              <p n:if="!$HAVE_FORMATS_ORIGINAL">{='The original picture will be detected with the filename (without extension).'|translate}</p>
+              <p
+                n:if="!$HAVE_FORMATS_ORIGINAL"
+              >{='The original picture will be detected with the filename (without extension).'|translate}</p>
             {/if}
           </p>
           </p>

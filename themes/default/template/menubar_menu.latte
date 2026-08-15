@@ -725,14 +725,14 @@
   <ul>{spaceless}
       {foreach $block->data as $link}
         <li n:if="is_array($link)"><a
-              href="{$link['URL']|noescape}"
-              {if isset($link['TITLE'])}
-              title="{$link['TITLE']}"
-              {/if}
-              {if isset($link['REL'])}
-              {$link['REL']|noescape}
-              {/if}
-            >{$link['NAME']}</a>{if isset($link['COUNTER'])} ({$link['COUNTER']}){/if}</li>
+            href="{$link['URL']|noescape}"
+            {if isset($link['TITLE'])}
+            title="{$link['TITLE']}"
+            {/if}
+            {if isset($link['REL'])}
+            {$link['REL']|noescape}
+            {/if}
+          >{$link['NAME']}</a>{if isset($link['COUNTER'])} ({$link['COUNTER']}){/if}</li>
       {/foreach}
     {/spaceless}</ul>
 </dd>

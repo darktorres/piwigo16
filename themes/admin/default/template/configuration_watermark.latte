@@ -781,10 +781,11 @@
               class="dError"
               {/if}
             > (png)
-            <span n:if="isset($ferrors['watermarkImage'])"
-                class="dErrorDesc"
-                title="{$ferrors['watermarkImage']|htmlspecialchars|noescape}"
-              >!</span>
+            <span
+              n:if="isset($ferrors['watermarkImage'])"
+              class="dErrorDesc"
+              title="{$ferrors['watermarkImage']|htmlspecialchars|noescape}"
+            >!</span>
           </span>
         </li>
 
@@ -906,10 +907,11 @@
                 class="dError"
                 {/if}
               >%
-              <span n:if="isset($ferrors['watermark']['xpos'])"
-                  class="dErrorDesc"
-                  title="{$ferrors['watermark']['xpos']}"
-                >!</span>
+              <span
+                n:if="isset($ferrors['watermark']['xpos'])"
+                class="dErrorDesc"
+                title="{$ferrors['watermark']['xpos']}"
+              >!</span>
             </label>
 
             <br>
@@ -924,10 +926,11 @@
                 class="dError"
                 {/if}
               >%
-              <span n:if="isset($ferrors['watermark']['ypos'])"
-                  class="dErrorDesc"
-                  title="{$ferrors['watermark']['ypos']}"
-                >!</span>
+              <span
+                n:if="isset($ferrors['watermark']['ypos'])"
+                class="dErrorDesc"
+                title="{$ferrors['watermark']['ypos']}"
+              >!</span>
             </label>
 
             <br>
@@ -942,10 +945,11 @@
                 class="dError"
                 {/if}
               >
-              <span n:if="isset($ferrors['watermark']['xrepeat'])"
-                  class="dErrorDesc"
-                  title="{$ferrors['watermark']['xrepeat']}"
-                >!</span>
+              <span
+                n:if="isset($ferrors['watermark']['xrepeat'])"
+                class="dErrorDesc"
+                title="{$ferrors['watermark']['xrepeat']}"
+              >!</span>
             </label>
 
             <br>
@@ -960,10 +964,11 @@
                 class="dError"
                 {/if}
               >
-              <span n:if="isset($ferrors['watermark']['yrepeat'])"
-                  class="dErrorDesc"
-                  title="{$ferrors['watermark']['yrepeat']}"
-                >!</span>
+              <span
+                n:if="isset($ferrors['watermark']['yrepeat'])"
+                class="dErrorDesc"
+                title="{$ferrors['watermark']['yrepeat']}"
+              >!</span>
             </label>
           </div>
         </li>
@@ -980,10 +985,11 @@
             class="dError"
             {/if}
           > %
-          <span n:if="isset($ferrors['watermark']['opacity'])"
-              class="dErrorDesc"
-              title="{$ferrors['watermark']['opacity']}"
-            >!</span>
+          <span
+            n:if="isset($ferrors['watermark']['opacity'])"
+            class="dErrorDesc"
+            title="{$ferrors['watermark']['opacity']}"
+          >!</span>
         </li>
       </ul>
     </fieldset>
@@ -993,10 +999,10 @@
     <div class="savebar-footer-start"></div>
     <div class="savebar-footer-end">
       <div n:if="isset($save_success)" class="savebar-footer-block">
-          <div class="badge info-message">
-            <i class="icon-ok"></i>{$save_success}
-          </div>
+        <div class="badge info-message">
+          <i class="icon-ok"></i>{$save_success}
         </div>
+      </div>
       <div class="savebar-footer-block">
         <button
           class="buttonLike"

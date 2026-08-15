@@ -715,50 +715,53 @@
               <th>{='Correction'|translate}</th>
             </tr>
             {if isset($c13y_list)}
-              <tr n:foreach="$c13y_list as $c13y"
-                  class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
-                >
-                  <td>
-                    {if $c13y['can_select']}
-                      <input
-                        type="checkbox"
-                        name="c13y_selection[]"
-                        value="{$c13y['id']}"
-                        id="c13y_selection-{$c13y['id']}"
-                      ><label for="c13y_selection-{$c13y['id']}"></label>
+              <tr
+                n:foreach="$c13y_list as $c13y"
+                class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
+              >
+                <td>
+                  {if $c13y['can_select']}
+                    <input
+                      type="checkbox"
+                      name="c13y_selection[]"
+                      value="{$c13y['id']}"
+                      id="c13y_selection-{$c13y['id']}"
+                    ><label for="c13y_selection-{$c13y['id']}"></label>
+                  {/if}
+                </td>
+                <td><label
+                    for="c13y_selection-{$c13y['id']}"
+                  >{$c13y['anomaly']}</label></td>
+                <td>
+                  <label for="c13y_selection-{$c13y['id']}">
+                    {if $c13y['show_ignore_msg']}
+                      {='The anomaly will be ignored until next application version'|translate}
+                      <br>
+                      {='Correction the anomaly will cancel the fact that it\'s ignored'|translate}
                     {/if}
-                  </td>
-                  <td><label
-                      for="c13y_selection-{$c13y['id']}"
-                    >{$c13y['anomaly']}</label></td>
-                  <td>
-                    <label for="c13y_selection-{$c13y['id']}">
-                      {if $c13y['show_ignore_msg']}
-                        {='The anomaly will be ignored until next application version'|translate}
-                        <br>
-                        {='Correction the anomaly will cancel the fact that it\'s ignored'|translate}
-                      {/if}
-                      {if $c13y['show_correction_fct']}
-                        {='Automatic correction'|translate}
-                      {/if}
-                      {if $c13y['show_correction_bad_fct']}
-                        {='Impossible automatic correction'|translate}
-                      {/if}
-                      {if $c13y['show_correction_success_fct']}
-                        {='Correction applied with success'|translate}
-                      {/if}
-                      {if !empty($c13y['correction_error_fct'])}
-                        {='Correction applied with error'|translate}
-                        <br>
-                        {$c13y['correction_error_fct']|noescape}
-                      {/if}
-                      {if !empty($c13y['correction_msg'])}
-                        <br n:if="$c13y['show_correction_success_fct'] or !empty($c13y['correction_error_fct']) or $c13y['show_correction_fct'] or $c13y['show_correction_bad_fct']">
-                        {$c13y['correction_msg']|nl2br|noescape}
-                      {/if}
-                    </label>
-                  </td>
-                </tr>
+                    {if $c13y['show_correction_fct']}
+                      {='Automatic correction'|translate}
+                    {/if}
+                    {if $c13y['show_correction_bad_fct']}
+                      {='Impossible automatic correction'|translate}
+                    {/if}
+                    {if $c13y['show_correction_success_fct']}
+                      {='Correction applied with success'|translate}
+                    {/if}
+                    {if !empty($c13y['correction_error_fct'])}
+                      {='Correction applied with error'|translate}
+                      <br>
+                      {$c13y['correction_error_fct']|noescape}
+                    {/if}
+                    {if !empty($c13y['correction_msg'])}
+                      <br
+                        n:if="$c13y['show_correction_success_fct'] or !empty($c13y['correction_error_fct']) or $c13y['show_correction_fct'] or $c13y['show_correction_bad_fct']"
+                      >
+                      {$c13y['correction_msg']|nl2br|noescape}
+                    {/if}
+                  </label>
+                </td>
+              </tr>
             {/if}
           </table>
 
@@ -806,18 +809,20 @@
           </p>
 
           <p>
-            <input n:if="$c13y_show_submit_automatic_correction"
-                class="submit"
-                type="submit"
-                value="{='Apply selected corrections'|translate}"
-                name="Apply selected corrections"
-              >
-            <input n:if="$c13y_show_submit_ignore"
-                class="submit"
-                type="submit"
-                value="{='Ignore selected anomalies'|translate}"
-                name="Ignore selected anomalies"
-              >
+            <input
+              n:if="$c13y_show_submit_automatic_correction"
+              class="submit"
+              type="submit"
+              value="{='Apply selected corrections'|translate}"
+              name="Apply selected corrections"
+            >
+            <input
+              n:if="$c13y_show_submit_ignore"
+              class="submit"
+              type="submit"
+              value="{='Ignore selected anomalies'|translate}"
+              name="Ignore selected anomalies"
+            >
             <input
               class="submit"
               type="submit"

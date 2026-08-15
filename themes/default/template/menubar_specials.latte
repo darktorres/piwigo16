@@ -696,11 +696,11 @@
 <dd>
   <ul>{spaceless}
       <li n:foreach="$block->data as $link"><a
-            href="{$link['URL']|noescape}"
-            title="{$link['TITLE']}"
-            {if isset($link['REL'])}
-            {$link['REL']|noescape}
-            {/if}
-          >{$link['NAME']}</a></li>
+          href="{$link['URL']|noescape}"
+          title="{$link['TITLE']}"
+          {if isset($link['REL'])}
+          {$link['REL']|noescape}
+          {/if}
+        >{$link['NAME']}</a></li>
     {/spaceless}</ul>
 </dd>

@@ -693,13 +693,14 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 <div n:if="isset($tabsheet) and count($tabsheet)" id="tabsheet">
-    <ul class="tabsheet">
-      <li n:foreach="$tabsheet as $name => $sheet"
-          class="{if ($name == $tabsheet_selected)}selected_tab{else}normal_tab{/if}"
-        >
-          <a
-            href="{$sheet['url']|noescape}"
-          ><span>{$sheet['caption']|noescape}</span></a>
-        </li>
-    </ul>
-  </div>
+  <ul class="tabsheet">
+    <li
+      n:foreach="$tabsheet as $name => $sheet"
+      class="{if ($name == $tabsheet_selected)}selected_tab{else}normal_tab{/if}"
+    >
+      <a
+        href="{$sheet['url']|noescape}"
+      ><span>{$sheet['caption']|noescape}</span></a>
+    </li>
+  </ul>
+</div>

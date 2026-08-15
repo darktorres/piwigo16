@@ -695,19 +695,25 @@
 <!DOCTYPE html>
 <html lang="{$lang_info['code']}" dir="{$lang_info['direction']}">
   <head>
-    <meta n:if="$SHOW_MOBILE_APP_BANNER" name="apple-itunes-app" content="app-id=472225196">
+    <meta
+      n:if="$SHOW_MOBILE_APP_BANNER"
+      name="apple-itunes-app"
+      content="app-id=472225196"
+    >
     <meta charset="{$CONTENT_ENCODING}">
     <meta name="generator" content="Piwigo (aka PWG), see piwigo.org">
 
     {if isset($meta_ref)}
-      <meta n:if="isset($INFO_AUTHOR)"
-          name="author"
-          content="{$INFO_AUTHOR|strip_tags:false|replace:'"',' '}"
-        >
-      <meta n:if="isset($related_tags)"
-          name="keywords"
-          content="{foreach $related_tags as $tag}{if !$iterator->first}, {/if}{$tag['name']}{/foreach}"
-        >
+      <meta
+        n:if="isset($INFO_AUTHOR)"
+        name="author"
+        content="{$INFO_AUTHOR|strip_tags:false|replace:'"',' '}"
+      >
+      <meta
+        n:if="isset($related_tags)"
+        name="keywords"
+        content="{foreach $related_tags as $tag}{if !$iterator->first}, {/if}{$tag['name']}{/foreach}"
+      >
       {if isset($COMMENT_IMG)}
         <meta
           name="description"
@@ -735,45 +741,53 @@
       href="{$ROOT_URL}search.php"
     >
 
-    <link n:if="isset($first['U_IMG'])"
-        rel="first"
-        title="{='First'|translate}"
-        href="{$first['U_IMG']|noescape}"
-      >
-    <link n:if="isset($previous['U_IMG'])"
-        rel="prev"
-        title="{='Previous'|translate}"
-        href="{$previous['U_IMG']|noescape}"
-      >
-    <link n:if="isset($next['U_IMG'])"
-        rel="next"
-        title="{='Next'|translate}"
-        href="{$next['U_IMG']|noescape}"
-      >
-    <link n:if="isset($last['U_IMG'])"
-        rel="last"
-        title="{='Last'|translate}"
-        href="{$last['U_IMG']|noescape}"
-      >
-    <link n:if="isset($U_UP)"
-        rel="up"
-        title="{='Thumbnails'|translate}"
-        href="{$U_UP|noescape}"
-      >
+    <link
+      n:if="isset($first['U_IMG'])"
+      rel="first"
+      title="{='First'|translate}"
+      href="{$first['U_IMG']|noescape}"
+    >
+    <link
+      n:if="isset($previous['U_IMG'])"
+      rel="prev"
+      title="{='Previous'|translate}"
+      href="{$previous['U_IMG']|noescape}"
+    >
+    <link
+      n:if="isset($next['U_IMG'])"
+      rel="next"
+      title="{='Next'|translate}"
+      href="{$next['U_IMG']|noescape}"
+    >
+    <link
+      n:if="isset($last['U_IMG'])"
+      rel="last"
+      title="{='Last'|translate}"
+      href="{$last['U_IMG']|noescape}"
+    >
+    <link
+      n:if="isset($U_UP)"
+      rel="up"
+      title="{='Thumbnails'|translate}"
+      href="{$U_UP|noescape}"
+    >
 
-    <link n:if="isset($U_PREFETCH)"
-        rel="prefetch"
-        href="{$U_PREFETCH|noescape}"
-      >
-    <link n:if="isset($U_CANONICAL)"
-        rel="canonical"
-        href="{$U_CANONICAL|noescape}"
-      >
+    <link
+      n:if="isset($U_PREFETCH)"
+      rel="prefetch"
+      href="{$U_PREFETCH|noescape}"
+    >
+    <link
+      n:if="isset($U_CANONICAL)"
+      rel="canonical"
+      href="{$U_CANONICAL|noescape}"
+    >
 
-    <meta n:if="!empty($page_refresh)"
-        http-equiv="refresh"
-        content="{$page_refresh['TIME']};url={$page_refresh['U_REFRESH']|noescape}"
-      >
+    <meta
+      n:if="!empty($page_refresh)"
+      http-equiv="refresh"
+      content="{$page_refresh['TIME']};url={$page_refresh['U_REFRESH']|noescape}"
+    >
 
     {spaceless}
       {foreach $themes as $theme}
@@ -813,16 +827,16 @@
   >
     <div id="the_page">
       <div n:if="!empty($header_msgs)" class="header_msgs">
-          {foreach $header_msgs as $elt}
-            {$elt}<br>
-          {/foreach}
-        </div>
+        {foreach $header_msgs as $elt}
+          {$elt}<br>
+        {/foreach}
+      </div>
 
       <div id="theHeader">{$PAGE_BANNER|default:''|noescape}</div>
 
       <div n:if="!empty($header_notes)" class="header_notes">
-          <p n:foreach="$header_notes as $elt">{$elt}</p>
-        </div>
+        <p n:foreach="$header_notes as $elt">{$elt}</p>
+      </div>
 
       {*
   This file is deliberately left unclosed here (<div id="the_page">,

@@ -797,35 +797,36 @@ $(document).ready(function() {
     <td>{='Rate'|translate}/{='Username'|translate}/{='Rate date'|translate}</td>
     <td></td>
   </tr>
-  <tr n:foreach="$images as $image"
-      valign="top"
-      class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
-    >
-      <td><a href="{$image['U_URL']|noescape}"><img
-            src="{$image['U_THUMB']|noescape}"
-            alt="{$image['FILE']}"
-            title="{$image['FILE']}"
-          ></a></td>
-      <td><strong>{$image['NB_RATES']}/{$image['NB_RATES_TOTAL']}</strong></td>
-      <td><strong>{$image['SCORE_RATE']}</strong></td>
-      <td><strong>{$image['AVG_RATE']}</strong></td>
-      <td
-        style="border-right:1px solid"
-      ><strong>{$image['SUM_RATE']}</strong></td>
-      <td>
-        <table style="width:100%">
-          <tr n:foreach="$image['rates'] as $rate">
-              <td>{$rate['rate']}</td>
-              <td><b>{$rate['USER']}</b></td>
-              <td>{$rate['date']}</td>
-              <td><a
-                  onclick="return del(this,{$image['id']},{$rate['user_id']}{if !empty($rate['anonymous_id'])},{$rate['anonymous_id']}{/if})"
-                  class="icon-trash"
-                ></a></td>
-            </tr>{* rates *}
-        </table>
-      </td>
-    </tr>{* images *}
+  <tr
+    n:foreach="$images as $image"
+    valign="top"
+    class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
+  >
+    <td><a href="{$image['U_URL']|noescape}"><img
+          src="{$image['U_THUMB']|noescape}"
+          alt="{$image['FILE']}"
+          title="{$image['FILE']}"
+        ></a></td>
+    <td><strong>{$image['NB_RATES']}/{$image['NB_RATES_TOTAL']}</strong></td>
+    <td><strong>{$image['SCORE_RATE']}</strong></td>
+    <td><strong>{$image['AVG_RATE']}</strong></td>
+    <td
+      style="border-right:1px solid"
+    ><strong>{$image['SUM_RATE']}</strong></td>
+    <td>
+      <table style="width:100%">
+        <tr n:foreach="$image['rates'] as $rate">
+          <td>{$rate['rate']}</td>
+          <td><b>{$rate['USER']}</b></td>
+          <td>{$rate['date']}</td>
+          <td><a
+              onclick="return del(this,{$image['id']},{$rate['user_id']}{if !empty($rate['anonymous_id'])},{$rate['anonymous_id']}{/if})"
+              class="icon-trash"
+            ></a></td>
+        </tr>{* rates *}
+      </table>
+    </td>
+  </tr>{* images *}
 </table>
 {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
 {capture $tmpFooterScript2}

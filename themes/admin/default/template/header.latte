@@ -699,7 +699,11 @@
 <!DOCTYPE html>
 <html lang="{$lang_info['code']}" dir="{$lang_info['direction']}">
   <head>
-    <meta n:if="$SHOW_MOBILE_APP_BANNER" name="apple-itunes-app" content="app-id=472225196">
+    <meta
+      n:if="$SHOW_MOBILE_APP_BANNER"
+      name="apple-itunes-app"
+      content="app-id=472225196"
+    >
     <meta charset="{$CONTENT_ENCODING}">
     <title>{$GALLERY_TITLE} :: {$PAGE_TITLE}</title>
     <link
@@ -747,10 +751,10 @@
   <body id="{$BODY_ID}">
     <div id="the_page">
       <div n:if="!empty($header_msgs)" class="header_msgs">
-          {foreach $header_msgs as $elt}
-            {$elt}
-          {/foreach}
-        </div>
+        {foreach $header_msgs as $elt}
+          {$elt}
+        {/foreach}
+      </div>
 
       <div id="pwgHead">
         <a
@@ -798,10 +802,10 @@
       <div style="clear:both;"></div>
 
       <div n:if="!empty($header_notes)" class="header_notes">
-          {foreach $header_notes as $elt}
-            {$elt}
-          {/foreach}
-        </div>
+        {foreach $header_notes as $elt}
+          {$elt}
+        {/foreach}
+      </div>
 
       <div id="pwgMain">
         {*

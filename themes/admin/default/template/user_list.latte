@@ -1104,14 +1104,15 @@ $(document).ready(function() {
               name="filter_group"
             >
               <option value="" label="" selected></option>
-              <option n:foreach="$groups_for_filter as $group"
-                  value="{$group['id']}"
-                  {if $group['counter'] == 0}
-                  disabled
-                  {/if}
-                >
-                  {$group['name']}{if $group['counter'] > 0} ({$group['counter']}){/if}
-                </option>
+              <option
+                n:foreach="$groups_for_filter as $group"
+                value="{$group['id']}"
+                {if $group['counter'] == 0}
+                disabled
+                {/if}
+              >
+                {$group['name']}{if $group['counter'] > 0} ({$group['counter']}){/if}
+              </option>
             </select>
           </div>
         </div>
@@ -1240,9 +1241,10 @@ $(document).ready(function() {
                   value="recent_period"
                 >{='Recent period'|translate}</option>
                 <option value="expand">{='Expand all albums'|translate}</option>
-                <option n:if="$ACTIVATE_COMMENTS"
-                    value="show_nb_comments"
-                  >{='Show number of comments'|translate}</option>
+                <option
+                  n:if="$ACTIVATE_COMMENTS"
+                  value="show_nb_comments"
+                >{='Show number of comments'|translate}</option>
                 <option
                   value="show_nb_hits"
                 >{='Show number of hits'|translate}</option>

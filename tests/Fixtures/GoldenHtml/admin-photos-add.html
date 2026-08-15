@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
-    <meta name="apple-itunes-app" content="app-id=472225196">
+    <meta
+      name="apple-itunes-app"
+      content="app-id=472225196"
+    >
     <meta charset="utf-8">
     <title>Fixture Gallery :: Piwigo Administration</title>
     <link
@@ -75,8 +78,8 @@
               class="icon-plus-circled"
             ></i>Add</a></li>
         <li><a href="admin.php?page=rating"><i
-                class="icon-star"
-              ></i>Rating</a></li>
+              class="icon-star"
+            ></i>Rating</a></li>
         <li><a href="admin.php?page=tags"><i
               class="icon-tags"
             ></i>Tags</a></li>
@@ -134,8 +137,8 @@
     <dd>
       <ul>
         <li><a href="admin.php?page=site_update&amp;site=1"><i
-                class="icon-exchange"
-              ></i>Synchronize</a></li>
+              class="icon-exchange"
+            ></i>Synchronize</a></li>
         <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
               class="icon-signal"
             ></i>History</a></li>
@@ -143,15 +146,15 @@
               class="icon-tools"
             ></i>Maintenance</a></li>
         <li><a href="admin.php?page=comments"><i
-                class="icon-chat"
-              ></i>Comments
-              <span
-                  class="adminMenubarCounter"
-                  title="1 waiting for validation"
-                >1</span></a></li>
+              class="icon-chat"
+            ></i>Comments
+            <span
+              class="adminMenubarCounter"
+              title="1 waiting for validation"
+            >1</span></a></li>
         <li><a href="admin.php?page=updates"><i
-                class="icon-arrows-cw"
-              ></i>Updates</a></li>
+              class="icon-arrows-cw"
+            ></i>Updates</a></li>
       </ul>
     </dd>
   </dl>
@@ -186,30 +189,30 @@
     ></span></h1>
 
   <div id="tabsheet">
-    <ul class="tabsheet">
-      <li
-          class="selected_tab"
-        >
-          <a
-            href="admin.php?page=photos_add&amp;section=direct"
-          ><span><span class="icon-upload"></span>Web Form</span></a>
-        </li>
-      <li
-          class="normal_tab"
-        >
-          <a
-            href="admin.php?page=photos_add&amp;section=applications"
-          ><span><span class="icon-network"></span>Applications</span></a>
-        </li>
-      <li
-          class="normal_tab"
-        >
-          <a
-            href="admin.php?page=photos_add&amp;section=ftp"
-          ><span><span class="icon-exchange"></span>FTP + Synchronization</span></a>
-        </li>
-    </ul>
-  </div>
+  <ul class="tabsheet">
+    <li
+      class="selected_tab"
+    >
+      <a
+        href="admin.php?page=photos_add&amp;section=direct"
+      ><span><span class="icon-upload"></span>Web Form</span></a>
+    </li>
+    <li
+      class="normal_tab"
+    >
+      <a
+        href="admin.php?page=photos_add&amp;section=applications"
+      ><span><span class="icon-network"></span>Applications</span></a>
+    </li>
+    <li
+      class="normal_tab"
+    >
+      <a
+        href="admin.php?page=photos_add&amp;section=ftp"
+      ><span><span class="icon-exchange"></span>FTP + Synchronization</span></a>
+    </li>
+  </ul>
+</div>
 
 
   <div class="eiw">
@@ -265,22 +268,22 @@
 
 
   <div
-      class="addAlbumEmptyCenter"
-      
-      style="display:none;"
-      
-    >
-      <div class="addAlbumEmpty">
-        <div class="addAlbumEmptyTitle">Welcome!</div>
-        <p
-          class="addAlbumEmptyInfos"
-        >Piwigo requires an album to add photos.</p>
-        <a
-          class="buttonLike"
-          id="btnFirstAlbum"
-        >Create a first album</a>
-      </div>
+    class="addAlbumEmptyCenter"
+    
+    style="display:none;"
+    
+  >
+    <div class="addAlbumEmpty">
+      <div class="addAlbumEmptyTitle">Welcome!</div>
+      <p
+        class="addAlbumEmptyInfos"
+      >Piwigo requires an album to add photos.</p>
+      <a
+        class="buttonLike"
+        id="btnFirstAlbum"
+      >Create a first album</a>
     </div>
+  </div>
 
   <div class="infos" style="display:none"><i class="eiw-icon icon-ok"></i></div>
   <div class="errors" style="display:none"><i
@@ -338,21 +341,27 @@
           <span
             class="icon-file-image icon-yellow"
           ></span>Select files
-          <div id="uploadOptions" class="upload-options">
-              <span
-                class="icon-equalizer rotate-element upload-options-icon"
-              ></span>Options
-            </div>
-        </div>
-        <div class="upload-options-content" id="uploadOptionsContent">
-            <label class="switch">
-              <input type="checkbox" id="toggleUpdateMode">
-              <span class="slider round"></span>
-            </label>
-            <div style="margin-left: 6px;">
-              <p>If a photo in this album has the same filename, update the file without changing the photo's properties</p>
-            </div>
+          <div
+            id="uploadOptions"
+            class="upload-options"
+          >
+            <span
+              class="icon-equalizer rotate-element upload-options-icon"
+            ></span>Options
           </div>
+        </div>
+        <div
+          class="upload-options-content"
+          id="uploadOptionsContent"
+        >
+          <label class="switch">
+            <input type="checkbox" id="toggleUpdateMode">
+            <span class="slider round"></span>
+          </label>
+          <div style="margin-left: 6px;">
+            <p>If a photo in this album has the same filename, update the file without changing the photo's properties</p>
+          </div>
+        </div>
       </legend>
 
       <div class="selectFilesButtonBlock">
@@ -565,13 +574,13 @@
       title="Visit Piwigo project website"
     ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
     <span
-        id="whats_new_notification"
-        class="icon-blue tiptip"
-        onclick="show_user_whats_new()"
-        title="What&apos;s new in version 17?"
-      >
-        <i class="icon-bell"></i>
-      </span>
+      id="whats_new_notification"
+      class="icon-blue tiptip"
+      onclick="show_user_whats_new()"
+      title="What&apos;s new in version 17?"
+    >
+      <i class="icon-bell"></i>
+    </span>
   </div>
   <div id="pageInfos">
 
@@ -582,49 +591,48 @@
   </div></div>
 </div>
 
-<div id="whats_new">
-    <div id="whats_new_popin">
-      <a
-        class="icon-cancel close_whats_new"
-        onClick="hide_user_whats_new()"
-      ></a>
-      <h3>What's new in version 17?</h3>
-      <div>
-        <div class="whats_new_block_container">
-          <div class="whats_new_block icon-blue whats_new_block_w_60">
-            <h4><a
-                href="https://upstream.example.invalid/releases/17.0.0"
-                target="_blank"
-              >Brand new login &amp; preferences with Standard pages !</a></h4>
-          </div>
-          <div class="whats_new_block icon-purple whats_new_block_w_40">
-            <h4><a
-                href="https://upstream.example.invalid/releases/17.0.0"
-                target="_blank"
-              >Two factor authentication is here</a></h4>
-          </div>
+<div
+  id="whats_new"
+>
+  <div id="whats_new_popin">
+    <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+    <h3>What's new in version 17?</h3>
+    <div>
+      <div class="whats_new_block_container">
+        <div class="whats_new_block icon-blue whats_new_block_w_60">
+          <h4><a
+              href="https://upstream.example.invalid/releases/17.0.0"
+              target="_blank"
+            >Brand new login &amp; preferences with Standard pages !</a></h4>
         </div>
-        <div class="whats_new_block_container">
-          <div class="whats_new_block icon-green whats_new_block_w_100">
-            <h4><a
-                href="https://upstream.example.invalid/releases/17.0.0"
-                target="_blank"
-              >UI redesigns that make a difference</a></h4>
-          </div>
+        <div class="whats_new_block icon-purple whats_new_block_w_40">
+          <h4><a
+              href="https://upstream.example.invalid/releases/17.0.0"
+              target="_blank"
+            >Two factor authentication is here</a></h4>
         </div>
       </div>
-      <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i
-            class="icon-thumbs-up"
-          ></i> Ok, got it!</button>
-        <a
-          class="buttonLike"
-          href="https://upstream.example.invalid/releases/17.0.0"
-          target="_blank"
-        ><i class="icon-book"></i> Read the release note</a>
+      <div class="whats_new_block_container">
+        <div class="whats_new_block icon-green whats_new_block_w_100">
+          <h4><a
+              href="https://upstream.example.invalid/releases/17.0.0"
+              target="_blank"
+            >UI redesigns that make a difference</a></h4>
+        </div>
       </div>
     </div>
+    <div class="whats_new_buttons">
+      <button onClick="hide_user_whats_new()"><i
+          class="icon-thumbs-up"
+        ></i> Ok, got it!</button>
+      <a
+        class="buttonLike"
+        href="https://upstream.example.invalid/releases/17.0.0"
+        target="_blank"
+      ><i class="icon-book"></i> Read the release note</a>
+    </div>
   </div>
+</div>
 
 <style>
 
@@ -755,7 +763,10 @@ function show_user_whats_new() {
 //]]></script>
 <!-- END get_combined -->
 
-<script type="module" src="dist/vitals.js"></script>
+<script
+  type="module"
+  src="dist/vitals.js"
+></script>
 
 </body>
 </html>

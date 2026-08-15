@@ -697,24 +697,24 @@
   <div class="titrePage">
     <ul class="categoryActions">
       <li n:if="$display_mode == 'letters'"><a
-            href="{$U_CLOUD|noescape}"
-            title="{='show tag cloud'|translate}"
-            class="pwg-state-default pwg-button"
-          >
-            <span class="pwg-icon pwg-icon-cloud"></span><span
-              class="pwg-button-text"
-            >{='cloud'|translate}</span>
-          </a></li>
+          href="{$U_CLOUD|noescape}"
+          title="{='show tag cloud'|translate}"
+          class="pwg-state-default pwg-button"
+        >
+          <span class="pwg-icon pwg-icon-cloud"></span><span
+            class="pwg-button-text"
+          >{='cloud'|translate}</span>
+        </a></li>
       <li n:if="$display_mode == 'cloud'"><a
-            href="{$U_LETTERS|noescape}"
-            title="{='group by letters'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-letters"></span><span
-              class="pwg-button-text"
-            >{='letters'|translate}</span>
-          </a></li>
+          href="{$U_LETTERS|noescape}"
+          title="{='group by letters'|translate}"
+          class="pwg-state-default pwg-button"
+          rel="nofollow"
+        >
+          <span class="pwg-icon pwg-icon-letters"></span><span
+            class="pwg-button-text"
+          >{='letters'|translate}</span>
+        </a></li>
     </ul>
     <h2><a
         href="{$U_HOME|noescape}"
@@ -724,36 +724,36 @@
   {include 'infos_errors.latte'}
 
   <div n:if="$display_mode == 'cloud' and isset($tags)" id="fullTagCloud">
-      <span n:foreach="$tags as $tag"><a
-            href="{$tag['URL']|noescape}"
-            class="tagLevel{$tag['level']}"
-            title="{$tag['counter']|translate_dec:'%d photo','%d photos'}"
-          >{$tag['name']}</a></span>
-    </div>
+    <span n:foreach="$tags as $tag"><a
+        href="{$tag['URL']|noescape}"
+        class="tagLevel{$tag['level']}"
+        title="{$tag['counter']|translate_dec:'%d photo','%d photos'}"
+      >{$tag['name']}</a></span>
+  </div>
 
   <table n:if="$display_mode == 'letters' and isset($letters)">
-      <tr>
-        <td valign="top">
-          {foreach $letters as $letter}
-            <fieldset class="tagLetter">
-              <legend class="tagLetterLegend">{$letter['TITLE']}</legend>
-              <table class="tagLetterContent">
-                <tr n:foreach="$letter['tags'] as $tag" class="tagLine">
-                    <td><a
-                        href="{$tag['URL']|noescape}"
-                        title="{$tag['name']}"
-                      >{$tag['name']}</a></td>
-                    <td
-                      class="nbEntries"
-                    >{$tag['counter']|translate_dec:'%d photo','%d photos'}</td>
-                  </tr>
-              </table>
-            </fieldset>
-            {if isset($letter['CHANGE_COLUMN'])}
-              </td>
-              <td valign="top">{/if}
-          {/foreach}
-        </td>
-      </tr>
-    </table>
+    <tr>
+      <td valign="top">
+        {foreach $letters as $letter}
+          <fieldset class="tagLetter">
+            <legend class="tagLetterLegend">{$letter['TITLE']}</legend>
+            <table class="tagLetterContent">
+              <tr n:foreach="$letter['tags'] as $tag" class="tagLine">
+                <td><a
+                    href="{$tag['URL']|noescape}"
+                    title="{$tag['name']}"
+                  >{$tag['name']}</a></td>
+                <td
+                  class="nbEntries"
+                >{$tag['counter']|translate_dec:'%d photo','%d photos'}</td>
+              </tr>
+            </table>
+          </fieldset>
+          {if isset($letter['CHANGE_COLUMN'])}
+            </td>
+            <td valign="top">{/if}
+        {/foreach}
+      </td>
+    </tr>
+  </table>
 </div> <!-- content -->

@@ -706,8 +706,8 @@
   <div id="piwigoAbout">
     {$ABOUT_MESSAGE|noescape}
     <ul n:if="isset($THEME_ABOUT)">
-        <li>{$THEME_ABOUT|noescape}</li>
-      </ul>
+      <li>{$THEME_ABOUT|noescape}</li>
+    </ul>
     {if !empty($about_msgs)}
       {foreach $about_msgs as $elt}
         {$elt|noescape}

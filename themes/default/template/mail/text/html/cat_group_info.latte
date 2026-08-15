@@ -694,9 +694,10 @@
 {* END varType *}
 <div id="cat_group_info">
   <h2>{='Informations'|translate}</h2>
-  <p n:if="isset($IMG) && isset($IMG['link']) && isset($IMG['src'])"><a href="{$IMG['link']|noescape}" class="thumblnk"><img
-          src="{$IMG['src']}"
-        ></a></p>
+  <p n:if="isset($IMG) && isset($IMG['link']) && isset($IMG['src'])"><a
+      href="{$IMG['link']|noescape}"
+      class="thumblnk"
+    ><img src="{$IMG['src']}"></a></p>
   <p>{='Hello,'|translate}</p>
   <p>{='Discover album:'|translate} <a
       href="{$LINK|noescape}"

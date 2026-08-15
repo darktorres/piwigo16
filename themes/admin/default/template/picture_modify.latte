@@ -913,19 +913,26 @@ const str_assoc_album_ab = '{_ 'Associate to album'|escapeJavascript|noescape}';
         name="associate[]"
         multiple
       >
-        <option n:foreach="$related_categories as $key => $cat_path" selected value="{$key}"></option>
+        <option
+          n:foreach="$related_categories as $key => $cat_path"
+          selected
+          value="{$key}"
+        ></option>
       </select>
       <div class="related-categories-container">
-        <div n:foreach="$related_categories as $key => $cat_path" class="breadcrumb-item"><span
-              class="link-path"
-            >{$cat_path['name']|noescape}</span>{if $cat_path['unlinkable']}<span
-                id="{$key}"
-                class="icon-cancel-circled remove-item"
-              ></span>{else}<span
-                id="{$key}"
-                class="icon-help-circled help-item tiptip"
-                title="{='This picture is physically linked to this album, you can\'t dissociate them'|translate}"
-              ></span>{/if}</div>
+        <div
+          n:foreach="$related_categories as $key => $cat_path"
+          class="breadcrumb-item"
+        ><span
+            class="link-path"
+          >{$cat_path['name']|noescape}</span>{if $cat_path['unlinkable']}<span
+              id="{$key}"
+              class="icon-cancel-circled remove-item"
+            ></span>{else}<span
+              id="{$key}"
+              class="icon-help-circled help-item tiptip"
+              title="{='This picture is physically linked to this album, you can\'t dissociate them'|translate}"
+            ></span>{/if}</div>
       </div>
       <div
         class="breadcrumb-item linked-albums add-item {if count($related_categories) < 1} highlight {/if}"
@@ -996,10 +1003,10 @@ const str_assoc_album_ab = '{_ 'Associate to album'|escapeJavascript|noescape}';
       </div>
       <div class="savebar-footer-end">
         <div n:if="isset($save_success)" class="savebar-footer-block">
-            <div class="badge info-message">
-              <i class="icon-ok"></i>{$save_success}
-            </div>
+          <div class="badge info-message">
+            <i class="icon-ok"></i>{$save_success}
           </div>
+        </div>
 
         <div class="savebar-footer-block">
           <button class="buttonLike" type="submit" name="submit"><i

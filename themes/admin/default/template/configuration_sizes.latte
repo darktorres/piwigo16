@@ -835,10 +835,11 @@ $(".restore-settings-button").each(function() {
                 class="dError"
                 {/if}
               > {='pixels'|translate}
-              <span n:if="isset($ferrors['original_resize_maxwidth'])"
-                  class="dErrorDesc"
-                  title="{$ferrors['original_resize_maxwidth']}"
-                >!</span>
+              <span
+                n:if="isset($ferrors['original_resize_maxwidth'])"
+                class="dErrorDesc"
+                title="{$ferrors['original_resize_maxwidth']}"
+              >!</span>
             </td>
           </tr>
           <tr>
@@ -854,10 +855,11 @@ $(".restore-settings-button").each(function() {
                 class="dError"
                 {/if}
               > {='pixels'|translate}
-              <span n:if="isset($ferrors['original_resize_maxheight'])"
-                  class="dErrorDesc"
-                  title="{$ferrors['original_resize_maxheight']}"
-                >!</span>
+              <span
+                n:if="isset($ferrors['original_resize_maxheight'])"
+                class="dErrorDesc"
+                title="{$ferrors['original_resize_maxheight']}"
+              >!</span>
             </td>
           </tr>
           <tr>
@@ -873,10 +875,11 @@ $(".restore-settings-button").each(function() {
                 class="dError"
                 {/if}
               > %
-              <span n:if="isset($ferrors['original_resize_quality'])"
-                  class="dErrorDesc"
-                  title="{$ferrors['original_resize_quality']}"
-                >!</span>
+              <span
+                n:if="isset($ferrors['original_resize_quality'])"
+                class="dErrorDesc"
+                title="{$ferrors['original_resize_quality']}"
+              >!</span>
             </td>
           </tr>
         </table>
@@ -958,21 +961,21 @@ $(".restore-settings-button").each(function() {
             <td colspan="3">
               <table class="sizeEditForm">
                 <tr n:if="!$d['must_square']">
-                    <td colspan="2">
-                      <label class="font-checkbox">
-                        <span class="icon-check"></span>
-                        <input
-                          type="checkbox"
-                          class="cropToggle"
-                          name="d[{$type}][crop]"
-                          {if $d['crop']}
-                          checked="checked"
-                          {/if}
-                        >
-                        {='Crop'|translate}
-                      </label>
-                    </td>
-                  </tr>
+                  <td colspan="2">
+                    <label class="font-checkbox">
+                      <span class="icon-check"></span>
+                      <input
+                        type="checkbox"
+                        class="cropToggle"
+                        name="d[{$type}][crop]"
+                        {if $d['crop']}
+                        checked="checked"
+                        {/if}
+                      >
+                      {='Crop'|translate}
+                    </label>
+                  </td>
+                </tr>
                 <tr>
                   <td
                     class="sizeEditWidth"
@@ -988,33 +991,35 @@ $(".restore-settings-button").each(function() {
                       class="dError"
                       {/if}
                     > {='pixels'|translate}
-                    <span n:if="isset($ferrors[$type]['w'])"
-                        class="dErrorDesc"
-                        title="{$ferrors[$type]['w']}"
-                      >!</span>
+                    <span
+                      n:if="isset($ferrors[$type]['w'])"
+                      class="dErrorDesc"
+                      title="{$ferrors[$type]['w']}"
+                    >!</span>
                   </td>
                 </tr>
                 <tr n:if="!$d['must_square']">
-                    <td
-                      class="sizeEditHeight"
-                    >{if $d['crop']}{='Height'|translate}{else}{='Maximum height'|translate}{/if}</td>
-                    <td>
-                      <input
-                        type="text"
-                        name="d[{$type}][h]"
-                        maxlength="4"
-                        size="4"
-                        value="{$d['h']}"
-                        {if isset($ferrors[$type]['h'])}
-                        class="dError"
-                        {/if}
-                      > {='pixels'|translate}
-                      <span n:if="isset($ferrors[$type]['h'])"
-                          class="dErrorDesc"
-                          title="{$ferrors[$type]['h']}"
-                        >!</span>
-                    </td>
-                  </tr>
+                  <td
+                    class="sizeEditHeight"
+                  >{if $d['crop']}{='Height'|translate}{else}{='Maximum height'|translate}{/if}</td>
+                  <td>
+                    <input
+                      type="text"
+                      name="d[{$type}][h]"
+                      maxlength="4"
+                      size="4"
+                      value="{$d['h']}"
+                      {if isset($ferrors[$type]['h'])}
+                      class="dError"
+                      {/if}
+                    > {='pixels'|translate}
+                    <span
+                      n:if="isset($ferrors[$type]['h'])"
+                      class="dErrorDesc"
+                      title="{$ferrors[$type]['h']}"
+                    >!</span>
+                  </td>
+                </tr>
                 <tr>
                   <td>{='Sharpen'|translate}</td>
                   <td>
@@ -1028,10 +1033,11 @@ $(".restore-settings-button").each(function() {
                       class="dError"
                       {/if}
                     > %
-                    <span n:if="isset($ferrors[$type]['sharpen'])"
-                        class="dErrorDesc"
-                        title="{$ferrors[$type]['sharpen']}"
-                      >!</span>
+                    <span
+                      n:if="isset($ferrors[$type]['sharpen'])"
+                      class="dErrorDesc"
+                      title="{$ferrors[$type]['sharpen']}"
+                    >!</span>
                   </td>
                 </tr>
               </table> {* #sizeEdit *}
@@ -1055,10 +1061,11 @@ $(".restore-settings-button").each(function() {
           class="dError"
           {/if}
         > %
-        <span n:if="isset($ferrors['resize_quality'])"
-            class="dErrorDesc"
-            title="{$ferrors['resize_quality']}"
-          >!</span>
+        <span
+          n:if="isset($ferrors['resize_quality'])"
+          class="dErrorDesc"
+          title="{$ferrors['resize_quality']}"
+        >!</span>
       </p>
       <p
         style="margin:10px 0 0 0;{if isset($ferrors)} display:block;{/if}"
@@ -1076,10 +1083,10 @@ $(".restore-settings-button").each(function() {
     <div class="savebar-footer-start"></div>
     <div class="savebar-footer-end">
       <div n:if="isset($save_success)" class="savebar-footer-block">
-          <div class="badge info-message">
-            <i class="icon-ok"></i>{$save_success}
-          </div>
+        <div class="badge info-message">
+          <i class="icon-ok"></i>{$save_success}
         </div>
+      </div>
       <div class="savebar-footer-block">
         <button
           class="buttonLike"

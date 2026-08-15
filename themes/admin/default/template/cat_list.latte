@@ -769,53 +769,52 @@ jQuery(document).ready(function(){
     </form>
   </div>
   {if count($categories)}
-    <div n:foreach="$categories as $category"
-        class="categoryBox{if $category['IS_VIRTUAL']} virtual_cat{/if}"
-        id="cat_{$category['ID']}"
-      >
-        <div class="albumTop">
-          <div class="albumIcon">
-            <span
-              class="
+    <div
+      n:foreach="$categories as $category"
+      class="categoryBox{if $category['IS_VIRTUAL']} virtual_cat{/if}"
+      id="cat_{$category['ID']}"
+    >
+      <div class="albumTop">
+        <div class="albumIcon">
+          <span
+            class="
         {if $category['NB_SUB_ALBUMS'] == 0}icon-folder-open{else}icon-sitemap{/if}
         {$color_tab[$category['ID'] % 5]}
         "
-            ></span>
-          </div>
-
-          <div class="albumTitle">
-            {$category['NAME']}
-          </div>
+          ></span>
         </div>
 
-        <span
-          class="albumInfos"
-        ><p>{$category['NB_PHOTOS']|translate_dec:'%d photo','%d photos'}</p> <p>{$category['NB_SUB_PHOTOS']|translate_dec:'%d photo','%d photos'} {$category['NB_SUB_ALBUMS']|translate_dec:'in %d sub-album','in %d sub-albums'}</p></span>
+        <div class="albumTitle">
+          {$category['NAME']}
+        </div>
+      </div>
 
-        <div class="albumActions">
-          <a
-            href="{$category['U_EDIT']|noescape}"
-            class="actionEdit"
-            {*title="{'Edit'|@translate}"*}
-          ><span
-              class="icon-pencil tiptip"
-              title="{='Edit'|translate}"
-            ></span><span class="iconLegend">{='Edit'|translate}</span></a>
-          <a
-            href="{$category['U_CHILDREN']|noescape}"
-            class="actionTitle"
-            {*title="{'sub-albums'|@translate}"*}
-          ><span
-              class="icon-sitemap tiptip"
-              title="{='sub-albums'|translate}"
-            ></span><span
-              class="iconLegend"
-            >{='sub-albums'|translate}</span></a>
-          <a href="{$category['U_MOVE']|noescape}" class="actionMove"><span
-              class="icon-move tiptip"
-              title="{='Move'|translate}"
-            ></span><span class="iconLegend">{='Move'|translate}</span></a>
-          {* NOTE: this is a real, pre-existing bug in the original .tpl -- it
+      <span
+        class="albumInfos"
+      ><p>{$category['NB_PHOTOS']|translate_dec:'%d photo','%d photos'}</p> <p>{$category['NB_SUB_PHOTOS']|translate_dec:'%d photo','%d photos'} {$category['NB_SUB_ALBUMS']|translate_dec:'in %d sub-album','in %d sub-albums'}</p></span>
+
+      <div class="albumActions">
+        <a
+          href="{$category['U_EDIT']|noescape}"
+          class="actionEdit"
+          {*title="{'Edit'|@translate}"*}
+        ><span
+            class="icon-pencil tiptip"
+            title="{='Edit'|translate}"
+          ></span><span class="iconLegend">{='Edit'|translate}</span></a>
+        <a
+          href="{$category['U_CHILDREN']|noescape}"
+          class="actionTitle"
+          {*title="{'sub-albums'|@translate}"*}
+        ><span
+            class="icon-sitemap tiptip"
+            title="{='sub-albums'|translate}"
+          ></span><span class="iconLegend">{='sub-albums'|translate}</span></a>
+        <a href="{$category['U_MOVE']|noescape}" class="actionMove"><span
+            class="icon-move tiptip"
+            title="{='Move'|translate}"
+          ></span><span class="iconLegend">{='Move'|translate}</span></a>
+        {* NOTE: this is a real, pre-existing bug in the original .tpl -- it
          checks a bare $CAT_ADMIN_ACCESS, but the renderer only ever sets
          $category['CAT_ADMIN_ACCESS'] (a per-row field). The bare variable
          is never assigned anywhere, so this condition is always false under
@@ -826,41 +825,39 @@ jQuery(document).ready(function(){
          every render. Not fixed to $category['CAT_ADMIN_ACCESS'] -- that
          would change which branch renders, a real behavior change beyond
          this migration's engine-swap scope. *}
-          {if isset($CAT_ADMIN_ACCESS) && $CAT_ADMIN_ACCESS}
-            <a
-              href="{$category['U_JUMPTO']|noescape}"
-              class="actionGalery"
-              {*title="{'Visit Gallery'|@translate}"*}
-            ><span
-                class="icon-eye tiptip"
-                title="{='Visit Gallery'|translate}"
-              ></span><span
-                class="iconLegend"
-              >{='Visit Gallery'|translate}</span></a>
-          {else}
-            <span
-              href="{$category['U_JUMPTO']|noescape}"
-              class="actionGalery"
-              {*title="{'This album is private'|@translate}"*}
-            ><span
-                class="icon-eye tiptip"
-                title="{='This album is private'|translate}"
-              ></span><span
-                class="iconLegend"
-              >{='Visit Gallery'|translate}</span></span>
-          {/if}
+        {if isset($CAT_ADMIN_ACCESS) && $CAT_ADMIN_ACCESS}
           <a
-            href="{$category['U_ADD_PHOTOS_ALBUM']|noescape}"
-            class="actionAdd"
-            {*title="{'Add Photos'|@translate}"*}
+            href="{$category['U_JUMPTO']|noescape}"
+            class="actionGalery"
+            {*title="{'Visit Gallery'|@translate}"*}
           ><span
-              class="icon-plus tiptip"
-              title="{='Add Photos'|translate}"
+              class="icon-eye tiptip"
+              title="{='Visit Gallery'|translate}"
             ></span><span
               class="iconLegend"
-            >{='Add Photos'|translate}</span></a>
-        </div>
+            >{='Visit Gallery'|translate}</span></a>
+        {else}
+          <span
+            href="{$category['U_JUMPTO']|noescape}"
+            class="actionGalery"
+            {*title="{'This album is private'|@translate}"*}
+          ><span
+              class="icon-eye tiptip"
+              title="{='This album is private'|translate}"
+            ></span><span
+              class="iconLegend"
+            >{='Visit Gallery'|translate}</span></span>
+        {/if}
+        <a
+          href="{$category['U_ADD_PHOTOS_ALBUM']|noescape}"
+          class="actionAdd"
+          {*title="{'Add Photos'|@translate}"*}
+        ><span
+            class="icon-plus tiptip"
+            title="{='Add Photos'|translate}"
+          ></span><span class="iconLegend">{='Add Photos'|translate}</span></a>
       </div>
+    </div>
   {/if}
 </div>
 

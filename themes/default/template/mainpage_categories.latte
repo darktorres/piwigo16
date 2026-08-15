@@ -739,16 +739,22 @@
         <div class="description">
           <h3>
             <a href="{$cat['URL']|noescape}">{$cat['NAME']}</a>
-            <img n:if="!empty($cat['icon_ts'])"
-                title="{$cat['icon_ts']['TITLE']}"
-                src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']['IS_CHILD_DATE']}_by_child{/if}.png"
-                alt="(!)"
-              >
+            <img
+              n:if="!empty($cat['icon_ts'])"
+              title="{$cat['icon_ts']['TITLE']}"
+              src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']['IS_CHILD_DATE']}_by_child{/if}.png"
+              alt="(!)"
+            >
           </h3>
           <div class="text">
-            <p n:if="isset($cat['INFO_DATES'])" class="dates">{$cat['INFO_DATES']}</p>
+            <p
+              n:if="isset($cat['INFO_DATES'])"
+              class="dates"
+            >{$cat['INFO_DATES']}</p>
             <p class="Nb_images">{$cat['CAPTION_NB_IMAGES']|noescape}</p>
-            <p n:if="!empty($cat['DESCRIPTION'])">{$cat['DESCRIPTION']|noescape}</p>
+            <p
+              n:if="!empty($cat['DESCRIPTION'])"
+            >{$cat['DESCRIPTION']|noescape}</p>
           </div>
         </div>
       </div>

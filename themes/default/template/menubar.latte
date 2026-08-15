@@ -695,11 +695,11 @@
 {if !empty($blocks)}
   <div id="menubar">
     <dl n:foreach="$blocks as $id => $block" id="{$id}">
-        {if !empty($block->template)}
-          {include getExtent($block->template, $id), block: $block, id: $id}
-        {else}
-          {$block->raw_content|noescape}
-        {/if}
-      </dl>
+      {if !empty($block->template)}
+        {include getExtent($block->template, $id), block: $block, id: $id}
+      {else}
+        {$block->raw_content|noescape}
+      {/if}
+    </dl>
   </div><div id="menuSwitcher"></div>
 {/if}

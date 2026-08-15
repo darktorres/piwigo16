@@ -768,17 +768,17 @@ const str_must_not_empty = "{_ 'must not be empty'|escapeJavascript|noescape}";
   </section>
 
   <section n:if="'none' != $STD_PGS_SELECTED_LOGO" id="logo-section">
-      {if 'piwigo_logo' == $STD_PGS_SELECTED_LOGO}
-        <img
-          id="piwigo-logo"
-          src="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
-        >
-      {elseif 'custom_logo' == $STD_PGS_SELECTED_LOGO}
-        <img id="custom-logo" src="{$ROOT_URL}logo.php">
-      {elseif 'gallery_title'}
-        <h1>{$GALLERY_TITLE}</h1>
-      {/if}
-    </section>
+    {if 'piwigo_logo' == $STD_PGS_SELECTED_LOGO}
+      <img
+        id="piwigo-logo"
+        src="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
+      >
+    {elseif 'custom_logo' == $STD_PGS_SELECTED_LOGO}
+      <img id="custom-logo" src="{$ROOT_URL}logo.php">
+    {elseif 'gallery_title'}
+      <h1>{$GALLERY_TITLE}</h1>
+    {/if}
+  </section>
 
   <a href="{$U_HOME}" id="return-to-gallery"><i
       class="gallery-icon-left"
@@ -823,216 +823,220 @@ const str_must_not_empty = "{_ 'must not be empty'|escapeJavascript|noescape}";
   </section>
 
   {* PREFERENCES *}
-  <section n:if="$ALLOW_USER_CUSTOMIZATION" id="preferences-section" class="profile-section">
-      <div class="title display-section" data-display="preferences-display">
-        <div class="column-flex">
-          <h1>{='Preferences'|translate}</h1>
-          <p>{='Choose how you want to see your gallery'|translate}</p>
-        </div>
-        <i class="gallery-icon-up-open display-btn close"></i>
+  <section
+    n:if="$ALLOW_USER_CUSTOMIZATION"
+    id="preferences-section"
+    class="profile-section"
+  >
+    <div class="title display-section" data-display="preferences-display">
+      <div class="column-flex">
+        <h1>{='Preferences'|translate}</h1>
+        <p>{='Choose how you want to see your gallery'|translate}</p>
       </div>
-      <div class="form" id="preferences-display">
-        <div class="column-flex first">
-          <label
-            for="nb_image_page"
-          >{='Number of photos per page'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="icon-picture"></i>
+      <i class="gallery-icon-up-open display-btn close"></i>
+    </div>
+    <div class="form" id="preferences-display">
+      <div class="column-flex first">
+        <label
+          for="nb_image_page"
+        >{='Number of photos per page'|translate}</label>
+        <div class="row-flex input-container">
+          <i class="icon-picture"></i>
+          <input
+            type="number"
+            size="4"
+            maxlength="3"
+            name="nb_image_page"
+            id="nb_image_page"
+            value="{$NB_IMAGE_PAGE}"
+          />
+        </div>
+        <p id="error_nb_image" class="error-message"><i
+            class="gallery-icon-attention-circled"
+          ></i>
+          {='must not be empty'|translate}</p>
+      </div>
+
+      <div class="column-flex">
+        <label>{='Theme'|translate}</label>
+        <div class="row-flex input-container">
+          <i class="icon-brush"></i>
+          {=htmlOptions(name: 'theme', options: $template_options, selected: $template_selection)}
+        </div>
+        <p class="error-message"><i
+            class="gallery-icon-attention-circled"
+          ></i> {='must not be empty'|translate}</p>
+      </div>
+
+      <div class="column-flex">
+        <label>{='Language'|translate}</label>
+        <div class="row-flex input-container">
+          <i class="icon-language"></i>
+          {=htmlOptions(name: 'language', options: $language_options, selected: $language_selection)}
+        </div>
+        <p class="error-message"><i
+            class="gallery-icon-attention-circled"
+          ></i> {='must not be empty'|translate}</p>
+      </div>
+
+      <div class="column-flex">
+        <label for="recent_period">{='Recent period'|translate}</label>
+        <div class="row-flex input-container">
+          <i class="icon-calendar"></i>
+          <input
+            type="number"
+            size="3"
+            maxlength="2"
+            name="recent_period"
+            id="recent_period"
+            value="{$RECENT_PERIOD}"
+          />
+        </div>
+        <p id="error_period" class="error-message"><i
+            class="gallery-icon-attention-circled"
+          ></i>
+          {='must not be empty'|translate}</p>
+      </div>
+
+      {* OPTIONS *}
+      <label class="options-title">{='Options'|translate}</label>
+      <div class="column-flex input-container preferences-options">
+        <div class="row-flex option">
+          <label class="switch">
             <input
-              type="number"
-              size="4"
-              maxlength="3"
-              name="nb_image_page"
-              id="nb_image_page"
-              value="{$NB_IMAGE_PAGE}"
-            />
-          </div>
-          <p id="error_nb_image" class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i>
-            {='must not be empty'|translate}</p>
+              type="checkbox"
+              id="opt_album"
+              {if "true" === $EXPAND}
+              checked
+              {/if}
+            >
+            <span class="slider round"></span>
+          </label>
+          <p>{='Expand all albums'|translate}</p>
         </div>
 
-        <div class="column-flex">
-          <label>{='Theme'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="icon-brush"></i>
-            {=htmlOptions(name: 'theme', options: $template_options, selected: $template_selection)}
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
-        <div class="column-flex">
-          <label>{='Language'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="icon-language"></i>
-            {=htmlOptions(name: 'language', options: $language_options, selected: $language_selection)}
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
-        <div class="column-flex">
-          <label for="recent_period">{='Recent period'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="icon-calendar"></i>
+        <div n:if="$ACTIVATE_COMMENTS" class="row-flex option">
+          <label class="switch">
             <input
-              type="number"
-              size="3"
-              maxlength="2"
-              name="recent_period"
-              id="recent_period"
-              value="{$RECENT_PERIOD}"
-            />
-          </div>
-          <p id="error_period" class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i>
-            {='must not be empty'|translate}</p>
+              type="checkbox"
+              id="opt_comment"
+              {if "true" === $NB_COMMENTS}
+              checked
+              {/if}
+            >
+            <span class="slider round"></span>
+          </label>
+          <p>{='Show number of comments'|translate}</p>
         </div>
 
-        {* OPTIONS *}
-        <label class="options-title">{='Options'|translate}</label>
-        <div class="column-flex input-container preferences-options">
-          <div class="row-flex option">
-            <label class="switch">
-              <input
-                type="checkbox"
-                id="opt_album"
-                {if "true" === $EXPAND}
-                checked
-                {/if}
-              >
-              <span class="slider round"></span>
-            </label>
-            <p>{='Expand all albums'|translate}</p>
-          </div>
-
-          <div n:if="$ACTIVATE_COMMENTS" class="row-flex option">
-              <label class="switch">
-                <input
-                  type="checkbox"
-                  id="opt_comment"
-                  {if "true" === $NB_COMMENTS}
-                  checked
-                  {/if}
-                >
-                <span class="slider round"></span>
-              </label>
-              <p>{='Show number of comments'|translate}</p>
-            </div>
-
-          <div class="row-flex option">
-            <label class="switch">
-              <input
-                type="checkbox"
-                id="opt_hits"
-                {if "true" === $NB_HITS}
-                checked
-                {/if}
-              >
-              <span class="slider round"></span>
-            </label>
-            <p>{='Show number of hits'|translate}</p>
-          </div>
-        </div>
-
-        <div class="reset">
-          <button
-            class="btn btn-main btn-secondary"
-            id="default_preferences"
-          >{='Reset to default values'|translate}</button>
-          <div class="save">
-            <button
-              class="btn btn-main btn-secondary"
-              id="reset_preferences"
-            >{='Reset'|translate}</button>
-            <button
-              class="btn btn-main"
-              id="save_preferences"
-            >{='Submit'|translate}</button>
-          </div>
+        <div class="row-flex option">
+          <label class="switch">
+            <input
+              type="checkbox"
+              id="opt_hits"
+              {if "true" === $NB_HITS}
+              checked
+              {/if}
+            >
+            <span class="slider round"></span>
+          </label>
+          <p>{='Show number of hits'|translate}</p>
         </div>
       </div>
-    </section>
 
-  {* PASSWORD *}
-  <section n:if="!$SPECIAL_USER" id="password-section" class="profile-section">
-      <div class="title display-section" data-display="password-display">
-        <div class="column-flex">
-          <h1>{='Password'|translate}</h1>
-          <p>{='Change your password'|translate}</p>
-        </div>
-        <i class="gallery-icon-up-open display-btn close"></i>
-      </div>
-      <div class="form" id="password-display">
-        <div class="column-flex">
-          <label for="password">{='Password'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-lock"></i>
-            <input
-              type="password"
-              class=""
-              name="password"
-              id="password"
-              size="25"
-            />
-            <i class="gallery-icon-eye togglePassword"></i>
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
-        <div class="column-flex">
-          <label for="password_new">{='New password'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-lock"></i>
-            <input
-              type="password"
-              class=""
-              name="new-password"
-              id="password_new"
-              size="25"
-            />
-            <i class="gallery-icon-eye togglePassword"></i>
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
-        <div class="column-flex">
-          <label
-            for="password_conf"
-          >{='Confirm my new password'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-lock"></i>
-            <input
-              type="password"
-              class=""
-              name="password_conf"
-              id="password_conf"
-              size="25"
-            />
-            <i class="gallery-icon-eye togglePassword"></i>
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
+      <div class="reset">
+        <button
+          class="btn btn-main btn-secondary"
+          id="default_preferences"
+        >{='Reset to default values'|translate}</button>
         <div class="save">
           <button
+            class="btn btn-main btn-secondary"
+            id="reset_preferences"
+          >{='Reset'|translate}</button>
+          <button
             class="btn btn-main"
-            id="save_password"
+            id="save_preferences"
           >{='Submit'|translate}</button>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
+
+  {* PASSWORD *}
+  <section n:if="!$SPECIAL_USER" id="password-section" class="profile-section">
+    <div class="title display-section" data-display="password-display">
+      <div class="column-flex">
+        <h1>{='Password'|translate}</h1>
+        <p>{='Change your password'|translate}</p>
+      </div>
+      <i class="gallery-icon-up-open display-btn close"></i>
+    </div>
+    <div class="form" id="password-display">
+      <div class="column-flex">
+        <label for="password">{='Password'|translate}</label>
+        <div class="row-flex input-container">
+          <i class="gallery-icon-lock"></i>
+          <input
+            type="password"
+            class=""
+            name="password"
+            id="password"
+            size="25"
+          />
+          <i class="gallery-icon-eye togglePassword"></i>
+        </div>
+        <p class="error-message"><i
+            class="gallery-icon-attention-circled"
+          ></i> {='must not be empty'|translate}</p>
+      </div>
+
+      <div class="column-flex">
+        <label for="password_new">{='New password'|translate}</label>
+        <div class="row-flex input-container">
+          <i class="gallery-icon-lock"></i>
+          <input
+            type="password"
+            class=""
+            name="new-password"
+            id="password_new"
+            size="25"
+          />
+          <i class="gallery-icon-eye togglePassword"></i>
+        </div>
+        <p class="error-message"><i
+            class="gallery-icon-attention-circled"
+          ></i> {='must not be empty'|translate}</p>
+      </div>
+
+      <div class="column-flex">
+        <label
+          for="password_conf"
+        >{='Confirm my new password'|translate}</label>
+        <div class="row-flex input-container">
+          <i class="gallery-icon-lock"></i>
+          <input
+            type="password"
+            class=""
+            name="password_conf"
+            id="password_conf"
+            size="25"
+          />
+          <i class="gallery-icon-eye togglePassword"></i>
+        </div>
+        <p class="error-message"><i
+            class="gallery-icon-attention-circled"
+          ></i> {='must not be empty'|translate}</p>
+      </div>
+
+      <div class="save">
+        <button
+          class="btn btn-main"
+          id="save_password"
+        >{='Submit'|translate}</button>
+      </div>
+    </div>
+  </section>
 
   {* API KEY *}
   <section id="apikey-section" class="profile-section">
@@ -1288,46 +1292,51 @@ const str_must_not_empty = "{_ 'must not be empty'|escapeJavascript|noescape}";
   </section>
 
   {if isset($PLUGINS_PROFILE)}
-    <section n:foreach="$PLUGINS_PROFILE as $k_block => $plugin_block" id="{$k_block}-section" class="profile-section">
-        <div class="title display-section" data-display="{$k_block}-display">
-          <div class="column-flex">
-            <h1>{$plugin_block['name']}</h1>
-            <p>{$plugin_block['desc']}</p>
-          </div>
-          <i class="gallery-icon-up-open display-btn close"></i>
+    <section
+      n:foreach="$PLUGINS_PROFILE as $k_block => $plugin_block"
+      id="{$k_block}-section"
+      class="profile-section"
+    >
+      <div class="title display-section" data-display="{$k_block}-display">
+        <div class="column-flex">
+          <h1>{$plugin_block['name']}</h1>
+          <p>{$plugin_block['desc']}</p>
         </div>
-        <div class="form plugins" id="{$k_block}-display">
-          {include $plugin_block['template']}
-          {if $plugin_block['standard_show_save']}
-            <div class="save">
-              <button
-                class="btn btn-main"
-                id="save_{$k_block}"
-              >{='Submit'|translate}</button>
-            </div>
-            {capture $tmpPluginSaveScript}
+        <i class="gallery-icon-up-open display-btn close"></i>
+      </div>
+      <div class="form plugins" id="{$k_block}-display">
+        {include $plugin_block['template']}
+        {if $plugin_block['standard_show_save']}
+          <div class="save">
+            <button
+              class="btn btn-main"
+              id="save_{$k_block}"
+            >{='Submit'|translate}</button>
+          </div>
+          {capture $tmpPluginSaveScript}
             standardSaveSelector.push('#save_{$k_block}');
             {/capture}
-            {do footerScript($tmpPluginSaveScript)}
-          {/if}
-        </div>
-      </section>
+          {do footerScript($tmpPluginSaveScript)}
+        {/if}
+      </div>
+    </section>
   {/if}
 
   <section n:if="count($language_options) > 1" id="language-switch">
-      <div id="lang-select">
-        <span id="other-languages">
-          <span n:foreach="$language_options as $code => $lang"
-              id="lang={$code}"
-              onclick="setCookie('lang',{$code},30)"
-            >{$lang}</span>
-        </span>
-        <div id="selected-language-container">
-          <i class="gallery-icon-left-chevron"></i><span
-            id="selected-language"
-          >{$language_options[$language_selection]}</span>
-        </div>
+    <div id="lang-select">
+      <span id="other-languages">
+        <span
+          n:foreach="$language_options as $code => $lang"
+          id="lang={$code}"
+          onclick="setCookie('lang',{$code},30)"
+        >{$lang}</span>
+      </span>
+      <div id="selected-language-container">
+        <i class="gallery-icon-left-chevron"></i><span
+          id="selected-language"
+        >{$language_options[$language_selection]}</span>
       </div>
-    </section>
+    </div>
+  </section>
   {include 'toaster.latte'}
 </container>

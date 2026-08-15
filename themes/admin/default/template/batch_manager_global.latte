@@ -1076,10 +1076,11 @@ $(document).ready(function() {
                         title="{='Zoom'|translate}"
                       ></a>
                     </div>
-                    <em n:if="$thumbnail['level'] > 0"
-                        class="levelIndicatorF"
-                        title="{='Who can see these photos?'|translate} : "
-                      >{='Level %d'|sprintf:$thumbnail['level']|translate}</em>
+                    <em
+                      n:if="$thumbnail['level'] > 0"
+                      class="levelIndicatorF"
+                      title="{='Who can see these photos?'|translate} : "
+                    >{='Level %d'|sprintf:$thumbnail['level']|translate}</em>
                     <img
                       src="{$thumbnail['thumb']->getUrl()}"
                       alt="{$thumbnail['file']}"
@@ -1094,18 +1095,18 @@ $(document).ready(function() {
         </ul>
 
         <div n:if="!empty($navbar)" class="batchManager-pagination">
-            <div class="pagination-per-page">
-              <span>{='display'|translate}</span>
-              <a href="{$U_DISPLAY|noescape}&amp;display=20">20</a>
-              <a href="{$U_DISPLAY|noescape}&amp;display=50">50</a>
-              <a href="{$U_DISPLAY|noescape}&amp;display=100">100</a>
-              <a
-                href="{$U_DISPLAY|noescape}&amp;display=all"
-              >{='all'|translate}</a>
-            </div>
-
-            {include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}
+          <div class="pagination-per-page">
+            <span>{='display'|translate}</span>
+            <a href="{$U_DISPLAY|noescape}&amp;display=20">20</a>
+            <a href="{$U_DISPLAY|noescape}&amp;display=50">50</a>
+            <a href="{$U_DISPLAY|noescape}&amp;display=100">100</a>
+            <a
+              href="{$U_DISPLAY|noescape}&amp;display=all"
+            >{='all'|translate}</a>
           </div>
+
+          {include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}
+        </div>
       {else}
         <div
           class="selectionEmptyBlock"
@@ -1142,11 +1143,15 @@ $(document).ready(function() {
                 value="associate"
               >{='Associate to album'|translate}</option>
               <option value="move">{='Move to album'|translate}</option>
-              <option n:if="!empty($associated_categories)"
-                  value="dissociate"
-                >{='Dissociate from album'|translate}</option>
+              <option
+                n:if="!empty($associated_categories)"
+                value="dissociate"
+              >{='Dissociate from album'|translate}</option>
               <option value="add_tags">{='Add tags'|translate}</option>
-              <option n:if="!empty($associated_tags)" value="del_tags">{='remove tags'|translate}</option>
+              <option
+                n:if="!empty($associated_tags)"
+                value="del_tags"
+              >{='remove tags'|translate}</option>
               <option value="author">{='Set author'|translate}</option>
               <option value="title">{='Set title'|translate}</option>
               <option
@@ -1175,7 +1180,10 @@ $(document).ready(function() {
                 value="generate_derivatives"
               >{='Generate multiple size images'|translate}</option>
               {if !empty($element_set_global_plugins_actions)}
-                <option n:foreach="$element_set_global_plugins_actions as $action" value="{$action['ID']}">{$action['NAME']}</option>
+                <option
+                  n:foreach="$element_set_global_plugins_actions as $action"
+                  value="{$action['ID']}"
+                >{$action['NAME']}</option>
               {/if}
             </select>
           </div>
@@ -1263,15 +1271,19 @@ $(document).ready(function() {
 
           <!-- del_tags -->
           <div id="action_del_tags" class="bulkAction">
-            <select n:if="!empty($associated_tags)"
-                data-selectize="tags"
-                name="del_tags[]"
-                multiple
-                style="width:400px;"
-                placeholder="{='Type in a search term'|translate}"
-              >
-                <option n:foreach="$associated_tags as $tag" value="{$tag['id']}">{$tag['name']}</option>
-              </select>
+            <select
+              n:if="!empty($associated_tags)"
+              data-selectize="tags"
+              name="del_tags[]"
+              multiple
+              style="width:400px;"
+              placeholder="{='Type in a search term'|translate}"
+            >
+              <option
+                n:foreach="$associated_tags as $tag"
+                value="{$tag['id']}"
+              >{$tag['name']}</option>
+            </select>
           </div>
 
           <!-- author -->
@@ -1342,13 +1354,14 @@ $(document).ready(function() {
               >{='None'|translate}</a>
             </div>
             <br>
-            <label n:foreach="$generate_derivatives_types as $type => $disp" class="font-checkbox"><span
-                  class="icon-check"
-                ></span><input
-                  type="checkbox"
-                  name="generate_derivatives_type[]"
-                  value="{$type}"
-                > {$disp}</label>
+            <label
+              n:foreach="$generate_derivatives_types as $type => $disp"
+              class="font-checkbox"
+            ><span class="icon-check"></span><input
+                type="checkbox"
+                name="generate_derivatives_type[]"
+                value="{$type}"
+              > {$disp}</label>
           </div>
 
           <!-- delete derivatives -->
@@ -1358,20 +1371,25 @@ $(document).ready(function() {
               <a href="javascript:selectDelDerivNone()">{='None'|translate}</a>
             </div>
             <br>
-            <label n:foreach="$del_derivatives_types as $type => $disp" class="font-checkbox"><span
-                  class="icon-check"
-                ></span><input
-                  type="checkbox"
-                  name="del_derivatives_type[]"
-                  value="{$type}"
-                > {$disp}</label>
+            <label
+              n:foreach="$del_derivatives_types as $type => $disp"
+              class="font-checkbox"
+            ><span class="icon-check"></span><input
+                type="checkbox"
+                name="del_derivatives_type[]"
+                value="{$type}"
+              > {$disp}</label>
           </div>
 
           <!-- plugins -->
           {if !empty($element_set_global_plugins_actions)}
-            <div n:foreach="$element_set_global_plugins_actions as $action" id="action_{$action['ID']}" class="bulkAction">
-                {if !empty($action['CONTENT'])}{$action['CONTENT']|noescape}{/if}
-              </div>
+            <div
+              n:foreach="$element_set_global_plugins_actions as $action"
+              id="action_{$action['ID']}"
+              class="bulkAction"
+            >
+              {if !empty($action['CONTENT'])}{$action['CONTENT']|noescape}{/if}
+            </div>
           {/if}
         </div>
       </div> <!-- #permitAction -->

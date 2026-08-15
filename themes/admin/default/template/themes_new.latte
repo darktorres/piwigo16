@@ -718,19 +718,19 @@ $(window).bind("load", function() {
 {if !empty($new_themes)}
   <div class="themeBoxes">
     <div n:foreach="$new_themes as $theme" class="themeBox">
-        <div class="themeShot"><a
-            href="{$theme['screenshot']|noescape}"
-            class="preview-box"
-            title="{$theme['name']}"
-          ><img
-              src="{$theme['screenshot']|noescape}"
-              onerror="this.src='{$default_screenshot|noescape}'"
-            ></a></div>
-        <div class="themeName" title="{$theme['name']}">{$theme['name']}</div>
-        <div class="themeActions"><a
-            href="{$theme['install_url']|noescape}"
-          >{='Install'|translate}</a></div>
-      </div>
+      <div class="themeShot"><a
+          href="{$theme['screenshot']|noescape}"
+          class="preview-box"
+          title="{$theme['name']}"
+        ><img
+            src="{$theme['screenshot']|noescape}"
+            onerror="this.src='{$default_screenshot|noescape}'"
+          ></a></div>
+      <div class="themeName" title="{$theme['name']}">{$theme['name']}</div>
+      <div class="themeActions"><a
+          href="{$theme['install_url']|noescape}"
+        >{='Install'|translate}</a></div>
+    </div>
   </div> <!-- themeBoxes -->
 {else}
   <p>{='There is no other theme available.'|translate}</p>

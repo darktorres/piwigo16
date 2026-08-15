@@ -817,22 +817,26 @@ jQuery("#selectStatus").change(function() {
       ></select>
     </p>
 
-    <p n:if="isset($nb_users_granted_indirect) && $nb_users_granted_indirect > 0">
-        {='%u users have automatic permission because they belong to a granted group.'|translate:$nb_users_granted_indirect}
-        <a
-          href="#"
-          class="toggle-indirectPermissions"
-          style="display:none"
-        >{='hide details'|translate}</a>
-        <a
-          href="#"
-          class="toggle-indirectPermissions"
-        >{='show details'|translate}</a>
+    <p
+      n:if="isset($nb_users_granted_indirect) && $nb_users_granted_indirect > 0"
+    >
+      {='%u users have automatic permission because they belong to a granted group.'|translate:$nb_users_granted_indirect}
+      <a
+        href="#"
+        class="toggle-indirectPermissions"
+        style="display:none"
+      >{='hide details'|translate}</a>
+      <a
+        href="#"
+        class="toggle-indirectPermissions"
+      >{='show details'|translate}</a>
 
-        <ul id="indirectPermissionsDetails" style="display:none">
-          <li n:foreach="$user_granted_indirect_groups as $group_details"><strong>{$group_details['group_name']}</strong> : {$group_details['group_users']}</li>
-        </ul>
-      </p>
+      <ul id="indirectPermissionsDetails" style="display:none">
+        <li
+          n:foreach="$user_granted_indirect_groups as $group_details"
+        ><strong>{$group_details['group_name']}</strong> : {$group_details['group_users']}</li>
+      </ul>
+    </p>
 
     {*
   <h4>{'Groups'|@translate}</h4>
@@ -918,10 +922,10 @@ jQuery("#selectStatus").change(function() {
     </div>
     <div class="savebar-footer-end">
       <div n:if="isset($save_success)" class="savebar-footer-block">
-          <div class="badge info-message">
-            <i class="icon-ok"></i>{$save_success}
-          </div>
+        <div class="badge info-message">
+          <i class="icon-ok"></i>{$save_success}
         </div>
+      </div>
 
       <div class="savebar-footer-block">
         <button class="buttonLike" type="submit" name="submit"><i

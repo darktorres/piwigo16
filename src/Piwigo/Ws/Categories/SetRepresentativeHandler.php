@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Categories;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Category\CategoryService;
@@ -37,6 +38,7 @@ final readonly class SetRepresentativeHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): ?WsErrorResponse
     {
         $input = SetRepresentativeParams::fromArray($params);

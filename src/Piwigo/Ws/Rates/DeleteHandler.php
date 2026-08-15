@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Rates;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Rate\RateService;
@@ -31,6 +32,7 @@ final readonly class DeleteHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): int
     {
         $input = DeleteParams::fromArray($params);

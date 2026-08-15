@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Comments;
 
+use Override;
 use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentService;
 use Piwigo\Comment\Projection\CommentDateRange;
@@ -55,6 +56,7 @@ final readonly class GetListHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array<string, mixed>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         if (! $this->currentConfig->activateComments) {

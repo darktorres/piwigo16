@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Tags;
 
+use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
@@ -39,6 +40,7 @@ final readonly class MergeHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: list<int>}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = MergeParams::fromArray($params);

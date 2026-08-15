@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
@@ -64,6 +65,7 @@ final readonly class PluginsPerformActionHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|true
     {
         $template = $this->currentTemplate->get();

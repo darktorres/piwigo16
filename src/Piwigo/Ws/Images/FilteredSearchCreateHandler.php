@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
@@ -50,6 +51,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{search_id: string, search_url: string}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         // MethodDefinition's own registration for this method guarantees

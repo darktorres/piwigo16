@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Images;
 
 use Exception;
+use Override;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -66,6 +67,7 @@ final readonly class UploadHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array<string, mixed>|null
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array|null
     {
         // MethodDefinition's own registration for this method guarantees

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Comments;
 
+use Override;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
@@ -33,6 +34,7 @@ final readonly class DeleteHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|string
     {
         $input = DeleteParams::fromArray($params);

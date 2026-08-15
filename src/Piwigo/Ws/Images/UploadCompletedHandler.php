@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Csrf\CsrfService;
@@ -41,6 +42,7 @@ final readonly class UploadCompletedHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{moved_from_lounge: list<array{image_id: int, category_id: int}>|null, category: array{id: int, nb_photos: int, label: string}}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = UploadCompletedParams::fromArray($params);

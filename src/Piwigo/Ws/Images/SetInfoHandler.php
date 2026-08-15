@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Images;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\ImageId;
@@ -55,6 +56,7 @@ final readonly class SetInfoHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): ?WsErrorResponse
     {
         // MethodDefinition's own registration for this method guarantees

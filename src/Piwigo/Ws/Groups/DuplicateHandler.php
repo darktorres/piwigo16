@@ -13,6 +13,7 @@ namespace Piwigo\Ws\Groups;
 
 use InvalidArgumentException;
 use LogicException;
+use Override;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
@@ -37,6 +38,7 @@ final readonly class DuplicateHandler implements WsAction
      * @return WsErrorResponse|array<array-key, mixed> WsErrorResponse, or the result of
      *   the pwg.groups.getList invocation
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = DuplicateParams::fromArray($params);

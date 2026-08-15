@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Activity;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Activity\ActivityListCriteria;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -50,6 +51,7 @@ final readonly class GetListHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<mixed>}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = GetListParams::fromArray($params);

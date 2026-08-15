@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Images;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
@@ -41,6 +42,7 @@ final readonly class SyncMetadataHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{nb_synchronized: int}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = SyncMetadataParams::fromArray($params);

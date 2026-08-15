@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Session;
 
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -41,6 +42,7 @@ final readonly class GetStatusHandler implements WsAction
      *   unvalidated request array, but the body doesn't read it.
      * @return array<string, mixed>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $currentUser = $this->currentUser->get();

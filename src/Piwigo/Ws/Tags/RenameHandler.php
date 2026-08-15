@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Tags;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
@@ -44,6 +45,7 @@ final readonly class RenameHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array<string, mixed>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = RenameParams::fromArray($params);

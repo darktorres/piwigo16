@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
@@ -33,6 +34,7 @@ final readonly class AddChunkHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): ?WsErrorResponse
     {
         $input = AddChunkParams::fromArray($params);

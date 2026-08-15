@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Categories;
 
+use Override;
 use Piwigo\Category\CategoryAdminListCriteria;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -41,6 +42,7 @@ final readonly class GetAdminListHandler implements WsAction
      * @param array<mixed> $params
      * @return array<string, mixed>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $input = GetAdminListParams::fromArray($params);

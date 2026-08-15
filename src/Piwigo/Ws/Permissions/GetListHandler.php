@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Permissions;
 
+use Override;
 use Piwigo\Core\WsError;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Ws\NamedArray;
@@ -31,6 +32,7 @@ final readonly class GetListHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{categories: NamedArray}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $providedCount = (array_key_exists('cat_id', $params) ? 1 : 0)

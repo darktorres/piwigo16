@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\ImageService;
@@ -34,6 +35,7 @@ final readonly class SetMd5sumHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{nb_added: int, nb_no_md5sum: int}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = SetMd5sumParams::fromArray($params);

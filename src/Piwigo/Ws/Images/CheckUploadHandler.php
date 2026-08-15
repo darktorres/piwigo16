@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
@@ -30,6 +31,7 @@ final readonly class CheckUploadHandler implements WsAction
      *   unvalidated request array, but the body doesn't read it.
      * @return array{message: ?string, ready_for_upload: bool}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $ret = [];

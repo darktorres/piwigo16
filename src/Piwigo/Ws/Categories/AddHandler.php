@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Categories;
 
+use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -37,6 +38,7 @@ final readonly class AddHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{info: string, id: int|string}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = AddParams::fromArray($params);

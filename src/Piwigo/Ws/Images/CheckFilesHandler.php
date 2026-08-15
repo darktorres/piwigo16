@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Paths;
@@ -37,6 +38,7 @@ final readonly class CheckFilesHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array<string, string>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = CheckFilesParams::fromArray($params);

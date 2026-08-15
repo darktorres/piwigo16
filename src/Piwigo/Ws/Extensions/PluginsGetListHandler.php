@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
@@ -47,6 +48,7 @@ final readonly class PluginsGetListHandler implements WsAction
      *   unvalidated request array, but the body doesn't read it.
      * @return list<array{id: string, name: string, version: string, state: string, description: string}>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $urlService = $this->urlService;

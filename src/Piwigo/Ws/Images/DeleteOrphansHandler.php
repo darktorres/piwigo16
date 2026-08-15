@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
@@ -37,6 +38,7 @@ final readonly class DeleteOrphansHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{nb_deleted: int, nb_orphans: int}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = DeleteOrphansParams::fromArray($params);

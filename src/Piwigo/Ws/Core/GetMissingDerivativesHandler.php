@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Core;
 
+use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
 use Piwigo\Image\DerivativeImage;
@@ -39,6 +40,7 @@ final readonly class GetMissingDerivativesHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{next_page?: int, urls?: string[]}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = GetMissingDerivativesParams::fromArray($params);

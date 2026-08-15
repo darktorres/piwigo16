@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Images;
 
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -73,6 +74,7 @@ final readonly class AddHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{image_id: int|string, url: string}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         // MethodDefinition's own registration for this method guarantees

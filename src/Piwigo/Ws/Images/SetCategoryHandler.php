@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
@@ -37,6 +38,7 @@ final readonly class SetCategoryHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): ?WsErrorResponse
     {
         $input = SetCategoryParams::fromArray($params);

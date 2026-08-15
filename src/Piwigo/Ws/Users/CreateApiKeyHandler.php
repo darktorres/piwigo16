@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Users;
 
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Config\CurrentConfig;
@@ -38,6 +39,7 @@ final readonly class CreateApiKeyHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $logger = $this->currentLogger->get();

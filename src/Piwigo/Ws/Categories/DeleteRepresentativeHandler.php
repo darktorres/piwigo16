@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Categories;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -37,6 +38,7 @@ final readonly class DeleteRepresentativeHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): ?WsErrorResponse
     {
         $input = DeleteRepresentativeParams::fromArray($params);

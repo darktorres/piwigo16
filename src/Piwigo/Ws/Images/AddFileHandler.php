@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
@@ -43,6 +44,7 @@ final readonly class AddFileHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|bool|null
     {
         $input = AddFileParams::fromArray($params);

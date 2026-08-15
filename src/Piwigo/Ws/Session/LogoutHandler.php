@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Session;
 
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthService;
 use Piwigo\Core\ApiKeyRequestFlag;
@@ -34,6 +35,7 @@ final readonly class LogoutHandler implements WsAction
      *   signature (zero registered params) -- $params is the raw, entirely
      *   unvalidated request array, but the body doesn't read it.
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|true
     {
         if ($this->apiKeyRequestFlag->isActive()) {

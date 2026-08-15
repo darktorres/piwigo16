@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Users;
 
 use LogicException;
+use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\PageState;
 use Piwigo\Core\WsError;
@@ -37,6 +38,7 @@ final readonly class SetInfoHandler implements WsAction
      * @return WsErrorResponse|array<int|string, mixed> WsErrorResponse, or the result of
      *   the pwg.users.getList invocation
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = SetInfoParams::fromArray($params);

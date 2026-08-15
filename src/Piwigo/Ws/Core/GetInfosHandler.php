@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Core;
 
+use Override;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\AppInfo;
@@ -42,6 +43,7 @@ final readonly class GetInfosHandler implements WsAction
      *   unvalidated request array, but the body doesn't read it.
      * @return array{infos: NamedArray}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $infos = [];

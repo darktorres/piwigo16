@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Users;
 
+use Override;
 use Piwigo\Auth\AuthService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
@@ -33,6 +34,7 @@ final readonly class GetAuthKeyHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{auth_key: string, user_id: int, created_on: string, duration: int, expired_on: string, key_type: string, auth_key_id: string}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = GetAuthKeyParams::fromArray($params);

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryService;
@@ -61,6 +62,7 @@ final readonly class GetInfoHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array<string, mixed>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = GetInfoParams::fromArray($params);

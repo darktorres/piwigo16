@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Image\ImageService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
@@ -34,6 +35,7 @@ final readonly class EmptyLoungeHandler implements WsAction
      * @return array{rows: list<array{image_id: int, category_id: int}>|null} matches
      *   ImageService::emptyLounge()'s own already-precise return type
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $ret = [

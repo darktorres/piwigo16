@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Core;
 
+use Override;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
@@ -42,6 +43,7 @@ final readonly class GetCacheSizeHandler implements WsAction
      *   unvalidated request array, but the body doesn't read it.
      * @return array{infos: NamedArray}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $data_location = $this->currentConfig->dataLocation;

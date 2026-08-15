@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Users;
 
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
@@ -42,6 +43,7 @@ final readonly class FavoritesGetListHandler implements WsAction
      * @param array<mixed> $params
      * @return false|array{paging: NamedStruct, images: NamedArray}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): false|array
     {
         if ($this->accessControl->isAGuest()) {

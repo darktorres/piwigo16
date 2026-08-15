@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Categories;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -41,6 +42,7 @@ final readonly class RefreshRepresentativeHandler implements WsAction
      *   CategoryService::getCategoryRepresentantProperties()'s own
      *   already-precise return type (this method's only real array return)
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = RefreshRepresentativeParams::fromArray($params);

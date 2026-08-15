@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Groups;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
@@ -36,6 +37,7 @@ final readonly class GetListHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{paging: NamedStruct, groups: NamedArray}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = GetListParams::fromArray($params);

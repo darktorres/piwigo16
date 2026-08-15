@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Permissions;
 
 use LogicException;
+use Override;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Csrf\CsrfService;
@@ -37,6 +38,7 @@ final readonly class RemoveHandler implements WsAction
      *   can't prove the sealed shape from a re-narrowed value, only that
      *   it's a real array)
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = RemoveParams::fromArray($params);

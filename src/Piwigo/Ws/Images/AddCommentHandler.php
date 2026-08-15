@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
@@ -40,6 +41,7 @@ final readonly class AddCommentHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{comment: NamedStruct}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = AddCommentParams::fromArray($params);

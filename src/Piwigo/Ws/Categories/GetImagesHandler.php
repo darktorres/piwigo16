@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Categories;
 
+use Override;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
@@ -47,6 +48,7 @@ final readonly class GetImagesHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{paging: NamedStruct, images: NamedArray}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = GetImagesParams::fromArray($params);

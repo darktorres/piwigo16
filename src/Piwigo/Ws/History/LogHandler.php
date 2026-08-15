@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\History;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryService;
@@ -40,6 +41,7 @@ final readonly class LogHandler implements WsAction
      * away from in inheritance), so this returns null rather than
      * matching the god-class method's own `void`-declared original.
      */
+    #[Override]
     public function __invoke(array $params, Server $server): mixed
     {
         $input = LogParams::fromArray($params);

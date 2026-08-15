@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Tags;
 
+use Override;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Tag\TagService;
 use Piwigo\Ws\NamedArray;
@@ -37,6 +38,7 @@ final readonly class GetAdminListHandler implements WsAction
      *   unvalidated request array, but the body doesn't read it.
      * @return array{tags: NamedArray}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         return [

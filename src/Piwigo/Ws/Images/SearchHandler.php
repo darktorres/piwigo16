@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\RenderElementDescription;
@@ -42,6 +43,7 @@ final readonly class SearchHandler implements WsAction
      * @param array<mixed> $params
      * @return array{paging: NamedStruct, images: NamedArray}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $input = SearchParams::fromArray($params);

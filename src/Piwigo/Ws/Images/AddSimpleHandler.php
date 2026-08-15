@@ -13,6 +13,7 @@ namespace Piwigo\Ws\Images;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Override;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ImageId;
@@ -58,6 +59,7 @@ final readonly class AddSimpleHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{image_id: int|string, url: string}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         // MethodDefinition's own registration for this method guarantees

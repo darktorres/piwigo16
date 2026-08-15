@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Users;
 
 use LogicException;
+use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -43,6 +44,7 @@ final readonly class AddHandler implements WsAction
      * @return WsErrorResponse|array<int|string, mixed> WsErrorResponse, or the result of
      *   the pwg.users.getList invocation
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = AddParams::fromArray($params);

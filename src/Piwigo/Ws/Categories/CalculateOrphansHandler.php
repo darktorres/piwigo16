@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Categories;
 
+use Override;
 use Piwigo\Category\CategoryService;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
@@ -30,6 +31,7 @@ final readonly class CalculateOrphansHandler implements WsAction
      * @param array<mixed> $params
      * @return array<int, array{nb_images_associated_outside: int, nb_images_becoming_orphan: int, nb_images_recursive: int}>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $input = CalculateOrphansParams::fromArray($params);

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Categories;
 
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Cache\PermissionsCachePool;
@@ -132,6 +133,7 @@ final readonly class GetListHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array<int|string, mixed>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = GetListParams::fromArray($params);

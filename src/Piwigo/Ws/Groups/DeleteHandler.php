@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Groups;
 
+use Override;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Config\CurrentConfig;
@@ -34,6 +35,7 @@ final readonly class DeleteHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|NamedArray
     {
         $input = DeleteParams::fromArray($params);

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Image\ImageService;
@@ -37,6 +38,7 @@ final readonly class RateHandler implements WsAction
      * @return WsErrorResponse|array<string, mixed> matches
      *   Rate\RateService::rate()'s own already-reviewed by-design shape
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = RateParams::fromArray($params);

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Groups;
 
+use Override;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
@@ -38,6 +39,7 @@ final readonly class MergeHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{destination_group: mixed, deleted_group: mixed}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = MergeParams::fromArray($params);

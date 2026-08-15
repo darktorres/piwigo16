@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Paths;
@@ -40,6 +41,7 @@ final readonly class FormatsDeleteHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|bool
     {
         $input = FormatsDeleteParams::fromArray($params);

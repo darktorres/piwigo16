@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Users;
 
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Config\CurrentConfig;
@@ -39,6 +40,7 @@ final readonly class RevokeApiKeyHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|string
     {
         $logger = $this->currentLogger->get();

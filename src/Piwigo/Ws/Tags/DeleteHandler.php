@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Tags;
 
+use Override;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
@@ -34,6 +35,7 @@ final readonly class DeleteHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{id: list<int>}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = DeleteParams::fromArray($params);

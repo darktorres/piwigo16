@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Override;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Core\WsError;
@@ -36,6 +37,7 @@ final readonly class SetRankHandler implements WsAction
      *   the single-image branch below returns the one image_id plus its
      *   new rank
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array|WsErrorResponse
     {
         $input = SetRankParams::fromArray($params);

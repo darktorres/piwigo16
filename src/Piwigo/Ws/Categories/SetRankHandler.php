@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Categories;
 
+use Override;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\WsError;
 use Piwigo\Ws\Server;
@@ -32,6 +33,7 @@ final readonly class SetRankHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): ?WsErrorResponse
     {
         $input = SetRankParams::fromArray($params);

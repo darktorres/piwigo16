@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Extensions;
 
+use Override;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Auth\AccessControl;
@@ -34,6 +35,7 @@ final readonly class IgnoreUpdateHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|true
     {
         // No define('IN_ADMIN', true) or include_once

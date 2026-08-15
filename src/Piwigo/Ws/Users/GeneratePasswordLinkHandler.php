@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Users;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthService;
@@ -51,6 +52,7 @@ final readonly class GeneratePasswordLinkHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array{generated_link: string, send_by_mail: string|false|null, time_validation: string}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = GeneratePasswordLinkParams::fromArray($params);

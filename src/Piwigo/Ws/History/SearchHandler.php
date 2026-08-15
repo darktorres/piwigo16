@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\History;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
@@ -66,6 +67,7 @@ final readonly class SearchHandler implements WsAction
      * @param array<mixed> $params
      * @return array<string, mixed>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $input = SearchParams::fromArray($params);

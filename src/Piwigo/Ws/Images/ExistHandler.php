@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Images;
 
 use Exception;
+use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Image\ImageService;
@@ -35,6 +36,7 @@ final readonly class ExistHandler implements WsAction
      *   id is 'images''s NOT NULL primary key (int|string per
      *   driver), or null when no matching photo was found
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $input = ExistParams::fromArray($params);

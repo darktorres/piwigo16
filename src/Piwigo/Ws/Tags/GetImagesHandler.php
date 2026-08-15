@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Tags;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\UrlServiceInterface;
@@ -43,6 +44,7 @@ final readonly class GetImagesHandler implements WsAction
      * @param array<mixed> $params
      * @return array{paging: NamedStruct, images: NamedArray}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $input = GetImagesParams::fromArray($params);

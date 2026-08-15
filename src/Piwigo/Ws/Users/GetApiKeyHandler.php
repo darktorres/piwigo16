@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Users;
 
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\Projection\ApiKeySummary;
@@ -39,6 +40,7 @@ final readonly class GetApiKeyHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|string|list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array|string
     {
         if ($this->accessControl->isAGuest()) {

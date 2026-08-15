@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Session;
 
+use Override;
 use Piwigo\Auth\AuthService;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Ws\Server;
@@ -30,6 +31,7 @@ final readonly class LoginHandler implements WsAction
     /**
      * @param array<mixed> $params
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|true
     {
         if ($this->apiKeyRequestFlag->isActive()) {

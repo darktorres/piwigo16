@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Extensions;
 
+use Override;
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Core\AppInfo;
@@ -33,6 +34,7 @@ final readonly class CheckUpdatesHandler implements WsAction
      *   unvalidated request array, but the body doesn't read it.
      * @return array{piwigo_need_update: bool|null, ext_need_update: bool|null}
      */
+    #[Override]
     public function __invoke(array $params, Server $server): array
     {
         $coreUpdateService = $this->coreUpdateService;

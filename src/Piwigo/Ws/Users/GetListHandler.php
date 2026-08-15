@@ -13,6 +13,7 @@ namespace Piwigo\Ws\Users;
 
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
+use Override;
 use Piwigo\Auth\AuthService;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
@@ -54,6 +55,7 @@ final readonly class GetListHandler implements WsAction
      * @param array<mixed> $params
      * @return WsErrorResponse|array<int|string, mixed>
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = GetListParams::fromArray($params);

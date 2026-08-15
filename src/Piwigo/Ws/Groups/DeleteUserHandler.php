@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Groups;
 
 use LogicException;
+use Override;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
@@ -37,6 +38,7 @@ final readonly class DeleteUserHandler implements WsAction
      * @return WsErrorResponse|array<array-key, mixed> WsErrorResponse, or the result of
      *   the pwg.groups.getList invocation
      */
+    #[Override]
     public function __invoke(array $params, Server $server): WsErrorResponse|array
     {
         $input = DeleteUserParams::fromArray($params);

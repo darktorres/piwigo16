@@ -1609,8 +1609,15 @@ final readonly class SearchService
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $whereClauses[] = "i.id IN ({$placeholders})";
         $params = [...$params, ...$ids];
-        if (isset($options['images_where']) && $options['images_where'] !== '' && is_scalar($options['images_where'])) {
-            $whereClauses[] = '(' . (string) $options['images_where'] . ')';
+        // 'images_where' arrives as a real SqlCondition, so its values stay
+        // bound: positionalCondition() rewrites the named placeholders into
+        // the `?` form the rest of this query uses and hands back the
+        // matching values, which have to be appended in clause order.
+        $imagesWhere = $options['images_where'] ?? null;
+        if ($imagesWhere instanceof SqlCondition && ! $imagesWhere->isEmpty()) {
+            [$imagesWhereSql, $imagesWhereValues] = $this->positionalCondition($imagesWhere);
+            $whereClauses[] = '(' . $imagesWhereSql . ')';
+            $params = [...$params, ...$imagesWhereValues];
         }
 
         if ($permissions) {

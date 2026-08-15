@@ -78,28 +78,11 @@ final readonly class SearchHandler implements WsAction
             $super_order_by = true; // quick_search_result might be faster
         }
 
-        // SearchService::getQuickSearchResults()'s 'images_where' option
-        // takes a single already-built SQL string with no bound-parameter
-        // side-channel, so the filter condition is flattened back into
-        // literal SQL here. Safe to do so: every one of
-        // ImageFilterCriteria's own field values is already
-        // is_numeric()/DateHelper::isValidMysqlDatetime()-validated (see
-        // WsHelper::stdImageSqlFilterCriteria()'s own docblock) before ever
-        // reaching $filterCondition, so no injection-capable character can
-        // survive this substitution.
-        $images_where = $filterCondition->sql;
-        foreach ($filterCondition->parameters as $placeholder => $value) {
-            if (! is_scalar($value)) {
-                continue;
-            }
-            $images_where = str_replace(':' . $placeholder, is_string($value) ? "'" . $value . "'" : (string) $value, $images_where);
-        }
-
         $search_result = $this->searchService->getQuickSearchResults(
             $input->query,
             [
                 'super_order_by' => $super_order_by,
-                'images_where' => $images_where,
+                'images_where' => $filterCondition,
             ]
         );
 

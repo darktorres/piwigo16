@@ -2294,10 +2294,28 @@ test('getQuickSearchResultsNoCache() applies a custom images_where clause', func
     // coincidentally the same result).
     $results = searchServiceTestService()
         ->getQuickSearchResultsNoCache('nature', [
-            'images_where' => 'id = 2',
+            'images_where' => new SqlCondition('id = :onlyId', [
+                'onlyId' => 2,
+            ]),
         ]);
 
     expect($results['items'])->toBe([2]);
+});
+
+test('getQuickSearchResultsNoCache() keeps images_where values bound rather than inlining them', function (): void {
+    // A value carrying a quote survives only because it stays a bound
+    // parameter all the way down. The caller that produces this option used
+    // to flatten the condition back into literal SQL by hand, wrapping
+    // strings in bare single quotes -- which this value would have closed
+    // early, producing a syntax error instead of an empty result.
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('nature', [
+            'images_where' => new SqlCondition('file = :quoted', [
+                'quoted' => "o'brien' OR '1'='1",
+            ]),
+        ]);
+
+    expect($results['items'])->toBe([]);
 });
 
 test('getValidatedSearchInfo() calls fatalError() for an invalid identifier', function (): void {

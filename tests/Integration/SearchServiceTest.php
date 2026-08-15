@@ -1662,7 +1662,9 @@ namespace Piwigo\Tests\Integration {
             // narrows that down further, proving the clause is genuinely
             // applied (not coincidentally the same result).
             $results = $this->service->getQuickSearchResultsNoCache('nature', [
-                'images_where' => 'id = 2',
+                'images_where' => new SqlCondition('id = :onlyId', [
+                    'onlyId' => 2,
+                ]),
             ]);
 
             self::assertSame([2], $results['items']);

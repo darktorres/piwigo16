@@ -8,10 +8,10 @@ dist/
 # Piwigo specific directories
 _data/
 
-# Legacy CSS/JSON/MD under themes/ — excluded until P33 (docs/PLAN.md's
+# Legacy CSS/JSON/MD under themes/ — excluded until P49 (docs/PLAN.md's
 # additive-only rule). Listed by extension rather than a blanket `themes/`
 # directory ignore: gitignore-style negation can't re-include a path whose
-# parent directory is already fully excluded, and P32's Latte formatter
+# parent directory is already fully excluded, and P30's Latte formatter
 # (tools/latte-prettier/) needs `themes/**/*.latte` reachable in the same tree.
 themes/**/*.css
 themes/**/*.json
@@ -31,3 +31,6 @@ docs/REFERENCE.md
 composer.lock
 bun.lock
 eslint-suppressions.json
+# Written by composer-patches (note its own `_hash` field), 4-space indent.
+# Reformatting it would be undone by the next patch-set change.
+patches.lock.json

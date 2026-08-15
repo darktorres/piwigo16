@@ -4,7 +4,15 @@
   "title": "Piwigo plugin manifest",
   "description": "Declarative manifest for Piwigo 17+ plugins. One file per plugin at plugins/<id>/plugin.json. Read by PluginRegistry at load time; validated via opis/json-schema.",
   "type": "object",
-  "required": ["id", "name", "version", "description", "license", "minPiwigo", "main"],
+  "required": [
+    "id",
+    "name",
+    "version",
+    "description",
+    "license",
+    "minPiwigo",
+    "main"
+  ],
   "additionalProperties": false,
   "properties": {
     "$schema": {
@@ -61,7 +69,10 @@
       "description": "Minimum Piwigo version this plugin targets, matching Core\\AppInfo::VERSION's own 3-part shape (e.g. '16.3.0') — NOT a 'MAJOR.MINOR' branch marker. This fork deliberately pins AppInfo::VERSION to the legacy PHPWG_VERSION data-format value rather than a 17.x branch marker (bumping it forward once caused a real upgrade-redirect-loop bug), so PluginRegistry compares this field directly against AppInfo::VERSION via composer/semver, matching PemCatalog's own established precedent for extension-compatibility checks."
     },
     "hasSettings": {
-      "oneOf": [{ "type": "boolean" }, { "type": "string", "enum": ["webmaster"] }],
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "string", "enum": ["webmaster"] }
+      ],
       "description": "Whether the plugin exposes a settings page: true (admin), false (none), or 'webmaster' (webmaster-only). Default: false."
     },
     "require": {

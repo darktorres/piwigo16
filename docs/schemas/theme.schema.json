@@ -4,7 +4,15 @@
   "title": "Piwigo theme manifest",
   "description": "Declarative manifest for Piwigo 17+ themes. One file per theme at themes/<id>/theme.json. Read by ThemeRegistry at load time; validated via opis/json-schema.",
   "type": "object",
-  "required": ["id", "name", "version", "description", "license", "minPiwigo", "main"],
+  "required": [
+    "id",
+    "name",
+    "version",
+    "description",
+    "license",
+    "minPiwigo",
+    "main"
+  ],
   "additionalProperties": false,
   "properties": {
     "$schema": {
@@ -61,7 +69,10 @@
       "description": "Minimum Piwigo version this theme targets, matching Core\\AppInfo::VERSION's own 3-part shape (e.g. '16.3.0') — see plugin.schema.json's own minPiwigo description for why this isn't a 'MAJOR.MINOR' branch marker."
     },
     "hasSettings": {
-      "oneOf": [{ "type": "boolean" }, { "type": "string", "enum": ["webmaster"] }],
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "string", "enum": ["webmaster"] }
+      ],
       "description": "Whether the theme exposes a settings page: true (admin), false (none), or 'webmaster' (webmaster-only). Default: false."
     },
     "require": {

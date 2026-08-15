@@ -12,8 +12,20 @@
 // ---------------------------------------------------------------------------
 
 const VOID_ELEMENTS = new Set([
-  "area", "base", "br", "col", "embed", "hr", "img", "input",
-  "link", "meta", "param", "source", "track", "wbr",
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
 ]);
 
 const RAW_TEXT_ELEMENTS = new Set(["script", "style"]);
@@ -60,7 +72,10 @@ class Scanner {
     return this.text.startsWith(str, this.pos);
   }
   startsWithCI(str) {
-    return this.text.slice(this.pos, this.pos + str.length).toLowerCase() === str.toLowerCase();
+    return (
+      this.text.slice(this.pos, this.pos + str.length).toLowerCase() ===
+      str.toLowerCase()
+    );
   }
   advance(n = 1) {
     this.pos += n;
@@ -189,7 +204,9 @@ class ExprScanner {
     while (!this.eof() && isSpace(this.peek())) this.advance();
   }
   error(message) {
-    throw new Error(`${message} (in expression: ${JSON.stringify(this.text)}, at offset ${this.pos})`);
+    throw new Error(
+      `${message} (in expression: ${JSON.stringify(this.text)}, at offset ${this.pos})`,
+    );
   }
   startsWithOp(op) {
     return this.text.startsWith(op, this.pos);
@@ -205,7 +222,17 @@ const BINARY_OPS_BY_PRECEDENCE = [
   ["*", "/", "%"],
 ];
 
-const CAST_TYPES = new Set(["string", "int", "integer", "float", "double", "bool", "boolean", "array", "object"]);
+const CAST_TYPES = new Set([
+  "string",
+  "int",
+  "integer",
+  "float",
+  "double",
+  "bool",
+  "boolean",
+  "array",
+  "object",
+]);
 
 function parseExprString(text) {
   const es = new ExprScanner(text);
@@ -340,7 +367,11 @@ function parsePostfix(es) {
       es.skipSpace();
       if (es.peek() === "(") {
         const args = parseCallArgs(es);
-        expr = { type: "Call", callee: { type: "PropAccess", object: expr, prop: name }, args };
+        expr = {
+          type: "Call",
+          callee: { type: "PropAccess", object: expr, prop: name },
+          args,
+        };
       } else {
         expr = { type: "PropAccess", object: expr, prop: name };
       }
@@ -580,7 +611,12 @@ function consumeTextRun(s, { allowElements, stopChar }) {
     s.advance();
   }
   if (s.pos === start) s.error("internal error: empty text run");
-  return { type: "HtmlText", value: s.text.slice(start, s.pos), start, end: s.pos };
+  return {
+    type: "HtmlText",
+    value: s.text.slice(start, s.pos),
+    start,
+    end: s.pos,
+  };
 }
 
 function parseHtmlAngle(s, stopKeywords) {
@@ -594,7 +630,12 @@ function parseHtmlComment(s) {
   const idx = s.text.indexOf("-->", s.pos + 4);
   if (idx === -1) s.error("unterminated HTML comment");
   s.pos = idx + 3;
-  return { type: "HtmlComment", value: s.text.slice(start, s.pos), start, end: s.pos };
+  return {
+    type: "HtmlComment",
+    value: s.text.slice(start, s.pos),
+    start,
+    end: s.pos,
+  };
 }
 
 function parseDoctype(s) {
@@ -602,7 +643,12 @@ function parseDoctype(s) {
   const idx = s.text.indexOf(">", s.pos);
   if (idx === -1) s.error("unterminated <!DOCTYPE>");
   s.pos = idx + 1;
-  return { type: "HtmlDoctype", value: s.text.slice(start, s.pos), start, end: s.pos };
+  return {
+    type: "HtmlDoctype",
+    value: s.text.slice(start, s.pos),
+    start,
+    end: s.pos,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -639,7 +685,9 @@ function parseElement(s, inheritedStopKeywords) {
       const idxLower = s.text.toLowerCase().indexOf(closeTag, s.pos);
       if (idxLower === -1) s.error(`unterminated <${name}> (raw-text element)`);
       const rawValue = s.text.slice(s.pos, idxLower);
-      children = rawValue.length ? [{ type: "HtmlText", value: rawValue, start: s.pos, end: idxLower }] : [];
+      children = rawValue.length
+        ? [{ type: "HtmlText", value: rawValue, start: s.pos, end: idxLower }]
+        : [];
       s.pos = idxLower;
     } else {
       // Forwarding the enclosing {if}/{foreach}/{spaceless} branch's own
@@ -648,7 +696,10 @@ function parseElement(s, inheritedStopKeywords) {
       // before the next {else}) recognize that keyword as its own implicit
       // close instead of trying to parse it as a fresh, unrecognized tag.
       s.openTags.push(lower);
-      children = parseNodeList(s, { allowElements: true, stopKeywords: inheritedStopKeywords });
+      children = parseNodeList(s, {
+        allowElements: true,
+        stopKeywords: inheritedStopKeywords,
+      });
       s.openTags.pop();
     }
     // A same-file document fragment (Piwigo's header/footer split) can leave
@@ -732,18 +783,29 @@ function parseAttributeItems(s, stopKeywords) {
 function parseUnquotedAttrValue(s) {
   const nodes = [];
   for (;;) {
-    if (s.eof() || isSpace(s.peek()) || s.peek() === ">" || s.peek() === "/") break;
+    if (s.eof() || isSpace(s.peek()) || s.peek() === ">" || s.peek() === "/")
+      break;
     const head = peekLatteHead(s);
     if (isRealLatteStart(head)) {
       nodes.push(parseLatteNode(s, head, { allowElements: false }));
       continue;
     }
     const start = s.pos;
-    while (!s.eof() && !isSpace(s.peek()) && s.peek() !== ">" && s.peek() !== "/") {
+    while (
+      !s.eof() &&
+      !isSpace(s.peek()) &&
+      s.peek() !== ">" &&
+      s.peek() !== "/"
+    ) {
       if (isRealLatteStart(peekLatteHead(s))) break;
       s.advance();
     }
-    nodes.push({ type: "HtmlText", value: s.text.slice(start, s.pos), start, end: s.pos });
+    nodes.push({
+      type: "HtmlText",
+      value: s.text.slice(start, s.pos),
+      start,
+      end: s.pos,
+    });
   }
   return nodes;
 }
@@ -809,7 +871,9 @@ function parseLatteNode(s, head, listOpts) {
   }
   if (head.sigil === "$" || head.sigil === "=") {
     const body = readTagBody(s);
-    const expr = parseExprString(head.sigil === "=" ? body.replace(/^=/, "") : body);
+    const expr = parseExprString(
+      head.sigil === "=" ? body.replace(/^=/, "") : body,
+    );
     return { type: "LatteOutput", form: head.sigil, expr, start, end: s.pos };
   }
   if (head.sigil === "(") {
@@ -835,7 +899,13 @@ function parseLatteNode(s, head, listOpts) {
       const body = readTagBody(s);
       const rest = body.replace(new RegExp(`^${head.keyword}\\s*`), "");
       const expr = parseExprString(rest);
-      return { type: "LatteOutput", form: head.keyword, expr, start, end: s.pos };
+      return {
+        type: "LatteOutput",
+        form: head.keyword,
+        expr,
+        start,
+        end: s.pos,
+      };
     }
     case "if":
       return parseIf(s, start, listOpts);
@@ -916,13 +986,24 @@ function parseIf(s, start, listOpts) {
     }
     s.error(`unexpected {${key}} inside {if} construct`);
   }
-  return { type: "LatteIf", cond, consequent, elseifs, alternate, start, end: s.pos };
+  return {
+    type: "LatteIf",
+    cond,
+    consequent,
+    elseifs,
+    alternate,
+    start,
+    end: s.pos,
+  };
 }
 
 function parseForeach(s, start, listOpts) {
   const src = readTagBody(s).replace(/^foreach\s+/, "");
   const m = /^(.*?)\s+as\s+(.+)$/s.exec(src);
-  if (!m) s.error(`malformed {foreach ${src}}: expected "EXPR as $var" or "EXPR as $k => $v"`);
+  if (!m)
+    s.error(
+      `malformed {foreach ${src}}: expected "EXPR as $var" or "EXPR as $k => $v"`,
+    );
   const iterable = parseExprString(m[1]);
   let keyVar = null;
   let valueVar;
@@ -938,12 +1019,24 @@ function parseForeach(s, start, listOpts) {
   const foreachStops = new Set(["/foreach"]);
   const body = isAttrList
     ? parseAttributeItems(s, foreachStops)
-    : parseBodyLoop(s, Boolean(listOpts && listOpts.allowElements), foreachStops);
+    : parseBodyLoop(
+        s,
+        Boolean(listOpts && listOpts.allowElements),
+        foreachStops,
+      );
   const head = peekLatteHead(s);
   if (!head || stopKey(head) !== "/foreach") s.error("expected {/foreach}");
   s.advance();
   readTagBody(s);
-  return { type: "LatteForeach", iterable, keyVar, valueVar, body, start, end: s.pos };
+  return {
+    type: "LatteForeach",
+    iterable,
+    keyVar,
+    valueVar,
+    body,
+    start,
+    end: s.pos,
+  };
 }
 
 // A tiny statement grammar (assignment, post-increment/decrement) on top of
@@ -987,7 +1080,8 @@ function parseStatement(text) {
 function parseFor(s, start, listOpts) {
   const src = readTagBody(s).replace(/^for\s+/, "");
   const clauses = splitTopLevel(src, ";");
-  if (clauses.length !== 3) s.error(`malformed {for ${src}}: expected "INIT; COND; STEP"`);
+  if (clauses.length !== 3)
+    s.error(`malformed {for ${src}}: expected "INIT; COND; STEP"`);
   const init = parseStatement(clauses[0]);
   const cond = parseExprString(clauses[1].trim());
   const step = parseStatement(clauses[2]);
@@ -1008,7 +1102,8 @@ function parseVar(s, start) {
   const eq = src.indexOf("=");
   if (eq === -1) s.error(`malformed {var ${src}}: expected "$name = expr"`);
   const nameSrc = src.slice(0, eq).trim();
-  if (!nameSrc.startsWith("$")) s.error(`malformed {var}: expected variable name, got "${nameSrc}"`);
+  if (!nameSrc.startsWith("$"))
+    s.error(`malformed {var}: expected variable name, got "${nameSrc}"`);
   const name = nameSrc.slice(1);
   const value = parseExprString(src.slice(eq + 1).trim());
   return { type: "LatteVar", name, value, start, end: s.pos };
@@ -1090,7 +1185,11 @@ function parseSpaceless(s, start, listOpts) {
   const spacelessStops = new Set(["/spaceless"]);
   const body = isAttrList
     ? parseAttributeItems(s, spacelessStops)
-    : parseBodyLoop(s, Boolean(listOpts && listOpts.allowElements), spacelessStops);
+    : parseBodyLoop(
+        s,
+        Boolean(listOpts && listOpts.allowElements),
+        spacelessStops,
+      );
   const head = peekLatteHead(s);
   if (!head || stopKey(head) !== "/spaceless") s.error("expected {/spaceless}");
   s.advance();
@@ -1108,7 +1207,11 @@ function parseDefine(s, start, listOpts) {
   const defineStops = new Set(["/define"]);
   const body = isAttrList
     ? parseAttributeItems(s, defineStops)
-    : parseBodyLoop(s, Boolean(listOpts && listOpts.allowElements), defineStops);
+    : parseBodyLoop(
+        s,
+        Boolean(listOpts && listOpts.allowElements),
+        defineStops,
+      );
   const head = peekLatteHead(s);
   if (!head || stopKey(head) !== "/define") s.error("expected {/define}");
   s.advance();
@@ -1118,9 +1221,13 @@ function parseDefine(s, start, listOpts) {
 
 function parseCapture(s, start) {
   const src = readTagBody(s).replace(/^capture\s+/, "");
-  if (!src.startsWith("$")) s.error(`malformed {capture ${src}}: expected a variable name`);
+  if (!src.startsWith("$"))
+    s.error(`malformed {capture ${src}}: expected a variable name`);
   const varName = src.slice(1).trim();
-  const body = parseNodeList(s, { allowElements: false, stopKeywords: new Set(["/capture"]) });
+  const body = parseNodeList(s, {
+    allowElements: false,
+    stopKeywords: new Set(["/capture"]),
+  });
   const head = peekLatteHead(s);
   if (!head || stopKey(head) !== "/capture") s.error("expected {/capture}");
   s.advance();

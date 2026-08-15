@@ -32,7 +32,13 @@ function exprToDoc(e) {
     case "PostIncDec":
       return [exprToDoc(e.target), e.op];
     case "Ternary":
-      return [exprToDoc(e.cond), " ? ", exprToDoc(e.then), " : ", exprToDoc(e.else)];
+      return [
+        exprToDoc(e.cond),
+        " ? ",
+        exprToDoc(e.then),
+        " : ",
+        exprToDoc(e.else),
+      ];
     case "Binary":
       return [exprToDoc(e.left), " ", e.op, " ", exprToDoc(e.right)];
     case "PropAccess":
@@ -66,7 +72,9 @@ function printArg(a) {
 }
 
 function varsDoc(node) {
-  return node.keyVar ? [exprToDoc(node.keyVar), " => ", exprToDoc(node.valueVar)] : exprToDoc(node.valueVar);
+  return node.keyVar
+    ? [exprToDoc(node.keyVar), " => ", exprToDoc(node.valueVar)]
+    : exprToDoc(node.valueVar);
 }
 
 // ---------------------------------------------------------------------------
@@ -137,11 +145,27 @@ function computeBlock(nodes, options) {
   const inner = [];
   for (let i = 0; i < items.length; i++) {
     if (i > 0) inner.push(gapDoc(items[i].gapBefore, raw));
-    inner.push(items[i].kind === "text" ? textFillDoc(items[i].core, raw) : printNode(items[i].node, options, "block"));
+    inner.push(
+      items[i].kind === "text"
+        ? textFillDoc(items[i].core, raw)
+        : printNode(items[i].node, options, "block"),
+    );
   }
   const lead = items[0].gapBefore;
-  const leadBreak = raw ? lead : lead.includes("\n") ? hardline : lead ? " " : "";
-  const trailBreak = raw ? trailingGap : trailingGap.includes("\n") ? hardline : trailingGap ? " " : "";
+  const leadBreak = raw
+    ? lead
+    : lead.includes("\n")
+      ? hardline
+      : lead
+        ? " "
+        : "";
+  const trailBreak = raw
+    ? trailingGap
+    : trailingGap.includes("\n")
+      ? hardline
+      : trailingGap
+        ? " "
+        : "";
   return { leadBreak, inner, trailBreak };
 }
 
@@ -170,13 +194,21 @@ function printInlinePart(n, options) {
 // ---------------------------------------------------------------------------
 function printPlainAttribute(a, options) {
   if (!a.hasValue) return a.name;
-  const valueParts = a.value.map((v) => (v.type === "HtmlText" ? v.value : printNode(v, options, "inline")));
+  const valueParts = a.value.map((v) =>
+    v.type === "HtmlText" ? v.value : printNode(v, options, "inline"),
+  );
   const q = a.quote || '"';
   return [a.name, "=", q, valueParts, q];
 }
 
 const SIMPLE_ATTR_PASSTHROUGH = new Set([
-  "LatteOutput", "LatteComment", "LatteVar", "LatteDo", "LatteBreakIf", "LatteFor", "LatteDefine",
+  "LatteOutput",
+  "LatteComment",
+  "LatteVar",
+  "LatteDo",
+  "LatteBreakIf",
+  "LatteFor",
+  "LatteDefine",
 ]);
 
 function attrPieces(item, options) {
@@ -205,12 +237,16 @@ function attrPieces(item, options) {
     return out;
   }
   if (item.type === "LatteForeach") {
-    const out = [["{foreach ", exprToDoc(item.iterable), " as ", varsDoc(item), "}"]];
+    const out = [
+      ["{foreach ", exprToDoc(item.iterable), " as ", varsDoc(item), "}"],
+    ];
     for (const it of item.body) out.push(...attrPieces(it, options));
     out.push("{/foreach}");
     return out;
   }
-  throw new Error(`printer: unexpected attribute-list item type '${item.type}'`);
+  throw new Error(
+    `printer: unexpected attribute-list item type '${item.type}'`,
+  );
 }
 
 function printOpenTag(node, options) {
@@ -272,9 +308,16 @@ function printNode(node, options, mode = "block") {
         // untouched, same as the rest of this text; only the trailing
         // whitespace needs normalizing, since the hardline below already
         // guarantees "file ends in exactly one newline".
-        const trailingRaw = leading.length ? trailingRawFull.trimEnd() : trailingRawFull.trim();
+        const trailingRaw = leading.length
+          ? trailingRawFull.trimEnd()
+          : trailingRawFull.trim();
         if (trailingRaw.trim()) {
-          const leadingDoc = leading.length ? printNode({ ...node, children: leading }, options, mode).slice(0, -1) : [];
+          const leadingDoc = leading.length
+            ? printNode({ ...node, children: leading }, options, mode).slice(
+                0,
+                -1,
+              )
+            : [];
           return [...leadingDoc, trailingRaw, hardline];
         }
       }
@@ -287,7 +330,11 @@ function printNode(node, options, mode = "block") {
       // gapDoc's `raw` param for why this is safe to do unconditionally: a
       // control-tag-only line still gets auto-trimmed by real Latte
       // regardless of what indentation we print before it.
-      if (node.children.some((c) => c.type === "LatteContentType" && c.value === "text")) {
+      if (
+        node.children.some(
+          (c) => c.type === "LatteContentType" && c.value === "text",
+        )
+      ) {
         options.__latteContentTypeText = true;
       }
       const raw = Boolean(options.__latteContentTypeText);
@@ -295,7 +342,11 @@ function printNode(node, options, mode = "block") {
       const parts = [];
       for (let i = 0; i < items.length; i++) {
         if (i > 0) parts.push(gapDoc(items[i].gapBefore, raw));
-        parts.push(items[i].kind === "text" ? textFillDoc(items[i].core, raw) : printNode(items[i].node, options, "block"));
+        parts.push(
+          items[i].kind === "text"
+            ? textFillDoc(items[i].core, raw)
+            : printNode(items[i].node, options, "block"),
+        );
       }
       // The one place responsible for "the file ends in exactly one
       // newline" — deliberately not delegated to a descendant's own
@@ -341,7 +392,11 @@ function printNode(node, options, mode = "block") {
     case "LatteOutput":
       return [
         "{",
-        node.form === "=" ? "=" : node.form === "_" || node.form === "translate" ? node.form + " " : "",
+        node.form === "="
+          ? "="
+          : node.form === "_" || node.form === "translate"
+            ? node.form + " "
+            : "",
         exprToDoc(node.expr),
         "}",
       ];
@@ -368,14 +423,22 @@ function printNode(node, options, mode = "block") {
       const parts = ["{include ", exprToDoc(node.target)];
       for (const a of node.args) {
         parts.push(", ");
-        parts.push(a.name ? [a.name, ": ", exprToDoc(a.value)] : exprToDoc(a.value));
+        parts.push(
+          a.name ? [a.name, ": ", exprToDoc(a.value)] : exprToDoc(a.value),
+        );
       }
       parts.push("}");
       return parts;
     }
 
     case "LatteCapture":
-      return ["{capture $", node.varName, "}", ...node.body.map((n) => printInlinePart(n, options)), "{/capture}"];
+      return [
+        "{capture $",
+        node.varName,
+        "}",
+        ...node.body.map((n) => printInlinePart(n, options)),
+        "{/capture}",
+      ];
 
     case "LatteIf": {
       if (mode === "inline") {
@@ -387,7 +450,9 @@ function printNode(node, options, mode = "block") {
         }
         if (node.alternate) {
           parts.push("{else}");
-          node.alternate.forEach((n) => parts.push(printInlinePart(n, options)));
+          node.alternate.forEach((n) =>
+            parts.push(printInlinePart(n, options)),
+          );
         }
         parts.push("{/if}");
         return parts;
@@ -399,16 +464,27 @@ function printNode(node, options, mode = "block") {
         if (b) parts.push(indent([b.leadBreak, ...b.inner]), b.trailBreak);
       };
       pushBranch(["{if ", exprToDoc(node.cond), "}"], node.consequent);
-      for (const ei of node.elseifs) pushBranch(["{elseif ", exprToDoc(ei.cond), "}"], ei.body);
+      for (const ei of node.elseifs)
+        pushBranch(["{elseif ", exprToDoc(ei.cond), "}"], ei.body);
       if (node.alternate) pushBranch("{else}", node.alternate);
       parts.push("{/if}");
       return parts;
     }
 
     case "LatteForeach": {
-      const head = ["{foreach ", exprToDoc(node.iterable), " as ", varsDoc(node), "}"];
+      const head = [
+        "{foreach ",
+        exprToDoc(node.iterable),
+        " as ",
+        varsDoc(node),
+        "}",
+      ];
       if (mode === "inline") {
-        return [head, ...node.body.map((n) => printInlinePart(n, options)), "{/foreach}"];
+        return [
+          head,
+          ...node.body.map((n) => printInlinePart(n, options)),
+          "{/foreach}",
+        ];
       }
       const parts = [head];
       const b = computeBlock(node.body, options);
@@ -419,7 +495,11 @@ function printNode(node, options, mode = "block") {
 
     case "LatteSpaceless": {
       if (mode === "inline") {
-        return ["{spaceless}", ...node.body.map((n) => printInlinePart(n, options)), "{/spaceless}"];
+        return [
+          "{spaceless}",
+          ...node.body.map((n) => printInlinePart(n, options)),
+          "{/spaceless}",
+        ];
       }
       const parts = ["{spaceless}"];
       const b = computeBlock(node.body, options);
@@ -429,9 +509,21 @@ function printNode(node, options, mode = "block") {
     }
 
     case "LatteFor": {
-      const head = ["{for ", exprToDoc(node.init), "; ", exprToDoc(node.cond), "; ", exprToDoc(node.step), "}"];
+      const head = [
+        "{for ",
+        exprToDoc(node.init),
+        "; ",
+        exprToDoc(node.cond),
+        "; ",
+        exprToDoc(node.step),
+        "}",
+      ];
       if (mode === "inline") {
-        return [head, ...node.body.map((n) => printInlinePart(n, options)), "{/for}"];
+        return [
+          head,
+          ...node.body.map((n) => printInlinePart(n, options)),
+          "{/for}",
+        ];
       }
       const parts = [head];
       const b = computeBlock(node.body, options);
@@ -443,7 +535,11 @@ function printNode(node, options, mode = "block") {
     case "LatteDefine": {
       const head = ["{define ", node.name, "}"];
       if (mode === "inline") {
-        return [head, ...node.body.map((n) => printInlinePart(n, options)), "{/define}"];
+        return [
+          head,
+          ...node.body.map((n) => printInlinePart(n, options)),
+          "{/define}",
+        ];
       }
       const parts = [head];
       const b = computeBlock(node.body, options);

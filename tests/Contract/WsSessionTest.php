@@ -227,6 +227,42 @@ final class WsSessionTest extends ContractTestCase
     }
 
     /**
+     * SEC finding 2: `pwg.images.uploadAsync`'s username/password credential
+     * path (handled by `UserBootstrap::initialize()`, before `Server::
+     * invoke()` ever dispatches -- no real multipart upload payload is
+     * needed to reach it) used to unconditionally overwrite
+     * `$_SESSION['connected_with']` with `'pwg.images.uploadAsync'` right
+     * after `LoginHandler` had correctly set it to
+     * `'ws_session_login_api_key'`. That erased the marker
+     * `Server::isAuthorizedMethodForAPIKEY()` checks, so every method on
+     * `apiKeyForbiddenMethods` became callable for the rest of the session --
+     * an API key is a deliberately restricted credential, and this silently
+     * laundered it into an unrestricted one.
+     */
+    public function testUploadAsyncLoginViaApiKeyDoesNotLiftApiKeyRestrictions(): void
+    {
+        $apiKeyValue = $this->createApiKeyHeaderValue();
+        [$pkid, $secret] = explode(':', $apiKeyValue);
+
+        $freshCookieJar = tempnam(sys_get_temp_dir(), 'pwg_ct_uploadasync_');
+        self::assertNotFalse($freshCookieJar);
+
+        try {
+            $this->wsWithCookieJar($freshCookieJar, 'pwg.images.uploadAsync', [
+                'username' => $pkid,
+                'password' => $secret,
+            ]);
+
+            $response = $this->wsWithCookieJar($freshCookieJar, 'pwg.users.getAuthKey');
+
+            self::assertSame('fail', $response['stat']);
+            self::assertSame(401, $response['err']);
+        } finally {
+            @unlink($freshCookieJar);
+        }
+    }
+
+    /**
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */

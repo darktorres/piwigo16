@@ -281,7 +281,17 @@ final readonly class UserBootstrap
                 $service->sendResponse($login);
                 exit();
             }
-            $_SESSION['connected_with'] = 'pwg.images.uploadAsync';
+            // SEC finding 2: do NOT unconditionally overwrite this --
+            // LoginHandler already set 'ws_session_login_api_key' above when
+            // $credentials['username'] was an API key (pkid-...), and
+            // Server::isAuthorizedMethodForAPIKEY() keys off that exact
+            // literal to keep apiKeyForbiddenMethods enforced for the rest
+            // of the session. Overwriting it here unconditionally erased
+            // that marker, silently lifting every restriction an API key is
+            // supposed to carry for the remainder of the session.
+            if (($_SESSION['connected_with'] ?? null) !== 'ws_session_login_api_key') {
+                $_SESSION['connected_with'] = 'pwg.images.uploadAsync';
+            }
         }
 
         // $user['id'] is always numeric here (either \Piwigo\Config\CurrentConfig::guestId(), a

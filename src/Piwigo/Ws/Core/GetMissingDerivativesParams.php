@@ -16,7 +16,7 @@ use Piwigo\Ws\WsParams;
 /**
  * `pwg.getMissingDerivatives` input DTO -- the method-specific fields
  * only. The shared `f_*` image-filter params (merged into this method's
- * own registration via `WsDefaultMethods::sharedImageFilterParams()`)
+ * own registration via `SharedImageFilterParams::get()`)
  * stay in the raw `$params` array and are read directly by
  * `WsHelper::stdImageSqlFilterCriteria()`, same as the god-class method
  * this replaces -- no need to duplicate their shape here.

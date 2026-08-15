@@ -172,13 +172,14 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
      * @param string $methodName - the name of the method as seen externally
      * @param string|array<int, string>|Closure $callback - a callable
      *   (function name, [class, method], or a first-class callable
-     *   Closure -- every real registration in WsDefaultMethods.php uses the
-     *   latter)
+     *   Closure -- every real registration across the per-domain
+     *   *MethodRegistrar.php files (P25 Stage 1's split of the old
+     *   WsDefaultMethods god-method) uses the latter)
      * @param array<int, string>|array<string, mixed>|null $params - either a
      *   plain list of allowed parameter names (shorthand, no options) or a map
      *   of allowed parameter names to their options; many real registrations
-     *   in WsDefaultMethods.php (e.g. pwg.getVersion, pwg.getInfos,
-     *   pwg.session.getStatus) explicitly pass null for "no params"
+     *   (e.g. pwg.getVersion, pwg.getInfos, pwg.session.getStatus) explicitly
+     *   pass null for "no params"
      *    @option mixed default (optional)
      *    @option int flags (optional)
      *      possible values: WsParamFlag::ACCEPT_ARRAY, WsParamFlag::FORCE_ARRAY, WsParamFlag::OPTIONAL
@@ -187,8 +188,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
      *                       WsParamType::POSITIVE, WsParamType::NOTNULL
      *    @option int|float maxValue (optional)
      * @param string|null $description - a description of the method; some
-     *   real registrations in WsDefaultMethods.php explicitly pass null for
-     *   "no description"
+     *   real registrations explicitly pass null for "no description"
      * @param array<string, mixed> $options
      *    @option bool hidden (optional) - if true, this method won't be visible by reflection.getMethodList
      *    @option bool admin_only (optional)

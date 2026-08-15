@@ -24,20 +24,20 @@ use Piwigo\Ws\Server;
 use Piwigo\Ws\WsDefaultMethods;
 
 /**
- * Piwigo\Ws\WsDefaultMethods -- registers every standard WS method
- * (`pwg.*`) against a real `Server`. `register()` is almost entirely
- * declarative `$service->addMethod(...)` calls (confirmed by reading
- * the whole 2300+-line file) -- so this isn't branch-coverage in the
- * usual sense, it's a real regression guard on the single place every
- * WS method's `admin_only`/`post_only` security flag is declared. The
- * one real conditional in the whole file, `$this->accessControl->
- * isAGuest() ? 'guest' : $this->currentUser->get()->username` (the
- * default `author` value for `pwg.images.addComment`'s own
- * registration -- not asserted on directly here), needs the
- * container-shared `CurrentUser` initialized even though this test
- * never calls `addComment()` itself, since `register()` evaluates that
- * ternary eagerly while building the registration, not lazily inside a
- * callback.
+ * Piwigo\Ws\WsDefaultMethods -- the thin coordinator that delegates to one
+ * *MethodRegistrar per handler-directory domain (P25 Stage 1 split every
+ * `pwg.*` registration out of this class's own former 1,322-line
+ * register() body) -- so this isn't branch-coverage in the usual sense,
+ * it's a real regression guard on the single place every WS method's
+ * `admin_only`/`post_only` security flag is declared, now spread across
+ * 13 files instead of one. The one real conditional in the whole
+ * registration surface, `$this->accessControl->isAGuest() ? 'guest' :
+ * $this->currentUser->get()->username` (ImagesMethodRegistrar's default
+ * `author` value for `pwg.images.addComment`'s own registration -- not
+ * asserted on directly here), needs the container-shared `CurrentUser`
+ * initialized even though this test never calls `addComment()` itself,
+ * since `register()` evaluates that ternary eagerly while building the
+ * registration, not lazily inside a callback.
  * A silent drop of `admin_only` from a sensitive method here (e.g.
  * during a future refactor) is a real security bug nothing else in this
  * codebase would catch. No dedicated Integration/Browser spec of its
@@ -46,9 +46,11 @@ use Piwigo\Ws\WsDefaultMethods;
  * as a whole.
  *
  * Resolved via `Kernel::container()->get()` (same rationale as
- * `UpdatesSubControllerTest.php`) -- 13 constructor deps (the 9 Pwg*
- * handler classes plus 4 shared collaborators), none of which matter
- * for what's asserted here.
+ * `UpdatesSubControllerTest.php`) -- 13 constructor deps (one per domain
+ * registrar), each autowired with whatever shared collaborators
+ * (CurrentConfig/AccessControl/CurrentUser/ImageStdParams) its own
+ * domain's registrations actually need, none of which matter for what's
+ * asserted here.
  */
 function wsDefaultMethodsTestServer(): Server
 {

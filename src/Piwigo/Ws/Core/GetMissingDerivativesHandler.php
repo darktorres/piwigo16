@@ -77,8 +77,8 @@ final readonly class GetMissingDerivativesHandler implements WsAction
         $qlimit = (int) min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
 
         // MethodDefinition's own registration for this method merges
-        // WsDefaultMethods::sharedImageFilterParams() into its param
-        // list, so Server::invoke()'s generic validation guarantees this
+        // SharedImageFilterParams::get() into its param list, so
+        // Server::invoke()'s generic validation guarantees this
         // exact shape before __invoke() ever runs -- WsAction::__invoke()'s
         // own $params type can't express that (every handler shares the
         // same loose array<mixed> contract), so it's asserted locally at

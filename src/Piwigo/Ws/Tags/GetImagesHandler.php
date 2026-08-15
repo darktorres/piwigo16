@@ -61,7 +61,7 @@ final readonly class GetImagesHandler implements WsAction
         $tag_ids = array_keys($tags_by_id);
 
         // MethodDefinition's own registration for this method merges
-        // WsDefaultMethods::sharedImageFilterParams() plus 'order' into
+        // SharedImageFilterParams::get() plus 'order' into
         // its param list, so Server::invoke()'s generic validation
         // guarantees this exact shape before __invoke() ever runs --
         // WsAction::__invoke()'s own $params type can't express that

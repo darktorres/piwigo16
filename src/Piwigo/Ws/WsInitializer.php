@@ -19,6 +19,7 @@ use Piwigo\Ws\Protocol\RestRequestHandler;
 use Piwigo\Ws\Protocol\SerialPhpEncoder;
 use Piwigo\Ws\Protocol\XmlRpcEncoder;
 use Piwigo\Ws\Request\WsFormatRequest;
+use Psr\Container\ContainerInterface;
 
 /**
  * Builds the per-request Server and registers the WS default event
@@ -48,6 +49,7 @@ final class WsInitializer
         private readonly AccessControl $accessControl,
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
         private readonly CurrentConfig $currentConfig,
+        private readonly ContainerInterface $container,
     ) {}
 
     public function init(): Server
@@ -66,7 +68,7 @@ final class WsInitializer
         $requestFormat = 'rest';
         $responseFormat = WsFormatRequest::fromGlobals()->responseFormat;
 
-        $service = new Server($this->eventDispatcher, $this->accessControl, $this->apiKeyRequestFlag, $this->currentConfig);
+        $service = new Server($this->eventDispatcher, $this->accessControl, $this->apiKeyRequestFlag, $this->currentConfig, $this->container);
 
         // $requestFormat is hardcoded to 'rest' above; the format-selection
         // switch stays for parity with $responseFormat's structure and in case

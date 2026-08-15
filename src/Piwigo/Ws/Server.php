@@ -12,11 +12,11 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Closure;
+use LogicException;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
@@ -25,6 +25,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\Event\WsAddMethods;
 use Piwigo\Ws\Event\WsInvokeAllowed;
+use Psr\Container\ContainerInterface;
 
 /**
  * The WS framework's own generic method registry/dispatcher -- every
@@ -57,6 +58,7 @@ final class Server
         private readonly AccessControl $accessControl,
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
         private readonly CurrentConfig $currentConfig,
+        private readonly ?ContainerInterface $container = null,
     ) {}
 
     /**
@@ -515,7 +517,10 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         if (! $is_error) {
             $handlerClass = $method['handlerClass'];
             if ($handlerClass !== null) {
-                $handler = Kernel::container()->get($handlerClass);
+                if (! $this->container instanceof ContainerInterface) {
+                    throw new LogicException('Server::invoke() requires a container to dispatch a WsAction handler for ' . $handlerClass);
+                }
+                $handler = $this->container->get($handlerClass);
                 assert($handler instanceof WsAction);
                 try {
                     $result = $handler($params, $this);

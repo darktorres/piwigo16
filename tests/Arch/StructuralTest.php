@@ -699,9 +699,9 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
     //   - Ws/Server.php: isPost()'s own `$_POST !== []` -- a minimal
     //     single-fact reader (matches this same file's own docblock),
     //     not a bag of request data a DTO wrapper would help.
-    //   - Ws/Images.php: upload()'s own `$_FILES !== []` top-level
-    //     existence check -- governs a broader condition ("was ANY file
-    //     posted") than the 'file' key specifically, which
+    //   - Ws/Images/UploadHandler.php: __invoke()'s own `$_FILES !== []`
+    //     top-level existence check -- governs a broader condition ("was
+    //     ANY file posted") than the 'file' key specifically, which
     //     Ws\Request\UploadedFileRequest already covers.
     //   - Admin/BatchManagerGlobalPageRenderer.php: the pre-DTO CSRF gate
     //     (`count($_POST) > 0`), which must run before
@@ -721,7 +721,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
         'Bootstrap/UserBootstrap.php',
         'Bootstrap/RequestBootstrap.php',
         'Ws/Server.php',
-        'Ws/Images.php',
+        'Ws/Images/UploadHandler.php',
         'Admin/BatchManagerGlobalPageRenderer.php',
     ];
     $unexpected = array_values(array_filter(

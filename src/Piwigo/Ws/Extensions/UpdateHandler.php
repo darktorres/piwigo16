@@ -64,6 +64,7 @@ final readonly class UpdateHandler implements WsAction
         private PluginRegistry $pluginRegistry,
         private ThemeRegistry $themeRegistry,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
     ) {}
 
     /**
@@ -82,7 +83,7 @@ final readonly class UpdateHandler implements WsAction
 
         $input = UpdateParams::fromArray($params);
 
-        if (new CsrfService($this->currentConfig)->getToken() !== $input->pwgToken) {
+        if (! hash_equals($this->csrfService->getToken(), $input->pwgToken)) {
             return new WsErrorResponse(403, 'Invalid security token');
         }
 
@@ -126,7 +127,7 @@ final readonly class UpdateHandler implements WsAction
                                 . '&id=' . $extension_id
                                 . '&revision=' . $revision
                                 . '&reactivate=true'
-                                . '&pwg_token=' . new CsrfService($this->currentConfig)->getToken()
+                                . '&pwg_token=' . $this->csrfService->getToken()
                                 . '&format=json'
                     );
             }

@@ -81,9 +81,9 @@ final readonly class WsHelper
             return $required ? new WsErrorResponse(403, $message) : null;
         }
 
-        return $this->csrfService->getToken() !== $submittedToken
-            ? new WsErrorResponse(403, $message)
-            : null;
+        return hash_equals($this->csrfService->getToken(), $submittedToken)
+            ? null
+            : new WsErrorResponse(403, $message);
     }
 
     /**

@@ -22,6 +22,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageTextField;
 use Piwigo\Image\ImageUniquenessColumn;
 use Piwigo\Image\MissingDerivativesCriteria;
+use Piwigo\Image\PhotoSortField;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageCategoryLink;
 use Piwigo\Image\Projection\ImageFormat;
@@ -1636,6 +1637,75 @@ final class ImageRepositoryTest extends IntegrationTestCase
             $this->enableForeignKeyChecks($this->conn);
 
             self::assertSame([999999], $this->repo->findOrphanImageCategoryLinkIds());
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<int>
+     */
+    private static function unitRowIds(array $rows): array
+    {
+        return array_map(
+            static fn (array $row): int => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+            $rows
+        );
+    }
+
+    public function testFindBatchManagerUnitRowsRestrictsToTheGivenCategory(): void
+    {
+        // Fixture: image_category links images 1/2/3 to category 1 and 4/5
+        // to category 2 -- a non-null $categoryId adds the JOIN, null omits
+        // it entirely.
+        self::assertSame(
+            [1, 2, 3],
+            self::unitRowIds($this->repo->findBatchManagerUnitRows([1, 2, 3, 4, 5], 1, 'ORDER BY id ASC', 100, 0))
+        );
+        self::assertSame(
+            [1, 2, 3, 4, 5],
+            self::unitRowIds($this->repo->findBatchManagerUnitRows([1, 2, 3, 4, 5], null, 'ORDER BY id ASC', 100, 0))
+        );
+    }
+
+    public function testFindBatchManagerUnitRowsSelectsOnlyImagesColumnsWhenJoined(): void
+    {
+        // `SELECT images.*`, not a bare `SELECT *`: the category JOIN would
+        // otherwise leak all three of image_category's own columns into the
+        // row, making its column set depend on $categoryId.
+        $rows = $this->repo->findBatchManagerUnitRows([1, 2, 3], 1, 'ORDER BY id ASC', 100, 0);
+
+        self::assertNotSame([], $rows);
+        foreach (['image_id', 'category_id', 'rank'] as $joinedColumn) {
+            self::assertArrayNotHasKey($joinedColumn, $rows[0]);
+        }
+
+        // A real images column is still present, proving the assertion above
+        // isn't passing against an empty/short row shape.
+        self::assertArrayHasKey('storage_category_id', $rows[0]);
+    }
+
+    public function testFindBatchManagerUnitRowsCanOrderByTheJoinedRankColumn(): void
+    {
+        // `rank` lives only on image_category, so this exercises the JOIN's
+        // second, load-bearing purpose: without it the query fails outright
+        // with "Unknown column 'rank' in 'order clause'". The fixture's own
+        // ranks (1,2,3) match the id order exactly, so they are inverted
+        // here to make the assertion discriminate between rank-ordering and
+        // id-ordering rather than passing either way.
+        $rankOrderBy = 'ORDER BY ' . PhotoSortField::Rank->column() . ' ASC';
+
+        $this->conn->beginTransaction();
+
+        try {
+            $this->conn->executeStatement('UPDATE image_category SET `rank` = 3 WHERE image_id = 1 AND category_id = 1');
+            $this->conn->executeStatement('UPDATE image_category SET `rank` = 1 WHERE image_id = 3 AND category_id = 1');
+
+            self::assertSame(
+                [3, 2, 1],
+                self::unitRowIds($this->repo->findBatchManagerUnitRows([1, 2, 3], 1, $rankOrderBy, 100, 0))
+            );
         } finally {
             $this->conn->rollBack();
         }

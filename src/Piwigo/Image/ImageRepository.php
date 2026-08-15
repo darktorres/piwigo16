@@ -2087,9 +2087,23 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Same dynamic pagination shape as findBatchManagerThumbnails() above,
-     * but every column (`SELECT *`) -- Admin\BatchManagerUnitPageRenderer's
-     * own per-image inline-edit grid needs far more columns than the
-     * global-mode thumbnail grid does.
+     * but every column of `images` (`images.*`) --
+     * Admin\BatchManagerUnitPageRenderer's own per-image inline-edit grid
+     * reads far more columns than the global-mode thumbnail grid does.
+     *
+     * Qualified as `images.*`, not a bare `SELECT *`: the conditional JOIN
+     * below would otherwise add `image_category`'s own `image_id`/
+     * `category_id`/`rank` to the row whenever $categoryId is non-null,
+     * making the row's column set depend on that argument.
+     *
+     * The JOIN itself is load-bearing beyond filtering: $orderBySql may be
+     * `` ORDER BY `rank` ASC `` (the "Manual sort order" entry in
+     * Controller\Admin\ConfigurationSubController's own $sort_fields, kept
+     * for order_by_inside_category and writable onto categories.image_order
+     * by Admin\ElementSetRanksPageRenderer), and `rank` lives only on
+     * `image_category`. Replacing the JOIN with an `id IN (SELECT ...)`
+     * filter compiles but fails at runtime with "Unknown column 'rank' in
+     * 'order clause'".
      *
      * Stays on DBAL -- $orderBySql is a caller-composed raw fragment DQL
      * has no way to embed.
@@ -2099,11 +2113,9 @@ final class ImageRepository extends EntityRepository
      */
     public function findBatchManagerUnitRows(array $imageIds, ?int $categoryId, string $orderBySql, int $limit, int $offset): array
     {
-        $imagesTable = 'images';
-
         $query = <<<SQL
-            SELECT *
-            FROM {$imagesTable}
+            SELECT images.*
+            FROM images
             SQL;
         $params = [
             'ids' => array_map(strval(...), $imageIds),
@@ -2117,10 +2129,9 @@ final class ImageRepository extends EntityRepository
         ];
 
         if ($categoryId !== null) {
-            $imageCategoryTable = 'image_category';
             $query .= <<<SQL
 
-                JOIN {$imageCategoryTable} ON id = image_id
+                JOIN image_category ON id = image_id
                 SQL;
         }
 

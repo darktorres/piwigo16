@@ -46,6 +46,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
+use Piwigo\Db\LikePattern;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
@@ -3511,7 +3512,7 @@ final readonly class CategoryRepository
         // WHERE can be rendered (or omitted entirely) in one place.
         if ($searchTerm !== null) {
             $conditions[] = new SqlCondition('name LIKE :searchTerm', [
-                'searchTerm' => '%' . $searchTerm . '%',
+                'searchTerm' => LikePattern::containing($searchTerm),
             ]);
         }
 
@@ -3582,7 +3583,7 @@ final readonly class CategoryRepository
         $conditions = [$this->categoryScopeCondition($criteria->catId, $criteria->recursive)];
         if ($searchTerm !== null) {
             $conditions[] = new SqlCondition('name LIKE :searchTerm', [
-                'searchTerm' => '%' . $searchTerm . '%',
+                'searchTerm' => LikePattern::containing($searchTerm),
             ]);
         }
 

@@ -20,6 +20,7 @@ use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbCredentials;
+use Piwigo\Db\LikePattern;
 use Piwigo\Event\Search\QsearchGetScopes;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
@@ -760,12 +761,12 @@ final readonly class SearchService
             foreach ($fields as $field) {
                 $paramName = "word{$wordIndex}_{$field}";
                 $fieldClauses[] = $dqlFieldsByColumn[$field] . ' LIKE :' . $paramName;
-                $params[$paramName] = '%' . $word . '%';
+                $params[$paramName] = LikePattern::containing($word);
             }
 
             if ($catFields !== []) {
                 $catIds = $this->categoryService->getIdsByNameOrCommentLike(
-                    '%' . $word . '%',
+                    LikePattern::containing($word),
                     in_array('cat-title', $catFields, true),
                     in_array('cat-desc', $catFields, true)
                 );
@@ -971,9 +972,10 @@ final readonly class SearchService
                 $likeClauses = [];
                 foreach ($fields as $field) {
                     foreach ($ftVariants as $ftVariant) {
-                        $escaped = str_replace(['%', '_'], ['\\%', '\\_'], $ftVariant);
                         $likeClauses[] = $field . ' LIKE ?';
-                        $values[] = $wildcardEnd ? ($escaped . '%') : ('%' . $escaped . '%');
+                        $values[] = $wildcardEnd
+                            ? LikePattern::startingWith($ftVariant)
+                            : LikePattern::containing($ftVariant);
                     }
                 }
 
@@ -1066,9 +1068,8 @@ final readonly class SearchService
             $clauses = [];
             $params = [];
 
-            $like = str_replace(['%', '_'], ['\\%', '\\_'], $token->term);
             $fileLike = $isPostgres ? 'file LIKE ?' : 'CONVERT(file, CHAR) LIKE ?';
-            $fileLikeValue = '%' . $like . '%';
+            $fileLikeValue = LikePattern::containing($token->term);
 
             switch ($scopeId) {
                 case 'photo':

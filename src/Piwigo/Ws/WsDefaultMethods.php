@@ -55,7 +55,11 @@ use Piwigo\Ws\Groups\MergeHandler as GroupsMergeHandler;
 use Piwigo\Ws\Groups\SetInfoHandler as GroupsSetInfoHandler;
 use Piwigo\Ws\History\LogHandler as HistoryLogHandler;
 use Piwigo\Ws\History\SearchHandler as HistorySearchHandler;
+use Piwigo\Ws\Images\AddChunkHandler;
 use Piwigo\Ws\Images\AddCommentHandler;
+use Piwigo\Ws\Images\AddFileHandler;
+use Piwigo\Ws\Images\AddHandler as ImagesAddHandler;
+use Piwigo\Ws\Images\AddSimpleHandler;
 use Piwigo\Ws\Images\CheckFilesHandler;
 use Piwigo\Ws\Images\CheckUploadHandler;
 use Piwigo\Ws\Images\DeleteHandler as ImagesDeleteHandler;
@@ -74,6 +78,9 @@ use Piwigo\Ws\Images\SetMd5sumHandler;
 use Piwigo\Ws\Images\SetPrivacyLevelHandler;
 use Piwigo\Ws\Images\SetRankHandler as ImagesSetRankHandler;
 use Piwigo\Ws\Images\SyncMetadataHandler;
+use Piwigo\Ws\Images\UploadAsyncHandler;
+use Piwigo\Ws\Images\UploadCompletedHandler;
+use Piwigo\Ws\Images\UploadHandler;
 use Piwigo\Ws\Permissions\AddHandler as PermissionsAddHandler;
 use Piwigo\Ws\Permissions\GetListHandler as PermissionsGetListHandler;
 use Piwigo\Ws\Permissions\RemoveHandler as PermissionsRemoveHandler;
@@ -108,26 +115,16 @@ use Piwigo\Ws\Users\SetMyInfoHandler;
 
 final readonly class WsDefaultMethods
 {
-    // Each Pwg* class used by register() is injected as a constructor
-    // property; the property list here and the instance-method callbacks
-    // registered below must stay in sync -- addMethod() calls these as real
-    // instance methods (e.g. $this->pwgImages->addComment(...)), not static
-    // ClassName::method() calls. `pwg.userComments.*`/`pwg.permissions.*`/
-    // `pwg.plugins.*`/`pwg.themes.performAction`/`pwg.extensions.*`/
-    // `pwg.groups.*`/`pwg.tags.*`/`pwg.categories.*`/`pwg.users.*`/
-    // `pwg.getVersion`/`pwg.getInfos`/`pwg.getCacheSize`/
-    // `pwg.getMissingDerivatives`/`pwg.caddie.add`/`pwg.rates.delete`/
-    // `pwg.session.*`/`pwg.activity.getList`/`pwg.history.log`/
-    // `pwg.history.search` (Comments.php/Permissions.php/Extensions.php/
-    // Groups.php/Tags.php/Categories.php/Users.php/Core.php, Group 19's
-    // first 8 migrated domains) no longer have a callback-based
-    // registration or a constructor property here -- their methods
-    // register via MethodDefinition/handlerClass instead, resolved from
-    // the container at invocation time. `pwg.activity.downloadLog`
-    // stays on the legacy addMethod()/plain-string-callback path
-    // permanently -- see its own registration below for why.
+    // Group 19's 9 god-class files (Comments.php/Permissions.php/
+    // Extensions.php/Groups.php/Tags.php/Categories.php/Users.php/
+    // Core.php/Images.php) are all fully migrated -- every WS method
+    // below registers via MethodDefinition/handlerClass, resolved from
+    // the container at invocation time, not a constructor-injected Pwg*
+    // class's own instance method. `pwg.activity.downloadLog` is the
+    // sole permanent exception: it stays on the legacy
+    // addMethod()/plain-string-callback path forever -- see its own
+    // registration below for why.
     public function __construct(
-        private Images $pwgImages,
         private CurrentConfig $currentConfig,
         private AccessControl $accessControl,
         private CurrentUser $currentUser,
@@ -464,244 +461,129 @@ final readonly class WsDefaultMethods
             ],
         ));
 
-        $service->addMethod(
-            'pwg.images.addChunk',
-            $this->pwgImages->addChunk(...),
-            [
-                'data' => [],
-                'original_sum' => [],
-                'type' => [
-                    'default' => 'file',
-                    'info' => 'Must be "file", for backward compatiblity "high" and "thumb" are allowed.',
-                ],
-                'position' => [],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.addChunk',
+            handlerClass: AddChunkHandler::class,
+            description: 'Add a chunk of a file.',
+            params: [
+                ParamDefinition::required('data'),
+                ParamDefinition::required('original_sum'),
+                ParamDefinition::optional('type', 'file', info: 'Must be "file", for backward compatiblity "high" and "thumb" are allowed.'),
+                ParamDefinition::required('position'),
             ],
-            'Add a chunk of a file.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
-        $service->addMethod(
-            'pwg.images.addFile',
-            $this->pwgImages->addFile(...),
-            [
-                'image_id' => [
-                    'type' => WsParamType::ID,
-                ],
-                'type' => [
-                    'default' => 'file',
-                    'info' => 'Must be "file", for backward compatiblity "high" and "thumb" are allowed.',
-                ],
-                'sum' => [],
-            ],
-            'Add or update a file for an existing photo.
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.addFile',
+            handlerClass: AddFileHandler::class,
+            description: 'Add or update a file for an existing photo.
     <br>pwg.images.addChunk must have been called before (maybe several times).',
-            options: [
-                'admin_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.images.add',
-            $this->pwgImages->add(...),
-            [
-                'thumbnail_sum' => [
-                    'default' => null,
-                ],
-                'high_sum' => [
-                    'default' => null,
-                ],
-                'original_sum' => [],
-                'original_filename' => [
-                    'default' => null,
-                    'Provide it if "check_uniqueness" is true and the gallery\'s configured uniqueness mode is "filename".',
-                ],
-                'name' => [
-                    'default' => null,
-                ],
-                'author' => [
-                    'default' => null,
-                ],
-                'date_creation' => [
-                    'default' => null,
-                ],
-                'comment' => [
-                    'default' => null,
-                ],
-                'categories' => [
-                    'default' => null,
-                    'info' => 'String list "category_id[,rank];category_id[,rank]".<br>The rank is optional and is equivalent to "auto" if not given.',
-                ],
-                'tag_ids' => [
-                    'default' => null,
-                    'info' => 'Comma separated ids',
-                ],
-                'level' => [
-                    'default' => 0,
-                    'maxValue' => max($available_permission_levels),
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'check_uniqueness' => [
-                    'default' => true,
-                    'type' => WsParamType::BOOL,
-                ],
-                'image_id' => [
-                    'default' => null,
-                    'type' => WsParamType::ID,
-                ],
+            params: [
+                ParamDefinition::required('image_id', WsParamType::ID),
+                ParamDefinition::optional('type', 'file', info: 'Must be "file", for backward compatiblity "high" and "thumb" are allowed.'),
+                ParamDefinition::required('sum'),
             ],
-            'Add an image.
+            requiresAuth: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.add',
+            handlerClass: ImagesAddHandler::class,
+            description: 'Add an image.
     <br>pwg.images.addChunk must have been called before (maybe several times).
     <br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.images.addSimple',
-            $this->pwgImages->addSimple(...),
-            [
-                'category' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'name' => [
-                    'default' => null,
-                ],
-                'author' => [
-                    'default' => null,
-                ],
-                'comment' => [
-                    'default' => null,
-                ],
-                'level' => [
-                    'default' => 0,
-                    'maxValue' => max($available_permission_levels),
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'tags' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::ACCEPT_ARRAY,
-                ],
-                'image_id' => [
-                    'default' => null,
-                    'type' => WsParamType::ID,
-                ],
+            params: [
+                ParamDefinition::optional('thumbnail_sum'),
+                ParamDefinition::optional('high_sum'),
+                ParamDefinition::required('original_sum'),
+                // The original registration's own 'info' value here is a
+                // stray unkeyed array element (a pre-existing typo -- see
+                // git history), so it was already silently discarded by
+                // Server::addMethod() and never surfaced via
+                // pwg.getMethodDetails; not carried over here either.
+                ParamDefinition::optional('original_filename'),
+                ParamDefinition::optional('name'),
+                ParamDefinition::optional('author'),
+                ParamDefinition::optional('date_creation'),
+                ParamDefinition::optional('comment'),
+                ParamDefinition::optional('categories', info: 'String list "category_id[,rank];category_id[,rank]".<br>The rank is optional and is equivalent to "auto" if not given.'),
+                ParamDefinition::optional('tag_ids', info: 'Comma separated ids'),
+                ParamDefinition::optional('level', 0, WsParamType::INT | WsParamType::POSITIVE, maxValue: max($available_permission_levels)),
+                ParamDefinition::optional('check_uniqueness', true, WsParamType::BOOL),
+                ParamDefinition::optional('image_id', null, WsParamType::ID),
             ],
-            'Add an image.
+            requiresAuth: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.addSimple',
+            handlerClass: AddSimpleHandler::class,
+            description: 'Add an image.
     <br>Use the <b>$_FILES[image]</b> field for uploading file.
     <br>Set the form encoding to "form-data".
     <br>You can update an existing photo if you define an existing image_id.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.images.upload',
-            $this->pwgImages->upload(...),
-            [
-                'name' => [
-                    'default' => null,
-                ],
-                'category' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'level' => [
-                    'default' => 0,
-                    'maxValue' => max($available_permission_levels),
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'format_of' => [
-                    'default' => null,
-                    'type' => WsParamType::ID,
-                    'info' => 'id of the extended image (name/category/level are not used if format_of is provided)',
-                ],
-                'update_mode' => [
-                    'default' => false,
-                    'type' => WsParamType::BOOL,
-                    'info' => 'true if the update mode is active',
-                ],
-                'pwg_token' => [],
+            params: [
+                ParamDefinition::optional('category', null, WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optional('name'),
+                ParamDefinition::optional('author'),
+                ParamDefinition::optional('comment'),
+                ParamDefinition::optional('level', 0, WsParamType::INT | WsParamType::POSITIVE, maxValue: max($available_permission_levels)),
+                ParamDefinition::optional('tags', flags: WsParamFlag::ACCEPT_ARRAY),
+                ParamDefinition::optional('image_id', null, WsParamType::ID),
             ],
-            'Add an image.
+            requiresAuth: true,
+            postOnly: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.upload',
+            handlerClass: UploadHandler::class,
+            description: 'Add an image.
     <br>Use the <b>$_FILES[image]</b> field for uploading file.
     <br>Set the form encoding to "form-data".',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
-
-        $service->addMethod(
-            'pwg.images.uploadAsync',
-            $this->pwgImages->uploadAsync(...),
-            [
-                'username' => [
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'password' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::OPTIONAL,
-                ],
-                'chunk' => [
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'chunk_sum' => [],
-                'chunks' => [
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'original_sum' => [],
-                'category' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::FORCE_ARRAY,
-                    'type' => WsParamType::ID,
-                ],
-                'filename' => [],
-                'name' => [
-                    'default' => null,
-                ],
-                'author' => [
-                    'default' => null,
-                ],
-                'comment' => [
-                    'default' => null,
-                ],
-                'date_creation' => [
-                    'default' => null,
-                ],
-                'level' => [
-                    'default' => 0,
-                    'maxValue' => max($available_permission_levels),
-                    'type' => WsParamType::INT | WsParamType::POSITIVE,
-                ],
-                'tag_ids' => [
-                    'default' => null,
-                    'info' => 'Comma separated ids',
-                ],
-                'image_id' => [
-                    'default' => null,
-                    'type' => WsParamType::ID,
-                ],
+            params: [
+                ParamDefinition::optional('name'),
+                ParamDefinition::optional('category', null, WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::optional('level', 0, WsParamType::INT | WsParamType::POSITIVE, maxValue: max($available_permission_levels)),
+                ParamDefinition::optional('format_of', null, WsParamType::ID, info: 'id of the extended image (name/category/level are not used if format_of is provided)'),
+                ParamDefinition::optional('update_mode', false, WsParamType::BOOL, info: 'true if the update mode is active'),
+                ParamDefinition::required('pwg_token'),
             ],
-            'Upload photo by chunks in a random order.
+            requiresAuth: true,
+            postOnly: true,
+        ));
+
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.uploadAsync',
+            handlerClass: UploadAsyncHandler::class,
+            description: 'Upload photo by chunks in a random order.
     <br>Use the <b>$_FILES[file]</b> field for uploading file.
     <br>Start with chunk 0 (zero).
     <br>Set the form encoding to "form-data".
     <br>You can update an existing photo if you define an existing image_id.
     <br>Requires <b>admin</b> credentials: either with username/password or header authorization with api key.',
-            options: [
-                'admin_only' => true,
-                'post_only' => true,
-            ]
-        );
+            params: [
+                ParamDefinition::optionalFlag('username'),
+                ParamDefinition::optionalFlag('password'),
+                ParamDefinition::required('chunk', WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::required('chunk_sum'),
+                ParamDefinition::required('chunks', WsParamType::INT | WsParamType::POSITIVE),
+                ParamDefinition::required('original_sum'),
+                ParamDefinition::optional('category', null, WsParamType::ID, WsParamFlag::FORCE_ARRAY),
+                ParamDefinition::required('filename'),
+                ParamDefinition::optional('name'),
+                ParamDefinition::optional('author'),
+                ParamDefinition::optional('comment'),
+                ParamDefinition::optional('date_creation'),
+                ParamDefinition::optional('level', 0, WsParamType::INT | WsParamType::POSITIVE, maxValue: max($available_permission_levels)),
+                ParamDefinition::optional('tag_ids', info: 'Comma separated ids'),
+                ParamDefinition::optional('image_id', null, WsParamType::ID),
+            ],
+            requiresAuth: true,
+            postOnly: true,
+        ));
 
         $service->register(new MethodDefinition(
             name: 'pwg.images.delete',
@@ -965,24 +847,17 @@ final readonly class WsDefaultMethods
             requiresAuth: true,
         ));
 
-        $service->addMethod(
-            'pwg.images.uploadCompleted',
-            $this->pwgImages->uploadCompleted(...),
-            [
-                'image_id' => [
-                    'default' => null,
-                    'flags' => WsParamFlag::ACCEPT_ARRAY,
-                ],
-                'pwg_token' => [],
-                'category_id' => [
-                    'type' => WsParamType::ID,
-                ],
+        $service->register(new MethodDefinition(
+            name: 'pwg.images.uploadCompleted',
+            handlerClass: UploadCompletedHandler::class,
+            description: 'Notify Piwigo you have finished uploading a set of photos. It will empty the lounge, if any.',
+            params: [
+                ParamDefinition::optional('image_id', null, flags: WsParamFlag::ACCEPT_ARRAY),
+                ParamDefinition::required('pwg_token'),
+                ParamDefinition::required('category_id', WsParamType::ID),
             ],
-            'Notify Piwigo you have finished uploading a set of photos. It will empty the lounge, if any.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            requiresAuth: true,
+        ));
 
         $service->register(new MethodDefinition(
             name: 'pwg.images.setInfo',

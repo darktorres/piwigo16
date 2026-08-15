@@ -2495,12 +2495,12 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Every column of $imageId's own row, if it satisfies $criteria --
-     * Ws\Images::getInfo()'s own image lookup. Both
+     * Ws\Images\GetInfoHandler's own image lookup. Both
      * $criteria->visibleImageIds and $criteria->maxLevel apply here (not
      * visibleImageIds alone).
      *
      * Stays on DBAL -- the blocker is `SELECT *` itself: this row is
-     * {@see \Piwigo\Ws\Images::getInfo()}'s own public WS response
+     * {@see \Piwigo\Ws\Images\GetInfoHandler}'s own public WS response
      * shape, read/re-emitted with its raw snake_case column names
      * (`$image_row['rating_score']`, etc.) as real external API contract.
      * DQL always hydrates through the entity's own (camelCase) property
@@ -2537,11 +2537,11 @@ final class ImageRepository extends EntityRepository
     /**
      * Categories $imageId belongs to that satisfy $criteria, with each
      * category's own display-relevant columns (including `commentable`,
-     * unlike findVisibleCategoriesForImage() below) -- Ws\Images::
-     * getInfo()'s own "related categories" block.
+     * unlike findVisibleCategoriesForImage() below) -- Ws\Images\
+     * GetInfoHandler's own "related categories" block.
      *
      * `commentable` hydrates as a real `bool` -- safe because the one
-     * real caller ({@see \Piwigo\Ws\Images::getInfo()}) already
+     * real caller ({@see \Piwigo\Ws\Images\GetInfoHandler}) already
      * `(bool)`-casts it and `unset()`s the key immediately after, before
      * the row ever reaches its own JSON response. `c.id`/`c.permalink`
      * are custom-Typed (`category_id`/`permalink`), so `getArrayResult()`

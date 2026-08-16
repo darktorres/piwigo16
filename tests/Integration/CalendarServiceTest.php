@@ -168,7 +168,7 @@ namespace Piwigo\Tests\Integration {
 
             self::assertNotNull($scope);
             self::assertStringContainsString('WHERE id IN (:innerItems)', $scope->rawSqlFromWhere->sql);
-            self::assertSame(['1', '2', '3'], $scope->rawSqlFromWhere->parameters['innerItems']);
+            self::assertSame([1, 2, 3], $scope->rawSqlFromWhere->parameters['innerItems']);
 
             self::assertFalse($scope->joinImageCategory);
             self::assertSame('i.id IN (:innerItems)', $scope->dqlWhere->sql);

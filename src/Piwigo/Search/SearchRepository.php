@@ -12,6 +12,7 @@ use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
@@ -80,7 +81,7 @@ final readonly class SearchRepository
             id: $entity->id ?? 0,
             searchUuid: $entity->searchUuid,
             createdOn: $entity->createdOn?->value,
-            createdBy: $entity->createdBy,
+            createdBy: $entity->createdBy?->value,
             forkedFrom: $entity->forkedFrom,
             rules: self::filterRulesKeys($entity->rules),
         );
@@ -141,7 +142,7 @@ final readonly class SearchRepository
         ?string $searchUuid = null,
         ?int $forkedFrom = null
     ): int {
-        $entity = new SavedSearchEntity($searchUuid, SqlDateTime::tryFrom($createdOn), $createdBy, $forkedFrom, $rules);
+        $entity = new SavedSearchEntity($searchUuid, SqlDateTime::tryFrom($createdOn), UserId::tryFrom($createdBy), $forkedFrom, $rules);
         $this->em->persist($entity);
         $this->em->flush();
 

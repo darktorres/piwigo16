@@ -6,6 +6,7 @@ namespace Piwigo\Search;
 
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `search` table. Named to avoid colliding with the existing {@see
@@ -14,10 +15,10 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * entity's properties directly rather than round-tripping through
  * `Search::fromRow()`'s raw-row path.
  *
- * `createdBy`/`forkedFrom` stay plain `?int` -- FK into the un-VO'd
- * `users` domain and a self-FK respectively, same "foreign-key-shaped
- * column into an un-VO'd domain stays raw" call as
- * {@see \Piwigo\Comment\CommentEntity::$authorId}. `createdOn` is
+ * `createdBy` is `UserId`-typed -- `fk_search_created_by` is a real
+ * constraint onto `users.id`. `forkedFrom` stays plain `?int`: a self-FK
+ * onto this same table's own `id`, which stays a plain `?int` primary key
+ * (out of `0.3`'s scope, see the SQL-modernization plan). `createdOn` is
  * `SqlDateTime`-typed -- nullable for `Ws\Core::
  * historySearch()`'s ephemeral, metadata-less inserts (no user-facing
  * permalink, never forked); `SearchService::saveSearch()`'s own real
@@ -41,8 +42,8 @@ final class SavedSearchEntity
         public ?string $searchUuid,
         #[ORM\Column(name: 'created_on', type: 'sql_datetime', length: 19, nullable: true)]
         public ?SqlDateTime $createdOn,
-        #[ORM\Column(name: 'created_by', type: 'integer', nullable: true)]
-        public ?int $createdBy,
+        #[ORM\Column(name: 'created_by', type: 'user_id', nullable: true)]
+        public ?UserId $createdBy,
         #[ORM\Column(name: 'forked_from', type: 'integer', nullable: true)]
         public ?int $forkedFrom,
         /**

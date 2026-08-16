@@ -58,12 +58,24 @@ final readonly class SortRenderer
     {
         $prefix = $tableAlias === null || $tableAlias === '' ? '' : $tableAlias . '.';
 
-        return implode(', ', array_map(
-            fn (array $entry): string => $entry['field'] === PhotoSortField::Random
-                ? $this->randomExpression()
-                : $prefix . $this->column($entry['field']) . ' ' . $entry['dir']->value,
-            $order->entries(),
-        ));
+        $fragments = [];
+        foreach ($order->entries() as $entry) {
+            if ($entry['field'] === PhotoSortField::Random) {
+                $fragments[] = $this->randomExpression();
+
+                continue;
+            }
+
+            $column = $prefix . $this->column($entry['field']);
+            $dir = $entry['dir']->value;
+            if (self::isNullable($entry['field'])) {
+                $fragments[] = self::nullDiscriminant($column) . ' ' . $dir;
+            }
+
+            $fragments[] = $column . ' ' . $dir;
+        }
+
+        return implode(', ', $fragments);
     }
 
     /**
@@ -88,7 +100,12 @@ final readonly class SortRenderer
                 return null;
             }
 
-            $clauses[] = new OrderByClause($property, $entry['dir']->value);
+            $dir = $entry['dir']->value;
+            if (self::isNullable($entry['field'])) {
+                $clauses[] = new OrderByClause(self::nullDiscriminant($property), $dir);
+            }
+
+            $clauses[] = new OrderByClause($property, $dir);
         }
 
         return $clauses;
@@ -189,6 +206,40 @@ final readonly class SortRenderer
             PhotoSortField::Random => 'RAND()',
             PhotoSortField::Rank => $imageCategoryAlias === null ? null : $imageCategoryAlias . '.rank',
         };
+    }
+
+    /**
+     * Whether $field's underlying column can be NULL -- `date_available`,
+     * `date_creation`, `name`, `rating_score` and `image_category.rank` all
+     * are; `id`/`file`/`hit` are not, and `Random` is a function call with
+     * no column at all.
+     */
+    private static function isNullable(PhotoSortField $field): bool
+    {
+        return match ($field) {
+            PhotoSortField::DateAvailable, PhotoSortField::DateCreation,
+            PhotoSortField::Name, PhotoSortField::RatingScore, PhotoSortField::Rank => true,
+            PhotoSortField::Id, PhotoSortField::File, PhotoSortField::Hit, PhotoSortField::Random => false,
+        };
+    }
+
+    /**
+     * MySQL's `ORDER BY` always treats NULL as the smallest possible value,
+     * in both directions -- an ascending sort puts NULLs first, a
+     * descending one puts them last. PostgreSQL's default is the opposite
+     * convention (NULL sorts as if largest): NULLS LAST for ASC, NULLS
+     * FIRST for DESC. Neither engine has a portable NULLS-position syntax
+     * (MySQL has none at all -- {@see \Piwigo\Rate\RateRepository::findTopRatedImageIds()}'s
+     * own comment), so this reproduces MySQL's behavior on both platforms
+     * with an explicit discriminant every nullable field's sort entry gets,
+     * ahead of the real column: sorted in the *same* direction as the real
+     * column, a 0/1 split reliably puts the NULL group first for an
+     * ascending sort and last for a descending one, matching "NULL is
+     * always smallest" either way.
+     */
+    private static function nullDiscriminant(string $columnOrProperty): string
+    {
+        return "CASE WHEN {$columnOrProperty} IS NULL THEN 0 ELSE 1 END";
     }
 
     private function platform(): AbstractPlatform

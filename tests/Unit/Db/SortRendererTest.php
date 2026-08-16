@@ -31,12 +31,15 @@ function sortRendererTestIsPostgres(): bool
 }
 
 test('toSql() renders a complete clause and toSqlBody() the same without the keyword', function (): void {
+    // `hit` is NOT NULL, so it gets no discriminant; `name` is nullable, so
+    // it does -- see the dedicated NULL-ordering tests below for why.
     $order = PhotoSortOrder::fromConfigFragment('ORDER BY name ASC, hit DESC');
+    $expectedBody = 'CASE WHEN name IS NULL THEN 0 ELSE 1 END ASC, name ASC, hit DESC';
 
     expect(sortRendererTestRenderer()->toSql($order))
-        ->toBe('ORDER BY name ASC, hit DESC')
+        ->toBe('ORDER BY ' . $expectedBody)
         ->and(sortRendererTestRenderer()->toSqlBody($order))
-        ->toBe('name ASC, hit DESC');
+        ->toBe($expectedBody);
 });
 
 test('toSql() is empty for an order with no entries', function (): void {
@@ -44,8 +47,10 @@ test('toSql() is empty for an order with no entries', function (): void {
 });
 
 test('toSql() prefixes real columns with a table alias when one is given', function (): void {
+    // `id` is NOT NULL, so it gets no discriminant; `name` is nullable, so
+    // its discriminant is prefixed too.
     expect(sortRendererTestRenderer()->toSql(PhotoSortOrder::fromConfigFragment('ORDER BY name ASC, id DESC'), 'i'))
-        ->toBe('ORDER BY i.name ASC, i.id DESC');
+        ->toBe('ORDER BY CASE WHEN i.name IS NULL THEN 0 ELSE 1 END ASC, i.name ASC, i.id DESC');
 });
 
 test('the random expression takes no table prefix and no direction', function (): void {
@@ -68,12 +73,14 @@ test('randomExpression() agrees with SqlDialect but derives the platform from th
 });
 
 test('rank is quoted by the connected platform', function (): void {
+    // `rank` is nullable (image_category.rank), so its own discriminant is
+    // quoted the same way as the real column.
     $quoted = sortRendererTestIsPostgres() ? '"rank"' : '`rank`';
 
     expect(sortRendererTestRenderer()->rankColumn())
         ->toBe($quoted)
         ->and(sortRendererTestRenderer()->toSql(PhotoSortOrder::fromConfigFragment('ORDER BY `rank` ASC')))
-        ->toBe('ORDER BY ' . $quoted . ' ASC');
+        ->toBe('ORDER BY CASE WHEN ' . $quoted . ' IS NULL THEN 0 ELSE 1 END ASC, ' . $quoted . ' ASC');
 });
 
 test('column() returns the real column or expression for every field', function (): void {
@@ -92,8 +99,11 @@ test('column() returns the real column or expression for every field', function 
 });
 
 test('toDql() maps every entry to a DQL expression', function (): void {
+    // `date_available` is nullable and gets a leading discriminant clause;
+    // `file`/`id` are NOT NULL and get none.
     expect(sortRendererTestRenderer()->toDql(PhotoSortOrder::fromConfigFragment('ORDER BY date_available DESC, file ASC, id ASC'), 'i'))
         ->toEqual([
+            new OrderByClause('CASE WHEN i.dateAvailable IS NULL THEN 0 ELSE 1 END', 'DESC'),
             new OrderByClause('i.dateAvailable', 'DESC'),
             new OrderByClause('i.file', 'ASC'),
             new OrderByClause('i.id', 'ASC'),
@@ -111,13 +121,17 @@ test('toDql() maps a random order to the registered custom DQL function', functi
 
 test('toDql() returns null only for rank with no image_category alias', function (): void {
     // null means "fall back to raw SQL", never "no order". This is the one
-    // remaining way to get there.
+    // remaining way to get there. `rank` is nullable, so the resolved case
+    // carries its own leading discriminant clause too.
     $renderer = sortRendererTestRenderer();
 
     expect($renderer->toDql(PhotoSortOrder::fromConfigFragment('ORDER BY `rank` ASC'), 'i'))
         ->toBeNull()
         ->and($renderer->toDql(PhotoSortOrder::fromConfigFragment('ORDER BY `rank` ASC'), 'i', 'ic'))
-        ->toEqual([new OrderByClause('ic.rank', 'ASC')]);
+        ->toEqual([
+            new OrderByClause('CASE WHEN ic.rank IS NULL THEN 0 ELSE 1 END', 'ASC'),
+            new OrderByClause('ic.rank', 'ASC'),
+        ]);
 });
 
 test('toDql() returns null for an empty order rather than an empty clause list', function (): void {
@@ -127,6 +141,7 @@ test('toDql() returns null for an empty order rather than an empty clause list',
 test('resolveDqlOrderBy() parses and maps a composed fragment in one step', function (): void {
     expect(sortRendererTestRenderer()->resolveDqlOrderBy('ORDER BY date_available DESC, file ASC, id ASC', 'i'))
         ->toEqual([
+            new OrderByClause('CASE WHEN i.dateAvailable IS NULL THEN 0 ELSE 1 END', 'DESC'),
             new OrderByClause('i.dateAvailable', 'DESC'),
             new OrderByClause('i.file', 'ASC'),
             new OrderByClause('i.id', 'ASC'),
@@ -147,5 +162,8 @@ test('resolveDqlOrderBy() honours the same rank rule as toDql()', function (): v
     expect($renderer->resolveDqlOrderBy('ORDER BY `rank` ASC', 'i'))
         ->toBeNull()
         ->and($renderer->resolveDqlOrderBy('ORDER BY `rank` ASC', 'i', 'ic'))
-        ->toEqual([new OrderByClause('ic.rank', 'ASC')]);
+        ->toEqual([
+            new OrderByClause('CASE WHEN ic.rank IS NULL THEN 0 ELSE 1 END', 'ASC'),
+            new OrderByClause('ic.rank', 'ASC'),
+        ]);
 });

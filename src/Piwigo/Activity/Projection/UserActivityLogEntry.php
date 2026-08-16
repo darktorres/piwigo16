@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity\Projection;
 
+use Piwigo\Common\ValueObject\ActivityId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
@@ -21,9 +22,9 @@ use Piwigo\Common\ValueObject\UserId;
  * {@see SystemActivityLogEntry}'s own consumer, which does structured
  * `$details['key']` access and needs the real array.
  *
- * ActivityEntity::$performedBy is UserId-typed -- `performedBy` here
- * stays plain `?int` (Projection convention), `fromRow()` narrows via
- * `instanceof UserId`, not `is_numeric()`.
+ * ActivityEntity::$performedBy/$activityId are UserId-/ActivityId-typed --
+ * `performedBy`/`activityId` here stay plain `?int`/`int` (Projection
+ * convention), `fromRow()` narrows both via `instanceof`, not `is_numeric()`.
  */
 final readonly class UserActivityLogEntry
 {
@@ -45,7 +46,7 @@ final readonly class UserActivityLogEntry
     public static function fromRow(array $row): self
     {
         return new self(
-            activityId: is_numeric($row['activity_id'] ?? null) ? (int) $row['activity_id'] : 0,
+            activityId: ($row['activity_id'] ?? null) instanceof ActivityId ? $row['activity_id']->value : 0,
             performedBy: ($row['performed_by'] ?? null) instanceof UserId ? $row['performed_by']->value : null,
             object: is_string($row['object'] ?? null) ? $row['object'] : '',
             objectId: is_numeric($row['object_id'] ?? null) ? (int) $row['object_id'] : 0,

@@ -25,6 +25,7 @@ use Piwigo\Db\DqlFunction\SubstringIndexFunction;
 use Piwigo\Db\DqlFunction\WeekdayFunction;
 use Piwigo\Db\DqlFunction\WeekFunction;
 use Piwigo\Db\DqlFunction\YearFunction;
+use Piwigo\Db\Type\ActivityIdType;
 use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
 use Piwigo\Db\Type\EmailType;
@@ -81,6 +82,7 @@ final class EntityManagerFactory
         // memoized (called fresh per-request/per-test) and addType()
         // throws on double-registration.
         foreach ([
+            'activity_id' => ActivityIdType::class,
             'group_id' => GroupIdType::class,
             'user_id' => UserIdType::class,
             'category_id' => CategoryIdType::class,

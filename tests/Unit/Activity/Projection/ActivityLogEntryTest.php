@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
+use Piwigo\Common\ValueObject\ActivityId;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -14,10 +15,10 @@ use Piwigo\Common\ValueObject\UserId;
  */
 test('UserActivityLogEntry::fromRow narrows a real joined row, including a valid ip_address', function (): void {
     $entry = UserActivityLogEntry::fromRow([
-        'activity_id' => '10',
-        // A real row's `performed_by` is a UserId instance
-        // (ActivityEntity::$performedBy is UserId-typed, DQL array
-        // hydration applies the custom Type), not a raw scalar.
+        // A real row's `activity_id`/`performed_by` are ActivityId/UserId
+        // instances (both custom-Typed, DQL array hydration applies the
+        // Type), not raw scalars.
+        'activity_id' => ActivityId::from(10),
         'performed_by' => UserId::from(5),
         'object' => 'user',
         'object_id' => '5',
@@ -90,7 +91,7 @@ test('UserActivityLogEntry::fromRow falls back to safe defaults for a fully empt
 
 test('UserActivityLogEntry::toArray unwraps the IpAddress value object back to a raw string', function (): void {
     $entry = UserActivityLogEntry::fromRow([
-        'activity_id' => 10,
+        'activity_id' => ActivityId::from(10),
         'performed_by' => UserId::from(5),
         'object' => 'user',
         'object_id' => 5,
@@ -123,7 +124,7 @@ test('UserActivityLogEntry::toArray null-safes a null ipAddress instead of fatal
     // property 'value' on null" instead of toArray() succeeding with a
     // null 'ip_address' entry.
     $entry = UserActivityLogEntry::fromRow([
-        'activity_id' => 10,
+        'activity_id' => ActivityId::from(10),
         'object' => 'user',
         'object_id' => 5,
         'action' => 'login',
@@ -149,7 +150,7 @@ test('UserActivityLogEntry::toArray null-safes a null ipAddress instead of fatal
 
 test('SystemActivityLogEntry::fromRow narrows a real row, keeping the already-decoded details array', function (): void {
     $entry = SystemActivityLogEntry::fromRow([
-        'activity_id' => '20',
+        'activity_id' => ActivityId::from(20),
         'performed_by' => null,
         'object_id' => '1',
         'action' => 'update',
@@ -241,7 +242,7 @@ test('SystemActivityLogEntry::fromRow filters non-string keys out of the details
 
 test('SystemActivityLogEntry::toArray round-trips the decoded details array as-is', function (): void {
     $entry = SystemActivityLogEntry::fromRow([
-        'activity_id' => 20,
+        'activity_id' => ActivityId::from(20),
         'performed_by' => null,
         'object_id' => 1,
         'action' => 'update',

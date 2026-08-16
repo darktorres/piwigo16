@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Activity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\ActivityId;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -18,6 +19,11 @@ use Piwigo\Common\ValueObject\UserId;
  * write path traces to an `Env::now()`-derived value. `details` maps as native
  * Doctrine `json` -- no round-trip-fidelity requirement forces a raw-string
  * exception here, unlike Audit\AuditLogEntity's hash-chain columns.
+ * `activityId` is `ActivityId`-typed -- its own primary key, not a reference
+ * (see the SQL-modernization plan's `0.3` audit), so no other table's column
+ * gains a matching foreign key. `UserActivityLogEntry`/`SystemActivityLogEntry`
+ * both stay plain `int` (Projection convention), `fromRow()` narrowing via
+ * `instanceof ActivityId`, not `is_numeric()`.
  */
 #[ORM\Entity(repositoryClass: ActivityRepository::class)]
 #[ORM\Table(name: 'activity')]
@@ -25,8 +31,8 @@ final class ActivityEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'activity_id', type: 'integer')]
-    public ?int $activityId = null;
+    #[ORM\Column(name: 'activity_id', type: 'activity_id')]
+    public ?ActivityId $activityId = null;
 
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]

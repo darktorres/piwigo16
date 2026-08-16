@@ -8,16 +8,18 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `comments` table. `date`/`validationDate` are `SqlDateTime`-typed
  * -- both real write paths
  * (`CommentRepository::insert()`/`update()`/`validate()`) trace to an
  * `Env::now()`-derived value. `validated` is a real boolean column.
- * `author_id` stays plain ?int -- UserId propagation across every other
- * domain's foreign-key-shaped column (this one,
- * Audit\AuditLogEntity::$actorId, Activity\ActivityEntity:: $performedBy, ...)
- * is deliberately out of scope here.
+ * `author_id` is `UserId`-typed -- `fk_comments_author_id` is a real
+ * constraint onto `users.id` (`ON DELETE SET NULL`, so a genuinely NULL
+ * value means an anonymous/guest comment, not an oversight).
+ * `Comment\Projection\Comment::$authorId` stays plain `?int` regardless --
+ * see that class's own docblock.
  *
  * `id`'s `comment_id` column type is a custom Doctrine Type
  * ({@see \Piwigo\Db\Type\CommentIdType}, registered in
@@ -42,8 +44,8 @@ final class CommentEntity
         public ?string $author,
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
         public ?string $email,
-        #[ORM\Column(name: 'author_id', type: 'integer', nullable: true)]
-        public ?int $authorId,
+        #[ORM\Column(name: 'author_id', type: 'user_id', nullable: true)]
+        public ?UserId $authorId,
         #[ORM\Column(name: 'anonymous_id', type: 'string', length: 45)]
         public string $anonymousId,
         #[ORM\Column(name: 'website_url', type: 'string', length: 255, nullable: true)]

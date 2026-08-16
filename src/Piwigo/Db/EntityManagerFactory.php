@@ -41,6 +41,7 @@ use Piwigo\Db\Type\SiteIdType;
 use Piwigo\Db\Type\SqlDateTimeType;
 use Piwigo\Db\Type\SqlDateType;
 use Piwigo\Db\Type\SqlTimeType;
+use Piwigo\Db\Type\SummaryIdType;
 use Piwigo\Db\Type\TagIdType;
 use Piwigo\Db\Type\ThemeIdType;
 use Piwigo\Db\Type\UserIdType;
@@ -103,6 +104,7 @@ final class EntityManagerFactory
             'sql_date' => SqlDateType::class,
             'sql_datetime' => SqlDateTimeType::class,
             'sql_time' => SqlTimeType::class,
+            'summary_id' => SummaryIdType::class,
         ] as $name => $class) {
             if (! Type::hasType($name)) {
                 Type::addType($name, $class);

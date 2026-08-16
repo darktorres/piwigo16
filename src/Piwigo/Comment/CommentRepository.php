@@ -14,6 +14,7 @@ use Doctrine\ORM\Query\Expr\Join;
 use Override;
 use Piwigo\Comment\Projection\Comment;
 use Piwigo\Comment\Projection\CommentDateRange;
+use Piwigo\Comment\Projection\CommentListRow;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Comment\Projection\CommentSummaryCounts;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -762,10 +763,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * a plain bool.
      *
      * @param list<SqlCondition> $whereClauses
-     * @return PaginatedResult<array{comment_id: int|string, image_id: int|string,
-     *   category_id: int|string, author: ?string, author_id: int|string|null,
-     *   user_email: ?string, email: ?string, date: ?string, website_url: ?string,
-     *   content: ?string, validated: bool|int}>
+     * @return PaginatedResult<CommentListRow>
      */
     public function findAllWithConditions(
         array $whereClauses,
@@ -824,19 +822,19 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 continue;
             }
 
-            $rows[] = [
-                'comment_id' => $commentId,
-                'image_id' => $imageId,
-                'category_id' => $categoryId,
-                'author' => is_string($row['author'] ?? null) ? $row['author'] : null,
-                'author_id' => (is_int($authorId) || is_string($authorId)) ? $authorId : null,
-                'user_email' => is_string($row['user_email'] ?? null) ? $row['user_email'] : null,
-                'email' => is_string($row['email'] ?? null) ? $row['email'] : null,
-                'date' => is_string($row['date'] ?? null) ? $row['date'] : null,
-                'website_url' => is_string($row['website_url'] ?? null) ? $row['website_url'] : null,
-                'content' => is_string($row['content'] ?? null) ? $row['content'] : null,
-                'validated' => $validated,
-            ];
+            $rows[] = new CommentListRow(
+                commentId: $commentId,
+                imageId: $imageId,
+                categoryId: $categoryId,
+                author: is_string($row['author'] ?? null) ? $row['author'] : null,
+                authorId: (is_int($authorId) || is_string($authorId)) ? $authorId : null,
+                userEmail: is_string($row['user_email'] ?? null) ? $row['user_email'] : null,
+                email: is_string($row['email'] ?? null) ? $row['email'] : null,
+                date: is_string($row['date'] ?? null) ? $row['date'] : null,
+                websiteUrl: is_string($row['website_url'] ?? null) ? $row['website_url'] : null,
+                content: is_string($row['content'] ?? null) ? $row['content'] : null,
+                validated: $validated,
+            );
         }
 
         return new PaginatedResult($rows, $total);

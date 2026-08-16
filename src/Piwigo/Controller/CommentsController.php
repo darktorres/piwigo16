@@ -447,8 +447,8 @@ final readonly class CommentsController implements ControllerInterface
         );
         foreach ($paginated_comments->rows as $row) {
             $comments[] = $row;
-            $element_ids[] = (string) $row['image_id'];
-            $category_ids[] = (string) $row['category_id'];
+            $element_ids[] = (string) $row->imageId;
+            $category_ids[] = (string) $row->categoryId;
         }
         $counter = $paginated_comments->total ?? 0;
 
@@ -481,13 +481,13 @@ final readonly class CommentsController implements ControllerInterface
             );
 
             foreach ($comments as $comment) {
-                $image_id = (string) $comment['image_id'];
+                $image_id = (string) $comment->imageId;
                 // $elements is keyed by ImageRepository::findByIds()'s own
                 // real int image ids, not the string $image_id used
                 // everywhere else in this loop (URL params, template vars).
                 $image_id_int = (int) $image_id;
 
-                $category_id = (string) $comment['category_id'];
+                $category_id = (string) $comment->categoryId;
 
                 $element_name = $elements[$image_id_int]['name'] ?? null;
                 if (is_string($element_name) && $element_name !== '' && $element_name !== '0') {
@@ -509,8 +509,8 @@ final readonly class CommentsController implements ControllerInterface
                 );
 
                 $email = null;
-                $user_email = $comment['user_email'];
-                $comment_email = $comment['email'];
+                $user_email = $comment->userEmail;
+                $comment_email = $comment->email;
                 if (is_string($user_email) && $user_email !== '' && $user_email !== '0') {
                     $email = $user_email;
                 } elseif (is_string($comment_email) && $comment_email !== '' && $comment_email !== '0') {
@@ -522,25 +522,25 @@ final readonly class CommentsController implements ControllerInterface
                 // `false` "no date" sentinel is the correct fallback,
                 // matching Comments::getList()'s own identical guard
                 // for this same column.
-                $date = is_string($comment['date']) ? $comment['date'] : false;
+                $date = is_string($comment->date) ? $comment->date : false;
 
-                $author_id = $comment['author_id'];
+                $author_id = $comment->authorId;
                 // comments.author_id is nullable in schema; a NULL
                 // author can never match a real user id, so treat it as
                 // unowned rather than casting blindly.
                 $author_id = is_numeric($author_id) ? (int) $author_id : -1;
 
-                $authorEvent = $this->eventDispatcher->dispatch(new RenderCommentAuthor(is_string($comment['author']) ? $comment['author'] : ''));
+                $authorEvent = $this->eventDispatcher->dispatch(new RenderCommentAuthor(is_string($comment->author) ? $comment->author : ''));
 
-                $contentEvent = $this->eventDispatcher->dispatch(new RenderCommentContent(is_string($comment['content']) ? $comment['content'] : ''));
+                $contentEvent = $this->eventDispatcher->dispatch(new RenderCommentContent(is_string($comment->content) ? $comment->content : ''));
 
                 $tpl_comment = [
-                    'ID' => $comment['comment_id'],
+                    'ID' => $comment->commentId,
                     'U_PICTURE' => $url,
                     'src_image' => $src_image,
                     'ALT' => $name,
                     'AUTHOR' => $authorEvent->commentAuthor,
-                    'WEBSITE_URL' => $comment['website_url'],
+                    'WEBSITE_URL' => $comment->websiteUrl,
                     'DATE' => DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
                     'CONTENT' => $contentEvent->commentContent,
                 ];
@@ -553,7 +553,7 @@ final readonly class CommentsController implements ControllerInterface
                     $tpl_comment['U_DELETE'] = $urlService->addUrlParams(
                         $url_self,
                         [
-                            'delete' => $comment['comment_id'],
+                            'delete' => $comment->commentId,
                             'pwg_token' => $this->csrfService
                                 ->getToken(),
                         ]
@@ -564,29 +564,29 @@ final readonly class CommentsController implements ControllerInterface
                     $tpl_comment['U_EDIT'] = $urlService->addUrlParams(
                         $url_self,
                         [
-                            'edit' => $comment['comment_id'],
+                            'edit' => $comment->commentId,
                         ]
                     );
 
-                    $comment_id_str = (string) $comment['comment_id'];
+                    $comment_id_str = (string) $comment->commentId;
                     if ($edit_comment !== null and $comment_id_str === (string) $edit_comment) {
                         $tpl_comment['IN_EDIT'] = true;
                         $key = new EphemeralKeyService($this->currentConfig)
                             ->generate(2, $image_id);
                         $tpl_comment['KEY'] = $key;
                         $tpl_comment['IMAGE_ID'] = $image_id;
-                        $tpl_comment['CONTENT'] = $comment['content'];
+                        $tpl_comment['CONTENT'] = $comment->content;
                         $tpl_comment['CSRF_TOKEN'] = $this->csrfService->getToken();
                         $tpl_comment['U_CANCEL'] = $url_self;
                     }
                 }
 
                 if ($this->accessControl->canManageComment('validate', $author_id)) {
-                    if (! SqlDialect::getBoolean($comment['validated'])) {
+                    if (! SqlDialect::getBoolean($comment->validated)) {
                         $tpl_comment['U_VALIDATE'] = $urlService->addUrlParams(
                             $url_self,
                             [
-                                'validate' => $comment['comment_id'],
+                                'validate' => $comment->commentId,
                                 'pwg_token' => $this->csrfService
                                     ->getToken(),
                             ]

@@ -9,6 +9,7 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\Event\UserCommentCheck;
 use Piwigo\Comment\Event\UserCommentValidation;
 use Piwigo\Comment\Projection\CommentDateRange;
+use Piwigo\Comment\Projection\CommentListRow;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Comment\Projection\CommentSummaryCounts;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -61,10 +62,7 @@ final readonly class CommentService
 
     /**
      * @param list<SqlCondition> $whereClauses
-     * @return PaginatedResult<array{comment_id: int|string, image_id: int|string,
-     *   category_id: int|string, author: ?string, author_id: int|string|null,
-     *   user_email: ?string, email: ?string, date: ?string, website_url: ?string,
-     *   content: ?string, validated: bool|int}>
+     * @return PaginatedResult<CommentListRow>
      */
     public function getAllCommentsWithConditions(
         array $whereClauses,

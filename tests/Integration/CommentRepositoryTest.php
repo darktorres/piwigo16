@@ -567,7 +567,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame(2, $firstPage->total);
         self::assertCount(1, $secondPage->rows);
         self::assertSame(2, $secondPage->total);
-        self::assertNotSame($firstPage->rows[0]['comment_id'], $secondPage->rows[0]['comment_id']);
+        self::assertNotSame($firstPage->rows[0]->commentId, $secondPage->rows[0]->commentId);
         self::assertCount(2, $allAtOnce->rows);
     }
 

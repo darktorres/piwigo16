@@ -44,6 +44,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\CoverageCollector;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentThemeConfProvider;
@@ -461,6 +462,7 @@ final class RequestBootstrap
             self::currentConfig(),
             self::paths(),
             EntityManagerFactory::build($conn),
+            new ConnectedWithSession(),
         )));
         new UserBootstrap(
             self::accessLevelChecker(),
@@ -470,6 +472,7 @@ final class RequestBootstrap
             self::currentLogger(),
             self::wsContext(),
             self::deploymentPolicy(),
+            new ConnectedWithSession(),
         )->initialize();
     }
 

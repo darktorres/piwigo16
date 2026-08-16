@@ -23,6 +23,8 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\WsContext;
@@ -165,11 +167,12 @@ final class UserBootstrapTest extends IntegrationTestCase
 
     private function bootstrap(?WsContext $wsContext = null, ?DeploymentPolicy $deploymentPolicy = null): UserBootstrap
     {
-        // The api_key branch that reads CurrentLogger ends in a bare
-        // exit() and is deliberately left uncovered here (see this class's
-        // own docblock) -- never actually read, so a fresh, never-set()
-        // instance is fine.
-        return new UserBootstrap(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
+        // The api_key branch's own CurrentLogger read only happens past
+        // the invalid-api_key throw this class's own docblock describes
+        // (see testInitializeThrowsAResponseReadyExceptionForAnInvalidApiKey()
+        // below, which never reaches it) -- a fresh, never-set() instance
+        // is fine.
+        return new UserBootstrap(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy(), new ConnectedWithSession());
     }
 
     public function testInitializeAutoRegistersANewLocalAccountForAnUnknownApacheRemoteUser(): void
@@ -261,6 +264,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
             CurrentPathsTestFactory::get(),
             EntityManagerFactory::build($this->conn),
+            new ConnectedWithSession(),
         )->pwgLogin(...));
 
         $_SERVER = [];
@@ -279,7 +283,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             $this->bootstrap(new WsContext(true))
                 ->initialize();
 
-            self::assertSame('pwg.images.uploadAsync', $_SESSION['connected_with'] ?? null);
+            self::assertSame(ConnectedWith::UploadAsync, new ConnectedWithSession()->get());
         } finally {
             $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$newUserId]);
         }
@@ -336,6 +340,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
             CurrentPathsTestFactory::get(),
             EntityManagerFactory::build($this->conn),
+            new ConnectedWithSession(),
         )->pwgLogin(...));
 
         $_SERVER = [];

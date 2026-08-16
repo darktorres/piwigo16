@@ -17,6 +17,7 @@ use Piwigo\Admin\Install\InstallWizard;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Bootstrap\SessionBootstrap;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseEmitter;
@@ -54,6 +55,7 @@ $wizard = new InstallWizard(
     RequestBootstrap::deploymentPolicy(),
     RequestBootstrap::currentTemplate(),
     RequestBootstrap::currentUser(),
+    new ConnectedWithSession(),
 );
 
 // InstallWizard::boot()'s own "PHP extension mysqli is not loaded"/

@@ -15,6 +15,7 @@ use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\History\HistoryService;
@@ -60,7 +61,7 @@ final readonly class GetStatusHandler implements WsAction
         $res['current_datetime'] = Env::now()->format('Y-m-d H:i:s');
         $res['version'] = AppInfo::VERSION;
         $res['save_visits'] = $this->historyService->isLoggingAllowed();
-        $res['connected_with'] = $_SESSION['connected_with'] ?? null;
+        $res['connected_with'] = new ConnectedWithSession()->get()?->value;
 
         // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;

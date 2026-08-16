@@ -23,6 +23,8 @@ use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
@@ -75,6 +77,7 @@ final readonly class UserBootstrap
         private CurrentLogger $currentLogger,
         private WsContext $wsContext,
         private DeploymentPolicy $deploymentPolicy,
+        private ConnectedWithSession $connectedWithSession,
     ) {}
 
     public function initialize(): void
@@ -133,6 +136,7 @@ final readonly class UserBootstrap
             RequestBootstrap::currentConfig(),
             $paths,
             EntityManagerFactory::build($conn),
+            $this->connectedWithSession,
         );
         $filterState = RequestBootstrap::filterState();
         $translator = Kernel::container()->get(Translator::class);
@@ -288,8 +292,8 @@ final readonly class UserBootstrap
             // of the session. Overwriting it here unconditionally erased
             // that marker, silently lifting every restriction an API key is
             // supposed to carry for the remainder of the session.
-            if (($_SESSION['connected_with'] ?? null) !== 'ws_session_login_api_key') {
-                $_SESSION['connected_with'] = 'pwg.images.uploadAsync';
+            if ($this->connectedWithSession->get() !== ConnectedWith::WsSessionLoginApiKey) {
+                $this->connectedWithSession->set(ConnectedWith::UploadAsync);
             }
         }
 

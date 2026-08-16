@@ -12,6 +12,7 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Request\IdentificationSubmitRequest;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -84,6 +85,7 @@ function sensitiveParameterTestAuthService(): AuthService
         $currentConfig,
         CurrentPathsTestFactory::get(),
         EntityManagerFactory::build($conn),
+        new ConnectedWithSession(),
     );
 }
 

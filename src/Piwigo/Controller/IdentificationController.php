@@ -17,6 +17,8 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Projection\IdentificationPageContext;
 use Piwigo\Controller\Request\IdentificationSubmitRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
@@ -79,6 +81,7 @@ final readonly class IdentificationController implements ControllerInterface
         private Paths $paths,
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
+        private ConnectedWithSession $connectedWithSession,
     ) {}
 
     #[Override]
@@ -148,7 +151,7 @@ final readonly class IdentificationController implements ControllerInterface
                     // {redirect (final) = http://localhost/piwigo/git/admin.php}
                     $root_url = $this->urlService->getAbsoluteRootUrl();
 
-                    $_SESSION['connected_with'] = 'pwg_ui';
+                    $this->connectedWithSession->set(ConnectedWith::PwgUi);
 
                     $gallery_home_url = $this->urlService->getGalleryHomeUrl();
 

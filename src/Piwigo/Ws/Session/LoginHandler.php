@@ -14,6 +14,8 @@ namespace Piwigo\Ws\Session;
 use Override;
 use Piwigo\Auth\AuthService;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
@@ -26,6 +28,7 @@ final readonly class LoginHandler implements WsAction
     public function __construct(
         private AuthService $authService,
         private ApiKeyRequestFlag $apiKeyRequestFlag,
+        private ConnectedWithSession $connectedWithSession,
     ) {}
 
     /**
@@ -46,11 +49,11 @@ final readonly class LoginHandler implements WsAction
             // considered valid at all, so it never needs SQL escaping.
             $authenticate = $this->authService->authKeyLogin($input->username . ':' . $input->password);
             if ($authenticate) {
-                $_SESSION['connected_with'] = 'ws_session_login_api_key';
+                $this->connectedWithSession->set(ConnectedWith::WsSessionLoginApiKey);
                 return true;
             }
         } elseif ($this->authService->tryLogUser($input->username, $input->password, false)) {
-            $_SESSION['connected_with'] = 'ws_session_login';
+            $this->connectedWithSession->set(ConnectedWith::WsSessionLogin);
             return true;
         }
         return new WsErrorResponse(999, 'Invalid username/password');

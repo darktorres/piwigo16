@@ -19,6 +19,7 @@ use Piwigo\Controller\Projection\ProfilePageContext;
 use Piwigo\Controller\Request\ProfileActionRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
@@ -182,7 +183,7 @@ final readonly class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths);
+        $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths, new ConnectedWithSession());
 
         $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);

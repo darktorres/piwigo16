@@ -28,6 +28,7 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -1306,6 +1307,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->currentConfig,
             $this->paths,
             $this->entityManager,
+            new ConnectedWithSession(),
         );
 
         if ($password_update !== null) {

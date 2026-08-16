@@ -22,6 +22,7 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
@@ -140,6 +141,7 @@ function core_update_service_test_mail_service(): MailService
             new CurrentConfig(),
             Paths::fromRoot(sys_get_temp_dir()),
             EntityManagerFactory::build($conn),
+            new ConnectedWithSession(),
         ),
         core_update_service_test_user_service(),
     );

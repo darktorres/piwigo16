@@ -20,6 +20,8 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -102,6 +104,7 @@ function authServiceTestService(?Connection $conn = null): AuthService
         $currentConfig,
         CurrentPathsTestFactory::get(),
         EntityManagerFactory::build($conn),
+        new ConnectedWithSession(),
     );
 }
 
@@ -379,7 +382,7 @@ test('autoLogin() succeeds for a valid remember-me cookie and marks the session 
         // PageFilterHelper::scriptBasename() resolves to this test
         // binary's own invoking script name under CLI (never literally
         // "ws"), so the pwg_ui branch always applies here.
-        expect($_SESSION['connected_with'] ?? null)->toBe('pwg_ui');
+        expect($_SESSION['connected_with'] ?? null)->toBe(ConnectedWith::PwgUi->value);
     } finally {
         unset($_COOKIE[$remember_me_name]);
         unset($_SESSION['pwg_uid'], $_SESSION['connected_with']);

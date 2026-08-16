@@ -30,6 +30,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\DeploymentPolicy;
+    use Piwigo\Core\ConnectedWith;
+    use Piwigo\Core\ConnectedWithSession;
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
@@ -147,6 +149,7 @@ namespace Piwigo\Tests\Integration {
                 CurrentConfigTestFactory::get(),
                 CurrentPathsTestFactory::get(),
                 EntityManagerFactory::build(DbConnection::build()),
+                new ConnectedWithSession(),
             );
         }
 
@@ -419,7 +422,7 @@ namespace Piwigo\Tests\Integration {
                 // PageFilterHelper::scriptBasename() resolves to this test
                 // binary's own invoking script name under CLI (never
                 // literally "ws"), so the pwg_ui branch always applies here.
-                self::assertSame('pwg_ui', $_SESSION['connected_with'] ?? null);
+                self::assertSame(ConnectedWith::PwgUi->value, $_SESSION['connected_with'] ?? null);
             } finally {
                 unset($_COOKIE[$remember_me_name]);
                 unset($_SESSION['pwg_uid'], $_SESSION['connected_with']);

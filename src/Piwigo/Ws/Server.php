@@ -16,6 +16,8 @@ use Piwigo\Admin\Upload\UnsupportedMediaTypeException;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\WsError;
 use Piwigo\Event\Ws\SendResponse;
 use Piwigo\Http\ResponseFactory;
@@ -631,7 +633,8 @@ final class Server
         // if it is, access is refused (false)
         if (
             $this->apiKeyRequestFlag->isActive()
-            or (isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'ws_session_login_api_key')
+            or new ConnectedWithSession()
+                ->get() === ConnectedWith::WsSessionLoginApiKey
         ) {
             $forbidden_methods = $this->currentConfig->apiKeyForbiddenMethods;
 

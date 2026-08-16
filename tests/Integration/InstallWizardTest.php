@@ -15,6 +15,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
@@ -330,7 +331,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $dbCredentials = DbCredentialsTestFactory::get();
 
-        $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
+        $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get(), new ConnectedWithSession());
         $wizard->boot();
 
         return $wizard;

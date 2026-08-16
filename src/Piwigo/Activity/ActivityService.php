@@ -18,6 +18,8 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageFilterHelper;
@@ -129,9 +131,8 @@ final readonly class ActivityService implements ActivityLoggerInterface
             $userAgent = strip_tags($userAgentHeader);
         }
 
-        $connectedWith = $_SESSION['connected_with'] ?? null;
-        if ($connectedWith === 'api_key' && $userAgentHeader !== null) {
-            $details['connected_with'] = 'api_key';
+        if (new ConnectedWithSession()->get() === ConnectedWith::ApiKey && $userAgentHeader !== null) {
+            $details['connected_with'] = ConnectedWith::ApiKey->value;
             $userAgent = strip_tags($userAgentHeader);
         }
 

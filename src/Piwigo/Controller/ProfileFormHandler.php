@@ -21,6 +21,8 @@ use Piwigo\Controller\Projection\ProfileFormPageContext;
 use Piwigo\Controller\Request\ProfileFormSubmitRequest;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -68,6 +70,7 @@ final readonly class ProfileFormHandler
         private CurrentConfig $currentConfig,
         private CsrfService $csrfService,
         private Paths $paths,
+        private ConnectedWithSession $connectedWithSession,
     ) {}
 
     /**
@@ -405,7 +408,7 @@ final readonly class ProfileFormHandler
             apiCurrentDate: $api_current_date,
             apiExpiration: $display_duration,
             apiSelectedExpiration: array_key_first($display_duration),
-            apiCanManage: 'pwg_ui' === ($_SESSION['connected_with'] ?? null),
+            apiCanManage: $this->connectedWithSession->get() === ConnectedWith::PwgUi,
             apiEmailInfos: $email_notifications_infos,
             pwgToken: $this->csrfService
                 ->getToken(),

@@ -50,6 +50,8 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilterState;
@@ -187,6 +189,7 @@ final class InstallWizard
         private readonly DeploymentPolicy $deploymentPolicy,
         private readonly CurrentTemplate $currentTemplate,
         private readonly CurrentUser $currentUser,
+        private readonly ConnectedWithSession $connectedWithSession,
     ) {}
 
     /**
@@ -733,9 +736,9 @@ final class InstallWizard
             // data; this mirrors that method's own two calls verbatim.
             $this->currentUser->set(User::fromUserArray($user));
             $this->currentUser->markRealUserResolved();
-            new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $this->passwordService($conn), new CookieService(), EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->paths, EntityManagerFactory::build($conn))
+            new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $this->passwordService($conn), new CookieService(), EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->paths, EntityManagerFactory::build($conn), $this->connectedWithSession)
                 ->logUser($login_user_id, false);
-            $_SESSION['connected_with'] = 'pwg_ui';
+            $this->connectedWithSession->set(ConnectedWith::PwgUi);
 
             // Same reason: narrow 'preferences' to array without discarding
             // whatever getuserdata() already populated it with.

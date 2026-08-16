@@ -16,6 +16,8 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -72,6 +74,7 @@ final readonly class AuthService
         private CurrentConfig $currentConfig,
         private Paths $paths,
         private EntityManagerInterface $entityManager,
+        private ConnectedWithSession $connectedWithSession,
     ) {}
 
     /**
@@ -254,7 +257,7 @@ final readonly class AuthService
                         // via remember-me may miss this, so we set it to
                         // 'pwg_ui' for UI logins (not API).
                         if (PageFilterHelper::scriptBasename($this->currentConfig) !== 'ws') {
-                            $_SESSION['connected_with'] = 'pwg_ui';
+                            $this->connectedWithSession->set(ConnectedWith::PwgUi);
                         }
                         $this->logUser($cookie[0], true);
                         $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom($calculated['username'])));
@@ -540,18 +543,18 @@ final readonly class AuthService
     {
         $authKey = is_string($authKey) ? $authKey : '';
 
-        $valid_key = false;
+        $valid_key = null;
         $secret_key = null;
         if ((bool) preg_match('/^[a-z0-9]{30}$/i', $authKey)) {
-            $valid_key = 'auth_key';
+            $valid_key = ConnectedWith::AuthKey;
         } elseif ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}:[a-z0-9]{40}$/i', $authKey)) {
-            $valid_key = 'api_key';
+            $valid_key = ConnectedWith::ApiKey;
             $tmp_key = explode(':', $authKey);
             $authKey = $tmp_key[0];
             $secret_key = $tmp_key[1];
         }
 
-        if (! (bool) $valid_key) {
+        if ($valid_key === null) {
             return false;
         }
 
@@ -570,12 +573,12 @@ final readonly class AuthService
         }
 
         // admin/webmaster/guest can't get connected with authentication keys
-        if ($valid_key === 'auth_key' and ! in_array($key->status, ['normal', 'generic'], true)) {
+        if ($valid_key === ConnectedWith::AuthKey and ! in_array($key->status, ['normal', 'generic'], true)) {
             return false;
         }
 
         // the key is an api_key
-        if ($valid_key === 'api_key') {
+        if ($valid_key === ConnectedWith::ApiKey) {
             // check secret
             $apikey_secret = $key->apikeySecret;
             if ($apikey_secret === null || ! $this->passwordService->verify($secret_key, $apikey_secret)) {
@@ -621,7 +624,7 @@ final readonly class AuthService
         $this->repo->touchAuthKeyLastUsed($key_user_id, $key->authKey, $now);
 
         // set the type of connection
-        $_SESSION['connected_with'] = $valid_key;
+        $this->connectedWithSession->set($valid_key);
 
         // if the connection is made via an API key in the header,
         // access is authenticated without creating a persistent user session

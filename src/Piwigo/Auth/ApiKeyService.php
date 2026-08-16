@@ -10,6 +10,8 @@ use Piwigo\Auth\Projection\ApiKeySummary;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\ConnectedWith;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
@@ -209,7 +211,8 @@ final readonly class ApiKeyService
     public function connectedWithPwgUi(): bool
     {
         // You can manage your api key only if you are connected via identification.php
-        return isset($_SESSION['connected_with']) && $_SESSION['connected_with'] === 'pwg_ui';
+        return new ConnectedWithSession()
+            ->get() === ConnectedWith::PwgUi;
     }
 
     /**

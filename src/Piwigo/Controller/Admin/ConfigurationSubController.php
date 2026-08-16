@@ -35,6 +35,7 @@ use Piwigo\Controller\Admin\Request\ConfigurationRequest;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -591,7 +592,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $guest_id = $this->currentConfig->guestId;
 
                 $edit_user = $this->userService->buildUser(UserId::from($guest_id));
-                $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths);
+                $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths, new ConnectedWithSession());
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {

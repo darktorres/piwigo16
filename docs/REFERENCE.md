@@ -193,6 +193,11 @@ the current, live (post-migration) schema.
 
 ### Plugin/theme contract (P27)
 
+Every typed event a plugin/theme can subscribe to, mapped back to the
+legacy `trigger_change()`/`trigger_notify()` hook name it derives from
+(if any), lives in `docs/events-legacy-map.md` — this section covers the
+mechanism, that file is the name lookup.
+
 `PluginConfig\ExtensionInterface` is the one shared contract for both
 plugins and themes — `boot(ExtensionContext $context)`, `install()`,
 `activate()`, `deactivate()`, `uninstall()`, `update(string $oldVersion,

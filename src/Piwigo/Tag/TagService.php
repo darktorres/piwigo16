@@ -340,7 +340,7 @@ final readonly class TagService
             $usePermissions,
             $this->permissionService->getPermissionCriteria(),
             $filterCriteria,
-            $this->sortRenderer()->toSql($order, 'i')
+            $this->sortRenderer()->toSqlBody($order, 'i')
         );
     }
 

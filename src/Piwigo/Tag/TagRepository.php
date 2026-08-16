@@ -245,9 +245,10 @@ final class TagRepository extends EntityRepository
 
     /**
      * Stays on DBAL rather than DQL: conditionally joins the
-     * never-entity-mapped `image_category`, and $orderBySql is a raw,
-     * caller-supplied SQL ORDER BY fragment, not a typed sort object --
-     * the one real caller ({@see \Piwigo\Tag\TagService::
+     * never-entity-mapped `image_category`, and $orderBySqlBody is a raw,
+     * caller-supplied SQL ORDER BY body (no `ORDER BY` keyword -- this
+     * builder's own `orderBy()` prepends that itself), not a typed sort
+     * object -- the one real caller ({@see \Piwigo\Tag\TagService::
      * getImageIdsForTags()}) falls back to `CurrentConfig::orderBy()`
      * (free-form admin-configurable text) whenever the caller-supplied
      * `$orderBy` is null/empty, the same "caller composes trusted ORDER
@@ -271,7 +272,7 @@ final class TagRepository extends EntityRepository
         bool $usePermissions,
         PermissionCriteria $criteria,
         ?ImageFilterCriteria $filterCriteria = null,
-        string $orderBySql = ''
+        string $orderBySqlBody = ''
     ): array {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -319,8 +320,8 @@ final class TagRepository extends EntityRepository
                 ->setParameter('tagCount', count($tagIds));
         }
 
-        if ($orderBySql !== '') {
-            $qb->orderBy(str_replace('ORDER BY ', '', $orderBySql));
+        if ($orderBySqlBody !== '') {
+            $qb->orderBy($orderBySqlBody);
         }
 
         $ids = $qb->executeQuery()

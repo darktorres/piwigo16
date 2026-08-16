@@ -7,11 +7,11 @@ namespace Piwigo\Category;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Piwigo\Common\ValueObject\CategoryId;
-use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Db\HasLastModified;
+use Piwigo\Image\ImageEntity;
 
 /**
  * Maps the `categories` table. `lastmodified` is `SqlDateTime`-typed -- `NOT
@@ -34,13 +34,23 @@ use Piwigo\Db\HasLastModified;
  * both during hydration, so every `CategoryRepository` method selecting
  * `c.id`/`c.permalink` that way must unwrap via `instanceof`;
  * `getSingleColumnResult()` (Gotcha #4, `HYDRATE_SCALAR_COLUMN`) never
- * does, regardless of column. `representative_picture_id` is `ImageId`-typed
- * the same way (`fk_categories_representative_picture_id`, `ON DELETE SET
- * NULL`) -- `Category\Projection\Category::$representativePictureId` stays
- * plain `?int` regardless, unwrapping `->value` in `fromEntity()`. `siteId`
+ * does, regardless of column. `siteId`
  * is `SiteId`-typed the same way (`fk_categories_site_id`, `ON DELETE
  * CASCADE`) -- `sites.id` itself stays a plain `?int` primary key (out of
  * `0.3`'s scope, same as `search.id`).
+ *
+ * `representativePicture` is a real `#[ORM\ManyToOne] ?ImageEntity`
+ * association (`fk_categories_representative_picture_id`), not a scalar
+ * VO -- the schema's own `ON DELETE SET NULL` is the only referential
+ * authority (no `#[JoinColumn(onDelete: ...)]` here, see `0.3`'s "No ORM
+ * cascades"). `nullable`/`referencedColumnName` are both left unspecified
+ * on the `#[ORM\JoinColumn]` deliberately -- they resolve to `true`/`'id'`
+ * on their own. `Category\Projection\Category::$representativePictureId`
+ * stays plain `?int` regardless, unwrapping
+ * `$entity->representativePicture?->id?->value` in `fromEntity()` --
+ * `->id` on an uninitialized to-one proxy never triggers a query, since
+ * `ProxyFactory` pre-populates identifier fields at construction time
+ * and marks them as skipped from lazy initialization.
  *
  * Only a handful of CategoryRepository's 65 methods go through this
  * entity -- the large majority are bulk id-list operations against a
@@ -91,8 +101,9 @@ final class CategoryEntity implements HasLastModified
         public ?SiteId $siteId,
         #[ORM\Column(type: 'boolean')]
         public bool $visible,
-        #[ORM\Column(name: 'representative_picture_id', type: 'image_id', nullable: true)]
-        public ?ImageId $representativePictureId,
+        #[ORM\ManyToOne]
+        #[ORM\JoinColumn(name: 'representative_picture_id')]
+        public ?ImageEntity $representativePicture,
         #[ORM\Column(type: 'string', length: 255)]
         public string $uppercats,
         #[ORM\Column(type: 'boolean')]

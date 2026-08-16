@@ -606,6 +606,9 @@ final class ImageRepository extends EntityRepository
      * `categories` is a cross-repository-owned table, but `Category` and
      * `Image` are the same `L2aCoreDomain` deptrac layer, so querying it
      * directly here is architecturally legal per deptrac.yaml's ruleset.
+     * `CategoryEntity::$representativePicture` is a real owning-side
+     * association -- the bare path in `IN (:ids)` still resolves straight
+     * to `representative_picture_id`, same as any other WHERE context.
      *
      * @param array<int, int|string> $ids
      * @return list<int>
@@ -620,7 +623,7 @@ final class ImageRepository extends EntityRepository
                 ->createQueryBuilder()
                 ->select('c.id')
                 ->from(CategoryEntity::class, 'c')
-                ->where('c.representativePictureId IN (:ids)')
+                ->where('c.representativePicture IN (:ids)')
                 ->setParameter('ids', $idsForDql, ArrayParameterType::INTEGER)
                 ->getQuery()
                 ->getSingleColumnResult()

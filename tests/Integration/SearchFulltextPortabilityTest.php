@@ -158,7 +158,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             status: CategoryStatus::Public,
             siteId: null,
             visible: true,
-            representativePictureId: null,
+            representativePicture: null,
             uppercats: '1',
             commentable: true,
             globalRank: null,

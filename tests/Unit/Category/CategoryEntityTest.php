@@ -8,9 +8,48 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Image\ImageEntity;
 
 /**
- * @return array{name: string, idUppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: CategoryStatus, siteId: ?SiteId, visible: bool, representativePictureId: ?ImageId, uppercats: string, commentable: bool, globalRank: ?string, imageOrder: ?string, permalink: ?Permalink, lastmodified: SqlDateTime}
+ * A minimal, never-persisted `ImageEntity` standing in for the
+ * `representativePicture` association -- `new ImageEntity(...)` is safe
+ * here (this test never calls `flush()`), unlike a real write path, which
+ * must use `$em->getReference()` instead (see `0.3`'s cascade-persist note).
+ */
+function representativeImage(): ImageEntity
+{
+    $image = new ImageEntity(
+        file: 'representative.jpg',
+        dateAvailable: null,
+        dateCreation: null,
+        name: null,
+        comment: null,
+        author: null,
+        hit: 0,
+        filesize: null,
+        width: null,
+        height: null,
+        coi: null,
+        representativeExt: null,
+        dateMetadataUpdate: null,
+        ratingScore: null,
+        path: 'representative.jpg',
+        storageCategoryId: null,
+        level: 0,
+        md5sum: null,
+        addedBy: null,
+        rotation: null,
+        latitude: null,
+        longitude: null,
+        lastmodified: SqlDateTime::from('2026-07-26 14:30:00'),
+    );
+    $image->id = ImageId::from(458);
+
+    return $image;
+}
+
+/**
+ * @return array{name: string, idUppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: CategoryStatus, siteId: ?SiteId, visible: bool, representativePicture: ?ImageEntity, uppercats: string, commentable: bool, globalRank: ?string, imageOrder: ?string, permalink: ?Permalink, lastmodified: SqlDateTime}
  */
 function baseCategoryArgs(): array
 {
@@ -23,7 +62,7 @@ function baseCategoryArgs(): array
         'status' => CategoryStatus::Public,
         'siteId' => SiteId::from(1),
         'visible' => true,
-        'representativePictureId' => ImageId::from(458),
+        'representativePicture' => representativeImage(),
         'uppercats' => '1,12,27',
         'commentable' => false,
         'globalRank' => '000012000027',
@@ -54,7 +93,7 @@ test('constructs with distinct values for every property', function (): void {
         ->toEqual(SiteId::from(1))
         ->and($category->visible)
         ->toBeTrue()
-        ->and($category->representativePictureId)
+        ->and($category->representativePicture?->id)
         ->toEqual(ImageId::from(458))
         ->and($category->uppercats)
         ->toBe('1,12,27')
@@ -129,13 +168,13 @@ test('constructs with siteId null', function (): void {
         ->toBeNull();
 });
 
-test('constructs with representativePictureId null', function (): void {
+test('constructs with representativePicture null', function (): void {
     $args = baseCategoryArgs();
-    $args['representativePictureId'] = null;
+    $args['representativePicture'] = null;
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->representativePictureId)
+    expect($category->representativePicture)
         ->toBeNull();
 });
 

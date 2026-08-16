@@ -40,7 +40,6 @@ use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
-use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -972,12 +971,11 @@ final readonly class CategoryRepository
      * @param 'all'|int|string|array<int|string> $ids
      * @return list<int>
      *
-     * Real DQL -- `images` is queried directly via Join::WITH with no
-     * association declared on CategoryEntity, the same shape
-     * findStorageLinkedImageIds()/findRefDatesByCategoryIds() already use.
-     * getSingleColumnResult() hydrates HYDRATE_SCALAR_COLUMN, which never
-     * applies a field's custom Type, so `c.id` comes back as a plain scalar
-     * despite being CategoryId-typed.
+     * Real DQL -- `c.representativePicture` is a real owning-side
+     * `#[ORM\ManyToOne]`, so the join is a plain association join, not an
+     * explicit `Join::WITH` condition. getSingleColumnResult() hydrates
+     * HYDRATE_SCALAR_COLUMN, which never applies a field's custom Type, so
+     * `c.id` comes back as a plain scalar despite being CategoryId-typed.
      */
     public function findWrongRepresentativeCategoryIds(array|int|string $ids = 'all'): array
     {
@@ -985,8 +983,8 @@ final readonly class CategoryRepository
             ->select('c.id')
             ->distinct()
             ->from(CategoryEntity::class, 'c')
-            ->leftJoin(ImageEntity::class, 'i', Join::WITH, 'c.representativePictureId = i.id')
-            ->where('c.representativePictureId IS NOT NULL')
+            ->leftJoin('c.representativePicture', 'i')
+            ->where('c.representativePicture IS NOT NULL')
             ->andWhere('i.id IS NULL');
 
         if (! self::restrictToCategoryIds($qb, $ids)) {
@@ -1055,7 +1053,7 @@ final readonly class CategoryRepository
         $em = $this->em;
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
-            ->set('c.representativePictureId', ':null')
+            ->set('c.representativePicture', ':null')
             ->set('c.lastmodified', ':now')
             ->where('c.id IN (:ids)')
             ->setParameter('null', null)
@@ -1085,7 +1083,7 @@ final readonly class CategoryRepository
             ->distinct()
             ->from(CategoryEntity::class, 'c')
             ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'c.id = ic.categoryId')
-            ->where('c.representativePictureId IS NULL');
+            ->where('c.representativePicture IS NULL');
 
         if (! self::restrictToCategoryIds($qb, $ids)) {
             return [];
@@ -1747,16 +1745,20 @@ final readonly class CategoryRepository
      * own explicit clear() afterward).
      *
      * Real DQL -- single-table, static WHERE, fixed SET column.
+     * `c.representativePicture` is an owning-side association now, but the
+     * bare path resolves straight to `representative_picture_id`
+     * (`SqlWalker::walkPathExpression()`), so a raw scalar bind still works
+     * unwrapped -- same as binding a plain int against `c.id` above.
      */
     public function setRepresentativeImage(int $categoryId, int $imageId): void
     {
         $this->em
             ->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
-            ->set('c.representativePictureId', ':imageId')
+            ->set('c.representativePicture', ':imageId')
             ->set('c.lastmodified', ':now')
             ->where('c.id = :categoryId')
-            ->setParameter('imageId', ImageId::from($imageId))
+            ->setParameter('imageId', $imageId)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('categoryId', $categoryId)
             ->getQuery()
@@ -2005,11 +2007,11 @@ final readonly class CategoryRepository
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank');
 
         if ($hasRepresentative) {
-            $qb->where('c.representativePictureId IS NOT NULL');
+            $qb->where('c.representativePicture IS NOT NULL');
         } else {
             $qb->distinct()
                 ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.categoryId = c.id')
-                ->where('c.representativePictureId IS NULL');
+                ->where('c.representativePicture IS NULL');
         }
 
         return self::narrowIdNameUppercatsRankRows($qb->getQuery()->getArrayResult());
@@ -2461,16 +2463,20 @@ final readonly class CategoryRepository
      * against a DQL query builder (see {@see applyCondition()}), and
      * `RAND()` uses the same portable custom DQL function
      * ({@see \Piwigo\Db\DqlFunction\RandFunction}) as
-     * {@see findRandomImageIdInCategory()}.
+     * {@see findRandomImageIdInCategory()}. `IDENTITY(c.representativePicture)`
+     * extracts the raw FK id without hydrating the associated `ImageEntity`
+     * -- the one context in this file where the bare association path
+     * can't be used, since a bare path in `SELECT` would try to hydrate the
+     * related entity instead of returning its scalar id.
      */
     public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, PermissionCriteria $criteria): ?string
     {
         $uppercatsLike = $uppercats . ',%';
 
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
-            ->select('c.representativePictureId')
+            ->select('IDENTITY(c.representativePicture)')
             ->where('c.uppercats LIKE :uppercatsLike')
-            ->andWhere('c.representativePictureId IS NOT NULL')
+            ->andWhere('c.representativePicture IS NOT NULL')
             ->setParameter('uppercatsLike', $uppercatsLike)
             ->orderBy('RAND()')
             ->setMaxResults(1);
@@ -2639,8 +2645,8 @@ final readonly class CategoryRepository
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
                 ->select('c.id')
-                ->where('c.representativePictureId = :imageId')
-                ->setParameter('imageId', ImageId::from($imageId))
+                ->where('c.representativePicture = :imageId')
+                ->setParameter('imageId', $imageId)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -2666,10 +2672,10 @@ final readonly class CategoryRepository
         $this->em
             ->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
-            ->set('c.representativePictureId', ':imageId')
+            ->set('c.representativePicture', ':imageId')
             ->set('c.lastmodified', ':now')
             ->where('c.id IN (:categoryIds)')
-            ->setParameter('imageId', ImageId::from($imageId))
+            ->setParameter('imageId', $imageId)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
             ->getQuery()

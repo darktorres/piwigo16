@@ -10,6 +10,45 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Image\ImageEntity;
+
+/**
+ * A minimal, never-persisted `ImageEntity` standing in for the
+ * `representativePicture` association -- safe here since this test never
+ * calls `flush()` (a real write path must use `$em->getReference()`
+ * instead, see `0.3`'s cascade-persist note).
+ */
+function fullCategoryRepresentativeImage(): ImageEntity
+{
+    $image = new ImageEntity(
+        file: 'representative.jpg',
+        dateAvailable: null,
+        dateCreation: null,
+        name: null,
+        comment: null,
+        author: null,
+        hit: 0,
+        filesize: null,
+        width: null,
+        height: null,
+        coi: null,
+        representativeExt: null,
+        dateMetadataUpdate: null,
+        ratingScore: null,
+        path: 'representative.jpg',
+        storageCategoryId: null,
+        level: 0,
+        md5sum: null,
+        addedBy: null,
+        rotation: null,
+        latitude: null,
+        longitude: null,
+        lastmodified: SqlDateTime::from('2026-08-01 00:00:00'),
+    );
+    $image->id = ImageId::from(42);
+
+    return $image;
+}
 
 function fullCategoryEntity(): CategoryEntity
 {
@@ -22,7 +61,7 @@ function fullCategoryEntity(): CategoryEntity
         status: CategoryStatus::Private,
         siteId: SiteId::from(1),
         visible: true,
-        representativePictureId: ImageId::from(42),
+        representativePicture: fullCategoryRepresentativeImage(),
         uppercats: '1,3',
         commentable: true,
         globalRank: '1.2',
@@ -174,8 +213,20 @@ test('fromEntity copies every field straight through, keeping the real VOs', fun
         ->toBe('Sample Album')
         ->and($cat->status)
         ->toBe('private')
+        ->and($cat->representativePictureId)
+        ->toBe(42)
         ->and($cat->permalink)
         ->toEqual(Permalink::from('sample-album'));
+});
+
+test('fromEntity narrows representativePictureId to null when the association is unset', function (): void {
+    $entity = fullCategoryEntity();
+    $entity->representativePicture = null;
+
+    $cat = Category::fromEntity($entity);
+
+    expect($cat->representativePictureId)
+        ->toBeNull();
 });
 
 test('fromEntity throws when the entity has no id yet (not persisted)', function (): void {

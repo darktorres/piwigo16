@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Category\CategoryEntity;
@@ -473,5 +474,17 @@ final readonly class SearchRepository
     {
         return $this->em->getConnection()
             ->getServerVersion();
+    }
+
+    /**
+     * Whether the real, live connection is PostgreSQL -- read from the
+     * connected platform, not `DbCredentials::fromEnv()`, so `SearchService`
+     * (which holds no `Connection` of its own) doesn't need an env read to
+     * branch its quick-search SQL construction.
+     */
+    public function isPostgres(): bool
+    {
+        return $this->em->getConnection()
+            ->getDatabasePlatform() instanceof PostgreSQLPlatform;
     }
 }

@@ -3463,9 +3463,13 @@ final readonly class CategoryRepository
             // the single-quoted form both platforms treat identically.
             // `visible` is a genuine boolean column -- a bare `1` literal
             // is valid MySQL tinyint(1) input but Postgres rejects it
-            // outright against a real boolean column.
-            $visibleLiteral = $conn->getDatabasePlatform() instanceof PostgreSQLPlatform ? 'true' : '1';
-            $conditions[] = new SqlCondition("status = 'public' AND visible = {$visibleLiteral}");
+            // outright against a real boolean column, so it's bound as a
+            // real BOOLEAN parameter instead of a per-platform literal.
+            $conditions[] = new SqlCondition("status = 'public' AND visible = :visible", [
+                'visible' => true,
+            ], [
+                'visible' => ParameterType::BOOLEAN,
+            ]);
         }
 
         // The search term is another condition rather than a clause appended

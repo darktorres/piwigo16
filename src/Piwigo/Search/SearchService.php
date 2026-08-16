@@ -19,7 +19,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbCredentials;
 use Piwigo\Db\LikePattern;
 use Piwigo\Db\SortRenderer;
 use Piwigo\Event\Search\QsearchGetScopes;
@@ -859,7 +858,7 @@ final readonly class SearchService
         // except {'author'} maps to tsv_search, matching how each
         // migration paired that generated column with exactly the same
         // field combination.
-        $isPostgres = DbCredentials::fromEnv()->driver === 'pgsql';
+        $isPostgres = $this->repo->isPostgres();
 
         $clauses = [];
         $values = [];
@@ -1061,7 +1060,7 @@ final readonly class SearchService
     {
         $qsr->images_iids = array_fill(0, count($expr->stokens), []);
 
-        $isPostgres = DbCredentials::fromEnv()->driver === 'pgsql';
+        $isPostgres = $this->repo->isPostgres();
 
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $token = $expr->stokens[$i];

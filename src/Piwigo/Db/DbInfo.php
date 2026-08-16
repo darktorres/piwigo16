@@ -121,8 +121,16 @@ final readonly class DbInfo
             return;
         }
 
+        // Quoted via the platform, matching getTableFingerprint() above --
+        // both callers pass a hardcoded literal today, but interpolating
+        // $table unquoted here while binding the identical value as a
+        // parameter to pg_get_serial_sequence() below was an inconsistency,
+        // not a deliberate distinction.
+        $quotedTable = $this->conn->getDatabasePlatform()
+            ->quoteSingleIdentifier($table);
+
         $this->conn->executeStatement(<<<SQL
-            SELECT setval(pg_get_serial_sequence(?, 'id'), COALESCE((SELECT MAX(id) FROM {$table}), 1))
+            SELECT setval(pg_get_serial_sequence(?, 'id'), COALESCE((SELECT MAX(id) FROM {$quotedTable}), 1))
             SQL
             , [$table]);
     }

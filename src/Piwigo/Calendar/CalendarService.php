@@ -148,20 +148,27 @@ final readonly class CalendarService
             WHERE id IN (:innerItems)
             SQL;
 
+        // $items is caller-supplied and only ever filtered through
+        // is_scalar() upstream, so it can genuinely carry a bool/float
+        // alongside real numeric ids -- is_numeric($v) ? (int) $v : 0 maps
+        // a non-numeric value to 0 (a safe no-match id) rather than letting
+        // an int cast coerce it into an accidental real match (e.g.
+        // (int) true === 1). Both branches below now bind the identical
+        // conversion as a real INTEGER parameter -- previously the raw-SQL
+        // side bound plain strings and relied on MySQL's own implicit
+        // coercion, while only the DQL side (i.id is a mapped `integer`
+        // property, which type-checks the bound value) was honest about it.
+        $innerItemIds = array_map(static fn (bool|float|int|string $v): int => is_numeric($v) ? (int) $v : 0, $items);
+
         return new CalendarQueryScope(
             new SqlCondition($sql, [
-                'innerItems' => array_map(strval(...), $items),
+                'innerItems' => $innerItemIds,
             ], [
-                'innerItems' => ArrayParameterType::STRING,
+                'innerItems' => ArrayParameterType::INTEGER,
             ]),
             false,
-            // i.id is a mapped `integer` property (unlike the raw-SQL side
-            // above, which compares against the column as a string and
-            // relies on MySQL's own implicit coercion) -- bound as real ints
-            // here so DQL's own type checking against the mapped column
-            // type stays honest.
             new SqlCondition('i.id IN (:innerItems)', [
-                'innerItems' => array_map(static fn (bool|float|int|string $v): int => is_numeric($v) ? (int) $v : 0, $items),
+                'innerItems' => $innerItemIds,
             ], [
                 'innerItems' => ArrayParameterType::INTEGER,
             ]),

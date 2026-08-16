@@ -128,11 +128,11 @@ test('buildInnerSql builds a WHERE id IN clause for a non-category section', fun
         ->toBe(" FROM images\nWHERE id IN (:innerItems)")
         ->and($scope->rawSqlFromWhere->parameters)
         ->toBe([
-            'innerItems' => ['1', '2', '3'],
+            'innerItems' => [1, 2, 3],
         ])
         ->and($scope->rawSqlFromWhere->types)
         ->toBe([
-            'innerItems' => ArrayParameterType::STRING,
+            'innerItems' => ArrayParameterType::INTEGER,
         ])
         ->and($scope->joinImageCategory)
         ->toBeFalse()
@@ -144,20 +144,29 @@ test('buildInnerSql builds a WHERE id IN clause for a non-category section', fun
         ]);
 });
 
-test('buildInnerSql casts each DQL item to int, defaulting a non-numeric item to 0', function (): void {
+test('buildInnerSql casts each item to int on both the raw-SQL and DQL sides, defaulting a non-numeric item to 0', function (): void {
     // A pure-int input array (like the [1, 2, 3] the sibling test above
     // uses) can't distinguish the array_map()/int-cast from a no-op --
     // every mutant produces the identical [1, 2, 3] result for that input.
     // A numeric string plus a genuinely non-numeric item is needed: the
     // numeric string only round-trips to the same int value through a real
     // (int) cast, and the non-numeric item only defaults to exactly 0
-    // (not -1/+1) through the real ternary fallback.
+    // (not -1/+1) through the real ternary fallback. Both branches share
+    // the identical conversion now, so both are asserted here.
     $service = makeCalendarService();
 
     $scope = $service->buildInnerSql('tags', false, null, '', ['5', 'abc']);
     assert($scope instanceof CalendarQueryScope);
 
-    expect($scope->dqlWhere->sql)
+    expect($scope->rawSqlFromWhere->parameters)
+        ->toBe([
+            'innerItems' => [5, 0],
+        ])
+        ->and($scope->rawSqlFromWhere->types)
+        ->toBe([
+            'innerItems' => ArrayParameterType::INTEGER,
+        ])
+        ->and($scope->dqlWhere->sql)
         ->toBe('i.id IN (:innerItems)')
         ->and($scope->dqlWhere->parameters)
         ->toBe([

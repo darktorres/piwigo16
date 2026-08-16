@@ -1176,9 +1176,9 @@ final readonly class CategoryRepository
                     WHERE {$column} IN (:values)
                     SQL
                     , [
-                        'values' => array_map(static fn (int|string $v): string => (string) $v, $values),
+                        'values' => array_map(intval(...), $values),
                     ], [
-                        'values' => ArrayParameterType::STRING,
+                        'values' => ArrayParameterType::INTEGER,
                     ]);
 
             return;
@@ -2077,7 +2077,7 @@ final readonly class CategoryRepository
 
         if ($groupAuthorizedCatIds !== []) {
             $qb->andWhere($qb->expr()->notIn('ua.catId', ':groupAuthorized'))
-                ->setParameter('groupAuthorized', $groupAuthorizedCatIds, ArrayParameterType::STRING);
+                ->setParameter('groupAuthorized', array_map(intval(...), $groupAuthorizedCatIds), ArrayParameterType::INTEGER);
         }
 
         return self::narrowIdNameUppercatsRankRows($qb->getQuery()->getArrayResult());
@@ -2145,7 +2145,7 @@ final readonly class CategoryRepository
 
         if ($excludeCatIds !== []) {
             $qb->andWhere($qb->expr()->notIn('c.id', ':excludeCatIds'))
-                ->setParameter('excludeCatIds', $excludeCatIds, ArrayParameterType::STRING);
+                ->setParameter('excludeCatIds', array_map(intval(...), $excludeCatIds), ArrayParameterType::INTEGER);
         }
 
         // See findPrivateCategoriesGrantedToGroup()'s
@@ -2999,7 +2999,7 @@ final readonly class CategoryRepository
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.idUppercat AS id_uppercat')
             ->where('c.id IN (:categoryIds)')
-            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::STRING)
+            ->setParameter('categoryIds', array_map(intval(...), $categoryIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -3189,7 +3189,7 @@ final readonly class CategoryRepository
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.dir')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', array_map(static fn (int|string $v): string => (string) $v, $ids), ArrayParameterType::STRING)
+            ->setParameter('ids', array_map(intval(...), $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 

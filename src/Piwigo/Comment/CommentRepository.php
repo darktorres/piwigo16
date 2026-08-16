@@ -604,7 +604,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->where('c.validated = :validated')
             ->andWhere('c.imageId IN (:imageIds)')
             ->setParameter('validated', true)
-            ->setParameter('imageIds', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->setParameter('imageIds', array_map(intval(...), $imageIds), ArrayParameterType::INTEGER)
             ->groupBy('c.imageId')
             ->getQuery()
             ->getArrayResult();

@@ -337,8 +337,8 @@ final readonly class SectionPopulator
                         $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
                         $subcat_ids[] = (string) $page_category['id'];
                         $where_sql = 'category_id IN (:subcatIds)';
-                        $where_params['subcatIds'] = $subcat_ids;
-                        $where_types['subcatIds'] = ArrayParameterType::STRING;
+                        $where_params['subcatIds'] = array_map(intval(...), $subcat_ids);
+                        $where_types['subcatIds'] = ArrayParameterType::INTEGER;
                         // remove categories from forbidden because just checked above
                         //
                         // visible_images's own old fallthrough into

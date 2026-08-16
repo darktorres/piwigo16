@@ -13,6 +13,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryRefDateField;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\Projection\Category;
+    use Piwigo\Category\Projection\CategoryIdNameUppercat;
     use Piwigo\Category\Projection\CategoryIdNameUppercatsRank;
     use Piwigo\Category\Projection\ComputedCategoryRollupRow;
     use Piwigo\Common\ValueObject\CategoryId;
@@ -725,6 +726,21 @@ namespace Piwigo\Tests\Integration {
         public function testFindDirsByIdsReturnsEmptyForNoIds(): void
         {
             self::assertSame([], $this->repo->findDirsByIds([]));
+        }
+
+        /**
+         * §13: $categoryIds is bound as a real INTEGER array parameter, not
+         * stringified -- passing numeric-string ids here (the shape
+         * Admin\AlbumsPageRenderer's own caller actually uses) proves the
+         * bind still matches real int-column rows, not just that the query
+         * doesn't throw.
+         */
+        public function testFindIdsNamesUppercatsForIdsMatchesRowsForNumericStringIds(): void
+        {
+            self::assertEquals([
+                new CategoryIdNameUppercat(1, 'Sample Album', null),
+                new CategoryIdNameUppercat(2, 'Nested Sub Album', 1),
+            ], $this->repo->findIdsNamesUppercatsForIds(['1', '2']));
         }
 
         public function testFindDirsByIdsReturnsNullForAVirtualCategory(): void

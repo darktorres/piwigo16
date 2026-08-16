@@ -371,7 +371,7 @@ final class ImageRepository extends EntityRepository
         $rows = $this->createQueryBuilder('i')
             ->select('i.id', 'i.path', 'i.representativeExt AS representative_ext')
             ->where('i.id IN (:ids)')
-            ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->setParameter('ids', array_map(intval(...), $imageIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -816,8 +816,8 @@ final class ImageRepository extends EntityRepository
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.image IN (:images)')
             ->andWhere('ic.category IN (:categories)')
-            ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
-            ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING)
+            ->setParameter('images', array_map(intval(...), $images), ArrayParameterType::INTEGER)
+            ->setParameter('categories', array_map(intval(...), $categories), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -855,7 +855,7 @@ final class ImageRepository extends EntityRepository
             ->where('ic.rank IS NOT NULL')
             ->andWhere('ic.category IN (:categories)')
             ->groupBy('ic.category')
-            ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING)
+            ->setParameter('categories', array_map(intval(...), $categories), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -897,7 +897,7 @@ final class ImageRepository extends EntityRepository
                 ->andWhere('i.id IN (:images)')
                 ->andWhere('(ic.category != i.storageCategory OR i.storageCategory IS NULL)')
                 ->setParameter('category', (int) $category)
-                ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
+                ->setParameter('images', array_map(intval(...), $images), ArrayParameterType::INTEGER)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -914,7 +914,7 @@ final class ImageRepository extends EntityRepository
             ->where('ic.category = :category')
             ->andWhere('ic.image IN (:images)')
             ->setParameter('category', (int) $category)
-            ->setParameter('images', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->setParameter('images', $imageIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -942,7 +942,7 @@ final class ImageRepository extends EntityRepository
             ->where('ic.image = :imageId')
             ->andWhere('ic.category IN (:categoryIds)')
             ->setParameter('imageId', $imageId->value)
-            ->setParameter('categoryIds', array_map(strval(...), $categoryIds), ArrayParameterType::STRING)
+            ->setParameter('categoryIds', array_map(intval(...), $categoryIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
     }
@@ -974,7 +974,7 @@ final class ImageRepository extends EntityRepository
             ->select('i.id', 'IDENTITY(i.storageCategory) AS storageCategoryId')
             ->from(ImageEntity::class, 'i')
             ->where('i.id IN (:images)')
-            ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
+            ->setParameter('images', array_map(intval(...), $images), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -990,7 +990,7 @@ final class ImageRepository extends EntityRepository
 
             if ($categories !== []) {
                 $qb->andWhere('ic.category NOT IN (:categories)')
-                    ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING);
+                    ->setParameter('categories', array_map(intval(...), $categories), ArrayParameterType::INTEGER);
             }
 
             // storage_category_id IS NULL -- every link for this image is
@@ -1034,7 +1034,7 @@ final class ImageRepository extends EntityRepository
         $rows = $this->createQueryBuilder('i')
             ->select('i.id', 'i.path')
             ->where('i.id IN (:ids)')
-            ->setParameter('ids', array_map(strval(...), $ids), ArrayParameterType::STRING)
+            ->setParameter('ids', array_map(intval(...), $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -1440,7 +1440,7 @@ final class ImageRepository extends EntityRepository
         $rows = $this->createQueryBuilder('i')
             ->select('i.id', 'COALESCE(i.name, i.file) AS label', 'i.filesize', 'i.file', 'i.path', 'i.representativeExt AS representative_ext')
             ->where('i.id IN (:ids)')
-            ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->setParameter('ids', array_map(intval(...), $imageIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -1579,7 +1579,7 @@ final class ImageRepository extends EntityRepository
 
         $entities = $this->createQueryBuilder('i')
             ->where('i.id IN (:ids)')
-            ->setParameter('ids', array_map(strval(...), $ids), ArrayParameterType::STRING)
+            ->setParameter('ids', array_map(intval(...), $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getResult();
 
@@ -2045,7 +2045,7 @@ final class ImageRepository extends EntityRepository
         foreach ($this->createQueryBuilder('i')
             ->select('i.id', 'i.dateCreation AS date_creation')
             ->where('i.id IN (:ids)')
-            ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->setParameter('ids', array_map(intval(...), $imageIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult() as $row) {
             $id = is_array($row) ? ($row['id'] ?? null) : null;
@@ -2968,7 +2968,7 @@ final class ImageRepository extends EntityRepository
             $this->createQueryBuilder('i')
                 ->select('i.id')
                 ->where('i.id IN (:ids)')
-                ->setParameter('ids', array_map(strval(...), $ids), ArrayParameterType::STRING)
+                ->setParameter('ids', array_map(intval(...), $ids), ArrayParameterType::INTEGER)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -3050,7 +3050,7 @@ final class ImageRepository extends EntityRepository
         $rows = $this->createQueryBuilder('i')
             ->select('i.id', 'i.path')
             ->where('i.storageCategory IN (:categoryIds)')
-            ->setParameter('categoryIds', array_map(strval(...), $categoryIds), ArrayParameterType::STRING)
+            ->setParameter('categoryIds', array_map(intval(...), $categoryIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 

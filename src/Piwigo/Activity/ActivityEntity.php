@@ -13,6 +13,7 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Users\UserEntity;
 
 /**
  * Maps the `activity` table. `occuredOn` is `SqlDateTime`-typed -- every real
@@ -24,6 +25,16 @@ use Piwigo\Common\ValueObject\UserId;
  * gains a matching foreign key. `UserActivityLogEntry`/`SystemActivityLogEntry`
  * both stay plain `int` (Projection convention), `fromRow()` narrowing via
  * `instanceof ActivityId`, not `is_numeric()`.
+ *
+ * `performedByUser` is a real `#[ORM\ManyToOne] ?UserEntity` association
+ * (`fk_activity_performed_by`), not a scalar VO -- the schema's own
+ * `ON DELETE SET NULL` is the only referential authority (no
+ * `#[JoinColumn(onDelete: ...)]`, see `0.3`'s "No ORM cascades").
+ * `nullable`/`referencedColumnName` are left unspecified deliberately, same
+ * reasoning as `CategoryEntity::$representativePicture`. The 5 exclusive-arc
+ * columns below (`userId`/`categoryId`/`imageId`/`tagId`/`groupId`) stay
+ * scalar VOs -- explicitly out of `0.3`'s scope, a separate CHECK-constrained
+ * polymorphic-adjacent decision.
  */
 #[ORM\Entity(repositoryClass: ActivityRepository::class)]
 #[ORM\Table(name: 'activity')]
@@ -50,8 +61,9 @@ final class ActivityEntity
         public int $objectId,
         #[ORM\Column(type: 'string', length: 255)]
         public string $action,
-        #[ORM\Column(name: 'performed_by', type: 'user_id', nullable: true)]
-        public ?UserId $performedBy,
+        #[ORM\ManyToOne]
+        #[ORM\JoinColumn(name: 'performed_by')]
+        public ?UserEntity $performedByUser,
         #[ORM\Column(name: 'session_idx', type: 'string', length: 255)]
         public string $sessionIdx,
         #[ORM\Column(name: 'ip_address', type: 'ip_address', length: 50, nullable: true)]

@@ -6,7 +6,6 @@ namespace Piwigo\Activity\Projection;
 
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
-use Piwigo\Common\ValueObject\UserId;
 
 /**
  * {@see \Piwigo\Activity\ActivityRepository::findPaginated()}'s own row
@@ -14,6 +13,15 @@ use Piwigo\Common\ValueObject\UserId;
  * auto-increment `activityId` -- {@see \Piwigo\Ws\Activity\GetListHandler}'s
  * real (and only) consumer, its `history.log`/`activity.search`-style WS
  * listing.
+ *
+ * `performedBy` stays plain `?int` even though
+ * `ActivityEntity::$performedByUser` is a real association (`?UserEntity`)
+ * -- deliberately breaking the VO-propagation convention every other
+ * Projection in `0.3` follows for its own touched columns: this DTO is
+ * `GetListHandler`'s own input, a layer past the repository where "never
+ * touch a lazy-loaded property in application code" can no longer be
+ * guaranteed, so carrying an entity reference out past the repository
+ * boundary is the wrong shape here specifically.
  */
 final readonly class PaginatedActivityRow
 {
@@ -21,7 +29,7 @@ final readonly class PaginatedActivityRow
      * @param array<string, mixed>|null $details
      */
     public function __construct(
-        public ?UserId $performedBy,
+        public ?int $performedBy,
         public string $object,
         public int $objectId,
         public string $action,

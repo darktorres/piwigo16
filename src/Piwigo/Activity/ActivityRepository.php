@@ -57,8 +57,8 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             ->select('COUNT(a.activityId)')
             ->from(ActivityEntity::class, 'a')
             ->where("a.action = 'login'")
-            ->andWhere('a.performedBy = :userId')
-            ->setParameter('userId', UserId::from($userId))
+            ->andWhere('a.performedByUser = :userId')
+            ->setParameter('userId', $userId)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -115,11 +115,13 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
                 $column = null;
             }
 
+            $performedBy = $row['performedBy'] !== null ? UserId::tryFrom($row['performedBy']) : null;
+
             $em->persist(new ActivityEntity(
                 object: $row['object'],
                 objectId: $objectId,
                 action: $row['action'],
-                performedBy: $row['performedBy'] !== null ? UserId::tryFrom($row['performedBy']) : null,
+                performedByUser: $performedBy instanceof UserId ? $em->getReference(UserEntity::class, $performedBy) : null,
                 sessionIdx: $row['sessionIdx'],
                 ipAddress: $row['ipAddress'],
                 occuredOn: $row['occuredOn'],
@@ -190,19 +192,19 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     public function countByUser(): array
     {
         $rows = $this->createQueryBuilder('a')
-            ->select('a.performedBy AS performed_by', 'COUNT(a.activityId) AS counter')
+            ->select('IDENTITY(a.performedByUser) AS performed_by', 'COUNT(a.activityId) AS counter')
             ->where("a.object != 'system'")
-            ->groupBy('a.performedBy')
+            ->groupBy('a.performedByUser')
             ->getQuery()
             ->getResult();
 
         $counts = [];
         foreach ($rows as $row) {
-            if (! $row['performed_by'] instanceof UserId) {
+            if (! is_numeric($row['performed_by'])) {
                 continue;
             }
 
-            $counts[$row['performed_by']->value] = $row['counter'];
+            $counts[(int) $row['performed_by']] = $row['counter'];
         }
 
         return $counts;
@@ -286,7 +288,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         $rows = $this->createQueryBuilder('a')
             ->select(
                 'a.activityId AS activity_id',
-                'a.performedBy AS performed_by',
+                'IDENTITY(a.performedByUser) AS performed_by',
                 'a.object AS object',
                 'a.objectId AS object_id',
                 'a.action AS action',
@@ -295,7 +297,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
                 'a.details AS details',
                 'u.username AS username',
             )
-            ->innerJoin(UserEntity::class, 'u', Join::WITH, 'u.id = a.performedBy')
+            ->innerJoin('a.performedByUser', 'u')
             ->where("a.object = 'user'")
             ->orderBy('a.activityId', 'DESC')
             ->getQuery()
@@ -352,14 +354,14 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         $rows = $this->createQueryBuilder('a')
             ->select(
                 'a.activityId AS activity_id',
-                'a.performedBy AS performed_by',
+                'IDENTITY(a.performedByUser) AS performed_by',
                 'a.objectId AS object_id',
                 'a.action AS action',
                 'a.occuredOn AS occured_on',
                 'a.details AS details',
-                "CASE WHEN a.performedBy = 0 OR a.performedBy IS NULL THEN 'System' ELSE u.username END AS username"
+                "CASE WHEN a.performedByUser = 0 OR a.performedByUser IS NULL THEN 'System' ELSE u.username END AS username"
             )
-            ->leftJoin(UserEntity::class, 'u', Join::WITH, 'u.id = a.performedBy')
+            ->leftJoin('a.performedByUser', 'u')
             ->where("a.object = 'system'")
             ->orderBy('a.activityId', 'DESC')
             ->getQuery()
@@ -402,7 +404,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     {
         $qb = $this->createQueryBuilder('a')
             ->select(
-                'a.performedBy AS performed_by',
+                'IDENTITY(a.performedByUser) AS performed_by',
                 'a.object AS object',
                 'a.objectId AS object_id',
                 'a.action AS action',
@@ -421,7 +423,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         $criteriaObj = Criteria::create();
 
         if ($criteria->performedBy instanceof UserId) {
-            $criteriaObj->andWhere($expr->eq('performedBy', $criteria->performedBy));
+            $criteriaObj->andWhere($expr->eq('performedByUser', $criteria->performedBy->value));
         }
 
         if ($criteria->action !== null) {
@@ -472,7 +474,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             $details = $row['details'] ?? null;
 
             $result[] = new PaginatedActivityRow(
-                performedBy: $performedBy instanceof UserId ? $performedBy : null,
+                performedBy: is_numeric($performedBy) ? (int) $performedBy : null,
                 object: $row['object'],
                 objectId: $row['object_id'],
                 action: $row['action'],

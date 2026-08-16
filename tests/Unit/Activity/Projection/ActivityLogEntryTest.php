@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Common\ValueObject\ActivityId;
-use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Piwigo\Activity\Projection\UserActivityLogEntry/SystemActivityLogEntry
@@ -15,11 +14,14 @@ use Piwigo\Common\ValueObject\UserId;
  */
 test('UserActivityLogEntry::fromRow narrows a real joined row, including a valid ip_address', function (): void {
     $entry = UserActivityLogEntry::fromRow([
-        // A real row's `activity_id`/`performed_by` are ActivityId/UserId
-        // instances (both custom-Typed, DQL array hydration applies the
-        // Type), not raw scalars.
+        // A real row's `activity_id` is an ActivityId instance (custom-Typed,
+        // DQL array hydration applies the Type), not a raw scalar --
+        // `performed_by` is a plain scalar even under array hydration,
+        // since the repository selects IDENTITY(a.performedByUser)
+        // (a.performedByUser is an association, not a custom-Typed
+        // scalar column) rather than a bare association path.
         'activity_id' => ActivityId::from(10),
-        'performed_by' => UserId::from(5),
+        'performed_by' => 5,
         'object' => 'user',
         'object_id' => '5',
         'action' => 'login',
@@ -92,7 +94,7 @@ test('UserActivityLogEntry::fromRow falls back to safe defaults for a fully empt
 test('UserActivityLogEntry::toArray unwraps the IpAddress value object back to a raw string', function (): void {
     $entry = UserActivityLogEntry::fromRow([
         'activity_id' => ActivityId::from(10),
-        'performed_by' => UserId::from(5),
+        'performed_by' => 5,
         'object' => 'user',
         'object_id' => 5,
         'action' => 'login',
@@ -200,12 +202,12 @@ test('SystemActivityLogEntry::fromRow falls back to safe defaults for a fully em
         ->toBeNull();
 });
 
-test('SystemActivityLogEntry::fromRow narrows a real performed_by UserId instance', function (): void {
+test('SystemActivityLogEntry::fromRow narrows a real performed_by scalar', function (): void {
     // Every other SystemActivityLogEntry fixture in this file passes
-    // performed_by: null, so nothing exercised the `instanceof UserId`
-    // branch that unwraps a real UserId into its plain int value.
+    // performed_by: null, so nothing exercised the is_numeric() branch
+    // that keeps a real performed_by value as a plain int.
     $entry = SystemActivityLogEntry::fromRow([
-        'performed_by' => UserId::from(7),
+        'performed_by' => 7,
     ]);
 
     expect($entry->performedBy)

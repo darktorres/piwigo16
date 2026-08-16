@@ -155,7 +155,7 @@ final readonly class GetListHandler implements WsAction
                     $row_action = $row->action;
                     $row_object_id = (string) $row->objectId;
                     $row_ip_address = $row->ipAddress?->value;
-                    $row_performed_by = $row->performedBy !== null ? (string) $row->performedBy->value : null;
+                    $row_performed_by = $row->performedBy !== null ? (string) $row->performedBy : null;
                     $row_details = $row->details ?? [];
                     $row_occured_on = $row->occuredOn->value;
 

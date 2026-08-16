@@ -5,11 +5,10 @@ declare(strict_types=1);
 use Piwigo\Activity\Projection\PaginatedActivityRow;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
-use Piwigo\Common\ValueObject\UserId;
 
 test('constructs with distinct values for every property', function (): void {
     $row = new PaginatedActivityRow(
-        performedBy: UserId::from(1),
+        performedBy: 1,
         object: 'tag',
         objectId: 3,
         action: 'add',
@@ -23,7 +22,7 @@ test('constructs with distinct values for every property', function (): void {
     );
 
     expect($row->performedBy)
-        ->toEqual(UserId::from(1))
+        ->toBe(1)
         ->and($row->object)
         ->toBe('tag')
         ->and($row->objectId)

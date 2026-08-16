@@ -6,7 +6,6 @@ namespace Piwigo\Activity\Projection;
 
 use Piwigo\Common\ValueObject\ActivityId;
 use Piwigo\Common\ValueObject\SqlDateTime;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 
 /**
@@ -23,9 +22,13 @@ use Piwigo\Common\ValueObject\Username;
  * {@see UserActivityLogEntry}'s own raw string) -- that consumer does
  * structured `$details['key']` access.
  *
- * ActivityEntity::$performedBy/$activityId are UserId-/ActivityId-typed --
- * `performedBy`/`activityId` here stay plain `?int`/`int` (Projection
- * convention), `fromRow()` narrows both via `instanceof`, not `is_numeric()`.
+ * `activityId` is `ActivityId`-typed -- `activityId` here stays plain `int`
+ * (Projection convention), `fromRow()` narrows it via `instanceof`, not
+ * `is_numeric()`. `performedBy` is different: `ActivityEntity::
+ * $performedByUser` is a real association, so
+ * `findSystemObjectLogWithUsernames()` selects `IDENTITY(a.performedByUser)`,
+ * which already returns a plain scalar -- `fromRow()` narrows it via
+ * `is_numeric()`, not `instanceof`.
  */
 final readonly class SystemActivityLogEntry
 {
@@ -49,7 +52,7 @@ final readonly class SystemActivityLogEntry
     {
         return new self(
             activityId: ($row['activity_id'] ?? null) instanceof ActivityId ? $row['activity_id']->value : 0,
-            performedBy: ($row['performed_by'] ?? null) instanceof UserId ? $row['performed_by']->value : null,
+            performedBy: is_numeric($row['performed_by'] ?? null) ? (int) $row['performed_by'] : null,
             objectId: is_numeric($row['object_id'] ?? null) ? (int) $row['object_id'] : 0,
             action: is_string($row['action'] ?? null) ? $row['action'] : '',
             occuredOn: ($row['occured_on'] ?? null) instanceof SqlDateTime

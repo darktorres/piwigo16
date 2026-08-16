@@ -18,9 +18,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\AuthRepository;
     use Piwigo\Auth\AuthService;
     use Piwigo\Auth\CookieService;
-    use Piwigo\Auth\Event\FinalizeLogin;
     use Piwigo\Auth\PasswordRepository;
     use Piwigo\Auth\PasswordService;
+    use Piwigo\Auth\Projection\FinalizeLoginDecision;
     use Piwigo\Auth\UserFailedLoginEntity;
     use Piwigo\Auth\UserFailedLoginRepository;
     use Piwigo\Common\ValueObject\LangCode;
@@ -58,7 +58,8 @@ namespace Piwigo\Tests\Integration {
      * registered in this harness, so EventDispatcher::dispatch()
      * returns the same event object unchanged); also authKeyLogin()'s
      * every reject-before-logUser() branch, pwgLogin()'s early-success and
-     * finalize_login-denial branches, logUser()'s 2 invalid-lang-cookie
+     * finalize-login-decision-denial branches, logUser()'s 2
+     * invalid-lang-cookie
      * branches (both throw via HtmlRenderingInterface::fatalError() before
      * any session/cookie code runs), createUserAuthKey()'s
      * duration-disabled branch, and generatePasswordLink()'s
@@ -135,7 +136,18 @@ namespace Piwigo\Tests\Integration {
 
             $this->failedLoginRepo = EntityManagerFactory::build(DbConnection::build())->getRepository(UserFailedLoginEntity::class);
 
-            $this->service = new AuthService(
+            $this->service = $this->buildAuthService();
+        }
+
+        /**
+         * Same real collaborators as $this->service's own setUp()
+         * construction, but with a caller-supplied FinalizeLoginDecision
+         * override -- see AuthService's own docblock on
+         * $finalizeLoginOverride.
+         */
+        private function buildAuthService(?FinalizeLoginDecision $finalizeLoginOverride = null): AuthService
+        {
+            return new AuthService(
                 new AuthRepository(EntityManagerFactory::build(DbConnection::build())),
                 new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)),
                 HtmlServiceTestFactory::build(),
@@ -150,6 +162,7 @@ namespace Piwigo\Tests\Integration {
                 CurrentPathsTestFactory::get(),
                 EntityManagerFactory::build(DbConnection::build()),
                 new ConnectedWithSession(),
+                $finalizeLoginOverride,
             );
         }
 
@@ -158,9 +171,10 @@ namespace Piwigo\Tests\Integration {
          * handler -- it now takes/returns a TryLogUser event, not 4 loose
          * params, matching addTypedHandler()'s own contract.
          */
-        private function pwgLoginResult(bool $success, string $username, ?string $password, bool $rememberMe): bool
+        private function pwgLoginResult(bool $success, string $username, ?string $password, bool $rememberMe, ?AuthService $service = null): bool
         {
-            return $this->service->pwgLogin(new TryLogUser($success, $username, $password, $rememberMe))
+            return ($service ?? $this->service)
+                ->pwgLogin(new TryLogUser($success, $username, $password, $rememberMe))
                 ->success;
         }
 
@@ -462,28 +476,26 @@ namespace Piwigo\Tests\Integration {
             self::assertTrue($this->pwgLoginResult(true, 'irrelevant', 'irrelevant', false));
         }
 
-        public function testPwgLoginDeniesTheLoginWhenAFinalizeLoginHandlerBlocksIt(): void
+        public function testPwgLoginDeniesTheLoginWhenAFinalizeLoginDecisionOverrideBlocksIt(): void
         {
             // fixture_admin / fixture_admin, per tests/Fixtures/README.md's
             // documented install credentials -- a real username+password
             // that passes pwgLogin()'s own password_verify() check, so
-            // execution reaches the finalize_login trigger rather than
-            // being rejected earlier for a wrong password.
-            $handler = static function (FinalizeLogin $event): void {
-                $event->state = [
-                    'can_login' => false,
-                    'reason' => 'blocked_by_test_handler',
-                    'authenticated' => $event->state['authenticated'],
-                ];
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FinalizeLogin::class, $handler);
+            // execution reaches the finalize-login decision rather than
+            // being rejected earlier for a wrong password. Replaces the old
+            // FinalizeLogin plugin-event handler (P32 Stage A5 -- zero
+            // production listeners; every real auth-extension plugin in the
+            // surveyed corpus hooks the earlier TryLogUser event instead)
+            // with a real constructor-injected FinalizeLoginDecision
+            // override.
+            $override = new FinalizeLoginDecision(canLogin: false, reason: 'blocked_by_test_handler', authenticated: false);
+            $service = $this->buildAuthService($override);
 
             try {
-                $result = $this->pwgLoginResult(false, 'fixture_admin', 'fixture_admin', false);
+                $result = $this->pwgLoginResult(false, 'fixture_admin', 'fixture_admin', false, $service);
 
                 self::assertFalse($result);
             } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FinalizeLogin::class, $handler);
                 $this->conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
             }
         }

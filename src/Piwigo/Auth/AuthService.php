@@ -7,9 +7,9 @@ namespace Piwigo\Auth;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use Piwigo\Auth\Event\FinalizeLogin;
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Auth\Projection\FinalizeLoginDecision;
 use Piwigo\Auth\Projection\UsernamePassword;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\UserId;
@@ -55,6 +55,12 @@ use SensitiveParameter;
  * generatePasswordLink() (password reset) never routes through
  * pwgLogin()/tryLogUser()/logUser() at all, so it stays a working escape
  * hatch for a legitimately locked-out user.
+ *
+ * `$finalizeLoginOverride` is the real test seam for pwgLogin()'s own
+ * post-credential-check decision (P32 Stage A5 -- the old `FinalizeLogin`
+ * plugin event it replaces had zero production listeners). Always `null`
+ * in production; tests inject a real `FinalizeLoginDecision` instead of
+ * registering an event handler.
  */
 final readonly class AuthService
 {
@@ -73,6 +79,7 @@ final readonly class AuthService
         private Paths $paths,
         private EntityManagerInterface $entityManager,
         private ConnectedWithSession $connectedWithSession,
+        private ?FinalizeLoginDecision $finalizeLoginOverride = null,
     ) {}
 
     /**
@@ -405,40 +412,18 @@ final readonly class AuthService
             return $event;
         }
 
-        // PLUGIN HOOK: Allow plugins to intercept authentication before log_user()
-        //
-        // $state's 'can_login' (bool): set to false to block login;
-        // 'reason' (?string): custom activity log reason if login blocked;
-        // 'authenticated' (bool): set to true if the plugin handles
-        // log_user() itself.
-        //
-        // Example plugin implementation (a plugin has no constructor-
-        // injection access of its own, so it must resolve a real
-        // EventDispatcher instance from the DI container first):
-        //   $eventDispatcher->addTypedHandler(FinalizeLogin::class, my_2fa_check(...));
-        //   function my_2fa_check(FinalizeLogin $event): void {
-        //     if (!verify_2fa_code()) {
-        //       $event->state = [
-        //         'can_login' => false,
-        //         'reason' => '2fa_failed',
-        //         'authenticated' => $event->state['authenticated'],
-        //       ];
-        //     }
-        //   }
-        $finalizeLoginEvent = new FinalizeLogin(
-            [
-                'can_login' => true,
-                'reason' => null,
-                'authenticated' => false,
-            ],
-            $user_found,
-            $rememberMe,
+        // Post-credential-check decision, overridable via
+        // $this->finalizeLoginOverride (always null in production -- see
+        // this class's own docblock).
+        $finalizeLoginDecision = $this->finalizeLoginOverride ?? new FinalizeLoginDecision(
+            canLogin: true,
+            reason: null,
+            authenticated: false,
         );
-        $finalizeLoginEvent = $this->eventDispatcher->dispatch($finalizeLoginEvent);
 
-        $can_login = $finalizeLoginEvent->state['can_login'];
-        $reason = $finalizeLoginEvent->state['reason'];
-        $authenticated = $finalizeLoginEvent->state['authenticated'];
+        $can_login = $finalizeLoginDecision->canLogin;
+        $reason = $finalizeLoginDecision->reason;
+        $authenticated = $finalizeLoginDecision->authenticated;
 
         if (! $can_login) {
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);

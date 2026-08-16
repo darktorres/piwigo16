@@ -13,6 +13,7 @@ use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Image\ImageProcessingException;
+use Piwigo\Admin\Upload\UnsupportedMediaTypeException;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
@@ -762,7 +763,12 @@ final class UploadServiceTest extends IntegrationTestCase
         $threw = null;
         try {
             new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get(), $this->permissionService)->addUploadedFile($source, $this->urlService, 'fake.png');
-        } catch (ImageProcessingException $e) {
+        } catch (UnsupportedMediaTypeException $e) {
+            // P25 Stage 2 item 4: the SVG-mismatch guard throws
+            // UnsupportedMediaTypeException, a RuntimeException sibling of
+            // ImageProcessingException (which is final and couldn't be
+            // extended) -- not the same hierarchy, so this needs its own
+            // catch clause rather than falling under ImageProcessingException.
             $threw = $e;
         }
 

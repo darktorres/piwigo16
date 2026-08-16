@@ -965,6 +965,18 @@ final class ImageRepositoryTest extends IntegrationTestCase
     }
 
     /**
+     * `_` is a single-character `LIKE` wildcard. 'fixture_photo-2' (the
+     * real 'fixture-photo-2' with its first `-` swapped for `_`) would
+     * match 'fixture-photo-2.jpg' if `_` were left as a live wildcard --
+     * this pins that it is escaped to a literal instead, so a filename
+     * that merely resembles the pattern does not match.
+     */
+    public function testFindByIdOrFilePatternEscapesLikeWildcardsInTheFileValue(): void
+    {
+        self::assertFalse($this->repo->findByIdOrFilePattern(0, 'fixture_photo-2'));
+    }
+
+    /**
      * [SEC-20] regression: a file-pattern value containing SQL syntax
      * (exactly the shape a crafted picture.php URL path segment could
      * produce, per Controller\PictureController's own "already escaped"

@@ -24,6 +24,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
+use Piwigo\Db\LikePattern;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\Projection\AddMethodBreakdown;
 use Piwigo\Image\Projection\ExtensionBreakdown;
@@ -2333,10 +2334,14 @@ final class ImageRepository extends EntityRepository
      * PictureController's own "resolve the requested picture, by id or by
      * filename" lookup. $imageFile is guest-reachable, untrusted input
      * (Section\SectionInitializer::parseUrl() captures it from a raw
-     * picture.php URL path segment); the caller's own `_`/`%` escaping
-     * only neutralizes LIKE wildcards, not SQL quote characters, so
-     * $imageFile must always be bound as a parameter here, never spliced
-     * into the query.
+     * picture.php URL path segment), always bound as a parameter here,
+     * never spliced into the query. `LikePattern::escape()` neutralizes
+     * its `%`/`_` wildcards (and any literal backslash) before the
+     * trailing `.%` suffix is appended, so the suffix stays a real
+     * wildcard while everything from the caller is a literal -- the
+     * previous `ESCAPE '/'` form never escaped a literal `/` in
+     * $imageFile itself, letting one desynchronize the pattern from the
+     * value it was meant to protect.
      */
     public function findByIdOrFilePattern(int $imageId, ?string $imageFile): ImageLookupRow|false
     {
@@ -2349,8 +2354,8 @@ final class ImageRepository extends EntityRepository
                 ->setParameter('imageId', $imageId, ParameterType::INTEGER);
         } else {
             assert($imageFile !== null && $imageFile !== '');
-            $qb->where("i.file LIKE :imageFile ESCAPE '/'")
-                ->setParameter('imageFile', $imageFile . '.%');
+            $qb->where('i.file LIKE :imageFile')
+                ->setParameter('imageFile', LikePattern::escape($imageFile) . '.%');
         }
 
         $row = $qb->getQuery()

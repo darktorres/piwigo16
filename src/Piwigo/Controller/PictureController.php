@@ -200,12 +200,12 @@ final readonly class PictureController implements ControllerInterface
         // message is displayed, and execution is stopped
         if (! isset($rank_of[$image_id])) {
             if ($image_id > 0) {
-                $escaped_image_file = null;
+                $file_pattern = null;
             } else {// url given by file name
                 assert($image_file !== null && $image_file !== '');
-                $escaped_image_file = str_replace(['_', '%'], ['/_', '/%'], $image_file);
+                $file_pattern = $image_file;
             }
-            $row = $this->imageService->findByIdOrFilePattern($image_id, $escaped_image_file);
+            $row = $this->imageService->findByIdOrFilePattern($image_id, $file_pattern);
             if ($row === false) {// element does not exist
                 $this->htmlService
                     ->pageNotFound(

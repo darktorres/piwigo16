@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Common\ValueObject\IpAddress;
@@ -72,7 +73,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
     public function testInsertReturnsTheNewRowIdAndPersistsEveryColumn(): void
     {
         $id = $this->repo->insert(
-            1,
+            UserId::from(1),
             'create',
             'user',
             42,
@@ -141,16 +142,16 @@ final class AuditRepositoryTest extends IntegrationTestCase
 
     public function testFindLatestRowHashReturnsTheMostRecentlyInserted(): void
     {
-        $this->repo->insert(1, 'create', 'user', 1, null, null, null, SqlDateTime::from('2026-07-12 10:00:00'), null, str_repeat('a', 64));
-        $this->repo->insert(1, 'create', 'user', 2, null, null, null, SqlDateTime::from('2026-07-12 10:00:01'), str_repeat('a', 64), str_repeat('b', 64));
+        $this->repo->insert(UserId::from(1), 'create', 'user', 1, null, null, null, SqlDateTime::from('2026-07-12 10:00:00'), null, str_repeat('a', 64));
+        $this->repo->insert(UserId::from(1), 'create', 'user', 2, null, null, null, SqlDateTime::from('2026-07-12 10:00:01'), str_repeat('a', 64), str_repeat('b', 64));
 
         self::assertSame(str_repeat('b', 64), $this->repo->findLatestRowHash());
     }
 
     public function testFindAllInOrderReturnsRowsOldestFirstWithTheChainLinked(): void
     {
-        $this->repo->insert(1, 'create', 'user', 1, null, null, null, SqlDateTime::from('2026-07-12 10:00:00'), null, str_repeat('a', 64));
-        $this->repo->insert(1, 'delete', 'group', 2, '{"name":"x"}', null, null, SqlDateTime::from('2026-07-12 10:00:01'), str_repeat('a', 64), str_repeat('b', 64));
+        $this->repo->insert(UserId::from(1), 'create', 'user', 1, null, null, null, SqlDateTime::from('2026-07-12 10:00:00'), null, str_repeat('a', 64));
+        $this->repo->insert(UserId::from(1), 'delete', 'group', 2, '{"name":"x"}', null, null, SqlDateTime::from('2026-07-12 10:00:01'), str_repeat('a', 64), str_repeat('b', 64));
 
         $rows = $this->repo->findAllInOrder();
 

@@ -330,8 +330,7 @@ final readonly class GroupService
         $this->activityLogger->record('group', $ids, 'delete');
 
         // [SEC-57] one row per group actually deleted
-        $actorId = $this->currentUser->get()
-            ->id->value;
+        $actorId = $this->currentUser->get()->id;
         $audit = $this->auditService;
         foreach ($deleted as $deletedId => $deletedName) {
             $audit->record($actorId, 'delete', 'group', $deletedId, [

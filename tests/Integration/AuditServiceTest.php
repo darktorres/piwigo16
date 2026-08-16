@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditService;
 use Piwigo\Config\ConfigLoader;
@@ -63,7 +64,7 @@ final class AuditServiceTest extends IntegrationTestCase
 
     public function testRecordPersistsARowAndReturnsItsId(): void
     {
-        $id = $this->service->record(1, 'create', 'user', 42, null, [
+        $id = $this->service->record(UserId::from(1), 'create', 'user', 42, null, [
             'username' => 'alice',
         ]);
 
@@ -95,10 +96,49 @@ final class AuditServiceTest extends IntegrationTestCase
         self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $row['row_hash']);
     }
 
+    public function testActorIdContributesItsBareDigitsToTheRowHash(): void
+    {
+        // The hash payload joins `(string) $actorId`. Retyping the column
+        // from int to UserId only stays safe because UserId::__toString()
+        // yields the same bare digits -- anything else (an object hash, a
+        // "UserId(1)" debug form) would silently invalidate every row
+        // written before the retype, and verifyChain() would only reveal it
+        // on an installation that already had history.
+        //
+        // Pinned by recomputing the documented payload here rather than by
+        // calling the private method, so a change to either the payload
+        // shape or UserId's string form fails this test.
+        $this->service->record(UserId::from(1), 'create', 'user', 42);
+
+        $row = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from('audit_log')
+            ->orderBy('id', 'DESC')
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        self::assertIsArray($row);
+        self::assertIsString($row['created_at']);
+        $expected = hash('sha256', implode('|', [
+            '',
+            '1',
+            'create',
+            'user',
+            '42',
+            '',
+            '',
+            '10.20.30.40',
+            $row['created_at'],
+        ]));
+
+        self::assertSame($expected, $row['row_hash']);
+    }
+
     public function testRecordLinksTheSecondRowToTheFirst(): void
     {
-        $this->service->record(1, 'create', 'user', 1);
-        $secondId = $this->service->record(1, 'delete', 'group', 2);
+        $this->service->record(UserId::from(1), 'create', 'user', 1);
+        $secondId = $this->service->record(UserId::from(1), 'delete', 'group', 2);
 
         $rows = $this->conn->createQueryBuilder()
             ->select('id', 'prev_hash', 'row_hash')
@@ -119,10 +159,10 @@ final class AuditServiceTest extends IntegrationTestCase
 
     public function testVerifyChainIsTrueForAnUntamperedChain(): void
     {
-        $this->service->record(1, 'create', 'user', 1, null, [
+        $this->service->record(UserId::from(1), 'create', 'user', 1, null, [
             'username' => 'alice',
         ]);
-        $this->service->record(1, 'update', 'user', 1, [
+        $this->service->record(UserId::from(1), 'update', 'user', 1, [
             'username' => 'alice',
         ], [
             'username' => 'alice2',
@@ -134,8 +174,8 @@ final class AuditServiceTest extends IntegrationTestCase
 
     public function testVerifyChainIsFalseWhenARowsContentIsAltered(): void
     {
-        $this->service->record(1, 'create', 'user', 1);
-        $this->service->record(1, 'delete', 'group', 2);
+        $this->service->record(UserId::from(1), 'create', 'user', 1);
+        $this->service->record(UserId::from(1), 'delete', 'group', 2);
 
         // tamper with the first row's action after the fact -- its own
         // row_hash no longer matches its (now different) content, and the
@@ -153,8 +193,8 @@ final class AuditServiceTest extends IntegrationTestCase
 
     public function testVerifyChainIsFalseWhenAStoredHashIsAltered(): void
     {
-        $this->service->record(1, 'create', 'user', 1);
-        $this->service->record(1, 'delete', 'group', 2);
+        $this->service->record(UserId::from(1), 'create', 'user', 1);
+        $this->service->record(UserId::from(1), 'delete', 'group', 2);
 
         $this->conn->createQueryBuilder()
             ->update('audit_log')
@@ -176,8 +216,8 @@ final class AuditServiceTest extends IntegrationTestCase
         // "prevHash !== expectedPrevHash" branch specifically, distinct
         // from the "recomputed hash mismatch" branch already covered by
         // the row-content and stored-hash tampering tests above.
-        $this->service->record(1, 'create', 'user', 1);
-        $this->service->record(1, 'delete', 'group', 2);
+        $this->service->record(UserId::from(1), 'create', 'user', 1);
+        $this->service->record(UserId::from(1), 'delete', 'group', 2);
 
         $this->conn->createQueryBuilder()
             ->update('audit_log')

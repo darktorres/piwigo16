@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit;
 
+use Piwigo\Common\ValueObject\UserId;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Piwigo\Audit\Projection\AuditLogEntry;
@@ -20,7 +21,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 final class AuditRepository extends EntityRepository
 {
     public function insert(
-        ?int $actorId,
+        ?UserId $actorId,
         string $action,
         string $entityType,
         ?int $entityId,

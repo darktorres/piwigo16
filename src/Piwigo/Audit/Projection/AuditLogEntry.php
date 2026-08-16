@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit\Projection;
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\IpAddress;
 
 /**
@@ -19,7 +20,7 @@ final readonly class AuditLogEntry
 {
     public function __construct(
         public int $id,
-        public ?int $actorId,
+        public ?UserId $actorId,
         public string $action,
         public string $entityType,
         public ?int $entityId,
@@ -38,7 +39,7 @@ final readonly class AuditLogEntry
     {
         return new self(
             id: is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
-            actorId: is_numeric($row['actor_id'] ?? null) ? (int) $row['actor_id'] : null,
+            actorId: UserId::tryFrom($row['actor_id'] ?? null),
             action: is_string($row['action'] ?? null) ? $row['action'] : '',
             entityType: is_string($row['entity_type'] ?? null) ? $row['entity_type'] : '',
             entityId: is_numeric($row['entity_id'] ?? null) ? (int) $row['entity_id'] : null,
@@ -60,7 +61,7 @@ final readonly class AuditLogEntry
     {
         return [
             'id' => $this->id,
-            'actor_id' => $this->actorId,
+            'actor_id' => $this->actorId?->value,
             'action' => $this->action,
             'entity_type' => $this->entityType,
             'entity_id' => $this->entityId,

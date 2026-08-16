@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\Projection\AuditLogEntry;
@@ -51,7 +52,7 @@ test('insert() persists every column and returns the real auto-generated id', fu
     try {
         $id = auditTestRepo()
             ->insert(
-                actorId: 1,
+                actorId: UserId::from(1),
                 action: 'create',
                 entityType: $marker,
                 entityId: 42,
@@ -168,8 +169,8 @@ test('findAllInOrder() returns every row as an AuditLogEntry, in ascending id or
 
     try {
         $repo = auditTestRepo();
-        $firstId = $repo->insert(1, 'create', $marker, 1, null, null, null, SqlDateTime::from('2026-08-01 12:00:00'), null, str_repeat('a', 64));
-        $secondId = $repo->insert(1, 'update', $marker, 1, '{}', '{}', null, SqlDateTime::from('2026-08-01 12:00:01'), str_repeat('a', 64), str_repeat('b', 64));
+        $firstId = $repo->insert(UserId::from(1), 'create', $marker, 1, null, null, null, SqlDateTime::from('2026-08-01 12:00:00'), null, str_repeat('a', 64));
+        $secondId = $repo->insert(UserId::from(1), 'update', $marker, 1, '{}', '{}', null, SqlDateTime::from('2026-08-01 12:00:01'), str_repeat('a', 64), str_repeat('b', 64));
 
         $all = $repo->findAllInOrder();
         $ours = array_values(array_filter($all, static fn (AuditLogEntry $e): bool => $e->entityType === $marker));

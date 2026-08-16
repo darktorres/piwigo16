@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit;
 
+use Piwigo\Common\ValueObject\UserId;
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -34,8 +35,8 @@ final class AuditLogEntity
     public ?int $id = null;
 
     public function __construct(
-        #[ORM\Column(name: 'actor_id', type: 'integer', nullable: true)]
-        public ?int $actorId,
+        #[ORM\Column(name: 'actor_id', type: 'user_id', nullable: true)]
+        public ?UserId $actorId,
         #[ORM\Column(type: 'string', length: 64)]
         public string $action,
         #[ORM\Column(name: 'entity_type', type: 'string', length: 64)]

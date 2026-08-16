@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit;
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Core\Env;
@@ -45,7 +46,7 @@ final readonly class AuditService
      * @return int the new audit_log row's id
      */
     public function record(
-        ?int $actorId,
+        ?UserId $actorId,
         string $action,
         string $entityType,
         ?int $entityId,
@@ -108,7 +109,7 @@ final readonly class AuditService
 
     private static function computeHash(
         ?string $prevHash,
-        ?int $actorId,
+        ?UserId $actorId,
         string $action,
         string $entityType,
         ?int $entityId,

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Audit\Projection\AuditLogEntry;
 use Piwigo\Common\ValueObject\IpAddress;
 
@@ -31,7 +32,7 @@ test('fromRow narrows every column to its real type', function (): void {
     expect($entry->id)
         ->toBe(42)
         ->and($entry->actorId)
-        ->toBe(1)
+        ->toEqual(UserId::from(1))
         ->and($entry->action)
         ->toBe('create')
         ->and($entry->entityType)

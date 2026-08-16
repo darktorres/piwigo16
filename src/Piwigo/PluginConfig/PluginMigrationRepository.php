@@ -37,4 +37,27 @@ final class PluginMigrationRepository extends EntityRepository
 
         $em->flush();
     }
+
+    /**
+     * Removes a plugin's whole ledger.
+     *
+     * Exists because `fk_plugin_migrations_plugin_id` is `ON DELETE
+     * RESTRICT`: the constraint deliberately refuses to let a `plugins` row
+     * disappear while its history is still attached, so uninstalling has to
+     * say what should happen to that history rather than have a cascade
+     * decide silently. {@see \Piwigo\PluginConfig\PluginRegistry::uninstall()}
+     * calls this immediately before deleting the row, in the same
+     * transaction.
+     */
+    public function deleteForPlugin(PluginId $pluginId): void
+    {
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(PluginMigrationEntity::class, 'pm')
+            ->where('pm.pluginId = :pluginId')
+            ->setParameter('pluginId', $pluginId)
+            ->getQuery()
+            ->execute();
+        $em->clear();
+    }
 }

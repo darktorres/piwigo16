@@ -231,6 +231,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
             $this->extensionContextFactory($conn),
             $this->currentConfig,
             $this->paths,
+            $conn,
         );
     }
 }

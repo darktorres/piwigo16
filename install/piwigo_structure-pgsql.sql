@@ -3157,6 +3157,13 @@ ALTER TABLE ONLY public.old_permalinks
     ADD CONSTRAINT fk_old_permalinks_cat_id FOREIGN KEY (cat_id) REFERENCES public.categories(id) ON DELETE CASCADE;
 
 --
+-- Name: plugin_migrations fk_plugin_migrations_plugin_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_migrations
+    ADD CONSTRAINT fk_plugin_migrations_plugin_id FOREIGN KEY (plugin_id) REFERENCES public.plugins(id) ON DELETE RESTRICT;
+
+--
 -- Name: rate fk_rate_element_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 

@@ -25,19 +25,35 @@ function pluginMigrationTestRepo(): PluginMigrationRepository
     return $repo;
 }
 
-function pluginMigrationTestDelete(Connection $conn, PluginId $pluginId, string $version): void
+
+/**
+ * Creates the `plugins` row the ledger row will reference, and returns a
+ * cleanup closure.
+ *
+ * fk_plugin_migrations_plugin_id is ON DELETE RESTRICT, so a ledger entry
+ * for a plugin that was never installed is exactly the state the constraint
+ * forbids -- these tests used to create it. Owning a real plugin row keeps
+ * them honest about the invariant rather than working around it, and the
+ * teardown order (ledger first, then plugin) is the same order
+ * PluginRegistry::uninstall() has to use for the same reason.
+ */
+function pluginMigrationTestInstallPlugin(Connection $conn, PluginId $pluginId): callable
 {
-    $conn->createQueryBuilder()
-        ->delete('plugin_migrations')
-        ->where('plugin_id = :pluginId AND version = :version')
-        ->setParameter('pluginId', $pluginId->value)
-        ->setParameter('version', $version)
-        ->executeStatement();
+    $conn->executeStatement(
+        'INSERT INTO plugins (id, state, version) VALUES (?, ?, ?)',
+        [$pluginId->value, 'inactive', '1.0.0']
+    );
+
+    return static function () use ($conn, $pluginId): void {
+        $conn->executeStatement('DELETE FROM plugin_migrations WHERE plugin_id = ?', [$pluginId->value]);
+        $conn->executeStatement('DELETE FROM plugins WHERE id = ?', [$pluginId->value]);
+    };
 }
 
 test('record() inserts a new row when no (plugin_id, version) pair exists yet', function (): void {
     $conn = DbConnection::build();
     $pluginId = PluginId::from('unit_test_plugin_migration');
+    $uninstall = pluginMigrationTestInstallPlugin($conn, $pluginId);
 
     try {
         pluginMigrationTestRepo()->record($pluginId, '1.0.0', '2026-08-01 12:00:00');
@@ -57,13 +73,14 @@ test('record() inserts a new row when no (plugin_id, version) pair exists yet', 
                 'executed_at' => '2026-08-01 12:00:00',
             ]);
     } finally {
-        pluginMigrationTestDelete($conn, $pluginId, '1.0.0');
+        $uninstall();
     }
 });
 
 test('record() updates executed_at in place when the same (plugin_id, version) pair recurs -- a real "restore" re-run, not a duplicate insert', function (): void {
     $conn = DbConnection::build();
     $pluginId = PluginId::from('unit_test_plugin_migration_2');
+    $uninstall = pluginMigrationTestInstallPlugin($conn, $pluginId);
 
     try {
         $repo = pluginMigrationTestRepo();
@@ -87,13 +104,14 @@ test('record() updates executed_at in place when the same (plugin_id, version) p
                 ],
             ]);
     } finally {
-        pluginMigrationTestDelete($conn, $pluginId, '2.0.0');
+        $uninstall();
     }
 });
 
 test('record() keeps separate rows for the same plugin at different versions (composite PK)', function (): void {
     $conn = DbConnection::build();
     $pluginId = PluginId::from('unit_test_plugin_migration_3');
+    $uninstall = pluginMigrationTestInstallPlugin($conn, $pluginId);
 
     try {
         $repo = pluginMigrationTestRepo();
@@ -111,7 +129,6 @@ test('record() keeps separate rows for the same plugin at different versions (co
         expect($rows)
             ->toBe(['1.0.0', '1.1.0']);
     } finally {
-        pluginMigrationTestDelete($conn, $pluginId, '1.0.0');
-        pluginMigrationTestDelete($conn, $pluginId, '1.1.0');
+        $uninstall();
     }
 });

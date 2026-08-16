@@ -43,8 +43,8 @@ CREATE TABLE `audit_log` (
   `after_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'entity-agnostic snapshot after the change, null for a deletion, folded into row_hash so must stay exactly what was recorded' CHECK (json_valid(`after_json`)),
   `ip_address` varchar(45) DEFAULT NULL COMMENT 'REMOTE_ADDR of the request that performed the action',
   `created_at` datetime NOT NULL COMMENT 'when the action was recorded',
-  `prev_hash` varchar(64) DEFAULT NULL COMMENT 'row_hash of the previous row, null for the first row, forms the hash chain',
-  `row_hash` varchar(64) NOT NULL COMMENT 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash',
+  `prev_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'row_hash of the previous row, null for the first row, forms the hash chain',
+  `row_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash',
   PRIMARY KEY (`id`),
   KEY `idx_audit_log_entity` (`entity_type`,`entity_id`),
   KEY `idx_audit_log_actor` (`actor_id`),
@@ -70,7 +70,7 @@ CREATE TABLE `categories` (
   `name` varchar(255) NOT NULL DEFAULT '' COMMENT 'album display name',
   `id_uppercat` int(11) DEFAULT NULL COMMENT 'parent album id, null for a root album',
   `comment` text DEFAULT NULL COMMENT 'album description shown on its page',
-  `dir` varchar(255) DEFAULT NULL COMMENT 'filesystem subdirectory name for a physical, synchronized album, null for a virtual album',
+  `dir` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'filesystem subdirectory name for a physical, synchronized album, null for a virtual album',
   `rank` int(11) DEFAULT NULL COMMENT 'sibling display order within the same parent, distinct from global_rank',
   `status` enum('public','private') NOT NULL DEFAULT 'public' COMMENT 'private albums require an explicit user_access or group_access grant to view',
   `site_id` smallint(6) DEFAULT NULL COMMENT 'owning site id, resolves to sites.galleries_url for a physical album',
@@ -119,7 +119,7 @@ CREATE TABLE `comments` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `config` (
-  `param` varchar(40) NOT NULL DEFAULT '' COMMENT 'configuration key',
+  `param` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'configuration key',
   `value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'JSON-encoded configuration value, see ConfigService::encode()/hydrate()' CHECK (json_valid(`value`)),
   `comment` varchar(255) DEFAULT NULL COMMENT 'human-readable description of the param, seeded for built-in settings by install/config.sql',
   PRIMARY KEY (`param`)
@@ -138,7 +138,7 @@ CREATE TABLE `derivative_settings` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `derivative_size` (
-  `name` varchar(32) NOT NULL COMMENT 'derivative size name, e.g. thumb, medium, xxlarge',
+  `name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'derivative size name, e.g. thumb, medium, xxlarge',
   `enabled` smallint(6) NOT NULL DEFAULT 1 COMMENT 'whether this derivative size is generated',
   `max_width` int(11) NOT NULL DEFAULT 0 COMMENT 'maximum output width in pixels, see SizingParams',
   `max_height` int(11) NOT NULL DEFAULT 0 COMMENT 'maximum output height in pixels, see SizingParams',
@@ -154,7 +154,7 @@ CREATE TABLE `derivative_size` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `extension_ignored_updates` (
   `extension_type` varchar(16) NOT NULL COMMENT 'plugin, theme, or language, see ExtensionType',
-  `extension_id` varchar(64) NOT NULL COMMENT 'directory-name identifier of the extension whose update is being ignored',
+  `extension_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'directory-name identifier of the extension whose update is being ignored',
   `ignored_at` datetime NOT NULL COMMENT 'when the update was dismissed',
   PRIMARY KEY (`extension_type`,`extension_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='extension updates an admin dismissed, read and written by ExtensionUpdateChecker via ExtensionIgnoredUpdateRepository';
@@ -293,10 +293,10 @@ CREATE TABLE `images` (
   `representative_ext` varchar(4) DEFAULT NULL COMMENT 'file extension of a separate representative thumbnail, for formats that cannot be thumbnailed directly, e.g. PDF/video',
   `date_metadata_update` date DEFAULT NULL COMMENT 'date the row was last synced from the file EXIF/IPTC metadata, null if never synced',
   `rating_score` float(5,2) DEFAULT NULL COMMENT 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore',
-  `path` varchar(255) NOT NULL DEFAULT '' COMMENT 'full relative filesystem path to the original file',
+  `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'full relative filesystem path to the original file',
   `storage_category_id` int(11) DEFAULT NULL COMMENT 'album the file is physically stored under, distinct from possibly multiple image_category memberships',
   `level` smallint(6) NOT NULL DEFAULT 0 COMMENT 'minimum permission level required to view the image, see Images::setPrivacyLevel and available_permission_levels',
-  `md5sum` char(32) DEFAULT NULL COMMENT 'MD5 checksum of the original file, computed lazily for duplicate detection',
+  `md5sum` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'MD5 checksum of the original file, computed lazily for duplicate detection',
   `added_by` int(11) DEFAULT NULL COMMENT 'uploading user id',
   `rotation` smallint(6) DEFAULT NULL COMMENT 'pending quarter-turn rotation to apply when rendering, 0 to 3',
   `latitude` double(8,6) DEFAULT NULL COMMENT 'GPS latitude, from EXIF',
@@ -324,7 +324,7 @@ CREATE TABLE `images` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `integrity_ignored_anomalies` (
-  `anomaly_id` varchar(64) NOT NULL COMMENT 'add_anomaly()-generated md5 id, see CheckIntegrity',
+  `anomaly_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'add_anomaly()-generated md5 id, see CheckIntegrity',
   `piwigo_version` varchar(16) NOT NULL COMMENT 'Piwigo version the anomaly was ignored under',
   `ignored_at` datetime NOT NULL COMMENT 'when the anomaly was dismissed',
   PRIMARY KEY (`anomaly_id`,`piwigo_version`)
@@ -333,7 +333,7 @@ CREATE TABLE `integrity_ignored_anomalies` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `languages` (
-  `id` varchar(64) NOT NULL DEFAULT '' COMMENT 'language directory-name identifier, e.g. en_UK, row existence alone means installed and active',
+  `id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'language directory-name identifier, e.g. en_UK, row existence alone means installed and active',
   `version` varchar(64) NOT NULL DEFAULT '0' COMMENT 'installed language pack version string',
   `name` varchar(64) DEFAULT NULL COMMENT 'human-readable language display name',
   PRIMARY KEY (`id`)
@@ -366,10 +366,11 @@ CREATE TABLE `old_permalinks` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `plugin_migrations` (
-  `plugin_id` varchar(64) NOT NULL COMMENT 'directory-name identifier of the plugin that ran this migration',
+  `plugin_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'directory-name identifier of the plugin that ran this migration',
   `version` varchar(191) NOT NULL COMMENT 'plugin-internal migration version identifier',
   `executed_at` datetime NOT NULL COMMENT 'when this plugin migration ran',
-  PRIMARY KEY (`plugin_id`,`version`)
+  PRIMARY KEY (`plugin_id`,`version`),
+  CONSTRAINT `fk_plugin_migrations_plugin_id` FOREIGN KEY (`plugin_id`) REFERENCES `plugins` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-plugin install/update history, read and written by ExtensionLifecycle via PluginMigrationRepository, not a real migration runner';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -399,7 +400,7 @@ CREATE TABLE `rate` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `search` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
-  `search_uuid` char(23) DEFAULT NULL COMMENT 'public, shareable identifier for this saved search, used in URLs instead of id',
+  `search_uuid` char(23) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'public, shareable identifier for this saved search, used in URLs instead of id',
   `created_on` datetime DEFAULT NULL COMMENT 'when the search was saved',
   `created_by` int(11) DEFAULT NULL COMMENT 'user id who saved the search, null for an anonymous search',
   `forked_from` int(11) DEFAULT NULL COMMENT 'search this one was refined/derived from, null for an original search',
@@ -454,7 +455,7 @@ CREATE TABLE `tags` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `themes` (
-  `id` varchar(64) NOT NULL DEFAULT '' COMMENT 'theme directory-name identifier, referenced by user_infos.theme, row existence alone means installed and active',
+  `id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'theme directory-name identifier, referenced by user_infos.theme, row existence alone means installed and active',
   `version` varchar(64) NOT NULL DEFAULT '0' COMMENT 'installed theme version string',
   `name` varchar(64) DEFAULT NULL COMMENT 'human-readable theme display name',
   PRIMARY KEY (`id`)
@@ -475,8 +476,8 @@ CREATE TABLE `user_access` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_auth_keys` (
   `auth_key_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
-  `auth_key` varchar(255) NOT NULL COMMENT 'the token value: a random persistent-login token for key_type=auth_key, or the public pkid-... identifier for key_type=api_key',
-  `apikey_secret` varchar(255) DEFAULT NULL COMMENT 'hashed secret half of a key_type=api_key pair, null for auth_key rows',
+  `auth_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'the token value: a random persistent-login token for key_type=auth_key, or the public pkid-... identifier for key_type=api_key',
+  `apikey_secret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'hashed secret half of a key_type=api_key pair, null for auth_key rows',
   `user_id` int(11) NOT NULL COMMENT 'owning user id',
   `created_on` datetime NOT NULL COMMENT 'when the key was issued',
   `duration` int(11) DEFAULT NULL COMMENT 'requested key lifetime, seconds for auth_key rows or days for api_key rows, see expired_on for the actual cutoff',
@@ -532,16 +533,16 @@ CREATE TABLE `user_infos` (
   `user_id` int(11) NOT NULL DEFAULT 0 COMMENT 'the owning users.id row, application-assigned, never auto-generated here',
   `nb_image_page` int(11) NOT NULL DEFAULT 15 COMMENT 'photos per page preference',
   `status` enum('webmaster','admin','normal','generic','guest') NOT NULL DEFAULT 'guest' COMMENT 'account role, gates admin access and permission checks',
-  `language` varchar(50) NOT NULL DEFAULT 'en_UK' COMMENT 'interface language, references languages.id',
+  `language` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT 'en_UK' COMMENT 'interface language, references languages.id',
   `expand` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'whether the album tree auto-expands in the menu',
   `show_nb_comments` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'whether comment counts are shown alongside thumbnails',
   `show_nb_hits` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'whether view counts are shown alongside thumbnails',
   `recent_period` smallint(6) NOT NULL DEFAULT 7 COMMENT 'number of days considered recent for the recent photos/albums views',
-  `theme` varchar(255) NOT NULL DEFAULT 'modus' COMMENT 'interface theme, references themes.id',
+  `theme` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT 'modus' COMMENT 'interface theme, references themes.id',
   `registration_date` datetime DEFAULT NULL COMMENT 'account creation date',
   `enabled_high` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'whether the user may view/download the original, high-definition photo',
   `level` smallint(6) NOT NULL DEFAULT 0 COMMENT 'effective permission level, gates access to images.level-restricted photos',
-  `activation_key` varchar(255) DEFAULT NULL COMMENT 'hashed password-reset token, see AuthService::setActivationKey and password.php',
+  `activation_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'hashed password-reset token, see AuthService::setActivationKey and password.php',
   `activation_key_expire` datetime DEFAULT NULL COMMENT 'when activation_key stops being valid',
   `last_visit` datetime DEFAULT NULL COMMENT 'when the user was last seen, refreshed once per session length',
   `last_visit_from_history` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'whether last_visit was already backfilled from the history table, avoids repeating that lookup',
@@ -569,7 +570,7 @@ CREATE TABLE `user_mail_notification` (
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key, referenced by user_id everywhere else',
   `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'login name, unique',
-  `password` varchar(255) DEFAULT NULL COMMENT 'hashed login password',
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'hashed login password',
   `mail_address` varchar(255) DEFAULT NULL COMMENT 'account email address',
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_ui1` (`username`)

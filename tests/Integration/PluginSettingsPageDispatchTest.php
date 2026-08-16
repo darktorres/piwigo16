@@ -154,8 +154,10 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement("DELETE FROM plugins WHERE id LIKE 'zz-%'");
+        // Ledger before plugins: fk_plugin_migrations_plugin_id is ON DELETE
+        // RESTRICT, so the plugin row cannot go first.
         $this->conn->executeStatement("DELETE FROM plugin_migrations WHERE plugin_id LIKE 'zz-%'");
+        $this->conn->executeStatement("DELETE FROM plugins WHERE id LIKE 'zz-%'");
         $this->conn->executeStatement("DELETE FROM config WHERE param LIKE 'zz-%'");
         foreach ($this->tempDirs as $dir) {
             $this->removeDir($dir);
@@ -203,6 +205,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
             $this->contextFactory,
             $this->containerGet(CurrentConfig::class),
             $paths,
+            $this->conn,
         );
     }
 

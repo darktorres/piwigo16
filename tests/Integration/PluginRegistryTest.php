@@ -135,8 +135,10 @@ final class PluginRegistryTest extends IntegrationTestCase
         // exactly which rows each individual test left behind (some
         // tests deliberately leave a plugin active to prove a guard
         // refused to remove it).
-        $this->conn->executeStatement("DELETE FROM plugins WHERE id LIKE 'zz-%'");
+        // Ledger before plugins: fk_plugin_migrations_plugin_id is ON DELETE
+        // RESTRICT, so the plugin row cannot go first.
         $this->conn->executeStatement("DELETE FROM plugin_migrations WHERE plugin_id LIKE 'zz-%'");
+        $this->conn->executeStatement("DELETE FROM plugins WHERE id LIKE 'zz-%'");
         foreach ($this->tempDirs as $dir) {
             $this->removeDir($dir);
         }
@@ -182,6 +184,7 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->contextFactory,
             $this->containerGet(CurrentConfig::class),
             $paths,
+            $this->conn,
         );
     }
 

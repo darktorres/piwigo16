@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\PluginConfig;
 
+use Doctrine\DBAL\Connection;
 use Composer\Autoload\ClassLoader;
 use Composer\Semver\Semver;
 use JsonException;
@@ -65,6 +66,7 @@ final class PluginRegistry
         private readonly ExtensionContextFactory $contextFactory,
         private readonly CurrentConfig $currentConfig,
         private readonly Paths $paths,
+        private readonly Connection $connection,
     ) {
         $this->validator = new Validator();
     }
@@ -267,7 +269,18 @@ final class PluginRegistry
 
         $this->bootInstance($manifest)
             ->uninstall();
-        $this->repository->delete(PluginId::from($pluginId));
+
+        // fk_plugin_migrations_plugin_id is ON DELETE RESTRICT, so the
+        // ledger has to go first and the constraint will refuse the delete
+        // otherwise. That refusal is the point: a cascade would have thrown
+        // this history away silently on every uninstall, and a reinstall
+        // would then re-run migrations it had already applied. Both writes
+        // share one transaction because losing the ledger while keeping the
+        // plugin row is exactly the state that would cause that re-run.
+        $this->connection->transactional(function () use ($pluginId): void {
+            $this->migrationRepository->deleteForPlugin(PluginId::from($pluginId));
+            $this->repository->delete(PluginId::from($pluginId));
+        });
     }
 
     /**

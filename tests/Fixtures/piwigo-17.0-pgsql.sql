@@ -4118,6 +4118,14 @@ ALTER TABLE ONLY public.old_permalinks
 
 
 --
+-- Name: plugin_migrations fk_plugin_migrations_plugin_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+ALTER TABLE ONLY public.plugin_migrations
+    ADD CONSTRAINT fk_plugin_migrations_plugin_id FOREIGN KEY (plugin_id) REFERENCES public.plugins(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: comments fk_comments_author_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
 --
 

@@ -148,12 +148,16 @@ namespace Piwigo\Tests\Integration {
         #[Override]
         protected function tearDown(): void
         {
+            // Ledger before plugins: fk_plugin_migrations_plugin_id is ON
+            // DELETE RESTRICT, so a plugin row cannot go while its migration
+            // history is still attached. Same ordering
+            // PluginRegistry::uninstall() has to use, for the same reason.
+            $this->conn->executeStatement('DELETE FROM plugin_migrations');
             $this->conn->executeStatement('DELETE FROM plugins');
             $this->conn->executeStatement('DELETE FROM themes');
             $this->conn->executeStatement("DELETE FROM languages WHERE id != 'en_UK'");
             $this->conn->executeStatement("UPDATE user_infos SET theme = 'default' WHERE user_id IN (1, 2)");
             $this->conn->executeStatement('DELETE FROM activity');
-            $this->conn->executeStatement('DELETE FROM plugin_migrations');
             foreach ($this->createdPluginIds as $id) {
                 $this->removePluginManifest($id);
             }

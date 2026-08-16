@@ -3,6 +3,22 @@ includes:
 
 parameters:
     level: 10
+    # Defaults to the machine-wide sys_get_temp_dir()/phpstan, shared by
+    # every worktree on this box -- the dead-code-detector extension's own
+    # UsageCacheStorage keys its cache purely by content hash and garbage-
+    # collects entries its own process didn't read, so two worktrees
+    # analysing overlapping content concurrently race on the same cache
+    # files ("DCD cache file not found for hash ..." is the symptom).
+    # %currentWorkingDirectory% (already used below for analysisDir)
+    # embedded in a /tmp path -- not a path *inside* this repo -- gives
+    # each worktree a distinct, real filesystem path (e.g. /tmp/phpstan
+    # /home/torres/piwigo17-rewrite) with zero collision risk, and avoids
+    # needing every other tool (ECS, etc.) to also learn to exclude it --
+    # a first attempt using _analysis/phpstan-tmp inside the repo made
+    # ECS's own file-count balloon from ~290 to ~9700, since a single
+    # PHPStan run seeds tens of thousands of tiny dead-code-detector cache
+    # files there.
+    tmpDir: /tmp/phpstan%currentWorkingDirectory%
     bootstrapFiles:
         - tests/phpstan-dba-bootstrap.php
     doctrine:

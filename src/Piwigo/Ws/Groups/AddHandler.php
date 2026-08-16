@@ -61,8 +61,7 @@ final readonly class AddHandler implements WsAction
         }
 
         // [SEC-57]
-        $actor_id = $this->currentUser->get()
-            ->id->value;
+        $actor_id = $this->currentUser->get()->id;
         $this->auditService
             ->record($actor_id, 'create', 'group', $inserted_id->value, null, [
                 'name' => $name,

@@ -176,7 +176,7 @@ final readonly class RegisterController implements ControllerInterface
                 // admin); only the username is recorded, never the password.
                 if ($new_user_id !== null) {
                     $this->auditService
-                        ->record($new_user_id, 'create', 'user', $new_user_id, null, [
+                        ->record(UserId::from($new_user_id), 'create', 'user', $new_user_id, null, [
                             'username' => $post_login,
                         ]);
                 }

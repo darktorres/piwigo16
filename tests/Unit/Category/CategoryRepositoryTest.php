@@ -12,10 +12,10 @@ use Piwigo\Category\Projection\Category;
 use Piwigo\Category\Projection\CategoryIdNameUppercatsRank;
 use Piwigo\Category\Projection\ComputedCategoryRollupRow;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionCriteria;
-use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**

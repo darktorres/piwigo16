@@ -1021,7 +1021,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      */
     public function findVisibleFavoriteImageIds(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
-        $dqlOrderBy = $this->sortRenderer()->resolveDqlOrderBy($orderBySql, 'i');
+        $dqlOrderBy = $this->sortRenderer()
+            ->resolveDqlOrderBy($orderBySql, 'i');
         if ($dqlOrderBy !== null) {
             $qb = $this->em
                 ->createQueryBuilder()

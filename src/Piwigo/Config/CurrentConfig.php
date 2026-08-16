@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 use Piwigo\Common\Enum\SortOrder;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
-use Piwigo\Common\ValueObject\PhotoSortOrder;
 use ReflectionClass;
 
 /**

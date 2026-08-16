@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
-    use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
-
     use Doctrine\DBAL\Connection;
+    use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
     use Exception;
     use LogicException;
     use Override;

@@ -25,7 +25,7 @@ function storageCategoryEntity(): CategoryEntity
         dir: null,
         rank: null,
         status: CategoryStatus::Public,
-        siteId: null,
+        site: null,
         visible: true,
         representativePicture: null,
         uppercats: '9',

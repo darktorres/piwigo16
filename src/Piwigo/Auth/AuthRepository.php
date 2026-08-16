@@ -319,8 +319,9 @@ final readonly class AuthRepository
     /**
      * Delegates to $lookup (an explicit per-call parameter, same
      * reasoning as {@see findLastVisitFromHistory()} above) instead of
-     * reading `activity` directly: `Auth` (`L2aCoreDomain`) can't depend
-     * on `Activity` (`L2bExtendedDomain`).
+     * reading `activity` directly -- see
+     * {@see \Piwigo\Auth\LoginActivityLookupInterface}'s own docblock for
+     * why this indirection exists.
      */
     public function countLoginActivity(int $userId, LoginActivityLookupInterface $lookup): int
     {

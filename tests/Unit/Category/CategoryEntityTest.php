@@ -6,9 +6,22 @@ use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryStatus;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
-use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Site\SiteEntity;
+
+/**
+ * A minimal, never-persisted `SiteEntity` standing in for the `site`
+ * association -- same "safe here, but a real write path must use
+ * $em->getReference() instead" reasoning as `representativeImage()` below.
+ */
+function categorySite(): SiteEntity
+{
+    $site = new SiteEntity(galleriesUrl: 'http://example.test/gallery');
+    $site->id = 1;
+
+    return $site;
+}
 
 /**
  * A minimal, never-persisted `ImageEntity` standing in for the
@@ -49,7 +62,7 @@ function representativeImage(): ImageEntity
 }
 
 /**
- * @return array{name: string, idUppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: CategoryStatus, siteId: ?SiteId, visible: bool, representativePicture: ?ImageEntity, uppercats: string, commentable: bool, globalRank: ?string, imageOrder: ?string, permalink: ?Permalink, lastmodified: SqlDateTime}
+ * @return array{name: string, idUppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: CategoryStatus, site: ?SiteEntity, visible: bool, representativePicture: ?ImageEntity, uppercats: string, commentable: bool, globalRank: ?string, imageOrder: ?string, permalink: ?Permalink, lastmodified: SqlDateTime}
  */
 function baseCategoryArgs(): array
 {
@@ -60,7 +73,7 @@ function baseCategoryArgs(): array
         'dir' => 'summer-vacation-2026',
         'rank' => 3,
         'status' => CategoryStatus::Public,
-        'siteId' => SiteId::from(1),
+        'site' => categorySite(),
         'visible' => true,
         'representativePicture' => representativeImage(),
         'uppercats' => '1,12,27',
@@ -89,8 +102,8 @@ test('constructs with distinct values for every property', function (): void {
         ->toBe(3)
         ->and($category->status)
         ->toBe(CategoryStatus::Public)
-        ->and($category->siteId)
-        ->toEqual(SiteId::from(1))
+        ->and($category->site?->id)
+        ->toBe(1)
         ->and($category->visible)
         ->toBeTrue()
         ->and($category->representativePicture?->id)
@@ -158,13 +171,13 @@ test('constructs with rank null', function (): void {
         ->toBeNull();
 });
 
-test('constructs with siteId null', function (): void {
+test('constructs with site null', function (): void {
     $args = baseCategoryArgs();
-    $args['siteId'] = null;
+    $args['site'] = null;
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->siteId)
+    expect($category->site)
         ->toBeNull();
 });
 

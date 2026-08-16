@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit;
 
-use Piwigo\Common\ValueObject\GroupId;
-use Piwigo\Common\ValueObject\UserId;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Piwigo\Audit\Projection\AuditLogEntry;
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Persistence layer for the audit domain: `audit_log` [SEC-57]. Only ever

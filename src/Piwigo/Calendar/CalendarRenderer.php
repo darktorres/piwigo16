@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
-use Piwigo\Db\SortRenderer;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CalendarNavCachePool;
@@ -27,6 +26,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
@@ -271,7 +271,8 @@ final readonly class CalendarRenderer
         } // end category calling
 
         if ($must_show_list) {
-            $conf_order_by = new SortRenderer($this->entityManager->getConnection())->toSql($this->currentConfig->orderBy);
+            $conf_order_by = new SortRenderer($this->entityManager->getConnection())
+                ->toSql($this->currentConfig->orderBy);
 
             if ($superOrderBy) {
                 $order_by = $conf_order_by;

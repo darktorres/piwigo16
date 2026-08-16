@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\PluginConfig;
 
-use Doctrine\DBAL\Connection;
 use Composer\Autoload\ClassLoader;
 use Composer\Semver\Semver;
+use Doctrine\DBAL\Connection;
 use JsonException;
 use Opis\JsonSchema\Errors\ValidationError;
 use Opis\JsonSchema\Validator;

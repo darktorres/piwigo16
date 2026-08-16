@@ -25,7 +25,6 @@ function pluginMigrationTestRepo(): PluginMigrationRepository
     return $repo;
 }
 
-
 /**
  * Creates the `plugins` row the ledger row will reference, and returns a
  * cleanup closure.

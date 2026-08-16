@@ -21,11 +21,11 @@ use Piwigo\Users\CurrentUser;
  * Group domain business logic: creation/rename/deletion, membership
  * management, merge/duplicate. Constructor-injects GroupRepository (plain
  * constructor injection, same shape as PermalinkService) and
- * ActivityLoggerInterface -- pwg_activity()'s real target,
- * Piwigo\Activity\ActivityService, is L2bExtendedDomain; this class is
- * L2aCoreDomain, so it depends on the L1Infrastructure interface instead,
- * same shape as MailerInterface (see ActivityLoggerInterface's own
- * docblock) -- and calls Piwigo\Cache\PermissionCacheInvalidator
+ * ActivityLoggerInterface -- depends on the L1Infrastructure interface
+ * rather than pwg_activity()'s real target, Piwigo\Activity\ActivityService,
+ * directly, same shape as MailerInterface (see ActivityLoggerInterface's
+ * own docblock for why the interface exists at all) -- and calls
+ * Piwigo\Cache\PermissionCacheInvalidator
  * (L1Infrastructure) directly for cache invalidation, a real class
  * dependency always allowed (L2a may depend on L1). Also
  * constructor-injects ConfigService (L1Infrastructure) for delete()'s
@@ -336,7 +336,8 @@ final readonly class GroupService
         ]);
 
         // [SEC-57] one row per group actually deleted
-        $actorId = $this->currentUser->get()->id;
+        $actorId = $this->currentUser->get()
+            ->id;
         $audit = $this->auditService;
         foreach ($deleted as $deletedId => $deletedName) {
             $audit->record($actorId, 'delete', 'group', $deletedId, [

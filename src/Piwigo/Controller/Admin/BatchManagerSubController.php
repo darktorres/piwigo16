@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Piwigo\Db\SortRenderer;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
@@ -38,6 +37,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageService;
@@ -121,7 +121,8 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             ->id;
 
         $available_permission_levels = $this->currentConfig->availablePermissionLevels;
-        $conf_order_by = new SortRenderer($this->entityManager->getConnection())->toSql($this->currentConfig->orderBy);
+        $conf_order_by = new SortRenderer($this->entityManager->getConnection())
+            ->toSql($this->currentConfig->orderBy);
 
         // used both for the action-specific redirects below and for the
         // "category no longer exists" redirect further down

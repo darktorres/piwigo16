@@ -38,7 +38,6 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;

@@ -98,7 +98,8 @@ final readonly class CalendarRepository
             // and a calendar view has no single category context the way
             // CategoryRepository::findImageIdsForCategories() does, so
             // there's no query-independent way to express it here.
-            $dqlOrderBy = $this->sortRenderer()->resolveDqlOrderBy($orderBySql, 'i');
+            $dqlOrderBy = $this->sortRenderer()
+                ->resolveDqlOrderBy($orderBySql, 'i');
             if ($dqlOrderBy !== null) {
                 $qb = $this->baseQueryBuilder($dqlScope)
                     ->select('i.id')

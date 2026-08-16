@@ -8,10 +8,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Permalink;
-use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Db\HasLastModified;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Site\SiteEntity;
 
 /**
  * Maps the `categories` table. `lastmodified` is `SqlDateTime`-typed -- `NOT
@@ -34,23 +34,29 @@ use Piwigo\Image\ImageEntity;
  * both during hydration, so every `CategoryRepository` method selecting
  * `c.id`/`c.permalink` that way must unwrap via `instanceof`;
  * `getSingleColumnResult()` (Gotcha #4, `HYDRATE_SCALAR_COLUMN`) never
- * does, regardless of column. `siteId`
- * is `SiteId`-typed the same way (`fk_categories_site_id`, `ON DELETE
- * CASCADE`) -- `sites.id` itself stays a plain `?int` primary key (out of
- * `0.3`'s scope, same as `search.id`).
+ * does, regardless of column.
  *
- * `representativePicture` is a real `#[ORM\ManyToOne] ?ImageEntity`
- * association (`fk_categories_representative_picture_id`), not a scalar
- * VO -- the schema's own `ON DELETE SET NULL` is the only referential
- * authority (no `#[JoinColumn(onDelete: ...)]` here, see `0.3`'s "No ORM
- * cascades"). `nullable`/`referencedColumnName` are both left unspecified
- * on the `#[ORM\JoinColumn]` deliberately -- they resolve to `true`/`'id'`
- * on their own. `Category\Projection\Category::$representativePictureId`
- * stays plain `?int` regardless, unwrapping
- * `$entity->representativePicture?->id?->value` in `fromEntity()` --
- * `->id` on an uninitialized to-one proxy never triggers a query, since
- * `ProxyFactory` pre-populates identifier fields at construction time
- * and marks them as skipped from lazy initialization.
+ * `representativePicture` and `site` are both real `#[ORM\ManyToOne]`
+ * associations (`fk_categories_representative_picture_id`/
+ * `fk_categories_site_id`), not scalar VOs -- the schema's own `ON DELETE
+ * SET NULL`/`ON DELETE CASCADE` is the only referential authority (no
+ * `#[JoinColumn(onDelete: ...)]` here, see `0.3`'s "No ORM cascades").
+ * `nullable`/`referencedColumnName` are both left unspecified on either
+ * `#[ORM\JoinColumn]` deliberately -- they resolve to `true`/`'id'` on
+ * their own. `Category\Projection\Category::$representativePictureId`/
+ * `$siteId` both stay plain `?int` regardless, unwrapping
+ * `$entity->representativePicture?->id?->value`/`$entity->site?->id` in
+ * `fromEntity()` (`SiteEntity::$id` is already a plain `?int`, unlike
+ * `ImageEntity`/`CategoryEntity`'s VO-typed ids, so no further `->value`
+ * unwrap is needed for `site`) -- `->id` on an uninitialized to-one proxy
+ * never triggers a query, since `ProxyFactory` pre-populates identifier
+ * fields at construction time and marks them as skipped from lazy
+ * initialization.
+ *
+ * `site` required moving `Piwigo\Site`/`Piwigo\Metadata`/`Piwigo\Activity`
+ * from `L2bExtendedDomain` into `L2aCoreDomain` (`deptrac.yaml`) --
+ * `Piwigo\Category` (L2a) couldn't otherwise depend on `Piwigo\Site` (L2b).
+ * See `deptrac.yaml`'s own L2a comment for the full chain audit.
  *
  * Only a handful of CategoryRepository's 65 methods go through this
  * entity -- the large majority are bulk id-list operations against a
@@ -97,8 +103,9 @@ final class CategoryEntity implements HasLastModified
         public ?int $rank,
         #[ORM\Column(type: 'string', length: 10, enumType: CategoryStatus::class)]
         public CategoryStatus $status,
-        #[ORM\Column(name: 'site_id', type: 'site_id', nullable: true)]
-        public ?SiteId $siteId,
+        #[ORM\ManyToOne]
+        #[ORM\JoinColumn(name: 'site_id')]
+        public ?SiteEntity $site,
         #[ORM\Column(type: 'boolean')]
         public bool $visible,
         #[ORM\ManyToOne]

@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * `Piwigo\Activity\ActivityService` is L2bExtendedDomain, but its
- * free-function delegate `pwg_activity()` (include/functions.inc.php) has
- * real L2aCoreDomain callers (`Users\UserService`, `Group\GroupService`,
- * `Auth\AuthService`) that deptrac's ruleset forbids from depending upward
- * on L2b directly. This interface lives in `Piwigo\Core` (L1Infrastructure,
- * same direction as `MailerInterface`) so those classes can depend downward
- * on it instead of the concrete class. `ActivityService` implements it;
- * bound in `config/container.php`.
+ * `Piwigo\Activity\ActivityService`'s free-function delegate
+ * `pwg_activity()` (include/functions.inc.php) has real `L2aCoreDomain`
+ * callers (`Users\UserService`, `Group\GroupService`, `Auth\AuthService`).
+ * This interface lives in `Piwigo\Core` (`L1Infrastructure`, same direction
+ * as `MailerInterface`) so those classes can depend downward on it instead
+ * of the concrete class. `ActivityService` implements it; bound in
+ * `config/container.php`. Predates `0.3`'s move of `Activity` into
+ * `L2aCoreDomain` (originally needed because `Activity` was
+ * `L2bExtendedDomain`, and L2a callers couldn't depend upward on L2b
+ * directly) -- both now sit at the same layer, so the interface
+ * indirection is no longer required by deptrac, but removing it is a
+ * separate decision from that item.
  */
 interface ActivityLoggerInterface
 {

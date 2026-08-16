@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit;
 
-use Piwigo\Common\ValueObject\UserId;
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `audit_log` table. `before_json`/`after_json` map as plain `text`,

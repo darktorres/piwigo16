@@ -83,7 +83,7 @@ final readonly class Category
             dir: $entity->dir,
             rank: $entity->rank,
             status: $entity->status->value,
-            siteId: $entity->siteId?->value,
+            siteId: $entity->site?->id,
             visible: $entity->visible,
             representativePictureId: $entity->representativePicture?->id?->value,
             uppercats: $entity->uppercats,

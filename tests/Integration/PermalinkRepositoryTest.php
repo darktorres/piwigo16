@@ -222,5 +222,4 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
 
         self::assertSame(43, is_numeric($hit) ? (int) $hit : null);
     }
-
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit\Projection;
 
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Typed row shape for `audit_log`. `fromRow()` centralises the

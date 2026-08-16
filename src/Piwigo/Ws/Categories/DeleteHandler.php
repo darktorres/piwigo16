@@ -17,7 +17,6 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Ws\WsAction;

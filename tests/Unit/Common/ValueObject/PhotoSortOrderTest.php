@@ -112,9 +112,11 @@ test('tryFromConfigFragment() reports unrepresentable text instead of substituti
 test('tryFromConfigFragment() treats empty text as no ordering, not as a failure', function (): void {
     $order = PhotoSortOrder::tryFromConfigFragment('  ');
 
-    expect($order)->not->toBeNull();
+    expect($order)
+        ->not->toBeNull();
     assert($order instanceof PhotoSortOrder);
-    expect($order->isEmpty())->toBeTrue();
+    expect($order->isEmpty())
+        ->toBeTrue();
 });
 
 test('fromWsOrderParam() accepts the WS vocabulary, including its aliases', function (): void {

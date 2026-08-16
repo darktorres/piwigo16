@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;

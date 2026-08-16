@@ -81,7 +81,8 @@ final readonly class GroupPermPageRenderer
         $group_service = $this->groupService;
 
         // [SEC-57] actor for either branch below
-        $actor_id = $this->currentUser->get()->id;
+        $actor_id = $this->currentUser->get()
+            ->id;
 
         if ($groupPermSubmit->isFalsify
             and count($cat_true) > 0) {

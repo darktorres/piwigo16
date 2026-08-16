@@ -63,7 +63,8 @@ test('the random expression takes no table prefix and no direction', function ()
 test('randomExpression() agrees with SqlDialect but derives the platform from the connection', function (): void {
     // Same seeding policy, different platform source: SqlDialect reads
     // DbCredentials::fromEnv(), this reads the real connection.
-    expect(sortRendererTestRenderer()->randomExpression())->toBe(SqlDialect::randomFunction());
+    expect(sortRendererTestRenderer()->randomExpression())
+        ->toBe(SqlDialect::randomFunction());
 });
 
 test('rank is quoted by the connected platform', function (): void {
@@ -136,7 +137,8 @@ test('resolveDqlOrderBy() returns null for text outside the vocabulary rather th
     // The distinction from PhotoSortOrder::fromConfigFragment(): a composed
     // fragment must not silently become the default order. `comment` is a
     // real images column but not a $sort_fields token.
-    expect(sortRendererTestRenderer()->resolveDqlOrderBy('ORDER BY comment ASC', 'i'))->toBeNull();
+    expect(sortRendererTestRenderer()->resolveDqlOrderBy('ORDER BY comment ASC', 'i'))
+        ->toBeNull();
 });
 
 test('resolveDqlOrderBy() honours the same rank rule as toDql()', function (): void {

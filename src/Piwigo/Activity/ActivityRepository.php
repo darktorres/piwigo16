@@ -18,11 +18,11 @@ use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Activity\Projection\UserAgentBreakdown;
 use Piwigo\Auth\LoginActivityLookupInterface;
-use Piwigo\Common\ValueObject\IpAddress;
-use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
@@ -42,10 +42,12 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
 {
     /**
      * Implements {@see \Piwigo\Auth\LoginActivityLookupInterface} so
-     * `Auth` (`L2aCoreDomain`) can query login activity without
-     * depending directly on `Activity` (`L2bExtendedDomain`);
-     * `AuthRepository` constructor-injects the interface, wired to this
-     * class at the composition root.
+     * `AuthRepository` can query login activity via constructor-injected
+     * interface, wired to this class at the composition root. Predates
+     * `0.3`'s move of `Activity` into `L2aCoreDomain` alongside `Auth` --
+     * both now sit at the same layer, so the interface indirection is no
+     * longer required by deptrac, but removing it is a separate decision
+     * from this item.
      */
     #[Override]
     public function countLoginActivity(int $userId): int

@@ -8,9 +8,22 @@ use Piwigo\Category\Projection\Category;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
-use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Site\SiteEntity;
+
+/**
+ * A minimal, never-persisted `SiteEntity` standing in for the `site`
+ * association -- same "safe here, but a real write path must use
+ * $em->getReference() instead" reasoning as the image helper below.
+ */
+function fullCategorySite(): SiteEntity
+{
+    $site = new SiteEntity(galleriesUrl: 'http://example.test/gallery');
+    $site->id = 1;
+
+    return $site;
+}
 
 /**
  * A minimal, never-persisted `ImageEntity` standing in for the
@@ -59,7 +72,7 @@ function fullCategoryEntity(): CategoryEntity
         dir: 'sample_dir',
         rank: 2,
         status: CategoryStatus::Private,
-        siteId: SiteId::from(1),
+        site: fullCategorySite(),
         visible: true,
         representativePicture: fullCategoryRepresentativeImage(),
         uppercats: '1,3',
@@ -213,19 +226,24 @@ test('fromEntity copies every field straight through, keeping the real VOs', fun
         ->toBe('Sample Album')
         ->and($cat->status)
         ->toBe('private')
+        ->and($cat->siteId)
+        ->toBe(1)
         ->and($cat->representativePictureId)
         ->toBe(42)
         ->and($cat->permalink)
         ->toEqual(Permalink::from('sample-album'));
 });
 
-test('fromEntity narrows representativePictureId to null when the association is unset', function (): void {
+test('fromEntity narrows siteId/representativePictureId to null when their associations are unset', function (): void {
     $entity = fullCategoryEntity();
+    $entity->site = null;
     $entity->representativePicture = null;
 
     $cat = Category::fromEntity($entity);
 
-    expect($cat->representativePictureId)
+    expect($cat->siteId)
+        ->toBeNull()
+        ->and($cat->representativePictureId)
         ->toBeNull();
 });
 

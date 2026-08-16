@@ -9,12 +9,12 @@ namespace Piwigo\Tests\Integration {
     use Exception;
     use LogicException;
     use Override;
-    use Piwigo\Db\SortRenderer;
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Bootstrap\RedirectService;
     use Piwigo\Cache\SearchResultsCachePool;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
+    use Piwigo\Common\ValueObject\PhotoSortOrder;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\FilterViewsSelection;
@@ -26,6 +26,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\SortRenderer;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
@@ -42,7 +43,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Search\SearchService;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
-    use Piwigo\Common\ValueObject\PhotoSortOrder;
     use Piwigo\Tag\TagService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;

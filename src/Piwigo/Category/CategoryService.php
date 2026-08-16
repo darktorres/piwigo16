@@ -75,9 +75,8 @@ use Piwigo\Users\UserRepository;
 /**
  * Category domain business logic.
  *
- * `Activity` is L2bExtendedDomain; {@see deleteSite()}/
- * {@see deleteCategories()}/{@see moveCategories()}/
- * {@see createVirtualCategory()} need it to log activity, but
+ * {@see deleteSite()}/{@see deleteCategories()}/{@see moveCategories()}/
+ * {@see createVirtualCategory()} need `Activity` to log activity, but
  * constructor-injecting `ActivityLoggerInterface` (this class's usual
  * cross-layer-dependency fix elsewhere, e.g. {@see imageService()}) would
  * force all 33 real `new CategoryService(...)` call sites to supply one
@@ -143,10 +142,10 @@ final readonly class CategoryService
     }
 
     /**
-     * `Activity` is L2bExtendedDomain; `CategoryService` is L2aCoreDomain
-     * and may not depend on it directly (a private helper constructing
-     * `ActivityService` inline is a real `deptrac analyse` violation here
-     * specifically because Activity crosses layers). Unlike `ImageService`/
+     * A private helper constructing `ActivityService` inline instead of
+     * taking `ActivityLoggerInterface` would defeat the whole point of
+     * that interface seam (see this class's own opening docblock). Unlike
+     * `ImageService`/
      * `TagService` (each constructed fresh per write operation),
      * `CategoryService` has many real construction sites, the vast
      * majority pure-read (menu rendering, gallery browsing) that never
@@ -1126,11 +1125,13 @@ final readonly class CategoryService
      *
      * The site's own `sites` row is deleted by a real listener
      * on {@see DeleteSite}, registered in {@see \Piwigo\Bootstrap\RequestBootstrap}
-     * -- `Category` (`L2aCoreDomain`) can't depend on `Site`
-     * (`L2bExtendedDomain`) directly (`deptrac.yaml` only allows downward
-     * dependencies), and the site's own categories must already be gone
-     * first regardless, so this stays synchronous rather than a fire-
-     * and-forget notification.
+     * -- `Category` originally couldn't depend on `Site` directly back
+     * when `Site` was `L2bExtendedDomain` (both are `L2aCoreDomain` now,
+     * see {@see SiteGalleriesUrlLookupInterface}'s own docblock), and the
+     * site's own categories must already be gone first regardless, so
+     * this stays synchronous rather than a fire-and-forget notification
+     * even though the layer constraint that originally motivated the
+     * event indirection no longer applies.
      */
     public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager): void
     {

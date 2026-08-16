@@ -12,13 +12,13 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Images;
 
 use Override;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\Event\RenderElementDescription;
 use Piwigo\Html\Event\RenderElementName;
 use Piwigo\Image\ImageRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
-use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Ws\ImageFilterCriteriaBuilder;
 use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;

@@ -146,7 +146,8 @@ final readonly class SortRenderer
      */
     public function rankColumn(): string
     {
-        return $this->platform()->quoteSingleIdentifier('rank');
+        return $this->platform()
+            ->quoteSingleIdentifier('rank');
     }
 
     /**

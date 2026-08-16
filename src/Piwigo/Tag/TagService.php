@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
-use Piwigo\Db\SortRenderer;
 use LogicException;
 use Piwigo\Cache\TagCloudCachePool;
 use Piwigo\Common\ValueObject\ImageId;
@@ -15,6 +14,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
@@ -35,11 +35,11 @@ use Piwigo\Users\CurrentUser;
  * Tag domain business logic. Constructor-injects TagRepository and
  * PermissionService, plain constructor injection (same shape as
  * CalendarService, also L2aCoreDomain -- Permission is same-layer, no
- * deptrac concern). Also injects ActivityLoggerInterface --
- * `Piwigo\Activity\ActivityService` itself is L2bExtendedDomain, so
- * deleteTags() depends on the L1Infrastructure interface instead, same
- * shape as GroupService/UserService/AuthService's own fix for this exact
- * layering constraint (see ActivityLoggerInterface's own docblock).
+ * deptrac concern). Also injects ActivityLoggerInterface -- deleteTags()
+ * depends on the L1Infrastructure interface instead of the concrete
+ * `ActivityService`, same shape as GroupService/UserService/AuthService's
+ * own use of it (see ActivityLoggerInterface's own docblock for why the
+ * interface exists at all).
  *
  * getAllTags()/getCommonTags()/getTagListForImage()/getTagListByIds() each
  * take HtmlRenderingInterface as an explicit parameter, same per-method

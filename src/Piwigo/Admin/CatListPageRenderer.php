@@ -22,7 +22,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Html\HtmlService;
-use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;

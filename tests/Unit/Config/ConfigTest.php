@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Config\NotificationConfig;
 use Piwigo\Config\UpdateNotification;
-use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 beforeEach(function (): void {

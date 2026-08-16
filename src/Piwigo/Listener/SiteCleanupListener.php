@@ -13,11 +13,12 @@ use Piwigo\Site\SiteRepository;
  * Extracted from `Bootstrap\RequestBootstrap::finalize()`'s own
  * `DeleteSite` registration. `Category\CategoryService::deleteSite()`
  * dispatches this instead of reaching into `Site\SiteRepository` directly
- * (a real Deptrac boundary: `Category` is L2aCoreDomain, `Site` is
- * L2bExtendedDomain). `RequestBootstrap` constructs this listener
- * explicitly (not via container autowiring) so `$siteRepository` reuses
- * the request's own shared `Connection` instead of building a separate
- * one.
+ * -- see {@see \Piwigo\Category\CategoryService::deleteSite()}'s own
+ * docblock for why this event indirection still stands even though the
+ * deptrac boundary that originally required it is gone. `RequestBootstrap`
+ * constructs this listener explicitly (not via container autowiring) so
+ * `$siteRepository` reuses the request's own shared `Connection` instead
+ * of building a separate one.
  */
 final readonly class SiteCleanupListener implements SubscriberInterface
 {

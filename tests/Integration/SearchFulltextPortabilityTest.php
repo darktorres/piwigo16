@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
-use Piwigo\Db\SortRenderer;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
@@ -30,6 +29,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
@@ -156,7 +156,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             dir: null,
             rank: null,
             status: CategoryStatus::Public,
-            siteId: null,
+            site: null,
             visible: true,
             representativePicture: null,
             uppercats: '1',

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
-use Piwigo\Db\SortRenderer;
 use Doctrine\DBAL\ArrayParameterType;
 use Exception;
 use LogicException;
@@ -22,6 +21,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\LikePattern;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Event\Search\QsearchGetScopes;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;

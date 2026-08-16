@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Audit\Projection\AuditLogEntry;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * @return array<string, mixed>

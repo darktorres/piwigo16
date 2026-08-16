@@ -32,5 +32,4 @@ interface OldPermalinkLookupInterface
     public function findPermalinkMatches(array $permalinks): array;
 
     public function touchOldPermalinkHit(string $permalink, int $catId): void;
-
 }

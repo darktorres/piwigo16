@@ -69,10 +69,24 @@ deptrac:
     # domain, L2a) query user_group/group_access directly, a real
     # dependency from Permission onto Group, and L2a may not depend
     # sideways on L2b.
+    # Piwigo\Site/Piwigo\Metadata/Piwigo\Activity moved here from
+    # L2bExtendedDomain for `0.3` wave 3 (categories.site_id modeled as a
+    # real #[ORM\ManyToOne] CategoryEntity->SiteEntity association):
+    # Piwigo\Category (L2a) needed to depend on Piwigo\Site, which L2b
+    # placement forbade. The three move together, not just Site alone,
+    # because Site\LocalSiteReader depends on Metadata, and Metadata
+    # depends on Activity -- moving only Site would have just relocated
+    # the violation onto Site->Metadata. Audited every cross-namespace
+    # `use` in all three namespaces (recursively, not just top-level
+    # files) before moving: every other dependency any of the three has is
+    # already L0Data/L1Infrastructure/L2aCoreDomain, so this is the full
+    # chain, not a partial fix. Confirmed empirically too -- `deptrac
+    # analyse` reports 0 violations both right after this move (before the
+    # association existed) and with the association declared.
     - name: L2aCoreDomain
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Auth|Users|Permission|Category|Image|Tag|Group)\\.*
+          value: ^Piwigo\\(Auth|Users|Permission|Category|Image|Tag|Group|Site|Metadata|Activity)\\.*
     # L2b Extended Domain — every other first-party domain namespace.
     # Explicit enumeration (not a catch-all regex) so a namespace added
     # later has to be deliberately placed in the right layer instead of
@@ -93,18 +107,15 @@ deptrac:
     # (the anonymous-rater cookie), same L2b -> L2a shape as Comment's
     # EphemeralKeyService.
     # Piwigo\Caddie\CaddieRepository, Piwigo\Rate\RateRepository,
-    # Piwigo\Feed\FeedRepository, Piwigo\History\HistoryRepository, and
-    # Piwigo\Activity\ActivityRepository are plain Doctrine ORM entity
-    # repositories with no custom constructor of their own.
+    # Piwigo\Feed\FeedRepository, and Piwigo\History\HistoryRepository are
+    # plain Doctrine ORM entity repositories with no custom constructor of
+    # their own.
     # Piwigo\Notification\NotificationRepository/Service
     # constructor-injects Piwigo\Permission\PermissionService
     # (getSqlConditionFandF()), a real L2b -> L2a dependency, always
     # allowed. Neither it nor NotificationByMailRepository/Service inject
     # MailerInterface -- mail sending in this domain stays a
     # pwg_mail()-style free-function call.
-    # Piwigo\Metadata\MetadataService constructor-injects
-    # Piwigo\Users\CurrentUser (L2a), a real L2b -> L2a dependency,
-    # always allowed.
     # Piwigo\Telemetry\TelemetryService constructor-injects Doctrine's
     # EntityManagerInterface and Piwigo\Config\ConfigRepository directly
     # (ConfigRepository is L1), no Repository of its own and no other
@@ -137,7 +148,7 @@ deptrac:
     - name: L2bExtendedDomain
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Search|Calendar|Site|Url|Csrf|Permalink|Feed|Filter|Comment|Rate|Caddie|History|Activity|Notification|Metadata|Telemetry|Section)\\.*
+          value: ^Piwigo\\(Search|Calendar|Url|Csrf|Permalink|Feed|Filter|Comment|Rate|Caddie|History|Notification|Telemetry|Section)\\.*
         - type: classLike
           value: ^Piwigo\\PluginConfig\\(PluginRepository|PluginEntity|PluginState|Projection\\Plugin|PluginMigrationEntity|PluginMigrationRepository)$
     # L3 Presentation — Http\Middleware\RoutingMiddleware depends on

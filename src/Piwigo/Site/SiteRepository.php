@@ -10,7 +10,6 @@ use Doctrine\ORM\Query\Expr\Join;
 use Override;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\SiteGalleriesUrlLookupInterface;
-use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Site\Projection\Site;
 
@@ -46,13 +45,17 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
     /**
      * Real DQL replacement for {@see \Piwigo\Category\
      * CategoryRepository::deleteSiteRow()} (removed) -- that method
-     * existed only because `Category` (`L2aCoreDomain`)
-     * can't depend on `Site` (`L2bExtendedDomain`) directly; the delete
-     * itself is trivial once it lives in the domain that actually owns
-     * the table. {@see \Piwigo\Category\CategoryService::deleteSite()}
-     * dispatches {@see \Piwigo\Category\Event\DeleteSite} instead of calling
-     * this directly -- the listener is registered in
-     * {@see \Piwigo\Bootstrap\RequestBootstrap}.
+     * existed only because `Category` couldn't depend on `Site` directly
+     * back when `Site` was `L2bExtendedDomain`; the delete itself is
+     * trivial once it lives in the domain that actually owns the table.
+     * `0.3` later moved `Site` into `L2aCoreDomain` alongside `Category`
+     * (to let `CategoryEntity` associate to `SiteEntity`), so the layer
+     * constraint that originally motivated this indirection no longer
+     * applies, but the event-based decoupling itself is still the
+     * intended shape, not just a workaround. {@see \Piwigo\Category\
+     * CategoryService::deleteSite()} dispatches {@see \Piwigo\Category\
+     * Event\DeleteSite} instead of calling this directly -- the listener
+     * is registered in {@see \Piwigo\Bootstrap\RequestBootstrap}.
      */
     public function delete(int $id): void
     {
@@ -100,8 +103,9 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
     /**
      * Real DQL replacement for the raw DBAL read
      * {@see \Piwigo\Category\CategoryRepository::findSiteGalleriesUrls()}
-     * used to do directly -- `Category` (`L2aCoreDomain`) can't depend on
-     * `Site` (`L2bExtendedDomain`), so {@see \Piwigo\Category\CategoryService::getFulldirs()}
+     * used to do directly -- `Category` couldn't depend on `Site` back
+     * when `Site` was `L2bExtendedDomain` (both are `L2aCoreDomain` now,
+     * see {@see delete()}'s own docblock above), so {@see \Piwigo\Category\CategoryService::getFulldirs()}
      * now takes {@see SiteGalleriesUrlLookupInterface} as an explicit
      * parameter instead.
      *
@@ -131,11 +135,9 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
      * Real DQL replacement for the raw DBAL read
      * {@see \Piwigo\Category\CategoryRepository::findGalleriesUrlForCategory()}
      * used to do directly -- same reasoning as {@see findAllGalleriesUrls()}
-     * above. `Site` (`L2bExtendedDomain`) CAN depend downward on
-     * `Category` (`L2aCoreDomain`), same direction
-     * {@see findCategoryAndImageCountsBySite()} below already uses, so
-     * this join is a legal same-repository DQL query, not a boundary
-     * crossing.
+     * above. `Site` and `Category` are both `L2aCoreDomain` (see
+     * {@see delete()}'s own docblock above), so this join is a legal
+     * same-layer, same-repository DQL query, not a boundary crossing.
      */
     #[Override]
     public function findGalleriesUrlForCategory(int|string $categoryId): ?string
@@ -144,7 +146,7 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
             ->createQueryBuilder()
             ->select('s.galleriesUrl')
             ->from(SiteEntity::class, 's')
-            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 's.id = c.siteId')
+            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 's.id = c.site')
             ->where('c.id = :categoryId')
             ->setParameter('categoryId', $categoryId)
             ->setMaxResults(1)
@@ -183,17 +185,19 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
         // ImageEntity -- an explicit Join::WITH is still needed (a natural
         // association join would require the join to start from the
         // owning side), just with the bare association path on the image
-        // side instead of the old scalar column. CategoryEntity::$siteId
-        // is SiteId-typed -- getArrayResult() hydrates 'site_id' through
-        // it (Gotcha #1), unwrapped below. ImageEntity's id stays a plain
-        // scalar.
+        // side instead of the old scalar column. `CategoryEntity::$site`
+        // is an association too now -- `IDENTITY(c.site)` extracts the raw
+        // FK id without hydrating `SiteEntity` (a bare path in `SELECT`
+        // would hydrate it instead); the bare path still works unchanged
+        // in `WHERE`/`GROUP BY`, resolving to the same raw column.
+        // ImageEntity's id stays a plain scalar.
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('c.siteId AS site_id', 'COUNT(DISTINCT c.id) AS nb_categories', 'COUNT(i.id) AS nb_images')
+            ->select('IDENTITY(c.site) AS site_id', 'COUNT(DISTINCT c.id) AS nb_categories', 'COUNT(i.id) AS nb_images')
             ->from(CategoryEntity::class, 'c')
             ->leftJoin(ImageEntity::class, 'i', Join::WITH, 'c.id = i.storageCategory')
-            ->where('c.siteId IS NOT NULL')
-            ->groupBy('c.siteId')
+            ->where('c.site IS NOT NULL')
+            ->groupBy('c.site')
             ->getQuery()
             ->getArrayResult();
 
@@ -206,8 +210,8 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
             $siteId = $row['site_id'] ?? null;
             $nbCategories = $row['nb_categories'] ?? null;
             $nbImages = $row['nb_images'] ?? null;
-            if ($siteId instanceof SiteId && is_numeric($nbCategories) && is_numeric($nbImages)) {
-                $bySiteId[$siteId->value] = [
+            if (is_numeric($siteId) && is_numeric($nbCategories) && is_numeric($nbImages)) {
+                $bySiteId[(int) $siteId] = [
                     'nb_categories' => (int) $nbCategories,
                     'nb_images' => (int) $nbImages,
                 ];

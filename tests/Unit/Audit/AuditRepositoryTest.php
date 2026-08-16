@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\Projection\AuditLogEntry;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 

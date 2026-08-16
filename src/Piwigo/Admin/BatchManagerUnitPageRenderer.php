@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Db\SortRenderer;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Admin\Event\BatchManagerUnitRendered;
@@ -27,6 +26,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
@@ -241,13 +241,15 @@ final readonly class BatchManagerUnitPageRenderer
             } else {
                 // order_by is a raw "ORDER BY ..." SQL fragment string --
                 // see CurrentConfig::orderBy()'s own docblock.
-                $order_by = new SortRenderer($this->entityManager->getConnection())->toSql($this->currentConfig->orderBy);
+                $order_by = new SortRenderer($this->entityManager->getConnection())
+                    ->toSql($this->currentConfig->orderBy);
             }
 
             if ($is_category) {
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
-                $order_by = new SortRenderer($this->entityManager->getConnection())->toSql($this->currentConfig->orderByInsideCategory);
+                $order_by = new SortRenderer($this->entityManager->getConnection())
+                    ->toSql($this->currentConfig->orderByInsideCategory);
                 $category_image_order = $category_info instanceof CategoryInfo ? $category_info->imageOrder : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;

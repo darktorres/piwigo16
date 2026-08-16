@@ -201,7 +201,7 @@ final class FilesystemHelper
 
     /**
      * Lives here (not Piwigo\Admin) because a real caller,
-     * Piwigo\Site\LocalSiteReader (L2bExtendedDomain), can't depend on
+     * Piwigo\Site\LocalSiteReader (L2aCoreDomain), can't depend on
      * L4Integration -- this class is already L1Infrastructure, reachable
      * from every layer, and already owns the sibling
      * mkgetdir()/secureDirectory() filesystem concerns.

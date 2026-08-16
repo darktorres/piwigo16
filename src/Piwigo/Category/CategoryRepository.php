@@ -41,13 +41,14 @@ use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\Permalink;
-use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\LikePattern;
+use Piwigo\Db\OrderByClause;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
@@ -55,8 +56,6 @@ use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
-use Piwigo\Db\OrderByClause;
-use Piwigo\Db\SortRenderer;
 
 /**
  * Persistence layer for the category domain: tree/menu queries, permalink
@@ -445,7 +444,8 @@ final readonly class CategoryRepository
         // ONLY_FULL_GROUP_BY needs `ic.rank` explicitly in the GROUP BY
         // list too (added below) since it can't infer the functional
         // dependency on `i.id` from the WHERE clause's IN-list cardinality.
-        $dqlOrderBy = $this->sortRenderer()->toDql($this->currentConfig->orderBy, 'i', count($catIds) === 1 ? 'ic' : null);
+        $dqlOrderBy = $this->sortRenderer()
+            ->toDql($this->currentConfig->orderBy, 'i', count($catIds) === 1 ? 'ic' : null);
         if ($dqlOrderBy !== null) {
             return $this->findImageIdsForCategoriesViaDql($catIds, $mode, $criteria, $dqlOrderBy);
         }
@@ -709,8 +709,8 @@ final readonly class CategoryRepository
     {
         return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
-            ->where('c.siteId = :siteId')
-            ->setParameter('siteId', SiteId::from($siteId))
+            ->where('c.site = :siteId')
+            ->setParameter('siteId', $siteId)
             ->getQuery()
             ->getSingleColumnResult()));
     }
@@ -1657,6 +1657,9 @@ final readonly class CategoryRepository
      *
      * Real DQL -- single-table, static WHERE. `c.id` is custom-Typed
      * (`category_id`) -- see this class's own Gotcha #1 note above.
+     * `IDENTITY(c.site)` extracts the raw FK id without hydrating the
+     * associated `SiteEntity` -- a bare path here would hydrate it
+     * instead, since this is a `SELECT`, not a `WHERE`.
      */
     public function findCategoriesForFulldirs(array $ids): array
     {
@@ -1665,7 +1668,7 @@ final readonly class CategoryRepository
         }
 
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
-            ->select('c.id', 'c.uppercats', 'c.siteId AS site_id')
+            ->select('c.id', 'c.uppercats', 'IDENTITY(c.site) AS site_id')
             ->where('c.dir IS NOT NULL')
             ->andWhere('c.id IN (:ids)')
             ->setParameter('ids', array_values($ids), ArrayParameterType::INTEGER)
@@ -1681,7 +1684,7 @@ final readonly class CategoryRepository
             $result[] = new CategoryFulldirRow(
                 id: $row['id']->value,
                 uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                siteId: ($row['site_id'] ?? null) instanceof SiteId ? $row['site_id']->value : null,
+                siteId: is_numeric($row['site_id'] ?? null) ? (int) $row['site_id'] : null,
             );
         }
 
@@ -2230,8 +2233,8 @@ final readonly class CategoryRepository
     {
         return self::narrowIdNameUppercatsRankRows($this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
-            ->where('c.siteId = :siteId')
-            ->setParameter('siteId', SiteId::from($siteId))
+            ->where('c.site = :siteId')
+            ->setParameter('siteId', $siteId)
             ->getQuery()
             ->getArrayResult());
     }
@@ -3781,8 +3784,8 @@ final readonly class CategoryRepository
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id AS id', 'c.uppercats AS uppercats', 'c.globalRank AS global_rank', 'c.status AS status', 'c.visible AS visible')
             ->where('c.dir IS NOT NULL')
-            ->andWhere('c.siteId = :siteId')
-            ->setParameter('siteId', SiteId::from($siteId));
+            ->andWhere('c.site = :siteId')
+            ->setParameter('siteId', $siteId);
 
         if ($catId !== null) {
             if ($recursive) {

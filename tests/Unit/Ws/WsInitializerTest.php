@@ -75,6 +75,25 @@ test('init memoizes the built Server across repeated calls on the same instance'
         ->toBe($first);
 });
 
+test('init re-applies the current request format on a memoized Server instead of keeping the first call\'s format forever', function (): void {
+    $wsInitializer = wsInitializerTestGet();
+
+    unset($_GET['format']);
+    $first = $wsInitializer->init();
+    expect($first->responseFormat)
+        ->toBe('rest');
+
+    $_GET['format'] = 'json';
+    $second = $wsInitializer->init();
+
+    expect($second)
+        ->toBe($first)
+        ->and($second->responseFormat)
+        ->toBe('json')
+        ->and($second->responseEncoder)
+        ->toBeInstanceOf(JsonEncoder::class);
+});
+
 test('init selects the response encoder matching ?format=json', function (): void {
     $_GET['format'] = 'json';
 

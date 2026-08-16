@@ -20,6 +20,10 @@ use Piwigo\Activity\Projection\UserAgentBreakdown;
 use Piwigo\Auth\LoginActivityLookupInterface;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\ActivitySystem;
@@ -85,9 +89,33 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
 
         $em = $this->getEntityManager();
         foreach ($rows as $row) {
+            $objectId = is_numeric($row['objectId']) ? (int) $row['objectId'] : 0;
+            $kind = ActivityObject::tryFrom($row['object']);
+
+            // The live reference: exactly one typed column, chosen by the
+            // discriminator, and only when the referenced row actually
+            // exists right now.
+            //
+            // That check is not defensive padding. record() accepts any id
+            // from any caller, and two ordinary cases supply one that is
+            // already gone: a deletion is logged *after* the row is removed,
+            // and callers legitimately record activity against ids they do
+            // not own. Handing either to the foreign key gets the insert
+            // rejected -- which for a deletion would take the delete itself
+            // down. A log entry must never be able to fail the operation it
+            // is recording.
+            //
+            // The history is unaffected: object_id keeps the id either way,
+            // and ActivityService adds details['deleted_object_ids'] for
+            // deletions.
+            $column = $kind?->referenceColumn();
+            if ($column !== null && ! $this->referentExists($kind, $objectId)) {
+                $column = null;
+            }
+
             $em->persist(new ActivityEntity(
                 object: $row['object'],
-                objectId: is_numeric($row['objectId']) ? (int) $row['objectId'] : 0,
+                objectId: $objectId,
                 action: $row['action'],
                 performedBy: $row['performedBy'] !== null ? UserId::tryFrom($row['performedBy']) : null,
                 sessionIdx: $row['sessionIdx'],
@@ -95,10 +123,53 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
                 occuredOn: $row['occuredOn'],
                 details: $row['details'],
                 userAgent: $row['userAgent'],
+                userId: $column === 'userId' ? UserId::tryFrom($objectId) : null,
+                categoryId: $column === 'categoryId' ? CategoryId::tryFrom($objectId) : null,
+                imageId: $column === 'imageId' ? ImageId::tryFrom($objectId) : null,
+                tagId: $column === 'tagId' ? TagId::tryFrom($objectId) : null,
+                groupId: $column === 'groupId' ? GroupId::tryFrom($objectId) : null,
+                systemScope: $kind === ActivityObject::System ? $objectId : null,
             ));
         }
 
         $em->flush();
+    }
+
+    /**
+     * Whether the row a typed reference would point at exists right now.
+     *
+     * One indexed primary-key lookup per activity row. Deliberately not
+     * cached across the batch: insertMany() is called with a handful of rows
+     * for one action, and a stale "yes" here means a rejected insert.
+     */
+    private function referentExists(ActivityObject $kind, int $objectId): bool
+    {
+        $table = match ($kind) {
+            ActivityObject::User => 'users',
+            ActivityObject::Album => 'categories',
+            ActivityObject::Photo => 'images',
+            ActivityObject::Tag => 'tags',
+            ActivityObject::Group => 'groups',
+            ActivityObject::System => null,
+        };
+
+        if ($table === null || $objectId <= 0) {
+            return false;
+        }
+
+        $found = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('1')
+            // `groups` is a reserved word on both engines.
+            ->from($this->getEntityManager()->getConnection()->getDatabasePlatform()->quoteSingleIdentifier($table))
+            ->where('id = :id')
+            ->setParameter('id', $objectId)
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchOne();
+
+        return $found !== false;
     }
 
     /**
@@ -529,16 +600,19 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     public function findSystemActionCountsByObjectId(): array
     {
         $rows = $this->createQueryBuilder('a')
-            ->select('a.object', 'a.objectId AS object_id', 'a.action', 'COUNT(a.activityId) AS counter')
+            // systemScope, not objectId: for `object = 'system'` rows the
+            // ActivitySystem constant now has its own column, and object_id
+            // is only the legacy copy of it kept as history.
+            ->select('a.object', 'a.systemScope AS system_scope', 'a.action', 'COUNT(a.activityId) AS counter')
             ->where("a.object = 'system'")
-            ->groupBy('a.object', 'a.objectId', 'a.action')
+            ->groupBy('a.object', 'a.systemScope', 'a.action')
             ->getQuery()
             ->getResult();
 
         return array_map(
             static fn (array $row): SystemActionCount => new SystemActionCount(
                 object: $row['object'],
-                objectId: $row['object_id'],
+                systemScope: $row['system_scope'],
                 action: $row['action'],
                 counter: $row['counter'],
             ),

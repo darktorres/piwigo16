@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Activity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -27,6 +31,15 @@ final class ActivityEntity
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]
         public string $object,
+        /**
+         * The historical fact: which thing this event was about, at the
+         * time it happened. Never nulled, so a record of a deletion still
+         * says what was deleted -- see the typed columns below, and
+         * Version20260815230000 for why both exist.
+         *
+         * For `object = 'system'` this is not a row id at all; that meaning
+         * moved to $systemScope.
+         */
         #[ORM\Column(name: 'object_id', type: 'integer')]
         public int $objectId,
         #[ORM\Column(type: 'string', length: 255)]
@@ -46,5 +59,29 @@ final class ActivityEntity
         public ?array $details,
         #[ORM\Column(name: 'user_agent', type: 'string', length: 255, nullable: true)]
         public ?string $userAgent,
+        /**
+         * The live references. Exactly one is set on insert, chosen by
+         * {@see ActivityObject::referenceColumn()}; each carries a real
+         * foreign key with `ON DELETE SET NULL`, so none can ever dangle.
+         * A null here with a non-null $objectId means the subject has since
+         * been deleted, which for a log is the normal end state rather than
+         * an error.
+         */
+        #[ORM\Column(name: 'user_id', type: 'user_id', nullable: true)]
+        public ?UserId $userId = null,
+        #[ORM\Column(name: 'category_id', type: 'category_id', nullable: true)]
+        public ?CategoryId $categoryId = null,
+        #[ORM\Column(name: 'image_id', type: 'image_id', nullable: true)]
+        public ?ImageId $imageId = null,
+        #[ORM\Column(name: 'tag_id', type: 'tag_id', nullable: true)]
+        public ?TagId $tagId = null,
+        #[ORM\Column(name: 'group_id', type: 'group_id', nullable: true)]
+        public ?GroupId $groupId = null,
+        /**
+         * `ActivitySystem` constant for `object = 'system'` rows, which
+         * previously overloaded $objectId.
+         */
+        #[ORM\Column(name: 'system_scope', type: 'integer', nullable: true)]
+        public ?int $systemScope = null,
     ) {}
 }

@@ -37,7 +37,13 @@ CREATE TABLE public.activity (
     ip_address character varying(50) DEFAULT NULL::character varying,
     occured_on timestamp(0) without time zone DEFAULT now() NOT NULL,
     details jsonb,
-    user_agent character varying(255) DEFAULT NULL::character varying
+    user_agent character varying(255) DEFAULT NULL::character varying,
+    user_id integer,
+    category_id integer,
+    image_id integer,
+    tag_id integer,
+    group_id integer,
+    system_scope smallint
 );
 
 --
@@ -134,7 +140,8 @@ CREATE TABLE public.audit_log (
     ip_address character varying(45) DEFAULT NULL::character varying,
     created_at timestamp(0) without time zone NOT NULL,
     prev_hash character varying(64) DEFAULT NULL::character varying,
-    row_hash character varying(64) NOT NULL
+    row_hash character varying(64) NOT NULL,
+    group_id integer
 );
 
 --
@@ -2624,10 +2631,46 @@ ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_ui1_unique UNIQUE (username);
 
 --
+-- Name: activity_category_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX activity_category_id_idx ON public.activity USING btree (category_id);
+
+--
+-- Name: activity_group_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX activity_group_id_idx ON public.activity USING btree (group_id);
+
+--
+-- Name: activity_image_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX activity_image_id_idx ON public.activity USING btree (image_id);
+
+--
 -- Name: activity_performed_by_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX activity_performed_by_idx ON public.activity USING btree (performed_by);
+
+--
+-- Name: activity_tag_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX activity_tag_id_idx ON public.activity USING btree (tag_id);
+
+--
+-- Name: activity_user_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX activity_user_id_idx ON public.activity USING btree (user_id);
+
+--
+-- Name: audit_log_group_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX audit_log_group_id_idx ON public.audit_log USING btree (group_id);
 
 --
 -- Name: caddie_element_id_idx; Type: INDEX; Schema: public; Owner: -
@@ -2954,6 +2997,27 @@ CREATE INDEX user_group_user_id_idx ON public.user_group USING btree (user_id);
 CREATE INDEX user_infos_lastmodified_idx ON public.user_infos USING btree (lastmodified);
 
 --
+-- Name: activity fk_activity_category_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.activity
+    ADD CONSTRAINT fk_activity_category_id FOREIGN KEY (category_id) REFERENCES public.categories(id) ON DELETE SET NULL;
+
+--
+-- Name: activity fk_activity_group_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.activity
+    ADD CONSTRAINT fk_activity_group_id FOREIGN KEY (group_id) REFERENCES public.groups(id) ON DELETE SET NULL;
+
+--
+-- Name: activity fk_activity_image_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.activity
+    ADD CONSTRAINT fk_activity_image_id FOREIGN KEY (image_id) REFERENCES public.images(id) ON DELETE SET NULL;
+
+--
 -- Name: activity fk_activity_performed_by; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2961,11 +3025,32 @@ ALTER TABLE ONLY public.activity
     ADD CONSTRAINT fk_activity_performed_by FOREIGN KEY (performed_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 --
+-- Name: activity fk_activity_tag_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.activity
+    ADD CONSTRAINT fk_activity_tag_id FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE SET NULL;
+
+--
+-- Name: activity fk_activity_user_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.activity
+    ADD CONSTRAINT fk_activity_user_id FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+--
 -- Name: audit_log fk_audit_log_actor_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.audit_log
     ADD CONSTRAINT fk_audit_log_actor_id FOREIGN KEY (actor_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+--
+-- Name: audit_log fk_audit_log_group_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.audit_log
+    ADD CONSTRAINT fk_audit_log_group_id FOREIGN KEY (group_id) REFERENCES public.groups(id) ON DELETE SET NULL;
 
 --
 -- Name: caddie fk_caddie_element_id; Type: FK CONSTRAINT; Schema: public; Owner: -

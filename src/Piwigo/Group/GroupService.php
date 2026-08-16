@@ -327,7 +327,13 @@ final readonly class GroupService
         }
 
         $ids = array_keys($deleted);
-        $this->activityLogger->record('group', $ids, 'delete');
+        // The names, not just the ids: activity's group_id nulls the moment
+        // these rows are gone, so without this the log would record that
+        // some groups were deleted but not which. audit_log has captured
+        // them all along -- see the loop below.
+        $this->activityLogger->record('group', $ids, 'delete', [
+            'names' => array_values($deleted),
+        ]);
 
         // [SEC-57] one row per group actually deleted
         $actorId = $this->currentUser->get()->id;

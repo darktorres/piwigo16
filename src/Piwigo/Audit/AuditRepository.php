@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit;
 
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
@@ -43,6 +44,7 @@ final class AuditRepository extends EntityRepository
             createdAt: $createdAt,
             prevHash: $prevHash,
             rowHash: $rowHash,
+            groupId: $this->liveGroupId($entityType, $entityId),
         );
 
         $em = $this->getEntityManager();
@@ -60,6 +62,36 @@ final class AuditRepository extends EntityRepository
      * tip, needed to link the next row in. Null when the log is empty
      * (the very first row ever written has no prev_hash).
      */
+    /**
+     * The typed reference, but only when the group still exists.
+     *
+     * The only current writer records a group *deletion*, so by the time
+     * this runs the row is usually gone and the foreign key would reject the
+     * insert -- failing the very operation being audited. entity_type and
+     * entity_id keep the historical record regardless, and they are what
+     * AuditService::computeHash() folds into the chain, so nothing about the
+     * evidence depends on this column.
+     */
+    private function liveGroupId(string $entityType, ?int $entityId): ?GroupId
+    {
+        if ($entityType !== 'group' || $entityId === null) {
+            return null;
+        }
+
+        $found = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('1')
+            ->from($this->getEntityManager()->getConnection()->getDatabasePlatform()->quoteSingleIdentifier('groups'))
+            ->where('id = :id')
+            ->setParameter('id', $entityId)
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchOne();
+
+        return $found === false ? null : GroupId::tryFrom($entityId);
+    }
+
     public function findLatestRowHash(): ?string
     {
         $entities = $this->createQueryBuilder('a')

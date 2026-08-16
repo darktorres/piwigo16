@@ -553,7 +553,7 @@ namespace Piwigo\Tests\Integration {
 
             $activate = array_values(array_filter(
                 $rows,
-                static fn (SystemActionCount $row): bool => $row->objectId === 3 && $row->action === 'activate'
+                static fn (SystemActionCount $row): bool => $row->systemScope === 3 && $row->action === 'activate'
             ));
             self::assertCount(1, $activate);
             self::assertSame('system', $activate[0]->object);
@@ -561,7 +561,7 @@ namespace Piwigo\Tests\Integration {
 
             $install = array_values(array_filter(
                 $rows,
-                static fn (SystemActionCount $row): bool => $row->objectId === 1 && $row->action === 'install'
+                static fn (SystemActionCount $row): bool => $row->systemScope === 1 && $row->action === 'install'
             ));
             self::assertCount(1, $install);
             self::assertSame(1, $install[0]->counter);

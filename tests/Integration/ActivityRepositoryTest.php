@@ -567,7 +567,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
             $matching = array_values(array_filter(
                 $rows,
-                static fn (SystemActionCount $row): bool => $row->objectId === ActivitySystem::Plugin && $row->action === 'install'
+                static fn (SystemActionCount $row): bool => $row->systemScope === ActivitySystem::Plugin && $row->action === 'install'
             ));
 
             self::assertCount(1, $matching, 'the 2 rows just inserted must collapse into a single grouped bucket');

@@ -34,9 +34,25 @@ CREATE TABLE `activity` (
   `occured_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'when the action was recorded',
   `details` json DEFAULT NULL COMMENT 'per-action heterogeneous payload, e.g. config diffs, batch-edit fields, install metadata',
   `user_agent` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'browser user agent string, only captured on login actions',
+  `user_id` int DEFAULT NULL,
+  `category_id` int DEFAULT NULL,
+  `image_id` int DEFAULT NULL,
+  `tag_id` int DEFAULT NULL,
+  `group_id` int DEFAULT NULL,
+  `system_scope` smallint DEFAULT NULL,
   PRIMARY KEY (`activity_id`),
   KEY `fk_activity_performed_by` (`performed_by`),
-  CONSTRAINT `fk_activity_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  KEY `fk_activity_user_id` (`user_id`),
+  KEY `fk_activity_category_id` (`category_id`),
+  KEY `fk_activity_image_id` (`image_id`),
+  KEY `fk_activity_tag_id` (`tag_id`),
+  KEY `fk_activity_group_id` (`group_id`),
+  CONSTRAINT `fk_activity_category_id` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_activity_group_id` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_activity_image_id` FOREIGN KEY (`image_id`) REFERENCES `images` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_activity_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_activity_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_activity_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='general activity log of user and system actions, distinct from the tamper-evident audit_log';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -46,7 +62,7 @@ CREATE TABLE `activity` (
 
 LOCK TABLES `activity` WRITE;
 /*!40000 ALTER TABLE `activity` DISABLE KEYS */;
-INSERT INTO `activity` VALUES (1,'system',3,'activate',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL),(2,'system',1,'install',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"16.3.0\"}',NULL),(3,'user',1,'login',1,'aa35407a03d85ddb0c5cb929d012a4ee','::1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0'),(4,'user',1,'login',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.session.login\"}','PiwigoFixtureRegen/1.0'),(5,'album',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL),(6,'album',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL),(7,'photo',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(8,'photo',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(9,'photo',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(10,'photo',4,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(11,'photo',5,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(12,'tag',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),(13,'tag',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),(14,'tag',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),(15,'user',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL),(16,'user',4,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL),(17,'group',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL),(18,'group',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL),(19,'group',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL);
+INSERT INTO `activity` VALUES (1,'system',3,'activate',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL,NULL,NULL,NULL,NULL,NULL,3),(2,'system',1,'install',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"16.3.0\"}',NULL,NULL,NULL,NULL,NULL,NULL,1),(3,'user',1,'login',1,'aa35407a03d85ddb0c5cb929d012a4ee','::1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0',1,NULL,NULL,NULL,NULL,NULL),(4,'user',1,'login',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.session.login\"}','PiwigoFixtureRegen/1.0',1,NULL,NULL,NULL,NULL,NULL),(5,'album',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL,NULL,1,NULL,NULL,NULL,NULL),(6,'album',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL,NULL,2,NULL,NULL,NULL,NULL),(7,'photo',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,1,NULL,NULL,NULL),(8,'photo',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,2,NULL,NULL,NULL),(9,'photo',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,3,NULL,NULL,NULL),(10,'photo',4,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,4,NULL,NULL,NULL),(11,'photo',5,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,5,NULL,NULL,NULL),(12,'tag',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL,NULL,NULL,NULL,1,NULL,NULL),(13,'tag',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL,NULL,NULL,NULL,2,NULL,NULL),(14,'tag',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL,NULL,NULL,NULL,3,NULL,NULL),(15,'user',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL,3,NULL,NULL,NULL,NULL,NULL),(16,'user',4,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL,4,NULL,NULL,NULL,NULL,NULL),(17,'group',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL,NULL,NULL,NULL,NULL,1,NULL),(18,'group',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL,NULL,NULL,NULL,NULL,2,NULL),(19,'group',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL,NULL,NULL,NULL,NULL,3,NULL);
 /*!40000 ALTER TABLE `activity` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -69,11 +85,14 @@ CREATE TABLE `audit_log` (
   `created_at` datetime NOT NULL COMMENT 'when the action was recorded',
   `prev_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'row_hash of the previous row, null for the first row, forms the hash chain',
   `row_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash',
+  `group_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_audit_log_entity` (`entity_type`,`entity_id`),
   KEY `idx_audit_log_actor` (`actor_id`),
   KEY `idx_audit_log_created_at` (`created_at`),
-  CONSTRAINT `fk_audit_log_actor_id` FOREIGN KEY (`actor_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  KEY `fk_audit_log_group_id` (`group_id`),
+  CONSTRAINT `fk_audit_log_actor_id` FOREIGN KEY (`actor_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_audit_log_group_id` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SEC-57 append-only, hash-chained audit trail of admin actions and permission changes';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -83,7 +102,7 @@ CREATE TABLE `audit_log` (
 
 LOCK TABLES `audit_log` WRITE;
 /*!40000 ALTER TABLE `audit_log` DISABLE KEYS */;
-INSERT INTO `audit_log` VALUES (1,1,'create','group',1,NULL,'{\"name\": \"Editors\"}','::1','2026-08-01 00:00:00',NULL,'fb08569e0a181f3c519a47ed7faed20c576f9aee1d4ba3361bfb5d9bc9ffbbe0'),(2,1,'create','group',2,NULL,'{\"name\": \"Reviewers\"}','::1','2026-08-01 00:00:00','fb08569e0a181f3c519a47ed7faed20c576f9aee1d4ba3361bfb5d9bc9ffbbe0','425622dddcec305339ccef4d45d997d899b77bcd4fc4ead48ff7df01a6dbc53b'),(3,1,'create','group',3,NULL,'{\"name\": \"Guests\"}','::1','2026-08-01 00:00:00','425622dddcec305339ccef4d45d997d899b77bcd4fc4ead48ff7df01a6dbc53b','964f6fe6c7316cb7897260dffb899337c55e0d85c47c386f131533c5b209052f');
+INSERT INTO `audit_log` VALUES (1,1,'create','group',1,NULL,'{\"name\": \"Editors\"}','::1','2026-08-01 00:00:00',NULL,'fb08569e0a181f3c519a47ed7faed20c576f9aee1d4ba3361bfb5d9bc9ffbbe0',1),(2,1,'create','group',2,NULL,'{\"name\": \"Reviewers\"}','::1','2026-08-01 00:00:00','fb08569e0a181f3c519a47ed7faed20c576f9aee1d4ba3361bfb5d9bc9ffbbe0','425622dddcec305339ccef4d45d997d899b77bcd4fc4ead48ff7df01a6dbc53b',2),(3,1,'create','group',3,NULL,'{\"name\": \"Guests\"}','::1','2026-08-01 00:00:00','425622dddcec305339ccef4d45d997d899b77bcd4fc4ead48ff7df01a6dbc53b','964f6fe6c7316cb7897260dffb899337c55e0d85c47c386f131533c5b209052f',3);
 /*!40000 ALTER TABLE `audit_log` ENABLE KEYS */;
 UNLOCK TABLES;
 

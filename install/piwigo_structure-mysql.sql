@@ -26,9 +26,25 @@ CREATE TABLE `activity` (
   `occured_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'when the action was recorded',
   `details` json DEFAULT NULL COMMENT 'per-action heterogeneous payload, e.g. config diffs, batch-edit fields, install metadata',
   `user_agent` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'browser user agent string, only captured on login actions',
+  `user_id` int DEFAULT NULL,
+  `category_id` int DEFAULT NULL,
+  `image_id` int DEFAULT NULL,
+  `tag_id` int DEFAULT NULL,
+  `group_id` int DEFAULT NULL,
+  `system_scope` smallint DEFAULT NULL,
   PRIMARY KEY (`activity_id`),
   KEY `fk_activity_performed_by` (`performed_by`),
-  CONSTRAINT `fk_activity_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  KEY `fk_activity_user_id` (`user_id`),
+  KEY `fk_activity_category_id` (`category_id`),
+  KEY `fk_activity_image_id` (`image_id`),
+  KEY `fk_activity_tag_id` (`tag_id`),
+  KEY `fk_activity_group_id` (`group_id`),
+  CONSTRAINT `fk_activity_category_id` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_activity_group_id` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_activity_image_id` FOREIGN KEY (`image_id`) REFERENCES `images` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_activity_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_activity_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_activity_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='general activity log of user and system actions, distinct from the tamper-evident audit_log';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -45,11 +61,14 @@ CREATE TABLE `audit_log` (
   `created_at` datetime NOT NULL COMMENT 'when the action was recorded',
   `prev_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'row_hash of the previous row, null for the first row, forms the hash chain',
   `row_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash',
+  `group_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_audit_log_entity` (`entity_type`,`entity_id`),
   KEY `idx_audit_log_actor` (`actor_id`),
   KEY `idx_audit_log_created_at` (`created_at`),
-  CONSTRAINT `fk_audit_log_actor_id` FOREIGN KEY (`actor_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  KEY `fk_audit_log_group_id` (`group_id`),
+  CONSTRAINT `fk_audit_log_actor_id` FOREIGN KEY (`actor_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_audit_log_group_id` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SEC-57 append-only, hash-chained audit trail of admin actions and permission changes';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

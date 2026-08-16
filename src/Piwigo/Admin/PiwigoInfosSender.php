@@ -388,7 +388,7 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
             $piwigoActivitiesFlat[$activity->object][$activity->action] = $activity->counter;
         }
 
-        $labelForSystemObjectId = [
+        $labelForSystemScope = [
             1 => 'core',
             2 => 'plugin',
             3 => 'theme',
@@ -397,7 +397,11 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
         /** @var array<string, array<string, array<string, int>>> $piwigoActivitiesSystem */
         $piwigoActivitiesSystem = [];
         foreach ($this->activityService->getSystemActionCountsByObjectId() as $activity) {
-            $label = $labelForSystemObjectId[$activity->objectId] ?? 'undefined';
+            // Null scope means a row written before the object_id overload
+            // was split out, or by something bypassing ActivityService.
+            $label = $activity->systemScope === null
+                ? 'undefined'
+                : $labelForSystemScope[$activity->systemScope] ?? 'undefined';
             $piwigoActivitiesSystem[$activity->object][$label][$activity->action] = $activity->counter;
         }
         $piwigoInfos['activities'] = $piwigoActivitiesFlat + $piwigoActivitiesSystem;

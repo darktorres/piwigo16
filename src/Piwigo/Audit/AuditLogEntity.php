@@ -6,6 +6,7 @@ namespace Piwigo\Audit;
 
 use Piwigo\Common\ValueObject\UserId;
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
@@ -55,5 +56,14 @@ final class AuditLogEntity
         public ?string $prevHash,
         #[ORM\Column(name: 'row_hash', type: 'string', length: 64)]
         public string $rowHash,
+        /**
+         * Live reference for `entity_type = 'group'`, with a foreign key
+         * that nulls on deletion. `entity_type`/`entity_id` stay the
+         * historical record: AuditService::computeHash() folds `entity_id`
+         * into every row_hash, so it cannot move without invalidating the
+         * chain. More typed columns join this as more entity types appear.
+         */
+        #[ORM\Column(name: 'group_id', type: 'group_id', nullable: true)]
+        public ?GroupId $groupId = null,
     ) {}
 }

@@ -174,6 +174,19 @@ final readonly class ActivityService implements ActivityLoggerInterface
         $occuredOn = SqlDateTime::from(Env::now()
             ->format('Y-m-d H:i:s'));
 
+        // A deletion is logged *because* the subject is gone, so its typed
+        // reference is null from the moment the row is written and the
+        // foreign key can never bring it back. Snapshotting the id into the
+        // payload keeps the record answerable -- centrally, so no call site
+        // has to remember. Callers that also have a human label (see
+        // Group\GroupService) pass it in $details alongside.
+        if ($action === 'delete') {
+            $details['deleted_object_ids'] = array_values(array_map(
+                static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0,
+                $objectIds,
+            ));
+        }
+
         $rows = [];
         foreach ($objectIds as $loopObjectId) {
             // activity.performed_by has an ON DELETE SET NULL foreign key

@@ -223,7 +223,11 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
     $originalActivityRows = $conn->fetchAllAssociative('SELECT * FROM activity');
     $conn->executeStatement('DELETE FROM activity');
     $conn->executeStatement(
-        'INSERT INTO activity VALUES '
+        // Explicit column list: activity gained typed reference columns
+        // (user_id, category_id, ...) and a column-less INSERT breaks the
+        // moment the table grows. These rows exercise object/object_id,
+        // which is what the renderer reads.
+        'INSERT INTO activity (activity_id, object, object_id, action, performed_by, session_idx, ip_address, occured_on, details, user_agent) VALUES '
         . "(1,'system',3,'activate',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL),"
         . "(2,'system',1,'install',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"16.3.0\"}',NULL),"
         . "(3,'user',1,'login',1,'8681675b2a4136fb177e08193dcc5043','::1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0'),"

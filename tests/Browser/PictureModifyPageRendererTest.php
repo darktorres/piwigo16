@@ -464,9 +464,20 @@ it('honors the session edit context as the delete redirect target instead of the
     $curl = $session['curl'];
     $baseUrl = $session['baseUrl'];
 
+    $statusResponse = $curl($baseUrl . '/ws.php?format=json', [
+        'method' => 'pwg.session.getStatus',
+    ]);
+    $statusData = json_decode($statusResponse['body'], true);
+    $statusResult = is_array($statusData) ? ($statusData['result'] ?? null) : null;
+    $pwgTokenRaw = is_array($statusResult) ? ($statusResult['pwg_token'] ?? null) : null;
+    $pwgToken = is_string($pwgTokenRaw) ? $pwgTokenRaw : '';
+    expect($pwgToken)
+        ->not->toBe('');
+
     $albumResponse = $curl($baseUrl . '/ws.php?format=json', [
         'method' => 'pwg.categories.add',
         'name' => 'PM Delete Context Album ' . uniqid(),
+        'pwg_token' => $pwgToken,
     ]);
     $albumData = json_decode($albumResponse['body'], true);
     $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
@@ -481,16 +492,6 @@ it('honors the session edit context as the delete redirect target instead of the
 
     $view = $curl($baseUrl . '/picture.php?/' . $imageId . '/category/' . $albumId);
     expect($view['status'])->toBe(200);
-
-    $statusResponse = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $statusData = json_decode($statusResponse['body'], true);
-    $statusResult = is_array($statusData) ? ($statusData['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResult) ? ($statusResult['pwg_token'] ?? null) : null;
-    $pwgToken = is_string($pwgTokenRaw) ? $pwgTokenRaw : '';
-    expect($pwgToken)
-        ->not->toBe('');
 
     // Raw curl, redirects NOT followed, capturing the real Location header
     // via CURLINFO_REDIRECT_URL -- see pictureModifyCurlLoginSession()'s

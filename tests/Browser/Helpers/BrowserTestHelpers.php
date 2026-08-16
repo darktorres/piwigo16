@@ -840,6 +840,25 @@ final class BrowserTestHelpers
     }
 
     /**
+     * WS methods whose pwg_token is unconditionally required (P25 Stage 0's
+     * "Ship first" finding 5, commit 1e12629bf1: checkSecurityToken()
+     * defaults to required: true) — every real call site below wants a
+     * genuinely working call, not a deliberate CSRF-rejection test (those
+     * exercise a *different* endpoint's own missing/wrong-token branch
+     * directly, never one of these 4 methods), so wsCall() itself supplies
+     * the token automatically here rather than requiring 100+ call sites
+     * across the Browser suite to each remember to.
+     *
+     * @var list<string>
+     */
+    private const array WS_METHODS_REQUIRING_TOKEN = [
+        'pwg.categories.add',
+        'pwg.categories.setInfo',
+        'pwg.images.setInfo',
+        'pwg.groups.add',
+    ];
+
+    /**
      * Calls a WS API method through the SAME authenticated browser session,
      * via a same-origin fetch() POST executed in the page (script() awaits
      * the returned promise). POST, not ->navigate() with a GET query string,
@@ -851,6 +870,13 @@ final class BrowserTestHelpers
      */
     public static function wsCall(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $method, array $params = []): array
     {
+        // WS_METHODS_REQUIRING_TOKEN's own methods never appear here --
+        // pwg.session.getStatus is a read-only, no-token method, so this
+        // recurses at most one level deep.
+        if (in_array($method, self::WS_METHODS_REQUIRING_TOKEN, true) && ! array_key_exists('pwg_token', $params)) {
+            $params['pwg_token'] = self::pwgToken($page);
+        }
+
         $body = http_build_query(array_merge([
             'method' => $method,
         ], $params));

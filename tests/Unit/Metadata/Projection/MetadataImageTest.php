@@ -34,7 +34,7 @@ function metadataImageTestEntity(?string $representativeExt = 'jpg'): ImageEntit
         storageCategory: null,
         level: 0,
         md5sum: null,
-        addedBy: null,
+        addedByUser: null,
         rotation: null,
         latitude: null,
         longitude: null,

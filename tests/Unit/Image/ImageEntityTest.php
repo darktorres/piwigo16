@@ -5,10 +5,31 @@ declare(strict_types=1);
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryStatus;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Users\UserEntity;
+
+/**
+ * A minimal, never-persisted `UserEntity` standing in for the
+ * `addedByUser` association -- same "safe here, but a real write path must
+ * use $em->getReference() instead" reasoning as `storageCategoryEntity()`
+ * below.
+ */
+function addedByUserEntity(): UserEntity
+{
+    $user = new UserEntity(
+        username: Username::from('uploader'),
+        password: null,
+        mailAddress: Email::from('uploader@example.test'),
+    );
+    $user->id = UserId::from(11);
+
+    return $user;
+}
 
 /**
  * A minimal, never-persisted `CategoryEntity` standing in for the
@@ -41,7 +62,7 @@ function storageCategoryEntity(): CategoryEntity
 }
 
 /**
- * @return array{file: string, dateAvailable: ?SqlDateTime, dateCreation: ?SqlDateTime, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: string, storageCategory: ?CategoryEntity, level: int, md5sum: ?Md5Sum, addedBy: ?UserId, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: SqlDateTime}
+ * @return array{file: string, dateAvailable: ?SqlDateTime, dateCreation: ?SqlDateTime, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: string, storageCategory: ?CategoryEntity, level: int, md5sum: ?Md5Sum, addedByUser: ?UserEntity, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: SqlDateTime}
  */
 function baseImageArgs(): array
 {
@@ -64,7 +85,7 @@ function baseImageArgs(): array
         'storageCategory' => storageCategoryEntity(),
         'level' => 2,
         'md5sum' => Md5Sum::from('9e107d9d372bb6826bd81d3542a419d6'),
-        'addedBy' => UserId::from(11),
+        'addedByUser' => addedByUserEntity(),
         'rotation' => 3,
         'latitude' => 43.2965,
         'longitude' => 5.3698,
@@ -113,7 +134,7 @@ test('constructs with distinct values for every property', function (): void {
         ->toBe(2)
         ->and($image->md5sum)
         ->toEqual(Md5Sum::from('9e107d9d372bb6826bd81d3542a419d6'))
-        ->and($image->addedBy)
+        ->and($image->addedByUser?->id)
         ->toEqual(UserId::from(11))
         ->and($image->rotation)
         ->toBe(3)
@@ -274,13 +295,13 @@ test('constructs with md5sum null', function (): void {
         ->toBeNull();
 });
 
-test('constructs with addedBy null', function (): void {
+test('constructs with addedByUser null', function (): void {
     $args = baseImageArgs();
-    $args['addedBy'] = null;
+    $args['addedByUser'] = null;
 
     $image = new ImageEntity(...$args);
 
-    expect($image->addedBy)
+    expect($image->addedByUser)
         ->toBeNull();
 });
 

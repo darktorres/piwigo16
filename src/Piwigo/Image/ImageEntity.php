@@ -10,8 +10,8 @@ use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\SqlDateTime;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\HasLastModified;
+use Piwigo\Users\UserEntity;
 
 /**
  * Maps the `images` table. `dateMetadataUpdate` stays plain ?string, not a VO
@@ -72,12 +72,17 @@ use Piwigo\Db\HasLastModified;
  * repository's real method list is bulk id-list operations rather
  * than single-entity CRUD.
  *
- * `storageCategory` is a real `#[ORM\ManyToOne] ?CategoryEntity` association
- * (`fk_images_storage_category_id`), not a scalar VO -- the schema's own
- * `ON DELETE SET NULL` is the only referential authority (no
- * `#[JoinColumn(onDelete: ...)]`, see `0.3`'s "No ORM cascades"). `nullable`/
- * `referencedColumnName` are left unspecified deliberately, same reasoning
- * as `CategoryEntity::$representativePicture`.
+ * `storageCategory` and `addedByUser` are both real `#[ORM\ManyToOne]`
+ * associations (`fk_images_storage_category_id`/`fk_images_added_by`), not
+ * scalar VOs -- the schema's own `ON DELETE SET NULL` is the only
+ * referential authority (no `#[JoinColumn(onDelete: ...)]`, see `0.3`'s
+ * "No ORM cascades"). `nullable`/`referencedColumnName` are left
+ * unspecified on either deliberately, same reasoning as
+ * `CategoryEntity::$representativePicture`. `addedByUser` (not `addedBy`)
+ * avoids the confusion of two same-name-but-different-type properties
+ * across the entity/Projection boundary -- `Image\Projection\Image::
+ * $addedBy` stays plain `?int`, unwrapping `$entity->addedByUser?->id?->value`
+ * in `fromEntity()`.
  */
 #[ORM\Entity(repositoryClass: ImageRepository::class)]
 #[ORM\Table(name: 'images')]
@@ -133,8 +138,9 @@ final class ImageEntity implements HasLastModified
         public int $level,
         #[ORM\Column(type: 'md5sum', length: 32, nullable: true)]
         public ?Md5Sum $md5sum,
-        #[ORM\Column(name: 'added_by', type: 'user_id', nullable: true)]
-        public ?UserId $addedBy,
+        #[ORM\ManyToOne]
+        #[ORM\JoinColumn(name: 'added_by')]
+        public ?UserEntity $addedByUser,
         #[ORM\Column(type: 'smallint', nullable: true)]
         public ?int $rotation,
         #[ORM\Column(type: 'float', nullable: true)]

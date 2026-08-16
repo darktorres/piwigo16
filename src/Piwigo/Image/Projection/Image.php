@@ -7,7 +7,6 @@ namespace Piwigo\Image\Projection;
 use LogicException;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
 /**
@@ -29,15 +28,16 @@ use Piwigo\Image\ImageEntity;
  * that entity's own docblock) -- `fromEntity()` unwraps
  * `->value`/`?->value` for all 3.
  *
- * `storageCategoryId` stays plain `?int` even though
- * `ImageEntity::$storageCategory` is now a real association
- * (`?CategoryEntity`) -- this Projection is a layer past the repository
- * where `0.3`'s "never touch a lazy-loaded property in application code"
- * discipline can no longer be guaranteed, so `fromEntity()` unwraps
- * `$entity->storageCategory?->id?->value` rather than propagating the
- * entity reference (`->id` access on an uninitialized to-one proxy never
- * triggers a query, see `CategoryEntity::$representativePicture`'s own
- * docblock for why).
+ * `storageCategoryId`/`addedBy` both stay plain `?int` even though
+ * `ImageEntity::$storageCategory`/`$addedByUser` are now real associations
+ * (`?CategoryEntity`/`?UserEntity`) -- this Projection is a layer past the
+ * repository where `0.3`'s "never touch a lazy-loaded property in
+ * application code" discipline can no longer be guaranteed, so
+ * `fromEntity()` unwraps `$entity->storageCategory?->id?->value`/
+ * `$entity->addedByUser?->id?->value` rather than propagating the entity
+ * reference (`->id` access on an uninitialized to-one proxy never triggers
+ * a query, see `CategoryEntity::$representativePicture`'s own docblock for
+ * why).
  */
 final readonly class Image
 {
@@ -61,7 +61,7 @@ final readonly class Image
         public ?int $storageCategoryId,
         public int $level,
         public ?Md5Sum $md5sum,
-        public ?UserId $addedBy,
+        public ?int $addedBy,
         public ?int $rotation,
         public ?float $latitude,
         public ?float $longitude,
@@ -90,7 +90,7 @@ final readonly class Image
             storageCategoryId: $entity->storageCategory?->id?->value,
             level: $entity->level,
             md5sum: $entity->md5sum,
-            addedBy: $entity->addedBy,
+            addedBy: $entity->addedByUser?->id?->value,
             rotation: $entity->rotation,
             latitude: $entity->latitude,
             longitude: $entity->longitude,
@@ -123,7 +123,7 @@ final readonly class Image
             storageCategoryId: is_numeric($row['storage_category_id'] ?? null) ? (int) $row['storage_category_id'] : null,
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
             md5sum: is_string($row['md5sum'] ?? null) ? Md5Sum::from($row['md5sum']) : null,
-            addedBy: is_numeric($row['added_by'] ?? null) ? UserId::from((int) $row['added_by']) : null,
+            addedBy: is_numeric($row['added_by'] ?? null) ? (int) $row['added_by'] : null,
             rotation: is_numeric($row['rotation'] ?? null) ? (int) $row['rotation'] : null,
             latitude: is_numeric($row['latitude'] ?? null) ? (float) $row['latitude'] : null,
             longitude: is_numeric($row['longitude'] ?? null) ? (float) $row['longitude'] : null,
@@ -161,7 +161,7 @@ final readonly class Image
             'storage_category_id' => $this->storageCategoryId,
             'level' => $this->level,
             'md5sum' => $this->md5sum?->value,
-            'added_by' => $this->addedBy?->value,
+            'added_by' => $this->addedBy,
             'rotation' => $this->rotation,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,

@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\SqlDateTime;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\Projection\Image;
 
@@ -36,7 +35,7 @@ function transientImageEntity(): ImageEntity
         storageCategory: null,
         level: 0,
         md5sum: null,
-        addedBy: null,
+        addedByUser: null,
         rotation: null,
         latitude: null,
         longitude: null,
@@ -133,7 +132,7 @@ test('fromRow narrows every column to its real type', function (): void {
         ->and($image->md5sum)
         ->toEqual(Md5Sum::from('d41d8cd98f00b204e9800998ecf8427e'))
         ->and($image->addedBy)
-        ->toEqual(UserId::from(5))
+        ->toBe(5)
         ->and($image->rotation)
         ->toBe(2)
         ->and($image->latitude)

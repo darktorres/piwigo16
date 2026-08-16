@@ -288,7 +288,7 @@ final readonly class SearchService
         if ($addedByIds !== [] && ($displayFilters['added_by']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['added_by'] = $this->queryImageIdsFor(
-                new SqlCondition('i.addedBy IN (:addedByIds)', [
+                new SqlCondition('i.addedByUser IN (:addedByIds)', [
                     'addedByIds' => $addedByIds,
                 ], [
                     'addedByIds' => ArrayParameterType::INTEGER,

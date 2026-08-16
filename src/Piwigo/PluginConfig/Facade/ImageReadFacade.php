@@ -46,7 +46,7 @@ final readonly class ImageReadFacade
             return null;
         }
 
-        return $this->imageRepository->findById($imageIdVo)?->addedBy?->value;
+        return $this->imageRepository->findById($imageIdVo)?->addedBy;
     }
 
     public function getRepresentativePictureId(int $categoryId): ?int

@@ -383,11 +383,11 @@ final readonly class SearchFilterRenderer
                 $cacheKey = 'added_by_rows_' . $userId;
                 $filterRows = $this->cacheGet($cacheKey);
                 if (! is_array($filterRows)) {
-                    $filterRows = $this->repo->countImagesGroupedBy('i.addedBy', 'added_by_id', $filterCondition, true);
+                    $filterRows = $this->repo->countImagesGroupedBy('IDENTITY(i.addedByUser)', 'added_by_id', $filterCondition, true);
                     $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = $this->repo->countImagesGroupedBy('i.addedBy', 'added_by_id', $filterCondition, true);
+                $filterRows = $this->repo->countImagesGroupedBy('IDENTITY(i.addedByUser)', 'added_by_id', $filterCondition, true);
             }
 
             // the cache pool stores this row set as plain mixed data, so

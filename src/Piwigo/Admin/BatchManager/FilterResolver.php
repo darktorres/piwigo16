@@ -138,11 +138,6 @@ final readonly class FilterResolver
      * come from a fixed internal allowlist (duplicateFieldsFromFilter()),
      * never from raw user input.
      *
-     * Known limitation (pre-existing, not fixed here): GROUP_CONCAT
-     * truncates at 1024 chars by default, so a duplicate group larger
-     * than ~250 ids silently loses members -- matches the legacy code's
-     * own equivalent limitation.
-     *
      * @param list<ImageDuplicateField> $fields
      * @return list<int>
      */

@@ -24,7 +24,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Event\Search\QsearchGetScopes;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
@@ -1383,11 +1382,9 @@ namespace Piwigo\Tests\Integration {
             // No real quick-search scope ever has id 'custom_field' -- reaches
             // qsearchGetImages()'s own default/plugin-hook branch, same
             // direct-call rationale as the tag/category tests above.
-            $handler = static fn (QsearchGetImagesSqlScopes $event): QsearchGetImagesSqlScopes => new QsearchGetImagesSqlScopes(
-                [new QsearchClause('i.id = ?', [1])],
-                $event->token,
-                $event->expr
-            );
+            $handler = static function (QsearchGetImagesSqlScopes $event): void {
+                $event->clauses = [new QsearchClause('i.id = ?', [1])];
+            };
             EventDispatcherTestFactory::get()->addTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
 
             try {
@@ -1405,14 +1402,12 @@ namespace Piwigo\Tests\Integration {
 
         public function testQsearchGetImagesMergesParamsFromMultipleHookClauses(): void
         {
-            $handler = static fn (QsearchGetImagesSqlScopes $event): QsearchGetImagesSqlScopes => new QsearchGetImagesSqlScopes(
-                [
+            $handler = static function (QsearchGetImagesSqlScopes $event): void {
+                $event->clauses = [
                     new QsearchClause('i.id = ?', [1]),
                     new QsearchClause('i.id = ?', [2]),
-                ],
-                $event->token,
-                $event->expr
-            );
+                ];
+            };
             EventDispatcherTestFactory::get()->addTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
 
             try {
@@ -1562,33 +1557,11 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([1], $results['items']);
         }
 
-        public function testGetQuickSearchResultsNoCacheThrowsWhenAQsearchGetScopesHandlerReturnsSomethingOtherThanAQsearchGetScopesInstance(): void
-        {
-            // addEventHandler(), not addTypedHandler() -- a real plugin
-            // handler is untyped from PHPStan's perspective, and this test
-            // exercises dispatchChange()'s own runtime enforcement, not a
-            // static one.
-            $handler = static fn (): mixed => null;
-            EventDispatcherTestFactory::get()->addEventHandler(QsearchGetScopes::class, $handler);
-
-            $this->expectException(Error::class);
-            $this->expectExceptionMessageIsOrContains('must return an instance of');
-
-            try {
-                $this->service->getQuickSearchResultsNoCache('family', []);
-            } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetScopes::class, $handler);
-            }
-        }
-
         public function testGetQuickSearchResultsNoCacheFallsBackWhenAHookReturnsNonArrayItemsAndQs(): void
         {
-            $handler = static function (QsearchResults $event): QsearchResults {
-                $searchResults = $event->searchResults;
-                $searchResults['items'] = 'not-an-array';
-                $searchResults['qs'] = 'not-an-array-either';
-
-                return new QsearchResults($searchResults, $event->expression, $event->qsr);
+            $handler = static function (QsearchResults $event): void {
+                $event->searchResults['items'] = 'not-an-array';
+                $event->searchResults['qs'] = 'not-an-array-either';
             };
             EventDispatcherTestFactory::get()->addTypedHandler(QsearchResults::class, $handler);
 
@@ -1614,11 +1587,8 @@ namespace Piwigo\Tests\Integration {
 
         public function testGetQuickSearchResultsNoCacheMergesExtraNumericIdsFromAPluginHook(): void
         {
-            $handler = static function (QsearchResults $event): QsearchResults {
-                $searchResults = $event->searchResults;
-                $searchResults['items'] = ['4', 'not-numeric'];
-
-                return new QsearchResults($searchResults, $event->expression, $event->qsr);
+            $handler = static function (QsearchResults $event): void {
+                $event->searchResults['items'] = ['4', 'not-numeric'];
             };
             EventDispatcherTestFactory::get()->addTypedHandler(QsearchResults::class, $handler);
 

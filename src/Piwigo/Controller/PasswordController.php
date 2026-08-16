@@ -124,7 +124,7 @@ final class PasswordController implements ControllerInterface
 
         $this->accessControl->checkStatus(AccessLevel::Free);
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginPassword());
+        $this->eventDispatcher->dispatch(new LocBeginPassword());
 
         $this->request = PasswordRequest::fromGlobals($this->inputValidator);
         $action_param = $this->request->action;
@@ -302,7 +302,7 @@ final class PasswordController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatchNotify(new LocEndPassword());
+        $this->eventDispatcher->dispatch(new LocEndPassword());
         $this->htmlService
             ->flushPageMessages();
         $this->htmlService

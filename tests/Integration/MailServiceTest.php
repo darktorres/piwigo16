@@ -270,10 +270,9 @@ final class MailServiceTest extends IntegrationTestCase
     private function mailCaptureBeforeSend(string|array $to, array $args = [], array $tpl = []): array
     {
         $capturedEmail = null;
-        $handler = function (BeforeSendMail $event) use (&$capturedEmail): BeforeSendMail {
+        $handler = function (BeforeSendMail $event) use (&$capturedEmail): void {
             $capturedEmail = $event->email;
-
-            return new BeforeSendMail(false, $event->to, $event->args, $event->email);
+            $event->shouldSend = false;
         };
         EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $handler);
 

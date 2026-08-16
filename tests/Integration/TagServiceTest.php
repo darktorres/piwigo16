@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
-    use Error;
     use LogicException;
     use Override;
     use Piwigo\Activity\ActivityEntity;
@@ -31,7 +30,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Event\Tag\GetTagAltNames;
     use Piwigo\Event\Tag\GetTagNameLikeWhere;
-    use Piwigo\Event\Tag\RenderTagUrl;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Image\ImageEntity;
     use Piwigo\Image\ImageService;
@@ -581,26 +579,6 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function testTagIdFromTagNameThrowsWhenTheRenderTagUrlHandlerReturnsSomethingOtherThanARenderTagUrlInstance(): void
-        {
-            // addEventHandler(), not addTypedHandler() -- a real plugin
-            // handler is untyped from PHPStan's perspective, and this test
-            // exercises dispatchChange()'s own runtime enforcement, not a
-            // static one.
-            $name = 'weird url name ' . uniqid();
-            EventDispatcherTestFactory::get()->addEventHandler(RenderTagUrl::class, static fn (): int => 42);
-
-            $this->expectException(Error::class);
-            $this->expectExceptionMessageIsOrContains('must return an instance of');
-
-            try {
-                $this->service->tagIdFromTagName($name);
-            } finally {
-                EventDispatcherTestFactory::get()->reset();
-                $this->conn->executeStatement('DELETE FROM tags WHERE name = ?', [$name]);
-            }
-        }
-
         /**
          * A plugin's `get_tag_name_like_where` handler (extended-description
          * sub-name matching) can resolve to an EXISTING tag even when the
@@ -617,7 +595,9 @@ namespace Piwigo\Tests\Integration {
         {
             EventDispatcherTestFactory::get()->addTypedHandler(
                 GetTagNameLikeWhere::class,
-                static fn (GetTagNameLikeWhere $event): GetTagNameLikeWhere => new GetTagNameLikeWhere(['nature'], $event->tagName)
+                static function (GetTagNameLikeWhere $event): void {
+                    $event->value = ['nature'];
+                }
             );
 
             try {
@@ -639,7 +619,9 @@ namespace Piwigo\Tests\Integration {
         {
             EventDispatcherTestFactory::get()->addTypedHandler(
                 GetTagNameLikeWhere::class,
-                static fn (GetTagNameLikeWhere $event): GetTagNameLikeWhere => new GetTagNameLikeWhere(["' OR '1'='1"], $event->tagName)
+                static function (GetTagNameLikeWhere $event): void {
+                    $event->value = ["' OR '1'='1"];
+                }
             );
 
             $tagName = 'p18-test-sec19-' . bin2hex(random_bytes(4));
@@ -730,7 +712,9 @@ namespace Piwigo\Tests\Integration {
         {
             EventDispatcherTestFactory::get()->addTypedHandler(
                 GetTagAltNames::class,
-                static fn (GetTagAltNames $event): GetTagAltNames => new GetTagAltNames($event->rawName === 'nature' ? ['nature', 'Nature (alt)'] : [], $event->rawName)
+                static function (GetTagAltNames $event): void {
+                    $event->value = $event->rawName === 'nature' ? ['nature', 'Nature (alt)'] : [];
+                }
             );
 
             try {

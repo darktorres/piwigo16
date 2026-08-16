@@ -323,7 +323,7 @@ final readonly class ImageService
         if ($ids === []) {
             return 0;
         }
-        $this->eventDispatcher->dispatchNotify(new BeginDeleteElements($ids));
+        $this->eventDispatcher->dispatch(new BeginDeleteElements($ids));
 
         if ($physicalDeletion) {
             $ids = $this->deleteElementFiles($ids, $urlService);
@@ -344,7 +344,7 @@ final readonly class ImageService
                 ->updateCategory($categoryIds);
         }
 
-        $this->eventDispatcher->dispatchNotify(new DeleteElements($ids));
+        $this->eventDispatcher->dispatch(new DeleteElements($ids));
         $this->activityLogger->record('photo', $ids, 'delete');
         return count($ids);
     }
@@ -446,7 +446,7 @@ final readonly class ImageService
 
         $rowArrays = array_map(static fn (ImageCategoryLink $row): array => $row->toArray(), $rows);
 
-        $this->eventDispatcher->dispatchNotify(new EmptyLounge($rowArrays));
+        $this->eventDispatcher->dispatch(new EmptyLounge($rowArrays));
 
         return $rowArrays;
     }

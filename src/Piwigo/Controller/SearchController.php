@@ -62,7 +62,7 @@ final readonly class SearchController implements ControllerInterface
 
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginSearch());
+        $this->eventDispatcher->dispatch(new LocBeginSearch());
 
         $search = [
             'mode' => 'AND',

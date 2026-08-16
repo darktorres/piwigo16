@@ -452,7 +452,7 @@ final class RequestBootstrap
         // EventDispatcher::callablesEqual()'s closure-identity dedup work
         // correctly across repeated registrations.
         self::registerListener(new UploadFormatListener(self::uploadService()));
-        self::eventDispatcher()->dispatchNotify(new Init());
+        self::eventDispatcher()->dispatch(new Init());
 
         // CurrentUser's/PageState's own `??=` guards are already
         // satisfied by this point on the real HTTP path

@@ -132,7 +132,7 @@ final class PictureCommentRenderer
             $pageState->errors = $commentErrors;
 
             // allow plugins to notify what's going on
-            $eventDispatcher->dispatchNotify(new UserCommentInsertion(
+            $eventDispatcher->dispatch(new UserCommentInsertion(
                 array_merge($comm, [
                     'action' => $commentAction,
                 ])
@@ -199,9 +199,9 @@ final class PictureCommentRenderer
                 // same column.
                 $rowDate = $row->date ?? false;
 
-                $authorEvent = $eventDispatcher->dispatchChange(new RenderCommentAuthor($author ?? ''));
+                $authorEvent = $eventDispatcher->dispatch(new RenderCommentAuthor($author ?? ''));
 
-                $contentEvent = $eventDispatcher->dispatchChange(new RenderCommentContent($row->content ?? ''));
+                $contentEvent = $eventDispatcher->dispatch(new RenderCommentContent($row->content ?? ''));
 
                 $tplComment =
                   [

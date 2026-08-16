@@ -323,7 +323,7 @@ final readonly class UserBootstrap
             $user['language'] = $language;
             $currentUser->updateLanguage(LangCode::from($language));
         }
-        $eventDispatcher->dispatchNotify(new UserInit($user));
+        $eventDispatcher->dispatch(new UserInit($user));
     }
 
     /**

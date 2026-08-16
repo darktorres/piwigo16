@@ -113,7 +113,7 @@ final readonly class AlbumNotificationPageRenderer
                 }
             }
 
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($category['name'], 'admin_cat_list'));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category['name'], 'admin_cat_list'));
             $renderedCategoryName = $nameEvent->categoryName;
 
             $args = [

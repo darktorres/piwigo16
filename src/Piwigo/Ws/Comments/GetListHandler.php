@@ -175,9 +175,9 @@ final readonly class GetListHandler implements WsAction
             $comment_date = is_string($row['date']) ? $row['date'] : false;
             $comment_date_available = is_string($row['date_available']) ? $row['date_available'] : false;
 
-            $authorEvent = $this->eventDispatcher->dispatchChange(new RenderCommentAuthor($author_name ?? ''));
+            $authorEvent = $this->eventDispatcher->dispatch(new RenderCommentAuthor($author_name ?? ''));
 
-            $contentEvent = $this->eventDispatcher->dispatchChange(new RenderCommentContent(is_string($row['content']) ? $row['content'] : ''));
+            $contentEvent = $this->eventDispatcher->dispatch(new RenderCommentContent(is_string($row['content']) ? $row['content'] : ''));
 
             $list[] = [
                 'id' => $row['id'],

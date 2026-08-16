@@ -70,7 +70,7 @@ final readonly class TagsController implements ControllerInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginTags());
+        $this->eventDispatcher->dispatch(new LocBeginTags());
 
         $displayModeParam = $request->getQueryParams()['display_mode'] ?? null;
         $urlService = $this->urlService;
@@ -211,7 +211,7 @@ final readonly class TagsController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatchNotify(new LocEndTags());
+        $this->eventDispatcher->dispatch(new LocEndTags());
         $this->htmlService
             ->flushPageMessages();
         $template->parse('tags.latte', false);

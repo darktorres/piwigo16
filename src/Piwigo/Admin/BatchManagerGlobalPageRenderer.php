@@ -110,7 +110,7 @@ final readonly class BatchManagerGlobalPageRenderer
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginElementSetGlobal());
+        $this->eventDispatcher->dispatch(new LocBeginElementSetGlobal());
 
         $batchManagerGlobalRequest = BatchManagerGlobalRequest::fromGlobals($this->inputValidator);
 
@@ -446,7 +446,7 @@ final readonly class BatchManagerGlobalPageRenderer
                 PermissionCacheInvalidator::invalidate();
             }
 
-            $this->eventDispatcher->dispatchNotify(new ElementSetGlobalAction($action, $collection));
+            $this->eventDispatcher->dispatch(new ElementSetGlobalAction($action, $collection));
 
             if ($redirect) {
                 $this->redirectService->redirect($redirect_url);
@@ -592,7 +592,7 @@ final readonly class BatchManagerGlobalPageRenderer
             thumbnails: $thumbnails,
         ));
 
-        $this->eventDispatcher->dispatchNotify(new LocEndElementSetGlobal());
+        $this->eventDispatcher->dispatch(new LocEndElementSetGlobal());
 
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_global.latte');
     }

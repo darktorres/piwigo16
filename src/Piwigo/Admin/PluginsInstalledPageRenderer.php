@@ -129,11 +129,11 @@ final class PluginsInstalledPageRenderer
             exit;
         }
 
-        $plugin_menu_links_deprec_event = $eventDispatcher->dispatchChange(new GetAdminPluginMenuLinks([]));
+        $plugin_menu_links_deprec_event = $eventDispatcher->dispatch(new GetAdminPluginMenuLinks([]));
 
         $settings_url_for_plugin_deprec = [];
 
-        // dispatchChange() enforces the top-level array type, but a
+        // GetAdminPluginMenuLinks::$value is typed array, but a
         // misbehaving third-party handler could still populate it with
         // malformed element values PHP's own type system can't catch at
         // runtime -- narrow each item defensively before reading its own

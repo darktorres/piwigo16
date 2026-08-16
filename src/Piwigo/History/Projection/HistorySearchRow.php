@@ -12,7 +12,7 @@ namespace Piwigo\History\Projection;
  * into a caller-supplied `$data` array that a plugin's own `GetHistory`
  * event handler can also append genuinely heterogeneous
  * `array<string, mixed>` rows into (`Ws\Core::historyGet()` dispatches
- * via `dispatchChange()`) -- `getHistory()` calls `toArray()` before
+ * via `dispatch()`) -- `getHistory()` calls `toArray()` before
  * appending, so this DTO never leaks into that plugin-extensible
  * boundary.
  */

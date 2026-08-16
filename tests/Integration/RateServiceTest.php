@@ -224,7 +224,9 @@ namespace Piwigo\Tests\Integration {
             ];
             EventDispatcherTestFactory::get()->addTypedHandler(
                 UpdateRatingScore::class,
-                static fn (UpdateRatingScore $event): UpdateRatingScore => new UpdateRatingScore($override, $event->elementId)
+                static function (UpdateRatingScore $event) use ($override): void {
+                    $event->result = $override;
+                }
             );
 
             try {

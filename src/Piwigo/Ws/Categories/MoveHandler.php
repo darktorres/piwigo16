@@ -69,7 +69,7 @@ final readonly class MoveHandler implements WsAction
 
             // we break on error at first physical category detected
             if (! in_array($row->dir, [null, '', '0'], true)) {
-                $moveNameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($row->name, 'ws_categories_move'));
+                $moveNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($row->name, 'ws_categories_move'));
                 $row_name = strip_tags($moveNameEvent->categoryName);
 
                 return new WsErrorResponse(

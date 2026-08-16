@@ -19,7 +19,6 @@ use Piwigo\Mail\BoundedSendmailTransport;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\Mail\Projection\EmailRecipient;
-use Piwigo\Mail\Projection\MailContent;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -140,12 +139,12 @@ function mail_service_capture_send(MailService $service, string|array $to, array
     $capturedTo = null;
     $capturedArgs = null;
     $capturedEmail = null;
-    $eventHandler = function (BeforeSendMail $event) use (&$capturedTo, &$capturedArgs, &$capturedEmail): BeforeSendMail {
+    $eventHandler = function (BeforeSendMail $event) use (&$capturedTo, &$capturedArgs, &$capturedEmail): void {
         $capturedTo = $event->to;
         $capturedArgs = $event->args;
         $capturedEmail = $event->email;
 
-        return new BeforeSendMail(false, $event->to, $event->args, $event->email);
+        $event->shouldSend = false;
     };
     EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
 
@@ -809,24 +808,12 @@ test('generateResetPasswordMail assembles the exact HTML content, in order, from
         );
 });
 
-test('generateResetPasswordMail throws when a render_lost_password_mail_content handler returns something other than a RenderLostPasswordMailContent instance', function (): void {
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = mail_service_test_build();
-    $handler = static fn (): bool => false;
-    EventDispatcherTestFactory::get()->addEventHandler(RenderLostPasswordMailContent::class, $handler);
-
-    try {
-        expect(fn (): MailContent => $service->generateResetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '2 hours'))
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
-    }
-});
-
 test('generateResetPasswordMail uses the render_lost_password_mail_content handler\'s own replacement when it returns a real string', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = mail_service_test_build();
-    $handler = static fn (RenderLostPasswordMailContent $event): RenderLostPasswordMailContent => new RenderLostPasswordMailContent('REPLACED CONTENT');
+    $handler = static function (RenderLostPasswordMailContent $event): void {
+        $event->message = 'REPLACED CONTENT';
+    };
     EventDispatcherTestFactory::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
 
     try {
@@ -861,7 +848,9 @@ test('generateSetPasswordMail assembles the exact HTML content, in order, from e
 test('generateSetPasswordMail uses the render_lost_password_mail_content handler\'s own replacement when it returns a real string', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = mail_service_test_build();
-    $handler = static fn (RenderLostPasswordMailContent $event): RenderLostPasswordMailContent => new RenderLostPasswordMailContent('REPLACED CONTENT');
+    $handler = static function (RenderLostPasswordMailContent $event): void {
+        $event->message = 'REPLACED CONTENT';
+    };
     EventDispatcherTestFactory::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
 
     try {

@@ -191,7 +191,7 @@ final class CheckIntegrity
      */
     private function dispatchListCheckIntegrity(): void
     {
-        $this->eventDispatcher->dispatchNotify(new ListCheckIntegrity($this));
+        $this->eventDispatcher->dispatch(new ListCheckIntegrity($this));
     }
 
     /**

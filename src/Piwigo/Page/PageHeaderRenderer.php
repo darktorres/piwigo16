@@ -69,7 +69,7 @@ final class PageHeaderRenderer
     {
         $template = $currentTemplate->get();
 
-        $eventDispatcher->dispatchNotify(new LocBeginPageHeader());
+        $eventDispatcher->dispatch(new LocBeginPageHeader());
 
         $show_mobile_app_banner = $currentConfig->showMobileAppBannerInGallery;
         if (self::isAdminContextActive()) {
@@ -113,7 +113,7 @@ final class PageHeaderRenderer
 
         $template->assignContext(new PageHeaderPageContext(
             galleryTitle: $conf_gallery_title,
-            pageBanner: $eventDispatcher->dispatchChange(new RenderPageBanner(
+            pageBanner: $eventDispatcher->dispatch(new RenderPageBanner(
                 str_replace(
                     '%gallery_title%',
                     $conf_gallery_title,
@@ -134,12 +134,12 @@ final class PageHeaderRenderer
             headElements: $head_elements,
         ));
 
-        $eventDispatcher->dispatchNotify(new LocEndPageHeader());
+        $eventDispatcher->dispatch(new LocEndPageHeader());
 
         header('Content-Type: text/html; charset=utf-8');
         $template->parse('header.latte');
 
-        $eventDispatcher->dispatchNotify(new LocAfterPageHeader());
+        $eventDispatcher->dispatch(new LocAfterPageHeader());
     }
 
     /**

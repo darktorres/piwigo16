@@ -110,7 +110,7 @@ final class AlbumsPageRenderer
             }
 
             foreach ($categoryService->getIdsNamesUppercatsForIds($category_ids) as $cat_row) {
-                $nameEvent = $eventDispatcher->dispatchChange(new RenderCategoryName($cat_row['name'], 'admin_cat_list'));
+                $nameEvent = $eventDispatcher->dispatch(new RenderCategoryName($cat_row['name'], 'admin_cat_list'));
                 $cat_row['name'] = $nameEvent->categoryName;
 
                 if ($order_by_date) {
@@ -198,7 +198,7 @@ final class AlbumsPageRenderer
                 /** @var array<string, mixed> $the_place */
             }
 
-            $nameEvent = $eventDispatcher->dispatchChange(new RenderCategoryName($album['name'], 'admin_cat_list'));
+            $nameEvent = $eventDispatcher->dispatch(new RenderCategoryName($album['name'], 'admin_cat_list'));
             $album['name'] = $nameEvent->categoryName;
             $album['lastmodified'] = DateHelper::timeSince($album['lastmodified'], 'year');
 
@@ -334,8 +334,8 @@ final class AlbumsPageRenderer
             $orderedCat['rank'] = is_int($cat_row_rank) || is_string($cat_row_rank) ? $cat_row_rank : null;
             // 'name'/'status' are NOT NULL string columns; 'name' may also
             // have been rewritten above by the render_category_name filter
-            // (dispatchChange(new RenderCategoryName(...))'s own $categoryName
-            // is typed string, but this array's own value stays mixed
+            // (dispatch(new RenderCategoryName(...))'s own $categoryName is
+            // typed string, but this array's own value stays mixed
             // structurally regardless).
             $orderedCat['name'] = is_scalar($cat_row_name) ? (string) $cat_row_name : '';
             $orderedCat['status'] = is_scalar($cat_row_status) ? (string) $cat_row_status : '';

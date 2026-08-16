@@ -200,7 +200,7 @@ final class SrcImage
             $this->rel_path = ImagePathHelper::originalToRepresentative($path, $representative_ext);
         } else {
             $default_mimetype_location = self::themeConf('mime_icon_dir') . $ext . '.png';
-            $this->rel_path = self::eventDispatcher()->dispatchChange(new GetMimetypeLocation($default_mimetype_location, $ext))->location;
+            $this->rel_path = self::eventDispatcher()->dispatch(new GetMimetypeLocation($default_mimetype_location, $ext))->location;
             $this->flags |= self::IS_MIMETYPE;
             $mimetype_abs_path = self::paths()->root . $this->rel_path;
             $size = file_exists($mimetype_abs_path) ? getimagesize($mimetype_abs_path) : false;
@@ -277,7 +277,7 @@ final class SrcImage
             $part = $this->isOriginal() ? 'e' : 'r';
             $url = self::urlService()->getActionUrl($this->id, $part, false);
 
-            $url = self::eventDispatcher()->dispatchChange(new GetSrcImageUrl($url, $this))->url;
+            $url = self::eventDispatcher()->dispatch(new GetSrcImageUrl($url, $this))->url;
         }
 
         return self::urlService()->embellishUrl($url);

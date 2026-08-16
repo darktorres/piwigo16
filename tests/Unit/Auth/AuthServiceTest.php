@@ -222,7 +222,7 @@ test('calculateAutoLoginKey() changes when the secret key changes', function ():
 
 test('tryLogUser() fails closed when no handler is registered', function (): void {
     // No handler is registered for this event, so
-    // EventDispatcher::dispatchChange() returns the same event
+    // EventDispatcher::dispatch() returns the same event
     // (constructed with success=false) unchanged.
     expect(authServiceTestService()->tryLogUser('anyone', 'anything', false))
         ->toBeFalse();
@@ -419,15 +419,13 @@ test('pwgLogin() denies the login when a FinalizeLogin handler blocks it', funct
     // passes pwgLogin()'s own password_verify() check, so execution
     // reaches the finalize_login trigger rather than being rejected
     // earlier for a wrong password.
-    $handler = static fn (FinalizeLogin $event): FinalizeLogin => new FinalizeLogin(
-        [
+    $handler = static function (FinalizeLogin $event): void {
+        $event->state = [
             'can_login' => false,
             'reason' => 'blocked_by_test_handler',
             'authenticated' => $event->state['authenticated'],
-        ],
-        $event->userFound,
-        $event->rememberMe,
-    );
+        ];
+    };
     EventDispatcherTestFactory::get()->addTypedHandler(FinalizeLogin::class, $handler);
 
     try {

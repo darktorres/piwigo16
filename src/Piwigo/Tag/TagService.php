@@ -90,7 +90,7 @@ final readonly class TagService
     /**
      * Returns all tags even associated to no image. Row = Tag::toArray()'s
      * shape plus name_raw (the pre-render_tag_name-hook value); 'name'
-     * itself is passed through dispatchChange(new RenderTagName(...)).
+     * itself is passed through dispatch(new RenderTagName(...)).
      *
      * @return list<array{id: int, name: string, url_name: string, lastmodified: string, name_raw: string}>
      */
@@ -100,7 +100,7 @@ final readonly class TagService
         foreach ($this->repo->findAllTags() as $tag) {
             $row = $tag->toArray();
             $row['name_raw'] = $tag->name;
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($tag->name, $row));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderTagName($tag->name, $row));
             $row['name'] = $nameEvent->tagName;
             $tags[] = $row;
         }
@@ -221,7 +221,7 @@ final readonly class TagService
      *
      * Row = Tag::toArray()'s shape plus counter (from countImagesPerTag()'s
      * own array<int, int>) and name_raw; 'name' is passed through
-     * dispatchChange(new RenderTagName(...)).
+     * dispatch(new RenderTagName(...)).
      *
      * @param array<int, int|string> $tagIds empty means "no tag_id filter"
      * @return list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int, name_raw: string}>
@@ -268,7 +268,7 @@ final readonly class TagService
             $row = $tag->toArray();
             $row['counter'] = $tagCounters[$tag->id->value];
             $row['name_raw'] = $tag->name;
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($tag->name, $row));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderTagName($tag->name, $row));
             $row['name'] = $nameEvent->tagName;
             $tags[] = $row;
         }
@@ -331,7 +331,7 @@ final readonly class TagService
      * Return a list of tags corresponding to given items.
      *
      * Row = TagRepository::findCommonTags()'s own shape with 'name'
-     * passed through dispatchChange(new RenderTagName(...)).
+     * passed through dispatch(new RenderTagName(...)).
      *
      * @param int[] $items
      * @param int[] $excludedTagIds
@@ -345,7 +345,7 @@ final readonly class TagService
 
         $tags = [];
         foreach ($this->repo->findCommonTags(array_values($items), $maxTags, array_values($excludedTagIds)) as $row) {
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($row['name'], $row));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderTagName($row['name'], $row));
             $row['name'] = $nameEvent->tagName;
             $tags[] = $row;
         }
@@ -463,7 +463,7 @@ final readonly class TagService
         // -- unwrap ->value explicitly, same rule as every other
         // unconverted-domain sink in this codebase.
         $rawTagIds = array_map(static fn (TagId $id): int => $id->value, $tagIds);
-        $this->eventDispatcher->dispatchNotify(new DeleteTags($rawTagIds));
+        $this->eventDispatcher->dispatch(new DeleteTags($rawTagIds));
         $this->activityLogger->record('tag', $rawTagIds, 'delete');
 
         $this->imageService
@@ -511,7 +511,7 @@ final readonly class TagService
         $existingId = $this->repo->findIdByName($tagName);
 
         if (! $existingId instanceof TagId) {
-            $urlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($tagName));
+            $urlNameEvent = $this->eventDispatcher->dispatch(new RenderTagUrl($tagName));
             $urlName = $urlNameEvent->tagName;
 
             // search existing by url name
@@ -522,7 +522,7 @@ final readonly class TagService
                 // the hook returns LIKE pattern VALUES (bound as
                 // parameters), not raw SQL fragments -- see TagRepository::
                 // findIdByNameLikeAnyPattern()'s own docblock for why.
-                $likeWhereEvent = $this->eventDispatcher->dispatchChange(new GetTagNameLikeWhere([], $tagName));
+                $likeWhereEvent = $this->eventDispatcher->dispatch(new GetTagNameLikeWhere([], $tagName));
                 $namePatterns = array_values(array_filter($likeWhereEvent->value, is_string(...)));
                 if ($namePatterns !== []) {
                     $existingId = $this->repo->findIdByNameLikeAnyPattern($namePatterns);
@@ -657,7 +657,7 @@ final readonly class TagService
 
         // does the tag already exist?
         if (! $this->repo->findIdByName($tagName) instanceof TagId) {
-            $insertUrlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($tagName));
+            $insertUrlNameEvent = $this->eventDispatcher->dispatch(new RenderTagUrl($tagName));
             $urlName = $insertUrlNameEvent->tagName;
 
             $insertedId = $this->repo->insert($tagName, $urlName);
@@ -684,7 +684,7 @@ final readonly class TagService
 
         foreach ($rows as $row) {
             $rawName = $row->name;
-            $listNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($rawName, $row->toArray()));
+            $listNameEvent = $this->eventDispatcher->dispatch(new RenderTagName($rawName, $row->toArray()));
             $name = $listNameEvent->tagName;
             $rowId = (string) $row->id;
 
@@ -694,7 +694,7 @@ final readonly class TagService
             ];
 
             if (! $onlyUserLanguage) {
-                $altNamesEvent = $this->eventDispatcher->dispatchChange(new GetTagAltNames([], $rawName));
+                $altNamesEvent = $this->eventDispatcher->dispatch(new GetTagAltNames([], $rawName));
                 $altNames = array_filter($altNamesEvent->value, is_string(...));
                 $nameForDiff = $name;
 

@@ -100,7 +100,7 @@ final readonly class IdentificationController implements ControllerInterface
             $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
         }
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginIdentification());
+        $this->eventDispatcher->dispatch(new LocBeginIdentification());
 
         unset($_SESSION['reset_password_code']);
 
@@ -238,7 +238,7 @@ final readonly class IdentificationController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatchNotify(new LocEndIdentification());
+        $this->eventDispatcher->dispatch(new LocEndIdentification());
         $this->htmlService
             ->flushPageMessages();
         $this->htmlService

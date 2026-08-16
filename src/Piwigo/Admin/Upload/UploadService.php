@@ -491,7 +491,7 @@ final readonly class UploadService
 
             // handle the uploaded file type by potentially making a
             // pwg_representative file.
-            $representative_ext = $this->eventDispatcher->dispatchChange(new UploadFile(null, $file_path))
+            $representative_ext = $this->eventDispatcher->dispatch(new UploadFile(null, $file_path))
                 ->representativeExt;
 
             $logger->info(__METHOD__ . ' : force cache generation, representative_ext = ' . ($representative_ext ?? ''));
@@ -632,7 +632,7 @@ final readonly class UploadService
         // matters.
         HttpClientService::fetch($derivative_url, $this->currentConfig);
 
-        $this->eventDispatcher->dispatchNotify(new LocEndAddUploadedFile($image_infos));
+        $this->eventDispatcher->dispatch(new LocEndAddUploadedFile($image_infos));
 
         return $image_id;
     }
@@ -831,7 +831,7 @@ final readonly class UploadService
         $format_infos = $insert;
         $format_infos['format_id'] = $format_id;
 
-        $this->eventDispatcher->dispatchNotify(new LocEndAddFormat($format_infos));
+        $this->eventDispatcher->dispatch(new LocEndAddFormat($format_infos));
 
         return $add_status;
     }

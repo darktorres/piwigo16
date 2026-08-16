@@ -352,7 +352,7 @@ final readonly class CategoryService
     public function getPreferredImageOrders(): array
     {
 
-        $orders = $this->eventDispatcher->dispatchChange(new GetCategoryPreferredImageOrders([
+        $orders = $this->eventDispatcher->dispatch(new GetCategoryPreferredImageOrders([
             [$this->lang->t('Default'), '', true],
             [$this->lang->t('Photo title, A &rarr; Z'), 'name ASC', true],
             [$this->lang->t('Photo title, Z &rarr; A'), 'name DESC', true],
@@ -677,7 +677,7 @@ final readonly class CategoryService
 
             $globalRank = $cat['global_rank'];
             $cats[$idx]['LEVEL'] = substr_count(is_string($globalRank) ? $globalRank : '', '.') + 1;
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($cat['name'], $cat));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($cat['name'], $cat));
             $cats[$idx]['name'] = $nameEvent->categoryName;
 
             if (isset($commonCats[$catId])) {
@@ -764,7 +764,7 @@ final readonly class CategoryService
      * 'menu' rows extend CategoryTreeCache::getForUser()'s own row shape
      * with template-display fields (NAME/TITLE/URL/LEVEL/SELECTED/
      * IS_UPPERCAT/icon_ts) built inside this method's own loop; NAME is
-     * passed through dispatchChange(new RenderCategoryName(...)).
+     * passed through dispatch(new RenderCategoryName(...)).
      *
      * @param array<string, mixed>|null $category
      * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: ?int}
@@ -812,7 +812,7 @@ final readonly class CategoryService
             $selectedIdStr = is_scalar($selectedId) ? (string) $selectedId : null;
             $selectedIdUppercat = $selectedCategory['id_uppercat'] ?? null;
             $selectedIdUppercatStr = is_scalar($selectedIdUppercat) ? (string) $selectedIdUppercat : null;
-            $menuNameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($row['name'], 'get_categories_menu'));
+            $menuNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($row['name'], 'get_categories_menu'));
             $row = array_merge(
                 $row,
                 [
@@ -891,7 +891,7 @@ final readonly class CategoryService
                     (3 * substr_count(is_string($globalRank) ? $globalRank : '', '.'))
                 );
                 $option .= '- ';
-                $selectNameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'display_select_categories'));
+                $selectNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'display_select_categories'));
                 $option .= strip_tags($selectNameEvent->categoryName);
             }
             $id = $category['id'];
@@ -1061,19 +1061,18 @@ final readonly class CategoryService
      * key) built via UrlService.
      *
      * NOTE: 'combined_categories' below carries $cat AFTER
-     * getRelatedCategoriesMenu()'s own RenderCategoryName
-     * dispatchChange() already ran on 'name', so UrlService::makeIndexUrl()'s
-     * id-name style would embed the *rendered* name instead of the raw one
-     * if a RenderCategoryName handler is ever registered (none are today --
-     * PEM extensions are unwired, and RenderCategoryName is currently
-     * `readonly` (no core handler mutates it either) -- so this is
-     * currently a no-op difference). Re-verify if a RenderCategoryName
-     * handler is ever registered.
+     * getRelatedCategoriesMenu()'s own RenderCategoryName dispatch()
+     * already ran on 'name', so UrlService::makeIndexUrl()'s id-name
+     * style would embed the *rendered* name instead of the raw one if a
+     * RenderCategoryName handler is ever registered (none are today --
+     * PEM extensions are unwired -- so this is currently a no-op
+     * difference). Re-verify if a RenderCategoryName handler is ever
+     * registered.
      *
      * $category/$combinedCategories are SectionContext::$category-shaped
      * (only used wholesale as UrlService params here, never read by key);
      * the return rows inherit getRelatedCategoriesMenu()'s own 'name'
-     * field, run through dispatchChange(new RenderCategoryName(...)).
+     * field, run through dispatch(new RenderCategoryName(...)).
      *
      * @param  array<int, int|string>  $items
      * @param  array<int, int|string>  $excludedCatIds
@@ -1127,7 +1126,7 @@ final readonly class CategoryService
         $categoryIds = $this->repo->findCategoryIdsBySite($id);
         $this->deleteCategories($categoryIds, $activityLogger, $urlService, $sessionService, $eventDispatcher, $entityManager, oldPermalinkRepo: $oldPermalinkRepo);
 
-        $this->eventDispatcher->dispatchNotify(new DeleteSite($id));
+        $this->eventDispatcher->dispatch(new DeleteSite($id));
     }
 
     /**
@@ -1190,7 +1189,7 @@ final readonly class CategoryService
 
         $oldPermalinkRepo->deleteOldPermalinksForCategories($ids);
 
-        $eventDispatcher->dispatchNotify(new DeleteCategories($ids));
+        $eventDispatcher->dispatch(new DeleteCategories($ids));
         $activityLogger->record('album', $ids, 'delete', [
             'photo_deletion_mode' => $photoDeletionMode,
         ]);
@@ -2028,7 +2027,7 @@ final readonly class CategoryService
             $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));
         }
 
-        $this->eventDispatcher->dispatchNotify(new CreateVirtualCategory(array_merge([
+        $this->eventDispatcher->dispatch(new CreateVirtualCategory(array_merge([
             'id' => $insertedId,
         ], $insert)));
         $activityLogger->record('album', $insertedId, 'add');

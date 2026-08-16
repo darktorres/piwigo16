@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Error;
 use Latte\Runtime\Html;
 use LogicException;
 use Override;
@@ -28,7 +27,6 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\PermissionRepository;
@@ -527,24 +525,5 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $html = $this->renderedCategoriesHtml();
         self::assertStringNotContainsString('Sample Album', $html);
-    }
-
-    public function testRenderThrowsWhenTheRenderCategoryNameHandlerReturnsSomethingOtherThanARenderCategoryNameInstance(): void
-    {
-        // addEventHandler(), not addTypedHandler() -- a real plugin
-        // handler is untyped from PHPStan's perspective, and this test
-        // exercises dispatchChange()'s own runtime enforcement, not a
-        // static one.
-        $this->seedUser();
-        EventDispatcherTestFactory::get()->addEventHandler(RenderCategoryName::class, static fn (): int => 42);
-
-        $this->expectException(Error::class);
-        $this->expectExceptionMessageIsOrContains('must return an instance of');
-
-        try {
-            $this->renderer->render(Section::Categories, null, 0);
-        } finally {
-            EventDispatcherTestFactory::get()->reset();
-        }
     }
 }

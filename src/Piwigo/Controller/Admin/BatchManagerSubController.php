@@ -375,7 +375,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
                 $bulk_manager_filter['search']['q'] = $post['q'];
             }
 
-            $registerFiltersEvent = $this->eventDispatcher->dispatchChange(new BatchManagerRegisterFilters($bulk_manager_filter));
+            $registerFiltersEvent = $this->eventDispatcher->dispatch(new BatchManagerRegisterFilters($bulk_manager_filter));
             $_SESSION['bulk_manager_filter'] = $registerFiltersEvent->bulkManagerFilter;
         }
         // filters from url
@@ -493,7 +493,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
                         break;
 
                     default:
-                        $urlFilterEvent = $this->eventDispatcher->dispatchChange(new BatchManagerUrlFilter($url_filter, $filter));
+                        $urlFilterEvent = $this->eventDispatcher->dispatch(new BatchManagerUrlFilter($url_filter, $filter));
                         $url_filter = $urlFilterEvent->bulkManagerFilter;
                         break;
                 }
@@ -562,7 +562,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             if ($prefilter_result !== null) {
                 $filter_sets[] = $prefilter_result;
             } else {
-                $filter_sets = $this->eventDispatcher->dispatchChange(new PerformBatchManagerPrefilters($filter_sets, $prefilter))
+                $filter_sets = $this->eventDispatcher->dispatch(new PerformBatchManagerPrefilters($filter_sets, $prefilter))
                     ->filterSets;
             }
         }
@@ -660,7 +660,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             $filter_sets[] = $res_items;
         }
 
-        $filter_sets = $this->eventDispatcher->dispatchChange(new BatchManagerPerformFilters($filter_sets, $bulkFilter))
+        $filter_sets = $this->eventDispatcher->dispatch(new BatchManagerPerformFilters($filter_sets, $bulkFilter))
             ->filterSets;
 
         $current_set = array_shift($filter_sets);

@@ -13,8 +13,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Template\Css;
 use Piwigo\Template\CssLoader;
-use Piwigo\Template\Event\CombinedCss;
-use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateAdapter;
 use Piwigo\Tests\Support\AdHocPageContext;
@@ -1346,19 +1344,6 @@ test('makeScriptSrc (via getCombinedScripts) uses a remote script\'s own path ve
         ->toBe('<script type="text/javascript" src="https://cdn.example.com/foo.js"></script>');
 });
 
-test('makeScriptSrc (via getCombinedScripts) throws when a combined_script listener returns something other than a CombinedScript instance', function (): void {
-    $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/sync.js', 'console.log(1);');
-    $t->combineScript('sync-script', load: 'footer', path: 'sync.js');
-    EventDispatcherTestFactory::get()->addEventHandler(CombinedScript::class, static fn (): int => 42);
-
-    try {
-        $t->getCombinedScripts('footer');
-    } finally {
-        EventDispatcherTestFactory::get()->reset();
-    }
-})->throws(Error::class, 'must return an instance of');
-
 // --- footerScript --------------------------------------------------------
 
 test('footerScript registers an inline script once its own required script is already known', function (): void {
@@ -1479,16 +1464,6 @@ test('finalizeOutput appends a version query string for a truthy combined_css ve
     expect($result)
         ->toBe('<link rel="stylesheet" type="text/css" href="style.css?v7">');
 });
-
-test('finalizeOutput throws when a combined_css listener returns something other than a CombinedCss instance', function (): void {
-    $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
-    $t->combineCss('style.css', version: '7');
-    $t->output = Template::COMBINED_CSS_TAG;
-    EventDispatcherTestFactory::get()->addEventHandler(CombinedCss::class, static fn (): int => 42);
-
-    $t->fetchOutput();
-})->throws(Error::class, 'must return an instance of');
 
 test('finalizeOutput does not append a version query string when combined_css version is exactly false', function (): void {
     $t = TemplateTestFactory::build();

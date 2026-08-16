@@ -486,7 +486,7 @@ final class NotificationByMailSender
                     }
 
                     $customizeMailContent =
-                      $this->eventDispatcher->dispatchChange(new NbmRenderGlobalCustomizeMailContent($customizeMailContent))
+                      $this->eventDispatcher->dispatch(new NbmRenderGlobalCustomizeMailContent($customizeMailContent))
                           ->customizeMailContent;
 
                     // Prepare message after change language
@@ -574,7 +574,7 @@ final class NotificationByMailSender
                                 $global_new_lines = $nbmSendDetailedContent ? $news : null;
 
                                 $nbmUserCustomizeMailContent =
-                                  $this->eventDispatcher->dispatchChange(
+                                  $this->eventDispatcher->dispatch(
                                       new NbmRenderUserCustomizeMailContent($customizeMailContent, $nbmUser)
                                   )->customizeMailContent;
                                 $custom_mail_content = ! in_array($nbmUserCustomizeMailContent, ['0', ''], true) ? $nbmUserCustomizeMailContent : null;

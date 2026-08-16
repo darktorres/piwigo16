@@ -116,7 +116,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
         $this->accessControl->checkStatus(self::getTabStatus($page_mode));
 
         $this->eventDispatcher->addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, $this->renderGlobalCustomizeMailContent(...));
-        $this->eventDispatcher->dispatchNotify(new NbmEventHandlerAdded());
+        $this->eventDispatcher->dispatch(new NbmEventHandlerAdded());
 
         if (count($post) === 0) {
             // No insert data in post mode

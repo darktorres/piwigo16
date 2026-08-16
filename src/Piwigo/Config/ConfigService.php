@@ -443,7 +443,7 @@ final readonly class ConfigService
             $this->hydrate($entry->param, $entry->value);
         }
 
-        $this->eventDispatcher->dispatchNotify(new LoadConf($param));
+        $this->eventDispatcher->dispatch(new LoadConf($param));
     }
 
     /**

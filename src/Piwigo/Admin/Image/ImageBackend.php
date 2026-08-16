@@ -55,7 +55,7 @@ final class ImageBackend implements ImageInterface
         ?string $library = null
     ) {
 
-        $eventDispatcher->dispatchNotify(new LoadImageLibrary($this));
+        $eventDispatcher->dispatch(new LoadImageLibrary($this));
 
         if (is_object($this->image)) {
             return; // A plugin may have load its own library

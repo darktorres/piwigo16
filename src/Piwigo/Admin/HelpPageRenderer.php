@@ -37,7 +37,7 @@ final class HelpPageRenderer
         $tabsheet->select($selected, $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
-        $eventDispatcher->dispatchNotify(new LocEndHelp());
+        $eventDispatcher->dispatch(new LocEndHelp());
 
         $help_content_raw = $lang->load(
             'help/help_' . $tabsheet->selected . '.html',

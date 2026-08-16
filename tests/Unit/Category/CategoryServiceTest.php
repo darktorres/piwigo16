@@ -524,29 +524,17 @@ test('getRelatedCategoriesMenu() with permissions builds valid SQL', function ()
         ->not->toBe([]);
 });
 
-test('getPreferredImageOrders() throws when the event handler returns something other than a GetCategoryPreferredImageOrders instance', function (): void {
-    // addEventHandler(), not addTypedHandler() -- a real plugin handler
-    // is untyped from PHPStan's perspective, and this test exercises
-    // dispatchChange()'s own runtime enforcement, not a static one.
-    EventDispatcherTestFactory::get()->addEventHandler(GetCategoryPreferredImageOrders::class, static fn (): string => 'not-an-array');
-
-    try {
-        expect(fn (): array => categoryServiceTestService()->getPreferredImageOrders())
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->reset();
-    }
-});
-
 test('getPreferredImageOrders() skips a malformed entry from the event handler', function (): void {
     EventDispatcherTestFactory::get()->addTypedHandler(
         GetCategoryPreferredImageOrders::class,
         // Missing the 3rd (visibility) element -- malformed, must be
         // skipped rather than crash on an undefined offset.
-        static fn (): GetCategoryPreferredImageOrders => new GetCategoryPreferredImageOrders([
-            ['Only Two Elements', 'name ASC'],
-            ['Real Order', 'hit DESC', true],
-        ])
+        static function (GetCategoryPreferredImageOrders $event): void {
+            $event->orders = [
+                ['Only Two Elements', 'name ASC'],
+                ['Real Order', 'hit DESC', true],
+            ];
+        }
     );
 
     try {

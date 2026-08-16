@@ -216,7 +216,7 @@ final readonly class AuthService
             session_start();
         }
         $_SESSION['pwg_uid'] = (int) $userId;
-        // Captured into a local before dispatchNotify()'s own impure call --
+        // Captured into a local before dispatch()'s own impure call --
         // PHPStan can't keep a narrowed type for a superglobal offset read
         // after an intervening impure call (matches the same root cause
         // Controller\Admin\BatchManagerSubController's own resolveSessionFilter()
@@ -224,7 +224,7 @@ final readonly class AuthService
         // already document).
         $pwgUid = $_SESSION['pwg_uid'];
 
-        $this->eventDispatcher->dispatchNotify(new UserLogin(UserId::from($pwgUid)));
+        $this->eventDispatcher->dispatch(new UserLogin(UserId::from($pwgUid)));
         $this->activityLogger->record('user', $pwgUid, 'login');
     }
 
@@ -260,7 +260,7 @@ final readonly class AuthService
                             $this->connectedWithSession->set(ConnectedWith::PwgUi);
                         }
                         $this->logUser($cookie[0], true);
-                        $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom($calculated['username'])));
+                        $this->eventDispatcher->dispatch(new LoginSuccess(Username::tryFrom($calculated['username'])));
 
                         return true;
                     }
@@ -290,7 +290,7 @@ final readonly class AuthService
         ?string $password,
         bool $rememberMe
     ): bool {
-        $event = $this->eventDispatcher->dispatchChange(new TryLogUser(false, $username, $password, $rememberMe));
+        $event = $this->eventDispatcher->dispatch(new TryLogUser(false, $username, $password, $rememberMe));
 
         return $event->success;
     }
@@ -302,7 +302,7 @@ final readonly class AuthService
     {
 
         $pwg_uid = $_SESSION['pwg_uid'] ?? null;
-        $this->eventDispatcher->dispatchNotify(new UserLogout(is_int($pwg_uid) ? UserId::tryFrom($pwg_uid) : null));
+        $this->eventDispatcher->dispatch(new UserLogout(is_int($pwg_uid) ? UserId::tryFrom($pwg_uid) : null));
         if (is_int($pwg_uid) || is_string($pwg_uid)) {
             $this->activityLogger->record('user', $pwg_uid, 'logout');
         }
@@ -364,7 +364,7 @@ final readonly class AuthService
         // exists -- it doesn't depend on the lookup at all.
         if ($ip !== '' && $this->failedLoginRepo->countRecentByIp($ip, $windowStart) >= $maxAttempts) {
             $this->failedLoginRepo->recordFailure(null, $ip, $nowFormatted);
-            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom($username)));
+            $this->eventDispatcher->dispatch(new LoginFailure(Username::tryFrom($username)));
             return $event;
         }
 
@@ -381,7 +381,7 @@ final readonly class AuthService
         // still provides for every not-yet-locked-out attempt.
         if ($userId !== null && $this->failedLoginRepo->countRecentByUserId($userId, $windowStart) >= $maxAttempts) {
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
-            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom($username)));
+            $this->eventDispatcher->dispatch(new LoginFailure(Username::tryFrom($username)));
             return $event;
         }
 
@@ -412,7 +412,7 @@ final readonly class AuthService
                 $this->activityLogger->record('user', $user_found->id, 'login_failure_wrong_password');
             }
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
-            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom($username)));
+            $this->eventDispatcher->dispatch(new LoginFailure(Username::tryFrom($username)));
             return $event;
         }
 
@@ -446,7 +446,7 @@ final readonly class AuthService
             $user_found,
             $rememberMe,
         );
-        $finalizeLoginEvent = $this->eventDispatcher->dispatchChange($finalizeLoginEvent);
+        $finalizeLoginEvent = $this->eventDispatcher->dispatch($finalizeLoginEvent);
 
         $can_login = $finalizeLoginEvent->state['can_login'];
         $reason = $finalizeLoginEvent->state['reason'];
@@ -455,7 +455,7 @@ final readonly class AuthService
         if (! $can_login) {
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
             $this->activityLogger->record('user', $user_found->id, $reason ?? 'login_failure_before_log_user');
-            $this->eventDispatcher->dispatchNotify(new LoginFailureBeforeLogUser(Username::tryFrom($username)));
+            $this->eventDispatcher->dispatch(new LoginFailureBeforeLogUser(Username::tryFrom($username)));
             return $event;
         }
 
@@ -466,7 +466,7 @@ final readonly class AuthService
         }
 
         $this->clearFakeUserCache();
-        $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom($username)));
+        $this->eventDispatcher->dispatch(new LoginSuccess(Username::tryFrom($username)));
         $event->success = true;
 
         return $event;
@@ -634,7 +634,7 @@ final readonly class AuthService
         }
 
         $this->logUser($key_user_id, false);
-        $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom($key->username)));
+        $this->eventDispatcher->dispatch(new LoginSuccess(Username::tryFrom($key->username)));
 
         // to be registered in history table by HistoryService::logVisit()
         $this->pageState->setAuthKeyId((int) $key->authKeyId);

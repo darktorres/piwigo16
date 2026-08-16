@@ -80,7 +80,7 @@ final readonly class CategoryDefaultRenderer
 
         $selection = array_slice($items, $start, $nbImagePage);
 
-        $selection = $this->eventDispatcher->dispatchChange(new LocIndexThumbnailsSelection($selection))
+        $selection = $this->eventDispatcher->dispatch(new LocIndexThumbnailsSelection($selection))
             ->selection;
         /** @var list<int|string> $selection */
         $selection = array_values(array_filter(
@@ -131,7 +131,7 @@ final readonly class CategoryDefaultRenderer
             }
         }
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginIndexThumbnails($pictures));
+        $this->eventDispatcher->dispatch(new LocBeginIndexThumbnails($pictures));
         $tplThumbnailsVar = [];
 
         foreach ($pictures as $row) {
@@ -210,10 +210,10 @@ final readonly class CategoryDefaultRenderer
 
         $indexDeriv = $this->sessionService->getIndexDeriv() ?? ImageStdParams::THUMB;
 
-        $tplThumbnailsVar = $this->eventDispatcher->dispatchChange(new LocEndIndexThumbnails($tplThumbnailsVar, $pictures))
+        $tplThumbnailsVar = $this->eventDispatcher->dispatch(new LocEndIndexThumbnails($tplThumbnailsVar, $pictures))
             ->tplThumbnailsVar;
         $template->assignContext(new CategoryDefaultThumbnailsPageContext(
-            derivativeParams: $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams($this->imageStdParams->getByType($indexDeriv)))
+            derivativeParams: $this->eventDispatcher->dispatch(new GetIndexDerivativeParams($this->imageStdParams->getByType($indexDeriv)))
                 ->params,
             maxRequests: $this->currentConfig->maxRequests,
             showThumbnailCaption: $this->currentConfig->showThumbnailCaption,

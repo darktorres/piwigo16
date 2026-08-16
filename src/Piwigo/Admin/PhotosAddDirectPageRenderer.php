@@ -172,7 +172,7 @@ final readonly class PhotosAddDirectPageRenderer
 
         $this->prepareUploadForm($photosAddDirectRequest);
 
-        $this->eventDispatcher->dispatchNotify(new LocEndPhotoAddDirect());
+        $this->eventDispatcher->dispatch(new LocEndPhotoAddDirect());
 
         $conf_format_ext = $this->currentConfig->formatExtensions;
 

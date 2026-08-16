@@ -17,7 +17,7 @@ namespace Piwigo\Search;
 final class QResults
 {
     /**
-     * Rows get a 'name' key overwritten by EventDispatcher::dispatchChange()
+     * Rows get a 'name' key overwritten by EventDispatcher::dispatch()
      * (RenderTagName) before being stored here, so the row can't be a clean
      * Tag Projection -- the mixed leaf is real, not just unnarrowed.
      *
@@ -42,7 +42,7 @@ final class QResults
     public array $tag_iids = [];
 
     /**
-     * Same EventDispatcher::dispatchChange()-poisons-'name' rationale as
+     * Same EventDispatcher::dispatch()-poisons-'name' rationale as
      * $all_tags above.
      *
      * @var array<int, array<string, mixed>>

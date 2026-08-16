@@ -169,9 +169,9 @@ final readonly class GetImagesHandler implements WsAction
                     $image[$k] = $image_row[$k] ?? null;
                 }
 
-                $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
+                $nameEvent = $this->eventDispatcher->dispatch(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
                 $image['name'] = strip_tags($nameEvent->elementName);
-                $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
+                $descriptionEvent = $this->eventDispatcher->dispatch(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
                 $image['comment'] = $descriptionEvent->elementDescription;
 
                 $image = array_merge($image, $this->imageUrlBuilder->stdGetUrls($image_row, $urlService));

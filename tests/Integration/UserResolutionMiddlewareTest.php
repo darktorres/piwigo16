@@ -112,7 +112,7 @@ final class UserResolutionMiddlewareTest extends IntegrationTestCase
             $middleware->process(new ServerRequest('GET', '/'), $this->passthroughHandler());
 
             $event = new TryLogUser(success: false, username: $username, password: $plainPassword, rememberMe: false);
-            $result = EventDispatcherTestFactory::get()->dispatchChange($event);
+            $result = EventDispatcherTestFactory::get()->dispatch($event);
 
             self::assertTrue($result->success);
         } finally {

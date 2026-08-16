@@ -282,23 +282,6 @@ test('select discards a well-shaped sheet entry keyed by an int, not just a malf
     }
 });
 
-test('select throws when a tabsheet_before_select handler returns something other than a TabsheetBeforeSelect instance', function (): void {
-    // See RenderElementName's own sibling test in HtmlServiceTest.php for
-    // why this uses addEventHandler(), not addTypedHandler().
-    $handler = fn (): string => 'not-an-array';
-    EventDispatcherTestFactory::get()->addEventHandler(TabsheetBeforeSelect::class, $handler);
-
-    try {
-        $tabsheet = new Tabsheet();
-        $tabsheet->add('general', 'General', '/general');
-
-        expect(static fn () => $tabsheet->select('general', EventDispatcherTestFactory::get()))
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
-    }
-});
-
 test('assign makes the sheets array available to the tabsheet.latte template before rendering', function (): void {
     file_put_contents(CurrentPathsTestFactory::get()->root . '/tabsheet.latte', 'CAPTION:{$tabsheet[\'general\'][\'caption\']}');
 

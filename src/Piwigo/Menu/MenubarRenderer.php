@@ -56,7 +56,7 @@ use Piwigo\Users\UserRepository;
  * external-links block is gone -- Config\MenuLink::$visibilityLinkId
  * (a plain, safely-storable identifier, not raw PHP source) drives a
  * typed Menu\Event\CheckMenuLinkVisibility dispatch instead, reusing the
- * exact dispatchChange()/subscribedEvents() machinery every
+ * exact dispatch()/subscribedEvents() machinery every
  * PluginConfig\ExtensionInterface plugin already has (P27.0/P27.1) --
  * no separate mechanism needed.
  */
@@ -109,7 +109,7 @@ final class MenubarRenderer
         if ((bool) ($block = $menu->getBlock('mbLinks')) and ! self::emptyValue($currentConfig->links)) {
             $block->data = [];
             foreach ($currentConfig->links as $url => $link) {
-                if ($link->visibilityLinkId === null or $eventDispatcher->dispatchChange(new CheckMenuLinkVisibility($link->visibilityLinkId))->visible) {
+                if ($link->visibilityLinkId === null or $eventDispatcher->dispatch(new CheckMenuLinkVisibility($link->visibilityLinkId))->visible) {
                     $tpl_var = [
                         'URL' => $url,
                         'LABEL' => $link->label,

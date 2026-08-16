@@ -1874,7 +1874,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
 
             $result = $service->emptyLounge(invalidateUserCache: false);
 
-            // Kills line 391's RemoveMethodCall -- dispatchNotify(new EmptyLounge($rows))
+            // Kills line 391's RemoveMethodCall -- dispatch(new EmptyLounge($rows))
             // fires with the exact same rows this call itself returns.
             expect($capturedEventRows)
                 ->toBe($result);

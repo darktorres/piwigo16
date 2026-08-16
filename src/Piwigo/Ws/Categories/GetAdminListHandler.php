@@ -83,12 +83,12 @@ final readonly class GetAdminListHandler implements WsAction
 
             $row['name_raw'] = $row['name'];
 
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_getAdminList'));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_getAdminList'));
             $row['name'] = strip_tags($nameEvent->categoryName);
             $row['fullname'] = strip_tags($cat_display_name);
 
             $row['comment_raw'] = $row['comment'];
-            $adminDescriptionEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryDescription(is_string($row['comment']) ? $row['comment'] : '', 'ws_categories_getAdminList'));
+            $adminDescriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryDescription(is_string($row['comment']) ? $row['comment'] : '', 'ws_categories_getAdminList'));
             $row['comment'] = $adminDescriptionEvent->categoryDescription;
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {

@@ -66,7 +66,7 @@ final readonly class DuplicateHandler implements WsAction
             return new WsErrorResponse(WsError::InvalidParam->value, 'This name is already taken.');
         }
 
-        $copyUrlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($copy_name));
+        $copyUrlNameEvent = $this->eventDispatcher->dispatch(new RenderTagUrl($copy_name));
         $copy_url_name = $copyUrlNameEvent->tagName;
         $destination_tag_id = $this->tagService->duplicateTag($copy_name, $copy_url_name)
             ->value;

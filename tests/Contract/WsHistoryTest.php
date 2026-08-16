@@ -1119,20 +1119,22 @@ final class WsHistoryTest extends ContractTestCase
     }
 
     /**
-     * historySearch()'s `EventDispatcherTestFactory::get()->dispatchChange(new
-     * GetHistory([], ...))` fails loud now: a GetHistory handler that returns something other
-     * than a GetHistory instance makes dispatchChange() throw \Error,
-     * rather than the old triggerChange()'s silent "narrow to [] on a
-     * non-array return" fallback this test used to assert. historyGet()
-     * (this class's own GetHistory handler, registered at the default
-     * priority 50) always returns a real GetHistory instance, so reaching
-     * the misbehaving-handler path for real needs a second, higher-
-     * priority handler chained after it -- exactly the "a plugin can still
-     * override history search behavior by registering its own GetHistory
-     * handler at a higher priority" scenario historyGet()'s own docblock
-     * describes. A real plugin + `plugins` activation row
-     * (PluginConfig\PluginRegistry::bootActive() boots it on every real
-     * request, including ws.php) is the same established technique as
+     * historySearch()'s `EventDispatcherTestFactory::get()->dispatch(new
+     * GetHistory([], ...))` is resilient to a misbehaving handler now:
+     * dispatch() never reads a handler's return value, so a higher-
+     * priority plugin handler returning garbage without touching
+     * $event->data leaves it untouched for the next handler in the
+     * chain. `GetHistoryListener::__invoke()` (this class's own
+     * GetHistory handler, registered at the default priority 50)
+     * unconditionally overwrites $event->data with the real computed
+     * result regardless of what an earlier, higher-priority handler
+     * returned -- exactly the "a plugin can still override history
+     * search behavior by registering its own GetHistory handler at a
+     * higher priority" scenario historyGet()'s own docblock describes,
+     * just resilient to a broken override rather than crashing on one. A
+     * real plugin + `plugins` activation row (PluginConfig\PluginRegistry::
+     * bootActive() boots it on every real request, including ws.php) is
+     * the same established technique as
      * tests/Browser/PictureControllerTest.php's own 'user_comment_check'
      * misbehaving-plugin test -- EventDispatcher's own singleton lives in
      * the real Apache-served process, not this Pest process, so it can't
@@ -1140,16 +1142,8 @@ final class WsHistoryTest extends ContractTestCase
      * throwaway image_id (never 1-5) so it's a complete no-op for every
      * other concurrent request against this shared dev server while
      * active.
-     *
-     * Asserts the raw HTTP status only, not a decoded response body:
-     * ExceptionHandlerMiddleware catches the uncaught \Error and returns a
-     * real 500 (display_errors is off site-wide, so there's no fatal-error
-     * text to see even if it weren't caught) -- callWs()/wsAdmin() both
-     * assert 2xx/3xx and json_decode()-then-assertIsArray() the body, so
-     * neither fits this scenario; same "HTTP-status-only" assertion style
-     * as the Browser suite's own misbehaving-handler tests.
      */
-    public function testHistorySearchFatalsWhenAPluginGetHistoryHandlerReturnsSomethingOtherThanAGetHistoryInstance(): void
+    public function testHistorySearchSucceedsWithRealDataWhenAHigherPriorityPluginGetHistoryHandlerReturnsSomethingOtherThanAGetHistoryInstance(): void
     {
         $this->conn->executeStatement(
             'INSERT INTO images (file, path) VALUES (?, ?)',
@@ -1195,25 +1189,13 @@ final class WsHistoryTest extends ContractTestCase
                 [$pluginId]
             );
 
-            $url = $this->baseUrl . '/ws.php?format=json';
-            $ch = curl_init($url);
-            self::assertNotFalse($ch, 'curl_init failed');
-            $cookieJar = $this->cookieJar();
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-                'method' => 'pwg.history.search',
+            $after = $this->wsAdmin('pwg.history.search', [
                 'image_id' => $imageId,
-            ]));
-            curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
-            curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
-            curl_exec($ch);
-            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            unset($ch);
-
-            self::assertSame(500, $status, 'a plugin GetHistory handler returning a non-GetHistory instance must fatal (fail loud), not silently degrade');
+            ]);
+            self::assertSame('ok', $after['stat']);
+            $afterResult = $after['result'];
+            self::assertIsArray($afterResult);
+            self::assertNotEmpty($afterResult['lines'], 'the real GetHistoryListener handler must still populate the result despite the misbehaving higher-priority handler');
         } finally {
             $this->conn->executeStatement('DELETE FROM plugins WHERE id = ?', [$pluginId]);
             $this->removeFixturePlugin($pluginId);

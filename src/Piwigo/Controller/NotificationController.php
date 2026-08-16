@@ -71,7 +71,7 @@ final readonly class NotificationController implements ControllerInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginNotification());
+        $this->eventDispatcher->dispatch(new LocBeginNotification());
 
         $feedRepo = $this->entityManager->getRepository(FeedEntity::class);
         $feedId = $this->findAvailableFeedId($feedRepo);
@@ -117,7 +117,7 @@ final readonly class NotificationController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatchNotify(new LocEndNotification());
+        $this->eventDispatcher->dispatch(new LocEndNotification());
         $this->htmlService
             ->flushPageMessages();
         $template->parse('notification.latte', false);

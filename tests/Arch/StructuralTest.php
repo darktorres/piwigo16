@@ -817,8 +817,7 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
     // The free-function bridge (src/Piwigo/PluginConfig/functions.php) is
     // deleted -- every real call site takes EventDispatcher via
     // constructor injection and calls
-    // {addEventHandler,addTypedHandler,dispatchChange,dispatchNotify}()
-    // directly. deptrac.yaml
+    // {addEventHandler,addTypedHandler,dispatch}() directly. deptrac.yaml
     // places EventDispatcher in L1Infrastructure (split from its
     // namespace-mate PluginRepository) since real callers live in
     // L1Infrastructure/L2aCoreDomain. Zero-tolerance, no allowlist needed.
@@ -927,8 +926,8 @@ function findStringKeyedDispatchCallSites(string $dir): array
 
 test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls', function (): void {
     // Every real event dispatches through typed SomeEvent::class objects
-    // via addTypedHandler()/dispatchChange()/dispatchNotify() --
-    // including the 7 WS-protocol-lifecycle events (get_history,
+    // via addTypedHandler()/dispatch() -- including the 7
+    // WS-protocol-lifecycle events (get_history,
     // ws_users_getList, ws_invoke_allowed, ws_add_methods,
     // ws_images_uploadCompleted, sendResponse, merge_tags).
     //
@@ -948,9 +947,10 @@ test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls', func
 
     // Paired with the assertion above, not a separate concern: P27.0 gives
     // EventDispatcher real Psr\EventDispatcher\EventDispatcherInterface
-    // conformance via a dispatch() alias over dispatchChange() -- see that
-    // class's own docblock for why this can never become a delegation to
-    // a separate PSR-14 implementation (Symfony's concrete dispatcher
+    // conformance via dispatch(), the single verb for both value-transform
+    // and fire-and-forget dispatch -- see that class's own docblock for
+    // why this can never become a delegation to a separate PSR-14
+    // implementation (Symfony's concrete dispatcher
     // included): the 'trigger' meta-channel this test locks down above is
     // exactly the array-payload, string-keyed traffic that would
     // TypeError against PSR-14's object-only dispatch(object $event)

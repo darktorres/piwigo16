@@ -285,14 +285,14 @@ final readonly class ExtensionContext
         return new ExtensionSession($this->sessionService, $this->extensionId);
     }
 
-    public function dispatchNotify(object $event): void
+    /**
+     * @template T of object
+     * @param T $event
+     * @return T
+     */
+    public function dispatch(object $event): object
     {
-        $this->eventDispatcher->dispatchNotify($event);
-    }
-
-    public function dispatchChange(object $event): object
-    {
-        return $this->eventDispatcher->dispatchChange($event);
+        return $this->eventDispatcher->dispatch($event);
     }
 
     /**

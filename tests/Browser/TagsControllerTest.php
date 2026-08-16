@@ -90,12 +90,13 @@ it('renders the letters display mode, grouping tags by first letter', function (
 });
 
 /**
- * Closes dispatchChange()'s own instanceof-enforcement branch for the
- * `RenderTagName` event: TagService::getAvailableTags() dispatches it with
- * no whitelist -- a real plugin handler returning something other than a
- * RenderTagName instance reaches this branch, same throwaway-fixture-
- * plugin technique AlbumSubControllerTest.php's own RenderCategoryName
- * test establishes (an exactly analogous hook).
+ * Proves dispatch()'s resilience to a misbehaving handler for the
+ * `RenderTagName` event: TagService::getAvailableTags() dispatches it
+ * with no whitelist -- a real plugin handler returning something other
+ * than a RenderTagName instance (without mutating $event->tagName)
+ * reaches this branch, same throwaway-fixture-plugin technique
+ * AlbumSubControllerTest.php's own RenderCategoryName test establishes
+ * (an exactly analogous hook).
  */
 function tagsControllerPluginsPath(): string
 {
@@ -181,7 +182,7 @@ function tagsControllerRemoveFixturePlugin(string $pluginId): void
     }
 }
 
-it('fatal-errors instead of silently swallowing a real render_tag_name hook that returns something other than a RenderTagName instance', function (): void {
+it('renders the real tag name when a render_tag_name hook returns something other than a RenderTagName instance', function (): void {
     // RenderTagName is dispatched from many TagService call sites, not
     // just this one page -- the plugin's DB activation row is inserted
     // only around the one navigation under test, strictly AFTER login and
@@ -226,15 +227,14 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
         H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
         try {
-            // dispatchChange() now enforces its own instanceof contract --
-            // a misbehaving handler makes the request fail loud (an HTTP
-            // 500) rather than silently degrading. display_errors is off
-            // site-wide (Core\ErrorCollector::install() forces it, and
-            // php.ini already has it off too), so the response body itself
-            // carries no exception detail to assert on -- the status code
-            // is the only reliable, environment-independent signal.
+            // dispatch() never reads a handler's return value (Plan 2
+            // Stage A step 2), so a misbehaving handler that returns
+            // garbage without touching $event->tagName leaves it exactly
+            // as TagService set it -- the page renders normally with the
+            // real tag name, rather than crashing or dropping it.
             $response = H::rawGet($page, '/tags.php?display_mode=letters');
-            expect($response['status'])->toBe(500);
+            expect($response['status'])->toBe(200);
+            expect($response['body'])->toContain($tagName);
         } finally {
             H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         }

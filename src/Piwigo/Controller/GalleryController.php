@@ -147,7 +147,7 @@ final readonly class GalleryController implements ControllerInterface
         $tagService = $this->tagService;
         $categoryService = $this->categoryService;
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginIndex());
+        $this->eventDispatcher->dispatch(new LocBeginIndex());
 
         $galleryDisplay = GalleryDisplayRequest::fromGlobals();
 
@@ -338,7 +338,7 @@ final readonly class GalleryController implements ControllerInterface
                 $otherSelectedTags = $selectedTags;
                 unset($otherSelectedTags[$selectedTagKey]);
 
-                $selectedTagNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName(is_string($selectedTag['name']) ? $selectedTag['name'] : '', $selectedTag));
+                $selectedTagNameEvent = $this->eventDispatcher->dispatch(new RenderTagName(is_string($selectedTag['name']) ? $selectedTag['name'] : '', $selectedTag));
                 $selected_related_tags_info[$selectedTagKey] =
                 [
                     'tag_name' => $selectedTagNameEvent->tagName,
@@ -605,7 +605,7 @@ final readonly class GalleryController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatchNotify(new LocEndIndex());
+        $this->eventDispatcher->dispatch(new LocEndIndex());
         $this->htmlService
             ->flushPageMessages();
         $template->parseIndexButtons();

@@ -46,7 +46,7 @@ final class BlockManager
      */
     public function loadRegisteredBlocks(): void
     {
-        $this->eventDispatcher->dispatchNotify(new BlockManagerRegisterBlocks($this));
+        $this->eventDispatcher->dispatch(new BlockManagerRegisterBlocks($this));
     }
 
     public function getId(): string
@@ -101,7 +101,7 @@ final class BlockManager
             $idx++;
         }
         $this->sortBlocks();
-        $this->eventDispatcher->dispatchNotify(new BlockManagerPrepareDisplay($this));
+        $this->eventDispatcher->dispatch(new BlockManagerPrepareDisplay($this));
         $this->sortBlocks();
     }
 
@@ -159,7 +159,7 @@ final class BlockManager
     {
         $template = $this->currentTemplate->get();
 
-        $this->eventDispatcher->dispatchNotify(new BlockManagerApply($this));
+        $this->eventDispatcher->dispatch(new BlockManagerApply($this));
 
         foreach ($this->display_blocks as $id => $block) {
             if (in_array($block->raw_content, [''], true) and in_array($block->template, [''], true)) {

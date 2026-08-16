@@ -699,7 +699,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
 
         // render()'s own $eventDispatcher param (not the container-shared
-        // one) is what dispatchNotify(UserCommentInsertion) actually uses.
+        // one) is what dispatch(UserCommentInsertion) actually uses.
         $eventDispatcher = new EventDispatcher();
         $captured = null;
         $handler = static function (UserCommentInsertion $event) use (&$captured): void {

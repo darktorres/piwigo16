@@ -110,7 +110,7 @@ final readonly class RegisterController implements ControllerInterface
                 ->pageForbidden($this->redirectService, 'User registration closed');
         }
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginRegister());
+        $this->eventDispatcher->dispatch(new LocBeginRegister());
 
         $registerSubmit = RegisterSubmitRequest::fromGlobals();
 
@@ -296,7 +296,7 @@ final readonly class RegisterController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatchNotify(new LocEndRegister());
+        $this->eventDispatcher->dispatch(new LocEndRegister());
         $this->htmlService
             ->flushPageMessages();
         $this->htmlService

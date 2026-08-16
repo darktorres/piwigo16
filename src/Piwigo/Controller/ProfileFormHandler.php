@@ -303,7 +303,7 @@ final readonly class ProfileFormHandler
 
                 $activity_details_tables[] = 'user_infos';
             }
-            $this->eventDispatcher->dispatchNotify(new SaveProfileFromPost(UserId::from($user_id)));
+            $this->eventDispatcher->dispatch(new SaveProfileFromPost(UserId::from($user_id)));
             $this->activityService->record('user', $user_id, 'edit', [
                 'function' => __METHOD__,
                 'tables' => implode(',', $activity_details_tables),
@@ -383,7 +383,7 @@ final readonly class ProfileFormHandler
           : $this->lang->t('You have no email address, so you will not be notified when your API key is about to expire.');
 
         // allow plugins to add their own form data to content
-        $this->eventDispatcher->dispatchNotify(new LoadProfileInTemplate($userdata));
+        $this->eventDispatcher->dispatch(new LoadProfileInTemplate($userdata));
 
         $template->assignContext(new ProfileFormPageContext(
             templatePrefixe: $template_prefixe ?? '',

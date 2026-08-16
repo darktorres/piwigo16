@@ -215,7 +215,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
         RequestBootstrap::finalize();
 
-        $result = EventDispatcherTestFactory::get()->dispatchChange(new GetElementUrl(
+        $result = EventDispatcherTestFactory::get()->dispatch(new GetElementUrl(
             'http://original.example/x.jpg',
             [
                 'id' => 42,

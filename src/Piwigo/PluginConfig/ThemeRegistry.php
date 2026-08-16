@@ -242,10 +242,11 @@ final class ThemeRegistry
      * Chain order is furthest ancestor first, self last, for both
      * registration and boot -- the reverse of the natural-seeming
      * "self first, then walk up" order that matches CSS/asset-file
-     * lookup. `dispatchChange()` is a pipeline (each handler's return
-     * value feeds the next as the new event), so the *last* handler to
-     * run has final say -- registering the child before the parent
-     * would give the parent's handler the last word over the child's.
+     * lookup. `dispatch()` is a pipeline (each handler runs against the
+     * same event instance, mutating whatever the previous handler already
+     * changed), so the *last* handler to run has final say --
+     * registering the child before the parent would give the parent's
+     * handler the last word over the child's.
      * See this class's own P27 plan section for the full reasoning.
      *
      * Two-pass construct-once/reuse, same shape as

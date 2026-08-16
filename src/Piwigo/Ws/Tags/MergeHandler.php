@@ -83,7 +83,7 @@ final readonly class MergeHandler implements WsAction
             ]);
         }
 
-        $this->eventDispatcher->dispatchNotify(new MergeTags(
+        $this->eventDispatcher->dispatch(new MergeTags(
             TagId::from($input->destinationTagId),
             array_values(array_map(TagId::from(...), $merge_tag))
         ));

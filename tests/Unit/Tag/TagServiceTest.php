@@ -26,7 +26,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\GetTagNameLikeWhere;
-use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
@@ -833,23 +832,6 @@ test('tagIdFromTagName() returns the cached id without touching the db', functio
     }
 });
 
-test('tagIdFromTagName() throws when the RenderTagUrl handler returns something other than a RenderTagUrl instance', function (): void {
-    // addEventHandler(), not addTypedHandler() -- a real plugin handler
-    // is untyped from PHPStan's perspective, and this test exercises
-    // dispatchChange()'s own runtime enforcement, not a static one.
-    [$service, $conn] = tagServiceTestServiceConn();
-    $name = 'weird url name ' . uniqid();
-    EventDispatcherTestFactory::get()->addEventHandler(RenderTagUrl::class, static fn (): int => 42);
-
-    try {
-        expect(static fn (): TagId => $service->tagIdFromTagName($name))
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->reset();
-        $conn->executeStatement('DELETE FROM tags WHERE name = ?', [$name]);
-    }
-});
-
 /**
  * A plugin's `get_tag_name_like_where` handler (extended-description
  * sub-name matching) can resolve to an EXISTING tag even when the exact
@@ -858,7 +840,9 @@ test('tagIdFromTagName() throws when the RenderTagUrl handler returns something 
 test('tagIdFromTagName() matches via a plugin-supplied LIKE pattern', function (): void {
     EventDispatcherTestFactory::get()->addTypedHandler(
         GetTagNameLikeWhere::class,
-        static fn (GetTagNameLikeWhere $event): GetTagNameLikeWhere => new GetTagNameLikeWhere(['nature'], $event->tagName)
+        static function (GetTagNameLikeWhere $event): void {
+            $event->value = ['nature'];
+        }
     );
 
     try {
@@ -884,7 +868,9 @@ test('tagIdFromTagName() treats a plugin-supplied SQL injection attempt as a lit
     [$service, $conn] = tagServiceTestServiceConn();
     EventDispatcherTestFactory::get()->addTypedHandler(
         GetTagNameLikeWhere::class,
-        static fn (GetTagNameLikeWhere $event): GetTagNameLikeWhere => new GetTagNameLikeWhere(["' OR '1'='1"], $event->tagName)
+        static function (GetTagNameLikeWhere $event): void {
+            $event->value = ["' OR '1'='1"];
+        }
     );
 
     $tagName = 'p18-test-sec19-' . bin2hex(random_bytes(4));
@@ -960,7 +946,9 @@ test('getTagListByIds() returns the matching tags sorted alphabetically', functi
 test('getTagListByIds() includes surviving alt names when not restricted to user language', function (): void {
     EventDispatcherTestFactory::get()->addTypedHandler(
         GetTagAltNames::class,
-        static fn (GetTagAltNames $event): GetTagAltNames => new GetTagAltNames($event->rawName === 'nature' ? ['nature', 'Nature (alt)'] : [], $event->rawName)
+        static function (GetTagAltNames $event): void {
+            $event->value = $event->rawName === 'nature' ? ['nature', 'Nature (alt)'] : [];
+        }
     );
 
     try {

@@ -105,7 +105,7 @@ final class FilterPanelRenderer
             ];
         }
 
-        $prefiltersEvent = $eventDispatcher->dispatchChange(new GetBatchManagerPrefilters($prefilters));
+        $prefiltersEvent = $eventDispatcher->dispatch(new GetBatchManagerPrefilters($prefilters));
 
         // A misbehaving third-party handler could still populate this with
         // non-array elements PHP's own type system can't catch at runtime

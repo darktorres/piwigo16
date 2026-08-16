@@ -616,7 +616,8 @@ test('listVisibleMethodNames lists only non-hidden methods', function (): void {
         hidden: true,
     ));
 
-    expect($server->listVisibleMethodNames())->toBe(['test.visible']);
+    expect($server->listVisibleMethodNames())
+        ->toBe(['test.visible']);
 });
 
 // --------------------------------------------------------------- isAuthorizedMethodForAPIKEY

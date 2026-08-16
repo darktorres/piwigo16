@@ -324,7 +324,7 @@ final readonly class PictureController implements ControllerInterface
             },
         );
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginPicture());
+        $this->eventDispatcher->dispatch(new LocBeginPicture());
 
         // caching first_rank, last_rank, current_rank in the displayed
         // section. This should also help in readability.
@@ -573,7 +573,7 @@ final readonly class PictureController implements ControllerInterface
         }
 
         // don't increment if adding a comment
-        if ($this->eventDispatcher->dispatchChange(new AllowIncrementElementHitCount($inc_hit_count, ImageId::from($image_id)))->incHitCount) {
+        if ($this->eventDispatcher->dispatch(new AllowIncrementElementHitCount($inc_hit_count, ImageId::from($image_id)))->incHitCount) {
             $this->entityManager->getRepository(ImageEntity::class)
                 ->incrementVisitCounter(ImageId::from($image_id));
         }
@@ -719,7 +719,7 @@ final readonly class PictureController implements ControllerInterface
 
         // do we have a plugin that can show metadata for something
         // else than images?
-        $metadata_showable = $this->eventDispatcher->dispatchChange(new GetElementMetadataAvailable(
+        $metadata_showable = $this->eventDispatcher->dispatch(new GetElementMetadataAvailable(
             (
                 ($this->currentConfig->showExif or $this->currentConfig->showIptc)
                 and ! $picture['current']['src_image']->isMimetype()
@@ -773,7 +773,7 @@ final readonly class PictureController implements ControllerInterface
          *     ...
          * }> $picture
          */
-        $picture = $this->eventDispatcher->dispatchChange(new PicturePicturesData($picture))
+        $picture = $this->eventDispatcher->dispatch(new PicturePicturesData($picture))
             ->picture;
 
         $nav = [];
@@ -996,7 +996,7 @@ final readonly class PictureController implements ControllerInterface
         // legend
         $current_comment = $picture['current']['comment'] ?? null;
         if (is_string($current_comment) && $current_comment !== '' && $current_comment !== '0') {
-            $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription($current_comment, 'picture_page_element_description'));
+            $descriptionEvent = $this->eventDispatcher->dispatch(new RenderElementDescription($current_comment, 'picture_page_element_description'));
             $comment_img = $descriptionEvent->elementDescription;
         }
 
@@ -1170,7 +1170,7 @@ final readonly class PictureController implements ControllerInterface
 
         // maybe someone wants a special display (call it before
         // page_header so that they can add stylesheets)
-        $contentEvent = $this->eventDispatcher->dispatchChange(new RenderElementContent('', $picture['current']));
+        $contentEvent = $this->eventDispatcher->dispatch(new RenderElementContent('', $picture['current']));
         $element_content = $contentEvent->content;
 
         $u_prefetch = null;
@@ -1256,7 +1256,7 @@ final readonly class PictureController implements ControllerInterface
         /** @var string|null $url_link */
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link);
-        $this->eventDispatcher->dispatchNotify(new LocEndPicture());
+        $this->eventDispatcher->dispatch(new LocEndPicture());
         $this->htmlService
             ->flushPageMessages();
         if ($slideshow and $this->currentConfig->lightSlideshow) {
@@ -1282,7 +1282,7 @@ final readonly class PictureController implements ControllerInterface
 
     /**
      * $event->currentPicture is always $picture['current'] (see the
-     * dispatchChange() call near the end of __invoke()) -- 'derivatives' is
+     * dispatch() call near the end of __invoke()) -- 'derivatives' is
      * populated by DerivativeImage::getAll()
      * (src/Piwigo/Image/DerivativeImage.php), keyed by the IMG_* type
      * strings. `RenderElementContent::$currentPicture` itself stays

@@ -133,7 +133,7 @@ final class Server
             ],
         ));
 
-        $this->eventDispatcher->dispatchNotify(new WsAddMethods($this));
+        $this->eventDispatcher->dispatch(new WsAddMethods($this));
         return $this->requestHandler()
             ->handleRequest($this);
     }
@@ -148,7 +148,7 @@ final class Server
         $contentType = $this->responseEncoder()
             ->getContentType();
 
-        $this->eventDispatcher->dispatchNotify(new SendResponse($encodedResponse));
+        $this->eventDispatcher->dispatch(new SendResponse($encodedResponse));
 
         $status = 200;
         if ($response instanceof WsErrorResponse and $response->code() >= 400 and $response->code() < 600) {
@@ -437,7 +437,7 @@ final class Server
             return new WsErrorResponse(WsError::MissingParam->value, 'Missing parameters: ' . implode(',', $missing_params));
         }
 
-        $result = $this->eventDispatcher->dispatchChange(new WsInvokeAllowed(true, $methodName, $params))
+        $result = $this->eventDispatcher->dispatch(new WsInvokeAllowed(true, $methodName, $params))
             ->value;
 
         $is_error = false;

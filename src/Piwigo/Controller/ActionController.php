@@ -193,7 +193,7 @@ final readonly class ActionController implements ControllerInterface
                 ->logVisit($image_id_val, 'high', $format_row->formatId);
         }
 
-        $this->eventDispatcher->dispatchNotify(new LocActionBeforeHttpHeaders());
+        $this->eventDispatcher->dispatch(new LocActionBeforeHttpHeaders());
 
         $http_headers = [];
 

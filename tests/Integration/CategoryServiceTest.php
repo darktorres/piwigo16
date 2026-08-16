@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
-    use Error;
     use Exception;
     use LogicException;
     use Override;
@@ -602,34 +601,18 @@ namespace Piwigo\Tests\Integration {
             self::assertNotSame([], $cats);
         }
 
-        public function testGetPreferredImageOrdersThrowsWhenTheEventHandlerReturnsSomethingOtherThanAGetCategoryPreferredImageOrdersInstance(): void
-        {
-            // addEventHandler(), not addTypedHandler() -- a real plugin
-            // handler is untyped from PHPStan's perspective, and this test
-            // exercises dispatchChange()'s own runtime enforcement, not a
-            // static one.
-            EventDispatcherTestFactory::get()->addEventHandler(GetCategoryPreferredImageOrders::class, static fn (): string => 'not-an-array');
-
-            $this->expectException(Error::class);
-            $this->expectExceptionMessageIsOrContains('must return an instance of');
-
-            try {
-                $this->service->getPreferredImageOrders();
-            } finally {
-                EventDispatcherTestFactory::get()->reset();
-            }
-        }
-
         public function testGetPreferredImageOrdersSkipsAMalformedEntryFromTheEventHandler(): void
         {
             EventDispatcherTestFactory::get()->addTypedHandler(
                 GetCategoryPreferredImageOrders::class,
                 // Missing the 3rd (visibility) element -- malformed, must be
                 // skipped rather than crash on an undefined offset.
-                static fn (): GetCategoryPreferredImageOrders => new GetCategoryPreferredImageOrders([
-                    ['Only Two Elements', 'name ASC'],
-                    ['Real Order', 'hit DESC', true],
-                ])
+                static function (GetCategoryPreferredImageOrders $event): void {
+                    $event->orders = [
+                        ['Only Two Elements', 'name ASC'],
+                        ['Real Order', 'hit DESC', true],
+                    ];
+                }
             );
 
             try {

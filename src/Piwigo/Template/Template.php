@@ -893,7 +893,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 $href .= '?v' . ((bool) $combi->version ? $combi->version : AppInfo::VERSION);
             }
             // trigger the event for eventual use of a cdn
-            $combinedCssEvent = $this->eventDispatcher->dispatchChange(new CombinedCss($href, $combi));
+            $combinedCssEvent = $this->eventDispatcher->dispatch(new CombinedCss($href, $combi));
             $href = $combinedCssEvent->href;
             $content[] = '<link rel="stylesheet" type="text/css" href="' . $href . '">';
         }
@@ -962,7 +962,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             }
         }
         // trigger the event for eventual use of a cdn
-        $combinedScriptEvent = $this->eventDispatcher->dispatchChange(new CombinedScript($ret, $script));
+        $combinedScriptEvent = $this->eventDispatcher->dispatch(new CombinedScript($ret, $script));
 
         return self::urlService()->embellishUrl($combinedScriptEvent->src);
     }

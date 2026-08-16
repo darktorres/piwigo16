@@ -68,7 +68,7 @@ use RuntimeException;
  * via a fixed `(EntityManagerInterface $em, ClassMetadata $class)`
  * signature, which would block this class from taking `CurrentConfig`/
  * `EventDispatcher` (its own 2 dependencies, getWebmasterMailAddress()'s
- * `CurrentConfig::webmasterId()`/`EventDispatcher::dispatchChange()`, and
+ * `CurrentConfig::webmasterId()`/`EventDispatcher::dispatch()`, and
  * findVisibleFavoriteImageIds()'s `CurrentConfig::orderByCustom()`) via
  * real constructor injection. It's a plain, container-shared service
  * instead; `UserInfoEntity`'s own `#[ORM\Entity]` mapping doesn't name
@@ -126,7 +126,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         // non-null.
         $email = is_string($value) ? Email::tryFrom($value) : null;
 
-        return $this->eventDispatcher->dispatchChange(new GetWebmasterMailAddress($email))
+        return $this->eventDispatcher->dispatch(new GetWebmasterMailAddress($email))
             ->email->value ?? '';
     }
 

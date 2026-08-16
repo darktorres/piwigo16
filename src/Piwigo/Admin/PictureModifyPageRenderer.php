@@ -175,7 +175,7 @@ final readonly class PictureModifyPageRenderer
 
             $data['date_creation'] = $pictureModifyRequest->dateCreation;
 
-            $data = $this->eventDispatcher->dispatchChange(new PictureModifyBeforeUpdate($data))
+            $data = $this->eventDispatcher->dispatch(new PictureModifyBeforeUpdate($data))
                 ->data;
 
             unset($data['id']);
@@ -474,7 +474,7 @@ final readonly class PictureModifyPageRenderer
                 ->getToken(),
         ));
 
-        $this->eventDispatcher->dispatchNotify(new LocEndPictureModify());
+        $this->eventDispatcher->dispatch(new LocEndPictureModify());
 
         // ----------------------------------------------------------- sending html code
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'picture_modify.latte');

@@ -136,7 +136,7 @@ final readonly class CommentService
      * Basic spam check (plugins can do more via the same `user_comment_check`
      * event). Registered in Piwigo\Bootstrap\RequestBootstrap's own
      * default-event-handlers block as that event's own handler -- called by
-     * dispatchChange() from insertComment()/updateComment() themselves, not
+     * dispatch() from insertComment()/updateComment() themselves, not
      * directly by callers. $event->comm is untyped per-key (matching
      * updateComment()'s own already-established looseness), so 'content'/
      * 'author' are narrowed defensively here rather than trusted as string.
@@ -309,7 +309,7 @@ final readonly class CommentService
         }
 
         // perform more spam check
-        $commentAction = $this->eventDispatcher->dispatchChange(new UserCommentCheck($commentAction, $comm))
+        $commentAction = $this->eventDispatcher->dispatch(new UserCommentCheck($commentAction, $comm))
             ->commentAction;
 
         if ($commentAction !== 'reject') {
@@ -398,7 +398,7 @@ final readonly class CommentService
             'comment_id' => $rawCommentId,
         ]);
 
-        $this->eventDispatcher->dispatchNotify(new UserCommentDeletion($rawCommentId));
+        $this->eventDispatcher->dispatch(new UserCommentDeletion($rawCommentId));
 
         return true;
     }
@@ -441,7 +441,7 @@ final readonly class CommentService
         }
 
         // perform more spam check
-        $commentAction = $this->eventDispatcher->dispatchChange(new UserCommentCheck(
+        $commentAction = $this->eventDispatcher->dispatch(new UserCommentCheck(
             $commentAction,
             array_merge($comment, [
                 'author' => $username,
@@ -600,7 +600,7 @@ final readonly class CommentService
         $rawCommentId = is_array($commentId)
             ? array_map(static fn (CommentId $id): int => $id->value, $commentId)
             : $commentId->value;
-        $this->eventDispatcher->dispatchNotify(new UserCommentValidation($rawCommentId));
+        $this->eventDispatcher->dispatch(new UserCommentValidation($rawCommentId));
     }
 
     /**

@@ -124,7 +124,7 @@ test('addEventHandler allows the same method bound to two different objects', fu
         ->toBeTrue();
 });
 
-test('removeEventHandler removes a registered handler and dispatchChange no longer calls it', function (): void {
+test('removeEventHandler removes a registered handler and dispatch no longer calls it', function (): void {
     $dispatcher = new EventDispatcher();
     $handler = static function (TestChangeEvent $e): TestChangeEvent {
         $e->value = strtoupper($e->value);
@@ -136,7 +136,7 @@ test('removeEventHandler removes a registered handler and dispatchChange no long
     $removed = $dispatcher->removeEventHandler(TestChangeEvent::class, $handler);
 
     $event = new TestChangeEvent('hello');
-    $dispatcher->dispatchChange($event);
+    $dispatcher->dispatch($event);
 
     expect($removed)
         ->toBeTrue()
@@ -169,7 +169,7 @@ test('removeEventHandler on one handler leaves sibling handlers at the same prio
     $dispatcher->removeEventHandler(TestChangeEvent::class, $upper);
 
     $event = new TestChangeEvent(' hello ');
-    $dispatcher->dispatchChange($event);
+    $dispatcher->dispatch($event);
 
     expect($event->value)
         ->toBe('hello');
@@ -187,7 +187,7 @@ test('removeEventHandler returns false when the priority bucket has handlers but
     $removed = $dispatcher->removeEventHandler(TestChangeEvent::class, static fn (TestChangeEvent $e): TestChangeEvent => $e);
 
     $event = new TestChangeEvent('hello');
-    $dispatcher->dispatchChange($event);
+    $dispatcher->dispatch($event);
 
     expect($removed)
         ->toBeFalse()
@@ -209,7 +209,7 @@ test('addTypedHandler appends a new handler alongside others already registered 
         $calls[] = 'second';
     });
 
-    $dispatcher->dispatchNotify(new TestNotifyEvent('hi'));
+    $dispatcher->dispatch(new TestNotifyEvent('hi'));
 
     expect($calls)
         ->toBe(['first', 'second']);
@@ -236,7 +236,7 @@ test('removeEventHandler scans past a non-matching handler to reach a later matc
     $removed = $dispatcher->removeEventHandler(TestChangeEvent::class, $upper);
 
     $event = new TestChangeEvent('HeLLo');
-    $dispatcher->dispatchChange($event);
+    $dispatcher->dispatch($event);
 
     expect($removed)
         ->toBeTrue()
@@ -348,7 +348,7 @@ test('callablesEqual does not reflect a non-Closure registered handler when the 
         ->toBeFalse();
 });
 
-test('addTypedHandler registers under the event class-string, reaching dispatchChange', function (): void {
+test('addTypedHandler registers under the event class-string, reaching dispatch', function (): void {
     $dispatcher = new EventDispatcher();
     $dispatcher->addTypedHandler(
         TestChangeEvent::class,
@@ -360,7 +360,7 @@ test('addTypedHandler registers under the event class-string, reaching dispatchC
     );
     $event = new TestChangeEvent('hi');
 
-    $dispatcher->dispatchChange($event);
+    $dispatcher->dispatch($event);
 
     expect($event->value)
         ->toBe('HI');
@@ -380,11 +380,23 @@ test('addTypedHandler refuses to register the exact same string callable twice a
         ->toBeFalse();
 });
 
-test('dispatchChange returns the event unchanged when no handler is registered', function (): void {
+// --------------------------------------------------------------- dispatch
+//
+// The single verb for both use cases: a "change"-style caller reads a
+// value back off the same $event reference it dispatched (TestChangeEvent
+// below), a "notify"-style caller only cares about the handler's side
+// effect (TestNotifyEvent below). Both flow through the exact same
+// implementation now, so the plumbing tests (include_once, propagation
+// stopping, dead-handler invocation) are covered once each rather than
+// once per former method name -- duplicating them per calling style would
+// no longer prove anything the single implementation doesn't already
+// guarantee both ways.
+
+test('dispatch returns the event unchanged when no handler is registered', function (): void {
     $dispatcher = new EventDispatcher();
     $event = new TestChangeEvent('original');
 
-    $result = $dispatcher->dispatchChange($event);
+    $result = $dispatcher->dispatch($event);
 
     expect($result)
         ->toBe($event)
@@ -392,7 +404,13 @@ test('dispatchChange returns the event unchanged when no handler is registered',
         ->toBe('original');
 });
 
-test('dispatchChange passes the event through a single handler', function (): void {
+test('dispatch is a no-op when no handler is registered', function (): void {
+    $dispatcher = new EventDispatcher();
+
+    $dispatcher->dispatch(new TestNotifyEvent('hi'));
+})->throwsNoExceptions();
+
+test('dispatch passes the event through a single handler', function (): void {
     $dispatcher = new EventDispatcher();
     $dispatcher->addTypedHandler(TestChangeEvent::class, static function (TestChangeEvent $e): TestChangeEvent {
         $e->value = strtoupper($e->value);
@@ -401,13 +419,13 @@ test('dispatchChange passes the event through a single handler', function (): vo
     });
     $event = new TestChangeEvent('hello');
 
-    $dispatcher->dispatchChange($event);
+    $dispatcher->dispatch($event);
 
     expect($event->value)
         ->toBe('HELLO');
 });
 
-test('dispatchChange chains handlers in priority order, highest first', function (): void {
+test('dispatch chains handlers in priority order, highest first', function (): void {
     $dispatcher = new EventDispatcher();
     $dispatcher->addTypedHandler(TestChangeEvent::class, static function (TestChangeEvent $e): TestChangeEvent {
         $e->value .= 'b';
@@ -421,13 +439,13 @@ test('dispatchChange chains handlers in priority order, highest first', function
     }, 10);
     $event = new TestChangeEvent('');
 
-    $dispatcher->dispatchChange($event);
+    $dispatcher->dispatch($event);
 
     expect($event->value)
         ->toBe('ba');
 });
 
-test('dispatchChange preserves readonly context through a handler', function (): void {
+test('dispatch preserves readonly context through a handler', function (): void {
     $dispatcher = new EventDispatcher();
     $dispatcher->addTypedHandler(TestChangeEvent::class, static function (TestChangeEvent $e): TestChangeEvent {
         $e->value = $e->value . '-' . $e->context;
@@ -436,7 +454,7 @@ test('dispatchChange preserves readonly context through a handler', function ():
     });
     $event = new TestChangeEvent('v', 'ctx');
 
-    $dispatcher->dispatchChange($event);
+    $dispatcher->dispatch($event);
 
     expect($event->value)
         ->toBe('v-ctx')
@@ -444,26 +462,38 @@ test('dispatchChange preserves readonly context through a handler', function ():
         ->toBe('ctx');
 });
 
-test('dispatchChange throws when a handler returns something other than an instance of the event class', function (): void {
+test('dispatch calls every registered handler without reading (or requiring) a return value', function (): void {
+    // Proves the deleted "handler must return an instance of the event
+    // class" guard is really gone: both handlers below return void, which
+    // the old dispatchChange() implementation would have rejected outright.
     $dispatcher = new EventDispatcher();
-    $dispatcher->addTypedHandler(TestChangeEvent::class, static fn (TestChangeEvent $e): ?string => null);
+    $calls = [];
+    $dispatcher->addTypedHandler(TestNotifyEvent::class, static function (TestNotifyEvent $e) use (&$calls): void {
+        $calls[] = 'first:' . $e->value;
+    });
+    $dispatcher->addTypedHandler(TestNotifyEvent::class, static function (TestNotifyEvent $e) use (&$calls): void {
+        $calls[] = 'second:' . $e->value;
+    }, 60);
 
-    $dispatcher->dispatchChange(new TestChangeEvent('hi'));
-})->throws(Error::class, 'must return an instance of');
+    $dispatcher->dispatch(new TestNotifyEvent('hi'));
 
-test('dispatchChange throws only when a dead handler registration is actually invoked', function (): void {
+    expect($calls)
+        ->toBe(['second:hi', 'first:hi']);
+});
+
+test('dispatch throws only when a dead handler registration is actually invoked', function (): void {
     $dispatcher = new EventDispatcher();
     $dispatcher->addEventHandler(TestChangeEvent::class, 'this_function_does_not_exist_anywhere');
 
-    $dispatcher->dispatchChange(new TestChangeEvent('hi'));
+    $dispatcher->dispatch(new TestChangeEvent('hi'));
 })->throws(Error::class);
 
-test('dispatchChange include_once-s a handler\'s includePath before calling it', function (): void {
+test('dispatch include_once-s a handler\'s includePath before calling it', function (): void {
     $path = tempnam(sys_get_temp_dir(), 'event_dispatcher_test_');
     expect($path)
         ->not->toBeFalse();
-    file_put_contents($path, '<?php $GLOBALS["event_dispatcher_test_included_dispatch_change"] = true;');
-    $GLOBALS['event_dispatcher_test_included_dispatch_change'] = false;
+    file_put_contents($path, '<?php $GLOBALS["event_dispatcher_test_included_dispatch"] = true;');
+    $GLOBALS['event_dispatcher_test_included_dispatch'] = false;
 
     try {
         $dispatcher = new EventDispatcher();
@@ -479,19 +509,19 @@ test('dispatchChange include_once-s a handler\'s includePath before calling it',
         );
 
         $event = new TestChangeEvent('hi');
-        $dispatcher->dispatchChange($event);
+        $dispatcher->dispatch($event);
 
         expect($event->value)
             ->toBe('HI')
-            ->and($GLOBALS['event_dispatcher_test_included_dispatch_change'])->toBeTrue();
+            ->and($GLOBALS['event_dispatcher_test_included_dispatch'])->toBeTrue();
     } finally {
         unlink($path);
-        unset($GLOBALS['event_dispatcher_test_included_dispatch_change']);
+        unset($GLOBALS['event_dispatcher_test_included_dispatch']);
     }
 });
 
-test('dispatchChange skips include_once for a handler registered with an empty-string includePath', function (): void {
-    // Kills dispatchChange()'s own EmptyStringToNotEmpty mutation on the
+test('dispatch skips include_once for a handler registered with an empty-string includePath', function (): void {
+    // Kills dispatch()'s own EmptyStringToNotEmpty mutation on the
     // `!== ''` guard: if the guard stopped treating '' as "no path",
     // include_once('') would run and (per phpunit.xml.dist's
     // failOnWarning="true") fail this test on the resulting "Filename
@@ -504,123 +534,13 @@ test('dispatchChange skips include_once for a handler registered with an empty-s
     }, 50, '');
     $event = new TestChangeEvent('hi');
 
-    $dispatcher->dispatchChange($event);
+    $dispatcher->dispatch($event);
 
     expect($event->value)
         ->toBe('HI');
 });
 
-test('dispatchChange stops calling further handlers once a handler stops propagation', function (): void {
-    $dispatcher = new EventDispatcher();
-    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): TestStoppableEvent {
-        $e->calls[] = 'first';
-
-        return $e;
-    }, 30);
-    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): TestStoppableEvent {
-        $e->calls[] = 'second';
-        $e->stop();
-
-        return $e;
-    }, 20);
-    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): TestStoppableEvent {
-        $e->calls[] = 'third';
-
-        return $e;
-    }, 10);
-    $event = new TestStoppableEvent();
-
-    $dispatcher->dispatchChange($event);
-
-    expect($event->calls)
-        ->toBe(['first', 'second']);
-});
-
-test('dispatchChange runs every handler when the event never stops propagation', function (): void {
-    $dispatcher = new EventDispatcher();
-    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): TestStoppableEvent {
-        $e->calls[] = 'first';
-
-        return $e;
-    }, 20);
-    $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): TestStoppableEvent {
-        $e->calls[] = 'second';
-
-        return $e;
-    }, 10);
-    $event = new TestStoppableEvent();
-
-    $dispatcher->dispatchChange($event);
-
-    expect($event->calls)
-        ->toBe(['first', 'second']);
-});
-
-test('dispatchNotify calls every registered handler without transmitting a return value', function (): void {
-    $dispatcher = new EventDispatcher();
-    $calls = [];
-    $dispatcher->addTypedHandler(TestNotifyEvent::class, static function (TestNotifyEvent $e) use (&$calls): void {
-        $calls[] = 'first:' . $e->value;
-    });
-    $dispatcher->addTypedHandler(TestNotifyEvent::class, static function (TestNotifyEvent $e) use (&$calls): void {
-        $calls[] = 'second:' . $e->value;
-    }, 60);
-
-    $dispatcher->dispatchNotify(new TestNotifyEvent('hi'));
-
-    expect($calls)
-        ->toBe(['second:hi', 'first:hi']);
-});
-
-test('dispatchNotify is a no-op when no handler is registered', function (): void {
-    $dispatcher = new EventDispatcher();
-
-    $dispatcher->dispatchNotify(new TestNotifyEvent('hi'));
-})->throwsNoExceptions();
-
-test('dispatchNotify throws only when a dead handler registration is actually invoked', function (): void {
-    $dispatcher = new EventDispatcher();
-    $dispatcher->addEventHandler(TestNotifyEvent::class, 'this_function_does_not_exist_anywhere');
-
-    $dispatcher->dispatchNotify(new TestNotifyEvent('hi'));
-})->throws(Error::class);
-
-test('dispatchNotify include_once-s a handler\'s includePath before calling it', function (): void {
-    $path = tempnam(sys_get_temp_dir(), 'event_dispatcher_test_');
-    expect($path)
-        ->not->toBeFalse();
-    file_put_contents($path, '<?php $GLOBALS["event_dispatcher_test_included_dispatch_notify"] = true;');
-    $GLOBALS['event_dispatcher_test_included_dispatch_notify'] = false;
-
-    try {
-        $dispatcher = new EventDispatcher();
-        $dispatcher->addEventHandler(TestNotifyEvent::class, static function (): void {}, 50, $path);
-
-        $dispatcher->dispatchNotify(new TestNotifyEvent('hi'));
-
-        expect($GLOBALS['event_dispatcher_test_included_dispatch_notify'])->toBeTrue();
-    } finally {
-        unlink($path);
-        unset($GLOBALS['event_dispatcher_test_included_dispatch_notify']);
-    }
-});
-
-test('dispatchNotify skips include_once for a handler registered with an empty-string includePath', function (): void {
-    // Kills dispatchNotify()'s own EmptyStringToNotEmpty mutation on the
-    // `!== ''` guard, same reasoning as dispatchChange's own copy above.
-    $dispatcher = new EventDispatcher();
-    $calls = [];
-    $dispatcher->addEventHandler(TestNotifyEvent::class, static function () use (&$calls): void {
-        $calls[] = true;
-    }, 50, '');
-
-    $dispatcher->dispatchNotify(new TestNotifyEvent('hi'));
-
-    expect($calls)
-        ->toBe([true]);
-});
-
-test('dispatchNotify stops calling further handlers once a handler stops propagation', function (): void {
+test('dispatch stops calling further handlers once a handler stops propagation', function (): void {
     $dispatcher = new EventDispatcher();
     $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): void {
         $e->calls[] = 'first';
@@ -634,13 +554,13 @@ test('dispatchNotify stops calling further handlers once a handler stops propaga
     }, 10);
     $event = new TestStoppableEvent();
 
-    $dispatcher->dispatchNotify($event);
+    $dispatcher->dispatch($event);
 
     expect($event->calls)
         ->toBe(['first', 'second']);
 });
 
-test('dispatchNotify runs every handler when the event never stops propagation', function (): void {
+test('dispatch runs every handler when the event never stops propagation', function (): void {
     $dispatcher = new EventDispatcher();
     $dispatcher->addTypedHandler(TestStoppableEvent::class, static function (TestStoppableEvent $e): void {
         $e->calls[] = 'first';
@@ -650,7 +570,7 @@ test('dispatchNotify runs every handler when the event never stops propagation',
     }, 10);
     $event = new TestStoppableEvent();
 
-    $dispatcher->dispatchNotify($event);
+    $dispatcher->dispatch($event);
 
     expect($event->calls)
         ->toBe(['first', 'second']);

@@ -183,7 +183,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             }
 
             // $plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
-            $tpl_var['plugin_links'] = $this->eventDispatcher->dispatchChange(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks;
+            $tpl_var['plugin_links'] = $this->eventDispatcher->dispatch(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks;
 
             $tpl_sites[] = $tpl_var;
         }

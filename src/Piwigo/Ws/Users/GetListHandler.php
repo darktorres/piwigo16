@@ -351,10 +351,12 @@ final readonly class GetListHandler implements WsAction
             }
         }
         // WsUsersGetList::$users is a non-nullable PHP `array` property --
-        // dispatchChange()'s own instanceof check guarantees a real array
-        // here, unlike the old mixed-returning trigger_change(), so no
-        // fallback-to-original-$users guard is needed anymore.
-        $users = $this->eventDispatcher->dispatchChange(new WsUsersGetList($users))
+        // PHP's own native property typing guarantees a real array here
+        // (a handler assigning anything else to $event->users throws a
+        // TypeError at that assignment), unlike the old mixed-returning
+        // trigger_change(), so no fallback-to-original-$users guard is
+        // needed anymore.
+        $users = $this->eventDispatcher->dispatch(new WsUsersGetList($users))
             ->users;
         if ($input->perPage === 0 && $display_flags === []) {
             $method_result = $users_id_arr;

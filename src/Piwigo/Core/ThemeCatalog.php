@@ -75,7 +75,7 @@ final class ThemeCatalog
         }
 
         // plugins want remove some themes based on user status maybe?
-        $themes = $eventDispatcher->dispatchChange(new GetPwgThemes($themes))
+        $themes = $eventDispatcher->dispatch(new GetPwgThemes($themes))
             ->themes;
 
         $filtered_themes = [];

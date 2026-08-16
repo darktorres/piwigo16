@@ -70,7 +70,7 @@ final readonly class RenameHandler implements WsAction
         $this->activityService->record('tag', $tag_id, 'edit');
 
         if ($tag_name !== '') {
-            $urlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($tag_name));
+            $urlNameEvent = $this->eventDispatcher->dispatch(new RenderTagUrl($tag_name));
             $this->tagService->renameTag(TagId::from($tag_id), $tag_name, $urlNameEvent->tagName);
         }
         $this->entityManager->clear();
@@ -84,9 +84,9 @@ final readonly class RenameHandler implements WsAction
             'url_name' => $renamed_tag->urlName,
         ];
         $tag['raw_name'] = $tag['name'];
-        $renameNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($tag['raw_name'], $tag));
+        $renameNameEvent = $this->eventDispatcher->dispatch(new RenderTagName($tag['raw_name'], $tag));
         $tag['name'] = $renameNameEvent->tagName;
-        $altNamesEvent = $this->eventDispatcher->dispatchChange(new GetTagAltNames([], $tag['raw_name']));
+        $altNamesEvent = $this->eventDispatcher->dispatch(new GetTagAltNames([], $tag['raw_name']));
         $tag['alt_names'] = $altNamesEvent->value;
         return $tag;
     }

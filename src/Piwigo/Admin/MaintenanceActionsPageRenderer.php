@@ -179,7 +179,7 @@ final readonly class MaintenanceActionsPageRenderer
         }
 
         // $advanced_features is array of array composed of CAPTION & URL
-        $advanced_features_event = $this->eventDispatcher->dispatchChange(new GetAdminAdvancedFeaturesLinks([]));
+        $advanced_features_event = $this->eventDispatcher->dispatch(new GetAdminAdvancedFeaturesLinks([]));
 
         $template->assignContext(new MaintenanceActionsPageContext(
             maintActions: $maintActions,

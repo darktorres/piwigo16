@@ -129,7 +129,7 @@ final readonly class NoPhotoYetRenderer
                     ));
                 }
 
-                $this->eventDispatcher->dispatchNotify(new LocEndNoPhotoYet());
+                $this->eventDispatcher->dispatch(new LocEndNoPhotoYet());
 
                 $template->pparse('no_photo_yet.latte');
                 exit();

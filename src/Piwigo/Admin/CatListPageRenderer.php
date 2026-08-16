@@ -72,7 +72,7 @@ final readonly class CatListPageRenderer
 
         $categoryService = $this->categoryService;
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginCatList());
+        $this->eventDispatcher->dispatch(new LocBeginCatList());
 
         $catListRequest = CatListRequest::fromGlobals($this->inputValidator);
 
@@ -230,7 +230,7 @@ final readonly class CatListPageRenderer
                 $self_url .= '&amp;parent_id=' . $parent_id;
             }
 
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($category['name'], 'admin_cat_list'));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category['name'], 'admin_cat_list'));
             $tpl_cat =
               [
                   'NAME' => $nameEvent->categoryName,
@@ -272,7 +272,7 @@ final readonly class CatListPageRenderer
             categories: $tpl_categories,
         ));
 
-        $this->eventDispatcher->dispatchNotify(new LocEndCatList());
+        $this->eventDispatcher->dispatch(new LocEndCatList());
 
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_list.latte');
     }

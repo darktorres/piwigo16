@@ -1131,7 +1131,7 @@ it('resets a corrupted (non-array) session bulk_manager_filter back to the defau
     @unlink($session['cookieJar']);
 });
 
-it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilters handler that returns something other than a PerformBatchManagerPrefilters instance', function (): void {
+it('proceeds with an empty filter set when a perform_batch_manager_prefilters handler returns something other than a PerformBatchManagerPrefilters instance', function (): void {
     // Only invoked when the prefilter itself is unrecognized, i.e.
     // FilterResolver::resolvePrefilter() returns null. Unreachable
     // through any real, unhooked request -- reaching it needs a real
@@ -1141,7 +1141,10 @@ it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilte
     // Gated on this test's own unique marker prefilter value, so it's a
     // complete no-op for every other concurrent request against this
     // shared dev server while active (matches PictureControllerTest.php's
-    // own "bogus comment action" fixture-plugin test).
+    // own "bogus comment action" fixture-plugin test). Since dispatch()
+    // no longer enforces a return-type instanceof check (P32 Stage A2),
+    // a handler returning the wrong type is simply ignored -- $filterSets
+    // stays whatever it already was rather than crashing the request.
     $marker = 'pwgtest_bogus_prefilter_' . uniqid();
     $pluginId = 'pwgtest-batch-manager-bogus-prefilter';
     $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
@@ -1173,12 +1176,8 @@ it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilte
             'filter_prefilter' => $marker,
         ]);
 
-        // display_errors is off site-wide (Core\ErrorCollector::install()
-        // forces it, and php.ini already has it off too), so the response
-        // body itself carries no exception detail to assert on -- the
-        // status code is the only reliable, environment-independent
-        // signal.
-        expect($result['status'])->toBe(500);
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
     } finally {
         $cleanupDb = bmDbConnect();
         H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
@@ -1187,10 +1186,13 @@ it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilte
     }
 });
 
-it('fatal-errors instead of silently swallowing a batch_manager_perform_filters handler that returns something other than a BatchManagerPerformFilters instance', function (): void {
+it('proceeds with an empty filter set when a batch_manager_perform_filters handler returns something other than a BatchManagerPerformFilters instance', function (): void {
     // Always invoked, at the very end of computeCurrentSet(). Same
     // fixture-plugin technique as the sibling test above, gated on its
-    // own distinct marker.
+    // own distinct marker. Since dispatch() no longer enforces a
+    // return-type instanceof check (P32 Stage A2), a handler returning
+    // the wrong type is simply ignored -- $filterSets stays whatever it
+    // already was rather than crashing the request.
     $marker = 'pwgtest_bogus_filters_' . uniqid();
     $pluginId = 'pwgtest-batch-manager-bogus-filters';
     $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
@@ -1222,12 +1224,8 @@ it('fatal-errors instead of silently swallowing a batch_manager_perform_filters 
             'filter_prefilter' => $marker,
         ]);
 
-        // display_errors is off site-wide (Core\ErrorCollector::install()
-        // forces it, and php.ini already has it off too), so the response
-        // body itself carries no exception detail to assert on -- the
-        // status code is the only reliable, environment-independent
-        // signal.
-        expect($result['status'])->toBe(500);
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
     } finally {
         $cleanupDb = bmDbConnect();
         H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));

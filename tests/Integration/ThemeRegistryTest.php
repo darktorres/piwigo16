@@ -44,9 +44,10 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
- * Test-only typed change-event -- `dispatchChange()`-shaped (each
- * handler's return value feeds the next as the new event), used to prove
- * `ThemeRegistry::bootCurrent()`'s parent-chain dispatch order.
+ * Test-only typed change-event -- `dispatch()`-shaped (each handler runs
+ * against the same event instance, mutating whatever the previous
+ * handler already changed), used to prove `ThemeRegistry::bootCurrent()`'s
+ * parent-chain dispatch order.
  */
 final class ThemeRegistryTestFakeChangeEvent
 {
@@ -311,7 +312,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
     /**
      * The exact scenario the P27 plan calls out by name: a 2-level
      * parent/child theme pair, both subscribing to the same
-     * `dispatchChange()`-shaped event with distinguishably-tagged
+     * `dispatch()`-shaped event with distinguishably-tagged
      * handlers. Asserts the *child's* tag is what survives in the final
      * returned event (child boots last, furthest-ancestor-first chain
      * order) -- not merely that both handlers ran, which a
@@ -331,7 +332,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
         $registry->bootCurrent(ThemeId::from($childId));
 
         $event = new ThemeRegistryTestFakeChangeEvent();
-        $result = $this->eventDispatcher->dispatchChange($event);
+        $result = $this->eventDispatcher->dispatch($event);
 
         self::assertSame('Child' . $suffix, $result->tag, 'the child theme must have the final word in the dispatch pipeline');
     }

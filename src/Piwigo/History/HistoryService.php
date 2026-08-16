@@ -52,7 +52,7 @@ final readonly class HistoryService
             $doLog = $this->currentConfig->historyGuest;
         }
 
-        return $this->eventDispatcher->dispatchChange(new LogAllowed($doLog, ImageId::tryFrom($imageId), $imageType))
+        return $this->eventDispatcher->dispatch(new LogAllowed($doLog, ImageId::tryFrom($imageId), $imageType))
             ->doLog;
     }
 
@@ -97,7 +97,7 @@ final readonly class HistoryService
         if (in_array($lastVisit, [null, false, 0, '0', '', []], true) or strtotime($lastVisitStr) < time() - $sessionLength) {
             $updateLastVisit = true;
         }
-        $updateLastVisit = $this->eventDispatcher->dispatchChange(new LogUpdateLastVisit($updateLastVisit))
+        $updateLastVisit = $this->eventDispatcher->dispatch(new LogUpdateLastVisit($updateLastVisit))
             ->update;
 
         $userId = $user->id->value;

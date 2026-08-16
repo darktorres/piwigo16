@@ -214,7 +214,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
         $is_first = true;
 
         foreach ($catInformations as $cat) {
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($cat['name']) ? $cat['name'] : '', 'get_cat_display_name'));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($cat['name']) ? $cat['name'] : '', 'get_cat_display_name'));
             $cat['name'] = $nameEvent->categoryName;
 
             if ($is_first) {
@@ -291,7 +291,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $cat = $cat_names[$category_id] ?? null;
             $cat = $cat instanceof CategoryIdNamePermalink ? $cat->toArray() : [];
 
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', 'get_cat_display_name_cache'));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', 'get_cat_display_name_cache'));
             $cat['name'] = $nameEvent->categoryName;
 
             if ($is_first) {
@@ -377,7 +377,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
      * `Bootstrap\RequestBootstrap::finalize()`) -- every real caller
      * (Ws\Comments, Picture\PictureCommentRenderer,
      * Controller\CommentsController) reaches it through
-     * `dispatchChange(new RenderCommentContent(...))`, not directly.
+     * `dispatch(new RenderCommentContent(...))`, not directly.
      */
     public function renderCommentContent(RenderCommentContent $event): RenderCommentContent
     {
@@ -731,7 +731,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
         }
 
         header("{$protocol} {$code} {$text}", true, $code);
-        $this->eventDispatcher->dispatchNotify(new SetStatusHeader($code, $text));
+        $this->eventDispatcher->dispatch(new SetStatusHeader($code, $text));
     }
 
     /**
@@ -750,7 +750,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
 
     /**
      * Add known menubar blocks.
-     * This method is called by a dispatchNotify().
+     * This method is called by a fire-and-forget dispatch().
      */
     public function registerDefaultMenubarBlocks(BlockManagerRegisterBlocks $event): void
     {
@@ -786,7 +786,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
     public function renderElementName(array $info): string
     {
         if (isset($info['name']) && is_string($info['name']) && $info['name'] !== '') {
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName($info['name'], $info));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderElementName($info['name'], $info));
 
             return $nameEvent->elementName;
         }
@@ -808,7 +808,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
     public function renderElementDescription(array $info, string $param = ''): string
     {
         if (isset($info['comment']) && is_string($info['comment']) && $info['comment'] !== '') {
-            $descEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription($info['comment'], $param));
+            $descEvent = $this->eventDispatcher->dispatch(new RenderElementDescription($info['comment'], $param));
 
             return $descEvent->elementDescription;
         }
@@ -852,7 +852,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
         }
 
         $title = htmlspecialchars(strip_tags($title));
-        $titleEvent = $this->eventDispatcher->dispatchChange(new GetThumbnailTitle($title, $info));
+        $titleEvent = $this->eventDispatcher->dispatch(new GetThumbnailTitle($title, $info));
 
         return $titleEvent->title;
     }

@@ -16,8 +16,6 @@ use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Event\Picture\GetMimetypeLocation;
-use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
@@ -25,7 +23,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use RuntimeException;
 use stdClass;
@@ -457,27 +454,6 @@ test('constructor treats a missing path as an empty string, not null, when build
         ->toBe('pjpg');
 });
 
-test('constructor throws when a get_mimetype_location handler returns something other than a GetMimetypeLocation instance', function (): void {
-    $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    Kernel::boot(Paths::fromRoot($root));
-    srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
-    srcImageTestMakePng($root . '/themes/default/icon/mimetypes/zzz.png', 16, 12);
-
-    $handler = static fn (): int => 42;
-    EventDispatcherTestFactory::get()->addEventHandler(GetMimetypeLocation::class, $handler);
-
-    try {
-        expect(fn (): SrcImage => new SrcImage([
-            'id' => 1,
-            'path' => 'upload/2026/07/file.zzz',
-            'file' => 'file.zzz',
-        ]))->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(GetMimetypeLocation::class, $handler);
-        srcImageTestRrmdir($root);
-    }
-});
-
 test('constructor throws when neither the per-extension icon nor the shared unknown.png fallback exist on disk', function (): void {
     // Kills line 205's FalseToTrue (`$size = ... : true` instead of
     // `: false`) -- the sibling .svg test above reaches a DIFFERENT
@@ -638,37 +614,6 @@ test('getUrl() for a real representative image requests part "r"', function (): 
             ->toBe('/action/8/r');
         expect($fakeUrlService->lastActionUrlArgs)
             ->toBe([8, 'r', false]);
-    });
-});
-
-test('getUrl() throws when a get_src_image_url handler returns something other than a GetSrcImageUrl instance', function (): void {
-    // Every sibling non-mimetype getUrl() test above has NO handler
-    // registered for GetSrcImageUrl, so dispatchChange() returns the
-    // pre-filter url unchanged (already a string), never reaching
-    // dispatchChange()'s own instanceof enforcement.
-    $fakeUrlService = new SrcImageTestFakeUrlService();
-
-    KernelContainerOverride::with([
-        UrlServiceInterface::class => $fakeUrlService,
-    ], function (): void {
-        // addEventHandler(), not addTypedHandler() -- a real plugin handler
-        // is untyped from PHPStan's perspective, and this test exercises
-        // dispatchChange()'s own runtime enforcement, not a static one.
-        $handler = static fn (): int => 42;
-        EventDispatcherTestFactory::get()->addEventHandler(GetSrcImageUrl::class, $handler);
-
-        try {
-            $src = new SrcImage([
-                'id' => 7,
-                'path' => 'upload/2026/07/photo.jpg',
-                'file' => 'photo.jpg',
-            ]);
-
-            expect(static fn (): string => $src->getUrl())
-                ->toThrow(Error::class, 'must return an instance of');
-        } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(GetSrcImageUrl::class, $handler);
-        }
     });
 });
 

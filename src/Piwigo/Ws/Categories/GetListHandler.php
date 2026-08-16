@@ -304,13 +304,13 @@ final readonly class GetListHandler implements WsAction
             } else {
                 $row['name_raw'] = $row['name'];
 
-                $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_getList'));
+                $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_getList'));
                 $row['name'] = strip_tags($nameEvent->categoryName);
             }
 
             $row['comment_raw'] = $row['comment'];
 
-            $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryDescription(is_string($row['comment']) ? $row['comment'] : null, 'ws_categories_getList'));
+            $descriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryDescription(is_string($row['comment']) ? $row['comment'] : null, 'ws_categories_getList'));
             $row['comment'] = $descriptionEvent->categoryDescription ?? '';
 
             // management of the album thumbnail -- starts here

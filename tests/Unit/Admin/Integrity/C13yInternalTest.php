@@ -65,7 +65,7 @@ test('registerHandlers wires all 3 checkers onto the container-shared EventDispa
     }
     $checkIntegrity = c13yInternalTestCheckIntegrity();
 
-    $eventDispatcher->dispatchNotify(new ListCheckIntegrity($checkIntegrity));
+    $eventDispatcher->dispatch(new ListCheckIntegrity($checkIntegrity));
 
     // A real, healthy environment (see this file's own docblock) means
     // none of the 3 checkers add an anomaly -- this only proves all 3

@@ -340,7 +340,7 @@ final class PluginRegistry
         }
 
         $this->bootedInstances = $instances;
-        $this->eventDispatcher->dispatchNotify(new PluginsLoaded());
+        $this->eventDispatcher->dispatch(new PluginsLoaded());
     }
 
     /**

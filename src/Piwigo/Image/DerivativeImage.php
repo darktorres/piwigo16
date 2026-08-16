@@ -171,7 +171,7 @@ final class DerivativeImage
             return $src_image->getUrl();
         }
         $default_url = self::urlService()->getRootUrl() . $rel_url;
-        $filtered_url = self::eventDispatcher()->dispatchChange(new GetDerivativeUrl(
+        $filtered_url = self::eventDispatcher()->dispatch(new GetDerivativeUrl(
             $default_url,
             $params,
             $src_image,
@@ -341,7 +341,7 @@ final class DerivativeImage
             return $this->src_image->getUrl();
         }
         $default_url = self::urlService()->getRootUrl() . $this->rel_url;
-        $filtered_url = self::eventDispatcher()->dispatchChange(new GetDerivativeUrl(
+        $filtered_url = self::eventDispatcher()->dispatch(new GetDerivativeUrl(
             $default_url,
             $this->params,
             $this->src_image,

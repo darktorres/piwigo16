@@ -337,7 +337,7 @@ final readonly class CategoryCatsRenderer
             // Update filtered data
             $this->filterUpdater->updateCatsWithFilteredData($categories);
 
-            $this->eventDispatcher->dispatchNotify(new LocBeginIndexCategoryThumbnails($categories));
+            $this->eventDispatcher->dispatch(new LocBeginIndexCategoryThumbnails($categories));
 
             $tplThumbnailsVar = [];
 
@@ -347,7 +347,7 @@ final readonly class CategoryCatsRenderer
                     continue;
                 }
 
-                $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'subcatify_category_name'));
+                $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'subcatify_category_name'));
                 $category['name'] = $nameEvent->categoryName;
 
                 if ($isRecentCats) {
@@ -375,8 +375,8 @@ final readonly class CategoryCatsRenderer
                 $catCountCategories = is_numeric($catCountCategories) ? (int) $catCountCategories : 0;
 
                 $categoryComment = $category['comment'] ?? null;
-                $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryDescription(is_string($categoryComment) ? $categoryComment : null, 'subcatify_category_description'));
-                $literalDescriptionEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryLiteralDescription($descriptionEvent->categoryDescription));
+                $descriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryDescription(is_string($categoryComment) ? $categoryComment : null, 'subcatify_category_description'));
+                $literalDescriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryLiteralDescription($descriptionEvent->categoryDescription));
 
                 $tplVar = array_merge($category, [
                     'ID' => $category['id'] /* obsolete */,
@@ -428,8 +428,8 @@ final readonly class CategoryCatsRenderer
             // pagination
             $tplThumbnailsVarSelection = $tplThumbnailsVar;
 
-            $derivativeParams = $this->eventDispatcher->dispatchChange(new GetIndexAlbumDerivativeParams($this->imageStdParams->getByType(ImageStdParams::THUMB)))->params;
-            $tplThumbnailsVarSelection = $this->eventDispatcher->dispatchChange(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))
+            $derivativeParams = $this->eventDispatcher->dispatch(new GetIndexAlbumDerivativeParams($this->imageStdParams->getByType(ImageStdParams::THUMB)))->params;
+            $tplThumbnailsVarSelection = $this->eventDispatcher->dispatch(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))
                 ->tplThumbnailsVar;
             $template->assignContext(new CategoryCatsPageContext(
                 maxRequests: $this->currentConfig->maxRequests,

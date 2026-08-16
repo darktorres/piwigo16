@@ -53,7 +53,7 @@ final class CatModifyPageRenderer
     {
         $template = $currentTemplate->get();
 
-        $eventDispatcher->dispatchNotify(new LocBeginCatModify());
+        $eventDispatcher->dispatch(new LocBeginCatModify());
 
         // 'id' is the categories table primary key (NOT NULL); AlbumSubController's
         // own fetchAssociative() call (one file over the include boundary PHPStan
@@ -333,7 +333,7 @@ final class CatModifyPageRenderer
                 ->getToken(),
         ));
 
-        $eventDispatcher->dispatchNotify(new LocEndCatModify());
+        $eventDispatcher->dispatch(new LocEndCatModify());
 
         // ----------------------------------------------------------- sending html code
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_modify.latte');

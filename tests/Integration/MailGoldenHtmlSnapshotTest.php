@@ -165,10 +165,9 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
     private function mailCaptureBeforeSend(string|array $to, array $args = [], array $tpl = []): Email
     {
         $captured = null;
-        $handler = function (BeforeSendMail $event) use (&$captured): BeforeSendMail {
+        $handler = function (BeforeSendMail $event) use (&$captured): void {
             $captured = $event->email;
-
-            return new BeforeSendMail(false, $event->to, $event->args, $event->email);
+            $event->shouldSend = false;
         };
         EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $handler);
 
@@ -195,10 +194,9 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
     private function mailNotificationAdminsCaptureBeforeSend(string|array $subject, string|array $content): Email
     {
         $captured = null;
-        $handler = function (BeforeSendMail $event) use (&$captured): BeforeSendMail {
+        $handler = function (BeforeSendMail $event) use (&$captured): void {
             $captured = $event->email;
-
-            return new BeforeSendMail(false, $event->to, $event->args, $event->email);
+            $event->shouldSend = false;
         };
         EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $handler);
 

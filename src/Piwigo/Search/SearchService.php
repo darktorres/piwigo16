@@ -1154,7 +1154,7 @@ final readonly class SearchService
                     // $clauses is always [] here (this is the switch's own
                     // default arm; no other case falls through into it).
                     $hookClauses = $this->eventDispatcher
-                        ->dispatchChange(new QsearchGetImagesSqlScopes($clauses, $token, $expr))
+                        ->dispatch(new QsearchGetImagesSqlScopes($clauses, $token, $expr))
                         ->clauses;
                     foreach ($hookClauses as $hookClause) {
                         $clauses[] = $hookClause->sql;
@@ -1242,7 +1242,7 @@ final readonly class SearchService
         $allTags = array_intersect_key($allTags, array_flip(array_diff($positiveIds, $notIds)));
         usort($allTags, $this->htmlRenderer->tagAlphaCompare(...));
         foreach ($allTags as &$tag) {
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName(is_string($tag['name']) ? $tag['name'] : '', $tag));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderTagName(is_string($tag['name']) ? $tag['name'] : '', $tag));
             $tag['name'] = $nameEvent->tagName;
         }
 
@@ -1352,7 +1352,7 @@ final readonly class SearchService
         $allCats = array_intersect_key($allCats, array_flip(array_diff($positiveIds, $notIds)));
         usort($allCats, $this->htmlRenderer->tagAlphaCompare(...));
         foreach ($allCats as &$cat) {
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($cat['name']) ? $cat['name'] : '', $cat));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($cat['name']) ? $cat['name'] : '', $cat));
             $cat['name'] = $nameEvent->categoryName;
         }
 
@@ -1489,7 +1489,7 @@ final readonly class SearchService
         /** @var list<string> $debug */
         $debug = [];
 
-        $q = $this->eventDispatcher->dispatchChange(new QsearchPre($q))
+        $q = $this->eventDispatcher->dispatch(new QsearchPre($q))
             ->q;
 
         $scopes = [];
@@ -1517,7 +1517,7 @@ final readonly class SearchService
         $scopes[] = new QDateRangeScope('created', $createdDateAliases, true);
         $scopes[] = new QDateRangeScope('posted', $postedDateAliases);
 
-        $scopesAfterHook = $this->eventDispatcher->dispatchChange(new QsearchGetScopes($scopes))
+        $scopesAfterHook = $this->eventDispatcher->dispatch(new QsearchGetScopes($scopes))
             ->scopes;
         $scopes = array_values(array_filter($scopesAfterHook, static fn (mixed $s): bool => $s instanceof QSearchScope));
         $expression = new QExpression($q, $scopes);
@@ -1544,7 +1544,7 @@ final readonly class SearchService
             }
         }
 
-        $this->eventDispatcher->dispatchNotify(new QsearchExpressionParsed($expression));
+        $this->eventDispatcher->dispatch(new QsearchExpressionParsed($expression));
 
         if (count($expression->stokens) === 0) {
             $searchResults['debug'] = $debug;
@@ -1557,7 +1557,7 @@ final readonly class SearchService
         $this->qsearchGetCategories($expression, $qsr);
         $this->qsearchGetImages($expression, $qsr);
 
-        $this->eventDispatcher->dispatchNotify(new QsearchBeforeEval($expression, $qsr));
+        $this->eventDispatcher->dispatch(new QsearchBeforeEval($expression, $qsr));
 
         $tmp = false;
         $unmatchedTerms = [];
@@ -1576,7 +1576,7 @@ final readonly class SearchService
 
         $searchResults['qs']['matching_tags'] = $qsr->all_tags;
         $searchResults['qs']['matching_cats'] = $qsr->all_cats;
-        $searchResultsAfterHook = $this->eventDispatcher->dispatchChange(new QsearchResults($searchResults, $expression, $qsr))
+        $searchResultsAfterHook = $this->eventDispatcher->dispatch(new QsearchResults($searchResults, $expression, $qsr))
             ->searchResults;
         foreach ($searchResultsAfterHook as $hookKey => $hookValue) {
             if (is_string($hookKey)) {

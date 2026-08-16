@@ -82,7 +82,7 @@ final readonly class PageTailRenderer
     {
         $template = $this->currentTemplate->get();
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginPageTail());
+        $this->eventDispatcher->dispatch(new LocBeginPageTail());
 
         $contactMail = null;
         if (! $this->accessLevelChecker->isAGuest()) {
@@ -139,7 +139,7 @@ final readonly class PageTailRenderer
             toggleMobileThemeUrl: $toggleMobileThemeUrl,
         ));
 
-        $this->eventDispatcher->dispatchNotify(new LocEndPageTail());
+        $this->eventDispatcher->dispatch(new LocEndPageTail());
         //
         // Generate the page
         //

@@ -556,10 +556,13 @@ it('renders U_JUMPTO from the session edit context, ahead of the authorized-cate
     expect($result['body'])->toContain('picture.php?/' . $imageId . '/category/' . $albumId);
 });
 
-it('fatal-errors instead of silently falling back when a picture_modify_before_update plugin handler returns something other than a PictureModifyBeforeUpdate instance', function (): void {
-    // dispatchChange() now enforces its own instanceof contract -- a
-    // misbehaving handler makes the request fail loud (an HTTP 500)
-    // rather than silently falling back to the pre-hook submission.
+it('proceeds with the original submission when a picture_modify_before_update plugin handler returns something other than a PictureModifyBeforeUpdate instance', function (): void {
+    // dispatch() never reads a handler's return value (Plan 2 Stage A
+    // step 2 deleted the old instanceof-on-return-value enforcement), so
+    // a misbehaving handler that returns garbage without touching
+    // $event->data leaves $event->data exactly as the caller built it --
+    // the request succeeds using the original, pre-hook submission,
+    // rather than either crashing or silently degrading it.
     // PluginConfig\PluginRegistry::bootActive() boots every active
     // plugin's ExtensionInterface class on every request, the same live
     // mechanism a genuine misbehaving 3rd-party plugin would use -- same
@@ -610,19 +613,14 @@ it('fatal-errors instead of silently falling back when a picture_modify_before_u
             'level' => '0',
         ]);
 
-        // display_errors is off site-wide (Core\ErrorCollector::install()
-        // forces it, and php.ini already has it off too), so the response
-        // body itself carries no exception detail to assert on -- the
-        // status code is the only reliable, environment-independent
-        // signal.
-        expect($result['status'])->toBe(500);
+        expect($result['status'])->toBe(200);
 
-        // Proves the whole request failed before ever reaching
-        // updateFields() -- the photo keeps its original pre-submission
-        // name/comment, not the bogus edit.
+        // Proves the request reached updateFields() using $event->data
+        // untouched by the misbehaving handler -- the real submission's
+        // own name/comment, not silently dropped or replaced.
         $row = pictureModifyImageRow($imageId);
-        expect($row['name'] ?? null)->toBe('PM Bogus Hook Photo');
-        expect($row['comment'] ?? null)->not->toBe('Bogus hook comment ' . $marker);
+        expect($row['name'] ?? null)->toBe('Bogus Hook Title');
+        expect($row['comment'] ?? null)->toBe('Bogus hook comment ' . $marker);
     } finally {
         $cleanupDb = pictureModifyDbConnect();
         H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));

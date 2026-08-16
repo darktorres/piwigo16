@@ -59,7 +59,7 @@ final readonly class UploadCompletedHandler implements WsAction
         $category_name = $this->htmlService
             ->getCatDisplayNameFromId($input->categoryId, null);
 
-        $this->eventDispatcher->dispatchNotify(new WsImagesUploadCompleted([
+        $this->eventDispatcher->dispatch(new WsImagesUploadCompleted([
             'image_ids' => $input->imageIds,
             'category_id' => $input->categoryId,
             'moved_from_lounge' => $moved_from_lounge,

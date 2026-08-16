@@ -240,7 +240,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             }
         }
 
-        $this->eventDispatcher->dispatchNotify(new LocEndIntro());
+        $this->eventDispatcher->dispatch(new LocEndIntro());
 
         $nb_weeks = $this->currentConfig->dashboardActivityNbWeeks;
 

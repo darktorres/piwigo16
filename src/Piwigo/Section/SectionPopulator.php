@@ -270,7 +270,7 @@ final readonly class SectionPopulator
             } elseif ($page_category !== null) {
                 $upper_names = $page_category['upper_names'];
 
-                $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryDescription($page_category['comment'], 'main_page_category_description'));
+                $descriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryDescription($page_category['comment'], 'main_page_category_description'));
 
                 $page = array_merge(
                     $page,
@@ -746,7 +746,7 @@ final readonly class SectionPopulator
 
         $this->sectionContextRegistry->set(self::buildSectionContext($page));
 
-        $this->eventDispatcher->dispatchNotify(new LocEndSectionInit());
+        $this->eventDispatcher->dispatch(new LocEndSectionInit());
     }
 
     /**

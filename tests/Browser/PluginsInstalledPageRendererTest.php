@@ -358,12 +358,9 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
         , <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Admin\GetAdminPluginMenuLinks::class,
-        static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): \Piwigo\Event\Admin\GetAdminPluginMenuLinks {
-            $links = $event->value;
-            $links[] = ['URL' => 'admin.php?page=plugin-pwgtest-plugins-installed-hooks'];
-            $links[] = ['URL' => 'index.php?section=pwgtest-plugins-installed-target&foo=bar'];
-
-            return new \Piwigo\Event\Admin\GetAdminPluginMenuLinks($links);
+        static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): void {
+            $event->value[] = ['URL' => 'admin.php?page=plugin-pwgtest-plugins-installed-hooks'];
+            $event->value[] = ['URL' => 'index.php?section=pwgtest-plugins-installed-target&foo=bar'];
         }
     );
     PHP);
@@ -437,14 +434,11 @@ it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and
         , <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Admin\GetAdminPluginMenuLinks::class,
-        static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): \Piwigo\Event\Admin\GetAdminPluginMenuLinks {
-            $links = $event->value;
-            $links[] = 'not-an-array';
-            $links[] = ['no_url_key' => 'irrelevant'];
-            $links[] = ['URL' => ['not', 'a', 'string']];
-            $links[] = ['URL' => 'admin.php?page=plugin-pwgtest-plugins-installed-malformed-hooks'];
-
-            return new \Piwigo\Event\Admin\GetAdminPluginMenuLinks($links);
+        static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): void {
+            $event->value[] = 'not-an-array';
+            $event->value[] = ['no_url_key' => 'irrelevant'];
+            $event->value[] = ['URL' => ['not', 'a', 'string']];
+            $event->value[] = ['URL' => 'admin.php?page=plugin-pwgtest-plugins-installed-malformed-hooks'];
         }
     );
     PHP);

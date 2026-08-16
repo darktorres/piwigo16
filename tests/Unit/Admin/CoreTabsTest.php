@@ -20,7 +20,7 @@ use Piwigo\Url\RootPathOverride;
 /**
  * Piwigo\Admin\CoreTabs::addCoreTabs() -- the pure 'tabsheet_before_select'
  * handler that builds each admin tabsheet group's own tab list, reached
- * indirectly (via Tabsheet::select() -> EventDispatcher::dispatchChange())
+ * indirectly (via Tabsheet::select() -> EventDispatcher::dispatch())
  * by every real admin page, but fully exercisable directly here as a pure
  * function of ($sheets, $tabId).
  *

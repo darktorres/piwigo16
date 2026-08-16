@@ -114,7 +114,7 @@ final readonly class AdminShell
 
         $this->eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginAdmin());
+        $this->eventDispatcher->dispatch(new LocBeginAdmin());
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
@@ -451,7 +451,7 @@ final readonly class AdminShell
             displayBell: $display_bell,
         ));
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginAdminPage());
+        $this->eventDispatcher->dispatch(new LocBeginAdminPage());
 
         // SEC-19: sub-controllers read input from this PSR-7 request
         // (getQueryParams()/getParsedBody()), not $_GET/$_POST directly.
@@ -466,7 +466,7 @@ final readonly class AdminShell
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
 
-        $this->eventDispatcher->dispatchNotify(new LocEndAdmin());
+        $this->eventDispatcher->dispatch(new LocEndAdmin());
 
         $this->htmlService
             ->flushPageMessages();

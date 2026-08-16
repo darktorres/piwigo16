@@ -86,7 +86,7 @@ final readonly class AboutController implements ControllerInterface
         $title = $this->lang->t('About Piwigo');
         $this->pageState->setBodyId('theAboutPage');
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginAbout());
+        $this->eventDispatcher->dispatch(new LocBeginAbout());
 
         $about_message_raw = $this->lang->load('about.html', '', [
             'return' => true,

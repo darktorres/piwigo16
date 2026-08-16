@@ -120,7 +120,7 @@ final readonly class LanguageMiddleware implements MiddlewareInterface
             // Add language for temporary strings for new popup, from piwigo 15
             $this->lang->load('whats_new_' . VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
         }
-        $this->eventDispatcher->dispatchNotify(new LoadingLang());
+        $this->eventDispatcher->dispatch(new LoadingLang());
         $this->lang->load('lang', $this->paths->siteLocal, [
             'no_fallback' => true,
             'local' => true,

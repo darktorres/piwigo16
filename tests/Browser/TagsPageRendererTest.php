@@ -257,12 +257,10 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
     tagsPageWriteFixturePlugin($pluginId, <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Tag\GetTagAltNames::class,
-        static function (\Piwigo\Event\Tag\GetTagAltNames $event): \Piwigo\Event\Tag\GetTagAltNames {
+        static function (\Piwigo\Event\Tag\GetTagAltNames $event): void {
             if ($event->rawName === '__TAGS_PAGE_ALT_NAMES_TARGET__') {
-                return new \Piwigo\Event\Tag\GetTagAltNames(['Alt Name One', 'Alt Name Two'], $event->rawName);
+                $event->value = ['Alt Name One', 'Alt Name Two'];
             }
-
-            return $event;
         }
     );
     PHP);

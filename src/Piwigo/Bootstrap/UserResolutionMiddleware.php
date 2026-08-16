@@ -89,7 +89,7 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
         // finalize(): initialize() reaches AuthService::tryLogUser()
         // directly on its own pwg.images.uploadAsync username/password
         // credential path, before finalize() ever runs.
-        // EventDispatcher::dispatchChange() with no matching handler
+        // EventDispatcher::dispatch() with no matching handler
         // returns the event object unchanged, so TryLogUser's own
         // constructor-set $success (false) stays false; that credential
         // path needs the handler registered this early; every other real

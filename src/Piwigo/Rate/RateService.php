@@ -127,7 +127,7 @@ final readonly class RateService
      */
     public function updateRatingScore(int|false $elementId = false): array
     {
-        $altResult = $this->eventDispatcher->dispatchChange(new UpdateRatingScore(false, $elementId))
+        $altResult = $this->eventDispatcher->dispatch(new UpdateRatingScore(false, $elementId))
             ->result;
         if (is_array($altResult)) {
             return $altResult;

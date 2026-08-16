@@ -185,7 +185,7 @@ final readonly class CommentsController implements ControllerInterface
             ],
         ];
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginComments());
+        $this->eventDispatcher->dispatch(new LocBeginComments());
 
         $commentsRequest = CommentsRequest::fromGlobals($comments_page_nb_comments, $this->inputValidator);
 
@@ -534,9 +534,9 @@ final readonly class CommentsController implements ControllerInterface
                 // unowned rather than casting blindly.
                 $author_id = is_numeric($author_id) ? (int) $author_id : -1;
 
-                $authorEvent = $this->eventDispatcher->dispatchChange(new RenderCommentAuthor(is_string($comment['author']) ? $comment['author'] : ''));
+                $authorEvent = $this->eventDispatcher->dispatch(new RenderCommentAuthor(is_string($comment['author']) ? $comment['author'] : ''));
 
-                $contentEvent = $this->eventDispatcher->dispatchChange(new RenderCommentContent(is_string($comment['content']) ? $comment['content'] : ''));
+                $contentEvent = $this->eventDispatcher->dispatch(new RenderCommentContent(is_string($comment['content']) ? $comment['content'] : ''));
 
                 $tpl_comment = [
                     'ID' => $comment['comment_id'],
@@ -601,7 +601,7 @@ final readonly class CommentsController implements ControllerInterface
             }
         }
 
-        $derivative_params = $this->eventDispatcher->dispatchChange(new GetCommentsDerivativeParams($this->imageStdParams->getByType(ImageStdParams::THUMB)))->params;
+        $derivative_params = $this->eventDispatcher->dispatch(new GetCommentsDerivativeParams($this->imageStdParams->getByType(ImageStdParams::THUMB)))->params;
 
         $template->assignContext(new CommentsPageContext(
             fAction: $this->urlService->getRootUrl() . 'comments.php',
@@ -631,7 +631,7 @@ final readonly class CommentsController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatchNotify(new LocEndComments());
+        $this->eventDispatcher->dispatch(new LocEndComments());
         $this->htmlService
             ->flushPageMessages();
         if (count($comments) > 0) {

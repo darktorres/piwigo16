@@ -132,9 +132,9 @@ final readonly class SearchHandler implements WsAction
                     $image[$k] = $row[$k];
                 }
 
-                $nameEvent2 = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', 'search'));
+                $nameEvent2 = $this->eventDispatcher->dispatch(new RenderElementName(is_string($image['name']) ? $image['name'] : '', 'search'));
                 $image['name'] = strip_tags($nameEvent2->elementName);
-                $descriptionEvent2 = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', 'search'));
+                $descriptionEvent2 = $this->eventDispatcher->dispatch(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', 'search'));
                 $image['comment'] = $descriptionEvent2->elementDescription;
 
                 $image = array_merge($image, $this->imageUrlBuilder->stdGetUrls($row, $this->urlService));

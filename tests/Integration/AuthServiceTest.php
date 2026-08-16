@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 // tryLogUser() calls its own constructor-injected $this->eventDispatcher->
-// dispatchChange() directly, a pure passthrough with no handlers
+// dispatch() directly, a pure passthrough with no handlers
 // registered, so no local stub is needed.
 
 namespace Piwigo\Tests\Integration {
@@ -55,7 +55,7 @@ namespace Piwigo\Tests\Integration {
      * Covers calculateAutoLoginKey() fully (a pure DB read + HMAC
      * computation, no session/cookie/legacy-activity side effects) and
      * tryLogUser()'s delegation to the TryLogUser event (no handler is
-     * registered in this harness, so EventDispatcher::dispatchChange()
+     * registered in this harness, so EventDispatcher::dispatch()
      * returns the same event object unchanged); also authKeyLogin()'s
      * every reject-before-logUser() branch, pwgLogin()'s early-success and
      * finalize_login-denial branches, logUser()'s 2 invalid-lang-cookie
@@ -210,7 +210,7 @@ namespace Piwigo\Tests\Integration {
         public function testTryLogUserFailsClosedWhenNoHandlerIsRegistered(): void
         {
             // No handler is registered for this event, so
-            // EventDispatcher::dispatchChange() returns the same event
+            // EventDispatcher::dispatch() returns the same event
             // (constructed with success=false) unchanged.
             self::assertFalse($this->service->tryLogUser('anyone', 'anything', false));
         }
@@ -469,15 +469,13 @@ namespace Piwigo\Tests\Integration {
             // that passes pwgLogin()'s own password_verify() check, so
             // execution reaches the finalize_login trigger rather than
             // being rejected earlier for a wrong password.
-            $handler = (static fn (FinalizeLogin $event): FinalizeLogin => new FinalizeLogin(
-                [
+            $handler = static function (FinalizeLogin $event): void {
+                $event->state = [
                     'can_login' => false,
                     'reason' => 'blocked_by_test_handler',
                     'authenticated' => $event->state['authenticated'],
-                ],
-                $event->userFound,
-                $event->rememberMe,
-            ));
+                ];
+            };
             EventDispatcherTestFactory::get()->addTypedHandler(FinalizeLogin::class, $handler);
 
             try {

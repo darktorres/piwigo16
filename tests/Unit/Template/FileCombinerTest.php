@@ -9,7 +9,6 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Event\Template\CombinedCssPostfilter;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Combinable;
 use Piwigo\Template\Event\CombinablePreparse;
@@ -934,24 +933,6 @@ test('processCombinable throws when a template combinable points at a file that 
         Kernel::reset();
     }
 })->throws(Exception::class, 'processCombinable(): file not found for themes/default/js/does-not-exist.js');
-
-test('processCss throws when a combined_css_postfilter listener returns something other than a CombinedCssPostfilter instance', function (): void {
-    $root = sys_get_temp_dir() . '/piwigo-file-combiner-postfilter-' . bin2hex(random_bytes(8));
-    mkdir($root . '/themes/default/css', 0o777, true);
-    file_put_contents($root . '/themes/default/css/foo.css', "body{color:red;}\n");
-    EventDispatcherTestFactory::get()->addEventHandler(CombinedCssPostfilter::class, static fn (): int => 42);
-
-    $combinable = new Combinable('foo-css', 'themes/default/css/foo.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), []);
-
-    try {
-        $header = '';
-        invokeProcessCombinable($combiner, $combinable, true, false, $header);
-    } finally {
-        EventDispatcherTestFactory::get()->reset();
-        file_combiner_test_rrmdir($root);
-    }
-})->throws(Error::class, 'must return an instance of');
 
 /**
  * Confirmed-equivalent:

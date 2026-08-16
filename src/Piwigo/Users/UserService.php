@@ -252,7 +252,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
         $this->repo->deleteUser($userId);
         $this->sessionService->deleteUserSessions($userId->value);
-        $this->eventDispatcher->dispatchNotify(new DeleteUser($userId));
+        $this->eventDispatcher->dispatch(new DeleteUser($userId));
         $this->activityLogger->record('user', $userId->value, 'delete');
     }
 
@@ -320,7 +320,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             }
         }
 
-        $errorsAfterTrigger = $this->eventDispatcher->dispatchChange(new RegisterUserCheck(
+        $errorsAfterTrigger = $this->eventDispatcher->dispatch(new RegisterUserCheck(
             $errors,
             [
                 'username' => $login,
@@ -389,7 +389,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->sendWelcomeEmail($login, $mailAddress, $urlService, $mailer);
         }
 
-        $this->eventDispatcher->dispatchNotify(new RegisterUser([
+        $this->eventDispatcher->dispatch(new RegisterUser([
             'id' => $userId->value,
             'username' => $login,
             'email' => $mailAddress,

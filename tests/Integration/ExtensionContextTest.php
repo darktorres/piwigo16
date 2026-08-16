@@ -54,11 +54,11 @@ use RuntimeException;
 use Symfony\Component\Mime\Email;
 
 /**
- * Test-only typed event -- ExtensionContext::dispatchChange()/
- * dispatchNotify() are thin passthroughs to EventDispatcher's own
- * already-independently-tested dispatch logic (EventDispatcherTest.php),
- * so this only needs to prove the passthrough itself reaches a real
- * registered handler, not re-verify dispatch semantics.
+ * Test-only typed event -- ExtensionContext::dispatch() is a thin
+ * passthrough to EventDispatcher's own already-independently-tested
+ * dispatch logic (EventDispatcherTest.php), so this only needs to prove
+ * the passthrough itself reaches a real registered handler, not
+ * re-verify dispatch semantics.
  */
 final class ExtensionContextTestFakeEvent
 {
@@ -338,10 +338,9 @@ final class ExtensionContextTest extends IntegrationTestCase
     public function testMailReachesMailServiceWithTheGivenArguments(): void
     {
         $capturedEmail = null;
-        $handler = function (BeforeSendMail $event) use (&$capturedEmail): BeforeSendMail {
+        $handler = function (BeforeSendMail $event) use (&$capturedEmail): void {
             $capturedEmail = $event->email;
-
-            return new BeforeSendMail(false, $event->to, $event->args, $event->email);
+            $event->shouldSend = false;
         };
         EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $handler);
 
@@ -643,7 +642,7 @@ final class ExtensionContextTest extends IntegrationTestCase
         self::assertSame('value-from-b', $pluginB->session()->get('key'), 'removing plugin-a\'s key must not affect plugin-b\'s');
     }
 
-    public function testDispatchChangeReachesARegisteredHandler(): void
+    public function testDispatchReachesARegisteredHandler(): void
     {
         $eventDispatcher = $this->containerGet(EventDispatcher::class);
         $event = new ExtensionContextTestFakeEvent();
@@ -653,23 +652,9 @@ final class ExtensionContextTest extends IntegrationTestCase
             return $e;
         });
 
-        $result = $this->context->dispatchChange($event);
+        $result = $this->context->dispatch($event);
 
-        self::assertInstanceOf(ExtensionContextTestFakeEvent::class, $result);
         self::assertTrue($result->touched);
-    }
-
-    public function testDispatchNotifyReachesARegisteredHandler(): void
-    {
-        $eventDispatcher = $this->containerGet(EventDispatcher::class);
-        $touched = false;
-        $eventDispatcher->addTypedHandler(ExtensionContextTestFakeEvent::class, static function (ExtensionContextTestFakeEvent $e) use (&$touched): void {
-            $touched = true;
-        });
-
-        $this->context->dispatchNotify(new ExtensionContextTestFakeEvent());
-
-        self::assertTrue($touched);
     }
 
     public function testExtensionInterfaceBootReceivesTheRealExtensionContext(): void

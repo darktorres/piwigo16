@@ -251,7 +251,7 @@ final class PluginRegistryTest extends IntegrationTestCase
         file_put_contents($dir . '/plugin.json', json_encode($manifest, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
 
         $dispatchCall = $dispatchOnBoot
-            ? '$context->dispatchNotify(new \\Piwigo\\Tests\\Integration\\PluginRegistryTestFakeEvent());'
+            ? '$context->dispatch(new \\Piwigo\\Tests\\Integration\\PluginRegistryTestFakeEvent());'
             : '';
 
         $classSource = <<<PHP

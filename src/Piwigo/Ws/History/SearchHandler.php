@@ -195,13 +195,15 @@ final readonly class SearchHandler implements WsAction
         // the page actually displays instead of a SQL_CALC_FOUND_ROWS-based
         // LIMIT/OFFSET pagination -- a real, non-trivial optimization
         // opportunity on large history tables, not a defect.
-        $historyEvent = $this->eventDispatcher->dispatchChange(new GetHistory([], $page['search'], $types));
-        // GetHistory::$data is a non-nullable PHP `array` property --
-        // dispatchChange()'s own instanceof check already guarantees a real
-        // array here, but PHP has no generic array-shape enforcement, so a
-        // misbehaving handler at a higher priority than the default
-        // GetHistory handler could still populate it with non-row-shaped
-        // elements; keep the per-element defensive filter for that.
+        $historyEvent = $this->eventDispatcher->dispatch(new GetHistory([], $page['search'], $types));
+        // GetHistory::$data is a non-nullable PHP `array` property -- PHP's
+        // own native property typing already guarantees a real array here
+        // (a handler assigning anything else to $event->data throws a
+        // TypeError at that assignment, not here), but PHP has no generic
+        // array-shape enforcement, so a misbehaving handler at a higher
+        // priority than the default GetHistory handler could still
+        // populate it with non-row-shaped elements; keep the per-element
+        // defensive filter for that.
         /** @var array<int, array<string, mixed>> $data */
         $data = array_values(array_filter($historyEvent->data, is_array(...)));
         usort($data, $this->historyService->historyCompare(...));
@@ -338,7 +340,7 @@ final readonly class SearchHandler implements WsAction
                     'name' => $tag->name,
                     'url_name' => $tag->urlName,
                 ];
-                $tagRowNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($tag->name, $tag_row));
+                $tagRowNameEvent = $this->eventDispatcher->dispatch(new RenderTagName($tag->name, $tag_row));
                 $name_of_tag[(string) $tag->id->value] = $tagRowNameEvent->tagName;
             }
         }
@@ -487,7 +489,7 @@ final readonly class SearchHandler implements WsAction
 
                 if (isset($image_infos[$line_image_id]['label'])) {
                     $label = $image_infos[$line_image_id]['label'];
-                    $labelEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription($label));
+                    $labelEvent = $this->eventDispatcher->dispatch(new RenderElementDescription($label));
                     $image_title .= ' ' . $labelEvent->elementDescription;
                 } else {
                     $image_edit_string = '';

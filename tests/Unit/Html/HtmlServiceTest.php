@@ -18,7 +18,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\GetElementUrl;
-use Piwigo\Event\Picture\GetThumbnailTitle;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
@@ -748,28 +747,6 @@ test('renderElementName falls back to the filename when name is set but not a st
     ]))->toBe('my-photo');
 });
 
-test('renderElementName throws when a render_element_name handler returns something other than a RenderElementName instance', function (): void {
-    // dispatchChange() enforces this itself: the class-string key +
-    // instanceof check make returning a non-matching type structurally
-    // impossible to pass through silently.
-    $service = HtmlServiceTestFactory::build();
-    // A real, untyped plugin handler is exactly what addEventHandler()
-    // (not addTypedHandler()) accepts -- PHPStan can't see third-party
-    // code, so this test registers the same way to genuinely exercise
-    // dispatchChange()'s own runtime enforcement, not a static one.
-    $handler = static fn (): int => 42;
-    EventDispatcherTestFactory::get()->addEventHandler(RenderElementName::class, $handler);
-
-    try {
-        expect(static fn (): string => $service->renderElementName([
-            'name' => 'My Photo Title',
-        ]))
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(RenderElementName::class, $handler);
-    }
-});
-
 test('renderElementDescription returns empty string when comment is not set', function (): void {
     $service = HtmlServiceTestFactory::build();
 
@@ -826,26 +803,6 @@ test('renderElementDescription never triggers render_element_description for a g
         expect($service->renderElementDescription([
             'comment' => '',
         ]))->toBe('');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(RenderElementDescription::class, $handler);
-    }
-});
-
-test('renderElementDescription throws when a render_element_description handler returns something other than a RenderElementDescription instance', function (): void {
-    // dispatchChange() enforces this itself: the class-string key +
-    // instanceof check make returning a non-matching type structurally
-    // impossible to pass through silently.
-    $service = HtmlServiceTestFactory::build();
-    // See RenderElementName's own sibling test above for why this uses
-    // addEventHandler(), not addTypedHandler().
-    $handler = static fn (): int => 42;
-    EventDispatcherTestFactory::get()->addEventHandler(RenderElementDescription::class, $handler);
-
-    try {
-        expect(static fn (): string => $service->renderElementDescription([
-            'comment' => 'A lovely shot.',
-        ]))
-            ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(RenderElementDescription::class, $handler);
     }
@@ -1235,42 +1192,6 @@ test('getThumbnailTitle strips real tag markup out of the final title, not just 
         ->toBe('Bold');
 });
 
-test('getThumbnailTitle throws when a get_thumbnail_title handler returns something other than a GetThumbnailTitle instance', function (): void {
-    // dispatchChange() enforces this itself: the class-string key +
-    // instanceof check make returning a non-matching type structurally
-    // impossible to pass through silently.
-    $service = HtmlServiceTestFactory::build();
-    // See RenderElementName's own sibling test above for why this uses
-    // addEventHandler(), not addTypedHandler().
-    $handler = static fn (): int => 42;
-    EventDispatcherTestFactory::get()->addEventHandler(GetThumbnailTitle::class, $handler);
-
-    try {
-        expect(static fn (): string => $service->getThumbnailTitle([], 'My Photo'))
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(GetThumbnailTitle::class, $handler);
-    }
-});
-
-test('getCatDisplayName throws when a render_category_name handler returns something other than a RenderCategoryName instance', function (): void {
-    // See RenderElementName's own sibling test above for why this uses
-    // addEventHandler(), not addTypedHandler().
-    $service = HtmlServiceTestFactory::build();
-    $handler = static fn (): int => 42;
-    EventDispatcherTestFactory::get()->addEventHandler(RenderCategoryName::class, $handler);
-
-    try {
-        expect(static fn (): string => $service->getCatDisplayName([[
-            'id' => 1,
-            'name' => 'Nature',
-        ]], null))
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(RenderCategoryName::class, $handler);
-    }
-});
-
 test('getCatDisplayName joins multiple names with the level separator, and only the separator between them', function (): void {
     // Kills line 118's FalseToTrue ($is_first never becomes false, so
     // the separator-inserting branch is never reached at all) and line
@@ -1334,7 +1255,7 @@ test('getCatDisplayName builds one link per category, in order, when url is an e
 test('getCatDisplayName defaults a non-string category name to empty string before dispatching the rename event', function (): void {
     // Kills line 215's EmptyStringToNotEmpty ($cat['name'] fallback fed
     // into the RenderCategoryName event). With no handler registered,
-    // dispatchChange() passes its input straight through, so the final
+    // dispatch() passes its input straight through, so the final
     // output IS the fallback value -- with $url null, output is just the
     // (unlinked) name itself, an exact-value assertion the mutant's
     // literal placeholder can't satisfy.
@@ -1423,24 +1344,6 @@ test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, pref
             ->toStartWith('<a href="/gallery/index.php?/category/7"');
     } finally {
         htmlServiceTestRootPathOverride()->reset();
-    }
-});
-
-test('getCatDisplayNameCache throws when a render_category_name handler returns something other than a RenderCategoryName instance', function (): void {
-    htmlServiceTestProcessCache()->set('cat_names', [
-        '5' => new CategoryIdNamePermalink(5, 'Landscape', null),
-    ]);
-    // See RenderElementName's own sibling test above for why this uses
-    // addEventHandler(), not addTypedHandler().
-    $service = HtmlServiceTestFactory::build();
-    $handler = static fn (): int => 7;
-    EventDispatcherTestFactory::get()->addEventHandler(RenderCategoryName::class, $handler);
-
-    try {
-        expect(static fn (): string => $service->getCatDisplayNameCache('5', null))
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(RenderCategoryName::class, $handler);
     }
 });
 

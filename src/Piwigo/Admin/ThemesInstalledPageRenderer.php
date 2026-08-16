@@ -176,7 +176,7 @@ final readonly class ThemesInstalledPageRenderer
         $pwg_token = $this->csrfService
             ->getToken();
 
-        $this->eventDispatcher->dispatchNotify(new LocEndThemesInstalled());
+        $this->eventDispatcher->dispatch(new LocEndThemesInstalled());
 
         $template->assignContext(new ThemesInstalledPageContext(
             activateBaseUrl: $base_url . '&amp;action=activate&amp;pwg_token=' . $pwg_token . '&amp;theme=',

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Error;
 use LogicException;
 use Override;
 use Piwigo\Config\CurrentConfig;
@@ -153,40 +152,15 @@ final class ThemeCatalogTest extends IntegrationTestCase
             ]);
     }
 
-    public function testGetPwgThemesThrowsWhenAPluginFilterReturnsSomethingOtherThanAGetPwgThemesInstance(): void
-    {
-        // addEventHandler(), not addTypedHandler() -- a real plugin
-        // handler is untyped from PHPStan's perspective, and this test
-        // exercises dispatchChange()'s own runtime enforcement, not a
-        // static one.
-        EventDispatcherTestFactory::get()->addEventHandler(GetPwgThemes::class, static fn (): ?string => null);
-
-        $this->expectException(Error::class);
-        $this->expectExceptionMessageIsOrContains('must return an instance of');
-
-        try {
-            ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn));
-        } finally {
-            // EventDispatcher is a shared process-wide singleton -- a real
-            // reset (not just removing this one handler, no such API
-            // exists) so this fake filter can never intercept a later
-            // Integration test's own getPwgThemes()/EventDispatcher call.
-            EventDispatcherTestFactory::get()->reset();
-        }
-    }
-
     public function testGetPwgThemesSynthesizesTheDefaultThemeAndStillExposesItToTheGetPwgThemesEvent(): void
     {
         // No themes row at all (this file's own fixture starts and stays
         // empty) -- confirms 'default' is present even with nothing in
         // the DB, not just when a real row happens to exist.
-        $handler = static function (GetPwgThemes $event): GetPwgThemes {
-            $themes = $event->themes;
-            if (isset($themes['default']) && is_string($themes['default'])) {
-                $themes['default'] .= ' (filtered)';
+        $handler = static function (GetPwgThemes $event): void {
+            if (isset($event->themes['default']) && is_string($event->themes['default'])) {
+                $event->themes['default'] .= ' (filtered)';
             }
-
-            return new GetPwgThemes($themes);
         };
         EventDispatcherTestFactory::get()->addTypedHandler(GetPwgThemes::class, $handler);
 

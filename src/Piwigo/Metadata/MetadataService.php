@@ -119,7 +119,7 @@ final readonly class MetadataService
         if ((bool) preg_match('/[\x80-\xff]/', $value)) {
             // apparently mac uses some MacRoman crap encoding -- no
             // reliable way to detect it, a plugin should do the trick.
-            $value = $this->eventDispatcher->dispatchChange(new CleanIptcValue($value))
+            $value = $this->eventDispatcher->dispatch(new CleanIptcValue($value))
                 ->value;
 
             $qual = StringHelper::qualifyUtf8($value);
@@ -177,14 +177,14 @@ final readonly class MetadataService
         $exif = in_array($extension, ['jpg', 'jpeg', 'tif', 'tiff'], true)
             ? exif_read_data($filename)
             : false;
-        $exif2 = (bool) $exif ? null : $this->eventDispatcher->dispatchChange(new FormatExifData(null, $filename, $map))
+        $exif2 = (bool) $exif ? null : $this->eventDispatcher->dispatch(new FormatExifData(null, $filename, $map))
             ->exif;
 
         if ((bool) $exif || (bool) $exif2) {
             if ((bool) $exif2) {
                 $exif = $exif2;
             } else {
-                $exif = $this->eventDispatcher->dispatchChange(new FormatExifData($exif, $filename, $map))
+                $exif = $this->eventDispatcher->dispatch(new FormatExifData($exif, $filename, $map))
                     ->exif;
             }
 

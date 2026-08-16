@@ -106,11 +106,11 @@ final readonly class GetInfoHandler implements WsAction
         $image_row = array_merge($image_row, $this->imageUrlBuilder->stdGetUrls($image_row, $this->urlService));
 
         $image_row['name_raw'] = $image_row['name'];
-        $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image_row['name']) ? $image_row['name'] : '', 'getInfo'));
+        $nameEvent = $this->eventDispatcher->dispatch(new RenderElementName(is_string($image_row['name']) ? $image_row['name'] : '', 'getInfo'));
         $image_row['name'] = strip_tags($nameEvent->elementName);
 
         $image_row['comment_raw'] = $image_row['comment'];
-        $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image_row['comment']) ? $image_row['comment'] : '', 'getInfo'));
+        $descriptionEvent = $this->eventDispatcher->dispatch(new RenderElementDescription(is_string($image_row['comment']) ? $image_row['comment'] : '', 'getInfo'));
         $image_row['comment'] = $descriptionEvent->elementDescription;
 
         $related_category_rows = $this->imageService->getRelatedCategoriesForImage(
@@ -142,7 +142,7 @@ final readonly class GetInfoHandler implements WsAction
 
             $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
 
-            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'getInfo'));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'getInfo'));
             $row['name'] = strip_tags($nameEvent->categoryName);
 
             $related_categories[] = $row;

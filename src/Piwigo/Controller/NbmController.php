@@ -72,7 +72,7 @@ final readonly class NbmController implements ControllerInterface
         // Translations are in the admin file too.
         $this->lang->load('admin.lang');
         // Need to update a second time.
-        $this->eventDispatcher->dispatchNotify(new LoadingLang());
+        $this->eventDispatcher->dispatch(new LoadingLang());
         $this->lang->load('lang', $this->paths->siteLocal, [
             'no_fallback' => true,
             'local' => true,

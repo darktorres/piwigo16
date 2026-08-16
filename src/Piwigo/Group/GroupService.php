@@ -330,7 +330,7 @@ final readonly class GroupService
         }
 
         $ids = array_keys($deleted);
-        $this->eventDispatcher->dispatchNotify(new DeleteGroup($ids));
+        $this->eventDispatcher->dispatch(new DeleteGroup($ids));
         $this->activityLogger->record('group', $ids, 'delete');
 
         // [SEC-57] one row per group actually deleted

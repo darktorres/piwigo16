@@ -91,11 +91,10 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
 
     $capturedTo = null;
     $capturedArgs = null;
-    $eventHandler = function (BeforeSendMail $event) use (&$capturedTo, &$capturedArgs): BeforeSendMail {
+    $eventHandler = function (BeforeSendMail $event) use (&$capturedTo, &$capturedArgs): void {
         $capturedTo = $event->to;
         $capturedArgs = $event->args;
-
-        return new BeforeSendMail(false, $event->to, $event->args, $event->email);
+        $event->shouldSend = false;
     };
     EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
 

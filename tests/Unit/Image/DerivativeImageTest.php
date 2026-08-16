@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
-use Error;
 use Exception;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
@@ -12,7 +11,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
-use Piwigo\Image\Event\GetDerivativeUrl;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\SrcImage;
@@ -20,7 +18,6 @@ use Piwigo\Image\WatermarkParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use ReflectionMethod;
@@ -378,30 +375,6 @@ test('url() computes the derivative url via a real build() call, prefixed by the
         expect($url)
             ->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
     });
-});
-
-test('url() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {
-    // Kernel must boot before the handler is registered -- EventDispatcherTestFactory::get()
-    // resolves the pre-boot memoized fallback instance until Kernel::boot()
-    // builds the container's own (different) shared instance; registering
-    // before boot would silently register on an instance DerivativeImage's
-    // own get()-shim call never sees once the container exists.
-    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-filter-only'));
-    $handler = static fn (): int => 42;
-    EventDispatcherTestFactory::get()->addEventHandler(GetDerivativeUrl::class, $handler);
-
-    try {
-        $src = new SrcImage([
-            'id' => 1,
-            'path' => 'gallery/photo.jpg',
-            'file' => 'photo.jpg',
-        ]);
-
-        expect(fn (): string => DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src))
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
-    }
 });
 
 test('getAll() coerces a plain info array into a SrcImage and keys the result by defined type', function (): void {
@@ -971,29 +944,6 @@ test('getUrl() prefixes the computed rel_url with the real root url', function (
         expect($derivative->getUrl())
             ->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
     });
-});
-
-test('getUrl() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {
-    // Kernel must boot before the handler is registered -- see the sibling
-    // url() test's own comment above for why.
-    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-filter-only'));
-    $handler = static fn (): int => 42;
-    EventDispatcherTestFactory::get()->addEventHandler(GetDerivativeUrl::class, $handler);
-
-    try {
-        $src = new SrcImage([
-            'id' => 1,
-            'path' => 'gallery/photo.jpg',
-            'file' => 'photo.jpg',
-        ]);
-
-        $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
-
-        expect(fn (): string => $derivative->getUrl())
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
-    }
 });
 
 function derivativeCacheServiceRrmdirDerivativeImageTest(string $dir): void

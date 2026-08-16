@@ -20,7 +20,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Event\Search\QsearchGetScopes;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -1846,11 +1845,9 @@ test('qsearchGetImages() dispatches the hook for an unrecognized scope and appli
     // No real quick-search scope ever has id 'custom_field' -- reaches
     // qsearchGetImages()'s own default/plugin-hook branch, same
     // direct-call rationale as the tag/category tests above.
-    $handler = static fn (QsearchGetImagesSqlScopes $event): QsearchGetImagesSqlScopes => new QsearchGetImagesSqlScopes(
-        [new QsearchClause('i.id = ?', [1])],
-        $event->token,
-        $event->expr
-    );
+    $handler = static function (QsearchGetImagesSqlScopes $event): void {
+        $event->clauses = [new QsearchClause('i.id = ?', [1])];
+    };
     EventDispatcherTestFactory::get()->addTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
 
     try {
@@ -1868,14 +1865,12 @@ test('qsearchGetImages() dispatches the hook for an unrecognized scope and appli
 });
 
 test('qsearchGetImages() merges params from multiple hook clauses', function (): void {
-    $handler = static fn (QsearchGetImagesSqlScopes $event): QsearchGetImagesSqlScopes => new QsearchGetImagesSqlScopes(
-        [
+    $handler = static function (QsearchGetImagesSqlScopes $event): void {
+        $event->clauses = [
             new QsearchClause('i.id = ?', [1]),
             new QsearchClause('i.id = ?', [2]),
-        ],
-        $event->token,
-        $event->expr
-    );
+        ];
+    };
     EventDispatcherTestFactory::get()->addTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
 
     try {
@@ -2197,28 +2192,10 @@ test('getQuickSearchResultsNoCache() evaluates a parenthesized sub-group', funct
     expect($results['items'])->toBe([1]);
 });
 
-test('getQuickSearchResultsNoCache() throws when a QsearchGetScopes handler returns something other than a QsearchGetScopes instance', function (): void {
-    // addEventHandler(), not addTypedHandler() -- a real plugin handler
-    // is untyped from PHPStan's perspective, and this test exercises
-    // dispatchChange()'s own runtime enforcement, not a static one.
-    $handler = static fn (): mixed => null;
-    EventDispatcherTestFactory::get()->addEventHandler(QsearchGetScopes::class, $handler);
-
-    try {
-        expect(fn (): array => searchServiceTestService()->getQuickSearchResultsNoCache('family', []))
-            ->toThrow(Error::class, 'must return an instance of');
-    } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetScopes::class, $handler);
-    }
-});
-
 test('getQuickSearchResultsNoCache() falls back when a hook returns non-array items and qs', function (): void {
-    $handler = static function (QsearchResults $event): QsearchResults {
-        $searchResults = $event->searchResults;
-        $searchResults['items'] = 'not-an-array';
-        $searchResults['qs'] = 'not-an-array-either';
-
-        return new QsearchResults($searchResults, $event->expression, $event->qsr);
+    $handler = static function (QsearchResults $event): void {
+        $event->searchResults['items'] = 'not-an-array';
+        $event->searchResults['qs'] = 'not-an-array-either';
     };
     EventDispatcherTestFactory::get()->addTypedHandler(QsearchResults::class, $handler);
 
@@ -2244,11 +2221,8 @@ test('getQuickSearchResultsNoCache() falls back when a hook returns non-array it
 });
 
 test('getQuickSearchResultsNoCache() merges extra numeric ids from a plugin hook', function (): void {
-    $handler = static function (QsearchResults $event): QsearchResults {
-        $searchResults = $event->searchResults;
-        $searchResults['items'] = ['4', 'not-numeric'];
-
-        return new QsearchResults($searchResults, $event->expression, $event->qsr);
+    $handler = static function (QsearchResults $event): void {
+        $event->searchResults['items'] = ['4', 'not-numeric'];
     };
     EventDispatcherTestFactory::get()->addTypedHandler(QsearchResults::class, $handler);
 

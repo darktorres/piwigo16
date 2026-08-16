@@ -210,7 +210,7 @@ final class FileCombiner
             if ($real_path === false) {
                 throw new Exception("processCombinable(): file not found for {$combinable->path}");
             }
-            $this->eventDispatcher->dispatchNotify(new CombinablePreparse($template, $combinable, $this)); // allow themes and plugins to set their own vars to template ...
+            $this->eventDispatcher->dispatch(new CombinablePreparse($template, $combinable, $this)); // allow themes and plugins to set their own vars to template ...
             // parse($real_path, true) is always string (never null) since we
             // always pass true here (see Template::parse()'s conditional
             // return type).
@@ -276,7 +276,7 @@ final class FileCombiner
     private static function processCss(string $css, string $file, string &$header, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher): string
     {
         $css = self::processCssRec($css, dirname($file), $header, $urlService, $paths);
-        $postfilterEvent = $eventDispatcher->dispatchChange(new CombinedCssPostfilter($css));
+        $postfilterEvent = $eventDispatcher->dispatch(new CombinedCssPostfilter($css));
 
         return $postfilterEvent->css;
     }

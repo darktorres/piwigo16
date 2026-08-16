@@ -464,7 +464,7 @@ final class MailService implements MailerInterface
                 }
             }
 
-            $this->eventDispatcher->dispatchNotify(new LoadingLang());
+            $this->eventDispatcher->dispatch(new LoadingLang());
             $this->lang->load(
                 'lang',
                 $this->paths->siteLocal,
@@ -834,7 +834,7 @@ final class MailService implements MailerInterface
                     $this->templateCache[$cacheKey] = [
                         'theme' => $template,
                     ];
-                    $this->eventDispatcher->dispatchNotify(new BeforeParseMailTemplate($cacheKey, $contentType));
+                    $this->eventDispatcher->dispatch(new BeforeParseMailTemplate($cacheKey, $contentType));
 
                     $addUrlParams = [];
                     if (isset($args['auth_key']) && ! self::emptyValue($args['auth_key'])) {
@@ -973,7 +973,7 @@ final class MailService implements MailerInterface
 
         $ret = true;
         $errorMessage = null;
-        $beforeSendMailEvent = $this->eventDispatcher->dispatchChange(new BeforeSendMail(true, $to, $args, $email));
+        $beforeSendMailEvent = $this->eventDispatcher->dispatch(new BeforeSendMail(true, $to, $args, $email));
 
         if ($beforeSendMailEvent->shouldSend) {
             try {
@@ -1096,7 +1096,7 @@ final class MailService implements MailerInterface
                 ->unsetMakeFullUrl();
         }
 
-        $message = $this->eventDispatcher->dispatchChange(new RenderLostPasswordMailContent($message))
+        $message = $this->eventDispatcher->dispatch(new RenderLostPasswordMailContent($message))
             ->message;
 
         return new MailContent(
@@ -1129,7 +1129,7 @@ final class MailService implements MailerInterface
                 ->unsetMakeFullUrl();
         }
 
-        $message = $this->eventDispatcher->dispatchChange(new RenderLostPasswordMailContent($message))
+        $message = $this->eventDispatcher->dispatch(new RenderLostPasswordMailContent($message))
             ->message;
 
         return new MailContent(

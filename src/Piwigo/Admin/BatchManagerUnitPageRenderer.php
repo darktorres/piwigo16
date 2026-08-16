@@ -88,7 +88,7 @@ final readonly class BatchManagerUnitPageRenderer
 
         $htmlRenderer = $this->htmlRenderer;
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginElementSetUnit());
+        $this->eventDispatcher->dispatch(new LocBeginElementSetUnit());
 
         $batchManagerUnitRequest = BatchManagerUnitRequest::fromGlobals($this->inputValidator);
 
@@ -462,7 +462,7 @@ final readonly class BatchManagerUnitPageRenderer
             elements: $elements,
         ));
 
-        $this->eventDispatcher->dispatchNotify(new LocEndElementSetUnit());
+        $this->eventDispatcher->dispatch(new LocEndElementSetUnit());
 
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_unit.latte');
     }

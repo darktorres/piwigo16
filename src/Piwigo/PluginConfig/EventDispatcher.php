@@ -18,8 +18,9 @@ use ReflectionFunction;
  * variable mirrors this state).
  *
  * Implements PSR-14 (`Psr\EventDispatcher\EventDispatcherInterface`) via
- * `dispatch()`, a thin alias over `dispatchChange()` -- matches this
- * codebase's own PSR-11/PSR-7/PSR-15/PSR-3 conformance elsewhere. Not a
+ * `dispatch()`, the single verb for both value-transformation ("filter")
+ * and fire-and-forget ("notify") dispatch -- matches this codebase's own
+ * PSR-11/PSR-7/PSR-15/PSR-3 conformance elsewhere. Not a
  * delegation to Symfony's own concrete `EventDispatcher`: `addEventHandler()`'s
  * own string-keyed legacy registration, `addTypedHandler()`'s priority-bucket
  * ordering (`ksort()` on each event's own priority map), `includePath`-based
@@ -178,30 +179,26 @@ final class EventDispatcher implements EventDispatcherInterface
     }
 
     /**
-     * Modifier event: every registered handler for $event::class receives
-     * and must return an instance of $event::class, in priority order.
-     *
-     * Callers must capture and use the return value, not the pre-dispatch
-     * object -- a handler for a `readonly` event class cannot mutate its
-     * argument in place (the language forbids it), so it can only convey a
-     * change by returning a new instance. Relying on the original variable
-     * instead would silently discard that. The @template makes this the
-     * same instance for the common "handler mutates a non-readonly
-     * property and returns $event" case too, so capturing the return value
-     * is always correct and never a behavior change either way.
+     * PSR-14 `EventDispatcherInterface::dispatch()` -- the single verb for
+     * every registered handler of $event::class, in priority order. A
+     * handler mutates $event's own non-`readonly` field(s) directly (see
+     * each event class's own docblock for which field is mutable, if
+     * any); its return value, if any, is never read. A caller that cares
+     * about a result reads it off the same $event reference it passed
+     * in -- this method's own return value is the identical object,
+     * returned for PSR-14 interface conformance and call-site chaining
+     * convenience.
      *
      * Stoppable: if `$event` implements `Psr\EventDispatcher\
      * StoppableEventInterface` and `isPropagationStopped()` becomes true
-     * after a handler runs, no further handlers are called -- matches
-     * every other typed event class exactly (no changes needed to opt
-     * in/out), zero behavior change for the 156 existing event classes
-     * that don't implement the interface.
+     * after a handler runs, no further handlers are called.
      *
      * @template T of object
      * @param T $event
      * @return T
      */
-    public function dispatchChange(object $event): object
+    #[Override]
+    public function dispatch(object $event): object
     {
         $eventClass = $event::class;
 
@@ -216,13 +213,7 @@ final class EventDispatcher implements EventDispatcherInterface
                         throw new Error("Event handler for '{$eventClass}' is not callable.");
                     }
 
-                    $result = call_user_func($handler->function, $event);
-
-                    if (! $result instanceof $eventClass) {
-                        throw new Error("Change handler for '{$eventClass}' must return an instance of {$eventClass}.");
-                    }
-
-                    $event = $result;
+                    call_user_func($handler->function, $event);
 
                     if ($event instanceof StoppableEventInterface && $event->isPropagationStopped()) {
                         break 2;
@@ -232,51 +223,5 @@ final class EventDispatcher implements EventDispatcherInterface
         }
 
         return $event;
-    }
-
-    /**
-     * PSR-14 `EventDispatcherInterface::dispatch()` -- a safe alias over
-     * `dispatchChange()`, which already takes and returns `object`. See
-     * this class's own docblock for why this can't be a delegation to a
-     * separate PSR-14 implementation instead.
-     */
-    #[Override]
-    public function dispatch(object $event): object
-    {
-        return $this->dispatchChange($event);
-    }
-
-    /**
-     * Notifier event: fire-and-forget, no return value captured.
-     *
-     * Stoppable: same as `dispatchChange()`'s own docblock -- a handler
-     * wanting to stop propagation mutates a non-`readonly` property on
-     * `$event` directly (no return value here to reassign from).
-     */
-    public function dispatchNotify(object $event): void
-    {
-        $eventClass = $event::class;
-
-        if (! isset($this->handlers[$eventClass])) {
-            return;
-        }
-
-        foreach ($this->handlers[$eventClass] as $handlersAtPriority) {
-            foreach ($handlersAtPriority as $handler) {
-                if ($handler->includePath !== null && $handler->includePath !== '') {
-                    include_once $handler->includePath;
-                }
-
-                if (! is_callable($handler->function)) {
-                    throw new Error("Event handler for '{$eventClass}' is not callable.");
-                }
-
-                call_user_func($handler->function, $event);
-
-                if ($event instanceof StoppableEventInterface && $event->isPropagationStopped()) {
-                    break 2;
-                }
-            }
-        }
     }
 }

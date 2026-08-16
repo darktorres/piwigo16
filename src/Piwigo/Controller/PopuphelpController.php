@@ -90,7 +90,7 @@ final readonly class PopuphelpController implements ControllerInterface
             $help_content = '';
         }
 
-        $help_content = $this->eventDispatcher->dispatchChange(new GetPopupHelpContent($help_content, $rawPage))
+        $help_content = $this->eventDispatcher->dispatch(new GetPopupHelpContent($help_content, $rawPage))
             ->content;
 
         $template->assignContext(new PopuphelpPageContext(helpContent: $help_content));

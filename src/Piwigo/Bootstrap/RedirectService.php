@@ -182,7 +182,7 @@ final readonly class RedirectService implements RedirectServiceInterface
             $user = $this->userService->buildUser(UserId::from($guest_id));
             self::currentUser()->set(User::fromUserArray($user));
             $this->lang->load('common.lang');
-            $this->eventDispatcher->dispatchNotify(new LoadingLang());
+            $this->eventDispatcher->dispatch(new LoadingLang());
             $this->lang->load('lang', $paths->siteLocal, [
                 'no_fallback' => true,
                 'local' => true,

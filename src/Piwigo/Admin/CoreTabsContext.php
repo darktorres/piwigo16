@@ -10,7 +10,7 @@ namespace Piwigo\Admin;
  * `helpLink`/`baseUrl`/`adminPhotoBaseUrl`) into one value object.
  * `addCoreTabs()` is registered as the `tabsheet_before_select` event
  * handler with a fixed signature (`Tabsheet::select()` ->
- * `EventDispatcher::dispatchChange(new TabsheetBeforeSelect(...))`), so it
+ * `EventDispatcher::dispatch(new TabsheetBeforeSelect(...))`), so it
  * cannot take this as a real parameter -- see `CoreTabs`'s own docblock for
  * why a static setter/getter (matching its existing `UrlServiceInterface`
  * dependency) is the correct shape here.

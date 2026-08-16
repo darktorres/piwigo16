@@ -81,7 +81,7 @@ final class Tabsheet
     */
     public function select(string $name, EventDispatcher $eventDispatcher): void
     {
-        $event = $eventDispatcher->dispatchChange(new TabsheetBeforeSelect($this->sheets, $this->uniqid));
+        $event = $eventDispatcher->dispatch(new TabsheetBeforeSelect($this->sheets, $this->uniqid));
         // 'tabsheet_before_select' handlers are documented to filter/append to
         // the array<string, TabSheetEntry> $sheets they receive and return
         // the same shape, but TabsheetBeforeSelect::$sheets itself is only

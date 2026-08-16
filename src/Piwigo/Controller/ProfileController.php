@@ -147,7 +147,7 @@ final readonly class ProfileController implements ControllerInterface
         $userdata = $this->currentUser->get()
             ->toUserArray();
 
-        $this->eventDispatcher->dispatchNotify(new LocBeginProfile());
+        $this->eventDispatcher->dispatch(new LocBeginProfile());
 
         $fields = [
             'nb_image_page', 'expand',
@@ -239,7 +239,7 @@ final readonly class ProfileController implements ControllerInterface
             helpLink: $help_link,
         ));
 
-        $this->eventDispatcher->dispatchNotify(new LocEndProfile());
+        $this->eventDispatcher->dispatch(new LocEndProfile());
         $this->htmlService
             ->flushPageMessages();
         $template->parse('profile.latte', false);

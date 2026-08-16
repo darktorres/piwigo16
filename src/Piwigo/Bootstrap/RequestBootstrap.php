@@ -430,13 +430,15 @@ final class RequestBootstrap
         // same pipeline -- P27.4) so a plugin's own 'upload_file'
         // handler (if any) keeps first crack in the trigger_change() chain.
         // The 2 dead 'pwg_image_resize' registrations this block used to
-        // carry (UploadImageResize/UploadThumbnailResize -- no function
-        // by that name exists anywhere in this codebase, neither event is
-        // ever triggered) are deleted outright rather than ported: no
-        // Listener\ListenerInterface shape can express "register a string
-        // that isn't callable yet and only fail lazily," and preserving
-        // genuinely dead code isn't worth contorting the new mechanism
-        // for.
+        // carry (no function by that name exists anywhere in this
+        // codebase, neither event was ever triggered) were deleted
+        // outright rather than ported: no Listener\ListenerInterface
+        // shape can express "register a string that isn't callable yet
+        // and only fail lazily," and preserving genuinely dead code
+        // isn't worth contorting the new mechanism for. The 2 orphaned
+        // event classes themselves (UploadImageResize/UploadThumbnailResize)
+        // were later deleted outright too (P32 Stage A5), once zero
+        // dispatch site anywhere confirmed they served no purpose at all.
         self::registerListener(new HtmlRenderingListener(self::htmlService(), self::currentConfig()));
         // checkForSpam() is an instance method (matching UploadFormatListener's
         // own now-instance upload_file handlers below, both container-shared

@@ -75,7 +75,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testRateReturnsFalseForANullRate(): void
         {
-            self::assertFalse($this->service->rate(5, null));
+            self::assertFalse($this->service->rate(5, null, EntityManagerFactory::build($this->conn)));
         }
 
         public function testRateReturnsFalseWhenRatingIsDisabled(): void
@@ -86,17 +86,17 @@ namespace Piwigo\Tests\Integration {
             }
             $currentConfig->rateEnabled = false;
 
-            self::assertFalse($this->service->rate(5, 3));
+            self::assertFalse($this->service->rate(5, 3, EntityManagerFactory::build($this->conn)));
         }
 
         public function testRateReturnsFalseForANonDigitRate(): void
         {
-            self::assertFalse($this->service->rate(5, 'not-a-number'));
+            self::assertFalse($this->service->rate(5, 'not-a-number', EntityManagerFactory::build($this->conn)));
         }
 
         public function testRateReturnsFalseForARateValueNotInRateItems(): void
         {
-            self::assertFalse($this->service->rate(5, 99));
+            self::assertFalse($this->service->rate(5, 99, EntityManagerFactory::build($this->conn)));
         }
 
         public function testRateReturnsFalseForAnAnonymousUserWhenRateAnonymousIsDisabled(): void
@@ -111,13 +111,13 @@ namespace Piwigo\Tests\Integration {
                 'status' => 'guest',
             ]));
 
-            self::assertFalse($this->service->rate(5, 3));
+            self::assertFalse($this->service->rate(5, 3, EntityManagerFactory::build($this->conn)));
         }
 
         public function testRateInsertsANewRateAndRecomputesTheScore(): void
         {
             try {
-                $result = $this->service->rate(5, 4);
+                $result = $this->service->rate(5, 4, EntityManagerFactory::build($this->conn));
 
                 self::assertIsArray($result);
                 self::assertSame(4.0, $result['average']);
@@ -140,8 +140,8 @@ namespace Piwigo\Tests\Integration {
         public function testRateReplacesAnExistingRateFromTheSameUser(): void
         {
             try {
-                $this->service->rate(5, 2);
-                $result = $this->service->rate(5, 5);
+                $this->service->rate(5, 2, EntityManagerFactory::build($this->conn));
+                $result = $this->service->rate(5, 5, EntityManagerFactory::build($this->conn));
 
                 self::assertIsArray($result);
                 self::assertSame(1, $result['count'], 'the second rate must replace, not add to, the first');
@@ -168,7 +168,7 @@ namespace Piwigo\Tests\Integration {
             ]));
 
             try {
-                $result = $this->service->rate(5, 3);
+                $result = $this->service->rate(5, 3, EntityManagerFactory::build($this->conn));
 
                 self::assertIsArray($result);
                 self::assertSame('10.20.30', $_COOKIE['pwg_anonymous_rater'] ?? null);
@@ -209,7 +209,7 @@ namespace Piwigo\Tests\Integration {
                     'average' => null,
                     'count' => 0,
                 ],
-                $this->service->updateRatingScore(5)
+                $this->service->updateRatingScore(EntityManagerFactory::build($this->conn), 5)
             );
         }
 
@@ -248,7 +248,7 @@ namespace Piwigo\Tests\Integration {
             ]);
 
             try {
-                $result = $this->service->rate(5, 3);
+                $result = $this->service->rate(5, 3, EntityManagerFactory::build($this->conn));
 
                 self::assertIsArray($result);
                 self::assertSame(['10.20.30'], $this->fetchAnonymousIdsForElement(4, 2));

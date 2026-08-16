@@ -408,7 +408,7 @@ namespace Piwigo\Tests\Integration {
             ]);
             $id = (int) $this->conn->lastInsertId();
 
-            $this->service->deleteOrphanTags();
+            $this->service->deleteOrphanTags(EntityManagerFactory::build($this->conn));
 
             $remaining = $this->conn->createQueryBuilder()
                 ->select('id')

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\TagsPageContext;
 use Piwigo\Admin\Request\TagsActionRequest;
 use Piwigo\Auth\AccessControl;
@@ -35,6 +36,7 @@ final readonly class TagsPageRenderer
         private TagService $tagService,
         private HtmlRenderingInterface $htmlRenderer,
         private CsrfService $csrfService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     public function render(): void
@@ -55,7 +57,7 @@ final readonly class TagsPageRenderer
             $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            $tagService->deleteOrphanTags();
+            $tagService->deleteOrphanTags($this->entityManager);
             $_SESSION['message_tags'] = $this->lang->t('Orphan tags deleted');
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=tags');
         }

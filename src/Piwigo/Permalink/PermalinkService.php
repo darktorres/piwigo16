@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Permalink;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ProcessCache;
@@ -26,10 +27,17 @@ final readonly class PermalinkService
      * Deletes the permalink associated with a category. Returns true on
      * success.
      *
+     * clearCategoryPermalink() and (when $save) markOldPermalinkDeleted()/
+     * insertOldPermalinkDeleted() are two writes for one logical "retire
+     * this permalink" operation -- wrapped in one transaction via
+     * $entityManager so a failure between them can't leave a category with
+     * its live permalink cleared but no old-permalink history row
+     * recorded for it.
+     *
      * @param bool $save if true, the current category-permalink association
      * is saved in the old permalinks table in case external links hit it
      */
-    public function deleteCatPermalink(int $catId, bool $save): bool
+    public function deleteCatPermalink(int $catId, bool $save, EntityManagerInterface $entityManager): bool
     {
         $permalink = $this->repo->findPermalinkByCategoryId($catId);
         if ($permalink === null) { // no permalink; nothing to do
@@ -50,16 +58,18 @@ final readonly class PermalinkService
             }
         }
 
-        $this->repo->clearCategoryPermalink($catId);
-        $this->processCache->forget('cat_names'); // force regeneration
+        $entityManager->getConnection()->transactional(function () use ($catId, $save, $oldCatId, $permalink): void {
+            $this->repo->clearCategoryPermalink($catId);
 
-        if ($save) {
-            if ($oldCatId !== null) {
-                $this->repo->markOldPermalinkDeleted($catId, $permalink);
-            } else {
-                $this->repo->insertOldPermalinkDeleted($catId, $permalink);
+            if ($save) {
+                if ($oldCatId !== null) {
+                    $this->repo->markOldPermalinkDeleted($catId, $permalink);
+                } else {
+                    $this->repo->insertOldPermalinkDeleted($catId, $permalink);
+                }
             }
-        }
+        });
+        $this->processCache->forget('cat_names'); // force regeneration
 
         return true;
     }
@@ -67,10 +77,16 @@ final readonly class PermalinkService
     /**
      * Sets a new permalink for a category. Returns true on success.
      *
+     * deleteOldPermalink() and setCategoryPermalink() below are two writes
+     * for the "assign this permalink" half of the operation -- wrapped in
+     * one transaction via $entityManager so a failure between them can't
+     * leave a stale old-permalink history row blocking the very permalink
+     * this call was supposed to free up.
+     *
      * @param bool $save if true, the current category-permalink association
      * is saved in the old permalinks table in case external links hit it
      */
-    public function setCatPermalink(int $catId, string $permalink, bool $save): bool
+    public function setCatPermalink(int $catId, string $permalink, bool $save, EntityManagerInterface $entityManager): bool
     {
         $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', $permalink);
         $sanitized_permalink = trim((string) $sanitized_permalink, '/');
@@ -109,15 +125,17 @@ final readonly class PermalinkService
             return false;
         }
 
-        if (! $this->deleteCatPermalink($catId, $save)) {
+        if (! $this->deleteCatPermalink($catId, $save, $entityManager)) {
             return false;
         }
 
-        if ($oldCatId !== null) { // the new permalink must not be active and old at the same time
-            $this->repo->deleteOldPermalink($oldCatId, $permalink);
-        }
+        $entityManager->getConnection()->transactional(function () use ($catId, $permalink, $oldCatId): void {
+            if ($oldCatId !== null) { // the new permalink must not be active and old at the same time
+                $this->repo->deleteOldPermalink($oldCatId, $permalink);
+            }
 
-        $this->repo->setCategoryPermalink($catId, $permalink);
+            $this->repo->setCategoryPermalink($catId, $permalink);
+        });
         $this->processCache->forget('cat_names'); // force regeneration
 
         return true;

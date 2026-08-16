@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
 use Piwigo\Config\ConfigLoader;
@@ -24,6 +25,8 @@ final class PermalinkServiceTest extends IntegrationTestCase
     private PermalinkService $service;
 
     private PermalinkRepository $repo;
+
+    private Connection $conn;
 
     #[Override]
     protected function setUp(): void
@@ -46,7 +49,8 @@ final class PermalinkServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         PageStateTestFactory::get()->reset();
 
-        $this->repo = new PermalinkRepository(EntityManagerFactory::build(DbConnection::build()));
+        $this->conn = DbConnection::build();
+        $this->repo = new PermalinkRepository(EntityManagerFactory::build($this->conn));
         $this->service = new PermalinkService(LangTestFactory::get(), $this->repo, new ProcessCache(), PageStateTestFactory::get());
 
         $this->repo->clearCategoryPermalink(1);
@@ -63,16 +67,16 @@ final class PermalinkServiceTest extends IntegrationTestCase
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
 
-        self::assertTrue($this->service->setCatPermalink(1, $slug, false));
+        self::assertTrue($this->service->setCatPermalink(1, $slug, false, EntityManagerFactory::build($this->conn)));
         self::assertSame($slug, $this->repo->findPermalinkByCategoryId(1));
 
-        self::assertTrue($this->service->deleteCatPermalink(1, false));
+        self::assertTrue($this->service->deleteCatPermalink(1, false, EntityManagerFactory::build($this->conn)));
         self::assertNull($this->repo->findPermalinkByCategoryId(1));
     }
 
     public function testSetCatPermalinkRejectsANumericPermalink(): void
     {
-        $result = $this->service->setCatPermalink(1, '12345', false);
+        $result = $this->service->setCatPermalink(1, '12345', false, EntityManagerFactory::build($this->conn));
 
         self::assertFalse($result);
         self::assertNotSame([], PageStateTestFactory::get()->errors);
@@ -80,7 +84,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
 
     public function testSetCatPermalinkRejectsDisallowedCharacters(): void
     {
-        $result = $this->service->setCatPermalink(1, 'not valid!', false);
+        $result = $this->service->setCatPermalink(1, 'not valid!', false, EntityManagerFactory::build($this->conn));
 
         self::assertFalse($result);
     }
@@ -88,9 +92,9 @@ final class PermalinkServiceTest extends IntegrationTestCase
     public function testSetCatPermalinkRejectsAnAlreadyUsedPermalink(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
-        self::assertTrue($this->service->setCatPermalink(1, $slug, false));
+        self::assertTrue($this->service->setCatPermalink(1, $slug, false, EntityManagerFactory::build($this->conn)));
 
-        $result = $this->service->setCatPermalink(2, $slug, false);
+        $result = $this->service->setCatPermalink(2, $slug, false, EntityManagerFactory::build($this->conn));
 
         self::assertFalse($result);
 
@@ -100,25 +104,25 @@ final class PermalinkServiceTest extends IntegrationTestCase
     public function testSetCatPermalinkIsANoopSuccessWhenUnchanged(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
-        self::assertTrue($this->service->setCatPermalink(1, $slug, false));
+        self::assertTrue($this->service->setCatPermalink(1, $slug, false, EntityManagerFactory::build($this->conn)));
 
-        self::assertTrue($this->service->setCatPermalink(1, $slug, false));
+        self::assertTrue($this->service->setCatPermalink(1, $slug, false, EntityManagerFactory::build($this->conn)));
     }
 
     public function testDeleteCatPermalinkWithNoPermalinkSetSucceedsAsANoop(): void
     {
-        self::assertTrue($this->service->deleteCatPermalink(1, false));
+        self::assertTrue($this->service->deleteCatPermalink(1, false, EntityManagerFactory::build($this->conn)));
     }
 
     public function testSetThenDeleteWithSaveRecordsAndBlocksReuse(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
-        self::assertTrue($this->service->setCatPermalink(1, $slug, true));
-        self::assertTrue($this->service->deleteCatPermalink(1, true));
+        self::assertTrue($this->service->setCatPermalink(1, $slug, true, EntityManagerFactory::build($this->conn)));
+        self::assertTrue($this->service->deleteCatPermalink(1, true, EntityManagerFactory::build($this->conn)));
 
         // Now historically used -- setting it on a DIFFERENT category must
         // be rejected until the history entry is removed.
-        $result = $this->service->setCatPermalink(2, $slug, false);
+        $result = $this->service->setCatPermalink(2, $slug, false, EntityManagerFactory::build($this->conn));
         self::assertFalse($result);
 
         $this->repo->deleteOldPermalink(1, $slug);
@@ -158,7 +162,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         $this->repo->insertOldPermalinkDeleted(2, $slug);
 
         try {
-            $result = $this->service->deleteCatPermalink(1, true);
+            $result = $this->service->deleteCatPermalink(1, true, EntityManagerFactory::build($this->conn));
 
             self::assertFalse($result);
             self::assertNotSame([], PageStateTestFactory::get()->errors);
@@ -182,7 +186,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         $this->repo->setCategoryPermalink(1, $slug);
         $this->repo->insertOldPermalinkDeleted(1, $slug);
 
-        $result = $this->service->deleteCatPermalink(1, true);
+        $result = $this->service->deleteCatPermalink(1, true, EntityManagerFactory::build($this->conn));
 
         self::assertTrue($result);
         self::assertNull($this->repo->findPermalinkByCategoryId(1));
@@ -195,15 +199,15 @@ final class PermalinkServiceTest extends IntegrationTestCase
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
 
-        self::assertTrue($this->service->setCatPermalink(1, $slug, true));
-        self::assertTrue($this->service->deleteCatPermalink(1, true));
+        self::assertTrue($this->service->setCatPermalink(1, $slug, true, EntityManagerFactory::build($this->conn)));
+        self::assertTrue($this->service->deleteCatPermalink(1, true, EntityManagerFactory::build($this->conn)));
         self::assertSame(1, $this->repo->findOldCategoryId($slug), 'precondition: a history row for (cat 1, slug) must exist');
 
         // Re-claiming the SAME permalink back onto the SAME category it
         // was historically deleted from must succeed AND clear that now-
         // stale history row -- distinct from the cross-category rejection
         // covered by test_set_then_delete_with_save_records_and_blocks_reuse.
-        self::assertTrue($this->service->setCatPermalink(1, $slug, true));
+        self::assertTrue($this->service->setCatPermalink(1, $slug, true, EntityManagerFactory::build($this->conn)));
 
         self::assertNull($this->repo->findOldCategoryId($slug));
         self::assertSame($slug, $this->repo->findPermalinkByCategoryId(1));
@@ -225,7 +229,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         $this->repo->insertOldPermalinkDeleted(2, $oldSlug);
 
         try {
-            $result = $this->service->setCatPermalink(1, $newSlug, true);
+            $result = $this->service->setCatPermalink(1, $newSlug, true, EntityManagerFactory::build($this->conn));
 
             self::assertFalse($result);
             self::assertSame($oldSlug, $this->repo->findPermalinkByCategoryId(1), 'the failed set must leave the previous live permalink untouched');

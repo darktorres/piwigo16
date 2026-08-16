@@ -124,7 +124,7 @@ final readonly class MaintenanceActionDispatcher
                 $this->categoryService
                     ->updatePath($this->entityManager->getRepository(SiteEntity::class));
                 $this->rateService
-                    ->updateRatingScore();
+                    ->updateRatingScore($this->entityManager);
                 PermissionCacheInvalidator::invalidate();
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Update photos information'), $this->lang->t('action successfully performed.')));
                 break;
@@ -132,7 +132,7 @@ final readonly class MaintenanceActionDispatcher
             case 'delete_orphan_tags':
 
                 $this->tagService
-                    ->deleteOrphanTags();
+                    ->deleteOrphanTags($this->entityManager);
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Delete orphan tags'), $this->lang->t('action successfully performed.')));
                 break;
 

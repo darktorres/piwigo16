@@ -141,54 +141,6 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2, 3], $ids);
     }
 
-    public function testDeleteImageTagByTagIdsIsANoOpForNoIds(): void
-    {
-        $this->conn->insert('image_tag', [
-            'image_id' => 4,
-            'tag_id' => 3,
-        ]);
-
-        try {
-            $this->repo->deleteImageTagByTagIds([]);
-
-            // tag 3 (family) is also linked to image 1 in the fixture --
-            // both links survive this no-op call.
-            self::assertSame([1, 4], $this->repo->findImageIdsForTagIds([TagId::from(3)]));
-        } finally {
-            $this->conn->delete('image_tag', [
-                'image_id' => 4,
-                'tag_id' => 3,
-            ]);
-        }
-    }
-
-    public function testDeleteImageTagByTagIdsRemovesEveryLinkToThatTag(): void
-    {
-        $this->conn->insert('image_tag', [
-            'image_id' => 4,
-            'tag_id' => 3,
-        ]);
-        $this->conn->insert('image_tag', [
-            'image_id' => 5,
-            'tag_id' => 3,
-        ]);
-
-        try {
-            $this->repo->deleteImageTagByTagIds([TagId::from(3)]);
-
-            // family (tag 3) was also linked to image 1 in the fixture --
-            // that link must be gone too, not just the 2 disposable ones
-            // just added.
-            self::assertSame([], $this->repo->findImageIdsForTagIds([TagId::from(3)]));
-        } finally {
-            // restore the fixture's own image1<->tag3 link for later tests/classes
-            $this->conn->insert('image_tag', [
-                'image_id' => 1,
-                'tag_id' => 3,
-            ]);
-        }
-    }
-
     public function testDeleteImageTagByImageIdsIsANoOpForNoIds(): void
     {
         $this->conn->insert('image_tag', [

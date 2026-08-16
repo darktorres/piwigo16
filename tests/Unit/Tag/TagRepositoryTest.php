@@ -344,91 +344,13 @@ test('findImageIdsForTagIds() matches the fixture', function (): void {
         ->toBe([1, 2, 3]);
 });
 
-test('deleteImageTagByTagIds() is a no-op for no ids', function (): void {
-    // A disposable tag, not one of the fixture's own shared 1/2/3 --
-    // those are the exact terms other Unit-suite files search for by
-    // name (SearchServiceTest.php's 'nature'/'travel'/'family'
-    // assertions), so temporarily linking a real fixture tag here is
-    // directly observable by those tests under --parallel (confirmed
-    // live: this exact test raced against SearchServiceTest.php's
-    // 'family' search this way -- linking tag 3 to image 4 mid-test
-    // made a concurrent 'family' search return image 4 as a spurious
-    // extra match).
-    //
-    // Exempt from tests/Pest.php's blanket per-test transaction:
-    // tagTestFixtureLikeTagId() below inserts into `tags`, which carries
-    // a FULLTEXT index (tags_ft_name) -- its auxiliary-index maintenance
-    // can deadlock against another --parallel worker's own concurrent
-    // write to the same table when held open for a whole test's
-    // duration -- same mechanism, same fix, as TagServiceTest.php's own
-    // 'getTagIds() creates a new tag for a plain name when allowed'
-    // (reproduced live there: DeadlockException). Every other test below
-    // that inserts/updates/deletes a `tags` row (directly or via this
-    // same helper) carries the identical exemption for the identical
-    // reason, not repeated in full at each site.
-    DbTransactionTestOverride::rollback();
-    $repo = tagTestRepo();
-    $conn = DbConnection::build();
-    $tagId = tagTestFixtureLikeTagId();
-    $conn->insert('image_tag', [
-        'image_id' => 4,
-        'tag_id' => $tagId->value,
-    ]);
-
-    try {
-        $repo->deleteImageTagByTagIds([]);
-
-        // Both links (the pre-existing image1 one and the image4 one
-        // just added) survive this no-op call. findImageIdsForTagIds()
-        // carries no ORDER BY (order is not part of its contract -- both
-        // real callers in TagService just treat the result as a set), so
-        // sort before comparing, same idiom as the sibling test above.
-        $imageIds = $repo->findImageIdsForTagIds([$tagId]);
-        sort($imageIds);
-        expect($imageIds)
-            ->toBe([1, 4]);
-    } finally {
-        tagTestRemoveFixtureLikeTag($tagId);
-    }
-});
-
-test('deleteImageTagByTagIds() removes every link to that tag', function (): void {
-    // Disposable tag -- see the sibling no-op test above for why a real
-    // fixture tag id isn't safe to borrow here. Exempt from the blanket
-    // per-test transaction for the same FULLTEXT-deadlock reason -- see
-    // that same sibling test above.
-    DbTransactionTestOverride::rollback();
-    $repo = tagTestRepo();
-    $conn = DbConnection::build();
-    $tagId = tagTestFixtureLikeTagId();
-    $conn->insert('image_tag', [
-        'image_id' => 4,
-        'tag_id' => $tagId->value,
-    ]);
-    $conn->insert('image_tag', [
-        'image_id' => 5,
-        'tag_id' => $tagId->value,
-    ]);
-
-    try {
-        $repo->deleteImageTagByTagIds([$tagId]);
-
-        // The pre-existing image1 link must be gone too, not just the 2
-        // disposable ones just added.
-        expect($repo->findImageIdsForTagIds([$tagId]))->toBe([]);
-    } finally {
-        // deleteImageTagByTagIds() above already removed every link,
-        // including the image1 one tagTestFixtureLikeTagId() itself
-        // added -- only the tag row remains to clean up.
-        $repo->deleteByIds([$tagId]);
-    }
-});
-
 test('deleteImageTagByImageIds() is a no-op for no ids', function (): void {
-    // Disposable tag -- see deleteImageTagByTagIds()'s no-op test above
-    // for why a real fixture tag id isn't safe to borrow here. Exempt
-    // from the blanket per-test transaction for the same
-    // FULLTEXT-deadlock reason -- see that same test above.
+    // A disposable tag, not one of the fixture's own shared 1/2/3 --
+    // SearchServiceTest.php's own tag-name assertions can observe a real
+    // fixture tag temporarily borrowed here under --parallel. Exempt from
+    // the blanket per-test transaction for the same FULLTEXT-deadlock
+    // reason documented on TagServiceTest.php's 'getTagIds() creates a
+    // new tag for a plain name when allowed'.
     DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $tagId = $repo->insert(tagTestName(), tagTestName());

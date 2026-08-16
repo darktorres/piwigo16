@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Tags;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Tag\TagService;
@@ -27,6 +28,7 @@ final readonly class DeleteHandler implements WsAction
     public function __construct(
         private TagService $tagService,
         private WsCsrfGuard $wsCsrfGuard,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -50,7 +52,7 @@ final readonly class DeleteHandler implements WsAction
         $tag_ids = $input->tagIds;
 
         if (count($tag_ids) > 0) {
-            $this->tagService->deleteTags(array_map(TagId::from(...), $input->tagIds));
+            $this->tagService->deleteTags(array_map(TagId::from(...), $input->tagIds), $this->entityManager);
             return [
                 'id' => $tag_ids,
             ];

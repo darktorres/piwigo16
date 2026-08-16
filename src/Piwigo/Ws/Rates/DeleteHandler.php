@@ -50,7 +50,7 @@ final readonly class DeleteHandler implements WsAction
         );
         $this->entityManager->clear();
         if ($changes > 0) {
-            $this->rateService->updateRatingScore();
+            $this->rateService->updateRatingScore($this->entityManager);
         }
         return $changes;
     }

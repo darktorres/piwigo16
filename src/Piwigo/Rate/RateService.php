@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Rate;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
 use Piwigo\Common\ValueObject\ImageId;
@@ -41,12 +42,21 @@ final readonly class RateService
      * Rates a picture by the current user. Returns updateRatingScore()'s
      * result, or false if the rate is invalid or forbidden.
      *
+     * The anonymous-id migration (when the caller's IP changed) and the
+     * delete-then-insert replace-rate pair below are real multi-write
+     * sequences -- wrapped in one transaction via $entityManager so a
+     * failure partway through can't silently lose the caller's rate (a
+     * commit between deleteExistingRate() and insertRate() would) or
+     * leave their rate history split across two anonymous ids.
+     * updateRatingScore() nests its own transactional() call inside this
+     * one via the same $entityManager.
+     *
      * @param int|string|null $rate raw $_POST value (string) from
      *   picture.php, an (int)-cast value from the WS layer, or null when
      *   absent
      * @return array{score: float|null, average: float|null, count: int}|false
      */
-    public function rate(int $imageId, int|string|null $rate): array|false
+    public function rate(int $imageId, int|string|null $rate, EntityManagerInterface $entityManager): array|false
     {
 
         $rateItems = $this->currentConfig->rateItems;
@@ -88,8 +98,13 @@ final readonly class RateService
 
         if ($userAnonymous) {
             $savedAnonymousId = $this->cookies->getAnonymousRaterId() ?? $anonymousId;
+            $this->cookies->setCookieVar('anonymous_rater', $anonymousId);
+        } else {
+            $savedAnonymousId = null;
+        }
 
-            if ($anonymousId !== $savedAnonymousId) { // client has changed IP address, or is trying to fool us
+        $entityManager->getConnection()->transactional(function () use ($userId, $anonymousId, $savedAnonymousId, $userAnonymous, $elementId, $rateInt): void {
+            if ($userAnonymous && $anonymousId !== $savedAnonymousId) { // client has changed IP address, or is trying to fool us
                 $existingElementIds = $this->repo->findElementIdsForUserAndAnonymousId($userId, $anonymousId);
                 if ($existingElementIds !== []) {
                     $this->repo->deleteByUserAnonymousAndElements($userId, $savedAnonymousId, $existingElementIds);
@@ -98,13 +113,11 @@ final readonly class RateService
                 $this->repo->reassignAnonymousId($userId, $savedAnonymousId, $anonymousId);
             }
 
-            $this->cookies->setCookieVar('anonymous_rater', $anonymousId);
-        }
+            $this->repo->deleteExistingRate($elementId, $userId, $userAnonymous ? $anonymousId : null);
+            $this->repo->insertRate($elementId, $userId, $anonymousId, $rateInt);
+        });
 
-        $this->repo->deleteExistingRate($elementId, $userId, $userAnonymous ? $anonymousId : null);
-        $this->repo->insertRate($elementId, $userId, $anonymousId, $rateInt);
-
-        return $this->updateRatingScore($imageId);
+        return $this->updateRatingScore($entityManager, $imageId);
     }
 
     /**
@@ -113,10 +126,16 @@ final readonly class RateService
      * rate), and clears rating_score for images that no longer have any
      * rate at all.
      *
+     * updateRatingScores() and the conditional clearRatingScores() below
+     * are two writes for one logical "recompute every score" operation --
+     * wrapped in one transaction via $entityManager so a failure between
+     * them can't leave some images with a freshly-recomputed score and
+     * others still carrying a stale one from before this run.
+     *
      * @return array{score: float|null, average: float|null, count: int} values
      *   are null/0 if $elementId is false or has no rates of its own
      */
-    public function updateRatingScore(int|false $elementId = false): array
+    public function updateRatingScore(EntityManagerInterface $entityManager, int|false $elementId = false): array
     {
         $byItem = $this->repo->findRateSummaries();
 
@@ -152,13 +171,16 @@ final readonly class RateService
             ];
         }
 
-        $this->repo->updateRatingScores($updates);
-
         // set to null every image with no rate at all
         $elementIdKey = $elementId === false ? 0 : $elementId;
-        if (! isset($byItem[$elementIdKey])) {
-            $this->repo->clearRatingScores($this->repo->findImageIdsWithStaleRatingScore());
-        }
+
+        $entityManager->getConnection()->transactional(function () use ($updates, $byItem, $elementIdKey): void {
+            $this->repo->updateRatingScores($updates);
+
+            if (! isset($byItem[$elementIdKey])) {
+                $this->repo->clearRatingScores($this->repo->findImageIdsWithStaleRatingScore());
+            }
+        });
 
         return $return ?? [
             'score' => null,

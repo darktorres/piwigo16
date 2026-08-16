@@ -47,7 +47,7 @@ final readonly class CategoryAdminService
      */
     public function createVirtualCategory(string $name, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, ?int $parentId = null, array $options = []): CreateCategoryResult
     {
-        $result = $this->categoryService->createVirtualCategory($name, $activityLogger, $currentUser, $parentId, $options);
+        $result = $this->categoryService->createVirtualCategory($name, $activityLogger, $currentUser, $this->entityManager, $parentId, $options);
 
         if ($result->error !== null) {
             return CreateCategoryResult::failure($result->error);
@@ -145,7 +145,7 @@ final readonly class CategoryAdminService
         match ($section) {
             'comments' => $this->categoryService->setCatCommentable($catIds, $value),
             'visible' => $this->categoryService->setCatVisible($catIds, $value),
-            'status' => $this->categoryService->setCatStatus($catIds, $value ? 'public' : 'private'),
+            'status' => $this->categoryService->setCatStatus($catIds, $value ? 'public' : 'private', $this->entityManager),
             'representative' => $value
                 // theoretically, all categories in $catIds contain at least
                 // one element when $value is true, so Piwigo can find a
@@ -175,7 +175,7 @@ final readonly class CategoryAdminService
             if ($applyOnSub) {
                 $catIdsForStatus = array_merge($catIdsForStatus, $this->categoryService->getSubcatIds([$catId]));
             }
-            $this->categoryService->setCatStatus($catIdsForStatus, $newStatus);
+            $this->categoryService->setCatStatus($catIdsForStatus, $newStatus, $this->entityManager);
         }
 
         if ($newStatus !== 'private') {

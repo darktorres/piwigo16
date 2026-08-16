@@ -834,7 +834,7 @@ namespace Piwigo\Tests\Integration {
             $activityLogger = new CategoryServiceFakeActivityLogger();
             $urlService = UrlServiceTestFactory::build();
 
-            $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get());
+            $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn));
             $tempIdRaw = $result->id;
             self::assertTrue(is_numeric($tempIdRaw));
             $tempId = (int) $tempIdRaw;
@@ -883,7 +883,7 @@ namespace Piwigo\Tests\Integration {
             self::assertTrue(is_numeric($rawSiteId));
             $siteId = (int) $rawSiteId;
 
-            $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get())->id;
+            $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn))->id;
             self::assertTrue(is_numeric($categoryId));
             $this->conn->executeStatement('UPDATE categories SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
 
@@ -1055,7 +1055,7 @@ namespace Piwigo\Tests\Integration {
                 return true;
             });
             try {
-                $result = $this->service->setCatStatus([1], 'archived');
+                $result = $this->service->setCatStatus([1], 'archived', EntityManagerFactory::build($this->conn));
             } finally {
                 restore_error_handler();
             }
@@ -1068,7 +1068,7 @@ namespace Piwigo\Tests\Integration {
         {
             $this->conn->executeStatement("UPDATE categories SET status = 'private'");
 
-            $this->service->setCatStatus([2], 'public');
+            $this->service->setCatStatus([2], 'public', EntityManagerFactory::build($this->conn));
 
             self::assertSame('public', $this->repo->findCategoryStatus(1));
             self::assertSame('public', $this->repo->findCategoryStatus(2));
@@ -1080,7 +1080,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (3, 2)');
 
             try {
-                $this->service->setCatStatus([2], 'private');
+                $this->service->setCatStatus([2], 'private', EntityManagerFactory::build($this->conn));
 
                 // category 1 (the reference, since it's already private)
                 // grants no direct user access at all -- the
@@ -1120,7 +1120,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement('INSERT INTO group_access (group_id, cat_id) VALUES (?, 2)', [$groupId]);
 
             try {
-                $this->service->setCatStatus([2], 'private');
+                $this->service->setCatStatus([2], 'private', EntityManagerFactory::build($this->conn));
 
                 $remaining = $this->conn->createQueryBuilder()
                     ->select('COUNT(*) AS c')
@@ -1188,7 +1188,7 @@ namespace Piwigo\Tests\Integration {
             PageStateTestFactory::get()->reset();
             $activityLogger = new CategoryServiceFakeActivityLogger();
 
-            $this->service->moveCategories([1], $activityLogger, PageStateTestFactory::get(), 2);
+            $this->service->moveCategories([1], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build($this->conn), 2);
 
             self::assertContains('You cannot move an album in its own sub album', PageStateTestFactory::get()->errors);
             // the move must not have actually happened.
@@ -1203,7 +1203,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testCreateVirtualCategoryReturnsAnErrorWhenTheParentDoesNotExist(): void
         {
-            $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 999999);
+            $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), 999999);
 
             self::assertSame('The parent album does not exist', $result->error);
         }
@@ -1218,7 +1218,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement("UPDATE categories SET visible = {$falseLiteral} WHERE id = 1");
 
             try {
-                $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 1);
+                $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), 1);
                 $newIdRaw = $result->id;
                 self::assertTrue(is_numeric($newIdRaw));
                 $newId = (int) $newIdRaw;
@@ -1244,7 +1244,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (3, 1)');
 
             try {
-                $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 1, [
+                $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), 1, [
                     'inherit' => true,
                 ]);
                 $newIdRaw = $result->id;
@@ -1421,7 +1421,7 @@ namespace Piwigo\Tests\Integration {
             PageStateTestFactory::get()->reset();
             $activityLogger = new CategoryServiceFakeActivityLogger();
 
-            $this->service->moveCategories([], $activityLogger, PageStateTestFactory::get());
+            $this->service->moveCategories([], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build($this->conn));
 
             // the count()===0 early return skips updateCategoryParent(),
             // updateUppercats()/updateGlobalRank(), the PageState::addInfo()
@@ -1442,7 +1442,7 @@ namespace Piwigo\Tests\Integration {
                 // default $newParent = -1 -> $newParentSql = 'NULL' -> moving
                 // to root, the branch that hardcodes $parentStatus = 'public'
                 // rather than looking an actual parent category up.
-                $this->service->moveCategories([2], $activityLogger, PageStateTestFactory::get());
+                $this->service->moveCategories([2], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build($this->conn));
 
                 $idUppercat = $this->conn->createQueryBuilder()
                     ->select('id_uppercat')
@@ -1468,6 +1468,7 @@ namespace Piwigo\Tests\Integration {
                 'ct_move_private_parent_' . uniqid(),
                 $activityLogger,
                 CurrentUserTestFactory::get(),
+                EntityManagerFactory::build($this->conn),
                 null,
                 [
                     'status' => 'private',
@@ -1482,7 +1483,7 @@ namespace Piwigo\Tests\Integration {
                 // findCategoryStatus()) that happens to be private -- the
                 // setCatStatus(..., 'private') cascade onto the moved
                 // categories themselves only fires on this branch.
-                $this->service->moveCategories([2], $activityLogger, PageStateTestFactory::get(), $privateParentId);
+                $this->service->moveCategories([2], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build($this->conn), $privateParentId);
 
                 self::assertSame('private', $this->repo->findCategoryStatus(2));
             } finally {
@@ -1502,7 +1503,7 @@ namespace Piwigo\Tests\Integration {
             $currentConfig->newcatDefaultPosition = 'last';
 
             try {
-                $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get());
+                $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn));
                 $newIdRaw = $result->id;
                 self::assertTrue(is_numeric($newIdRaw));
                 $newId = (int) $newIdRaw;

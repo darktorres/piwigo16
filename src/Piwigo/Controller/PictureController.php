@@ -425,7 +425,7 @@ final readonly class PictureController implements ControllerInterface
                 case 'rate':
 
                     $this->rateService
-                        ->rate($image_id, $pictureRequest->rate);
+                        ->rate($image_id, $pictureRequest->rate, $this->entityManager);
                     $this->redirectService->redirect($url_self);
 
                     // no break

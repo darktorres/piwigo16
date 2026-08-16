@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Piwigo\Cache\TagCloudCachePool;
 use Piwigo\Common\ValueObject\ImageId;
@@ -374,12 +375,12 @@ final readonly class TagService
     /**
      * Deletes all tags linked to no photo.
      */
-    public function deleteOrphanTags(): void
+    public function deleteOrphanTags(EntityManagerInterface $entityManager): void
     {
         $orphanTags = $this->getOrphanTags();
 
         if ($orphanTags !== []) {
-            $this->deleteTags(array_map(static fn (TagBrief $tag): TagId => $tag->id, $orphanTags));
+            $this->deleteTags(array_map(static fn (TagBrief $tag): TagId => $tag->id, $orphanTags), $entityManager);
         }
     }
 
@@ -464,15 +465,30 @@ final readonly class TagService
     /**
      * Delete tags and tags associations.
      *
+     * `image_tag.tag_id` carries a real `ON DELETE CASCADE` FK straight to
+     * `tags.id` (tests/Fixtures/piwigo-17.0.sql) -- deleteByIds() below
+     * already removes every `image_tag` row for these tags itself, via
+     * cascade, so the explicit deleteImageTagByTagIds() call this used to
+     * make first was redundant duplicate work (same class of fix as
+     * `0.3`'s own `image_category`/`user_access`/`group_access` cleanup).
+     *
+     * deleteByIds() and updateImagesLastmodified() are two separate writes
+     * for one logical "delete these tags" operation -- wrapped in one
+     * transaction via $entityManager so a failure between them can't leave
+     * tags deleted but the images that lost them still carrying a stale
+     * lastmodified.
+     *
      * @param list<TagId> $tagIds
      */
-    public function deleteTags(array $tagIds): void
+    public function deleteTags(array $tagIds, EntityManagerInterface $entityManager): void
     {
         // we need the list of impacted images, to update their lastmodified
         $imageIds = $this->repo->findImageIdsForTagIds($tagIds);
 
-        $this->repo->deleteImageTagByTagIds($tagIds);
-        $this->repo->deleteByIds($tagIds);
+        $entityManager->getConnection()->transactional(function () use ($tagIds, $imageIds): void {
+            $this->repo->deleteByIds($tagIds);
+            $this->imageService->updateImagesLastmodified($imageIds);
+        });
 
         // EventDispatcher/ActivityLoggerInterface are cross-boundary sinks
         // (plugin events, ActivityEntity::$objectId is a plain int column)
@@ -482,8 +498,6 @@ final readonly class TagService
         $this->eventDispatcher->dispatch(new DeleteTags($rawTagIds));
         $this->activityLogger->record('tag', $rawTagIds, 'delete');
 
-        $this->imageService
-            ->updateImagesLastmodified($imageIds);
         $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_tags', null));
     }
 

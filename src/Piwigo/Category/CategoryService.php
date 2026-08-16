@@ -1478,15 +1478,35 @@ final readonly class CategoryService
     /**
      * Change the **status** property on a set of categories : private or public.
      *
+     * The private branch below is a real multi-write sequence -- the
+     * status UPDATE, then a per-top-album loop each issuing up to 2 more
+     * DELETEs to keep sub-album permissions consistent -- so the whole
+     * method (validation aside) runs inside one transaction via
+     * $entityManager. A failure partway through used to risk exactly the
+     * inconsistency this method exists to prevent: categories marked
+     * private with stale, still-inherited permissions on their sub-albums.
+     *
      * @param int[] $categories
      */
-    public function setCatStatus(array $categories, string $value): ?false
+    public function setCatStatus(array $categories, string $value, EntityManagerInterface $entityManager): ?false
     {
         if (! in_array($value, [CategoryStatus::Public->value, CategoryStatus::Private->value], true)) {
             trigger_error("setCatStatus invalid param {$value}", E_USER_WARNING);
             return false;
         }
 
+        $entityManager->getConnection()->transactional(function () use ($categories, $value): void {
+            $this->setCatStatusWithinTransaction($categories, $value);
+        });
+
+        return null;
+    }
+
+    /**
+     * @param int[] $categories
+     */
+    private function setCatStatusWithinTransaction(array $categories, string $value): void
+    {
         // make public a category => all its parent categories become public
         if ($value === CategoryStatus::Public->value) {
             $uppercats = $this->getUppercatIds($categories);
@@ -1607,8 +1627,6 @@ final readonly class CategoryService
                 }
             }
         }
-
-        return null;
     }
 
     /**
@@ -1840,10 +1858,20 @@ final readonly class CategoryService
      * Change the parent category of the given categories. The categories are
      * supposed virtual.
      *
+     * The parent-move UPDATE, the uppercats/rank recompute, and (when the
+     * new parent is private) setCatStatus()'s own permission cleanup all
+     * belong to one logical move -- wrapped in one transaction via
+     * $entityManager so a failure partway through can't leave a category
+     * re-parented but with a stale uppercats path or inherited-private
+     * permissions never applied. setCatStatus() nests its own
+     * transactional() call inside this one via the same $entityManager;
+     * Doctrine DBAL's Connection tracks nesting depth and only really
+     * commits at the outermost level, so this composes correctly.
+     *
      * @param array<int, int> $categoryIds
      * @param int $newParent (-1 for root)
      */
-    public function moveCategories(array $categoryIds, ActivityLoggerInterface $activityLogger, PageState $pageState, int $newParent = -1): void
+    public function moveCategories(array $categoryIds, ActivityLoggerInterface $activityLogger, PageState $pageState, EntityManagerInterface $entityManager, int $newParent = -1): void
     {
         if (count($categoryIds) === 0) {
             return;
@@ -1879,21 +1907,23 @@ final readonly class CategoryService
             }
         }
 
-        $this->repo->updateCategoryParent($categoryIds, $newParentSql);
+        $entityManager->getConnection()->transactional(function () use ($categoryIds, $newParentSql, $categories, $entityManager): void {
+            $this->repo->updateCategoryParent($categoryIds, $newParentSql);
 
-        $this->updateUppercats();
-        $this->updateGlobalRank();
+            $this->updateUppercats();
+            $this->updateGlobalRank();
 
-        // status and related permissions management
-        if ($newParentSql === 'NULL') {
-            $parentStatus = CategoryStatus::Public->value;
-        } else {
-            $parentStatus = $this->repo->findCategoryStatus((int) $newParentSql);
-        }
+            // status and related permissions management
+            if ($newParentSql === 'NULL') {
+                $parentStatus = CategoryStatus::Public->value;
+            } else {
+                $parentStatus = $this->repo->findCategoryStatus((int) $newParentSql);
+            }
 
-        if ($parentStatus === CategoryStatus::Private->value) {
-            $this->setCatStatus(array_map(intval(...), array_keys($categories)), CategoryStatus::Private->value);
-        }
+            if ($parentStatus === CategoryStatus::Private->value) {
+                $this->setCatStatus(array_map(intval(...), array_keys($categories)), CategoryStatus::Private->value, $entityManager);
+            }
+        });
 
         $pageState->addInfo($this->translator->plural(
             '%d album moved',
@@ -1917,8 +1947,16 @@ final readonly class CategoryService
      *   comment already required a real string today (strip_tags() throws
      *   a TypeError otherwise, under this codebase's strict_types=1),
      *   inherit's only real setter (a test) passes a bool literal
+     *
+     * The INSERT, its own immediate uppercats/lastmodified follow-up
+     * UPDATE, the global-rank recompute, and (for an inherited-private
+     * album) the permission-grant INSERTs are one logical "create this
+     * category" operation -- wrapped in one transaction via
+     * $entityManager so a failure partway through can't leave a category
+     * row that exists but has no uppercats path, or a private album
+     * created without the permissions it was supposed to inherit.
      */
-    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, int|string|null $parentId = null, array $options = []): CategoryCreateOutcome
+    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, EntityManagerInterface $entityManager, int|string|null $parentId = null, array $options = []): CategoryCreateOutcome
     {
 
         // is the given category name only containing blank spaces ?
@@ -2004,47 +2042,51 @@ final readonly class CategoryService
         }
 
         // we have then to add the virtual category
-        $insertedId = $this->repo->insertCategory($insert);
+        $insertedId = $entityManager->getConnection()->transactional(function () use ($insert, $uppercatsPrefix, $currentUser, $options): int|string {
+            $insertedId = $this->repo->insertCategory($insert);
 
-        $this->repo->updateCategoryAfterInsert($insertedId, [
-            'uppercats' => $uppercatsPrefix . $insertedId,
-            // This UPDATE is an unconditional, immediate follow-up to the
-            // INSERT above (needs the auto-generated id first) -- part of
-            // the same logical "create category" operation, not a later,
-            // independent edit. Re-set explicitly, since ON UPDATE
-            // CURRENT_TIMESTAMP would otherwise silently overwrite the
-            // INSERT's own frozen lastmodified with the real DB-server
-            // clock the moment this UPDATE runs.
-            'lastmodified' => Env::now()
-                ->format('Y-m-d H:i:s'),
-        ]);
+            $this->repo->updateCategoryAfterInsert($insertedId, [
+                'uppercats' => $uppercatsPrefix . $insertedId,
+                // This UPDATE is an unconditional, immediate follow-up to the
+                // INSERT above (needs the auto-generated id first) -- part of
+                // the same logical "create category" operation, not a later,
+                // independent edit. Re-set explicitly, since ON UPDATE
+                // CURRENT_TIMESTAMP would otherwise silently overwrite the
+                // INSERT's own frozen lastmodified with the real DB-server
+                // clock the moment this UPDATE runs.
+                'lastmodified' => Env::now()
+                    ->format('Y-m-d H:i:s'),
+            ]);
 
-        $this->updateGlobalRank();
+            $this->updateGlobalRank();
 
-        $insertIdUppercat = $insert['id_uppercat'] ?? null;
-        if ($insert['status'] === CategoryStatus::Private->value && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && $options['inherit']) || $this->currentConfig->inheritanceByDefault)) {
-            $grantedGrps = $this->repo->findAccessGroupIds(CategoryId::from($insertIdUppercat));
-            $inserts = [];
-            foreach ($grantedGrps as $grantedGrp) {
-                $inserts[] = [
-                    'group_id' => $grantedGrp,
-                    'cat_id' => (int) $insertedId,
-                ];
+            $insertIdUppercat = $insert['id_uppercat'] ?? null;
+            if ($insert['status'] === CategoryStatus::Private->value && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && $options['inherit']) || $this->currentConfig->inheritanceByDefault)) {
+                $grantedGrps = $this->repo->findAccessGroupIds(CategoryId::from($insertIdUppercat));
+                $inserts = [];
+                foreach ($grantedGrps as $grantedGrp) {
+                    $inserts[] = [
+                        'group_id' => $grantedGrp,
+                        'cat_id' => (int) $insertedId,
+                    ];
+                }
+                $this->repo->massInsertGroupAccess($inserts);
+
+                $grantedUsers = $this->repo->findAccessUserIds(CategoryId::from($insertIdUppercat));
+                $this->permissionService->addPermissionOnCategory((int) $insertedId, $grantedUsers);
+            } elseif ($insert['status'] === CategoryStatus::Private->value) {
+                $currentUserId = $currentUser->get()
+                    ->id->value;
+                $adminIds = array_map(
+                    static fn (UserId $id): int => $id->value,
+                    $this->userRepository
+                        ->findAdminIds()
+                );
+                $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));
             }
-            $this->repo->massInsertGroupAccess($inserts);
 
-            $grantedUsers = $this->repo->findAccessUserIds(CategoryId::from($insertIdUppercat));
-            $this->permissionService->addPermissionOnCategory((int) $insertedId, $grantedUsers);
-        } elseif ($insert['status'] === CategoryStatus::Private->value) {
-            $currentUserId = $currentUser->get()
-                ->id->value;
-            $adminIds = array_map(
-                static fn (UserId $id): int => $id->value,
-                $this->userRepository
-                    ->findAdminIds()
-            );
-            $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));
-        }
+            return $insertedId;
+        });
 
         $this->eventDispatcher->dispatch(new CreateVirtualCategory(array_merge([
             'id' => $insertedId,

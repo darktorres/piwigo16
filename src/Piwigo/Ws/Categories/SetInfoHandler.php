@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Categories;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryRepository;
@@ -34,6 +35,7 @@ final readonly class SetInfoHandler implements WsAction
         private ActivityService $activityService,
         private CurrentConfig $currentConfig,
         private WsCsrfGuard $wsCsrfGuard,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -63,7 +65,7 @@ final readonly class SetInfoHandler implements WsAction
             }
 
             if ($input->status !== $category->status) {
-                $categoryService->setCatStatus([$input->categoryId], $input->status);
+                $categoryService->setCatStatus([$input->categoryId], $input->status, $this->entityManager);
             }
         }
 

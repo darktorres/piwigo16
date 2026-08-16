@@ -59,9 +59,9 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
             $permalink = $permalinksRequest->permalink;
             $permalink_service = $this->permalinkService;
             if ($permalink === '') {
-                $permalink_service->deleteCatPermalink($post_cat_id, $permalinksRequest->isSave);
+                $permalink_service->deleteCatPermalink($post_cat_id, $permalinksRequest->isSave, $this->entityManager);
             } else {
-                $permalink_service->setCatPermalink($post_cat_id, $permalink, $permalinksRequest->isSave);
+                $permalink_service->setCatPermalink($post_cat_id, $permalink, $permalinksRequest->isSave, $this->entityManager);
             }
             $selected_cat = [$post_cat_id];
         } elseif ($permalinksRequest->deletePermanentPresent) {

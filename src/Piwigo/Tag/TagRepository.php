@@ -431,25 +431,6 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * @param list<TagId> $tagIds
-     */
-    public function deleteImageTagByTagIds(array $tagIds): void
-    {
-        if ($tagIds === []) {
-            return;
-        }
-
-        $em = $this->getEntityManager();
-        $em->createQueryBuilder()
-            ->delete(ImageTagEntity::class, 'it')
-            ->where('it.tagId IN (:tagIds)')
-            ->setParameter('tagIds', array_map(static fn (TagId $id): int => $id->value, $tagIds), ArrayParameterType::INTEGER)
-            ->getQuery()
-            ->execute();
-        $em->clear();
-    }
-
-    /**
      * @param array<int, int|string> $imageIds real callers pass
      *   array_keys()'d image-id-keyed maps
      */

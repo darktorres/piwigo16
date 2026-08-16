@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Categories;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -32,6 +33,7 @@ final readonly class AddHandler implements WsAction
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
         private WsCsrfGuard $wsCsrfGuard,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -77,6 +79,7 @@ final readonly class AddHandler implements WsAction
             $this->currentConfig->allowHtmlDescriptions ? $input->name : strip_tags($input->name),
             $this->activityService,
             $this->currentUser,
+            $this->entityManager,
             $input->parent,
             $options
         );

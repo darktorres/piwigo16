@@ -812,7 +812,7 @@ test('deleteCategories() delete_orphans mode preserves an image still linked els
         // that window. 'last' appends after category 1 instead, leaving
         // its rank untouched.
         CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
-        $result = $service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get());
+        $result = $service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($conn));
         $tempIdRaw = $result->id;
         expect(is_numeric($tempIdRaw))
             ->toBeTrue();
@@ -891,7 +891,7 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
         // 'last' position -- see 'deleteCategories() delete_orphans...'
         // above for why (avoids displacing category 1's own real rank).
         CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
-        $categoryId = $service->createVirtualCategory('Site Delete Temp', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get())->id;
+        $categoryId = $service->createVirtualCategory('Site Delete Temp', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($conn))->id;
         expect(is_numeric($categoryId))
             ->toBeTrue();
         $conn->executeStatement('UPDATE categories SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
@@ -1087,7 +1087,7 @@ test('setCatStatus() warns and returns false for an invalid value', function ():
     });
     try {
         $result = categoryServiceTestService()
-            ->setCatStatus([1], 'archived');
+            ->setCatStatus([1], 'archived', EntityManagerFactory::build(DbConnection::build()));
     } finally {
         restore_error_handler();
     }
@@ -1103,7 +1103,7 @@ test('setCatStatus() public makes parent categories public too', function (): vo
     [$service, $repo] = categoryServiceTestServiceRepoForConn($conn);
     $conn->executeStatement("UPDATE categories SET status = 'private'");
 
-    $service->setCatStatus([2], 'public');
+    $service->setCatStatus([2], 'public', EntityManagerFactory::build($conn));
 
     expect($repo->findCategoryStatus(1))
         ->toBe('public')
@@ -1117,7 +1117,7 @@ test('setCatStatus() private uses the private parent as the permission reference
     $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
     $conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (3, 2)');
 
-    $service->setCatStatus([2], 'private');
+    $service->setCatStatus([2], 'private', EntityManagerFactory::build($conn));
 
     // category 1 (the reference, since it's already private) grants
     // no direct user access at all -- the inconsistent-access sweep
@@ -1151,7 +1151,7 @@ test('setCatStatus() private removes inconsistent group_access too', function ()
     $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 1");
     $conn->executeStatement('INSERT INTO group_access (group_id, cat_id) VALUES (?, 2)', [$groupId]);
 
-    $service->setCatStatus([2], 'private');
+    $service->setCatStatus([2], 'private', EntityManagerFactory::build($conn));
 
     $remaining = $conn->createQueryBuilder()
         ->select('COUNT(*) AS c')
@@ -1219,7 +1219,7 @@ test('moveCategories() rejects moving a category into its own sub album', functi
     $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
 
     categoryServiceTestService()
-        ->moveCategories([1], $activityLogger, PageStateTestFactory::get(), 2);
+        ->moveCategories([1], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build(DbConnection::build()), 2);
 
     expect(PageStateTestFactory::get()->errors)
         ->toContain('You cannot move an album in its own sub album');
@@ -1237,7 +1237,7 @@ test('moveCategories() rejects moving a category into its own sub album', functi
 
 test('createVirtualCategory() returns an error when the parent does not exist', function (): void {
     $result = categoryServiceTestService()
-        ->createVirtualCategory('Orphan Parent Test', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get(), 999999);
+        ->createVirtualCategory('Orphan Parent Test', new CategoryServiceUnitTestFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build(DbConnection::build()), 999999);
 
     expect($result->error)
         ->toBe('The parent album does not exist');
@@ -1279,14 +1279,14 @@ test('createVirtualCategory() inherits invisibility from an invisible parent', f
         // parent would sort ahead of real fixture category 1 (rank 1)
         // and displace its own rank for as long as this parent exists.
         CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
-        $parentResult = $service->createVirtualCategory('ct_invisible_parent_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), null, [
+        $parentResult = $service->createVirtualCategory('ct_invisible_parent_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($conn), null, [
             'visible' => false,
         ]);
         expect(is_numeric($parentResult->id))
             ->toBeTrue();
         $parentId = (int) $parentResult->id;
 
-        $result = $service->createVirtualCategory('Invisible Child Test', $activityLogger, CurrentUserTestFactory::get(), $parentId);
+        $result = $service->createVirtualCategory('Invisible Child Test', $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($conn), $parentId);
         $newIdRaw = $result->id;
         expect(is_numeric($newIdRaw))
             ->toBeTrue();
@@ -1351,7 +1351,7 @@ test('createVirtualCategory() with inherit propagates the parent\'s groups and u
         // invisibility...' above for why (avoids displacing category 1's
         // own real rank as this private parent is itself root-level too).
         CurrentConfigTestFactory::get()->newcatDefaultPosition = 'last';
-        $parentResult = $service->createVirtualCategory('ct_inherit_parent_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), null, [
+        $parentResult = $service->createVirtualCategory('ct_inherit_parent_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($conn), null, [
             'status' => 'private',
         ]);
         expect(is_numeric($parentResult->id))
@@ -1367,7 +1367,7 @@ test('createVirtualCategory() with inherit propagates the parent\'s groups and u
         $conn->executeStatement('INSERT INTO group_access (group_id, cat_id) VALUES (1, ?), (2, ?), (3, ?)', [$parentId, $parentId, $parentId]);
         $conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (4, ?)', [$parentId]);
 
-        $result = $service->createVirtualCategory('Inherited Child Test', $activityLogger, CurrentUserTestFactory::get(), $parentId, [
+        $result = $service->createVirtualCategory('Inherited Child Test', $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($conn), $parentId, [
             'inherit' => true,
         ]);
         $newIdRaw = $result->id;
@@ -1529,7 +1529,7 @@ test('moveCategories() returns early for no category ids', function (): void {
     $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
 
     categoryServiceTestService()
-        ->moveCategories([], $activityLogger, PageStateTestFactory::get());
+        ->moveCategories([], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build(DbConnection::build()));
 
     // the count()===0 early return skips updateCategoryParent(),
     // updateUppercats()/updateGlobalRank(), the PageState::addInfo()
@@ -1548,7 +1548,7 @@ test('moveCategories() to root sets parent status public', function (): void {
     // default $newParent = -1 -> $newParentSql = 'NULL' -> moving to
     // root, the branch that hardcodes $parentStatus = 'public' rather
     // than looking an actual parent category up.
-    $service->moveCategories([2], $activityLogger, PageStateTestFactory::get());
+    $service->moveCategories([2], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build($conn));
 
     $idUppercat = $conn->createQueryBuilder()
         ->select('id_uppercat')
@@ -1592,6 +1592,7 @@ test('moveCategories() into a private parent cascades private status', function 
             'ct_move_private_parent_' . uniqid(),
             $activityLogger,
             CurrentUserTestFactory::get(),
+            EntityManagerFactory::build($conn),
             null,
             [
                 'status' => 'private',
@@ -1606,7 +1607,7 @@ test('moveCategories() into a private parent cascades private status', function 
         // findCategoryStatus()) that happens to be private -- the
         // setCatStatus(..., 'private') cascade onto the moved categories
         // themselves only fires on this branch.
-        $service->moveCategories([2], $activityLogger, PageStateTestFactory::get(), $privateParentId);
+        $service->moveCategories([2], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build($conn), $privateParentId);
 
         expect($repo->findCategoryStatus(2))
             ->toBe('private');
@@ -1616,7 +1617,7 @@ test('moveCategories() into a private parent cascades private status', function 
         // recompute its uppercats/global_rank back to their original
         // values rather than this restore having to hand-reconstruct them.
         [$service] = categoryServiceTestServiceRepoForConn($conn);
-        $service->moveCategories([2], $activityLogger, PageStateTestFactory::get(), 1);
+        $service->moveCategories([2], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build($conn), 1);
         $conn->executeStatement("UPDATE categories SET status = 'public' WHERE id = 2");
         // Idempotent restore -- the setCatStatus() cascade above may or
         // may not have reached the sweep before this finally runs.
@@ -1668,17 +1669,17 @@ test('createVirtualCategory() with "last" position ranks after existing siblings
         $service = categoryServiceTestServiceRepoForConn($conn)[0];
         $activityLogger = new CategoryServiceUnitTestFakeActivityLogger();
 
-        $parentResult = $service->createVirtualCategory('ct_last_position_parent_' . uniqid(), $activityLogger, CurrentUserTestFactory::get());
+        $parentResult = $service->createVirtualCategory('ct_last_position_parent_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($conn));
         expect(is_numeric($parentResult->id))
             ->toBeTrue();
         $parentId = (int) $parentResult->id;
 
-        $firstChildResult = $service->createVirtualCategory('ct_last_position_first_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), $parentId);
+        $firstChildResult = $service->createVirtualCategory('ct_last_position_first_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($conn), $parentId);
         expect(is_numeric($firstChildResult->id))
             ->toBeTrue();
         $firstChildId = (int) $firstChildResult->id;
 
-        $lastChildResult = $service->createVirtualCategory('ct_last_position_last_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), $parentId);
+        $lastChildResult = $service->createVirtualCategory('ct_last_position_last_' . uniqid(), $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($conn), $parentId);
         expect(is_numeric($lastChildResult->id))
             ->toBeTrue();
         $lastChildId = (int) $lastChildResult->id;

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Tags;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\TagId;
@@ -32,6 +33,7 @@ final readonly class MergeHandler implements WsAction
         private ActivityService $activityService,
         private EventDispatcher $eventDispatcher,
         private WsCsrfGuard $wsCsrfGuard,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -88,7 +90,7 @@ final readonly class MergeHandler implements WsAction
             array_values(array_map(TagId::from(...), $merge_tag))
         ));
 
-        $this->tagService->deleteTags(array_values(array_map(TagId::from(...), $merge_tag)));
+        $this->tagService->deleteTags(array_values(array_map(TagId::from(...), $merge_tag)), $this->entityManager);
 
         $image_in_merged = array_merge($image_in_dest, $image_to_add);
 

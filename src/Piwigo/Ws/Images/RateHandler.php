@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Images;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
@@ -30,6 +31,7 @@ final readonly class RateHandler implements WsAction
         private PermissionService $permissionService,
         private RateService $rateService,
         private CurrentConfig $currentConfig,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -51,7 +53,7 @@ final readonly class RateHandler implements WsAction
         }
 
         $res = $this->rateService
-            ->rate($input->imageId, (int) $input->rate);
+            ->rate($input->imageId, (int) $input->rate, $this->entityManager);
 
         if ($res === false) {
             $rate_items = $this->currentConfig->rateItems;

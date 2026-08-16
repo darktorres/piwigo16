@@ -595,7 +595,7 @@ test('deleteOrphanTags() removes a genuinely orphaned tag', function (): void {
     ]);
     $id = (int) $conn->lastInsertId();
 
-    $service->deleteOrphanTags();
+    $service->deleteOrphanTags(EntityManagerFactory::build($conn));
 
     $remaining = $conn->createQueryBuilder()
         ->select('id')

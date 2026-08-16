@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Categories;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -36,6 +37,7 @@ final readonly class MoveHandler implements WsAction
         private PageState $pageState,
         private HtmlRenderingInterface $htmlRenderer,
         private WsCsrfGuard $wsCsrfGuard,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -113,6 +115,7 @@ final readonly class MoveHandler implements WsAction
             $category_ids,
             $this->activityService,
             $pageState,
+            $this->entityManager,
             $input->parent
         );
         PermissionCacheInvalidator::invalidate();

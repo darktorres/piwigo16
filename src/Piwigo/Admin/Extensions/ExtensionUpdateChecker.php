@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
@@ -45,6 +46,7 @@ final readonly class ExtensionUpdateChecker
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private ExtensionUpdateCachePool $extensionUpdateCachePool,
     ) {}
 
     /**
@@ -134,22 +136,22 @@ final readonly class ExtensionUpdateChecker
 
     /**
      * Computes pending updates for every ExtensionType, stores the result
-     * in $_SESSION['extensions_need_update'] (consumed by
-     * Piwigo\Ws\Extensions::checkUpdates()), and syncs the ignore-list
-     * in extension_ignored_updates via $ignoredUpdateRepo -- mirrors
-     * updates.class.php::check_extensions()'s own behavior, including its
-     * "an ignored id no longer pending silently un-ignores" side effect
-     * (see the loop's own comment below).
+     * in ExtensionUpdateCachePool under the 'extensions_need_update' key
+     * (consumed by Piwigo\Ws\Extensions\CheckUpdatesHandler), and syncs
+     * the ignore-list in extension_ignored_updates via $ignoredUpdateRepo
+     * -- mirrors updates.class.php::check_extensions()'s own behavior,
+     * including its "an ignored id no longer pending silently
+     * un-ignores" side effect (see the loop's own comment below).
      */
     public function checkExtensions(): void
     {
-        // Built up locally (instead of writing straight into
-        // $_SESSION['extensions_need_update']) because PHPStan cannot keep a
-        // precise array shape for a superglobal offset mutated across loop
-        // iterations that also make impure calls (findIgnoredIdsByType()/
-        // unignore() below invalidate any narrowing PHPStan could otherwise
-        // track) -- the whole array is committed to the session once, after
-        // every ExtensionType's been processed.
+        // Built up locally (instead of writing straight into the cache
+        // item) because PHPStan cannot keep a precise array shape for a
+        // value mutated across loop iterations that also make impure
+        // calls (findIgnoredIdsByType()/unignore() below invalidate any
+        // narrowing PHPStan could otherwise track) -- the whole array is
+        // committed to the cache once, after every ExtensionType's been
+        // processed.
         /** @var array<string, array<string, string>> $extensionsNeedUpdate */
         $extensionsNeedUpdate = [];
 
@@ -186,17 +188,20 @@ final readonly class ExtensionUpdateChecker
             }
         }
 
-        $_SESSION['extensions_need_update'] = $extensionsNeedUpdate;
+        $item = $this->extensionUpdateCachePool->getItem('extensions_need_update');
+        $item->set($extensionsNeedUpdate);
+        $this->extensionUpdateCachePool->save($item);
     }
 
     /**
      * Re-runs checkExtensions() if any extension already flagged as
-     * needing an update in $_SESSION has since caught up on disk -- mirrors
-     * updates.class.php::check_updated_extensions().
+     * needing an update in the cache has since caught up on disk --
+     * mirrors updates.class.php::check_updated_extensions().
      */
     public function checkUpdatedExtensions(): void
     {
-        $extensionsNeedUpdateRaw = $_SESSION['extensions_need_update'] ?? null;
+        $item = $this->extensionUpdateCachePool->getItem('extensions_need_update');
+        $extensionsNeedUpdateRaw = $item->isHit() ? $item->get() : null;
         $extensionsNeedUpdate = is_array($extensionsNeedUpdateRaw) ? $extensionsNeedUpdateRaw : [];
 
         foreach (ExtensionType::cases() as $type) {

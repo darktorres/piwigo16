@@ -28,6 +28,7 @@ use Piwigo\Cache\CalendarNavCachePool;
 use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Cache\EffectivePermissionsCachePool;
+use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Cache\NotificationsCachePool;
 use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Cache\PersistentCache;
@@ -319,6 +320,7 @@ return [
     CategoryTreeCachePool::class => factory(static fn (): CategoryTreeCachePool => new CategoryTreeCachePool(CacheFactory::create(namespace: 'piwigo.category_tree', defaultLifetime: 300))),
     ConfigCachePool::class => factory(static fn (): ConfigCachePool => new ConfigCachePool(CacheFactory::create(namespace: 'piwigo.config'))),
     EffectivePermissionsCachePool::class => factory(static fn (): EffectivePermissionsCachePool => new EffectivePermissionsCachePool(CacheFactory::create(namespace: 'piwigo.effective_permissions', defaultLifetime: 30))),
+    ExtensionUpdateCachePool::class => factory(static fn (): ExtensionUpdateCachePool => new ExtensionUpdateCachePool(CacheFactory::create(namespace: 'piwigo.extension_update', defaultLifetime: 86400))),
     NotificationsCachePool::class => factory(static fn (): NotificationsCachePool => new NotificationsCachePool(CacheFactory::create(namespace: 'piwigo.notifications', defaultLifetime: 30))),
     PermissionsCachePool::class => factory(static fn (): PermissionsCachePool => new PermissionsCachePool(CacheFactory::create(namespace: 'piwigo.permissions', defaultLifetime: 30))),
     SearchResultsCachePool::class => factory(static fn (): SearchResultsCachePool => new SearchResultsCachePool(CacheFactory::create(namespace: 'piwigo.search_results', defaultLifetime: 30))),

@@ -8,6 +8,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
@@ -51,7 +52,7 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 // inside the `if ($pending === null) { continue; }`-gated loop body, which
 // never runs in this environment for the same PEM-unreachable reason as
 // getPendingUpdates() above -- calling it here would only exercise the
-// trivial "$_SESSION reset, nothing else happens" no-op path, not the
+// trivial "cache reset, nothing else happens" no-op path, not the
 // actual repository interaction this migration added.
 //
 // ExtensionType::scanDirectory() for Plugin/Language both resolve
@@ -88,8 +89,8 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 //   underlying reason as above: getPendingUpdates() returns null for
 //   EVERY type, so every iteration hits the same no-op branch
 //   regardless of whether the loop runs 3 times, 0 times, or stops
-//   after the first hit -- $extensionsNeedUpdate (and the final
-//   $_SESSION write) ends up identically [] in every case.
+//   after the first hit -- $extensionsNeedUpdate (and the final cache
+//   write) ends up identically [] in every case.
 // - checkUpdatedExtensions()'s own `!is_array(...) || ... === []`
 //   guard (BooleanOrToBooleanAnd) is inert too, per tracing
 //   BOTH ways the mutation can misfire (a real non-empty record for
@@ -214,7 +215,18 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
         new EventDispatcher(),
         CurrentConfigTestFactory::get(),
         $entityManager,
+        extensionUpdateCachePool(),
     );
+}
+
+function extensionUpdateCachePool(): ExtensionUpdateCachePool
+{
+    $pool = Kernel::container()->get(ExtensionUpdateCachePool::class);
+    if (! $pool instanceof ExtensionUpdateCachePool) {
+        throw new LogicException('Container returned an unexpected type for ' . ExtensionUpdateCachePool::class);
+    }
+
+    return $pool;
 }
 
 $fixtureRoot = null;
@@ -240,13 +252,15 @@ beforeEach(function () use (&$fixtureRoot): void {
     mkdir($fixtureRoot . 'language', 0o777, true);
     CurrentConfigTestFactory::get()->themesDir = rtrim($fixtureRoot, '/') . '/themes';
 
-    unset($_SESSION['extensions_need_update']);
+    extensionUpdateCachePool()
+        ->deleteItem('extensions_need_update');
 });
 
 afterEach(function () use (&$fixtureRoot): void {
     CurrentConfigTestFactory::get()->reset();
+    extensionUpdateCachePool()
+        ->deleteItem('extensions_need_update');
     Kernel::reset();
-    unset($_SESSION['extensions_need_update']);
     if (is_string($fixtureRoot) && is_dir($fixtureRoot)) {
         FilesystemHelper::deltree($fixtureRoot);
     }
@@ -337,52 +351,55 @@ test('getMissingExtensions keeps scanning later types after skipping an earlier 
         ->and($missing['theme'][0]['extension'])->toBe('888');
 });
 
-test('checkUpdatedExtensions is a no-op and never re-triggers checkExtensions when the session has no pending-update record', function (): void {
-    $_SESSION = [
-        'unrelated_key' => 'sentinel_value',
-    ];
-
+test('checkUpdatedExtensions is a no-op and never re-triggers checkExtensions when the cache has no pending-update record', function (): void {
     extensionUpdateChecker()
         ->checkUpdatedExtensions();
 
-    // checkExtensions() unconditionally starts by setting
-    // $_SESSION['extensions_need_update'] = [] before doing (and DB-
-    // writing) anything else -- asserting the session is byte-for-byte
-    // unchanged proves it was never called, not just "didn't throw".
-    expect($_SESSION)
-        ->toBe([
-            'unrelated_key' => 'sentinel_value',
-        ]);
+    // checkExtensions() unconditionally starts by writing
+    // 'extensions_need_update' = [] before doing (and DB-writing)
+    // anything else -- asserting the cache item is still a miss proves
+    // it was never called, not just "didn't throw".
+    expect(extensionUpdateCachePool()->getItem('extensions_need_update')->isHit())
+        ->toBeFalse();
 });
 
 test('checkUpdatedExtensions does not re-trigger checkExtensions while the installed plugin has not yet caught up', function () use (&$fixtureRoot): void {
     fixturePlugin(requireFixtureRoot($fixtureRoot), 'zzz_custom_plugin', '0.9.2', '777', 'Custom Gallery Widget');
-    $_SESSION['extensions_need_update'] = [
+    $item = extensionUpdateCachePool()
+        ->getItem('extensions_need_update');
+    $item->set([
         'plugin' => [
             'zzz_custom_plugin' => '5.0.0',
         ],
-    ];
+    ]);
+    extensionUpdateCachePool()
+        ->save($item);
 
     extensionUpdateChecker()
         ->checkUpdatedExtensions();
 
     // 0.9.2 >= 5.0.0 is false, so the fs scan never finds a caught-up
     // entry -- checkExtensions() (and its real DB write) must never run,
-    // leaving the recorded pending-update session data untouched.
-    expect($_SESSION['extensions_need_update'])->toBe([
-        'plugin' => [
-            'zzz_custom_plugin' => '5.0.0',
-        ],
-    ]);
+    // leaving the recorded pending-update cache data untouched.
+    expect(extensionUpdateCachePool()->getItem('extensions_need_update')->get())
+        ->toBe([
+            'plugin' => [
+                'zzz_custom_plugin' => '5.0.0',
+            ],
+        ]);
 });
 
 test('checkUpdatedExtensions re-triggers checkExtensions once the installed plugin has caught up', function () use (&$fixtureRoot): void {
     fixturePlugin(requireFixtureRoot($fixtureRoot), 'zzz_custom_plugin', '5.0.0', '777', 'Custom Gallery Widget');
-    $_SESSION['extensions_need_update'] = [
+    $item = extensionUpdateCachePool()
+        ->getItem('extensions_need_update');
+    $item->set([
         'plugin' => [
             'zzz_custom_plugin' => '0.9.2',
         ],
-    ];
+    ]);
+    extensionUpdateCachePool()
+        ->save($item);
 
     extensionUpdateChecker()
         ->checkUpdatedExtensions();
@@ -391,24 +408,29 @@ test('checkUpdatedExtensions re-triggers checkExtensions once the installed plug
     // has caught up -- checkExtensions() itself runs. Its own DB-touching
     // branch is never reached here (getPendingUpdates() always returns
     // null in this fork, see this file's own top-of-file docblock), but
-    // it still unconditionally resets $_SESSION['extensions_need_update']
-    // to [] before returning -- the only observable proof it actually ran,
-    // as opposed to the previous test's untouched non-empty session data.
-    expect($_SESSION['extensions_need_update'])->toBe([]);
+    // it still unconditionally resets 'extensions_need_update' to []
+    // before returning -- the only observable proof it actually ran, as
+    // opposed to the previous test's untouched non-empty cache data.
+    expect(extensionUpdateCachePool()->getItem('extensions_need_update')->get())
+        ->toBe([]);
 });
 
 test('checkUpdatedExtensions keeps checking later extension types after skipping one with no pending-update record', function () use (&$fixtureRoot): void {
     fixtureLanguage(requireFixtureRoot($fixtureRoot), 'xx_ZZ', 'Test Language');
-    // No 'plugin'/'theme' entry in the session record at all -- both hit
+    // No 'plugin'/'theme' entry in the cached record at all -- both hit
     // the guard's `continue` (no fs scan ever happens for either) before
     // the loop reaches 'language', the only type with a real
     // pending-update record below and the last of ExtensionType::cases()'s
     // 3 cases.
-    $_SESSION['extensions_need_update'] = [
+    $item = extensionUpdateCachePool()
+        ->getItem('extensions_need_update');
+    $item->set([
         'language' => [
             'xx_ZZ' => '0',
         ],
-    ];
+    ]);
+    extensionUpdateCachePool()
+        ->save($item);
 
     extensionUpdateChecker()
         ->checkUpdatedExtensions();
@@ -418,7 +440,8 @@ test('checkUpdatedExtensions keeps checking later extension types after skipping
     // always >= '0' -- so 'language' is the type whose scan actually
     // triggers checkExtensions(), proven the same way as the test above.
     // If skipping 'plugin' ever aborted the whole loop instead of moving
-    // on to 'theme' then 'language', this never runs and the session stays
+    // on to 'theme' then 'language', this never runs and the cache stays
     // untouched.
-    expect($_SESSION['extensions_need_update'])->toBe([]);
+    expect(extensionUpdateCachePool()->getItem('extensions_need_update')->get())
+        ->toBe([]);
 });

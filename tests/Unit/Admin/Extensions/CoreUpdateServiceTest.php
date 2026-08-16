@@ -15,6 +15,7 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -151,7 +152,7 @@ function core_update_service(): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get()), Paths::fromRoot(dirname(__DIR__, 4)), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfigTestFactory::get());
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get()), Paths::fromRoot(dirname(__DIR__, 4)), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfigTestFactory::get(), new ExtensionUpdateCachePool(CacheFactory::create(namespace: 'piwigo.extension_update', defaultLifetime: 86400)));
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {
@@ -206,7 +207,7 @@ function core_update_service_at(string $root): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get()), Paths::fromRoot($root), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfigTestFactory::get());
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get()), Paths::fromRoot($root), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfigTestFactory::get(), new ExtensionUpdateCachePool(CacheFactory::create(namespace: 'piwigo.extension_update', defaultLifetime: 86400)));
 }
 
 function core_update_service_step_is(int|string $step, int $target): bool

@@ -11,6 +11,7 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
@@ -223,6 +224,16 @@ final class PageTail
         return $mailService;
     }
 
+    private static function extensionUpdateCachePool(): ExtensionUpdateCachePool
+    {
+        $extensionUpdateCachePool = Kernel::container()->get(ExtensionUpdateCachePool::class);
+        if (! $extensionUpdateCachePool instanceof ExtensionUpdateCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . ExtensionUpdateCachePool::class);
+        }
+
+        return $extensionUpdateCachePool;
+    }
+
     private static function eventDispatcher(): EventDispatcher
     {
         $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
@@ -265,7 +276,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins(self::currentLogger()->get(), 'check_for_updates');
                 if ($exec_id !== false) {
-                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::currentConfigService()->get(), self::paths(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig())
+                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::currentConfigService()->get(), self::paths(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig(), self::extensionUpdateCachePool())
                         ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends(self::currentLogger()->get(), 'check_for_updates');

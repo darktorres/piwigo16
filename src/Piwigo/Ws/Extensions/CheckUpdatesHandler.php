@@ -14,6 +14,7 @@ namespace Piwigo\Ws\Extensions;
 use Override;
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
+use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Core\AppInfo;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
@@ -26,6 +27,7 @@ final readonly class CheckUpdatesHandler implements WsAction
     public function __construct(
         private CoreUpdateService $coreUpdateService,
         private ExtensionUpdateChecker $extensionUpdateChecker,
+        private ExtensionUpdateCachePool $extensionUpdateCachePool,
     ) {}
 
     /**
@@ -39,29 +41,36 @@ final readonly class CheckUpdatesHandler implements WsAction
     {
         $coreUpdateService = $this->coreUpdateService;
         $updateChecker = $this->extensionUpdateChecker;
+        $pool = $this->extensionUpdateCachePool;
         $result = [];
 
-        if (! isset($_SESSION['need_update' . AppInfo::VERSION])) {
+        $coreKey = 'core_need_update_' . AppInfo::VERSION;
+        if (! $pool->getItem($coreKey)->isHit()) {
             $coreUpdateService->checkPiwigoUpgrade();
         }
 
         // CoreUpdateService::checkPiwigoUpgrade() only ever writes this
-        // session key as null or a real bool (version_compare() result);
+        // cache item as null or a real bool (version_compare() result);
         // narrowed defensively since it's still a round-trip through
-        // session state.
-        $piwigo_need_update = $_SESSION['need_update' . AppInfo::VERSION] ?? null;
+        // cache state. Re-fetched: checkPiwigoUpgrade() may just have
+        // written it, and a PSR-6 item is a snapshot, not a live view.
+        $piwigo_need_update = $pool->getItem($coreKey)
+            ->get();
         $result['piwigo_need_update'] = is_bool($piwigo_need_update) ? $piwigo_need_update : null;
 
-        if (! isset($_SESSION['extensions_need_update'])) {
+        $extKey = 'extensions_need_update';
+        if (! $pool->getItem($extKey)->isHit()) {
             $updateChecker->checkExtensions();
         } else {
             $updateChecker->checkUpdatedExtensions();
         }
 
-        if (! is_array($_SESSION['extensions_need_update'] ?? null)) {
+        $extNeedUpdate = $pool->getItem($extKey)
+            ->get();
+        if (! is_array($extNeedUpdate)) {
             $result['ext_need_update'] = null;
         } else {
-            $result['ext_need_update'] = $_SESSION['extensions_need_update'] !== [];
+            $result['ext_need_update'] = $extNeedUpdate !== [];
         }
 
         return $result;

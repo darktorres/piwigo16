@@ -15,6 +15,7 @@ use Override;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
@@ -29,6 +30,7 @@ final readonly class IgnoreUpdateHandler implements WsAction
         private AccessControl $accessControl,
         private ExtensionUpdateChecker $extensionUpdateChecker,
         private WsCsrfGuard $wsCsrfGuard,
+        private ExtensionUpdateCachePool $extensionUpdateCachePool,
     ) {}
 
     /**
@@ -64,7 +66,7 @@ final readonly class IgnoreUpdateHandler implements WsAction
                 $updateChecker->resetAllIgnored();
             }
 
-            unset($_SESSION['extensions_need_update']);
+            $this->extensionUpdateCachePool->deleteItem('extensions_need_update');
             return true;
         }
 
@@ -78,7 +80,7 @@ final readonly class IgnoreUpdateHandler implements WsAction
         // the former blob's own manual in_array() guard.
         $updateChecker->ignoreUpdate($type, $input->id);
 
-        unset($_SESSION['extensions_need_update']);
+        $this->extensionUpdateCachePool->deleteItem('extensions_need_update');
         return true;
     }
 }

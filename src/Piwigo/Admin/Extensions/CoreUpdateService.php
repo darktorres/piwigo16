@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\Projection\NewVersionsInfo;
+use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -58,18 +59,22 @@ final readonly class CoreUpdateService
         private readonly UserService $userService,
         private readonly MailService $mailService,
         private readonly CurrentConfig $currentConfig,
+        private readonly ExtensionUpdateCachePool $extensionUpdateCachePool,
     ) {}
 
     public function checkPiwigoUpgrade(): void
     {
-        $_SESSION['need_update' . AppInfo::VERSION] = null;
+        $item = $this->extensionUpdateCachePool->getItem('core_need_update_' . AppInfo::VERSION);
+        $item->set(null);
 
         if ((bool) preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION)
           and is_string($result = @HttpClientService::fetch(AppInfo::URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $this->currentConfig))) {
             $allVersions = explode("\n", $result);
             $newVersion = trim($allVersions[0]);
-            $_SESSION['need_update' . AppInfo::VERSION] = version_compare(AppInfo::VERSION, $newVersion, '<');
+            $item->set(version_compare(AppInfo::VERSION, $newVersion, '<'));
         }
+
+        $this->extensionUpdateCachePool->save($item);
     }
 
     public function getPiwigoNewVersions(): NewVersionsInfo

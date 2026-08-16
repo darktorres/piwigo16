@@ -86,7 +86,6 @@ final readonly class DeleteHandler implements WsAction
             $this->sessionService,
             $this->eventDispatcher,
             $this->entityManager,
-            new PermalinkRepository($this->entityManager),
             $input->photoDeletionMode
         );
         $categoryService->updateGlobalRank();

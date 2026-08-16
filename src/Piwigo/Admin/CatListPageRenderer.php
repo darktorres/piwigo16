@@ -117,7 +117,6 @@ final readonly class CatListPageRenderer
                 $this->sessionService,
                 $this->eventDispatcher,
                 $this->entityManager,
-                new PermalinkRepository($this->entityManager),
                 $catListRequest->photoDeletionMode
             );
 

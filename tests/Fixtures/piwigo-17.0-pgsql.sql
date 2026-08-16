@@ -3834,6 +3834,20 @@ CREATE INDEX categories_lastmodified_idx ON public.categories USING btree (lastm
 
 
 --
+-- Name: categories_site_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX categories_site_id_idx ON public.categories USING btree (site_id);
+
+
+--
+-- Name: old_permalinks_cat_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX old_permalinks_cat_id_idx ON public.old_permalinks USING btree (cat_id);
+
+
+--
 -- Name: comments_i1; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
 --
 
@@ -4085,6 +4099,22 @@ ALTER TABLE ONLY public.categories
 
 ALTER TABLE ONLY public.categories
     ADD CONSTRAINT fk_categories_representative_picture_id FOREIGN KEY (representative_picture_id) REFERENCES public.images(id) ON DELETE SET NULL;
+
+
+--
+-- Name: categories fk_categories_site_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT fk_categories_site_id FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
+
+
+--
+-- Name: old_permalinks fk_old_permalinks_cat_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+ALTER TABLE ONLY public.old_permalinks
+    ADD CONSTRAINT fk_old_permalinks_cat_id FOREIGN KEY (cat_id) REFERENCES public.categories(id) ON DELETE CASCADE;
 
 
 --

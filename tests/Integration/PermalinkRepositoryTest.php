@@ -223,15 +223,4 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
         self::assertSame(43, is_numeric($hit) ? (int) $hit : null);
     }
 
-    public function testDeleteOldPermalinksForCategoriesIsANoOpForNoIds(): void
-    {
-        $this->repo->deleteOldPermalinksForCategories([]);
-
-        $count = $this->conn->createQueryBuilder()
-            ->select('COUNT(*) AS c')
-            ->from('old_permalinks')
-            ->executeQuery()
-            ->fetchOne();
-        self::assertSame(1, is_numeric($count) ? (int) $count : 0);
-    }
 }

@@ -535,14 +535,13 @@ test('touchOldPermalinkHit() increments the counter', function (): void {
         ->toBe(43);
 });
 
-test('deleteOldPermalinksForCategories() removes only rows for the given category ids', function (): void {
-    // Disposable category ids, not real fixture ones, for the
-    // delete-by-cat_id filter itself -- deleteOldPermalinksForCategories()
-    // scans by cat_id, not by this row's own randomized permalink PK, so
-    // a shared literal cat_id here is directly exposed to any other
-    // concurrent test's own old_permalinks row for that same id (see
-    // the sibling no-op test below for the confirmed-live incident this
-    // caused).
+test('deleting a category removes its old permalinks, via the constraint rather than a sweep', function (): void {
+    // fk_old_permalinks_cat_id ON DELETE CASCADE replaced
+    // PermalinkRepository::deleteOldPermalinksForCategories(), which
+    // CategoryService called by hand because no constraint existed. This
+    // asserts the behaviour that method used to provide, at the level that
+    // now provides it: delete the category row and the permalink goes with
+    // it, while another category's permalink is untouched.
     //
     // Exempt from tests/Pest.php's blanket per-test transaction -- see
     // permalinkRepoTestDisposableCategory()'s own docblock for why.
@@ -556,43 +555,14 @@ test('deleteOldPermalinksForCategories() removes only rows for the given categor
     $repo->insertOldPermalinkDeleted($deletedCatId, $deletedSlug);
 
     try {
-        $repo->deleteOldPermalinksForCategories([$deletedCatId]);
+        permalinkRepoTestDeleteCategory($deletedCatId);
 
-        expect($repo->findOldCategoryId($keptSlug))
-            ->toBe($keptCatId)
-            ->and($repo->findOldCategoryId($deletedSlug))
-            ->toBeNull();
+        expect($repo->findOldCategoryId($deletedSlug))
+            ->toBeNull()
+            ->and($repo->findOldCategoryId($keptSlug))
+            ->toBe($keptCatId);
     } finally {
         $repo->deleteOldPermalink($keptCatId, $keptSlug);
         permalinkRepoTestDeleteCategory($keptCatId);
-        permalinkRepoTestDeleteCategory($deletedCatId);
-    }
-});
-
-test('deleteOldPermalinksForCategories() is a no-op for no ids', function (): void {
-    // A real, targeted row -- not a global COUNT(*) before/after
-    // comparison -- plus a disposable category id (not a real fixture
-    // one), same reason as the sibling test above. Confirmed live: this
-    // exact test previously produced a real, intermittent "1 is
-    // identical to 2"-shaped failure from PermalinkServiceTest.php's own
-    // (since-fixed) hardcoded category-2 old_permalinks rows racing
-    // against this one's literal cat_id=2.
-    //
-    // Exempt from tests/Pest.php's blanket per-test transaction -- see
-    // permalinkRepoTestDisposableCategory()'s own docblock for why.
-    DbTransactionTestOverride::rollback();
-    $repo = permalinkRepoTest();
-    $slug = permalinkRepoTestSlug();
-    $catId = permalinkRepoTestDisposableCategory();
-    $repo->insertOldPermalinkDeleted($catId, $slug);
-
-    try {
-        $repo->deleteOldPermalinksForCategories([]);
-
-        expect($repo->findOldCategoryId($slug))
-            ->toBe($catId);
-    } finally {
-        $repo->deleteOldPermalink($catId, $slug);
-        permalinkRepoTestDeleteCategory($catId);
     }
 });

@@ -33,8 +33,4 @@ interface OldPermalinkLookupInterface
 
     public function touchOldPermalinkHit(string $permalink, int $catId): void;
 
-    /**
-     * @param  list<int>  $catIds
-     */
-    public function deleteOldPermalinksForCategories(array $catIds): void;
 }

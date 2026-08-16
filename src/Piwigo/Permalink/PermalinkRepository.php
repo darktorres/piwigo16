@@ -363,26 +363,4 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
             ->getQuery()
             ->execute();
     }
-
-    /**
-     * {@see OldPermalinkLookupInterface} implementation.
-     *
-     * @param  list<int>  $catIds
-     */
-    #[Override]
-    public function deleteOldPermalinksForCategories(array $catIds): void
-    {
-        if ($catIds === []) {
-            return;
-        }
-
-        $em = $this->em;
-        $em->createQueryBuilder()
-            ->delete(OldPermalinkEntity::class, 'op')
-            ->where('op.catId IN (:ids)')
-            ->setParameter('ids', $catIds, ArrayParameterType::INTEGER)
-            ->getQuery()
-            ->execute();
-        $em->clear();
-    }
 }

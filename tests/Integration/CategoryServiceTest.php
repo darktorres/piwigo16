@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+    use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+
     use Doctrine\DBAL\Connection;
     use Exception;
     use LogicException;
@@ -844,7 +846,7 @@ namespace Piwigo\Tests\Integration {
             // image.
             $this->conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$tempId})");
 
-            $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($this->conn), new PermalinkRepository(EntityManagerFactory::build($this->conn)), 'delete_orphans');
+            $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($this->conn), 'delete_orphans');
 
             self::assertNull($this->repo->findById($tempId));
             $stillLinked = $this->conn->createQueryBuilder()
@@ -892,7 +894,7 @@ namespace Piwigo\Tests\Integration {
             EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
 
             try {
-                $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn));
+                $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($this->conn));
 
                 self::assertNull($this->repo->findById((int) $categoryId));
                 self::assertNull($siteRepo->findGalleriesUrlById($siteId));
@@ -964,12 +966,23 @@ namespace Piwigo\Tests\Integration {
 
         public function testCheckCategoriesIntegrityDeletesAnOrphanedOldPermalinksRowAndKeepsARealOne(): void
         {
-            // cat_id is smallint unsigned (max 65535) -- 999999 (used
-            // elsewhere in this file only as a query parameter, never a raw
-            // INSERT value) would overflow it here.
-            $this->conn->executeStatement(
-                "INSERT INTO old_permalinks (cat_id, permalink, hit) VALUES (60000, 'orphaned-permalink-test', 0)"
-            );
+            // fk_old_permalinks_cat_id now makes this orphan impossible to
+            // create through normal writes, which is the point of the
+            // constraint. The integrity check still has a narrow job: a dump
+            // restored with referential checks disabled -- the default for
+            // mysqldump output -- can reintroduce one, and that is how this
+            // fixture is built here, matching the sibling
+            // image_category/user_access/group_access test above.
+            $isPostgres = $this->conn->getDatabasePlatform() instanceof PostgreSQLPlatform;
+            $this->conn->executeStatement($isPostgres ? "SET session_replication_role = 'replica'" : 'SET FOREIGN_KEY_CHECKS = 0');
+
+            try {
+                $this->conn->executeStatement(
+                    "INSERT INTO old_permalinks (cat_id, permalink, hit) VALUES (60000, 'orphaned-permalink-test', 0)"
+                );
+            } finally {
+                $this->conn->executeStatement($isPostgres ? "SET session_replication_role = 'origin'" : 'SET FOREIGN_KEY_CHECKS = 1');
+            }
 
             $this->service->checkCategoriesIntegrity();
 

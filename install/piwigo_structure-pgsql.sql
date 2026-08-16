@@ -2660,6 +2660,12 @@ CREATE INDEX categories_lastmodified_idx ON public.categories USING btree (lastm
 CREATE INDEX categories_representative_picture_id_idx ON public.categories USING btree (representative_picture_id);
 
 --
+-- Name: categories_site_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX categories_site_id_idx ON public.categories USING btree (site_id);
+
+--
 -- Name: comments_author_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2876,6 +2882,12 @@ CREATE INDEX images_lastmodified_idx ON public.images USING btree (lastmodified)
 CREATE INDEX lounge_category_id_idx ON public.lounge USING btree (category_id);
 
 --
+-- Name: old_permalinks_cat_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX old_permalinks_cat_id_idx ON public.old_permalinks USING btree (cat_id);
+
+--
 -- Name: rate_user_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2982,6 +2994,13 @@ ALTER TABLE ONLY public.categories
 
 ALTER TABLE ONLY public.categories
     ADD CONSTRAINT fk_categories_representative_picture_id FOREIGN KEY (representative_picture_id) REFERENCES public.images(id) ON DELETE SET NULL;
+
+--
+-- Name: categories fk_categories_site_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT fk_categories_site_id FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
 
 --
 -- Name: comments fk_comments_author_id; Type: FK CONSTRAINT; Schema: public; Owner: -
@@ -3129,6 +3148,13 @@ ALTER TABLE ONLY public.lounge
 
 ALTER TABLE ONLY public.lounge
     ADD CONSTRAINT fk_lounge_image_id FOREIGN KEY (image_id) REFERENCES public.images(id) ON DELETE CASCADE;
+
+--
+-- Name: old_permalinks fk_old_permalinks_cat_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.old_permalinks
+    ADD CONSTRAINT fk_old_permalinks_cat_id FOREIGN KEY (cat_id) REFERENCES public.categories(id) ON DELETE CASCADE;
 
 --
 -- Name: rate fk_rate_element_id; Type: FK CONSTRAINT; Schema: public; Owner: -

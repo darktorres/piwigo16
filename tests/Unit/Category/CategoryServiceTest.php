@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
@@ -826,7 +827,7 @@ test('deleteCategories() delete_orphans mode preserves an image still linked els
         // category must NOT delete it, unlike a genuinely orphaned image.
         $conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (2, {$tempId})");
 
-        $service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($conn), new PermalinkRepository(EntityManagerFactory::build($conn)), 'delete_orphans');
+        $service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($conn), 'delete_orphans');
 
         expect($repo->findById($tempId))
             ->toBeNull();
@@ -901,7 +902,7 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
         EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
 
         try {
-            $service->deleteSite($siteId, new CategoryServiceUnitTestFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn));
+            $service->deleteSite($siteId, new CategoryServiceUnitTestFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($conn));
 
             expect($repo->findById((int) $categoryId))
                 ->toBeNull();
@@ -986,11 +987,23 @@ test('checkCategoriesIntegrity() deletes orphaned image_category/user_access/gro
 });
 
 test('checkCategoriesIntegrity() deletes an orphaned old_permalinks row and keeps a real one', function (): void {
-    // cat_id is smallint unsigned (max 65535) -- 999999 would overflow it.
+    // fk_old_permalinks_cat_id now makes this orphan impossible to create
+    // through normal writes, which is the point of the constraint. The
+    // integrity check still has a narrow job: a dump restored with
+    // referential checks disabled -- the default for mysqldump output --
+    // can reintroduce one, and that is exactly how this fixture is built
+    // here. Without disabling the checks the INSERT is rejected outright.
     $conn = categoryServiceTestConn();
-    $conn->executeStatement(
-        "INSERT INTO old_permalinks (cat_id, permalink, hit) VALUES (60000, 'orphaned-permalink-test', 0)"
-    );
+    $isPostgres = $conn->getDatabasePlatform() instanceof PostgreSQLPlatform;
+    $conn->executeStatement($isPostgres ? "SET session_replication_role = 'replica'" : 'SET FOREIGN_KEY_CHECKS = 0');
+
+    try {
+        $conn->executeStatement(
+            "INSERT INTO old_permalinks (cat_id, permalink, hit) VALUES (60000, 'orphaned-permalink-test', 0)"
+        );
+    } finally {
+        $conn->executeStatement($isPostgres ? "SET session_replication_role = 'origin'" : 'SET FOREIGN_KEY_CHECKS = 1');
+    }
 
     categoryServiceTestService()
         ->checkCategoriesIntegrity();

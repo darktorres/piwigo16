@@ -87,9 +87,11 @@ CREATE TABLE `categories` (
   KEY `categories_i2` (`id_uppercat`),
   KEY `lastmodified` (`lastmodified`),
   KEY `fk_categories_representative_picture_id` (`representative_picture_id`),
+  KEY `fk_categories_site_id` (`site_id`),
   FULLTEXT KEY `categories_ft_name_comment` (`name`,`comment`) /*!50100 WITH PARSER `ngram` */ ,
   CONSTRAINT `fk_categories_id_uppercat` FOREIGN KEY (`id_uppercat`) REFERENCES `categories` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_categories_representative_picture_id` FOREIGN KEY (`representative_picture_id`) REFERENCES `images` (`id`) ON DELETE SET NULL
+  CONSTRAINT `fk_categories_representative_picture_id` FOREIGN KEY (`representative_picture_id`) REFERENCES `images` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_categories_site_id` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo albums, both physical filesystem-synced and virtual';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -356,7 +358,9 @@ CREATE TABLE `old_permalinks` (
   `date_deleted` datetime DEFAULT NULL COMMENT 'when the permalink was retired',
   `last_hit` datetime DEFAULT NULL COMMENT 'when the dead permalink was last visited',
   `hit` int NOT NULL DEFAULT '0' COMMENT 'visit count against the dead permalink',
-  PRIMARY KEY (`permalink`)
+  PRIMARY KEY (`permalink`),
+  KEY `fk_old_permalinks_cat_id` (`cat_id`),
+  CONSTRAINT `fk_old_permalinks_cat_id` FOREIGN KEY (`cat_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='retired album permalinks, kept to block reuse and shown on the admin permalinks page';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

@@ -9,40 +9,39 @@ use Piwigo\Tests\Fixtures\PluginConfig\TestStoppableEvent;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 
 /**
- * Narrows EventDispatcher's private $handlers property (read via
+ * Narrows EventDispatcher's private $wrapped property (read via
  * Reflection) from ReflectionProperty::getValue()'s mixed return down to
- * its real, internally-guaranteed shape.
+ * its real, internally-guaranteed shape. $wrapped is addEventHandler()'s
+ * own tracked-registration side table -- see EventDispatcher's own
+ * docblock (P32 Stage A3) for why it exists: real dispatch/priority state
+ * now lives inside the composed Symfony dispatcher instead, which offers
+ * no equivalent reflection-friendly seam.
  *
  * @return array<mixed, mixed>
  */
-function eventDispatcherHandlers(EventDispatcher $dispatcher): array
+function eventDispatcherWrapped(EventDispatcher $dispatcher): array
 {
-    $reflection = new ReflectionProperty(EventDispatcher::class, 'handlers');
-    $handlers = $reflection->getValue($dispatcher);
-    if (! is_array($handlers)) {
-        throw new RuntimeException('Expected handlers to be an array');
+    $reflection = new ReflectionProperty(EventDispatcher::class, 'wrapped');
+    $wrapped = $reflection->getValue($dispatcher);
+    if (! is_array($wrapped)) {
+        throw new RuntimeException('Expected wrapped to be an array');
     }
 
-    return $handlers;
+    return $wrapped;
 }
 
 /**
  * @return array<mixed, mixed>
  */
-function eventDispatcherHandlersAt(EventDispatcher $dispatcher, string $event, int $priority): array
+function eventDispatcherWrappedAt(EventDispatcher $dispatcher, string $event): array
 {
-    $handlers = eventDispatcherHandlers($dispatcher);
-    $atEvent = $handlers[$event] ?? null;
+    $wrapped = eventDispatcherWrapped($dispatcher);
+    $atEvent = $wrapped[$event] ?? null;
     if (! is_array($atEvent)) {
-        throw new RuntimeException("Expected handlers[{$event}] to be an array");
+        throw new RuntimeException("Expected wrapped[{$event}] to be an array");
     }
 
-    $atPriority = $atEvent[$priority] ?? null;
-    if (! is_array($atPriority)) {
-        throw new RuntimeException("Expected handlers[{$event}][{$priority}] to be an array");
-    }
-
-    return $atPriority;
+    return $atEvent;
 }
 
 function testNotifyHandler(TestNotifyEvent $e): void {}
@@ -175,7 +174,7 @@ test('removeEventHandler on one handler leaves sibling handlers at the same prio
         ->toBe('hello');
 });
 
-test('removeEventHandler returns false when the priority bucket has handlers but none match', function (): void {
+test('removeEventHandler returns false when the event has handlers registered but none match', function (): void {
     $dispatcher = new EventDispatcher();
     $upper = static function (TestChangeEvent $e): TestChangeEvent {
         $e->value = strtoupper($e->value);
@@ -197,9 +196,8 @@ test('removeEventHandler returns false when the priority bucket has handlers but
 });
 
 test('addTypedHandler appends a new handler alongside others already registered at that priority', function (): void {
-    // Kills a CoalesceRemoveLeft mutation on the `?? []` fallback: if the
-    // existing $priority bucket were unconditionally discarded instead of
-    // reused, only the second-registered handler would survive.
+    // A second registration for the same event must not discard the
+    // first -- both run, in registration order (same default priority).
     $dispatcher = new EventDispatcher();
     $calls = [];
     $dispatcher->addTypedHandler(TestNotifyEvent::class, static function (TestNotifyEvent $e) use (&$calls): void {
@@ -248,8 +246,8 @@ test('removeEventHandler re-indexes the surviving handlers after removing one fr
     // Kills an UnwrapArrayValues mutation on array_values(): without it,
     // removing the middle handler leaves a gapped key structure ([0, 2])
     // rather than a re-indexed list ([0, 1]) -- unobservable through
-    // trigger*() alone (foreach preserves insertion order regardless of
-    // keys), so this reaches into the private $handlers state directly,
+    // dispatch() alone (foreach preserves insertion order regardless of
+    // keys), so this reaches into the private $wrapped state directly,
     // same technique as BlockManagerTest's display_blocks assertions.
     $dispatcher = new EventDispatcher();
     $dispatcher->addEventHandler('e', 'strtoupper');
@@ -258,52 +256,52 @@ test('removeEventHandler re-indexes the surviving handlers after removing one fr
 
     $dispatcher->removeEventHandler('e', 'trim');
 
-    $handlersAt50 = eventDispatcherHandlersAt($dispatcher, 'e', 50);
+    $wrappedAtE = eventDispatcherWrappedAt($dispatcher, 'e');
 
-    expect(array_is_list($handlersAt50))
+    expect(array_is_list($wrappedAtE))
         ->toBeTrue()
-        ->and(array_keys($handlersAt50))
+        ->and(array_keys($wrappedAtE))
         ->toBe([0, 1]);
 });
 
-test('removeEventHandler fully unregisters an event once its only priority bucket becomes empty', function (): void {
+test('removeEventHandler fully unregisters an event once its last handler is removed', function (): void {
     // Kills IfNegated/IdenticalToNotIdentical mutations on
-    // `$handlersAtPriority === []`: an inverted/negated condition takes
-    // the else branch instead, leaving a stale empty bucket (and the event
-    // key) in place rather than unsetting both -- which is invisible to
-    // trigger*() (an empty bucket calls no handlers, same as no bucket at
-    // all), so this asserts on the private $handlers state directly.
+    // `$eventWrapped === []`: an inverted/negated condition takes the
+    // else branch instead, leaving a stale empty entry (the event key) in
+    // $wrapped rather than unsetting it -- which is invisible to
+    // dispatch() (an empty entry calls no handlers either way), so this
+    // asserts on the private $wrapped state directly.
     $dispatcher = new EventDispatcher();
     $dispatcher->addEventHandler('e', 'strtoupper');
 
     $removed = $dispatcher->removeEventHandler('e', 'strtoupper');
 
-    $handlers = eventDispatcherHandlers($dispatcher);
+    $wrapped = eventDispatcherWrapped($dispatcher);
 
     expect($removed)
         ->toBeTrue()
-        ->and($handlers)
+        ->and($wrapped)
         ->not->toHaveKey('e');
 });
 
-test('removeEventHandler reassigns the surviving handlers rather than unsetting the priority bucket', function (): void {
+test('removeEventHandler reassigns the surviving handlers rather than unsetting the event entry', function (): void {
     // Kills the same mutations from the opposite side: with more than one
     // handler still remaining, the (correct) else branch must run instead
-    // of the empty-bucket cleanup branch.
+    // of the empty-entry cleanup branch.
     $dispatcher = new EventDispatcher();
     $dispatcher->addEventHandler('e', 'strtoupper');
     $dispatcher->addEventHandler('e', 'trim');
 
     $removed = $dispatcher->removeEventHandler('e', 'strtoupper');
 
-    $handlers = eventDispatcherHandlers($dispatcher);
-    $handlersAt50 = eventDispatcherHandlersAt($dispatcher, 'e', 50);
+    $wrapped = eventDispatcherWrapped($dispatcher);
+    $wrappedAtE = eventDispatcherWrappedAt($dispatcher, 'e');
 
     expect($removed)
         ->toBeTrue()
-        ->and($handlers)
+        ->and($wrapped)
         ->toHaveKey('e')
-        ->and($handlersAt50)
+        ->and($wrappedAtE)
         ->toHaveCount(1);
 });
 

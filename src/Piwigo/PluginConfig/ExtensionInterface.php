@@ -54,8 +54,13 @@ interface ExtensionInterface
      *
      * Entries are bound `Closure`s (`$this->onFoo(...)`), never
      * method-name strings, matching `Listener\ListenerInterface`'s own
-     * contract -- see that interface's own docblock for why a
-     * string-keyed shape is unbuildable at this project's PHPStan level.
+     * contract -- see that interface's own docblock for why: Symfony's
+     * `EventSubscriberInterface::getSubscribedEvents()` shape (bare
+     * method-name strings) is declared `static`, so it has no `$this` for
+     * a bound closure to reference -- verified both by PHPStan rejecting
+     * `$this` inside a static method and by a real `Error: Using $this
+     * when not in object context` at runtime -- not a PHPStan-rule
+     * collision as an earlier version of that docblock claimed.
      *
      * @return array<class-string, Closure|list<Closure>>
      */

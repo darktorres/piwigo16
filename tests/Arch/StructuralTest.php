@@ -948,15 +948,21 @@ test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls', func
     // Paired with the assertion above, not a separate concern: P27.0 gives
     // EventDispatcher real Psr\EventDispatcher\EventDispatcherInterface
     // conformance via dispatch(), the single verb for both value-transform
-    // and fire-and-forget dispatch -- see that class's own docblock for
-    // why this can never become a delegation to a separate PSR-14
-    // implementation (Symfony's concrete dispatcher
-    // included): the 'trigger' meta-channel this test locks down above is
-    // exactly the array-payload, string-keyed traffic that would
-    // TypeError against PSR-14's object-only dispatch(object $event)
-    // signature. Locking in both facts together guards against a future
-    // change that drops the interface, or one that "simplifies" by
-    // routing 'trigger' through it.
+    // and fire-and-forget dispatch. An earlier version of this comment
+    // claimed dispatch() could "never become a delegation to a separate
+    // PSR-14 implementation (Symfony's concrete dispatcher included)",
+    // reasoning from the 'trigger' meta-channel's array-payload,
+    // string-keyed traffic -- but that reasoning was already stale when
+    // written: the same paragraph above confirms 'trigger' itself was
+    // already deleted (Finding 3, post-DI-campaign shim/facade audit),
+    // which is exactly what made P32 Stage A3's real delegation to
+    // Symfony\Component\EventDispatcher\EventDispatcher safe -- every
+    // event dispatched today is a real, typed object, never a bare
+    // string/array payload, so nothing here TypeErrors against PSR-14's
+    // object-only dispatch(object $event) signature. What this assertion
+    // still guards: a future change reintroducing string-keyed,
+    // non-object dispatch traffic (a new 'trigger'-shaped channel) would
+    // break that assumption again.
     expect(new ReflectionClass(EventDispatcher::class)->implementsInterface(EventDispatcherInterface::class))
         ->toBeTrue();
 });

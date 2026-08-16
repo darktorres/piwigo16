@@ -22,18 +22,34 @@ use Closure;
  * addTypedHandler()`.
  *
  * Entries are bound `Closure`s (`$this->onFoo(...)`), never method-name
- * strings: this codebase's own phpstan-strict-rules config bans variable
- * method calls outright (`method.dynamicName` -- `$obj->{$stringVar}()`
- * or its first-class-callable-syntax form are both flagged, no matter how
- * the string got there), so a later dynamic dispatch step keyed off a
- * stored method name is unbuildable at this project's PHPStan level.
+ * strings, deliberately diverging from Symfony's own `EventSubscriberInterface
+ * ::getSubscribedEvents()` shape -- not because of a PHPStan rule collision
+ * (an earlier version of this docblock claimed `method.dynamicName` bans
+ * this; verified false: that rule only flags a literal `$obj->$var()` AST
+ * node, which this pattern never writes anywhere, and shipmonk/dead-code-
+ * detector's `SymfonyUsageProvider` already has first-class support for
+ * tracing `getSubscribedEvents()`'s string method names as real usages --
+ * confirmed with a throwaway probe class analysed clean under the full,
+ * unscoped `composer analyse`). The real, load-bearing reason:
+ * `EventSubscriberInterface::getSubscribedEvents()` is declared `public
+ * static function`, so it has no `$this` -- confirmed both ways, PHPStan
+ * itself rejects `$this->onFoo(...)` written inside a static method
+ * (`return.type`/`method.nonObject`/`variable.undefined`), and actually
+ * calling it throws a real `Error: Using $this when not in object
+ * context`. Every implementor here (this interface's own listeners,
+ * constructed via real DI resolution; `ExtensionInterface`'s plugins/
+ * themes, constructed via `new $class()`) is a genuine per-request
+ * instance, so a bound closure needs a real, live `$this` -- a static
+ * method can't provide one, which would force registration back onto
+ * bare method-name strings and reopen exactly the case this shape avoids.
  * First-class callable syntax on a literal method name inside each
- * implementor's own `subscribedEvents()` sidesteps this entirely -- the
- * AST always sees a literal `Identifier`, never a variable one. Priority
- * tuples aren't part of this shape either: `EventDispatcher::
- * addTypedHandler()`'s priority param already defaults to 50, and zero
- * real call sites anywhere in `src/Piwigo/` pass a non-default priority
- * today -- add tuple support back only once a real caller needs it.
+ * implementor's own `subscribedEvents()` keeps every registration a real,
+ * renamable, typo-checked reference -- the AST always sees a literal
+ * `Identifier`, never a variable one. Priority tuples aren't part of this
+ * shape either: `EventDispatcher::addTypedHandler()`'s priority param
+ * already defaults to 50, and zero real call sites anywhere in
+ * `src/Piwigo/` pass a non-default priority today -- add tuple support
+ * back only once a real caller needs it.
  */
 interface ListenerInterface
 {

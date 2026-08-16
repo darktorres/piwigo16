@@ -9,8 +9,8 @@ use Error;
 use LogicException;
 use Override;
 use Psr\EventDispatcher\EventDispatcherInterface;
-use Psr\EventDispatcher\StoppableEventInterface;
 use ReflectionFunction;
+use Symfony\Component\EventDispatcher\EventDispatcher as SymfonyEventDispatcher;
 
 /**
  * Plugin event-handler registry, held as a container-shared instance --
@@ -20,30 +20,61 @@ use ReflectionFunction;
  * Implements PSR-14 (`Psr\EventDispatcher\EventDispatcherInterface`) via
  * `dispatch()`, the single verb for both value-transformation ("filter")
  * and fire-and-forget ("notify") dispatch -- matches this codebase's own
- * PSR-11/PSR-7/PSR-15/PSR-3 conformance elsewhere. Not a
- * delegation to Symfony's own concrete `EventDispatcher`: `addEventHandler()`'s
- * own string-keyed legacy registration, `addTypedHandler()`'s priority-bucket
- * ordering (`ksort()` on each event's own priority map), `includePath`-based
- * lazy handler inclusion, and `callablesEqual()`'s custom closure-identity
- * dedup are all Piwigo-specific mechanics Symfony's own dispatcher doesn't
- * provide. Every other method on this class is unrelated to and unaffected
- * by this interface.
+ * PSR-11/PSR-7/PSR-15/PSR-3 conformance elsewhere.
+ *
+ * **P32 Stage A3**: storage/dispatch is now delegated to a real
+ * `Symfony\Component\EventDispatcher\EventDispatcher` (`$inner`), matching
+ * Symfony's own priority convention (higher runs first) natively -- no
+ * more hand-rolled `krsort()`. `addTypedHandler()`'s own `callable
+ * $handler` param is already a real, currently-valid callable by the time
+ * PHP lets it through, so nothing needs wrapping there; `addEventHandler()`
+ * still allows registering a not-yet-existing function name (see its own
+ * comment below), which Symfony's own `callable|array`-typed
+ * `addListener()` would reject eagerly if handed the raw value -- every
+ * `addEventHandler()` registration is wrapped in a small deferred closure
+ * to preserve that, tracked in `$wrapped` so `removeEventHandler()` can
+ * find it again by the caller-visible original callable
+ * (`callablesEqual()`'s dedup semantics, unchanged). `addTypedHandler()`
+ * still delegates to `addEventHandler()` (unchanged, own dedup contract
+ * preserved) rather than calling `$inner->addListener()` directly, so
+ * every registration -- typed or not -- flows through the one tracked
+ * path `removeEventHandler()` already knows how to search.
+ *
+ * `addEventHandler()`/`removeEventHandler()`/`includePath`/
+ * `callablesEqual()` are all still here, unchanged in observable
+ * behaviour -- P32 Stage A4 deletes them for real, once every caller using
+ * them is migrated. `EventHandler` itself is already gone: A3's own
+ * redesign made it genuinely dead the moment `$wrapped` (a plain tuple,
+ * not that value object) replaced it as the tracked-registration side
+ * table, so it was deleted here rather than kept as an unreferenced file
+ * until A4. Not adopting Symfony's own `EventSubscriberInterface`
+ * anywhere in this codebase: see `Listener\ListenerInterface`'s own
+ * docblock for why (a real, verified blocker -- its `getSubscribedEvents()`
+ * is `static`, so it has no `$this` for the bound-closure registration
+ * style every implementor here relies on).
  */
 final class EventDispatcher implements EventDispatcherInterface
 {
-    // 'function' is declared string|array|object rather than PHPStan's
-    // usual `callable` -- PHP's native `callable` type hint validates
-    // callability EAGERLY, at registration time. That matters because
-    // Bootstrap\RequestBootstrap registers 'pwg_image_resize' for the
-    // 'UploadImageResize'/'UploadThumbnailResize' events, but that
-    // function doesn't exist anywhere in this codebase; neither event is
-    // ever actually triggered, so the registration is dead but harmless.
-    // Callability is validated lazily, only at invocation
-    // (call_user_func_array()), never at registration.
+    private SymfonyEventDispatcher $inner;
+
     /**
-     * @var array<string, array<int, list<EventHandler>>>
+     * Tracks every `addEventHandler()` registration (including the ones
+     * `addTypedHandler()` makes on a caller's behalf) as [the original,
+     * caller-visible callable, the deferred wrapper closure actually
+     * registered on `$inner`] pairs, keyed by event -- `removeEventHandler()`
+     * needs this to translate a removal request (given in terms of the
+     * original callable) into the wrapper Symfony's own `removeListener()`
+     * actually has registered; `$inner` alone has no way to look that up,
+     * since two structurally-different closures are never `==`-equal.
+     *
+     * @var array<string, list<array{0: array{0: object|string, 1: string}|object|string, 1: Closure}>>
      */
-    private array $handlers = [];
+    private array $wrapped = [];
+
+    public function __construct()
+    {
+        $this->inner = new SymfonyEventDispatcher();
+    }
 
     /**
      * Test-only. Clears every registered handler back to a pristine state
@@ -56,13 +87,25 @@ final class EventDispatcher implements EventDispatcherInterface
      */
     public function reset(): void
     {
-        $this->handlers = [];
+        $this->inner = new SymfonyEventDispatcher();
+        $this->wrapped = [];
     }
 
     /**
-     * Higher priority runs first, matching Symfony's own `EventDispatcher`
-     * convention (the concrete dispatcher `../piwigo16-rewrite`'s own P27
-     * reference implementation uses) -- established by `krsort()` below.
+     * 'function' is declared string|array|object rather than PHPStan's
+     * usual `callable` -- PHP's native `callable` type hint validates
+     * callability EAGERLY, at registration time. That matters because
+     * Bootstrap\RequestBootstrap registers 'pwg_image_resize' for the
+     * 'UploadImageResize'/'UploadThumbnailResize' events, but that
+     * function doesn't exist anywhere in this codebase; neither event is
+     * ever actually triggered, so the registration is dead but harmless.
+     * Callability is validated lazily, only at invocation
+     * (call_user_func()), never at registration -- the same reason every
+     * registration here is wrapped in a deferred closure rather than
+     * handed to `$inner->addListener()` as-is: Symfony's own `callable|
+     * array`-typed parameter would validate `$func` eagerly the moment
+     * PHP binds the argument, which is exactly the eager check this
+     * class exists to not do.
      *
      * @param array{0: object|string, 1: string}|object|string $func
      */
@@ -72,19 +115,27 @@ final class EventDispatcher implements EventDispatcherInterface
         int $priority = 50,
         ?string $includePath = null,
     ): bool {
-        if (isset($this->handlers[$event][$priority])) {
-            foreach ($this->handlers[$event][$priority] as $handler) {
-                if (self::callablesEqual($handler->function, $func)) {
-                    return false;
-                }
+        foreach ($this->wrapped[$event] ?? [] as [$existingFunc]) {
+            if (self::callablesEqual($existingFunc, $func)) {
+                return false;
             }
         }
 
-        $handlersAtPriority = $this->handlers[$event][$priority] ?? [];
-        $handlersAtPriority[] = new EventHandler($func, $includePath);
-        $this->handlers[$event][$priority] = $handlersAtPriority;
+        $wrapper = static function (object $dispatchedEvent) use ($func, $includePath): void {
+            if ($includePath !== null && $includePath !== '') {
+                include_once $includePath;
+            }
 
-        krsort($this->handlers[$event]);
+            if (! is_callable($func)) {
+                throw new Error('Event handler is not callable.');
+            }
+
+            call_user_func($func, $dispatchedEvent);
+        };
+
+        $this->wrapped[$event][] = [$func, $wrapper];
+        $this->inner->addListener($event, $wrapper, $priority);
+
         return true;
     }
 
@@ -93,28 +144,21 @@ final class EventDispatcher implements EventDispatcherInterface
      */
     public function removeEventHandler(string $event, string|array|object $func, int $priority = 50): bool
     {
-        if (! isset($this->handlers[$event][$priority])) {
-            return false;
-        }
-
-        $handlersAtPriority = $this->handlers[$event][$priority];
-
-        foreach ($handlersAtPriority as $i => $handler) {
-            if (! self::callablesEqual($handler->function, $func)) {
+        foreach ($this->wrapped[$event] ?? [] as $i => [$existingFunc, $wrapper]) {
+            if (! self::callablesEqual($existingFunc, $func)) {
                 continue;
             }
 
-            unset($handlersAtPriority[$i]);
-            $handlersAtPriority = array_values($handlersAtPriority);
+            $eventWrapped = $this->wrapped[$event];
+            unset($eventWrapped[$i]);
 
-            if ($handlersAtPriority === []) {
-                unset($this->handlers[$event][$priority]);
-                if ($this->handlers[$event] === []) {
-                    unset($this->handlers[$event]);
-                }
+            if ($eventWrapped === []) {
+                unset($this->wrapped[$event]);
             } else {
-                $this->handlers[$event][$priority] = $handlersAtPriority;
+                $this->wrapped[$event] = array_values($eventWrapped);
             }
+
+            $this->inner->removeListener($event, $wrapper);
 
             return true;
         }
@@ -189,9 +233,14 @@ final class EventDispatcher implements EventDispatcherInterface
      * returned for PSR-14 interface conformance and call-site chaining
      * convenience.
      *
-     * Stoppable: if `$event` implements `Psr\EventDispatcher\
-     * StoppableEventInterface` and `isPropagationStopped()` becomes true
-     * after a handler runs, no further handlers are called.
+     * Delegates straight to `$inner`: Symfony's own `dispatch()` already
+     * handles priority ordering and stops calling further handlers once
+     * `Psr\EventDispatcher\StoppableEventInterface::isPropagationStopped()`
+     * turns true, identically to what this method used to do by hand.
+     * `call_user_func()`'s own native "undefined function" `Error` (raised
+     * from inside each `addEventHandler()`-registered deferred wrapper --
+     * see that method's own docblock) already reproduces the "not
+     * callable" guard this method used to raise explicitly.
      *
      * @template T of object
      * @param T $event
@@ -200,28 +249,6 @@ final class EventDispatcher implements EventDispatcherInterface
     #[Override]
     public function dispatch(object $event): object
     {
-        $eventClass = $event::class;
-
-        if (isset($this->handlers[$eventClass])) {
-            foreach ($this->handlers[$eventClass] as $handlersAtPriority) {
-                foreach ($handlersAtPriority as $handler) {
-                    if ($handler->includePath !== null && $handler->includePath !== '') {
-                        include_once $handler->includePath;
-                    }
-
-                    if (! is_callable($handler->function)) {
-                        throw new Error("Event handler for '{$eventClass}' is not callable.");
-                    }
-
-                    call_user_func($handler->function, $event);
-
-                    if ($event instanceof StoppableEventInterface && $event->isPropagationStopped()) {
-                        break 2;
-                    }
-                }
-            }
-        }
-
-        return $event;
+        return $this->inner->dispatch($event);
     }
 }

@@ -7,6 +7,7 @@ namespace Piwigo\Metadata;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Image\ImageEntity;
@@ -64,7 +65,7 @@ final readonly class MetadataRepository
             ->from(CategoryEntity::class, 'c')
             ->where('c.siteId = :siteId')
             ->andWhere('c.dir IS NOT NULL')
-            ->setParameter('siteId', $siteId);
+            ->setParameter('siteId', SiteId::from($siteId));
 
         if (is_numeric($categoryId)) {
             if ($recursive) {

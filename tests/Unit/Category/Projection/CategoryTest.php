@@ -8,6 +8,7 @@ use Piwigo\Category\Projection\Category;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 function fullCategoryEntity(): CategoryEntity
@@ -19,7 +20,7 @@ function fullCategoryEntity(): CategoryEntity
         dir: 'sample_dir',
         rank: 2,
         status: CategoryStatus::Private,
-        siteId: 1,
+        siteId: SiteId::from(1),
         visible: true,
         representativePictureId: ImageId::from(42),
         uppercats: '1,3',

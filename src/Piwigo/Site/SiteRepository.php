@@ -10,6 +10,7 @@ use Doctrine\ORM\Query\Expr\Join;
 use Override;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\SiteGalleriesUrlLookupInterface;
+use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Site\Projection\Site;
 
@@ -181,10 +182,10 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
         // an ORM association between them (storage_category_id is a plain
         // int column, not a mapped ManyToOne), so the join is expressed as
         // an arbitrary cross-entity DQL JOIN ... WITH, same pattern already
-        // used by GroupRepository::getAccessibleCategoryIdsForUser(). Neither
-        // CategoryEntity::$siteId nor ImageEntity's id/storageCategoryId use
-        // a custom Doctrine Type, so array-hydrated values are plain scalars,
-        // same as the previous raw-DBAL row shape.
+        // used by GroupRepository::getAccessibleCategoryIdsForUser().
+        // CategoryEntity::$siteId is SiteId-typed -- getArrayResult()
+        // hydrates 'site_id' through it (Gotcha #1), unwrapped below.
+        // ImageEntity's id/storageCategoryId stay plain scalars.
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('c.siteId AS site_id', 'COUNT(DISTINCT c.id) AS nb_categories', 'COUNT(i.id) AS nb_images')
@@ -204,8 +205,8 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
             $siteId = $row['site_id'] ?? null;
             $nbCategories = $row['nb_categories'] ?? null;
             $nbImages = $row['nb_images'] ?? null;
-            if (is_numeric($siteId) && is_numeric($nbCategories) && is_numeric($nbImages)) {
-                $bySiteId[(int) $siteId] = [
+            if ($siteId instanceof SiteId && is_numeric($nbCategories) && is_numeric($nbImages)) {
+                $bySiteId[$siteId->value] = [
                     'nb_categories' => (int) $nbCategories,
                     'nb_images' => (int) $nbImages,
                 ];

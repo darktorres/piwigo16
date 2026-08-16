@@ -42,6 +42,7 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
@@ -710,7 +711,7 @@ final readonly class CategoryRepository
         return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
             ->where('c.siteId = :siteId')
-            ->setParameter('siteId', $siteId)
+            ->setParameter('siteId', SiteId::from($siteId))
             ->getQuery()
             ->getSingleColumnResult()));
     }
@@ -1682,7 +1683,7 @@ final readonly class CategoryRepository
             $result[] = new CategoryFulldirRow(
                 id: $row['id']->value,
                 uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                siteId: is_numeric($row['site_id'] ?? null) ? (int) $row['site_id'] : null,
+                siteId: ($row['site_id'] ?? null) instanceof SiteId ? $row['site_id']->value : null,
             );
         }
 
@@ -2222,7 +2223,7 @@ final readonly class CategoryRepository
         return self::narrowIdNameUppercatsRankRows($this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
             ->where('c.siteId = :siteId')
-            ->setParameter('siteId', $siteId)
+            ->setParameter('siteId', SiteId::from($siteId))
             ->getQuery()
             ->getArrayResult());
     }
@@ -3769,7 +3770,7 @@ final readonly class CategoryRepository
             ->select('c.id AS id', 'c.uppercats AS uppercats', 'c.globalRank AS global_rank', 'c.status AS status', 'c.visible AS visible')
             ->where('c.dir IS NOT NULL')
             ->andWhere('c.siteId = :siteId')
-            ->setParameter('siteId', $siteId);
+            ->setParameter('siteId', SiteId::from($siteId));
 
         if ($catId !== null) {
             if ($recursive) {

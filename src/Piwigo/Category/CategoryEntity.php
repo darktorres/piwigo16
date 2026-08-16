@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SiteId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Db\HasLastModified;
 
@@ -36,7 +37,10 @@ use Piwigo\Db\HasLastModified;
  * does, regardless of column. `representative_picture_id` is `ImageId`-typed
  * the same way (`fk_categories_representative_picture_id`, `ON DELETE SET
  * NULL`) -- `Category\Projection\Category::$representativePictureId` stays
- * plain `?int` regardless, unwrapping `->value` in `fromEntity()`.
+ * plain `?int` regardless, unwrapping `->value` in `fromEntity()`. `siteId`
+ * is `SiteId`-typed the same way (`fk_categories_site_id`, `ON DELETE
+ * CASCADE`) -- `sites.id` itself stays a plain `?int` primary key (out of
+ * `0.3`'s scope, same as `search.id`).
  *
  * Only a handful of CategoryRepository's 65 methods go through this
  * entity -- the large majority are bulk id-list operations against a
@@ -83,8 +87,8 @@ final class CategoryEntity implements HasLastModified
         public ?int $rank,
         #[ORM\Column(type: 'string', length: 10, enumType: CategoryStatus::class)]
         public CategoryStatus $status,
-        #[ORM\Column(name: 'site_id', type: 'integer', nullable: true)]
-        public ?int $siteId,
+        #[ORM\Column(name: 'site_id', type: 'site_id', nullable: true)]
+        public ?SiteId $siteId,
         #[ORM\Column(type: 'boolean')]
         public bool $visible,
         #[ORM\Column(name: 'representative_picture_id', type: 'image_id', nullable: true)]

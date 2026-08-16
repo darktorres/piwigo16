@@ -6,7 +6,7 @@ namespace Piwigo\Category\Projection;
 
 /**
  * {@see \Piwigo\Category\CategoryRepository::findRankInfoByIds()}'s own
- * row shape -- {@see \Piwigo\Ws\Categories::setRank()}'s real (and
+ * row shape -- {@see \Piwigo\Ws\Categories\SetRankHandler}'s real (and
  * only) consumer.
  */
 final readonly class CategoryRankInfoRow

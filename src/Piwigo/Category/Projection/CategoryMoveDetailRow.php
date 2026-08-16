@@ -6,7 +6,7 @@ namespace Piwigo\Category\Projection;
 
 /**
  * {@see \Piwigo\Category\CategoryRepository::findMoveDetailsByIds()}'s own
- * row shape -- {@see \Piwigo\Ws\Categories::move()}'s real (and only)
+ * row shape -- {@see \Piwigo\Ws\Categories\MoveHandler}'s real (and only)
  * consumer.
  */
 final readonly class CategoryMoveDetailRow

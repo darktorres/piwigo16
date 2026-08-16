@@ -599,7 +599,9 @@ final readonly class SearchService
      * <forbidden>` shape. $criterion is AND-combined with $forbidden
      * unparenthesized -- every real criterion built above already wraps
      * its own internal OR-joined clauses in parens itself when it has any,
-     * same convention {@see \Piwigo\Ws\Categories} already established.
+     * same convention
+     * {@see \Piwigo\Category\CategoryRepository::findIdsAndImageOrderWithConditions()}
+     * already established.
      *
      * @return list<int>
      */

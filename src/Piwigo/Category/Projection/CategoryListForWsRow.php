@@ -6,7 +6,7 @@ namespace Piwigo\Category\Projection;
 
 /**
  * {@see \Piwigo\Category\CategoryRepository::findListForWs()}'s own row
- * shape -- {@see \Piwigo\Ws\Categories::getList()}'s real (and only)
+ * shape -- {@see \Piwigo\Ws\Categories\GetListHandler}'s real (and only)
  * consumer, its paginated category rollup. This is a raw
  * `Connection::fetchAllAssociative()` DBAL row (no Doctrine Type
  * conversion applies, unlike this domain's DQL-backed methods), so each

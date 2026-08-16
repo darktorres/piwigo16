@@ -34,7 +34,7 @@ final readonly class ApiKeySummary
     ) {}
 
     /**
-     * {@see \Piwigo\Ws\Users::getApiKey()} returns a list of these
+     * {@see \Piwigo\Ws\Users\GetApiKeyHandler} returns a list of these
      * directly as the WS RPC response -- unbox to array at that
      * wire-format boundary.
      *

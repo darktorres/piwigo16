@@ -319,7 +319,7 @@ final class WsTopLevelTest extends ContractTestCase
                 ];
                 $handler = Kernel::container()->get(GetMissingDerivativesHandler::class);
                 self::assertInstanceOf(GetMissingDerivativesHandler::class, $handler);
-                $result = $handler($params, $service);
+                $result = $handler($params);
 
                 self::assertSame([], $result);
             } finally {

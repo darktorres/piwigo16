@@ -19,12 +19,11 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
-use Piwigo\Core\WsError;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -52,7 +51,7 @@ final readonly class GetListHandler implements WsAction
      * @return WsErrorResponse|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<mixed>}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = GetListParams::fromArray($params);
 

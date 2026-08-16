@@ -17,7 +17,6 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryService;
 use Piwigo\Image\ImageRepository;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -42,7 +41,7 @@ final readonly class LogHandler implements WsAction
      * matching the god-class method's own `void`-declared original.
      */
     #[Override]
-    public function __invoke(array $params, Server $server): mixed
+    public function __invoke(array $params): mixed
     {
         $input = LogParams::fromArray($params);
 

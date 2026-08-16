@@ -16,7 +16,6 @@ use Override;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Rate\RateService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -33,7 +32,7 @@ final readonly class DeleteHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): int
+    public function __invoke(array $params): int
     {
         $input = DeleteParams::fromArray($params);
 

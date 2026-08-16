@@ -16,9 +16,8 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
-use Piwigo\Core\WsError;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -36,7 +35,7 @@ final readonly class AddChunkHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): ?WsErrorResponse
+    public function __invoke(array $params): ?WsErrorResponse
     {
         $input = AddChunkParams::fromArray($params);
 

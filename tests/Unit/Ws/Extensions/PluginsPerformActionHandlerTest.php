@@ -8,7 +8,6 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Ws\Extensions\PluginsPerformActionHandler;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -70,16 +69,11 @@ test('returns a 403 WsErrorResponse when the submitted pwg_token does not match 
         CurrentTemplateTestFactory::get()->set($template);
 
         $handler = pwgPluginsPerformActionHandlerTestSubject();
-        $server = Kernel::container()->get(Server::class);
-        if (! $server instanceof Server) {
-            throw new LogicException('Container returned an unexpected type for ' . Server::class);
-        }
-
         $result = $handler([
             'action' => 'activate',
             'plugin' => 'my_plugin',
             'pwg_token' => 'wrong-token',
-        ], $server);
+        ]);
 
         expect($result)
             ->toBeInstanceOf(WsErrorResponse::class);

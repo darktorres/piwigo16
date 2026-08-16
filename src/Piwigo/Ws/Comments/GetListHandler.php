@@ -29,7 +29,6 @@ use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 
@@ -57,7 +56,7 @@ final readonly class GetListHandler implements WsAction
      * @return WsErrorResponse|array<string, mixed>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         if (! $this->currentConfig->activateComments) {
             return new WsErrorResponse(403, 'Comments are disabled');

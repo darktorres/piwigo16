@@ -2,23 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Auth\AccessControl;
-use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Common\ValueObject\LangCode;
-use Piwigo\Common\ValueObject\ThemeId;
-use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Users\User;
-use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Categories\AddHandler;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -42,28 +28,6 @@ function pwgCategoriesAddHandlerTestSubject(): AddHandler
     return $handler;
 }
 
-function pwgCategoriesAddHandlerTestServer(): Server
-{
-    $currentConfig = new CurrentConfig();
-    $currentUser = new CurrentUser($currentConfig);
-    $currentUser->set(new User(
-        id: UserId::from(1),
-        username: null,
-        email: null,
-        language: LangCode::from('en_UK'),
-        theme: ThemeId::from('default'),
-        status: UserStatus::Admin,
-        enabledHigh: false,
-    ));
-    $accessControl = new AccessControl(
-        HtmlServiceTestFactory::build(),
-        new AccessControlTestFakeRedirectServiceNeverCalled(),
-        new AccessLevelChecker($currentUser, $currentConfig),
-    );
-
-    return new Server(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig, Kernel::container());
-}
-
 beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 });
@@ -74,7 +38,6 @@ afterEach(function (): void {
 
 test('returns a 403 WsErrorResponse when a submitted pwg_token does not match the real CSRF token', function (): void {
     $handler = pwgCategoriesAddHandlerTestSubject();
-    $server = pwgCategoriesAddHandlerTestServer();
 
     $result = $handler([
         'name' => 'New album',
@@ -85,7 +48,7 @@ test('returns a 403 WsErrorResponse when a submitted pwg_token does not match th
         'commentable' => true,
         'position' => null,
         'pwg_token' => 'wrong-token',
-    ], $server);
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);
@@ -97,7 +60,6 @@ test('returns a 403 WsErrorResponse when a submitted pwg_token does not match th
 
 test('returns a 403 WsErrorResponse when pwg_token is absent entirely', function (): void {
     $handler = pwgCategoriesAddHandlerTestSubject();
-    $server = pwgCategoriesAddHandlerTestServer();
 
     $result = $handler([
         'name' => 'New album',
@@ -108,7 +70,7 @@ test('returns a 403 WsErrorResponse when pwg_token is absent entirely', function
         'commentable' => true,
         'position' => null,
         'pwg_token' => null,
-    ], $server);
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);

@@ -11,7 +11,6 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Images\DeleteOrphansHandler;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -30,16 +29,6 @@ function pwgImagesDeleteOrphansHandlerTestSubject(): DeleteOrphansHandler
     }
 
     return $handler;
-}
-
-function pwgImagesDeleteOrphansHandlerTestServer(): Server
-{
-    $server = Kernel::container()->get(Server::class);
-    if (! $server instanceof Server) {
-        throw new LogicException('Container returned an unexpected type for ' . Server::class);
-    }
-
-    return $server;
 }
 
 beforeEach(function (): void {
@@ -65,7 +54,7 @@ test('deleteOrphans returns a 403 WsErrorResponse when the submitted pwg_token d
     $result = $handler([
         'block_size' => 1000,
         'pwg_token' => 'wrong-token',
-    ], pwgImagesDeleteOrphansHandlerTestServer());
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);

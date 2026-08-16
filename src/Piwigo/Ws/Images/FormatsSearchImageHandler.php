@@ -16,7 +16,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\StringHelper;
 use Piwigo\Image\ImageService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -45,7 +44,7 @@ final readonly class FormatsSearchImageHandler implements WsAction
      * @return array<int|string, array<string, mixed>>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         $input = FormatsSearchImageParams::fromArray($params);
 

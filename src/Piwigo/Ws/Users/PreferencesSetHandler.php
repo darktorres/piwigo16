@@ -12,11 +12,10 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Users;
 
 use Override;
-use Piwigo\Core\WsError;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -36,7 +35,7 @@ final readonly class PreferencesSetHandler implements WsAction
      *   key-value shape (User.php's own $preferences docblock)
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = PreferencesSetParams::fromArray($params);
 

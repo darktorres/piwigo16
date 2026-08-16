@@ -17,7 +17,6 @@ use Piwigo\Auth\ApiKeyService;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -40,7 +39,7 @@ final readonly class RevokeApiKeyHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|string
+    public function __invoke(array $params): WsErrorResponse|string
     {
         $logger = $this->currentLogger->get();
 

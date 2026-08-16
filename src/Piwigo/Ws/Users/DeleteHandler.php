@@ -18,7 +18,6 @@ use Piwigo\Lang\Translator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -40,7 +39,7 @@ final readonly class DeleteHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|string
+    public function __invoke(array $params): WsErrorResponse|string
     {
         $input = DeleteParams::fromArray($params);
 

@@ -14,13 +14,12 @@ namespace Piwigo\Ws\Tags;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\TagId;
-use Piwigo\Core\WsError;
 use Piwigo\Event\Album\MergeTags;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -40,7 +39,7 @@ final readonly class MergeHandler implements WsAction
      * @return WsErrorResponse|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: list<int>}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = MergeParams::fromArray($params);
 

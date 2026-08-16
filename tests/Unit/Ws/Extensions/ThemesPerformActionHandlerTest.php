@@ -14,7 +14,6 @@ use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Extensions\ThemesPerformActionHandler;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -120,16 +119,11 @@ test('returns a 403 WsErrorResponse when the submitted pwg_token does not match 
         CurrentTemplateTestFactory::get()->set($template);
 
         $handler = pwgThemesPerformActionHandlerTestSubject();
-        $server = Kernel::container()->get(Server::class);
-        if (! $server instanceof Server) {
-            throw new LogicException('Container returned an unexpected type for ' . Server::class);
-        }
-
         $result = $handler([
             'action' => 'activate',
             'theme' => 'my_theme',
             'pwg_token' => 'wrong-token',
-        ], $server);
+        ]);
 
         expect($result)
             ->toBeInstanceOf(WsErrorResponse::class);
@@ -154,16 +148,11 @@ test('returns a 403 WsErrorResponse when the user is not a webmaster, for a real
         pwgThemesPerformActionHandlerTestSetUser(isWebmaster: false);
 
         $handler = pwgThemesPerformActionHandlerTestSubject();
-        $server = Kernel::container()->get(Server::class);
-        if (! $server instanceof Server) {
-            throw new LogicException('Container returned an unexpected type for ' . Server::class);
-        }
-
         $result = $handler([
             'action' => 'activate',
             'theme' => 'my_theme',
             'pwg_token' => pwgThemesPerformActionHandlerTestRealToken(),
-        ], $server);
+        ]);
 
         expect($result)
             ->toBeInstanceOf(WsErrorResponse::class);

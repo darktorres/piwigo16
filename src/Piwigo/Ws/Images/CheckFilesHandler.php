@@ -18,7 +18,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 
@@ -39,7 +38,7 @@ final readonly class CheckFilesHandler implements WsAction
      * @return WsErrorResponse|array<string, string>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = CheckFilesParams::fromArray($params);
 

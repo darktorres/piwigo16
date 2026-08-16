@@ -15,7 +15,6 @@ use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthService;
 use Piwigo\Core\ApiKeyRequestFlag;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 
@@ -36,7 +35,7 @@ final readonly class LogoutHandler implements WsAction
      *   unvalidated request array, but the body doesn't read it.
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|true
+    public function __invoke(array $params): WsErrorResponse|true
     {
         if ($this->apiKeyRequestFlag->isActive()) {
             return new WsErrorResponse(401, 'Cannot use this method with an api key');

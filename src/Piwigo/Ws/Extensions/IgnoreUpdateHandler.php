@@ -16,7 +16,6 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\ExtensionUpdateCachePool;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -37,7 +36,7 @@ final readonly class IgnoreUpdateHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|true
+    public function __invoke(array $params): WsErrorResponse|true
     {
         // No define('IN_ADMIN', true) or include_once
         // admin/include/functions.php here: IN_ADMIN has no reader left in

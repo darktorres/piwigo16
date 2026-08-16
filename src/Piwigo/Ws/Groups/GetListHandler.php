@@ -15,13 +15,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Core\WsError;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\Projection\GroupListing;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -38,7 +37,7 @@ final readonly class GetListHandler implements WsAction
      * @return WsErrorResponse|array{paging: NamedStruct, groups: NamedArray}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         return $this->resolve($params);
     }

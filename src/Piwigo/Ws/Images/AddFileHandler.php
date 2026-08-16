@@ -20,7 +20,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\Projection\UploadInfo;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 
@@ -45,7 +44,7 @@ final readonly class AddFileHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|bool|null
+    public function __invoke(array $params): WsErrorResponse|bool|null
     {
         $input = AddFileParams::fromArray($params);
 

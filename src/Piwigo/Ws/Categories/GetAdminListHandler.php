@@ -21,7 +21,6 @@ use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\NamedArray;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -43,7 +42,7 @@ final readonly class GetAdminListHandler implements WsAction
      * @return array<string, mixed>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         $input = GetAdminListParams::fromArray($params);
         $additional_output = array_map(trim(...), explode(',', $input->additionalOutput ?? ''));

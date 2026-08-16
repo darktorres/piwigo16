@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Ws;
 
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsParamException;
 
@@ -16,7 +15,7 @@ final class ServerTestFakeWsActionThrows implements WsAction
     /**
      * @param array<mixed> $params
      */
-    public function __invoke(array $params, Server $server): never
+    public function __invoke(array $params): never
     {
         throw new WsParamException('Bad params');
     }

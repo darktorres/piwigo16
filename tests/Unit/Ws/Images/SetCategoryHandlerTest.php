@@ -11,7 +11,6 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Images\SetCategoryHandler;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -30,16 +29,6 @@ function pwgImagesSetCategoryHandlerTestSubject(): SetCategoryHandler
     }
 
     return $handler;
-}
-
-function pwgImagesSetCategoryHandlerTestServer(): Server
-{
-    $server = Kernel::container()->get(Server::class);
-    if (! $server instanceof Server) {
-        throw new LogicException('Container returned an unexpected type for ' . Server::class);
-    }
-
-    return $server;
 }
 
 beforeEach(function (): void {
@@ -67,7 +56,7 @@ test('setCategory returns a 403 WsErrorResponse when the submitted pwg_token doe
         'category_id' => 1,
         'action' => 'associate',
         'pwg_token' => 'wrong-token',
-    ], pwgImagesSetCategoryHandlerTestServer());
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);

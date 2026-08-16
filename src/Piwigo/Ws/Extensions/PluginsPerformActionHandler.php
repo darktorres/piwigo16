@@ -33,7 +33,6 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -67,7 +66,7 @@ final readonly class PluginsPerformActionHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|true
+    public function __invoke(array $params): WsErrorResponse|true
     {
         $template = $this->currentTemplate->get();
         $input = PluginsPerformActionParams::fromArray($params);

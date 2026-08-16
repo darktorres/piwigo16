@@ -19,7 +19,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\PageState;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -44,7 +43,7 @@ final readonly class MoveHandler implements WsAction
      * @return WsErrorResponse|array{new_ariane_string: string, updated_cats: array<int, array{cat_id: string, nb_sub_photos: int}>}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = MoveParams::fromArray($params);
 

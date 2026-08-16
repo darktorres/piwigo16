@@ -18,14 +18,13 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\WsError;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserInfoUpdateFailureReason;
 use Piwigo\Users\UserInfoUpdateInput;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -49,7 +48,7 @@ final readonly class SetMyInfoHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|string
+    public function __invoke(array $params): WsErrorResponse|string
     {
         $input = SetMyInfoParams::fromArray($params);
 

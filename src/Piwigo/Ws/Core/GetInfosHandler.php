@@ -20,7 +20,6 @@ use Piwigo\Image\ImageService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\NamedArray;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -44,7 +43,7 @@ final readonly class GetInfosHandler implements WsAction
      * @return array{infos: NamedArray}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         $infos = [];
         $infos['version'] = AppInfo::VERSION;

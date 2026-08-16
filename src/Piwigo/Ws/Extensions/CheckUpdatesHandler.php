@@ -16,7 +16,6 @@ use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Core\AppInfo;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -37,7 +36,7 @@ final readonly class CheckUpdatesHandler implements WsAction
      * @return array{piwigo_need_update: bool|null, ext_need_update: bool|null}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         $coreUpdateService = $this->coreUpdateService;
         $updateChecker = $this->extensionUpdateChecker;

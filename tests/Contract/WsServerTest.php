@@ -8,10 +8,10 @@ use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Core\WsError;
 use Piwigo\Db\DbConnection;
 use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\WsParamType;
 

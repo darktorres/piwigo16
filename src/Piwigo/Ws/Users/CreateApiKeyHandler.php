@@ -16,7 +16,6 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -39,7 +38,7 @@ final readonly class CreateApiKeyHandler implements WsAction
      * @return WsErrorResponse|array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $logger = $this->currentLogger->get();
 

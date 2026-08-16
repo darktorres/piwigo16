@@ -15,7 +15,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -32,7 +31,7 @@ final readonly class CaddieAddHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): int
+    public function __invoke(array $params): int
     {
         $input = CaddieAddParams::fromArray($params);
 

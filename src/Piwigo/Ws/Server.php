@@ -18,7 +18,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\ConnectedWith;
 use Piwigo\Core\ConnectedWithSession;
-use Piwigo\Core\WsError;
 use Piwigo\Event\Ws\SendResponse;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -510,7 +509,7 @@ final class Server
                 $handler = $this->container->get($handlerClass);
                 assert($handler instanceof WsAction);
                 try {
-                    $result = $handler($params, $this);
+                    $result = $handler($params);
                 } catch (WsParamException $e) {
                     return new WsErrorResponse(403, $e->getMessage());
                 } catch (UnsupportedMediaTypeException $e) {

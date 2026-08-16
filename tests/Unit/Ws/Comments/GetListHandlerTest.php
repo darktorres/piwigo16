@@ -2,24 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Auth\AccessControl;
-use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Common\ValueObject\LangCode;
-use Piwigo\Common\ValueObject\ThemeId;
-use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Users\User;
-use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Comments\GetListHandler;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -50,28 +36,6 @@ function pwgGetListHandlerTestSubject(): GetListHandler
  * unregistered Server only needs to satisfy the type, same rationale as
  * PermissionsTest.php's own pwgPermissionsTestServer() helper.
  */
-function pwgGetListHandlerTestServer(): Server
-{
-    $currentConfig = new CurrentConfig();
-    $currentUser = new CurrentUser($currentConfig);
-    $currentUser->set(new User(
-        id: UserId::from(1),
-        username: null,
-        email: null,
-        language: LangCode::from('en_UK'),
-        theme: ThemeId::from('default'),
-        status: UserStatus::Admin,
-        enabledHigh: false,
-    ));
-    $accessControl = new AccessControl(
-        HtmlServiceTestFactory::build(),
-        new AccessControlTestFakeRedirectServiceNeverCalled(),
-        new AccessLevelChecker($currentUser, $currentConfig),
-    );
-
-    return new Server(new EventDispatcher(), $accessControl, new ApiKeyRequestFlag(), $currentConfig, Kernel::container());
-}
-
 /**
  * @return array{status: string, search: string|null, f_min_date: string|null, f_max_date: string|null, page: int, per_page: int}
  */
@@ -99,9 +63,8 @@ afterEach(function (): void {
 test('returns a 403 WsErrorResponse when comments are disabled', function (): void {
     CurrentConfigTestFactory::get()->activateComments = false;
     $handler = pwgGetListHandlerTestSubject();
-    $server = pwgGetListHandlerTestServer();
 
-    $result = $handler(pwgGetListHandlerTestBaseParams(), $server);
+    $result = $handler(pwgGetListHandlerTestBaseParams());
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);
@@ -116,12 +79,11 @@ test('returns a 403 WsErrorResponse when comments are disabled', function (): vo
 test('returns a 401 WsErrorResponse for a status outside the allowlist', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
     $handler = pwgGetListHandlerTestSubject();
-    $server = pwgGetListHandlerTestServer();
 
     $result = $handler([
         ...pwgGetListHandlerTestBaseParams(),
         'status' => 'not-a-real-status',
-    ], $server);
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);
@@ -136,12 +98,11 @@ test('returns a 401 WsErrorResponse for a status outside the allowlist', functio
 test('returns a 401 WsErrorResponse for a per_page outside the allowed set', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
     $handler = pwgGetListHandlerTestSubject();
-    $server = pwgGetListHandlerTestServer();
 
     $result = $handler([
         ...pwgGetListHandlerTestBaseParams(),
         'per_page' => 7,
-    ], $server);
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);
@@ -156,12 +117,11 @@ test('returns a 401 WsErrorResponse for a per_page outside the allowed set', fun
 test('returns a 401 WsErrorResponse for an unparsable f_min_date', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
     $handler = pwgGetListHandlerTestSubject();
-    $server = pwgGetListHandlerTestServer();
 
     $result = $handler([
         ...pwgGetListHandlerTestBaseParams(),
         'f_min_date' => 'not-a-real-date',
-    ], $server);
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);
@@ -176,12 +136,11 @@ test('returns a 401 WsErrorResponse for an unparsable f_min_date', function (): 
 test('returns a 401 WsErrorResponse for an unparsable f_max_date', function (): void {
     CurrentConfigTestFactory::get()->activateComments = true;
     $handler = pwgGetListHandlerTestSubject();
-    $server = pwgGetListHandlerTestServer();
 
     $result = $handler([
         ...pwgGetListHandlerTestBaseParams(),
         'f_max_date' => 'not-a-real-date',
-    ], $server);
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);

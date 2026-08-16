@@ -16,12 +16,11 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
-use Piwigo\Core\WsError;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Ws\NamedStruct;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -42,7 +41,7 @@ final readonly class AddCommentHandler implements WsAction
      * @return WsErrorResponse|array{comment: NamedStruct}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = AddCommentParams::fromArray($params);
 

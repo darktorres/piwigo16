@@ -15,7 +15,6 @@ use Override;
 use Piwigo\Category\CategoryService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Ws\NamedArray;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -43,7 +42,7 @@ final readonly class AddHandler implements WsAction
      *   recursive-dispatch removal)
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = AddParams::fromArray($params);
 

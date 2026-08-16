@@ -279,7 +279,7 @@ final readonly class UserBootstrap
             if (! $loginHandler instanceof LoginHandler) {
                 throw new LogicException('Container returned an unexpected type for ' . LoginHandler::class);
             }
-            $login = $loginHandler($credentials, $service);
+            $login = $loginHandler($credentials);
 
             if ($login !== true) {
                 throw new ResponseReadyException($service->sendResponse($login));

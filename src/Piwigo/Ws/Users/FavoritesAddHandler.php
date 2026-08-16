@@ -17,7 +17,6 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Image\ImageService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 
@@ -37,7 +36,7 @@ final readonly class FavoritesAddHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|true
+    public function __invoke(array $params): WsErrorResponse|true
     {
         $input = FavoritesAddParams::fromArray($params);
 

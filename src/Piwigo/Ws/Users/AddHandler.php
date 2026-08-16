@@ -15,13 +15,12 @@ use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsError;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -47,7 +46,7 @@ final readonly class AddHandler implements WsAction
      *   recursive-dispatch removal)
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = AddParams::fromArray($params);
 

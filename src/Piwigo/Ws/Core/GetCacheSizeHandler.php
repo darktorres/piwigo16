@@ -19,7 +19,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Ws\NamedArray;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -44,7 +43,7 @@ final readonly class GetCacheSizeHandler implements WsAction
      * @return array{infos: NamedArray}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         $data_location = $this->currentConfig->dataLocation;
 

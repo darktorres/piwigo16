@@ -21,7 +21,6 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\History\HistoryService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -44,7 +43,7 @@ final readonly class GetStatusHandler implements WsAction
      * @return array<string, mixed>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         $currentUser = $this->currentUser->get();
         $res = [];

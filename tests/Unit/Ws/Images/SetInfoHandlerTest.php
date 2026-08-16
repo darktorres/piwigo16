@@ -11,7 +11,6 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Images\SetInfoHandler;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -30,16 +29,6 @@ function pwgImagesSetInfoHandlerTestSubject(): SetInfoHandler
     }
 
     return $handler;
-}
-
-function pwgImagesSetInfoHandlerTestServer(): Server
-{
-    $server = Kernel::container()->get(Server::class);
-    if (! $server instanceof Server) {
-        throw new LogicException('Container returned an unexpected type for ' . Server::class);
-    }
-
-    return $server;
 }
 
 beforeEach(function (): void {
@@ -75,7 +64,7 @@ test('setInfo returns a 403 WsErrorResponse when a submitted pwg_token does not 
         'single_value_mode' => 'fill_if_empty',
         'multiple_value_mode' => 'append',
         'pwg_token' => 'wrong-token',
-    ], pwgImagesSetInfoHandlerTestServer());
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);
@@ -106,7 +95,7 @@ test('setInfo returns a 403 WsErrorResponse when pwg_token is absent entirely', 
         'level' => null,
         'single_value_mode' => 'fill_if_empty',
         'multiple_value_mode' => 'append',
-    ], pwgImagesSetInfoHandlerTestServer());
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);

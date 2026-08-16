@@ -13,13 +13,12 @@ namespace Piwigo\Ws\Users;
 
 use Override;
 use Piwigo\Core\PageState;
-use Piwigo\Core\WsError;
 use Piwigo\Users\UserInfoUpdateFailureReason;
 use Piwigo\Users\UserInfoUpdateInput;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -41,7 +40,7 @@ final readonly class SetInfoHandler implements WsAction
      *   recursive-dispatch removal)
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = SetInfoParams::fromArray($params);
 

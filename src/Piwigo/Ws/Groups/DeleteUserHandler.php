@@ -14,13 +14,12 @@ namespace Piwigo\Ws\Groups;
 use Override;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Core\WsError;
 use Piwigo\Group\GroupService;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -41,7 +40,7 @@ final readonly class DeleteUserHandler implements WsAction
      *   Stage 1's recursive-dispatch removal)
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = DeleteUserParams::fromArray($params);
 

@@ -11,7 +11,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Core\WsError;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
@@ -26,6 +25,7 @@ use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\WsParamFlag;
 use Piwigo\Ws\WsParamType;
@@ -575,7 +575,6 @@ test('invoke resolves a handlerClass-registered method from the container and ca
             'echo' => [
                 'name' => 'Alps',
             ],
-            'sameService' => true,
         ]);
 });
 

@@ -15,16 +15,15 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\TagId;
-use Piwigo\Core\WsError;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\TagService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -45,7 +44,7 @@ final readonly class RenameHandler implements WsAction
      * @return WsErrorResponse|array<string, mixed>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = RenameParams::fromArray($params);
 

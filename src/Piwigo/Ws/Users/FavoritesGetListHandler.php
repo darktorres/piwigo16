@@ -22,7 +22,6 @@ use Piwigo\Ws\ImageSqlOrderBuilder;
 use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\XmlAttributeLists;
 
@@ -48,7 +47,7 @@ final readonly class FavoritesGetListHandler implements WsAction
      * @return false|array{paging: NamedStruct, images: NamedArray}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): false|array
+    public function __invoke(array $params): false|array
     {
         if ($this->accessControl->isAGuest()) {
             return false;

@@ -11,7 +11,6 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Images\GetInfoHandler;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -31,16 +30,6 @@ function pwgImagesGetInfoHandlerTestSubject(): GetInfoHandler
     }
 
     return $handler;
-}
-
-function pwgImagesGetInfoHandlerTestServer(): Server
-{
-    $server = Kernel::container()->get(Server::class);
-    if (! $server instanceof Server) {
-        throw new LogicException('Container returned an unexpected type for ' . Server::class);
-    }
-
-    return $server;
 }
 
 beforeEach(function (): void {
@@ -67,7 +56,7 @@ test('getInfo returns a 404 WsErrorResponse for an image_id with no real match',
         'image_id' => 999999,
         'comments_page' => 0,
         'comments_per_page' => 10,
-    ], pwgImagesGetInfoHandlerTestServer());
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);

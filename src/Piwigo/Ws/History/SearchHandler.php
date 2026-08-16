@@ -36,7 +36,6 @@ use Piwigo\Tag\TagService;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 use Piwigo\Ws\Request\HistorySearchPageRequest;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -68,7 +67,7 @@ final readonly class SearchHandler implements WsAction
      * @return array<string, mixed>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         $input = SearchParams::fromArray($params);
 

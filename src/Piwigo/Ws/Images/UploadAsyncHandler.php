@@ -21,14 +21,13 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsError;
 use Piwigo\Image\ImageService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Request\UploadedFileRequest;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -72,7 +71,7 @@ final readonly class UploadAsyncHandler implements WsAction
      *   recursive-dispatch removal), once the upload is complete
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         // MethodDefinition's own registration for this method guarantees
         // this exact shape before __invoke() ever runs -- WsAction::

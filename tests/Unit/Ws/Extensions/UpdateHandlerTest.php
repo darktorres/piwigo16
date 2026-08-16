@@ -6,7 +6,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Ws\Extensions\UpdateHandler;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -64,17 +63,12 @@ test('returns a 401 WsErrorResponse when extensions install is disabled', functi
         CurrentConfigTestFactory::get()->enableExtensionsInstall = false;
 
         $handler = pwgUpdateHandlerTestSubject();
-        $server = Kernel::container()->get(Server::class);
-        if (! $server instanceof Server) {
-            throw new LogicException('Container returned an unexpected type for ' . Server::class);
-        }
-
         $result = $handler([
             'type' => 'plugins',
             'id' => 'my_plugin',
             'revision' => '1',
             'pwg_token' => 'anything',
-        ], $server);
+        ]);
 
         expect($result)
             ->toBeInstanceOf(WsErrorResponse::class);

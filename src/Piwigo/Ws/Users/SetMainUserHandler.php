@@ -16,11 +16,10 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigService;
-use Piwigo\Core\WsError;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -40,7 +39,7 @@ final readonly class SetMainUserHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|string
+    public function __invoke(array $params): WsErrorResponse|string
     {
         // check if not webmaster
         if (! $this->accessControl->isWebmaster()) {

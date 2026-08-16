@@ -17,7 +17,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -41,7 +40,7 @@ final readonly class FormatsDeleteHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|bool
+    public function __invoke(array $params): WsErrorResponse|bool
     {
         $input = FormatsDeleteParams::fromArray($params);
 

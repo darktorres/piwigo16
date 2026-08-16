@@ -16,7 +16,6 @@ use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Image\ImageService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -37,7 +36,7 @@ final readonly class ExistHandler implements WsAction
      *   driver), or null when no matching photo was found
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         $input = ExistParams::fromArray($params);
 

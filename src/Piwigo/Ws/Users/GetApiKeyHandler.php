@@ -17,7 +17,6 @@ use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\Projection\ApiKeySummary;
 use Piwigo\Core\Lang;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -40,7 +39,7 @@ final readonly class GetApiKeyHandler implements WsAction
      * @return WsErrorResponse|string|list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array|string
+    public function __invoke(array $params): WsErrorResponse|array|string
     {
         if ($this->accessControl->isAGuest()) {
             return new WsErrorResponse(401, 'Acces Denied');

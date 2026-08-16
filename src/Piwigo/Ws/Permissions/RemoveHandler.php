@@ -14,7 +14,6 @@ namespace Piwigo\Ws\Permissions;
 use Override;
 use Piwigo\Category\CategoryService;
 use Piwigo\Ws\NamedArray;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -37,7 +36,7 @@ final readonly class RemoveHandler implements WsAction
      *   recursive-dispatch removal)
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = RemoveParams::fromArray($params);
 

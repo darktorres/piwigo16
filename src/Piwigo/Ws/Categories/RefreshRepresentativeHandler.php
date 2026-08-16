@@ -19,7 +19,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 
@@ -43,7 +42,7 @@ final readonly class RefreshRepresentativeHandler implements WsAction
      *   already-precise return type (this method's only real array return)
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = RefreshRepresentativeParams::fromArray($params);
         $categoryService = $this->categoryService;

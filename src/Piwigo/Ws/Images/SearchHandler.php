@@ -23,7 +23,6 @@ use Piwigo\Ws\ImageFilterCriteriaBuilder;
 use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\XmlAttributeLists;
@@ -48,7 +47,7 @@ final readonly class SearchHandler implements WsAction
      * @return WsErrorResponse|array{paging: NamedStruct, images: NamedArray}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = SearchParams::fromArray($params);
 

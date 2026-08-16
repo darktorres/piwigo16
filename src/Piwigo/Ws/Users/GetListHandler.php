@@ -20,7 +20,6 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Core\WsError;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\User\WsUsersGetList;
 use Piwigo\Group\GroupService;
@@ -31,8 +30,8 @@ use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -56,7 +55,7 @@ final readonly class GetListHandler implements WsAction
      * @return WsErrorResponse|array<int|string, mixed>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         return $this->resolve($params);
     }

@@ -23,7 +23,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -49,7 +48,7 @@ final readonly class PluginsGetListHandler implements WsAction
      * @return list<array{id: string, name: string, version: string, state: string, description: string}>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         $urlService = $this->urlService;
         // ExtensionScanner::scan()'s own declared return type is a generic

@@ -16,9 +16,9 @@ use Piwigo\History\HistoryService;
 
 /**
  * Default `GetHistory` event handler, registered by `WsInitializer`
- * (not a `WsAction` -- this takes a typed event, not `(array $params,
- * Server $server)`, so it's not one of the WS-registered
- * `pwg.history.*` methods). `SearchHandler` (this class's only real
+ * (not a `WsAction` -- this takes a typed event, not `(array $params)`,
+ * so it's not one of the WS-registered `pwg.history.*` methods).
+ * `SearchHandler` (this class's only real
  * caller) dispatches via `dispatchChange()` rather than calling this
  * directly, so a plugin can still override history search behavior by
  * registering its own `GetHistory` handler at a higher priority.

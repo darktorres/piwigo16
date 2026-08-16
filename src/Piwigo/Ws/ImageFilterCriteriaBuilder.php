@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Piwigo\Core\DateHelper;
-use Piwigo\Core\WsError;
 use Piwigo\Image\ImageFilterCriteria;
 
 /**

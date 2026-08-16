@@ -16,10 +16,9 @@ use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\WsError;
 use Piwigo\Image\ImageService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -38,7 +37,7 @@ final readonly class SetPrivacyLevelHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|int
+    public function __invoke(array $params): WsErrorResponse|int
     {
         $input = SetPrivacyLevelParams::fromArray($params);
 

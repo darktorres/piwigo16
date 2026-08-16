@@ -17,7 +17,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Rate\RateService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 
@@ -39,7 +38,7 @@ final readonly class RateHandler implements WsAction
      *   Rate\RateService::rate()'s own already-reviewed by-design shape
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = RateParams::fromArray($params);
 

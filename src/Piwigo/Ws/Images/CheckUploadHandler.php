@@ -13,7 +13,6 @@ namespace Piwigo\Ws\Images;
 
 use Override;
 use Piwigo\Admin\Upload\UploadService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -32,7 +31,7 @@ final readonly class CheckUploadHandler implements WsAction
      * @return array{message: ?string, ready_for_upload: bool}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         $ret = [];
         $ret['message'] = $this->uploadService->readyForUploadMessage();

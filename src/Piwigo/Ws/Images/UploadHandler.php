@@ -29,7 +29,6 @@ use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Ws\Request\ChunkedUploadRequest;
 use Piwigo\Ws\Request\UploadedFileRequest;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -69,7 +68,7 @@ final readonly class UploadHandler implements WsAction
      * @return WsErrorResponse|array<string, mixed>|null
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array|null
+    public function __invoke(array $params): WsErrorResponse|array|null
     {
         // MethodDefinition's own registration for this method guarantees
         // this exact shape before __invoke() ever runs -- WsAction::

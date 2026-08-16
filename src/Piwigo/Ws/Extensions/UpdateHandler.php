@@ -37,7 +37,6 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 
@@ -71,7 +70,7 @@ final readonly class UpdateHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|string
+    public function __invoke(array $params): WsErrorResponse|string
     {
         if (! $this->currentConfig->enableExtensionsInstall) {
             return new WsErrorResponse(401, 'Piwigo extensions install/update system is disabled');

@@ -12,11 +12,10 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Permissions;
 
 use Override;
-use Piwigo\Core\WsError;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Ws\NamedArray;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -33,7 +32,7 @@ final readonly class GetListHandler implements WsAction
      * @return WsErrorResponse|array{categories: NamedArray}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         return $this->resolve($params);
     }

@@ -19,15 +19,14 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Core\WsError;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Tag\TagService;
 use Piwigo\Ws\Request\TagListRequest;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -58,7 +57,7 @@ final readonly class SetInfoHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): ?WsErrorResponse
+    public function __invoke(array $params): ?WsErrorResponse
     {
         // MethodDefinition's own registration for this method guarantees
         // this exact shape before __invoke() ever runs -- WsAction::

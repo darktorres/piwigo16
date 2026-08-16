@@ -17,7 +17,6 @@ use Piwigo\Event\Picture\WsImagesUploadCompleted;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -42,7 +41,7 @@ final readonly class UploadCompletedHandler implements WsAction
      * @return WsErrorResponse|array{moved_from_lounge: list<array{image_id: int, category_id: int}>|null, category: array{id: int, nb_photos: int, label: string}}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = UploadCompletedParams::fromArray($params);
 

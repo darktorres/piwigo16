@@ -25,7 +25,6 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsError;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
@@ -38,8 +37,8 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\CategoryTreeBuilder;
 use Piwigo\Ws\NamedArray;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\XmlAttributeLists;
 
@@ -136,7 +135,7 @@ final readonly class GetListHandler implements WsAction
      * @return WsErrorResponse|array<int|string, mixed>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = GetListParams::fromArray($params);
         $currentUser = $this->currentUser->get();

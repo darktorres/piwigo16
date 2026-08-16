@@ -28,7 +28,6 @@ use Piwigo\Db\DbCredentials;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageUniquenessColumn;
 use Piwigo\Tag\TagService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 
@@ -75,7 +74,7 @@ final readonly class AddHandler implements WsAction
      * @return WsErrorResponse|array{image_id: int|string, url: string}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         // MethodDefinition's own registration for this method guarantees
         // this exact shape before __invoke() ever runs -- WsAction::

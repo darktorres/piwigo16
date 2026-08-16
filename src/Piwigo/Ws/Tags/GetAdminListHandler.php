@@ -15,7 +15,6 @@ use Override;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Tag\TagService;
 use Piwigo\Ws\NamedArray;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\XmlAttributeLists;
 
@@ -39,7 +38,7 @@ final readonly class GetAdminListHandler implements WsAction
      * @return array{tags: NamedArray}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): array
+    public function __invoke(array $params): array
     {
         return [
             'tags' => new NamedArray(

@@ -35,7 +35,6 @@ use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\Request\WsFormatRequest;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\XmlAttributeLists;
@@ -66,7 +65,7 @@ final readonly class GetInfoHandler implements WsAction
      * @return WsErrorResponse|array<string, mixed>
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         return $this->resolve($params);
     }

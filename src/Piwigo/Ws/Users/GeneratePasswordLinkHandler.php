@@ -20,14 +20,13 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsError;
 use Piwigo\Mail\MailService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -54,7 +53,7 @@ final readonly class GeneratePasswordLinkHandler implements WsAction
      * @return WsErrorResponse|array{generated_link: string, send_by_mail: string|false|null, time_validation: string}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = GeneratePasswordLinkParams::fromArray($params);
 

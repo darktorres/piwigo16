@@ -20,7 +20,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -48,7 +47,7 @@ final readonly class DeleteHandler implements WsAction
      * @param array<mixed> $params
      */
     #[Override]
-    public function __invoke(array $params, Server $server): ?WsErrorResponse
+    public function __invoke(array $params): ?WsErrorResponse
     {
         $input = DeleteParams::fromArray($params);
 

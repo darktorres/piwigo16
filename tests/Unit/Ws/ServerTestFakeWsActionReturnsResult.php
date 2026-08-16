@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Ws;
 
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsResult;
 
@@ -16,7 +15,7 @@ final class ServerTestFakeWsActionReturnsResult implements WsAction
     /**
      * @param array<mixed> $params
      */
-    public function __invoke(array $params, Server $server): WsResult
+    public function __invoke(array $params): WsResult
     {
         return new class() implements WsResult {
             /**

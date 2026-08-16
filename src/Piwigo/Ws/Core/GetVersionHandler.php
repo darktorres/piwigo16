@@ -13,7 +13,6 @@ namespace Piwigo\Ws\Core;
 
 use Override;
 use Piwigo\Core\AppInfo;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 
 /**
@@ -27,7 +26,7 @@ final readonly class GetVersionHandler implements WsAction
      *   unvalidated request array, but the body doesn't read it.
      */
     #[Override]
-    public function __invoke(array $params, Server $server): string
+    public function __invoke(array $params): string
     {
         return AppInfo::VERSION;
     }

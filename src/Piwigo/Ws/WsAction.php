@@ -22,5 +22,5 @@ interface WsAction
     /**
      * @param array<mixed> $params
      */
-    public function __invoke(array $params, Server $server): mixed;
+    public function __invoke(array $params): mixed;
 }

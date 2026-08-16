@@ -14,10 +14,9 @@ namespace Piwigo\Ws\Tags;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\TagId;
-use Piwigo\Core\WsError;
 use Piwigo\Tag\TagService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -39,7 +38,7 @@ final readonly class AddHandler implements WsAction
      * @return WsErrorResponse|array{info: string, id: int|string, name: string, url_name: string}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = AddParams::fromArray($params);
         $creation_output = $this->tagService->createTag($input->name);

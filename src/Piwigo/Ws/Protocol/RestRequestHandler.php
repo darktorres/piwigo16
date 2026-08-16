@@ -12,10 +12,10 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Protocol;
 
 use Override;
-use Piwigo\Core\WsError;
 use Piwigo\Ws\Request\WsRawRequest;
 use Piwigo\Ws\RequestHandler;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 use Psr\Http\Message\ResponseInterface;
 

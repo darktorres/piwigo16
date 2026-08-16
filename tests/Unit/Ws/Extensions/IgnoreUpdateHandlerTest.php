@@ -11,7 +11,6 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\Extensions\IgnoreUpdateHandler;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -60,17 +59,13 @@ test('returns a 401 WsErrorResponse when the user is not a webmaster', function 
     pwgIgnoreUpdateHandlerTestSetUser(isWebmaster: false);
 
     $handler = pwgIgnoreUpdateHandlerTestSubject();
-    $server = Kernel::container()->get(Server::class);
-    if (! $server instanceof Server) {
-        throw new LogicException('Container returned an unexpected type for ' . Server::class);
-    }
 
     $result = $handler([
         'type' => null,
         'id' => null,
         'reset' => false,
         'pwg_token' => 'anything',
-    ], $server);
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);
@@ -86,17 +81,13 @@ test('returns a 403 WsErrorResponse when the submitted pwg_token does not match 
     pwgIgnoreUpdateHandlerTestSetUser(isWebmaster: true);
 
     $handler = pwgIgnoreUpdateHandlerTestSubject();
-    $server = Kernel::container()->get(Server::class);
-    if (! $server instanceof Server) {
-        throw new LogicException('Container returned an unexpected type for ' . Server::class);
-    }
 
     $result = $handler([
         'type' => null,
         'id' => null,
         'reset' => false,
         'pwg_token' => 'wrong-token',
-    ], $server);
+    ]);
 
     expect($result)
         ->toBeInstanceOf(WsErrorResponse::class);

@@ -14,13 +14,12 @@ namespace Piwigo\Ws\Images;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Core\WsError;
 use Piwigo\Image\ImageService;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Ws\Server;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
@@ -42,7 +41,7 @@ final readonly class SyncMetadataHandler implements WsAction
      * @return WsErrorResponse|array{nb_synchronized: int}
      */
     #[Override]
-    public function __invoke(array $params, Server $server): WsErrorResponse|array
+    public function __invoke(array $params): WsErrorResponse|array
     {
         $input = SyncMetadataParams::fromArray($params);
 

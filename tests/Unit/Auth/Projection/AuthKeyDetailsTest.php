@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\Projection\AuthKeyDetails;
+use Piwigo\Common\ValueObject\AuthKeyId;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
@@ -15,11 +16,12 @@ use Piwigo\Users\UserStatus;
 function fullAuthKeyDetailsRow(): array
 {
     return [
-        'auth_key_id' => '5',
-        // A real row's `user_id` is a UserId instance (UserAuthKeyEntity::$userId
-        // is UserId-typed, DQL array hydration applies the custom Type), not a raw
-        // scalar -- matches what fromRow()'s real caller actually passes, same reasoning
-        // as `status` below.
+        // A real row's `auth_key_id`/`user_id` are AuthKeyId/UserId
+        // instances (UserAuthKeyEntity::$authKeyId/$userId are both
+        // VO-typed, DQL array hydration applies the custom Type), not raw
+        // scalars -- matches what fromRow()'s real caller actually passes,
+        // same reasoning as `status` below.
+        'auth_key_id' => AuthKeyId::from(5),
         'user_id' => UserId::from(1),
         'auth_key' => str_repeat('a', 30),
         // A real row's `expired_on` is a SqlDateTime instance
@@ -85,11 +87,10 @@ test('fromRow casts a non-string scalar (e.g. a real DBAL int/float) to string f
     // the cast for real, since AuthKeyDetails's own properties are
     // `string`/`?string` and this file has strict_types=1.
     //
-    // user_id is deliberately left untouched -- it's instanceof-guarded,
-    // not scalar-guarded (see fullAuthKeyDetailsRow()'s own comment), so
-    // it isn't part of this scalar-cast group.
+    // auth_key_id/user_id are deliberately left untouched -- both are
+    // instanceof-guarded, not scalar-guarded (see fullAuthKeyDetailsRow()'s
+    // own comment), so neither is part of this scalar-cast group.
     $row = fullAuthKeyDetailsRow();
-    $row['auth_key_id'] = 5;
     $row['auth_key'] = 999888777;
     $row['expired_on'] = 20260801;
     $row['revoked_on'] = 20260701;

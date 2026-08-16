@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\History;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\AuthKeyId;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -41,7 +42,8 @@ use Piwigo\Common\ValueObject\UserId;
  *
  * `formatId` is `FormatId`-typed (`fk_history_format_id`, `ON DELETE SET
  * NULL`) -- unlike `searchId`, no `HistoryRepository` DQL site selects it,
- * only `insert()` writes it.
+ * only `insert()` writes it. `authKeyId` is `AuthKeyId`-typed
+ * (`fk_history_auth_key_id`, `ON DELETE SET NULL`) the same way.
  */
 #[ORM\Entity(repositoryClass: HistoryRepository::class)]
 #[ORM\Table(name: 'history')]
@@ -75,7 +77,7 @@ final class HistoryEntity
         public ?HistoryImageType $imageType,
         #[ORM\Column(name: 'format_id', type: 'format_id', nullable: true)]
         public ?FormatId $formatId,
-        #[ORM\Column(name: 'auth_key_id', type: 'integer', nullable: true)]
-        public ?int $authKeyId,
+        #[ORM\Column(name: 'auth_key_id', type: 'auth_key_id', nullable: true)]
+        public ?AuthKeyId $authKeyId,
     ) {}
 }

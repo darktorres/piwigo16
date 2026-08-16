@@ -26,6 +26,7 @@ use Piwigo\Db\DqlFunction\WeekdayFunction;
 use Piwigo\Db\DqlFunction\WeekFunction;
 use Piwigo\Db\DqlFunction\YearFunction;
 use Piwigo\Db\Type\ActivityIdType;
+use Piwigo\Db\Type\AuthKeyIdType;
 use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
 use Piwigo\Db\Type\EmailType;
@@ -87,6 +88,7 @@ final class EntityManagerFactory
         // throws on double-registration.
         foreach ([
             'activity_id' => ActivityIdType::class,
+            'auth_key_id' => AuthKeyIdType::class,
             'group_id' => GroupIdType::class,
             'user_id' => UserIdType::class,
             'category_id' => CategoryIdType::class,

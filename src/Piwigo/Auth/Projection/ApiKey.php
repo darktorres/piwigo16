@@ -6,6 +6,7 @@ namespace Piwigo\Auth\Projection;
 
 use InvalidArgumentException;
 use Piwigo\Auth\UserAuthKeyEntity;
+use Piwigo\Common\ValueObject\AuthKeyId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
@@ -51,7 +52,7 @@ final readonly class ApiKey
     public static function fromEntity(UserAuthKeyEntity $entity): self
     {
         return new self(
-            authKeyId: $entity->authKeyId ?? 0,
+            authKeyId: $entity->authKeyId instanceof AuthKeyId ? $entity->authKeyId->value : 0,
             authKey: $entity->authKey,
             apikeySecret: $entity->apikeySecret,
             apikeyName: $entity->apikeyName,
@@ -78,7 +79,7 @@ final readonly class ApiKey
         }
 
         return new self(
-            authKeyId: is_numeric($row['auth_key_id'] ?? null) ? (int) $row['auth_key_id'] : 0,
+            authKeyId: ($row['auth_key_id'] ?? null) instanceof AuthKeyId ? $row['auth_key_id']->value : (is_numeric($row['auth_key_id'] ?? null) ? (int) $row['auth_key_id'] : 0),
             authKey: is_string($row['auth_key'] ?? null) ? $row['auth_key'] : '',
             apikeySecret: is_string($row['apikey_secret'] ?? null) ? $row['apikey_secret'] : null,
             apikeyName: is_string($row['apikey_name'] ?? null) ? $row['apikey_name'] : null,

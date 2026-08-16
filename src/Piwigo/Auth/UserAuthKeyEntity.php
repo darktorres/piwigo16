@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\AuthKeyId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
@@ -23,6 +24,14 @@ use Piwigo\Common\ValueObject\UserId;
  * value. Every other datetime column stays plain ?string, not
  * \DateTimeImmutable, matching Auth\Projection\ApiKey's own already-documented
  * decision.
+ *
+ * `authKeyId` is `AuthKeyId`-typed -- its own primary key, also referenced
+ * by `history.auth_key_id`
+ * ({@see \Piwigo\History\HistoryEntity::$authKeyId}). Both
+ * `Auth\Projection\ApiKey`/`Auth\Projection\AuthKeyDetails` narrow
+ * `getArrayResult()`/`getOneOrNullResult(HYDRATE_ARRAY)` rows via
+ * `instanceof AuthKeyId`, same Gotcha #1 shape their own `userId` handling
+ * already established.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'user_auth_keys')]
@@ -30,8 +39,8 @@ final class UserAuthKeyEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'auth_key_id', type: 'integer')]
-    public ?int $authKeyId = null;
+    #[ORM\Column(name: 'auth_key_id', type: 'auth_key_id')]
+    public ?AuthKeyId $authKeyId = null;
 
     public function __construct(
         #[ORM\Column(name: 'auth_key', type: 'string', length: 255)]

@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Override;
 use Piwigo\Auth\LastVisitLookupInterface;
+use Piwigo\Common\ValueObject\AuthKeyId;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -836,7 +837,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             imageId: $data['imageId'] === null ? null : ImageId::from($data['imageId']),
             imageType: $data['imageType'] !== null ? HistoryImageType::tryFrom($data['imageType']) : null,
             formatId: FormatId::tryFrom($data['formatId']),
-            authKeyId: $data['authKeyId'],
+            authKeyId: AuthKeyId::tryFrom($data['authKeyId']),
         );
 
         $em = $this->getEntityManager();

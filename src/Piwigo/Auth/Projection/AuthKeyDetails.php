@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth\Projection;
 
+use Piwigo\Common\ValueObject\AuthKeyId;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
@@ -24,9 +25,10 @@ use Piwigo\Users\UserStatus;
  * so would just move that same narrowing to a different call site instead
  * of removing it.
  *
- * UserAuthKeyEntity::$userId is UserId-typed -- `uak.userId AS user_id`
- * array-hydrates as a UserId instance, not a scalar, so `fromRow()`'s own
- * `userId` narrowing checks `instanceof UserId` rather than `is_scalar()`
+ * UserAuthKeyEntity::$userId/$authKeyId are UserId-/AuthKeyId-typed --
+ * `uak.userId AS user_id`/`uak.authKeyId AS auth_key_id` array-hydrate as
+ * real VO instances, not scalars, so `fromRow()`'s own narrowing checks
+ * `instanceof UserId`/`instanceof AuthKeyId` rather than `is_scalar()`
  * (which would always be false and silently break every real login
  * through this security-sensitive path). `UserAuthKeyEntity::$expiredOn`
  * is `SqlDateTime`-typed too -- `expiredOn` narrows the same way.
@@ -58,7 +60,7 @@ final readonly class AuthKeyDetails
     public static function fromRow(array $row): self
     {
         return new self(
-            authKeyId: is_scalar($row['auth_key_id'] ?? null) ? (string) $row['auth_key_id'] : '',
+            authKeyId: ($row['auth_key_id'] ?? null) instanceof AuthKeyId ? (string) $row['auth_key_id']->value : '',
             userId: ($row['user_id'] ?? null) instanceof UserId ? (string) $row['user_id']->value : '',
             authKey: is_scalar($row['auth_key'] ?? null) ? (string) $row['auth_key'] : '',
             expiredOn: ($row['expired_on'] ?? null) instanceof SqlDateTime

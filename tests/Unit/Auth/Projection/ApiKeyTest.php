@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Auth\Projection\ApiKey;
 use Piwigo\Auth\UserAuthKeyEntity;
+use Piwigo\Common\ValueObject\AuthKeyId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
@@ -118,7 +119,7 @@ test('fromEntity copies every field from a real UserAuthKeyEntity', function ():
         lastUsedOn: '2026-07-05 00:00:00',
         lastNotifiedOn: '2026-07-06 00:00:00',
     );
-    $entity->authKeyId = 9;
+    $entity->authKeyId = AuthKeyId::from(9);
 
     $apiKey = ApiKey::fromEntity($entity);
 

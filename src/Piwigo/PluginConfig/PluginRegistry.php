@@ -14,7 +14,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
-use Piwigo\Event\Lifecycle\PluginsLoaded;
+use Piwigo\PluginConfig\Event\PluginsLoaded;
 use RuntimeException;
 
 /**

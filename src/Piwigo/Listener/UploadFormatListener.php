@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Listener;
 
 use Override;
+use Piwigo\Admin\Upload\Event\UploadFile;
 use Piwigo\Admin\Upload\UploadService;
-use Piwigo\Event\Picture\UploadFile;
 
 /**
  * Extracted from `Bootstrap\RequestBootstrap::finalize()`'s own 6

@@ -192,7 +192,7 @@ it('renders the real tag name when a render_tag_name hook returns something othe
     $pluginId = 'ct-tagscontroller-hook-' . uniqid();
     tagsControllerWriteFixturePlugin($pluginId, <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
-        \Piwigo\Event\Tag\RenderTagName::class,
+        \Piwigo\Tag\Event\RenderTagName::class,
         static fn (mixed $event): mixed => null
     );
     PHP);

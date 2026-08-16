@@ -13,9 +13,9 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Tag\GetTagAltNames;
-use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tag\Event\GetTagAltNames;
+use Piwigo\Tag\Event\RenderTagName;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 

@@ -18,6 +18,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\AuthRepository;
     use Piwigo\Auth\AuthService;
     use Piwigo\Auth\CookieService;
+    use Piwigo\Auth\Event\TryLogUser;
     use Piwigo\Auth\PasswordRepository;
     use Piwigo\Auth\PasswordService;
     use Piwigo\Auth\Projection\FinalizeLoginDecision;
@@ -35,7 +36,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Event\User\TryLogUser;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\Mail\MailService;
     use Piwigo\Session\SessionEntity;

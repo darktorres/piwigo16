@@ -28,8 +28,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Event\Tag\GetTagAltNames;
-    use Piwigo\Event\Tag\GetTagNameLikeWhere;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Image\ImageEntity;
     use Piwigo\Image\ImageService;
@@ -39,6 +37,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
+    use Piwigo\Tag\Event\GetTagAltNames;
+    use Piwigo\Tag\Event\GetTagNameLikeWhere;
     use Piwigo\Tag\Projection\TagBrief;
     use Piwigo\Tag\TagEntity;
     use Piwigo\Tag\TagService;

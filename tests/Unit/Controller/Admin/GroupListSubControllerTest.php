@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Controller\Admin\GroupListSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;

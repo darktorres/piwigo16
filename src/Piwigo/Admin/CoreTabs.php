@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use RuntimeException;
 
 /**

@@ -18,9 +18,9 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Template\CombinedCssPostfilter;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Event\CombinablePreparse;
+use Piwigo\Template\Event\CombinedCssPostfilter;
 
 final class FileCombiner
 {

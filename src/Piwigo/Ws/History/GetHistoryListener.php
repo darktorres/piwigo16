@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\History;
 
-use Piwigo\Event\Ws\GetHistory;
 use Piwigo\History\HistoryService;
+use Piwigo\Ws\History\Event\GetHistory;
 
 /**
  * Default `GetHistory` event handler, registered by `WsInitializer`

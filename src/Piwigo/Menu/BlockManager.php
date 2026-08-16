@@ -12,8 +12,8 @@ declare(strict_types=1);
 namespace Piwigo\Menu;
 
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Event\BlockManager\BlockManagerApply;
-use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
+use Piwigo\Menu\Event\BlockManagerApply;
+use Piwigo\Menu\Event\BlockManagerPrepareDisplay;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\Projection\MenubarBlocksPageContext;
 use Piwigo\PluginConfig\EventDispatcher;

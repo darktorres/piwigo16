@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Admin\BatchManager;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\BatchManager\Event\GetBatchManagerPrefilters;
 use Piwigo\Admin\BatchManager\Projection\FilterPanelPageContext;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Admin\GetBatchManagerPrefilters;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\PluginConfig\EventDispatcher;

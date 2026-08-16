@@ -19,7 +19,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Picture\GetMimetypeLocation;
+use Piwigo\Image\Event\GetMimetypeLocation;
 use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\PluginConfig\EventDispatcher;
 use RuntimeException;

@@ -6,7 +6,7 @@ namespace Piwigo\Listener;
 
 use Override;
 use Piwigo\Auth\AuthService;
-use Piwigo\Event\User\TryLogUser;
+use Piwigo\Auth\Event\TryLogUser;
 
 /**
  * Extracted from `Bootstrap\RequestBootstrap::connect()`'s own

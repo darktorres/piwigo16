@@ -49,7 +49,7 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
      * can't depend on `Site` (`L2bExtendedDomain`) directly; the delete
      * itself is trivial once it lives in the domain that actually owns
      * the table. {@see \Piwigo\Category\CategoryService::deleteSite()}
-     * dispatches {@see \Piwigo\Event\Site\DeleteSite} instead of calling
+     * dispatches {@see \Piwigo\Category\Event\DeleteSite} instead of calling
      * this directly -- the listener is registered in
      * {@see \Piwigo\Bootstrap\RequestBootstrap}.
      */

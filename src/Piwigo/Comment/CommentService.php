@@ -6,6 +6,8 @@ namespace Piwigo\Comment;
 
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Comment\Event\UserCommentCheck;
+use Piwigo\Comment\Event\UserCommentValidation;
 use Piwigo\Comment\Projection\CommentDateRange;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Comment\Projection\CommentSummaryCounts;
@@ -20,8 +22,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\User\UserCommentCheck;
-use Piwigo\Event\User\UserCommentValidation;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;

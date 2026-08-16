@@ -256,8 +256,8 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
     // this it()).
     tagsPageWriteFixturePlugin($pluginId, <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
-        \Piwigo\Event\Tag\GetTagAltNames::class,
-        static function (\Piwigo\Event\Tag\GetTagAltNames $event): void {
+        \Piwigo\Tag\Event\GetTagAltNames::class,
+        static function (\Piwigo\Tag\Event\GetTagAltNames $event): void {
             if ($event->rawName === '__TAGS_PAGE_ALT_NAMES_TARGET__') {
                 $event->value = ['Alt Name One', 'Alt Name Two'];
             }

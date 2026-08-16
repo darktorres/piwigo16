@@ -13,8 +13,8 @@ namespace Piwigo\Ws\Images;
 
 use Override;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Picture\RenderElementDescription;
-use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Html\Event\RenderElementDescription;
+use Piwigo\Html\Event\RenderElementName;
 use Piwigo\Image\ImageRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;

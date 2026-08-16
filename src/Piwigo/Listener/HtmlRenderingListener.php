@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Piwigo\Listener;
 
 use Override;
+use Piwigo\Category\Event\RenderCategoryDescription;
+use Piwigo\Category\Event\RenderCategoryLiteralDescription;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\StringHelper;
-use Piwigo\Event\Picture\GetElementUrl;
-use Piwigo\Event\Tag\RenderTagUrl;
-use Piwigo\Event\Template\RenderCategoryDescription;
-use Piwigo\Event\Template\RenderCategoryLiteralDescription;
-use Piwigo\Event\Template\RenderCommentAuthor;
-use Piwigo\Event\Template\RenderCommentContent;
+use Piwigo\Html\Event\RenderCommentContent;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
+use Piwigo\Picture\Event\GetElementUrl;
+use Piwigo\Picture\Event\RenderCommentAuthor;
+use Piwigo\Tag\Event\RenderTagUrl;
 
 /**
  * Extracted from `Bootstrap\RequestBootstrap::finalize()`'s own default

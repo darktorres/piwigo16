@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Latte\Runtime\Html;
+use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Admin\Projection\TabSheetEntry;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
+use Piwigo\Menu\Event\BlockManagerPrepareDisplay;
 use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;

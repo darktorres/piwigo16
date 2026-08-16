@@ -11,6 +11,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
+    use Piwigo\Category\Event\DeleteSite;
+    use Piwigo\Category\Event\GetCategoryPreferredImageOrders;
     use Piwigo\Category\Projection\RandomImageCategoryQuery;
     use Piwigo\Common\ValueObject\CategoryId;
     use Piwigo\Config\ConfigLoader;
@@ -24,8 +26,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
-    use Piwigo\Event\Site\DeleteSite;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Permalink\PermalinkRepository;
     use Piwigo\Permission\PermissionRepository;

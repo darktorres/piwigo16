@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
+use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
@@ -11,7 +12,6 @@ use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Listener;
 
 use Override;
-use Piwigo\Event\Site\DeleteSite;
+use Piwigo\Category\Event\DeleteSite;
 use Piwigo\Site\SiteRepository;
 
 /**

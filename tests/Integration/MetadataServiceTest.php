@@ -25,8 +25,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Logger;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Event\Picture\CleanIptcValue;
-    use Piwigo\Event\Picture\FormatExifData;
+    use Piwigo\Metadata\Event\CleanIptcValue;
+    use Piwigo\Metadata\Event\FormatExifData;
     use Piwigo\Metadata\MetadataRepository;
     use Piwigo\Metadata\MetadataService;
     use Piwigo\Metadata\Projection\SvgDimensions;

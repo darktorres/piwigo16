@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Latte\Runtime\Html;
 use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Admin\HelpPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -14,7 +15,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
-use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;

@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Admin\Projection\TabSheetEntry;
 use Piwigo\Admin\Projection\TabsheetPageContext;
-use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 

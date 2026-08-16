@@ -6,7 +6,7 @@ namespace Piwigo\Listener;
 
 use Override;
 use Piwigo\Comment\CommentService;
-use Piwigo\Event\User\UserCommentCheck;
+use Piwigo\Comment\Event\UserCommentCheck;
 
 /**
  * Extracted from `Bootstrap\RequestBootstrap::finalize()`'s own

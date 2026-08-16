@@ -112,7 +112,7 @@ it('renders the real category name when a render_category_name hook returns some
     $pluginId = 'ct-albumsub-hook-' . uniqid();
     $pluginSource = <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
-        \Piwigo\Event\Template\RenderCategoryName::class,
+        \Piwigo\Category\Event\RenderCategoryName::class,
         static fn (mixed $event): mixed => null
     );
     PHP;

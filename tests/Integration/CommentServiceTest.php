@@ -13,6 +13,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Comment\AvailableCommentsCounter;
     use Piwigo\Comment\CommentEntity;
     use Piwigo\Comment\CommentService;
+    use Piwigo\Comment\Event\UserCommentCheck;
     use Piwigo\Common\ValueObject\CommentId;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfig;
@@ -23,7 +24,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Event\User\UserCommentCheck;
     use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;

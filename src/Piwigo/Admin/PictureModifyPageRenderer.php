@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Event\PictureModifyBeforeUpdate;
 use Piwigo\Admin\Event\PictureModifyPageRendered;
 use Piwigo\Admin\Projection\PictureModifyPageContext;
 use Piwigo\Admin\Request\PictureModifyRequest;
@@ -29,7 +30,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Picture\PictureModifyBeforeUpdate;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;

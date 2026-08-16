@@ -357,8 +357,8 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
     PHP
         , <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
-        \Piwigo\Event\Admin\GetAdminPluginMenuLinks::class,
-        static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): void {
+        \Piwigo\Admin\Event\GetAdminPluginMenuLinks::class,
+        static function (\Piwigo\Admin\Event\GetAdminPluginMenuLinks $event): void {
             $event->value[] = ['URL' => 'admin.php?page=plugin-pwgtest-plugins-installed-hooks'];
             $event->value[] = ['URL' => 'index.php?section=pwgtest-plugins-installed-target&foo=bar'];
         }
@@ -433,8 +433,8 @@ it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and
     PHP
         , <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
-        \Piwigo\Event\Admin\GetAdminPluginMenuLinks::class,
-        static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): void {
+        \Piwigo\Admin\Event\GetAdminPluginMenuLinks::class,
+        static function (\Piwigo\Admin\Event\GetAdminPluginMenuLinks $event): void {
             $event->value[] = 'not-an-array';
             $event->value[] = ['no_url_key' => 'irrelevant'];
             $event->value[] = ['URL' => ['not', 'a', 'string']];

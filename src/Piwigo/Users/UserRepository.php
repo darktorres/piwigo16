@@ -6,6 +6,7 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
@@ -426,8 +427,14 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     {
         $preferencesRaw = $row['preferences'] ?? null;
 
+        // getReference() is typed object|null (it delegates to find(), which
+        // can return null, when the target has subclasses) -- UserEntity has
+        // none, so the real code path always returns a genuine proxy.
+        $userReference = $this->em->getReference(UserEntity::class, $userId);
+        assert($userReference instanceof UserEntity);
+
         return new UserInfoEntity(
-            userId: $userId,
+            user: $userReference,
             nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 15,
             // UserInfoEntity::$status is UserStatus (enumType-mapped) --
             // $row is a caller-supplied bag (not necessarily DB-sourced),
@@ -463,19 +470,39 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
+     * Real DQL `UPDATE`, not `find()` + mutate + `flush()` -- `ui.user` is
+     * `UserInfoEntity`'s own `#[ORM\Id]` association ({@see UserInfoEntity}),
+     * and Doctrine's `IdentifierFlattener` always collapses a to-one
+     * identifier association to a plain string for the entity-level
+     * `UPDATE`'s own `WHERE` clause, before that string ever reaches
+     * `UserId`'s custom Doctrine Type -- which then rejects it, since it
+     * only accepts a real {@see \Piwigo\Common\ValueObject\NumericId}, by
+     * design ({@see \Piwigo\Db\Type\AbstractNumericIdType}). Not a
+     * workaround: this is the same bulk-DQL-`UPDATE` shape every other
+     * `user_infos` write in this class already uses, and it never touches
+     * that internal flattening path at all -- the bare `ui.user` path
+     * resolves straight to the join column, same as every other wave in
+     * this item.
+     *
+     * `preferences` needs its `Types::JSON` binding type spelled out
+     * explicitly -- unlike a `WHERE`/join column comparison, a DQL `SET`
+     * value bound from a plain PHP array is otherwise inferred as an
+     * array-parameter expansion (an `IN`-list shape), not the single JSON
+     * scalar `json`-typed columns need.
+     *
      * @param array<string, mixed> $preferences
      */
     public function savePreferences(UserId $userId, array $preferences): void
     {
-        $entity = $this->find($userId);
-        if (! $entity instanceof UserInfoEntity) {
-            return;
-        }
-
-        $entity->preferences = $preferences;
-
-        $this->em
-            ->flush();
+        $this->em->createQueryBuilder()
+            ->update(UserInfoEntity::class, 'ui')
+            ->set('ui.preferences', ':preferences')
+            ->where('ui.user = :userId')
+            ->setParameter('preferences', $preferences, Types::JSON)
+            ->setParameter('userId', $userId->value)
+            ->getQuery()
+            ->execute();
+        $this->em->clear();
     }
 
     /**
@@ -489,18 +516,19 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
 
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
-            ->select('ui.userId')
+            ->select('IDENTITY(ui.user) AS userId')
             ->where('ui.status IN (:statuses)')
             ->setParameter('statuses', $statusList)
             ->getQuery()
             ->getResult();
 
         return array_map(static function (array $row): UserId {
-            if (! $row['userId'] instanceof UserId) {
-                throw new RuntimeException('Expected UserId from DQL scalar hydration of ui.userId');
+            $userId = UserId::tryFrom($row['userId']);
+            if (! $userId instanceof UserId) {
+                throw new RuntimeException('Expected a positive int from DQL scalar hydration of ui.user');
             }
 
-            return $row['userId'];
+            return $userId;
         }, $rows);
     }
 
@@ -542,8 +570,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
 
         $em->createQueryBuilder()
             ->delete(UserInfoEntity::class, 'ui')
-            ->where('ui.userId = :userId')
-            ->setParameter('userId', $userId)
+            ->where('ui.user = :userId')
+            ->setParameter('userId', $userId->value)
             ->getQuery()
             ->execute();
 
@@ -657,19 +685,27 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * {@see \Piwigo\Users\UserRelatedTable}'s own docblock for why the
      * other 2 stay on that raw-string method permanently.
      *
+     * `UserInfoEntity::$userId` became the `user` association in wave 7 of
+     * the association-modeling item -- `UserAccessEntity`/`UserGroupEntity`
+     * weren't touched, so only the `ui` branch needs `IDENTITY()`; the
+     * other two keep the bare `.userId` scalar select. A bare association
+     * path in a `SELECT` changes the generated SQL itself regardless of
+     * hydration mode, so `getSingleColumnResult()` needs the rewrite here
+     * too, the same as every other `SELECT`-clause site in that wave.
+     *
      * @return list<UserId>
      */
     public function findDistinctUserIdsInMappedTable(UserRelatedTable $table): array
     {
-        [$entityClass, $alias] = match ($table) {
-            UserRelatedTable::UserInfos => [UserInfoEntity::class, 'ui'],
-            UserRelatedTable::UserAccess => [UserAccessEntity::class, 'ua'],
-            UserRelatedTable::UserGroup => [UserGroupEntity::class, 'ug'],
+        [$entityClass, $alias, $selectExpr] = match ($table) {
+            UserRelatedTable::UserInfos => [UserInfoEntity::class, 'ui', 'IDENTITY(ui.user)'],
+            UserRelatedTable::UserAccess => [UserAccessEntity::class, 'ua', 'ua.userId'],
+            UserRelatedTable::UserGroup => [UserGroupEntity::class, 'ug', 'ug.userId'],
         };
 
         $rows = $this->em
             ->createQueryBuilder()
-            ->select("DISTINCT {$alias}.userId")
+            ->select("DISTINCT {$selectExpr}")
             ->from($entityClass, $alias)
             ->getQuery()
             ->getSingleColumnResult();
@@ -689,11 +725,18 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * Real DQL replacement for
      * {@see deleteUsersFromTable()}, same 3-of-5-tables scope as
      * {@see findDistinctUserIdsInMappedTable()} above. `UserAccessEntity::
-     * $userId` is a plain int column (unlike `UserInfoEntity`/
-     * `UserGroupEntity`'s custom `user_id` Doctrine Type), so it binds
-     * `$userIds` unwrapped to raw ints -- same "bind the VO for a
-     * custom-typed target, unwrap for a plain-int one" pattern already
-     * established by {@see deleteUser()}.
+     * $userId` is a plain int column (unlike `UserGroupEntity`'s custom
+     * `user_id` Doctrine Type), so it binds `$userIds` unwrapped to raw
+     * ints -- same "bind the VO for a custom-typed target, unwrap for a
+     * plain-int one" pattern already established by {@see deleteUser()}.
+     *
+     * `UserInfoEntity::$userId` became the `user` association in wave 7 of
+     * the association-modeling item, so its branch both selects a
+     * different field name (`user`, not `userId`) and binds unwrapped raw
+     * ints -- wave 1's resolved finding that a raw scalar (not the VO
+     * itself) is what binds correctly against an association comparison,
+     * since there's no field-level custom Type left to consult during
+     * binding the way the old scalar column had.
      *
      * @param list<UserId> $userIds
      */
@@ -703,23 +746,29 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             return;
         }
 
-        [$entityClass, $alias] = match ($table) {
-            UserRelatedTable::UserInfos => [UserInfoEntity::class, 'ui'],
-            UserRelatedTable::UserAccess => [UserAccessEntity::class, 'ua'],
-            UserRelatedTable::UserGroup => [UserGroupEntity::class, 'ug'],
+        [$entityClass, $alias, $field, $boundIds, $bindType] = match ($table) {
+            UserRelatedTable::UserInfos => [
+                UserInfoEntity::class, 'ui', 'user',
+                array_map(static fn (UserId $id): int => $id->value, $userIds),
+                ArrayParameterType::INTEGER,
+            ],
+            UserRelatedTable::UserAccess => [
+                UserAccessEntity::class, 'ua', 'userId',
+                array_map(static fn (UserId $id): int => $id->value, $userIds),
+                ArrayParameterType::INTEGER,
+            ],
+            UserRelatedTable::UserGroup => [
+                UserGroupEntity::class, 'ug', 'userId',
+                $userIds,
+                null,
+            ],
         };
 
         $em = $this->em;
         $em->createQueryBuilder()
             ->delete($entityClass, $alias)
-            ->where("{$alias}.userId IN (:userIds)")
-            ->setParameter(
-                'userIds',
-                $table === UserRelatedTable::UserAccess
-                    ? array_map(static fn (UserId $id): int => $id->value, $userIds)
-                    : $userIds,
-                $table === UserRelatedTable::UserAccess ? ArrayParameterType::INTEGER : null,
-            )
+            ->where("{$alias}.{$field} IN (:userIds)")
+            ->setParameter('userIds', $boundIds, $bindType)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -781,11 +830,11 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     public function countUserInfosRows(UserId $userId): int
     {
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
-            ->select('COUNT(ui.userId) AS counter')
+            ->select('COUNT(IDENTITY(ui.user)) AS counter')
             ->leftJoin(ThemeEntity::class, 't', Join::WITH, 't.id = ui.theme')
-            ->where('ui.userId = :userId')
-            ->groupBy('ui.userId')
-            ->setParameter('userId', $userId)
+            ->where('ui.user = :userId')
+            ->groupBy('ui.user')
+            ->setParameter('userId', $userId->value)
             ->getQuery()
             ->getResult();
 
@@ -822,8 +871,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->select('ui', 't.name AS theme_name')
             ->from(UserInfoEntity::class, 'ui')
             ->leftJoin(ThemeEntity::class, 't', Join::WITH, 't.id = ui.theme')
-            ->where('ui.userId = :userId')
-            ->setParameter('userId', $userId)
+            ->where('ui.user = :userId')
+            ->setParameter('userId', $userId->value)
             ->getQuery()
             ->getOneOrNullResult();
 
@@ -1181,7 +1230,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.status', ':status')
-            ->where('ui.userId IN (:userIds)')
+            ->where('ui.user IN (:userIds)')
             ->setParameter('status', $status)
             ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER)
             ->getQuery()
@@ -1212,7 +1261,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         $em = $this->em;
         $qb = $em->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
-            ->where('ui.userId IN (:userIds)')
+            ->where('ui.user IN (:userIds)')
             ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER);
 
         foreach ($updates as $field => $value) {
@@ -1292,7 +1341,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.registrationDate')
             ->where('ui.registrationDate IS NOT NULL')
-            ->orderBy('ui.userId', 'ASC')
+            ->orderBy('ui.user', 'ASC')
             ->setMaxResults(1)
             ->getQuery()
             ->getSingleColumnResult();
@@ -1318,7 +1367,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     public function findThemeUsageCounts(): array
     {
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
-            ->select('ui.theme', 'COUNT(ui.userId) AS themeCounter')
+            ->select('ui.theme', 'COUNT(IDENTITY(ui.user)) AS themeCounter')
             ->groupBy('ui.theme')
             ->orderBy('ui.theme')
             ->getQuery()
@@ -1351,7 +1400,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     public function findLanguageUsageCounts(): array
     {
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
-            ->select('ui.language', 'COUNT(ui.userId) AS languageCounter')
+            ->select('ui.language', 'COUNT(IDENTITY(ui.user)) AS languageCounter')
             ->groupBy('ui.language')
             ->orderBy('ui.language')
             ->getQuery()
@@ -1431,8 +1480,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     public function findUserCountsByStatus(int $excludeUserId): array
     {
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
-            ->select('ui.status', 'COUNT(ui.userId) AS nbUsersOf')
-            ->where('ui.userId != :excludeUserId')
+            ->select('ui.status', 'COUNT(IDENTITY(ui.user)) AS nbUsersOf')
+            ->where('ui.user != :excludeUserId')
             ->groupBy('ui.status')
             ->setParameter('excludeUserId', $excludeUserId, ParameterType::INTEGER)
             ->getQuery()
@@ -1458,8 +1507,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     public function findUserCountsByLevel(int $excludeUserId): array
     {
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
-            ->select('ui.level', 'COUNT(ui.userId) AS nbUsersOf')
-            ->where('ui.userId != :excludeUserId')
+            ->select('ui.level', 'COUNT(IDENTITY(ui.user)) AS nbUsersOf')
+            ->where('ui.user != :excludeUserId')
             ->groupBy('ui.level')
             ->setParameter('excludeUserId', $excludeUserId, ParameterType::INTEGER)
             ->getQuery()
@@ -1701,20 +1750,21 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * Admin\AlbumNotificationPageRenderer's own "every non-guest user"
      * pool, further intersected with album-access ids for private albums.
      *
-     * Single-table, static column/property. getSingleColumnResult() uses
-     * Doctrine's
-     * HYDRATE_SCALAR_COLUMN mode (ScalarColumnHydrator), which does a raw
-     * Statement::fetchFirstColumn() with NO per-field Type conversion at
-     * all -- unlike getArrayResult()/getResult(), it does NOT hydrate
-     * ui.userId into a UserId VO despite the custom `user_id` Doctrine
-     * Type, so this reads the raw numeric-string/int directly.
+     * Single-table, static column/property. `IDENTITY(ui.user)` extracts
+     * the raw FK id without hydrating the associated `UserEntity` -- a
+     * bare association path in a `SELECT` clause changes the generated SQL
+     * itself (every column of the joined entity, not just this one),
+     * regardless of which hydration mode reads the result afterward, so
+     * this still needs the same fix even though `getSingleColumnResult()`
+     * (`HYDRATE_SCALAR_COLUMN`) would otherwise apply no per-field Type
+     * conversion at all.
      *
      * @return list<string>
      */
     public function findUserIdsExcludingStatus(string $excludedStatus): array
     {
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
-            ->select('ui.userId')
+            ->select('IDENTITY(ui.user)')
             ->where('ui.status != :status')
             ->setParameter('status', $excludedStatus)
             ->getQuery()
@@ -1740,10 +1790,10 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      *
      * `users` is mapped ({@see UserEntity}); see this class's own
      * docblock for why its columns are fixed, not caller-supplied. Rows
-     * carry `user_id` as a raw int, not a UserId VO -- unwrapped
-     * explicitly after hydration (Gotcha #4 territory: array hydration
-     * WOULD apply `ui.userId`'s custom Type, but every real consumer of
-     * this row shape expects a plain scalar there).
+     * carry `user_id` as a raw int, not a UserId VO -- `IDENTITY(ui.user)`
+     * extracts it directly rather than hydrating the associated
+     * `UserEntity`, matching every real consumer of this row shape, which
+     * expects a plain scalar there.
      *
      * @param  list<int|string>  $userIds
      * @return list<NotificationRecipient>
@@ -1756,10 +1806,10 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
 
         $rows = $this->em
             ->createQueryBuilder()
-            ->select('ui.userId AS user_id', 'ui.status AS status', 'ui.language AS language', 'u.mailAddress AS email', 'u.username AS username')
+            ->select('IDENTITY(ui.user) AS user_id', 'ui.status AS status', 'ui.language AS language', 'u.mailAddress AS email', 'u.username AS username')
             ->from(UserInfoEntity::class, 'ui')
-            ->innerJoin(UserEntity::class, 'u', Join::WITH, 'u.id = ui.userId')
-            ->where('ui.userId IN (:userIds)')
+            ->innerJoin('ui.user', 'u')
+            ->where('ui.user IN (:userIds)')
             ->setParameter('userIds', array_map(static fn (int|string $id): int => (int) $id, $userIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
@@ -1771,7 +1821,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             }
 
             $result[] = new NotificationRecipient(
-                userId: ($row['user_id'] ?? null) instanceof UserId ? $row['user_id'] : null,
+                userId: is_numeric($row['user_id'] ?? null) ? UserId::from((int) $row['user_id']) : null,
                 // `status` is UserStatus (enumType-mapped) -- array
                 // hydration returns a real instance, unwrapped to
                 // `.value` here.
@@ -1920,7 +1970,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->createQueryBuilder()
             ->select('u.id AS id', 'ui.status AS status')
             ->from(UserEntity::class, 'u')
-            ->leftJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.userId')
+            ->leftJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.user')
             ->where('u.id IN (:ids)')
             ->setParameter('ids', array_map(static fn (int|string $id): int => (int) $id, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
@@ -1964,7 +2014,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->createQueryBuilder()
             ->select('u.id AS id', 'u.username AS username', 'ui.status AS status')
             ->from(UserEntity::class, 'u')
-            ->leftJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.userId')
+            ->leftJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.user')
             ->orderBy('u.username', 'ASC')
             ->getQuery()
             ->getArrayResult();
@@ -1997,20 +2047,18 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * compiles to MySQL's NOW()
      * (Doctrine\DBAL\Platforms\MySQLPlatform::getCurrentTimestampSQL()),
      * same comparison as `activation_key_expire > NOW()` against this
-     * still-plain-string column. `ui.userId` maps through the `user_id`
-     * custom Doctrine Type, so getArrayResult() hydrates it as a UserId
-     * value object, not a raw scalar -- so this builds ActivationKeyRow
-     * directly with an instanceof check instead of
-     * reusing ActivationKeyRow::fromRow() (which does a raw-DBAL-shaped
-     * UserId::tryFrom($row['user_id']) check that would silently treat a
-     * UserId object as invalid and throw).
+     * still-plain-string column. `IDENTITY(ui.user)` extracts the raw FK
+     * id without hydrating the associated `UserEntity` -- this builds
+     * ActivationKeyRow directly with a `UserId::tryFrom()` check instead of
+     * reusing ActivationKeyRow::fromRow() (whose own raw-DBAL-shaped row
+     * key is `user_id`, not this query's own `userId` alias).
      *
      * @return list<ActivationKeyRow>
      */
     public function findPendingActivationKeyRows(): array
     {
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
-            ->select('ui.userId', 'ui.status', 'ui.activationKey')
+            ->select('IDENTITY(ui.user) AS userId', 'ui.status', 'ui.activationKey')
             ->where('ui.activationKey IS NOT NULL')
             ->andWhere('ui.activationKeyExpire > CURRENT_TIMESTAMP()')
             ->getQuery()
@@ -2018,12 +2066,13 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! $row['userId'] instanceof UserId) {
+            $userId = is_array($row) ? UserId::tryFrom($row['userId'] ?? null) : null;
+            if (! $userId instanceof UserId) {
                 continue;
             }
 
             $result[] = new ActivationKeyRow(
-                userId: $row['userId'],
+                userId: $userId,
                 // `status` is UserStatus (enumType-mapped) -- array
                 // hydration returns a real instance, unwrapped to
                 // `.value` here.

@@ -511,7 +511,7 @@ final class RateRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('DISTINCT u.id AS id', 'u.username AS name', 'ui.status AS status')
             ->from(UserEntity::class, 'u')
-            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.userId')
+            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.user')
             ->getQuery()
             ->getArrayResult();
 

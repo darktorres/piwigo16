@@ -6,7 +6,6 @@ namespace Piwigo\Admin\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Common\ValueObject\LangCode;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Users\UserInfoEntity;
 use RuntimeException;
@@ -187,7 +186,7 @@ final readonly class ExtensionRepository
     public function findUserIdsByTheme(string $theme): array
     {
         $ids = $this->em->createQueryBuilder()
-            ->select('ui.userId')
+            ->select('IDENTITY(ui.user) AS userId')
             ->from(UserInfoEntity::class, 'ui')
             ->where('ui.theme = :theme')
             ->setParameter('theme', $theme)
@@ -195,11 +194,11 @@ final readonly class ExtensionRepository
             ->getResult();
 
         return array_map(static function (array $row): string {
-            if (! $row['userId'] instanceof UserId) {
-                throw new RuntimeException('Expected UserId from DQL scalar hydration of ui.userId');
+            if (! is_numeric($row['userId'])) {
+                throw new RuntimeException('Expected a positive int from DQL scalar hydration of ui.user');
             }
 
-            return (string) $row['userId']->value;
+            return (string) (int) $row['userId'];
         }, $ids);
     }
 
@@ -216,7 +215,7 @@ final readonly class ExtensionRepository
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.theme', ':theme')
             ->set('ui.lastmodified', ':now')
-            ->where('ui.userId IN (:ids)')
+            ->where('ui.user IN (:ids)')
             ->setParameter('theme', $theme)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', $userIds)
@@ -264,7 +263,7 @@ final readonly class ExtensionRepository
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.language', ':language')
             ->set('ui.lastmodified', ':now')
-            ->where('ui.userId IN (:ids)')
+            ->where('ui.user IN (:ids)')
             ->setParameter('language', $languageVo)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', [$defaultUserId, $guestId])

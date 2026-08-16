@@ -9,12 +9,20 @@ use Override;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\ThemeId;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\HasLastModified;
 
 /**
- * Maps the `user_infos` table. `user_id` is the PK, application-assigned (the
- * `users` row's own id -- never auto-generated here).
+ * Maps the `user_infos` table. `user` is the PK, application-assigned (the
+ * `users` row's own id -- never auto-generated here) -- a real
+ * `#[ORM\Id] #[ORM\ManyToOne] UserEntity` association (owning side only;
+ * see `0.3`'s "inverse side of x-to-one can never be lazy" finding for why
+ * `UserEntity` never gets a matching `$userInfo` back-reference). Identity
+ * *through* an association, not just a scalar FK -- `nullable`/
+ * `referencedColumnName` must both stay unspecified on the
+ * `#[ORM\JoinColumn]`: Doctrine forces `nullable` to `false`
+ * unconditionally for an `#[ORM\Id]` association and raises a deprecation
+ * warning if it's specified at all (see `CategoryEntity`'s own docblock for
+ * the full `nullable` resolution).
  *
  * `status` is `UserStatus` (native Doctrine `enumType` column), not a
  * plain string. `user_infos.status` is a DB-level
@@ -80,8 +88,9 @@ final class UserInfoEntity implements HasLastModified
 {
     public function __construct(
         #[ORM\Id]
-        #[ORM\Column(name: 'user_id', type: 'user_id')]
-        public UserId $userId,
+        #[ORM\ManyToOne]
+        #[ORM\JoinColumn(name: 'user_id')]
+        public UserEntity $user,
         #[ORM\Column(name: 'nb_image_page', type: 'smallint')]
         public int $nbImagePage,
         #[ORM\Column(type: 'string', length: 20, enumType: UserStatus::class)]

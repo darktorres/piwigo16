@@ -10,7 +10,6 @@ use Override;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\LangCode;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Mail\Projection\MailRecipient;
@@ -26,12 +25,16 @@ use Piwigo\Users\UserInfoEntity;
  * params -- `users` is mapped ({@see \Piwigo\Users\UserEntity}), always
  * `id`/`username`/`mail_address`.
  *
- * None of `UserEntity`/
- * `UserInfoEntity`/`UserGroupEntity` declares a formal ORM association to
- * either of the others, so every join here uses `Join::WITH` (same
- * established pattern as `TagRepository`/`CategoryRepository`/etc.). `Mail`
- * is `L3Presentation`; `Users`/`Group` are both `L2aCoreDomain` -- a
- * downward dependency, not a `deleteSiteRow`-class layer violation.
+ * `UserInfoEntity::$user` is a real owning-side association onto
+ * `UserEntity` (`0.3`), but `UserEntity` has no inverse back-reference and
+ * `UserGroupEntity` declares no association to either -- every join here
+ * still uses an explicit `Join::WITH` condition, just with the bare
+ * association path on `UserInfoEntity`'s own side where one of the two
+ * joined aliases is it (same established pattern as
+ * `TagRepository`/`CategoryRepository`/etc. use for their own
+ * non-association joins). `Mail` is `L3Presentation`; `Users`/`Group` are
+ * both `L2aCoreDomain` -- a downward dependency, not a
+ * `deleteSiteRow`-class layer violation.
  */
 final readonly class MailRecipientRepository implements MailRecipientRepositoryInterface
 {
@@ -50,23 +53,23 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
         ?int $excludeUserId
     ): array {
         $qb = $this->em->createQueryBuilder()
-            ->select('i.userId AS user_id', 'u.username AS name', 'u.mailAddress AS email')
+            ->select('IDENTITY(i.user) AS user_id', 'u.username AS name', 'u.mailAddress AS email')
             ->from(UserEntity::class, 'u')
-            ->innerJoin(UserInfoEntity::class, 'i', Join::WITH, 'i.userId = u.id')
+            ->innerJoin(UserInfoEntity::class, 'i', Join::WITH, 'i.user = u.id')
             ->where('i.status IN (:statuses)')
             ->andWhere('u.mailAddress IS NOT NULL')
             ->orderBy('name')
             ->setParameter('statuses', $userStatuses);
 
         if ($groupId !== null) {
-            $qb->innerJoin(UserGroupEntity::class, 'ug', Join::WITH, 'ug.userId = i.userId')
+            $qb->innerJoin(UserGroupEntity::class, 'ug', Join::WITH, 'ug.userId = i.user')
                 ->andWhere('ug.groupId = :groupId')
                 ->setParameter('groupId', GroupId::from($groupId));
         }
 
         if ($excludeUserId !== null) {
-            $qb->andWhere('i.userId <> :excludeUserId')
-                ->setParameter('excludeUserId', UserId::from($excludeUserId));
+            $qb->andWhere('i.user <> :excludeUserId')
+                ->setParameter('excludeUserId', $excludeUserId);
         }
 
         $rows = $qb->getQuery()
@@ -87,7 +90,7 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
             ->select('DISTINCT ui.language')
             ->from(UserGroupEntity::class, 'ug')
             ->innerJoin(UserEntity::class, 'u', Join::WITH, 'u.id = ug.userId')
-            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'ui.userId = ug.userId')
+            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'ui.user = ug.userId')
             ->where('ug.groupId = :groupId')
             ->andWhere("u.mailAddress <> ''")
             ->setParameter('groupId', GroupId::from($groupId));
@@ -118,10 +121,10 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
         string $language
     ): array {
         $rows = $this->em->createQueryBuilder()
-            ->select('ui.userId AS user_id', 'ui.status', 'u.username AS name', 'u.mailAddress AS email')
+            ->select('IDENTITY(ui.user) AS user_id', 'ui.status', 'u.username AS name', 'u.mailAddress AS email')
             ->from(UserGroupEntity::class, 'ug')
             ->innerJoin(UserEntity::class, 'u', Join::WITH, 'u.id = ug.userId')
-            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'ui.userId = ug.userId')
+            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'ui.user = ug.userId')
             ->where('ug.groupId = :groupId')
             ->andWhere("u.mailAddress <> ''")
             ->andWhere('ui.language = :language')
@@ -149,7 +152,7 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
             $name = $row['name'] ?? null;
             $email = $row['email'] ?? null;
             $recipients[] = MailRecipient::fromRow([
-                'user_id' => $userId instanceof UserId ? $userId->value : $userId,
+                'user_id' => $userId,
                 'name' => $name instanceof Username ? $name->value : $name,
                 'email' => $email instanceof Email ? $email->value : $email,
                 'status' => $includeStatus ? ($row['status'] ?? null) : null,

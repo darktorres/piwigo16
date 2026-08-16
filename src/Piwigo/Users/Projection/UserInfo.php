@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users\Projection;
 
 use InvalidArgumentException;
+use LogicException;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -123,7 +124,7 @@ final readonly class UserInfo
     public static function fromEntity(UserInfoEntity $entity): self
     {
         return new self(
-            userId: $entity->userId,
+            userId: $entity->user->id ?? throw new LogicException('UserEntity::$id is only null before persist; fromEntity() expects an already-persisted entity'),
             nbImagePage: $entity->nbImagePage,
             status: $entity->status->value,
             language: $entity->language,

@@ -769,9 +769,9 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
         // SessionRepository/CommentRepository's own established reasoning
         // (invisible to PIWIGO_TEST_NOW).
         $em = $this->getEntityManager();
-        $em->createQuery('UPDATE ' . UserInfoEntity::class . ' ui SET ui.lastVisit = :now WHERE ui.userId = :userId')
+        $em->createQuery('UPDATE ' . UserInfoEntity::class . ' ui SET ui.lastVisit = :now WHERE ui.user = :userId')
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('userId', UserId::from($userId))
+            ->setParameter('userId', $userId)
             ->execute();
         $em->clear();
     }

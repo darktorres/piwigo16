@@ -73,7 +73,7 @@ final class NotificationByMailRepository extends EntityRepository
         $qb = $this->createQueryBuilder('n')
             ->select('n.userId AS user_id', 'n.checkKey AS check_key', 'u.username AS username', 'u.mailAddress AS mail_address', 'n.enabled', 'n.lastSend AS last_send', 'ui.status')
             ->innerJoin(UserEntity::class, 'u', Join::WITH, 'n.userId = u.id')
-            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'ui.userId = n.userId');
+            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'ui.user = n.userId');
 
         if ($action === 'send') {
             $qb->andWhere('n.enabled = :enabledSend')

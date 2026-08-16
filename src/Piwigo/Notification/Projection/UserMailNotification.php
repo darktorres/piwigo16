@@ -23,7 +23,7 @@ use Piwigo\Users\UserStatus;
  * tinyint(1) driver read already gives natively -- nothing left to
  * conditionally convert once `fromRow()` does the `(bool)` cast once, here.
  *
- * `userId` is `UserId`, not `?UserId` -- `n.userId = u.id`/`ui.userId =
+ * `userId` is `UserId`, not `?UserId` -- `n.userId = u.id`/`ui.user =
  * n.userId` are both real `INNER JOIN`s in the one query this projects,
  * so a row can't exist without a valid user id, same reasoning as
  * {@see \Piwigo\Rate\Projection\Rate}'s `userId`.

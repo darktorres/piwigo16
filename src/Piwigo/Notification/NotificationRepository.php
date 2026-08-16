@@ -121,7 +121,12 @@ final readonly class NotificationRepository
             case 'new_users':
                 $qb->from(UserInfoEntity::class, 'ui');
                 $dateColumn = 'ui.registrationDate';
-                $fieldId = 'ui.userId';
+                // Bare 'ui.user' would hydrate the associated UserEntity
+                // in a SELECT clause -- IDENTITY() extracts the raw FK id
+                // directly instead, matching every other case's plain-scalar
+                // shape (scalarIdToInt() below already handles a plain
+                // scalar defensively, so this needs no further change there).
+                $fieldId = 'IDENTITY(ui.user)';
 
                 break;
             default:

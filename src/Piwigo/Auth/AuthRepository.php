@@ -72,15 +72,24 @@ final readonly class AuthRepository
         );
     }
 
+    /**
+     * Real DQL `UPDATE`, not `find()` + mutate + `flush()` -- see
+     * {@see \Piwigo\Users\UserRepository::savePreferences()}'s docblock for
+     * why an entity-level `flush()` against `UserInfoEntity`'s own
+     * association-typed `#[ORM\Id]` throws, and why the bulk-DQL form
+     * avoids it entirely.
+     */
     public function updateLanguage(UserId $userId, string $language): void
     {
-        $entity = $this->em->find(UserInfoEntity::class, $userId);
-        if ($entity === null) {
-            return;
-        }
-
-        $entity->language = LangCode::from($language);
-        $this->em->flush();
+        $this->em->createQueryBuilder()
+            ->update(UserInfoEntity::class, 'ui')
+            ->set('ui.language', ':language')
+            ->where('ui.user = :userId')
+            ->setParameter('language', LangCode::from($language))
+            ->setParameter('userId', $userId->value)
+            ->getQuery()
+            ->execute();
+        $this->em->clear();
     }
 
     /**
@@ -108,7 +117,7 @@ final readonly class AuthRepository
                 'i.status AS status',
             )
             ->from(UserEntity::class, 'u')
-            ->leftJoin(UserInfoEntity::class, 'i', Join::WITH, 'u.id = i.userId');
+            ->leftJoin(UserInfoEntity::class, 'i', Join::WITH, 'u.id = i.user');
 
         $row = null;
 
@@ -156,8 +165,8 @@ final readonly class AuthRepository
                 'u.mailAddress AS email',
             )
             ->from(UserAuthKeyEntity::class, 'uak')
-            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'uak.userId = ui.userId')
-            ->innerJoin(UserEntity::class, 'u', Join::WITH, 'u.id = ui.userId')
+            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'uak.userId = ui.user')
+            ->innerJoin(UserEntity::class, 'u', Join::WITH, 'u.id = ui.user')
             ->where('uak.authKey = :authKey')
             ->setParameter('authKey', $authKey)
             ->getQuery()
@@ -252,28 +261,40 @@ final readonly class AuthRepository
         $this->em->clear();
     }
 
+    /**
+     * Real DQL `UPDATE`, not `find()` + mutate + `flush()` -- same reason as
+     * {@see updateLanguage()} above.
+     */
     public function clearActivationKey(UserId $userId): void
     {
-        $entity = $this->em->find(UserInfoEntity::class, $userId);
-        if ($entity === null) {
-            return;
-        }
-
-        $entity->activationKey = null;
-        $entity->activationKeyExpire = null;
-        $this->em->flush();
+        $this->em->createQueryBuilder()
+            ->update(UserInfoEntity::class, 'ui')
+            ->set('ui.activationKey', 'NULL')
+            ->set('ui.activationKeyExpire', 'NULL')
+            ->where('ui.user = :userId')
+            ->setParameter('userId', $userId->value)
+            ->getQuery()
+            ->execute();
+        $this->em->clear();
     }
 
+    /**
+     * Real DQL `UPDATE`, not `find()` + mutate + `flush()` -- same reason as
+     * {@see updateLanguage()} above.
+     */
     public function setActivationKey(UserId $userId, string $hash, DateTimeInterface $expire): void
     {
-        $entity = $this->em->find(UserInfoEntity::class, $userId);
-        if ($entity === null) {
-            return;
-        }
-
-        $entity->activationKey = $hash;
-        $entity->activationKeyExpire = SqlDateTime::from($expire->format(self::DATETIME_FORMAT));
-        $this->em->flush();
+        $this->em->createQueryBuilder()
+            ->update(UserInfoEntity::class, 'ui')
+            ->set('ui.activationKey', ':hash')
+            ->set('ui.activationKeyExpire', ':expire')
+            ->where('ui.user = :userId')
+            ->setParameter('hash', $hash)
+            ->setParameter('expire', SqlDateTime::from($expire->format(self::DATETIME_FORMAT)))
+            ->setParameter('userId', $userId->value)
+            ->getQuery()
+            ->execute();
+        $this->em->clear();
     }
 
     /**
@@ -299,9 +320,9 @@ final readonly class AuthRepository
         $qb = $this->em->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.lastVisitFromHistory', ':true')
-            ->where('ui.userId = :userId')
+            ->where('ui.user = :userId')
             ->setParameter('true', true)
-            ->setParameter('userId', UserId::from($userId));
+            ->setParameter('userId', $userId);
 
         if ($lastVisit === null) {
             $qb->set('ui.lastVisit', 'NULL');

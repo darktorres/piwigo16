@@ -63,7 +63,6 @@ use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Listener\CommentSpamListener;
 use Piwigo\Listener\HtmlRenderingListener;
-use Piwigo\Listener\ListenerInterface;
 use Piwigo\Listener\SiteCleanupListener;
 use Piwigo\Listener\UploadFormatListener;
 use Piwigo\Mail\MailService;
@@ -432,28 +431,29 @@ final class RequestBootstrap
         // The 2 dead 'pwg_image_resize' registrations this block used to
         // carry (no function by that name exists anywhere in this
         // codebase, neither event was ever triggered) were deleted
-        // outright rather than ported: no Listener\ListenerInterface
-        // shape can express "register a string that isn't callable yet
-        // and only fail lazily," and preserving genuinely dead code
-        // isn't worth contorting the new mechanism for. The 2 orphaned
-        // event classes themselves (UploadImageResize/UploadThumbnailResize)
-        // were later deleted outright too (P32 Stage A5), once zero
-        // dispatch site anywhere confirmed they served no purpose at all.
-        self::registerListener(new HtmlRenderingListener(self::htmlService(), self::currentConfig()));
+        // outright rather than ported: no Core\SubscriberInterface
+        // implementor's shape can express "register a string that isn't
+        // callable yet and only fail lazily," and preserving genuinely
+        // dead code isn't worth contorting the new mechanism for. The 2
+        // orphaned event classes themselves (UploadImageResize/
+        // UploadThumbnailResize) were later deleted outright too (P32
+        // Stage A5), once zero dispatch site anywhere confirmed they
+        // served no purpose at all.
+        self::eventDispatcher()->registerSubscriber(new HtmlRenderingListener(self::htmlService(), self::currentConfig()));
         // checkForSpam() is an instance method (matching UploadFormatListener's
         // own now-instance upload_file handlers below, both container-shared
         // instances rather than static calls) -- CommentService is built
         // here, reusing the request's own shared Connection, and handed
         // to the listener rather than autowired fresh.
-        self::registerListener(new CommentSpamListener(new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessLevelChecker())));
-        self::registerListener(new SiteCleanupListener(EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)));
+        self::eventDispatcher()->registerSubscriber(new CommentSpamListener(new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessLevelChecker())));
+        self::eventDispatcher()->registerSubscriber(new SiteCleanupListener(EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)));
         // self::uploadService() resolves the container-shared instance --
         // see that method's own docblock for why every real UploadService
         // consumer (this listener included) now resolves the same object
         // instead of constructing its own (standard container hygiene,
         // not an event-dedup concern -- EventDispatcher::callablesEqual()
         // is gone, deleted in P32 Stage A4).
-        self::registerListener(new UploadFormatListener(self::uploadService()));
+        self::eventDispatcher()->registerSubscriber(new UploadFormatListener(self::uploadService()));
         self::eventDispatcher()->dispatch(new Init());
 
         // CurrentUser's/PageState's own `??=` guards are already
@@ -1126,27 +1126,5 @@ final class RequestBootstrap
         }
 
         return $uploadService;
-    }
-
-    /**
-     * Registers every entry of a Piwigo\Listener\* instance's own
-     * subscribedEvents() map onto EventDispatcher::addTypedHandler() --
-     * the glue P27.0's Listener extraction replaces inline
-     * addTypedHandler() calls with. $listener is already fully
-     * constructed (with real dependencies, reusing the request's shared
-     * Connection where relevant) by the caller; this method only wires
-     * its declared events onto the dispatcher, in whatever order
-     * subscribedEvents() returns them. Entries are already-bound Closures
-     * (see ListenerInterface's own docblock for why -- this codebase's
-     * phpstan-strict-rules config bans variable method calls outright, so
-     * there's no method-name string left to resolve here.
-     */
-    private static function registerListener(ListenerInterface $listener): void
-    {
-        foreach ($listener->subscribedEvents() as $eventClass => $handlers) {
-            foreach (is_array($handlers) ? $handlers : [$handlers] as $handler) {
-                self::eventDispatcher()->addTypedHandler($eventClass, $handler);
-            }
-        }
     }
 }

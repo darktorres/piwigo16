@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\PluginConfig;
 
 use Override;
+use Piwigo\Core\SubscriberInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher as SymfonyEventDispatcher;
 
@@ -44,7 +45,7 @@ use Symfony\Component\EventDispatcher\EventDispatcher as SymfonyEventDispatcher;
  * either.
  *
  * Not adopting Symfony's own `EventSubscriberInterface` anywhere in this
- * codebase: see `Listener\ListenerInterface`'s own docblock for why (a
+ * codebase: see `Core\SubscriberInterface`'s own docblock for why (a
  * real, verified blocker -- its `getSubscribedEvents()` is `static`, so it
  * has no `$this` for the bound-closure registration style every
  * implementor here relies on).
@@ -94,6 +95,28 @@ final class EventDispatcher implements EventDispatcherInterface
     public function removeTypedHandler(string $event, callable $handler): void
     {
         $this->inner->removeListener($event, $handler);
+    }
+
+    /**
+     * Registers every entry of a `Core\SubscriberInterface` implementor's
+     * own `subscribedEvents()` map (a first-party `Listener\*` instance,
+     * or a plugin/theme's `ExtensionInterface` instance) onto
+     * `addTypedHandler()` -- the one shared implementation of a loop that
+     * used to be duplicated across `Bootstrap\RequestBootstrap::
+     * registerListener()`, `Bootstrap\UserResolutionMiddleware`'s early
+     * `AuthListener` registration, `PluginConfig\PluginRegistry::
+     * bootActive()` and `PluginConfig\ThemeRegistry::bootCurrent()` (P32
+     * Stage A6). `$subscriber` is already fully constructed by the
+     * caller; this method only wires its declared events onto the
+     * dispatcher, in whatever order `subscribedEvents()` returns them.
+     */
+    public function registerSubscriber(SubscriberInterface $subscriber): void
+    {
+        foreach ($subscriber->subscribedEvents() as $eventClass => $handlers) {
+            foreach (is_array($handlers) ? $handlers : [$handlers] as $handler) {
+                $this->addTypedHandler($eventClass, $handler);
+            }
+        }
     }
 
     /**

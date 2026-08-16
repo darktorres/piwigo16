@@ -7,6 +7,7 @@ namespace Piwigo\Listener;
 use Override;
 use Piwigo\Comment\CommentService;
 use Piwigo\Comment\Event\UserCommentCheck;
+use Piwigo\Core\SubscriberInterface;
 
 /**
  * Extracted from `Bootstrap\RequestBootstrap::finalize()`'s own
@@ -16,7 +17,7 @@ use Piwigo\Comment\Event\UserCommentCheck;
  * reuses the request's own shared `Connection` instead of building a
  * separate one.
  */
-final readonly class CommentSpamListener implements ListenerInterface
+final readonly class CommentSpamListener implements SubscriberInterface
 {
     public function __construct(
         private CommentService $commentService,

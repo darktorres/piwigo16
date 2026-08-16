@@ -6,6 +6,7 @@ namespace Piwigo\Listener;
 
 use Override;
 use Piwigo\Category\Event\DeleteSite;
+use Piwigo\Core\SubscriberInterface;
 use Piwigo\Site\SiteRepository;
 
 /**
@@ -18,7 +19,7 @@ use Piwigo\Site\SiteRepository;
  * the request's own shared `Connection` instead of building a separate
  * one.
  */
-final readonly class SiteCleanupListener implements ListenerInterface
+final readonly class SiteCleanupListener implements SubscriberInterface
 {
     public function __construct(
         private SiteRepository $siteRepository,

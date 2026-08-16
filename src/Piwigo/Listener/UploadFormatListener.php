@@ -7,6 +7,7 @@ namespace Piwigo\Listener;
 use Override;
 use Piwigo\Admin\Upload\Event\UploadFile;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Core\SubscriberInterface;
 
 /**
  * Extracted from `Bootstrap\RequestBootstrap::finalize()`'s own 6
@@ -22,7 +23,7 @@ use Piwigo\Admin\Upload\UploadService;
  * callablesEqual()`'s closure-identity dedup, which an earlier version
  * of this docblock cited instead).
  */
-final readonly class UploadFormatListener implements ListenerInterface
+final readonly class UploadFormatListener implements SubscriberInterface
 {
     public function __construct(
         private UploadService $uploadService,

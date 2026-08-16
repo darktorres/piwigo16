@@ -7,6 +7,7 @@ namespace Piwigo\Listener;
 use Override;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\Event\TryLogUser;
+use Piwigo\Core\SubscriberInterface;
 
 /**
  * Extracted from `Bootstrap\RequestBootstrap::connect()`'s own
@@ -22,7 +23,7 @@ use Piwigo\Auth\Event\TryLogUser;
  * reuses the request's own shared `Connection` instead of building a
  * separate one.
  */
-final readonly class AuthListener implements ListenerInterface
+final readonly class AuthListener implements SubscriberInterface
 {
     public function __construct(
         private AuthService $authService,

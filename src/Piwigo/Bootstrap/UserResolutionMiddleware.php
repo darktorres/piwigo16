@@ -96,7 +96,7 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
         // caller of tryLogUser() (the normal pwg.session.login WS
         // dispatch, later in this same pipeline) is unaffected by this
         // ordering.
-        foreach (new AuthListener(new AuthService(
+        $this->eventDispatcher->registerSubscriber(new AuthListener(new AuthService(
             new AuthRepository(EntityManagerFactory::build($conn)),
             $this->activityService($conn),
             $this->htmlService,
@@ -111,11 +111,7 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
             $this->paths,
             EntityManagerFactory::build($conn),
             new ConnectedWithSession(),
-        ))->subscribedEvents() as $eventClass => $listenerHandlers) {
-            foreach (is_array($listenerHandlers) ? $listenerHandlers : [$listenerHandlers] as $listenerHandler) {
-                $this->eventDispatcher->addTypedHandler($eventClass, $listenerHandler);
-            }
-        }
+        )));
 
         new UserBootstrap(
             $this->accessLevelChecker,

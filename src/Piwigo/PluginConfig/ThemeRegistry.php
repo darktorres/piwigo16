@@ -269,11 +269,7 @@ final class ThemeRegistry
             $instance = $this->bootInstance($manifest);
             $instances[$id] = $instance;
 
-            foreach ($instance->subscribedEvents() as $eventClass => $handlers) {
-                foreach (is_array($handlers) ? $handlers : [$handlers] as $handler) {
-                    $this->eventDispatcher->addTypedHandler($eventClass, $handler);
-                }
-            }
+            $this->eventDispatcher->registerSubscriber($instance);
         }
 
         foreach ($instances as $id => $instance) {

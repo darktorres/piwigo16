@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\SubscriberInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Fixtures\PluginConfig\TestChangeEvent;
 use Piwigo\Tests\Fixtures\PluginConfig\TestNotifyEvent;
@@ -304,4 +305,107 @@ test('dispatch runs every handler when the event never stops propagation', funct
 
     expect($event->calls)
         ->toBe(['first', 'second']);
+});
+
+test('registerSubscriber wires a single-event subscriber onto the dispatcher', function (): void {
+    $subscriber = new class() implements SubscriberInterface {
+        /**
+         * @var list<string>
+         */
+        public array $calls = [];
+
+        public function subscribedEvents(): array
+        {
+            return [
+                TestNotifyEvent::class => $this->onNotify(...),
+            ];
+        }
+
+        public function onNotify(TestNotifyEvent $e): void
+        {
+            $this->calls[] = $e->value;
+        }
+    };
+    $dispatcher = new EventDispatcher();
+
+    $dispatcher->registerSubscriber($subscriber);
+    $dispatcher->dispatch(new TestNotifyEvent('hi'));
+
+    expect($subscriber->calls)
+        ->toBe(['hi']);
+});
+
+test('registerSubscriber wires every closure in a list<Closure> entry for the same event', function (): void {
+    $subscriber = new class() implements SubscriberInterface {
+        /**
+         * @var list<string>
+         */
+        public array $calls = [];
+
+        public function subscribedEvents(): array
+        {
+            return [
+                TestNotifyEvent::class => [$this->first(...), $this->second(...)],
+            ];
+        }
+
+        public function first(TestNotifyEvent $e): void
+        {
+            $this->calls[] = 'first:' . $e->value;
+        }
+
+        public function second(TestNotifyEvent $e): void
+        {
+            $this->calls[] = 'second:' . $e->value;
+        }
+    };
+    $dispatcher = new EventDispatcher();
+
+    $dispatcher->registerSubscriber($subscriber);
+    $dispatcher->dispatch(new TestNotifyEvent('hi'));
+
+    expect($subscriber->calls)
+        ->toBe(['first:hi', 'second:hi']);
+});
+
+test('registerSubscriber wires every event class a subscriber declares, not just the first', function (): void {
+    $subscriber = new class() implements SubscriberInterface {
+        public bool $notifyCalled = false;
+
+        public ?string $changeValue = null;
+
+        public function subscribedEvents(): array
+        {
+            return [
+                TestNotifyEvent::class => $this->onNotify(...),
+                TestChangeEvent::class => $this->onChange(...),
+            ];
+        }
+
+        public function onNotify(TestNotifyEvent $e): void
+        {
+            $this->notifyCalled = true;
+        }
+
+        public function onChange(TestChangeEvent $e): TestChangeEvent
+        {
+            $this->changeValue = $e->value;
+            $e->value = strtoupper($e->value);
+
+            return $e;
+        }
+    };
+    $dispatcher = new EventDispatcher();
+
+    $dispatcher->registerSubscriber($subscriber);
+    $dispatcher->dispatch(new TestNotifyEvent('hi'));
+    $changeEvent = new TestChangeEvent('hello');
+    $dispatcher->dispatch($changeEvent);
+
+    expect($subscriber->notifyCalled)
+        ->toBeTrue()
+        ->and($subscriber->changeValue)
+        ->toBe('hello')
+        ->and($changeEvent->value)
+        ->toBe('HELLO');
 });

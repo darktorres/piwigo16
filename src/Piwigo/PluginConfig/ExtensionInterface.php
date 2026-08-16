@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\PluginConfig;
 
-use Closure;
+use Piwigo\Core\SubscriberInterface;
 
 /**
  * Contract implemented by a plugin's or theme's `main` class (the
@@ -26,8 +26,21 @@ use Closure;
  * `update()` are lifecycle hooks called only from the admin UI
  * (`Admin\Extensions\ExtensionLifecycle`), never from a real request's
  * boot path.
+ *
+ * `subscribedEvents()` (P32 Stage A6: inherited from `Core\
+ * SubscriberInterface`, not redeclared here -- see that interface's own
+ * docblock for the shared shape/rationale) must declare the full,
+ * unconditional union of every event this extension might ever care
+ * about -- unlike `Listener\*`'s own `SubscriberInterface` implementors,
+ * this runs on a bare `new $class()` instance
+ * (`PluginRegistry`/`ThemeRegistry`'s own `bootInstance()`), before
+ * `boot()` ever assigns anything to `$this`, so there is no
+ * constructor-injected state to condition on here. Runtime decisions
+ * (e.g. "only register this handler when
+ * `ExtensionContext::isAdminContext()` is true") belong inside the
+ * handler method itself instead.
  */
-interface ExtensionInterface
+interface ExtensionInterface extends SubscriberInterface
 {
     public function boot(ExtensionContext $context): void;
 
@@ -40,29 +53,4 @@ interface ExtensionInterface
     public function uninstall(): void;
 
     public function update(string $oldVersion, string $newVersion): void;
-
-    /**
-     * Must declare the full, unconditional union of every event this
-     * extension might ever care about -- unlike `Listener\
-     * ListenerInterface`'s implementors, this runs on a bare `new
-     * $class()` instance (`PluginRegistry`/`ThemeRegistry`'s own
-     * `bootInstance()`), before `boot()` ever assigns anything to `$this`,
-     * so there is no constructor-injected state to condition on here.
-     * Runtime decisions (e.g. "only register this handler when
-     * `ExtensionContext::isAdminContext()` is true") belong inside the
-     * handler method itself instead.
-     *
-     * Entries are bound `Closure`s (`$this->onFoo(...)`), never
-     * method-name strings, matching `Listener\ListenerInterface`'s own
-     * contract -- see that interface's own docblock for why: Symfony's
-     * `EventSubscriberInterface::getSubscribedEvents()` shape (bare
-     * method-name strings) is declared `static`, so it has no `$this` for
-     * a bound closure to reference -- verified both by PHPStan rejecting
-     * `$this` inside a static method and by a real `Error: Using $this
-     * when not in object context` at runtime -- not a PHPStan-rule
-     * collision as an earlier version of that docblock claimed.
-     *
-     * @return array<class-string, Closure|list<Closure>>
-     */
-    public function subscribedEvents(): array;
 }

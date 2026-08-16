@@ -9,6 +9,7 @@ use Piwigo\Category\Event\RenderCategoryDescription;
 use Piwigo\Category\Event\RenderCategoryLiteralDescription;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\StringHelper;
+use Piwigo\Core\SubscriberInterface;
 use Piwigo\Html\Event\RenderCommentContent;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\Event\GetSrcImageUrl;
@@ -32,7 +33,7 @@ use Piwigo\Tag\Event\RenderTagUrl;
  * `GetElementUrl`/`GetSrcImageUrl` to subscribe to at all -- real
  * conditional registration, not a no-op-in-the-handler workaround.
  */
-final readonly class HtmlRenderingListener implements ListenerInterface
+final readonly class HtmlRenderingListener implements SubscriberInterface
 {
     public function __construct(
         private HtmlService $htmlService,

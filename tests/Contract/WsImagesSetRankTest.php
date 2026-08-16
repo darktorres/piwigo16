@@ -16,14 +16,14 @@ use Piwigo\Db\DbConnection;
  * category has no ranked images at all).
  *
  * setRank()'s own "image_id is missing" guard (image_id === null after
- * array_shift()) is NOT chased here: image_id is registered with
- * WsParamFlag::FORCE_ARRAY and no 'default', so Server::addMethod()
- * never ORs in WsParamFlag::OPTIONAL for it (that only happens when a
- * 'default' key is present) -- a caller can never get past the WS layer's
- * own "Missing parameters: image_id" without image_id already being a
- * non-empty array, so array_shift() can never return null. Confirmed live:
- * omitting image_id returns the WS-layer's generic message, never
- * setRank()'s own text.
+ * array_shift()) is NOT chased here: image_id is registered via
+ * ParamDefinition::required('image_id', WsParamType::ID,
+ * WsParamFlag::FORCE_ARRAY) -- required() never sets WsParamFlag::OPTIONAL
+ * (only optional()'s real default value does) -- a caller can never get
+ * past the WS layer's own "Missing parameters: image_id" without image_id
+ * already being a non-empty array, so array_shift() can never return
+ * null. Confirmed live: omitting image_id returns the WS-layer's generic
+ * message, never setRank()'s own text.
  *
  * The `$row === false` "max-rank aggregate query returned no row" Exception
  * is not chased either -- a bare `SELECT MAX(...)` with no GROUP BY always

@@ -8,9 +8,10 @@ use Piwigo\Ws\WsAction;
 
 /**
  * Echoes back its checked params, same shape as ServerTest.php's own
- * addMethod-based "invoke calls the real registered callback" test --
- * proves invoke()'s handlerClass branch resolves and calls a real
- * container-autowired WsAction.
+ * "invoke calls the real registered callback" test (registered via
+ * MethodDefinition::forLegacyCallback()) -- proves invoke()'s
+ * handlerClass branch resolves and calls a real container-autowired
+ * WsAction.
  */
 final class ServerTestFakeWsAction implements WsAction
 {

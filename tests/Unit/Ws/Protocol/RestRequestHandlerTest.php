@@ -17,6 +17,8 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
+use Piwigo\Ws\MethodDefinition;
+use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\Protocol\RestRequestHandler;
 use Piwigo\Ws\Server;
@@ -105,9 +107,15 @@ test('handleRequest invokes the requested GET method with its params and sends t
     ];
     $_POST = [];
     $server = pwgRestRequestHandlerTestServer();
-    $server->addMethod('test.echo', fn (array $params, Server &$service): array => [
-        'name' => $params['name'],
-    ], ['name']);
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.echo',
+        callback: fn (array $params): array => [
+            'name' => $params['name'],
+        ],
+        params: [
+            ParamDefinition::required('name'),
+        ],
+    ));
     $handler = new RestRequestHandler();
 
     $response = $handler->handleRequest($server);
@@ -125,9 +133,15 @@ test('handleRequest reads params from $_POST instead of $_GET when the request i
         'name' => 'Pyrenees',
     ];
     $server = pwgRestRequestHandlerTestServer();
-    $server->addMethod('test.echo', fn (array $params, Server &$service): array => [
-        'name' => $params['name'],
-    ], ['name']);
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.echo',
+        callback: fn (array $params): array => [
+            'name' => $params['name'],
+        ],
+        params: [
+            ParamDefinition::required('name'),
+        ],
+    ));
     $handler = new RestRequestHandler();
 
     $response = $handler->handleRequest($server);

@@ -28,14 +28,14 @@ final readonly class ExtensionsMethodRegistrar
 {
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.plugins.getList',
             handlerClass: PluginsGetListHandler::class,
             description: 'Gets the list of plugins with id, name, version, state and description.',
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.plugins.performAction',
             handlerClass: PluginsPerformActionHandler::class,
             params: [
@@ -46,7 +46,7 @@ final readonly class ExtensionsMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.themes.performAction',
             handlerClass: ThemesPerformActionHandler::class,
             params: [
@@ -57,7 +57,7 @@ final readonly class ExtensionsMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.extensions.update',
             handlerClass: UpdateHandler::class,
             description: '<b>Webmaster only.</b>',
@@ -70,7 +70,7 @@ final readonly class ExtensionsMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.extensions.ignoreUpdate',
             handlerClass: IgnoreUpdateHandler::class,
             description: '<b>Webmaster only.</b> Ignores an extension if it needs update.',
@@ -83,7 +83,7 @@ final readonly class ExtensionsMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.extensions.checkUpdates',
             handlerClass: CheckUpdatesHandler::class,
             description: 'Checks if piwigo or extensions are up to date.',

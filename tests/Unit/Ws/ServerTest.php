@@ -34,7 +34,7 @@ use Piwigo\Ws\WsParamType;
  * Piwigo\Ws\Server -- the WS framework's own generic method registry/
  * dispatcher. No dedicated Integration/Browser spec of its own, though
  * WsDefaultMethods.php registers every real WS method through
- * `addMethod()` and every Contract test exercises `invoke()`
+ * `register()` and every Contract test exercises `invoke()`
  * transitively via a real HTTP round-trip.
  *
  * `run()` itself is NOT covered here: it just wires reflection methods
@@ -96,68 +96,7 @@ function pwgServerTestServer(bool $isAdmin = true, ?CurrentConfig $currentConfig
     );
 }
 
-// --------------------------------------------------------------- addMethod/hasMethod/getters
-
-test('addMethod with a plain param-name list registers a shorthand signature with default flags/type', function (): void {
-    $server = pwgServerTestServer();
-
-    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], ['foo', 'bar'], 'A test method');
-
-    expect($server->hasMethod('test.method'))
-        ->toBeTrue()
-        ->and($server->getMethodDescription('test.method'))
-        ->toBe('A test method')
-        ->and($server->getMethodSignature('test.method'))
-        ->toBe([
-            'foo' => [
-                'flags' => 0,
-                'type' => 0,
-            ],
-            'bar' => [
-                'flags' => 0,
-                'type' => 0,
-            ],
-        ]);
-});
-
-test('addMethod with a detailed param options map preserves flags/type and sets OPTIONAL when a default is present', function (): void {
-    $server = pwgServerTestServer();
-
-    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], [
-        'id' => [
-            'type' => WsParamType::ID,
-        ],
-        'name' => [
-            'default' => 'x',
-        ],
-    ]);
-
-    $signature = $server->getMethodSignature('test.method');
-
-    expect($signature['id'])->toBe([
-        'type' => WsParamType::ID,
-        'flags' => 0,
-    ])
-        ->and($signature['name']['flags'])->toBe(WsParamFlag::OPTIONAL)
-        ->and($signature['name']['default'])->toBe('x');
-});
-
-test('addMethod treats a null description as an empty string and null params as no params', function (): void {
-    $server = pwgServerTestServer();
-
-    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], null, null, [
-        'admin_only' => true,
-    ]);
-
-    expect($server->getMethodDescription('test.method'))
-        ->toBe('')
-        ->and($server->getMethodSignature('test.method'))
-        ->toBe([])
-        ->and($server->getMethodOptions('test.method'))
-        ->toBe([
-            'admin_only' => true,
-        ]);
-});
+// --------------------------------------------------------------- register/hasMethod/getters
 
 test('hasMethod/getMethodDescription/getMethodSignature/getMethodOptions fall back cleanly for an unregistered method', function (): void {
     $server = pwgServerTestServer();
@@ -318,9 +257,11 @@ test('invoke returns a 405 for a post_only method called without POST data', fun
     $original = $_POST;
     $_POST = [];
     $server = pwgServerTestServer();
-    $server->addMethod('test.postOnly', fn (array $params, Server &$service): array => [], null, null, [
-        'post_only' => true,
-    ]);
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.postOnly',
+        callback: fn (array $params): array => [],
+        postOnly: true,
+    ));
 
     $result = $server->invoke('test.postOnly', []);
 
@@ -335,9 +276,11 @@ test('invoke returns a 405 for a post_only method called without POST data', fun
 
 test('invoke returns a 401 for an admin_only method called by a non-admin', function (): void {
     $server = pwgServerTestServer(isAdmin: false);
-    $server->addMethod('test.adminOnly', fn (array $params, Server &$service): array => [], null, null, [
-        'admin_only' => true,
-    ]);
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.adminOnly',
+        callback: fn (array $params): array => [],
+        requiresAuth: true,
+    ));
 
     $result = $server->invoke('test.adminOnly', []);
 
@@ -355,9 +298,12 @@ test('invoke returns a 401 when an active API key request targets a config-forbi
     $apiKeyFlag = new ApiKeyRequestFlag();
     $apiKeyFlag->activate();
     $server = new Server(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig, Kernel::container());
-    $server->addMethod('test.forbidden', fn (array $params, Server &$service): array => [
-        'ok' => true,
-    ]);
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.forbidden',
+        callback: fn (array $params): array => [
+            'ok' => true,
+        ],
+    ));
 
     $result = $server->invoke('test.forbidden', []);
 
@@ -371,7 +317,13 @@ test('invoke returns a 401 when an active API key request targets a config-forbi
 
 test('invoke returns MISSING_PARAM when a required param is absent, and again when it is present but empty', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], ['name']);
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.method',
+        callback: fn (array $params): array => [],
+        params: [
+            ParamDefinition::required('name'),
+        ],
+    ));
 
     $absent = $server->invoke('test.method', []);
     expect($absent)
@@ -397,14 +349,16 @@ test('invoke returns MISSING_PARAM when a required param is absent, and again wh
 test('invoke applies a registered default value for a missing optional param', function (): void {
     $server = pwgServerTestServer();
     $received = null;
-    $server->addMethod('test.method', function (array $params, Server &$service) use (&$received): array {
-        $received = $params;
-        return [];
-    }, [
-        'name' => [
-            'default' => 'anonymous',
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.method',
+        callback: function (array $params) use (&$received): array {
+            $received = $params;
+            return [];
+        },
+        params: [
+            ParamDefinition::optional('name', 'anonymous'),
         ],
-    ]);
+    ));
 
     $server->invoke('test.method', []);
 
@@ -416,7 +370,13 @@ test('invoke applies a registered default value for a missing optional param', f
 
 test('invoke rejects an array value for a param that does not accept arrays', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], ['name']);
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.method',
+        callback: fn (array $params): array => [],
+        params: [
+            ParamDefinition::required('name'),
+        ],
+    ));
 
     $result = $server->invoke('test.method', [
         'name' => ['a', 'b'],
@@ -435,14 +395,16 @@ test('invoke rejects an array value for a param that does not accept arrays', fu
 test('invoke force-wraps a scalar into an array when FORCE_ARRAY is set', function (): void {
     $server = pwgServerTestServer();
     $received = null;
-    $server->addMethod('test.method', function (array $params, Server &$service) use (&$received): array {
-        $received = $params;
-        return [];
-    }, [
-        'ids' => [
-            'flags' => WsParamFlag::FORCE_ARRAY,
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.method',
+        callback: function (array $params) use (&$received): array {
+            $received = $params;
+            return [];
+        },
+        params: [
+            ParamDefinition::required('ids', flags: WsParamFlag::FORCE_ARRAY),
         ],
-    ]);
+    ));
 
     $server->invoke('test.method', [
         'ids' => '7',
@@ -456,11 +418,13 @@ test('invoke force-wraps a scalar into an array when FORCE_ARRAY is set', functi
 
 test('invoke rejects a param that fails its declared type check', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], [
-        'category_id' => [
-            'type' => WsParamType::ID,
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.method',
+        callback: fn (array $params): array => [],
+        params: [
+            ParamDefinition::required('category_id', WsParamType::ID),
         ],
-    ]);
+    ));
 
     $result = $server->invoke('test.method', [
         'category_id' => 'not-an-id',
@@ -477,15 +441,16 @@ test('invoke rejects a param that fails its declared type check', function (): v
 test('invoke clamps a param above maxValue down to maxValue', function (): void {
     $server = pwgServerTestServer();
     $received = null;
-    $server->addMethod('test.method', function (array $params, Server &$service) use (&$received): array {
-        $received = $params;
-        return [];
-    }, [
-        'per_page' => [
-            'type' => WsParamType::INT,
-            'maxValue' => 100,
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.method',
+        callback: function (array $params) use (&$received): array {
+            $received = $params;
+            return [];
+        },
+        params: [
+            ParamDefinition::required('per_page', WsParamType::INT, maxValue: 100),
         ],
-    ]);
+    ));
 
     $server->invoke('test.method', [
         'per_page' => '500',
@@ -499,10 +464,16 @@ test('invoke clamps a param above maxValue down to maxValue', function (): void 
 
 test('invoke calls the real registered callback with the checked params and a reference to the service itself', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.method', fn (array $params, Server &$service): array => [
-        'echo' => $params,
-        'sameService' => $service->hasMethod('test.method'),
-    ], ['name']);
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.method',
+        callback: fn (array $params, Server &$service): array => [
+            'echo' => $params,
+            'sameService' => $service->hasMethod('test.method'),
+        ],
+        params: [
+            ParamDefinition::required('name'),
+        ],
+    ));
 
     $result = $server->invoke('test.method', [
         'name' => 'Alps',
@@ -522,7 +493,7 @@ test('invoke calls the real registered callback with the checked params and a re
 test('register stores a handlerClass-based method with a normalized signature/options', function (): void {
     $server = pwgServerTestServer();
 
-    $server->register(new MethodDefinition(
+    $server->register(MethodDefinition::forHandler(
         name: 'test.handlerClass',
         handlerClass: ServerTestFakeWsAction::class,
         description: 'A handler-based test method',
@@ -558,7 +529,7 @@ test('register stores a handlerClass-based method with a normalized signature/op
 
 test('invoke resolves a handlerClass-registered method from the container and calls it', function (): void {
     $server = pwgServerTestServer();
-    $server->register(new MethodDefinition(
+    $server->register(MethodDefinition::forHandler(
         name: 'test.handlerClass',
         handlerClass: ServerTestFakeWsAction::class,
         params: [
@@ -580,7 +551,7 @@ test('invoke resolves a handlerClass-registered method from the container and ca
 
 test('invoke converts a WsParamException thrown by a handlerClass into a 403 WsErrorResponse', function (): void {
     $server = pwgServerTestServer();
-    $server->register(new MethodDefinition(
+    $server->register(MethodDefinition::forHandler(
         name: 'test.handlerClass',
         handlerClass: ServerTestFakeWsActionThrows::class,
     ));
@@ -599,7 +570,7 @@ test('invoke converts a WsParamException thrown by a handlerClass into a 403 WsE
 
 test('invoke converts an UnsupportedMediaTypeException thrown by a handlerClass into a 415 WsErrorResponse', function (): void {
     $server = pwgServerTestServer();
-    $server->register(new MethodDefinition(
+    $server->register(MethodDefinition::forHandler(
         name: 'test.handlerClass',
         handlerClass: ServerTestFakeWsActionThrowsUnsupportedMediaType::class,
     ));
@@ -618,7 +589,7 @@ test('invoke converts an UnsupportedMediaTypeException thrown by a handlerClass 
 
 test('invoke unwraps a WsResult returned by a handlerClass via toArray()', function (): void {
     $server = pwgServerTestServer();
-    $server->register(new MethodDefinition(
+    $server->register(MethodDefinition::forHandler(
         name: 'test.handlerClass',
         handlerClass: ServerTestFakeWsActionReturnsResult::class,
     ));
@@ -631,77 +602,21 @@ test('invoke unwraps a WsResult returned by a handlerClass via toArray()', funct
         ]);
 });
 
-// --------------------------------------------------------------- wsGetMethodList / wsGetMethodDetails
+// --------------------------------------------------------------- listVisibleMethodNames
 
-test('wsGetMethodList lists only non-hidden methods', function (): void {
+test('listVisibleMethodNames lists only non-hidden methods', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.visible', fn (array $params, Server &$service): array => []);
-    $server->addMethod('test.hidden', fn (array $params, Server &$service): array => [], null, null, [
-        'hidden' => true,
-    ]);
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.visible',
+        callback: fn (array $params): array => [],
+    ));
+    $server->register(MethodDefinition::forLegacyCallback(
+        name: 'test.hidden',
+        callback: fn (array $params): array => [],
+        hidden: true,
+    ));
 
-    $result = Server::wsGetMethodList([], $server);
-
-    expect($result['methods']->content)->toBe(['test.visible']);
-});
-
-test('wsGetMethodDetails returns INVALID_PARAM for a non-existent method name', function (): void {
-    $server = pwgServerTestServer();
-
-    $result = Server::wsGetMethodDetails([
-        'methodName' => 'does.not.exist',
-    ], $server);
-
-    expect($result)
-        ->toBeInstanceOf(WsErrorResponse::class);
-    if ($result instanceof WsErrorResponse) {
-        expect($result->code())
-            ->toBe(WsError::InvalidParam->value);
-    }
-});
-
-test('wsGetMethodDetails describes a real method\'s full param signature', function (): void {
-    $server = pwgServerTestServer();
-    $server->addMethod('test.method', fn (array $params, Server &$service): array => [], [
-        'category_id' => [
-            'type' => WsParamType::ID,
-        ],
-        'name' => [
-            'default' => 'x',
-            'info' => 'a name',
-        ],
-    ], 'Does a thing', [
-        'admin_only' => true,
-    ]);
-
-    $result = Server::wsGetMethodDetails([
-        'methodName' => 'test.method',
-    ], $server);
-
-    expect($result)
-        ->toBeArray();
-    if (is_array($result)) {
-        expect($result['name'])->toBe('test.method')
-            ->and($result['description'])->toBe('Does a thing')
-            ->and($result['options'])->toBe([
-                'admin_only' => true,
-            ]);
-
-        $params = $result['params'];
-        $byName = [];
-        if (is_array($params)) {
-            foreach ($params as $paramData) {
-                if (is_array($paramData) && is_string($paramData['name'] ?? null)) {
-                    $byName[$paramData['name']] = $paramData;
-                }
-            }
-        }
-        expect($byName['category_id']['type'])->toBe('int positive notnull')
-            ->and($byName['category_id']['optional'])->toBeFalse()
-            ->and($byName['name']['optional'])->toBeTrue()
-            ->and($byName['name']['defaultValue'])->toBe('x')
-            ->and($byName['name']['info'])->toBe('a name');
-    }
+    expect($server->listVisibleMethodNames())->toBe(['test.visible']);
 });
 
 // --------------------------------------------------------------- isAuthorizedMethodForAPIKEY

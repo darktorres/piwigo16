@@ -10,7 +10,7 @@ use Piwigo\Ws\Server;
  * Typed event for the legacy `ws_add_methods` notification. Registered by
  * src/Piwigo/Ws/WsInitializer.php (WsDefaultMethods::register()) --
  * notify-shape, always readonly. Mutation happens through $server's own
- * addMethod() calls, not by reassigning this property -- same
+ * register() calls, not by reassigning this property -- same
  * accumulator-object pattern as
  * Piwigo\Admin\Integrity\Event\ListCheckIntegrity.
  *

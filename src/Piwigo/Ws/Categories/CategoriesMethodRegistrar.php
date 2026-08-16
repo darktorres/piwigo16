@@ -37,7 +37,7 @@ final readonly class CategoriesMethodRegistrar
 
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.getImages',
             handlerClass: GetImagesHandler::class,
             description: 'Returns elements for the corresponding categories.
@@ -53,7 +53,7 @@ final readonly class CategoriesMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.getList',
             handlerClass: GetListHandler::class,
             description: 'Returns a list of categories.',
@@ -69,7 +69,7 @@ final readonly class CategoriesMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.calculateOrphans',
             handlerClass: CalculateOrphansHandler::class,
             description: 'Return the number of orphan photos if an album is deleted.',
@@ -79,7 +79,7 @@ final readonly class CategoriesMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.getAdminList',
             handlerClass: GetAdminListHandler::class,
             description: 'Get albums list as displayed on admin page. <br>
@@ -94,7 +94,7 @@ final readonly class CategoriesMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.add',
             handlerClass: AddHandler::class,
             description: 'Adds an album.<br><br><b>pwg_token</b> required. HTML in name/comment is allowed only when the allow_html_descriptions config is enabled.',
@@ -112,7 +112,7 @@ final readonly class CategoriesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.delete',
             handlerClass: DeleteHandler::class,
             description: 'Deletes album(s).
@@ -127,7 +127,7 @@ final readonly class CategoriesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.move',
             handlerClass: MoveHandler::class,
             description: 'Move album(s).
@@ -141,7 +141,7 @@ final readonly class CategoriesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.setRepresentative',
             handlerClass: SetRepresentativeHandler::class,
             description: 'Sets the representative photo for an album. The photo doesn\'t have to belong to the album.',
@@ -153,7 +153,7 @@ final readonly class CategoriesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.deleteRepresentative',
             handlerClass: DeleteRepresentativeHandler::class,
             description: 'Deletes the album thumbnail. Only possible if $conf[\'allow_random_representative\']',
@@ -164,7 +164,7 @@ final readonly class CategoriesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.refreshRepresentative',
             handlerClass: RefreshRepresentativeHandler::class,
             description: 'Find a new album thumbnail.',
@@ -175,7 +175,7 @@ final readonly class CategoriesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.setInfo',
             handlerClass: SetInfoHandler::class,
             description: 'Changes properties of an album.<br><br><b>pwg_token</b> required. HTML in name/comment is allowed only when the allow_html_descriptions config is enabled.',
@@ -193,7 +193,7 @@ final readonly class CategoriesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.categories.setRank',
             handlerClass: SetRankHandler::class,
             description: 'Changes the rank of an album

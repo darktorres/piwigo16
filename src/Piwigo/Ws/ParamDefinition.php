@@ -13,11 +13,10 @@ namespace Piwigo\Ws;
 
 /**
  * Typed descriptor for a single WS method parameter, passed to
- * `MethodDefinition::$params`. Maps 1:1 onto the array-shape param
- * definitions `Server::addMethod()` already accepts (`type`/`flags`/
- * `default`/`maxValue`) -- `Server::register()` converts a list of these
- * into that same shape, so the existing signature-validation loop in
- * `Server::invoke()` runs unchanged for handler-based methods too.
+ * `MethodDefinition::$params`. `Server::register()` converts a list of
+ * these into the internal array-shape signature (`type`/`flags`/
+ * `default`/`maxValue`) `Server::invoke()`'s generic signature-validation
+ * loop expects.
  *
  * Use the named constructors:
  *   ParamDefinition::required('comment_id', WsParamType::INT | WsParamType::POSITIVE)

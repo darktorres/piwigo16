@@ -30,27 +30,27 @@ final readonly class CoreMethodRegistrar
 {
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.getVersion',
             handlerClass: GetVersionHandler::class,
             description: 'Returns the Piwigo version.',
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.getInfos',
             handlerClass: GetInfosHandler::class,
             description: 'Returns general informations.',
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.getCacheSize',
             handlerClass: GetCacheSizeHandler::class,
             description: 'Returns general informations.',
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.caddie.add',
             handlerClass: CaddieAddHandler::class,
             description: 'Adds elements to the caddie. Returns the number of elements added.',
@@ -60,7 +60,7 @@ final readonly class CoreMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.getMissingDerivatives',
             handlerClass: GetMissingDerivativesHandler::class,
             description: 'Returns a list of derivatives to build.',

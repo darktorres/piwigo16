@@ -28,7 +28,7 @@ final readonly class RatesMethodRegistrar
 {
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.rates.delete',
             handlerClass: DeleteHandler::class,
             description: 'Deletes all rates for a user.',

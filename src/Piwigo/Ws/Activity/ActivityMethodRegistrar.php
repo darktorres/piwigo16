@@ -28,7 +28,7 @@ final readonly class ActivityMethodRegistrar
 {
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.activity.getList',
             handlerClass: GetListHandler::class,
             description: 'Returns general informations.',
@@ -45,20 +45,20 @@ final readonly class ActivityMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->addMethod(
-            'pwg.activity.downloadLog',
+        $service->register(MethodDefinition::forLegacyCallback(
+            name: 'pwg.activity.downloadLog',
             // 'ws_activity_downloadLog' is not a defined function -- this
             // registration fatals with "call to undefined function" if
             // ever invoked. Permanently dead -- Group 19's Core batch
-            // leaves this on the legacy addMethod() path, not a Handler
-            // (see tests/Contract/WsHistoryTest.php's own regression
-            // coverage for this exact behavior).
-            'ws_activity_downloadLog',
-            null,
-            'Returns general informations.',
-            options: [
-                'admin_only' => true,
-            ]
-        );
+            // leaves this on the legacy callback path, not a Handler (see
+            // tests/Contract/WsHistoryTest.php's own regression coverage
+            // for this exact behavior). PHPStan runs at level 10 (max),
+            // which would flag a real call to an undefined function inside
+            // a Handler's own body -- the callback stays an opaque string,
+            // invisible to that check, same as it always was.
+            callback: 'ws_activity_downloadLog',
+            description: 'Returns general informations.',
+            requiresAuth: true,
+        ));
     }
 }

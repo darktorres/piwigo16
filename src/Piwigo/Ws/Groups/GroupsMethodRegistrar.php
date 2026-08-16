@@ -34,7 +34,7 @@ final readonly class GroupsMethodRegistrar
 
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.groups.getList',
             handlerClass: GetListHandler::class,
             description: 'Retrieves a list of all groups. The list can be filtered.',
@@ -48,7 +48,7 @@ final readonly class GroupsMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.groups.add',
             handlerClass: AddHandler::class,
             description: 'Creates a group and returns the new group record.',
@@ -61,7 +61,7 @@ final readonly class GroupsMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.groups.delete',
             handlerClass: DeleteHandler::class,
             description: 'Deletes a or more groups. Users and photos are not deleted.',
@@ -73,7 +73,7 @@ final readonly class GroupsMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.groups.setInfo',
             handlerClass: SetInfoHandler::class,
             description: 'Updates a group. Leave a field blank to keep the current value.',
@@ -87,7 +87,7 @@ final readonly class GroupsMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.groups.addUser',
             handlerClass: AddUserHandler::class,
             description: 'Adds one or more users to a group.',
@@ -100,7 +100,7 @@ final readonly class GroupsMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.groups.deleteUser',
             handlerClass: DeleteUserHandler::class,
             description: 'Removes one or more users from a group.',
@@ -113,7 +113,7 @@ final readonly class GroupsMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.groups.merge',
             handlerClass: MergeHandler::class,
             description: 'Merge groups in one other group',
@@ -126,7 +126,7 @@ final readonly class GroupsMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.groups.duplicate',
             handlerClass: DuplicateHandler::class,
             description: 'Create a copy of a group',

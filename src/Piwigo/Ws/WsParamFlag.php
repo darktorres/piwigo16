@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 /**
- * The 'flags' half of `Server::addMethod()`'s per-param options
+ * The 'flags' half of a `ParamDefinition`'s per-param options
  * (`WsParamType` is the separate 'type' half). P25 Stage 1 step 5: moved
  * here from `Piwigo\Core` alongside `WsParamType` -- see that class's
  * own docblock for why (`WsError` is the one of the three that's

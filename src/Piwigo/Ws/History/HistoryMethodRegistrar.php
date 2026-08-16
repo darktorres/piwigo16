@@ -29,7 +29,7 @@ final readonly class HistoryMethodRegistrar
 {
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.history.log',
             handlerClass: LogHandler::class,
             description: 'Log visit in history',
@@ -42,7 +42,7 @@ final readonly class HistoryMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.history.search',
             handlerClass: SearchHandler::class,
             description: 'Gives an history of who has visited the galery and the actions done in it. Receives parameter.

@@ -27,13 +27,13 @@ final readonly class SessionMethodRegistrar
 {
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.session.getStatus',
             handlerClass: GetStatusHandler::class,
             description: 'Gets information about the current session. Also provides a token useable with admin methods.',
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.session.login',
             handlerClass: LoginHandler::class,
             description: 'Tries to login the user.',
@@ -44,7 +44,7 @@ final readonly class SessionMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.session.logout',
             handlerClass: LogoutHandler::class,
             description: 'Ends the current session.',

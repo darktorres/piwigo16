@@ -29,7 +29,7 @@ final readonly class PermissionsMethodRegistrar
 {
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.permissions.getList',
             handlerClass: GetListHandler::class,
             description: 'Returns permissions: user ids and group ids having access to each album ; this list can be filtered.
@@ -42,7 +42,7 @@ final readonly class PermissionsMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.permissions.add',
             handlerClass: AddHandler::class,
             description: 'Adds permissions to an album.',
@@ -57,7 +57,7 @@ final readonly class PermissionsMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.permissions.remove',
             handlerClass: RemoveHandler::class,
             description: 'Removes permissions from an album.',

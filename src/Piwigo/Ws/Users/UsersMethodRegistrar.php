@@ -34,7 +34,7 @@ final readonly class UsersMethodRegistrar
 
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.getList',
             handlerClass: GetListHandler::class,
             description: 'Retrieves a list of all the users.<br>
@@ -64,7 +64,7 @@ final readonly class UsersMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.add',
             handlerClass: AddHandler::class,
             description: 'Registers a new user.',
@@ -81,7 +81,7 @@ final readonly class UsersMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.delete',
             handlerClass: DeleteHandler::class,
             description: 'Deletes on or more users. Photos owned by this user are not deleted.',
@@ -93,7 +93,7 @@ final readonly class UsersMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.getAuthKey',
             handlerClass: GetAuthKeyHandler::class,
             description: 'Get a new authentication key for a user. Only works for normal/generic users (not admins)',
@@ -105,7 +105,7 @@ final readonly class UsersMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.setInfo',
             handlerClass: SetInfoHandler::class,
             description: 'Updates a user. Leave a field blank to keep the current value.
@@ -134,7 +134,7 @@ final readonly class UsersMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.setMyInfo',
             handlerClass: SetMyInfoHandler::class,
             params: [
@@ -154,7 +154,7 @@ final readonly class UsersMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.preferences.set',
             handlerClass: PreferencesSetHandler::class,
             description: 'Set a user preferences parameter. JSON encode the value (and set is_json to true) if you need a complex data structure.',
@@ -165,7 +165,7 @@ final readonly class UsersMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.favorites.add',
             handlerClass: FavoritesAddHandler::class,
             description: 'Adds the indicated image to the current user\'s favorite images.',
@@ -174,7 +174,7 @@ final readonly class UsersMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.favorites.remove',
             handlerClass: FavoritesRemoveHandler::class,
             description: 'Removes the indicated image from the current user\'s favorite images.',
@@ -183,7 +183,7 @@ final readonly class UsersMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.favorites.getList',
             handlerClass: FavoritesGetListHandler::class,
             description: 'Returns the favorite images of the current user.',
@@ -194,7 +194,7 @@ final readonly class UsersMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.generatePasswordLink',
             handlerClass: GeneratePasswordLinkHandler::class,
             description: 'Return the reset password link <br />
@@ -208,7 +208,7 @@ final readonly class UsersMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.setMainUser',
             handlerClass: SetMainUserHandler::class,
             description: 'Update the main user (owner) <br />
@@ -222,7 +222,7 @@ final readonly class UsersMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.api_key.create',
             handlerClass: CreateApiKeyHandler::class,
             description: 'Create a new api key for the user in the current session',
@@ -234,7 +234,7 @@ final readonly class UsersMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.api_key.revoke',
             handlerClass: RevokeApiKeyHandler::class,
             description: 'Revoke a api key for the user in the current session',
@@ -245,7 +245,7 @@ final readonly class UsersMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.api_key.edit',
             handlerClass: EditApiKeyHandler::class,
             description: 'Edit a api key for the user in the current session',
@@ -257,7 +257,7 @@ final readonly class UsersMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.users.api_key.get',
             handlerClass: GetApiKeyHandler::class,
             description: 'Get all api key for the user in the current session',

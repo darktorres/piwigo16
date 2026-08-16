@@ -40,9 +40,9 @@ use Piwigo\Ws\Users\UsersMethodRegistrar;
  * registers via MethodDefinition/handlerClass, resolved from the
  * container at invocation time, not a constructor-injected Pwg*
  * class's own instance method. `pwg.activity.downloadLog` is the
- * sole permanent exception: it stays on the legacy
- * addMethod()/plain-string-callback path forever -- see
- * ActivityMethodRegistrar's own registration for why.
+ * sole permanent exception: it stays on
+ * `MethodDefinition::forLegacyCallback()`'s plain-string-callback path
+ * forever -- see ActivityMethodRegistrar's own registration for why.
  */
 final readonly class WsDefaultMethods
 {

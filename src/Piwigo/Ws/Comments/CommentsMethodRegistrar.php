@@ -34,7 +34,7 @@ final readonly class CommentsMethodRegistrar
 
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.userComments.getList',
             handlerClass: GetListHandler::class,
             description: 'Get comments',
@@ -51,7 +51,7 @@ final readonly class CommentsMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.userComments.delete',
             handlerClass: DeleteHandler::class,
             description: 'Delete comments',
@@ -63,7 +63,7 @@ final readonly class CommentsMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.userComments.validate',
             handlerClass: ValidateHandler::class,
             description: 'Validate comments',

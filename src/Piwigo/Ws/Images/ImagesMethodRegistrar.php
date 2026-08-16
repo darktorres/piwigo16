@@ -39,7 +39,7 @@ final readonly class ImagesMethodRegistrar
 
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.addComment',
             handlerClass: AddCommentHandler::class,
             description: 'Adds a comment to an image.',
@@ -52,7 +52,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.getInfo',
             handlerClass: GetInfoHandler::class,
             description: 'Returns information about an image.',
@@ -63,7 +63,7 @@ final readonly class ImagesMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.rate',
             handlerClass: RateHandler::class,
             description: 'Rates an image.',
@@ -73,7 +73,7 @@ final readonly class ImagesMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.search',
             handlerClass: SearchHandler::class,
             description: 'Returns elements for the corresponding query search.',
@@ -86,7 +86,7 @@ final readonly class ImagesMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.setPrivacyLevel',
             handlerClass: SetPrivacyLevelHandler::class,
             description: 'Sets the privacy levels for the images.',
@@ -98,7 +98,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.formats.searchImage',
             handlerClass: FormatsSearchImageHandler::class,
             description: 'Search for image ids matching the provided filenames. <b>filename_list</b> must be a JSON encoded associative array of unique_id:filename.<br><br>The method returns a list of unique_id:image_id.',
@@ -109,7 +109,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.formats.delete',
             handlerClass: FormatsDeleteHandler::class,
             description: 'Remove a format',
@@ -121,7 +121,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.setRank',
             handlerClass: SetRankHandler::class,
             description: 'Sets the rank of a photo for a given album.
@@ -139,7 +139,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.setCategory',
             handlerClass: SetCategoryHandler::class,
             description: 'Manage associations of images with an album. <b>action</b> can be:<ul><li><i>associate</i> : add photos to this album</li><li><i>dissociate</i> : remove photos from this album</li><li><i>move</i> : dissociate photos from any other album and adds photos to this album</li></ul>',
@@ -153,7 +153,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.addChunk',
             handlerClass: AddChunkHandler::class,
             description: 'Add a chunk of a file.',
@@ -167,7 +167,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.addFile',
             handlerClass: AddFileHandler::class,
             description: 'Add or update a file for an existing photo.
@@ -180,7 +180,7 @@ final readonly class ImagesMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.add',
             handlerClass: AddHandler::class,
             description: 'Add an image.
@@ -193,8 +193,9 @@ final readonly class ImagesMethodRegistrar
                 // The original registration's own 'info' value here is a
                 // stray unkeyed array element (a pre-existing typo -- see
                 // git history), so it was already silently discarded by
-                // Server::addMethod() and never surfaced via
-                // pwg.getMethodDetails; not carried over here either.
+                // the old addMethod()-based registration and never
+                // surfaced via pwg.getMethodDetails; not carried over here
+                // either.
                 ParamDefinition::optional('original_filename'),
                 ParamDefinition::optional('name'),
                 ParamDefinition::optional('author'),
@@ -209,7 +210,7 @@ final readonly class ImagesMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.addSimple',
             handlerClass: AddSimpleHandler::class,
             description: 'Add an image.
@@ -229,7 +230,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.upload',
             handlerClass: UploadHandler::class,
             description: 'Add an image.
@@ -247,7 +248,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.uploadAsync',
             handlerClass: UploadAsyncHandler::class,
             description: 'Upload photo by chunks in a random order.
@@ -277,7 +278,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.delete',
             handlerClass: DeleteHandler::class,
             description: 'Deletes image(s).',
@@ -289,7 +290,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.setMd5sum',
             handlerClass: SetMd5sumHandler::class,
             description: 'Set md5sum column, by blocks. Returns how many md5sums were added and how many are remaining.',
@@ -301,7 +302,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.syncMetadata',
             handlerClass: SyncMetadataHandler::class,
             description: 'Sync metadatas, by blocks. Returns how many images were synchronized',
@@ -313,7 +314,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.deleteOrphans',
             handlerClass: DeleteOrphansHandler::class,
             description: 'Deletes orphans, by blocks. Returns how many orphans were deleted and how many are remaining.',
@@ -325,7 +326,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.exist',
             handlerClass: ExistHandler::class,
             description: 'Checks existence of images.
@@ -337,7 +338,7 @@ final readonly class ImagesMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.checkFiles',
             handlerClass: CheckFilesHandler::class,
             description: 'Checks if you have updated version of your files for a given photo, the answer can be "missing", "equals" or "differs".
@@ -351,21 +352,21 @@ final readonly class ImagesMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.checkUpload',
             handlerClass: CheckUploadHandler::class,
             description: 'Checks if Piwigo is ready for upload.',
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.emptyLounge',
             handlerClass: EmptyLoungeHandler::class,
             description: 'Empty lounge, where images may be waiting before taking off.',
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.uploadCompleted',
             handlerClass: UploadCompletedHandler::class,
             description: 'Notify Piwigo you have finished uploading a set of photos. It will empty the lounge, if any.',
@@ -377,7 +378,7 @@ final readonly class ImagesMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.setInfo',
             handlerClass: SetInfoHandler::class,
             description: 'Changes properties of an image.
@@ -403,7 +404,7 @@ final readonly class ImagesMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.images.filteredSearch.create',
             handlerClass: FilteredSearchCreateHandler::class,
             params: [

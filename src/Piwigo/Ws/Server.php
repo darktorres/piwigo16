@@ -21,6 +21,8 @@ use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Event\Ws\SendResponse;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Ws\Core\GetMethodDetailsHandler;
+use Piwigo\Ws\Core\GetMethodListHandler;
 use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\Event\WsAddMethods;
 use Piwigo\Ws\Event\WsInvokeAllowed;
@@ -63,7 +65,7 @@ final class Server
 
     /**
      * $requestHandler is only read after run()'s own null-check, but
-     * intervening method calls (addMethod(), trigger_notify()) mean
+     * intervening method calls (register(), trigger_notify()) mean
      * PHPStan can't carry that narrowing to handleRequest()'s call site.
      */
     private function requestHandler(): RequestHandler
@@ -119,15 +121,17 @@ final class Server
         }
 
         // add reflection methods
-        $this->addMethod(
-            'reflection.getMethodList',
-            self::wsGetMethodList(...)
-        );
-        $this->addMethod(
-            'reflection.getMethodDetails',
-            self::wsGetMethodDetails(...),
-            ['methodName']
-        );
+        $this->register(MethodDefinition::forHandler(
+            name: 'reflection.getMethodList',
+            handlerClass: GetMethodListHandler::class,
+        ));
+        $this->register(MethodDefinition::forHandler(
+            name: 'reflection.getMethodDetails',
+            handlerClass: GetMethodDetailsHandler::class,
+            params: [
+                ParamDefinition::required('methodName'),
+            ],
+        ));
 
         $this->eventDispatcher->dispatchNotify(new WsAddMethods($this));
         return $this->requestHandler()
@@ -157,93 +161,13 @@ final class Server
     }
 
     /**
-     * Registers a web service method.
-     * @param string $methodName - the name of the method as seen externally
-     * @param string|array<int, string>|Closure $callback - a callable
-     *   (function name, [class, method], or a first-class callable
-     *   Closure -- every real registration across the per-domain
-     *   *MethodRegistrar.php files (P25 Stage 1's split of the old
-     *   WsDefaultMethods god-method) uses the latter)
-     * @param array<int, string>|array<string, mixed>|null $params - either a
-     *   plain list of allowed parameter names (shorthand, no options) or a map
-     *   of allowed parameter names to their options; many real registrations
-     *   (e.g. pwg.getVersion, pwg.getInfos, pwg.session.getStatus) explicitly
-     *   pass null for "no params"
-     *    @option mixed default (optional)
-     *    @option int flags (optional)
-     *      possible values: WsParamFlag::ACCEPT_ARRAY, WsParamFlag::FORCE_ARRAY, WsParamFlag::OPTIONAL
-     *    @option int type (optional)
-     *      possible values: WsParamType::BOOL, WsParamType::INT, WsParamType::FLOAT, WsParamType::ID
-     *                       WsParamType::POSITIVE, WsParamType::NOTNULL
-     *    @option int|float maxValue (optional)
-     * @param string|null $description - a description of the method; some
-     *   real registrations explicitly pass null for "no description"
-     * @param array<string, mixed> $options
-     *    @option bool hidden (optional) - if true, this method won't be visible by reflection.getMethodList
-     *    @option bool admin_only (optional)
-     *    @option bool post_only (optional)
-     */
-    public function addMethod(string $methodName, string|array|Closure $callback, ?array $params = [], ?string $description = '', array $options = []): void
-    {
-        if (! is_array($params)) {
-            $params = [];
-        }
-
-        // ws.php's own registrations (e.g. pwg.plugins.performAction,
-        // pwg.themes.performAction) explicitly pass null for "no description"
-        if ($description === null) {
-            $description = '';
-        }
-
-        if (range(0, count($params) - 1) === array_keys($params)) {
-            // shorthand form: a plain list of allowed parameter names
-            // (strings); array_filter() proves that to PHPStan since the
-            // declared type also allows the array<string, mixed> options-map
-            // form, whose values aren't guaranteed int|string.
-            $params = array_flip(array_filter($params, is_string(...)));
-        }
-
-        $signature = [];
-        foreach ($params as $param => $data) {
-            $param = (string) $param;
-            if (! is_array($data)) {
-                $signature[$param] = [
-                    'flags' => 0,
-                    'type' => 0,
-                ];
-            } else {
-                /** @var array<string, mixed> $data */
-                // every real registration in ws.php that sets 'flags' uses
-                // one of the WS_PARAM_* int constants; fall back to 0 for
-                // anything else (missing, or a non-int value).
-                if (! isset($data['flags']) or ! is_int($data['flags'])) {
-                    $data['flags'] = 0;
-                }
-                if (array_key_exists('default', $data)) {
-                    $data['flags'] |= WsParamFlag::OPTIONAL;
-                }
-                if (! isset($data['type'])) {
-                    $data['type'] = 0;
-                }
-                $signature[$param] = $data;
-            }
-        }
-
-        $this->methods[$methodName] = [
-            'callback' => $callback,
-            'handlerClass' => null,
-            'description' => $description,
-            'signature' => $signature,
-            'options' => $options,
-        ];
-    }
-
-    /**
-     * Typed registration path (Group 19) -- stores $def normalized into
-     * the same internal $methods shape addMethod() builds, so invoke()'s
-     * existing signature-validation loop runs unchanged for
-     * handler-based methods too. Coexists with addMethod() until every
-     * WS method has migrated off the legacy callback path.
+     * Registers a WS method from a typed {@see MethodDefinition}, built
+     * via either `MethodDefinition::forHandler()` (a real DI-resolved
+     * `WsAction`) or `MethodDefinition::forLegacyCallback()` (a plain
+     * callable -- function name, [class, method], or a first-class
+     * callable Closure). Normalizes $def's typed `ParamDefinition` list
+     * into the same internal $methods signature shape `invoke()`'s
+     * generic validation loop expects.
      */
     public function register(MethodDefinition $def): void
     {
@@ -277,12 +201,30 @@ final class Server
         }
 
         $this->methods[$def->name] = [
-            'callback' => null,
+            'callback' => $def->callback,
             'handlerClass' => $def->handlerClass,
             'description' => $def->description,
             'signature' => $signature,
             'options' => $options,
         ];
+    }
+
+    /**
+     * The `hidden`-option filter `reflection.getMethodList` (now
+     * `Ws\Core\GetMethodListHandler`) exposes -- matches the predicate
+     * this class used inline before that method existed as a real
+     * `WsAction`.
+     *
+     * @return list<string>
+     */
+    public function listVisibleMethodNames(): array
+    {
+        $methods = array_filter(
+            $this->methods,
+            static fn (array $m): bool => in_array($m['options']['hidden'] ?? null, [null, false, 0, '0', '', []], true)
+        );
+
+        return array_keys($methods);
     }
 
     public function hasMethod(string $methodName): bool
@@ -440,7 +382,7 @@ final class Server
         $missing_params = [];
 
         foreach ($signature as $name => $options) {
-            // addMethod() always populates 'flags' as an int (WS_PARAM_*
+            // register() always populates 'flags' as an int (WS_PARAM_*
             // constants or 0); the signature is stored back through the
             // loosely-typed $methods property though, so re-assert it here.
             $flags = $options['flags'];
@@ -473,7 +415,7 @@ final class Server
                     self::makeArrayParam($the_param);
                 }
 
-                // same reasoning as $flags above: addMethod() always
+                // same reasoning as $flags above: register() always
                 // populates 'type' as an int (WS_TYPE_* constants or 0).
                 $type = $options['type'];
                 $type = is_int($type) ? $type : 0;
@@ -519,101 +461,15 @@ final class Server
                     $result = $result->toArray();
                 }
             } else {
-                // every real registration (ws.php, and this class's own
-                // reflection methods) passes a genuinely callable function
-                // name or [class, method] pair
+                // MethodDefinition::forLegacyCallback()'s own type already
+                // constrains $def->callback to a genuinely callable function
+                // name, [class, method] pair, or Closure
                 assert(is_callable($method['callback']));
                 $result = call_user_func_array($method['callback'], [$params, &$this]);
             }
         }
 
         return $result;
-    }
-
-    /**
-     * WS reflection method implementation: lists all available methods
-     *
-     * @param array<string, mixed> $params
-     * @return array{methods: NamedArray}
-     */
-    public static function wsGetMethodList(array $params, self &$service): array
-    {
-        $methods = array_filter(
-            $service->methods,
-            fn (array $m): bool => in_array($m['options']['hidden'] ?? null, [null, false, 0, '0', '', []], true)
-        );
-        return [
-            'methods' => new NamedArray(array_keys($methods), 'method'),
-        ];
-    }
-
-    /**
-     * WS reflection method implementation: gets information about a given method
-     *
-     * @param array<string, mixed> $params
-     * @return WsErrorResponse|array<string, mixed>
-     */
-    public static function wsGetMethodDetails(array $params, self &$service): WsErrorResponse|array
-    {
-        $methodName = $params['methodName'];
-
-        // 'methodName' is registered with no WS_TYPE_* flag, so invoke()
-        // never coerces it; narrow it here instead of trusting the raw
-        // request value.
-        if (! is_string($methodName) or ! $service->hasMethod($methodName)) {
-            return new WsErrorResponse(WsError::InvalidParam->value, 'Requested method does not exist');
-        }
-
-        $res = [
-            'name' => $methodName,
-            'description' => $service->getMethodDescription($methodName),
-            'params' => [],
-            'options' => $service->getMethodOptions($methodName),
-        ];
-
-        foreach ($service->getMethodSignature($methodName) as $name => $options) {
-            // same reasoning as invoke(): addMethod() always populates
-            // 'flags'/'type' as ints, but the signature travels back out
-            // through the loosely-typed $methods property.
-            $flags = $options['flags'];
-            $flags = is_int($flags) ? $flags : 0;
-            $type = $options['type'];
-            $type = is_int($type) ? $type : 0;
-
-            $param_data = [
-                'name' => $name,
-                'optional' => self::hasFlag($flags, WsParamFlag::OPTIONAL),
-                'acceptArray' => self::hasFlag($flags, WsParamFlag::ACCEPT_ARRAY),
-                'type' => 'mixed',
-            ];
-
-            if (isset($options['default'])) {
-                $param_data['defaultValue'] = $options['default'];
-            }
-            if (isset($options['maxValue'])) {
-                $param_data['maxValue'] = $options['maxValue'];
-            }
-            if (isset($options['info'])) {
-                $param_data['info'] = $options['info'];
-            }
-
-            if (self::hasFlag($type, WsParamType::BOOL)) {
-                $param_data['type'] = 'bool';
-            } elseif (self::hasFlag($type, WsParamType::INT)) {
-                $param_data['type'] = 'int';
-            } elseif (self::hasFlag($type, WsParamType::FLOAT)) {
-                $param_data['type'] = 'float';
-            }
-            if (self::hasFlag($type, WsParamType::POSITIVE)) {
-                $param_data['type'] .= ' positive';
-            }
-            if (self::hasFlag($type, WsParamType::NOTNULL)) {
-                $param_data['type'] .= ' notnull';
-            }
-
-            $res['params'][] = $param_data;
-        }
-        return $res;
     }
 
     /**

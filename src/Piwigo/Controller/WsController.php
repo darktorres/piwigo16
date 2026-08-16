@@ -19,7 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * Replaces ws.php -- the web-service dispatcher entry point. Wraps the
  * existing Server registration/dispatch/response-formatting mechanism
  * as-is. The ~100 web-service methods are real Piwigo\Ws\* class methods,
- * autoloaded like every other class; their addMethod() registration
+ * autoloaded like every other class; their register() registration
  * catalog is Piwigo\Ws\WsDefaultMethods::register().
  *
  * IN_WS deliberately stays defined in ws.php's own root file, not here:

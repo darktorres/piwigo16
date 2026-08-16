@@ -35,7 +35,7 @@ final readonly class TagsMethodRegistrar
 
     public function register(Server $service): void
     {
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.tags.getList',
             handlerClass: GetListHandler::class,
             description: 'Retrieves a list of available tags.',
@@ -44,7 +44,7 @@ final readonly class TagsMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.tags.getImages',
             handlerClass: GetImagesHandler::class,
             description: 'Returns elements for the corresponding tags. Fill at least tag_id, tag_url_name or tag_name.',
@@ -60,14 +60,14 @@ final readonly class TagsMethodRegistrar
             ],
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.tags.getAdminList',
             handlerClass: GetAdminListHandler::class,
             description: '<b>Admin only.</b>',
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.tags.add',
             handlerClass: AddHandler::class,
             description: 'Adds a new tag.',
@@ -77,7 +77,7 @@ final readonly class TagsMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.tags.delete',
             handlerClass: DeleteHandler::class,
             description: 'Delete tag(s) by ID.',
@@ -88,7 +88,7 @@ final readonly class TagsMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.tags.rename',
             handlerClass: RenameHandler::class,
             description: 'Rename tag',
@@ -100,7 +100,7 @@ final readonly class TagsMethodRegistrar
             requiresAuth: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.tags.duplicate',
             handlerClass: DuplicateHandler::class,
             description: 'Create a copy of a tag',
@@ -113,7 +113,7 @@ final readonly class TagsMethodRegistrar
             postOnly: true,
         ));
 
-        $service->register(new MethodDefinition(
+        $service->register(MethodDefinition::forHandler(
             name: 'pwg.tags.merge',
             handlerClass: MergeHandler::class,
             description: 'Merge tags in one other group',

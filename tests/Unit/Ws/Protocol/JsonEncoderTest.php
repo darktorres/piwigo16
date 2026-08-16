@@ -13,11 +13,13 @@ use Piwigo\Ws\WsErrorResponse;
  * fixture rationale, reused verbatim here). No dedicated Integration/
  * Browser spec of its own.
  *
- * WsError::InvalidParam-style codes (>= 1000) are used for the WsErrorResponse
- * fixture, not an HTTP-range code (400-599), for the same reason as
- * SerialPhpEncoderTest.php: WsErrorResponse's constructor calls
- * PresentationAccessor::htmlService() for HTTP-range codes, which needs
- * a booted container this Unit test doesn't set up.
+ * WsError::InvalidParam-style codes (>= 1000) are used for the
+ * WsErrorResponse fixture, same as SerialPhpEncoderTest.php's own
+ * fixture -- WsErrorResponse is a pure value object (P25 Stage 2 item 3
+ * moved its former HTTP-status side effect into Server::sendResponse()
+ * instead), so this is no longer load-bearing for constructing one
+ * without a booted container, just kept consistent with the sibling
+ * encoder tests.
  */
 test('encodeResponse json-encodes a WsErrorResponse as a fail/err/message triple', function (): void {
     $encoder = new JsonEncoder();
@@ -27,7 +29,7 @@ test('encodeResponse json-encodes a WsErrorResponse as a fail/err/message triple
 
     expect($result)
         ->toBe('{"stat":"fail","err":1003,"message":"Invalid param foo"}')
-        ->and(json_decode((string) $result, true))
+        ->and(json_decode($result, true))
         ->toBe([
             'stat' => 'fail',
             'err' => 1003,
@@ -64,7 +66,7 @@ test('encodeResponse flattens a NamedStruct, merging its attributes_xml_ marker 
 
     expect($result)
         ->toBe('{"stat":"ok","result":{"id":7,"name":"Alps","visible":1}}')
-        ->and(json_decode((string) $result, true))
+        ->and(json_decode($result, true))
         ->toBe([
             'stat' => 'ok',
             'result' => [
@@ -83,7 +85,7 @@ test('encodeResponse flattens a NamedArray to its plain list content, with no at
 
     expect($result)
         ->toBe('{"stat":"ok","result":[10,20,30]}')
-        ->and(json_decode((string) $result, true))
+        ->and(json_decode($result, true))
         ->toBe([
             'stat' => 'ok',
             'result' => [10, 20, 30],

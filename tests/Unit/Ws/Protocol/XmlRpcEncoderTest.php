@@ -18,8 +18,11 @@ use Piwigo\Ws\WsErrorResponse;
  * running the encoder itself and copying its output.
  *
  * As with the SerialPhpEncoder tests, WsErrorResponse fixtures use a
- * WsError-style code (>= 1000), not an HTTP-range 400-599 code, to
- * avoid WsErrorResponse's constructor reaching for a booted container.
+ * WsError-style code (>= 1000) -- WsErrorResponse is a pure value
+ * object (P25 Stage 2 item 3 moved its former HTTP-status side effect
+ * into Server::sendResponse() instead), so this is no longer
+ * load-bearing for constructing one without a booted container, just
+ * kept consistent with the sibling encoder tests.
  *
  * Deliberately NOT tested: the `(string)` cast on the 'double' case's
  * `return '<double>' . (string) $data . '</double>';`. $data is only

@@ -188,7 +188,6 @@ final readonly class AddHandler implements WsAction
                     $params['level'],
                     $params['image_id'] > 0 ? $params['image_id'] : null,
                     $params['original_sum'],
-                    $server
                 );
         } finally {
             // $uniqueness_lock_name is always assigned in the same branch as

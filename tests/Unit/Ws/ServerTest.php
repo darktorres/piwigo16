@@ -18,11 +18,13 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Tests\Unit\Ws\ServerTestFakeWsAction;
 use Piwigo\Tests\Unit\Ws\ServerTestFakeWsActionReturnsResult;
 use Piwigo\Tests\Unit\Ws\ServerTestFakeWsActionThrows;
+use Piwigo\Tests\Unit\Ws\ServerTestFakeWsActionThrowsUnsupportedMediaType;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\ParamDefinition;
+use Piwigo\Ws\Protocol\JsonEncoder;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 use Piwigo\Ws\WsParamFlag;
@@ -35,22 +37,24 @@ use Piwigo\Ws\WsParamType;
  * `addMethod()` and every Contract test exercises `invoke()`
  * transitively via a real HTTP round-trip.
  *
- * `run()` itself is NOT covered here: its "unknown response format"
- * branch ends in a real `die(0)` (see the plan's own B4 audit -- one of
- * only 2 confirmed exit()/die() branches in the whole legacy WS API
- * bucket), and its happy path just wires reflection methods + delegates
- * to a real `RequestHandler::handleRequest()`, itself a thin wrapper
- * around `invoke()`/`sendResponse()`, both covered directly below.
- * `sendResponse()` also isn't covered here -- it's a 3-line `header()`/
- * `print_r()`/event-dispatch wrapper around `ResponseEncoder::
- * encodeResponse()`, itself already covered per-encoder (JsonEncoder/
- * SerialPhpEncoderTest.php/etc).
+ * `run()` itself is NOT covered here: it just wires reflection methods
+ * and delegates to a real `RequestHandler::handleRequest()`, itself a
+ * thin wrapper around `invoke()`/`sendResponse()`, both covered directly
+ * below (P25 Stage 2 items 1-2 deleted its former "unknown response
+ * format" `die(0)` branch and the internal-state `var_export()` it
+ * dumped to the client -- see WsServerTest.php's own Contract-level
+ * coverage for that branch now). `sendResponse()`'s own encoding is
+ * NOT re-covered here either -- it's a thin wrapper around
+ * `ResponseEncoder::encodeResponse()`, itself already covered
+ * per-encoder (JsonEncoder/SerialPhpEncoderTest.php/etc) -- but its own
+ * WsErrorResponse-code-to-HTTP-status mapping (P25 Stage 2 item 3, moved
+ * out of WsErrorResponse's own constructor) gets its own boundary
+ * coverage in the `sendResponse` section below.
  *
- * Kernel::boot() is required file-wide (same reasoning as WsErrorResponseTest.php):
- * several WsErrorResponse codes constructed by invoke() itself (401, 405, and
- * WsError::InvalidMethod = 501) fall in the HTTP range, which routes
- * WsErrorResponse's own constructor through PresentationAccessor::htmlService(),
- * needing a booted DI container.
+ * Kernel::boot() is required file-wide: constructing a real Server needs
+ * AccessControl's own dependency chain (-> RedirectService -> Lang),
+ * which needs a booted DI container regardless of anything WsErrorResponse
+ * itself does.
  */
 beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
@@ -594,6 +598,25 @@ test('invoke converts a WsParamException thrown by a handlerClass into a 403 WsE
     }
 });
 
+test('invoke converts an UnsupportedMediaTypeException thrown by a handlerClass into a 415 WsErrorResponse', function (): void {
+    $server = pwgServerTestServer();
+    $server->register(new MethodDefinition(
+        name: 'test.handlerClass',
+        handlerClass: ServerTestFakeWsActionThrowsUnsupportedMediaType::class,
+    ));
+
+    $result = $server->invoke('test.handlerClass', []);
+
+    expect($result)
+        ->toBeInstanceOf(WsErrorResponse::class);
+    if ($result instanceof WsErrorResponse) {
+        expect($result->code())
+            ->toBe(415)
+            ->and($result->message())
+            ->toBe('Wrong file type');
+    }
+});
+
 test('invoke unwraps a WsResult returned by a handlerClass via toArray()', function (): void {
     $server = pwgServerTestServer();
     $server->register(new MethodDefinition(
@@ -717,4 +740,61 @@ test('isAuthorizedMethodForAPIKEY also blocks via a ws_session_login_api_key ses
     } finally {
         $_SESSION = $originalSession;
     }
+});
+
+// --------------------------------------------------------------- sendResponse
+
+test('sendResponse maps a WsErrorResponse code below the HTTP range onto a 200 status', function (): void {
+    $server = pwgServerTestServer();
+    $server->setEncoder('json', new JsonEncoder());
+
+    $response = $server->sendResponse(new WsErrorResponse(1003, 'Invalid param foo'));
+
+    expect($response->getStatusCode())
+        ->toBe(200);
+});
+
+test('sendResponse maps a WsErrorResponse code at the lower HTTP boundary (400) onto that status', function (): void {
+    $server = pwgServerTestServer();
+    $server->setEncoder('json', new JsonEncoder());
+
+    $response = $server->sendResponse(new WsErrorResponse(400, 'Bad request'));
+
+    expect($response->getStatusCode())
+        ->toBe(400);
+});
+
+test('sendResponse maps a WsErrorResponse code at the upper HTTP boundary (599) onto that status', function (): void {
+    // Kills a GreaterOrEqualToSmaller-style mutant on the `< 600` check:
+    // for 599, `< 600` is true but `<= 599` alone wouldn't distinguish a
+    // mutant flipping the boundary the other way.
+    $server = pwgServerTestServer();
+    $server->setEncoder('json', new JsonEncoder());
+
+    $response = $server->sendResponse(new WsErrorResponse(599, 'Custom 599'));
+
+    expect($response->getStatusCode())
+        ->toBe(599);
+});
+
+test('sendResponse maps a WsErrorResponse code just past the HTTP range (600) onto a 200 status', function (): void {
+    $server = pwgServerTestServer();
+    $server->setEncoder('json', new JsonEncoder());
+
+    $response = $server->sendResponse(new WsErrorResponse(600, 'Not an HTTP code either'));
+
+    expect($response->getStatusCode())
+        ->toBe(200);
+});
+
+test('sendResponse maps a non-error response onto a 200 status', function (): void {
+    $server = pwgServerTestServer();
+    $server->setEncoder('json', new JsonEncoder());
+
+    $response = $server->sendResponse([
+        'ok' => true,
+    ]);
+
+    expect($response->getStatusCode())
+        ->toBe(200);
 });

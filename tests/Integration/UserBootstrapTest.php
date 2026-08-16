@@ -29,6 +29,7 @@ use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\User\TryLogUser;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
@@ -60,12 +61,17 @@ use Piwigo\Users\UserService;
  *  - the WS `pwg.images.uploadAsync` real-session-login success path.
  *
  * The 2 adjacent api_key-failure / uploadAsync-login-failure branches
- * both end in a bare `exit()`/`exit;` -- genuinely unsafe to invoke from
- * this shared PHPUnit/Pest process (same "don't exercise what would kill
- * the test" reasoning as NoPhotoYetRendererTest's own documented
+ * used to end in a bare `exit()`/`exit;` -- genuinely unsafe to invoke
+ * from this shared PHPUnit/Pest process (same "don't exercise what would
+ * kill the test" reasoning as NoPhotoYetRendererTest's own documented
  * exclusion) -- confirmed via a live investigation (a
- * deliberately-wrong password against the uploadAsync branch below really
- * does terminate the invoking PHP process), left uncovered.
+ * deliberately-wrong password against the uploadAsync branch below
+ * really did terminate the invoking PHP process). P25 Stage 2 replaced
+ * both with `throw new ResponseReadyException(...)` (the same pattern
+ * RequestBootstrap's own bootstrap-phase short-circuits already use),
+ * closing that gap -- see testInitializeThrowsAResponseReadyExceptionForAnInvalidApiKey()/
+ * testInitializeThrowsAResponseReadyExceptionWhenUploadAsyncLoginFails()
+ * below.
  *
  * tryLogUser()'s own 'try_log_user' event handler is registered by
  * RequestBootstrap::connect() (a real, always-executes-once registration,
@@ -274,6 +280,89 @@ final class UserBootstrapTest extends IntegrationTestCase
                 ->initialize();
 
             self::assertSame('pwg.images.uploadAsync', $_SESSION['connected_with'] ?? null);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$newUserId]);
+        }
+    }
+
+    public function testInitializeThrowsAResponseReadyExceptionForAnInvalidApiKey(): void
+    {
+        $_SERVER['HTTP_X_PIWIGO_API'] = 'not-a-real-api-key';
+        $_GET = [];
+        $_POST = [];
+        $_REQUEST = [
+            'method' => 'pwg.images.getInfo',
+        ];
+
+        $exception = null;
+
+        try {
+            $this->bootstrap(new WsContext(true))
+                ->initialize();
+        } catch (ResponseReadyException $e) {
+            $exception = $e;
+        }
+
+        self::assertInstanceOf(ResponseReadyException::class, $exception);
+        self::assertSame(401, $exception->response()->getStatusCode());
+        self::assertStringContainsString('Invalid api_key', (string) $exception->response()->getBody());
+    }
+
+    public function testInitializeThrowsAResponseReadyExceptionWhenUploadAsyncLoginFails(): void
+    {
+        $plainPassword = 'upload-async-pass-' . bin2hex(random_bytes(4));
+        $hash = new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy())->hash($plainPassword);
+        $username = 'upload_async_bad_login_' . bin2hex(random_bytes(4));
+        $this->conn->executeStatement(
+            'INSERT INTO users (username, password, mail_address) VALUES (?, ?, NULL)',
+            [$username, $hash]
+        );
+        $newUserId = (int) $this->conn->lastInsertId();
+
+        // Same real registration as the success test above -- without it,
+        // tryLogUser() would fail regardless of the credentials below,
+        // which would prove nothing about the real rejection path.
+        EventDispatcherTestFactory::get()->addTypedHandler(TryLogUser::class, new AuthService(
+            new AuthRepository(EntityManagerFactory::build($this->conn)),
+            new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
+            HtmlServiceTestFactory::build(),
+            new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
+            new CookieService(),
+            EntityManagerFactory::build($this->conn)->getRepository(UserFailedLoginEntity::class),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+            EventDispatcherTestFactory::get(),
+            PageStateTestFactory::get(),
+            CurrentUserTestFactory::get(),
+            CurrentConfigTestFactory::get(),
+            CurrentPathsTestFactory::get(),
+            EntityManagerFactory::build($this->conn),
+        )->pwgLogin(...));
+
+        $_SERVER = [];
+        $_GET = [];
+        $_POST = [
+            'username' => $username,
+            'password' => 'definitely-wrong-password',
+        ];
+        $_REQUEST = [
+            'method' => 'pwg.images.uploadAsync',
+            'username' => $username,
+            'password' => 'definitely-wrong-password',
+        ];
+
+        $exception = null;
+
+        try {
+            try {
+                $this->bootstrap(new WsContext(true))
+                    ->initialize();
+            } catch (ResponseReadyException $e) {
+                $exception = $e;
+            }
+
+            self::assertInstanceOf(ResponseReadyException::class, $exception);
+            self::assertSame(200, $exception->response()->getStatusCode());
+            self::assertStringContainsString('Invalid username/password', (string) $exception->response()->getBody());
         } finally {
             $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$newUserId]);
         }

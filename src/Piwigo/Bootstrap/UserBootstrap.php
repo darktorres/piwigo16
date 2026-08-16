@@ -37,6 +37,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\User\UserInit;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -236,8 +237,7 @@ final readonly class UserBootstrap
                         throw new LogicException('Container returned an unexpected type for ' . WsInitializer::class);
                     }
                     $service = $wsInitializer->init();
-                    $service->sendResponse(new WsErrorResponse(401, 'Invalid api_key'));
-                    exit;
+                    throw new ResponseReadyException($service->sendResponse(new WsErrorResponse(401, 'Invalid api_key')));
                 }
                 $this->apiKeyRequestFlag->activate();
 
@@ -278,8 +278,7 @@ final readonly class UserBootstrap
             $login = $loginHandler($credentials, $service);
 
             if ($login !== true) {
-                $service->sendResponse($login);
-                exit();
+                throw new ResponseReadyException($service->sendResponse($login));
             }
             // SEC finding 2: do NOT unconditionally overwrite this --
             // LoginHandler already set 'ws_session_login_api_key' above when

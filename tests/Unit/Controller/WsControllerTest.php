@@ -33,9 +33,12 @@ use Piwigo\Users\UserStatus;
  * reach the real Ws\* method classes over HTTP, not this controller).
  *
  * `checkStatus(AccessLevel::Free)` (the lowest access tier) never denies
- * any real user, and the real happy path always ends in a literal
- * `exit()` after `Server::run()` (see the class's own docblock) --
- * genuinely un-testable normally. But `allowWebServices = false` reaches
+ * any real user. The real happy path (`WsInitializer::init()->run()`) now
+ * returns a real ResponseInterface (P25 Stage 2) instead of ending in a
+ * literal `exit()`, but still has no dedicated test here -- it needs a
+ * fully wired Server/handler registry to exercise meaningfully, which the
+ * Contract suite already does over real HTTP. `allowWebServices = false`
+ * reaches
  * `HtmlService::pageForbidden()` BEFORE either of those, which throws via
  * `RedirectService::redirectHtml()` -- the SAME expensive-looking
  * "wall" U3 originally deferred `PictureCoiSubController` for, now

@@ -116,7 +116,6 @@ final readonly class AddSimpleHandler implements WsAction
                 8,
                 $params['image_id'] > 0 ? $params['image_id'] : null,
                 null,
-                $server
             );
 
         $this->imageService->updateLevelForImages([$image_id], $params['level']);

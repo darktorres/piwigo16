@@ -166,10 +166,12 @@ test('encodeResponse renders a WsErrorResponse as a stat="fail" response, never 
     // are all private, so get_object_vars() from outside the class sees
     // none of them, producing an empty stat="ok" response instead.
     //
-    // WsError-style code (>= 1000), not an HTTP-range 400-599 code, so
-    // WsErrorResponse's own constructor doesn't reach for a booted
-    // PresentationAccessor container -- same convention as the sibling
-    // XmlRpcEncoder/SerialPhpEncoder unit tests.
+    // WsError-style code (>= 1000) -- WsErrorResponse is a pure value
+    // object (P25 Stage 2 item 3 moved its former HTTP-status side effect
+    // into Server::sendResponse() instead), so this is no longer
+    // load-bearing for constructing one without a booted container, just
+    // kept consistent with the sibling XmlRpcEncoder/SerialPhpEncoder
+    // unit tests.
     $encoder = new RestEncoder();
     $error = new WsErrorResponse(1003, 'Bad param <x>');
 

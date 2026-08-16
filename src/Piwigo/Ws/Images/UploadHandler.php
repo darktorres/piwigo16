@@ -217,7 +217,6 @@ final readonly class UploadHandler implements WsAction
                     $params['level'],
                     $id_image,
                     null,
-                    $server
                 );
 
             $image_infos = $this->imageService->getUploadResultInfoById(ImageId::from($image_id));

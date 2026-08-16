@@ -12,17 +12,19 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Closure;
+use Piwigo\Admin\Upload\UnsupportedMediaTypeException;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\WsError;
 use Piwigo\Event\Ws\SendResponse;
+use Piwigo\Http\ResponseFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Encoder\ResponseEncoder;
 use Piwigo\Ws\Event\WsAddMethods;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * The WS framework's own generic method registry/dispatcher -- every
@@ -101,35 +103,18 @@ final class Server
      * Runs the web service call (handler and response encoder should have been
      * created)
      */
-    public function run(): void
+    public function run(): ResponseInterface
     {
         if (! $this->responseEncoder instanceof ResponseEncoder) {
-            PresentationAccessor::htmlService()
-                ->setStatusHeader(400);
-            @header('Content-Type: text/plain');
-            echo 'Cannot process your request. Unknown response format.
-Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->responseFormat . "\n";
-            // var_export($this) directly would recursively serialize this
-            // class's own DI-injected collaborators too -- accessControl's
-            // own dependency chain reaches HtmlService/MailService/UrlService
-            // and every one of their own collaborators, so a real request
-            // hitting this branch (any client sending an unrecognized
-            // `?format=`) would exhaust the request's memory limit walking
-            // that whole graph, not just report this class's own shallow
-            // request/response debug state. Export only that state instead.
-            var_export([
-                'requestHandler' => $this->requestHandler,
-                'requestFormat' => $this->requestFormat,
-                'responseEncoder' => $this->responseEncoder,
-                'responseFormat' => $this->responseFormat,
-                'methods' => $this->methods,
-            ]);
-            die(0);
+            return ResponseFactory::text(
+                'Cannot process your request. Unknown response format.'
+                . "\nRequest format: " . ($this->requestFormat ?? '') . ' Response format: ' . ($this->responseFormat ?? '') . "\n",
+                400
+            );
         }
 
         if (! $this->requestHandler instanceof RequestHandler) {
-            $this->sendResponse(new WsErrorResponse(400, 'Unknown request format'));
-            return;
+            return $this->sendResponse(new WsErrorResponse(400, 'Unknown request format'));
         }
 
         // add reflection methods
@@ -144,23 +129,30 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
         );
 
         $this->eventDispatcher->dispatchNotify(new WsAddMethods($this));
-        $this->requestHandler()
+        return $this->requestHandler()
             ->handleRequest($this);
     }
 
     /**
      * Encodes a response and sends it back to the browser.
      */
-    public function sendResponse(mixed $response): void
+    public function sendResponse(mixed $response): ResponseInterface
     {
         $encodedResponse = $this->responseEncoder()
             ->encodeResponse($response);
         $contentType = $this->responseEncoder()
             ->getContentType();
 
-        @header('Content-Type: ' . $contentType . '; charset=utf-8');
-        print_r($encodedResponse);
         $this->eventDispatcher->dispatchNotify(new SendResponse($encodedResponse));
+
+        $status = 200;
+        if ($response instanceof WsErrorResponse and $response->code() >= 400 and $response->code() < 600) {
+            $status = $response->code();
+        }
+
+        return ResponseFactory::raw($encodedResponse, [
+            'Content-Type' => $contentType . '; charset=utf-8',
+        ], $status);
     }
 
     /**
@@ -519,6 +511,8 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
                     $result = $handler($params, $this);
                 } catch (WsParamException $e) {
                     return new WsErrorResponse(403, $e->getMessage());
+                } catch (UnsupportedMediaTypeException $e) {
+                    return new WsErrorResponse(415, $e->getMessage());
                 }
                 if ($result instanceof WsResult) {
                     $result = $result->toArray();

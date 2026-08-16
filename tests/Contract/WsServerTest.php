@@ -74,9 +74,14 @@ final class WsServerTest extends ContractTestCase
      * WsInitializer::init()'s own switch doesn't recognize
      * (rest/php/json/xmlrpc), so Server::setEncoder() genuinely
      * receives a null encoder for a malformed real request -- not a
-     * synthetic construction. run() calls die(0) in this branch, so this
-     * uses a raw curl call against the live server rather than an
-     * in-process call (which would terminate the test runner itself).
+     * synthetic construction. P25 Stage 2 item 2 deleted this branch's
+     * own former die(0) and its var_export() dump of Server's internal
+     * state (registered handler class names, among other things) to the
+     * client -- it now returns a real 400 Response with a short, fully
+     * deterministic body, same as every other branch. A curl call
+     * against the live server is still used (not strictly required
+     * anymore, but genuinely exercises the real Apache-served process
+     * end to end, same as every other test in this file).
      */
     public function testRunWithAnUnrecognizedResponseFormatReportsTheErrorAndStops(): void
     {
@@ -93,20 +98,11 @@ final class WsServerTest extends ContractTestCase
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch);
 
-        self::assertIsString($body);
         self::assertSame(400, $status);
-        self::assertStringContainsString('Cannot process your request. Unknown response format.', $body);
-        self::assertStringContainsString('Request format: rest Response format: not-a-real-format', $body);
-        // var_export()'s own output of Server's own shallow request/
-        // response debug state -- confirms the die(0) branch really ran to
-        // completion rather than stopping earlier. Not a full
-        // var_export($this): Server's own DI-injected collaborators
-        // (accessControl's own chain reaches HtmlService/MailService/
-        // UrlService and every one of their own collaborators) would make
-        // a full var_export($this) exhaust the request's memory limit.
-        self::assertStringContainsString("'requestFormat' => 'rest'", $body);
-        self::assertStringContainsString("'responseFormat' => 'not-a-real-format'", $body);
-        self::assertStringContainsString("'methods' => \n  array (\n  )", $body);
+        self::assertSame(
+            "Cannot process your request. Unknown response format.\nRequest format: rest Response format: not-a-real-format\n",
+            $body
+        );
     }
 
     /**
@@ -116,16 +112,18 @@ final class WsServerTest extends ContractTestCase
      * container directly and calls setEncoder() without ever calling
      * setHandler() -- genuinely exercises run()'s own guard with a real
      * request-handler-less object, not a mock of the class under test. No
-     * HTTP call needed: unlike the "unknown response format" branch above,
-     * this one returns instead of calling die(), so it's safe to invoke
-     * in-process.
+     * HTTP call needed: run() returns a real ResponseInterface now (P25
+     * Stage 2 items 1-3), so this is safe to invoke in-process and read
+     * directly, no output-buffering capture required.
      *
-     * WsErrorResponse's own constructor mirrors a >= 400 code onto a real HTTP
-     * status via PresentationAccessor::htmlService(), which needs
-     * Kernel::boot() -- every other test in this file reaches that
-     * through the live Apache process's own bootstrap instead, but this
-     * one calls run() directly in the PHPUnit CLI process, so it
-     * boots/resets the Kernel locally, matching
+     * Server::sendResponse() (not WsErrorResponse's own constructor, since
+     * P25 Stage 2 item 3) maps a >= 400 WsErrorResponse code onto the
+     * returned Response's real HTTP status -- constructing one is now a
+     * pure value, no HtmlService/Kernel::boot() dependency of its own, but
+     * this still needs Kernel::boot() itself: every other test in this
+     * file reaches that through the live Apache process's own bootstrap
+     * instead, but this one calls run() directly in the PHPUnit CLI
+     * process, so it boots/resets the Kernel locally, matching
      * Integration\ContainerSmokeTest's own boot()-then-reset() pattern. A
      * real Paths is required, not a bare boot: Server constructor-
      * injects AccessControl, whose own chain
@@ -137,24 +135,19 @@ final class WsServerTest extends ContractTestCase
     public function testRunWithoutARequestHandlerReturnsUnknownRequestFormat(): void
     {
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
-        $body = false;
         try {
             $server = Kernel::container()->get(Server::class);
             self::assertInstanceOf(Server::class, $server);
             $encoder = new JsonEncoder();
             $server->setEncoder('json', $encoder);
 
-            ob_start();
-            try {
-                $server->run();
-            } finally {
-                $body = ob_get_clean();
-            }
+            $response = $server->run();
         } finally {
             Kernel::reset();
         }
 
-        self::assertIsString($body);
+        self::assertSame(400, $response->getStatusCode());
+        $body = (string) $response->getBody();
         $decoded = json_decode($body, true);
         self::assertIsArray($decoded);
         self::assertSame('fail', $decoded['stat']);

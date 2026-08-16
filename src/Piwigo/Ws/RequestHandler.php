@@ -11,13 +11,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Psr\Http\Message\ResponseInterface;
+
 /**
  * Abstract base class for request handlers.
  */
 abstract class RequestHandler
 {
-    /** Virtual abstract method. Decodes the request (GET or POST) handles the
-     * method invocation as well as response sending.
+    /** Virtual abstract method. Decodes the request (GET or POST), handles the
+     * method invocation, and returns the real response.
      */
-    abstract public function handleRequest(Server &$service): void;
+    abstract public function handleRequest(Server $service): ResponseInterface;
 }

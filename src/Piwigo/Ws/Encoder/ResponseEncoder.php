@@ -32,7 +32,7 @@ abstract class ResponseEncoder
     /** encodes the web service response to the appropriate output format
      * @param mixed $response the unencoded result of a service method call
      */
-    abstract public function encodeResponse(mixed $response): string|false;
+    abstract public function encodeResponse(mixed $response): string;
 
     /** default "Content-Type" http header for this kind of response format
      */

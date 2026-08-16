@@ -17,21 +17,21 @@ use Piwigo\Ws\Request\WsRawRequest;
 use Piwigo\Ws\RequestHandler;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
+use Psr\Http\Message\ResponseInterface;
 
 final class RestRequestHandler extends RequestHandler
 {
     #[Override]
-    public function handleRequest(Server &$service): void
+    public function handleRequest(Server $service): ResponseInterface
     {
         $wsRequest = WsRawRequest::fromGlobals();
 
         if ($wsRequest->method === null) {
-            $service->sendResponse(
+            return $service->sendResponse(
                 new WsErrorResponse(WsError::InvalidMethod->value, 'Missing "method" name')
             );
-            return;
         }
         $resp = $service->invoke($wsRequest->method, $wsRequest->params);
-        $service->sendResponse($resp);
+        return $service->sendResponse($resp);
     }
 }

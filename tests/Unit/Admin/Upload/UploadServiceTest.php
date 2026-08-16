@@ -14,7 +14,6 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
-use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Image\DerivativeParams;
@@ -113,11 +112,6 @@ function upload_service_test_make(): UploadService
         throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
 
-    $wsContext = Kernel::container()->get(WsContext::class);
-    if (! $wsContext instanceof WsContext) {
-        throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
-    }
-
     $currentUser = Kernel::container()->get(CurrentUser::class);
     if (! $currentUser instanceof CurrentUser) {
         throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
@@ -128,7 +122,7 @@ function upload_service_test_make(): UploadService
         throw new LogicException('Container returned an unexpected type for ' . PermissionService::class);
     }
 
-    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcherTestFactory::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get(), $permissionService);
+    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcherTestFactory::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get(), $permissionService);
 }
 
 beforeEach(function (): void {

@@ -249,7 +249,6 @@ final readonly class UploadAsyncHandler implements WsAction
                 $params['level'],
                 $params['image_id'],
                 $params['original_sum'],
-                $server
             );
 
         $logger->debug('uploadAsync image_id after add_uploaded_file = ' . $image_id);

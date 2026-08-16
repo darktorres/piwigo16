@@ -114,7 +114,6 @@ final readonly class AddFileHandler implements WsAction
                 null,
                 $input->imageId,
                 $image->md5sum, // we force the md5sum to remain the same
-                $server
             );
 
         return null;

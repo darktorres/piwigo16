@@ -29,7 +29,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsContext;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
@@ -48,8 +47,6 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\Server;
-use Piwigo\Ws\WsErrorResponse;
 
 /**
  * [SEC-21] The SVG upload branch validates that the sniffed MIME type
@@ -100,7 +97,6 @@ final readonly class UploadService
         private MetadataService $metadataService,
         private ImageService $imageService,
         private CurrentConfig $currentConfig,
-        private WsContext $wsContext,
         private CurrentUser $currentUser,
         private Paths $paths,
         private DbCredentials $dbCredentials,
@@ -256,15 +252,8 @@ final readonly class UploadService
      * 3) register in database
      *
      * @param int[]|null $categories
-     * @param Server|null $service Not a required parameter: the one
-     *   non-WS real caller, Job\Handler\BatchUploadHandler::
-     *   __invoke(BatchUploadJob $job), is a genuine queued-job handler
-     *   with no Server in scope at all. Images.php's 5 real WS
-     *   callers (addFile()/add()/addSimple()/upload()/uploadAsync(), each
-     *   already carrying its own Server $service param) pass it
-     *   through; BatchUploadHandler passes nothing.
      */
-    public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null, ?Server $service = null): int
+    public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null): int
     {
         $logger = $this->currentLogger->get();
 
@@ -448,12 +437,7 @@ final readonly class UploadService
                     if (in_array($finfo_type, ['image/svg', 'image/svg+xml'], true) and $original_extension !== 'svg') {
                         unlink($source_filepath);
                         $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
-                        if ($this->wsContext->isActive() && $service instanceof Server) {
-                            $service->sendResponse(new WsErrorResponse(415, $error_msg));
-                            exit;
-                        }
-
-                        throw new ImageProcessingException($error_msg);
+                        throw new UnsupportedMediaTypeException($error_msg);
                     }
 
                     // [SEC-21] strip <script>/event-handler content from a

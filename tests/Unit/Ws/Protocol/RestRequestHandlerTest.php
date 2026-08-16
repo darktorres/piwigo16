@@ -34,10 +34,9 @@ use Piwigo\Ws\Server;
  * `handleRequest()` itself: no method name resolved at all, and a real
  * method dispatched through to `Server::sendResponse()`.
  *
- * `sendResponse()` writes its encoded body via `print_r()` -- captured
- * here with `ob_start()`/`ob_get_clean()` rather than asserting on
- * `Server::invoke()`'s return value directly, since `handleRequest()`
- * itself never exposes that return value to a caller.
+ * `handleRequest()` returns the real ResponseInterface `sendResponse()`
+ * builds (P25 Stage 2 items 1-2), read directly here via
+ * `getBody()`/`getStatusCode()` -- no output buffering needed anymore.
  */
 function pwgRestRequestHandlerTestAccessControl(): AccessControl
 {
@@ -91,11 +90,11 @@ test('handleRequest sends an INVALID_METHOD error when no method name is present
     $server = pwgRestRequestHandlerTestServer();
     $handler = new RestRequestHandler();
 
-    ob_start();
-    $handler->handleRequest($server);
-    $output = ob_get_clean();
+    $response = $handler->handleRequest($server);
 
-    expect($output)
+    expect($response->getStatusCode())
+        ->toBe(501)
+        ->and((string) $response->getBody())
         ->toBe('{"stat":"fail","err":501,"message":"Missing \"method\" name"}');
 });
 
@@ -111,11 +110,11 @@ test('handleRequest invokes the requested GET method with its params and sends t
     ], ['name']);
     $handler = new RestRequestHandler();
 
-    ob_start();
-    $handler->handleRequest($server);
-    $output = ob_get_clean();
+    $response = $handler->handleRequest($server);
 
-    expect($output)
+    expect($response->getStatusCode())
+        ->toBe(200)
+        ->and((string) $response->getBody())
         ->toBe('{"stat":"ok","result":{"name":"Alps"}}');
 });
 
@@ -131,10 +130,10 @@ test('handleRequest reads params from $_POST instead of $_GET when the request i
     ], ['name']);
     $handler = new RestRequestHandler();
 
-    ob_start();
-    $handler->handleRequest($server);
-    $output = ob_get_clean();
+    $response = $handler->handleRequest($server);
 
-    expect($output)
+    expect($response->getStatusCode())
+        ->toBe(200)
+        ->and((string) $response->getBody())
         ->toBe('{"stat":"ok","result":{"name":"Pyrenees"}}');
 });

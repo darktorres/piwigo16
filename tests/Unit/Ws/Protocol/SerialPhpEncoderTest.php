@@ -16,10 +16,11 @@ use Piwigo\Ws\WsErrorResponse;
  * should produce.
  *
  * WsError::InvalidParam-style codes (>= 1000) are used for the
- * WsErrorResponse fixture, not an HTTP-range code (400-599), because
- * WsErrorResponse's constructor calls PresentationAccessor::htmlService() for
- * HTTP-range codes, which needs a booted container this Unit test
- * doesn't set up.
+ * WsErrorResponse fixture -- WsErrorResponse is a pure value object
+ * (P25 Stage 2 item 3 moved its former HTTP-status side effect into
+ * Server::sendResponse() instead), so this is no longer load-bearing
+ * for constructing one without a booted container, just kept
+ * consistent with the sibling encoder tests.
  *
  * Ws\Encoder\ResponseEncoder::flatten()'s own re-assertion guard (`$is_struct
  * = self::isStruct($value); if (! is_array($value)) { return; }`,

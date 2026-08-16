@@ -1115,22 +1115,6 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
     // line numbers drift with unrelated edits, call-site counts don't (a
     // genuinely new call site always changes the count).
     $allowlist = [
-        // Ws/* raw-response mechanism: the whole Ws/ module sends its own
-        // JSON-RPC/XML/PHP-serialized response and exits, by design --
-        // bypasses the PSR-7 middleware pipeline entirely (WsController's
-        // own docblock: "Server::run() always ends the response itself
-        // ... there is no real PSR-7 Response to construct"). Same
-        // mechanism reached from Bootstrap/UserBootstrap.php's api_key
-        // gate and Admin/Upload/UploadService.php's IN_WS branch.
-        // Ws/Images.php's own upload-error sites return `new
-        // WsErrorResponse(...)` instead of a raw die(), the same real
-        // error-response mechanism this file already uses everywhere
-        // else, so upload errors honor the request's real format=/
-        // protocol instead of hardcoding raw JSON regardless.
-        'Ws/Server.php' => 1,
-        'Controller/WsController.php' => 1,
-        'Bootstrap/UserBootstrap.php' => 2,
-
         // Html/HtmlService.php's accessDenied()/badRequest()/
         // pageNotFound()/pageForbidden()/fatalError() and Bootstrap/
         // RedirectService.php's redirectHttp()/redirectHtml() -- the
@@ -1149,7 +1133,16 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // gone -- it now returns a WsErrorResponse and lets the standard
         // Server::invoke() -> sendResponse() flow carry it out, the same
         // real error-response mechanism Ws/Images.php's own upload-error
-        // sites (above) already use instead of a raw die().
+        // sites already use instead of a raw die(). P25 Stage 2 finished
+        // the job for the rest of Ws/*: Server::run()/sendResponse() now
+        // return a real ResponseInterface instead of echo+exit(),
+        // WsController.php returns it directly, UploadService.php throws
+        // UnsupportedMediaTypeException instead of reaching into a Server
+        // to send+exit, and UserBootstrap.php's api_key/uploadAsync gates
+        // throw Piwigo\Http\ResponseReadyException like every other
+        // sanctioned short-circuit in this list -- zero die()/exit() left
+        // anywhere under Ws/, Controller/WsController.php,
+        // Bootstrap/UserBootstrap.php or Admin/Upload/UploadService.php.
 
         // AJAX/JSON action endpoints: echo a JSON (or CSV/file) body
         // directly and stop, deliberately not falling through to the
@@ -1199,9 +1192,11 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // (Ws/Images.php, Controller/ImageDerivativeController.php),
         // and Symfony Messenger's own consumer loop does the same for the
         // Job/BatchUploadJob.php background-job caller. UploadService.php's
-        // only remaining site is its own IN_WS branch's exit() (see the
-        // Ws/* raw-response mechanism comment above).
-        'Admin/Upload/UploadService.php' => 1,
+        // former IN_WS-branch exit() is gone too (see the Ws/* comment
+        // above) -- it now throws
+        // Piwigo\Admin\Upload\UnsupportedMediaTypeException, a sibling of
+        // ImageProcessingException, mapped onto a 415 WsErrorResponse by
+        // Ws\Server::invoke()'s own catch clause.
 
         // Core/ShutdownHandler.php: exit(143), a deliberate, documented
         // signal-termination exit code (128 + SIGTERM), not an error path.

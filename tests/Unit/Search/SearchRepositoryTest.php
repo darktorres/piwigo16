@@ -14,7 +14,7 @@ use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Search\SearchRepository -- has its own dedicated
- * tests/Integration/SearchRepositoryTest.php; this ports its 21 tests
+ * tests/Integration/SearchRepositoryTest.php; this ports most of its tests
  * down to the Unit suite via the real-DB-no-HTTP ImageRepositoryTest.php
  * pattern. `search` starts empty in the fixture.
  *
@@ -29,25 +29,29 @@ use Piwigo\Tests\Support\DbTransactionTestOverride;
  * Confirmed-equivalent mutations, not individually tested: every
  * `is_numeric(...) ? (int) ... : default` cast after
  * getSingleScalarResult()/fetchFirstColumn() (countSavedSearchByUuid(),
- * findIdsByClause()) and every `is_array($row) || ! is_numeric/instanceof`
- * guard over a plain (non-VO) or array-hydrated-VO column
- * (findSavedSearchRulesByIds(), findCategoryIdsAndUppercats()) are
- * unreachable on this driver, same root cause documented throughout this
- * project's other Unit-suite files; `$entity->id ?? 0` in toProjection()/
- * insertSavedSearch() is unreachable -- a real, already-persisted or
- * just-flushed SavedSearchEntity always has a real autoincrement id;
- * findSavedSearchRulesByIds()'s own `if ($ids === []) { return []; }`
- * early return is unobservable if skipped -- confirmed live
- * (sed-mutate-and-rerun: disabling it still returns `[]` for an empty
- * `$ids`, DBAL's own `ArrayParameterType` expansion of an empty array
- * already matches nothing on this driver, same root cause as
+ * findImageIdsByRawWhere()/findImageIdsForRegularSearch()) and every
+ * `is_array($row) || ! is_numeric/instanceof` guard over a plain (non-VO) or
+ * array-hydrated-VO column (findSavedSearchRulesByIds(),
+ * findCategoryIdsAndUppercats()) are unreachable on this driver, same root
+ * cause documented throughout this project's other Unit-suite files;
+ * `$entity->id ?? 0` in toProjection()/insertSavedSearch() is unreachable --
+ * a real, already-persisted or just-flushed SavedSearchEntity always has a
+ * real autoincrement id; findSavedSearchRulesByIds()'s own
+ * `if ($ids === []) { return []; }` early return is unobservable if skipped
+ * -- confirmed live (sed-mutate-and-rerun: disabling it still returns `[]`
+ * for an empty `$ids`, DBAL's own `ArrayParameterType` expansion of an empty
+ * array already matches nothing on this driver, same root cause as
  * PermalinkRepositoryTest.php's own findPermalinkMatches() finding).
  *
- * findRowsByClause()'s `tsv_` key-prefix filter used to be listed above as
- * untestable here, on the grounds that MySQL's schema has no
- * `tsv_search`/`tsv_author` generated columns for it to drop. It has its own
- * test now: the column is synthesized by a derived table, so the real filter
- * runs on this driver too.
+ * §14: findIdsByClause()/findRowsByClause()/quote() (a free-form
+ * table/column-string escape hatch, and a genuinely dead helper -- zero
+ * production callers even before this pass) are retired in favor of
+ * findImageIdsByRawWhere()/findImageIdsForRegularSearch()/
+ * findTagRowsByRawWhere()/findCategoryRowsByRawWhere(), each naming its own
+ * real table and explicit column list. The `tsv_`-prefix key-stripping test
+ * that used to live here is gone with it: an explicit column list can't
+ * select a `tsv_*` generated column in the first place, so there is nothing
+ * left to strip or to test.
  */
 function searchTestRepo(): SearchRepository
 {
@@ -157,20 +161,20 @@ test('findSavedSearchByUuid() maps a null created_on to null, not the entity ins
         ->toBeNull();
 });
 
-test('findIdsByClause() returns a list of ints', function (): void {
+test('findImageIdsByRawWhere() returns a list of ints', function (): void {
     // Bounded to the fixture's own 5 ids, not a bare 'id > 0' -- several
     // OTHER Unit-suite files insert a disposable image (a real, higher
     // auto-increment id) for the span of their own test, which an
     // unbounded condition here could catch mid-test under --parallel.
     $ids = searchTestRepo()
-        ->findIdsByClause('id', 'images i', 'id > ? AND id <= ?', [0, 5]);
+        ->findImageIdsByRawWhere('id > ? AND id <= ?', [0, 5]);
     sort($ids);
 
     expect($ids)
         ->toBe([1, 2, 3, 4, 5]);
 });
 
-test('findIdsByClause() returns empty for no match', function (): void {
+test('findImageIdsByRawWhere() returns empty for no match', function (): void {
     // Structurally impossible (id > 10 and id < 10 can never both hold),
     // not a bare high threshold like 'id > 99999' -- several OTHER
     // Unit-suite files deliberately use ids well above that (e.g.
@@ -182,12 +186,20 @@ test('findIdsByClause() returns empty for no match', function (): void {
     // literal id pair instead of a randomized one). This condition
     // matches nothing regardless of what any row's real id ever is, so
     // no threshold can ever need raising again.
-    expect(searchTestRepo()->findIdsByClause('id', 'images i', 'id > ? AND id < ?', [10, 10]))->toBe([]);
+    expect(searchTestRepo()->findImageIdsByRawWhere('id > ? AND id < ?', [10, 10]))->toBe([]);
 });
 
-test('findRowsByClause() returns full rows', function (): void {
+test('findImageIdsByRawWhere() orders by the given order body', function (): void {
+    $ids = searchTestRepo()
+        ->findImageIdsByRawWhere('id > ? AND id <= ?', [0, 5], 'id DESC');
+
+    expect($ids)
+        ->toBe([5, 4, 3, 2, 1]);
+});
+
+test('findTagRowsByRawWhere() returns full rows', function (): void {
     $rows = searchTestRepo()
-        ->findRowsByClause('tags', 'name = ?', ['nature']);
+        ->findTagRowsByRawWhere('name = ?', ['nature']);
 
     expect($rows)
         ->toHaveCount(1)
@@ -195,43 +207,43 @@ test('findRowsByClause() returns full rows', function (): void {
         ->and($rows[0]['name'])->toBe('nature');
 });
 
-test('findRowsByClause() strips tsv_-prefixed columns', function (): void {
-    // A derived table synthesizes the tsv_-prefixed column, so the real
-    // filter runs on every driver rather than only against Postgres's own
-    // generated columns -- see the Integration counterpart for the full
-    // rationale.
+test('findTagRowsByRawWhere() returns empty for no match', function (): void {
+    expect(searchTestRepo()->findTagRowsByRawWhere('name = ?', ['no-such-tag']))->toBe([]);
+});
+
+test('findCategoryRowsByRawWhere() returns full rows', function (): void {
     $rows = searchTestRepo()
-        ->findRowsByClause(
-            '(SELECT id, name, 1 AS tsv_fake FROM tags WHERE id = ?) t',
-            '',
-            [1]
-        );
+        ->findCategoryRowsByRawWhere('id = ?', [1]);
 
     expect($rows)
-        ->toHaveCount(1);
-    expect($rows[0])->toHaveKey('name');
-    expect($rows[0])->not->toHaveKey('tsv_fake');
+        ->toHaveCount(1)
+        ->and($rows[0]['id'])->toBe(1)
+        ->and($rows[0]['name'])->toBe('Sample Album');
 });
 
-test('findRowsByClause() returns empty for no match', function (): void {
-    expect(searchTestRepo()->findRowsByClause('tags', 'name = ?', ['no-such-tag']))->toBe([]);
+test('findCategoryRowsByRawWhere() returns empty for no match', function (): void {
+    expect(searchTestRepo()->findCategoryRowsByRawWhere('id = ?', [99999]))->toBe([]);
 });
 
-test('quote() escapes a value for safe inline embedding', function (): void {
-    // [SEC-18] real driver escaping (Connection::quote()), not
-    // addslashes() -- the quoted value must round-trip safely when
-    // embedded directly into a WHERE fragment (not bound via ?).
-    $quoted = searchTestRepo()
-        ->quote("o'brien\" --");
+test('findImageIdsForRegularSearch() joins image_category and groups by id when requested', function (): void {
+    // Fixture: images 1-3 belong to category 1, 4-5 to category 2 (see this
+    // file's own header docblock) -- category_id only resolves at all once
+    // the join is applied, and GROUP BY id keeps one row per image even
+    // though the join can fan out per membership.
+    $ids = searchTestRepo()
+        ->findImageIdsForRegularSearch('category_id = ?', [1], true, '');
+    sort($ids);
 
-    $row = DbConnection::build()->executeQuery("SELECT {$quoted} AS val")->fetchAssociative();
+    expect($ids)
+        ->toBe([1, 2, 3]);
+});
 
-    expect($row)
-        ->toBeArray();
-    if (! is_array($row)) {
-        throw new RuntimeException('unreachable');
-    }
-    expect($row['val'])->toBe("o'brien\" --");
+test('findImageIdsForRegularSearch() omits the join when not requested', function (): void {
+    $ids = searchTestRepo()
+        ->findImageIdsForRegularSearch('id > ? AND id <= ?', [0, 5], false, 'id DESC');
+
+    expect($ids)
+        ->toBe([5, 4, 3, 2, 1]);
 });
 
 test('countSavedSearchByUuid() returns zero for unknown uuid', function (): void {

@@ -3099,6 +3099,50 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
+     * Every image id linked to at least one category -- SearchService's own
+     * quick-search wildcard token (a bare `category:*`), the unfiltered
+     * counterpart of {@see findIdsInCategories()}.
+     *
+     * @return list<int>
+     */
+    public function findAllCategorizedIds(): array
+    {
+        return array_values(array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select('DISTINCT IDENTITY(ic.image)')
+                ->from(ImageCategoryEntity::class, 'ic')
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
+    }
+
+    /**
+     * Every image id linked to no category at all -- SearchService's own
+     * quick-search wildcard token (an empty `category:` term), the exact
+     * inverse of {@see findAllCategorizedIds()}. Real DQL, unlike
+     * {@see findIdsWithNoTag()}'s raw-DBAL LEFT JOIN -- `image_category` is
+     * this repository's own entity ({@see ImageCategoryEntity}), with the
+     * inverse `imageCategories` collection {@see ImageEntity} itself
+     * declares, so `IS EMPTY` expresses the join-and-filter in one step.
+     *
+     * @return list<int>
+     */
+    public function findIdsWithNoCategory(): array
+    {
+        return array_values(array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->createQueryBuilder('i')
+                ->select('i.id')
+                ->where('i.imageCategories IS EMPTY')
+                ->orderBy('i.id')
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
+    }
+
+    /**
      * Every image id NOT linked (via image_category) to any of
      * $categoryIds -- an empty $categoryIds returns every image,
      * unfiltered. Admin\BatchManager\FilterResolver's own

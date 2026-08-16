@@ -1402,6 +1402,41 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findIdsInCategories([]));
     }
 
+    public function testFindAllCategorizedIdsReturnsEveryLinkedImage(): void
+    {
+        // Fixture: images 1-3 are in category 1, images 4-5 are in
+        // category 2 -- every fixture image is linked to some category.
+        $ids = $this->repo->findAllCategorizedIds();
+        sort($ids);
+        self::assertSame([1, 2, 3, 4, 5], $ids);
+    }
+
+    public function testFindIdsWithNoCategoryReturnsEmptyWhenEveryImageIsLinked(): void
+    {
+        self::assertSame([], $this->repo->findIdsWithNoCategory());
+    }
+
+    public function testFindIdsWithNoCategoryReturnsAnImageWithNoImageCategoryRow(): void
+    {
+        // Every fixture image (1-5) already has an image_category link --
+        // a disposable image row (with none) is the only way to reach a
+        // non-empty result here, same "insert a scratch row" convention as
+        // 'countLoungeImagesPendingForCategory counts unlinked lounge rows'
+        // above.
+        $this->conn->insert('images', [
+            'file' => 'no-category-image.jpg',
+        ]);
+        $newId = (int) $this->conn->lastInsertId();
+
+        try {
+            self::assertSame([$newId], $this->repo->findIdsWithNoCategory());
+        } finally {
+            $this->conn->delete('images', [
+                'id' => $newId,
+            ]);
+        }
+    }
+
     public function testFindExistingAssociationsReturnsRealValuesNotAnEmptyArray(): void
     {
         // This method uses a *blind* `instanceof CategoryId` check (no

@@ -3326,6 +3326,38 @@ final readonly class CategoryRepository
     }
 
     /**
+     * Which of $ids are real category ids, minus $excludeIds --
+     * SearchService's own quick-search subcategory-expansion step
+     * (subcategory ids already resolved by CategoryService::getSubcatIds(),
+     * narrowed to real, non-forbidden ones).
+     *
+     * @param  list<int>  $ids
+     * @param  list<int>  $excludeIds
+     * @return list<int>
+     */
+    public function findIdsAmongExcluding(array $ids, array $excludeIds): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
+            ->select('c.id')
+            ->where('c.id IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+
+        if ($excludeIds !== []) {
+            $qb->andWhere('c.id NOT IN (:excludeIds)')
+                ->setParameter('excludeIds', $excludeIds, ArrayParameterType::INTEGER);
+        }
+
+        return array_values(array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $qb->getQuery()->getSingleColumnResult()
+        ));
+    }
+
+    /**
      * id/image_order for categories matching already-built $conditions --
      * Ws\Categories::getImages()'s own "which categories are we
      * fetching images for" step.

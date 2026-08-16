@@ -20,11 +20,11 @@ use Piwigo\Search\Projection\Search;
 
 /**
  * Persistence layer for the search domain: the `search` table (saved
- * search rules) plus generic parameterized id-list/row lookups shared by
- * the many distinct WHERE-clause shapes `SearchService` builds (the
- * quick-search token evaluator's own genuinely dynamic table/column/
- * operator combinations -- see {@see findIdsByClause()}'s own docblock
- * for why that one stays generic).
+ * search rules) plus a handful of raw-DBAL image/tag/category lookups the
+ * quick-search token evaluator needs for operator combinations DQL can't
+ * express (MySQL FULLTEXT search, a plugin extensibility hook accepting
+ * raw SQL) -- see {@see findImageIdsByRawWhere()}'s own docblock for the
+ * full reasoning.
  *
  * Takes a directly-injected `EntityManagerInterface` rather than
  * extending `AbstractRepository` (`Search` is `L2bExtendedDomain`;
@@ -32,11 +32,13 @@ use Piwigo\Search\Projection\Search;
  * dependency, same shape as `Calendar\CalendarRepository`/
  * `Notification\NotificationRepository`). The `search` table's own
  * basic CRUD runs through DQL/`persist()` below.
- * `findIdsByClause()`/`findRowsByClause()`/`quote()`/`expressionBuilder()`
- * stay generic -- the quick-search token evaluator's own real,
- * permanent need for dynamically-varying table/column/operator
- * combinations (MySQL FULLTEXT search, a plugin extensibility hook
- * accepting raw SQL) has no DQL representation.
+ * `findImageIdsByRawWhere()`/`findImageIdsForRegularSearch()`/
+ * `findTagRowsByRawWhere()`/`findCategoryRowsByRawWhere()`/
+ * `expressionBuilder()` each name their own real table and column list --
+ * only the WHERE clause and its bound parameters vary per call, not the
+ * table/column shape itself (§14 retired the earlier fully-generic
+ * `findIdsByClause()`/`findRowsByClause()`, plus the always-unused
+ * `quote()`, in favor of these).
  * `SearchService::getRegularSearchResults()`'s 12 advanced-search
  * criteria and `searchAllwords()` go through {@see findImageIdsMatching()}.
  * `SearchFilterRenderer`'s own filter-sidebar blocks (author/added_by/
@@ -48,9 +50,11 @@ use Piwigo\Search\Projection\Search;
  * Every `mixed` below stays that way by design: $params mirrors DBAL
  * Connection::executeQuery()'s own untyped bound-parameter contract
  * (values vary by which dynamically-built WHERE clause a caller
- * assembled); findRowsByClause()'s row shape genuinely varies with
- * $fromSql; $rules matches Search Projection's own already-documented
- * JSON rules-bag rationale.
+ * assembled); findTagRowsByRawWhere()/findCategoryRowsByRawWhere()'s row
+ * shape carries a plugin-rewritable `name` key (see
+ * `Search\QResults::$all_tags`'s own docblock), so it can't be a typed
+ * Projection either; $rules matches Search Projection's own
+ * already-documented JSON rules-bag rationale.
  */
 final readonly class SearchRepository
 {
@@ -358,31 +362,37 @@ final readonly class SearchRepository
     }
 
     /**
-     * Generic "list of ids matching an arbitrary WHERE clause" executor,
-     * used by the quick-search token evaluator's per-token image/tag/
-     * category lookups -- a real, permanent need for dynamically-varying
-     * table/column/operator combinations (MySQL FULLTEXT `MATCH()...
-     * AGAINST()`, a plugin extensibility hook accepting raw SQL clause
-     * strings), neither expressible in DQL. $whereSql uses `?`
-     * placeholders bound from $params -- callers building a clause from
-     * free-text search terms MUST bind through $params (or {@see quote()}
-     * when the value has to be embedded inline in a larger OR-joined
-     * fragment), never string-concatenate raw user input.
+     * "Image ids matching an arbitrary WHERE clause" executor -- the
+     * quick-search token evaluator's own per-token image lookup
+     * (`SearchService::qsearchGetImages()`) and its "re-sort a known id
+     * set" step, a real, permanent need for dynamically-varying operator
+     * combinations (MySQL FULLTEXT `MATCH()...AGAINST()`, a plugin
+     * extensibility hook accepting raw SQL clause strings) that DQL can't
+     * express. $whereSql uses `?` placeholders bound from $params --
+     * callers building a clause from free-text search terms MUST bind
+     * through $params (or {@see quote()} when the value has to be embedded
+     * inline in a larger OR-joined fragment), never string-concatenate raw
+     * user input. Has no `SqlCondition` (named-parameter) equivalent on
+     * purpose -- see {@see findTagRowsByRawWhere()}'s own docblock for why
+     * (the same plugin-hook contract feeds this method too).
      *
      * An empty $whereSql means "no restriction" and omits the WHERE
      * entirely, so callers matching everything pass nothing rather than a
-     * `1=1` stand-in.
+     * `1=1` stand-in. $orderBySqlBody is appended as a literal `ORDER BY`
+     * clause (already rendered by the caller, e.g. via
+     * {@see \Piwigo\Db\SortRenderer::toSqlBody()}), empty meaning no order.
      *
      * @param  list<mixed>  $params
      * @return list<int>
      */
-    public function findIdsByClause(string $selectSql, string $fromSql, string $whereSql = '', array $params = []): array
+    public function findImageIdsByRawWhere(string $whereSql, array $params = [], string $orderBySqlBody = ''): array
     {
         $where = $whereSql === '' ? '' : 'WHERE ' . $whereSql;
+        $orderBy = $orderBySqlBody === '' ? '' : 'ORDER BY ' . $orderBySqlBody;
         $ids = $this->em->getConnection()
             ->executeQuery(
                 <<<SQL
-                SELECT {$selectSql} FROM {$fromSql} {$where}
+                SELECT id FROM images i {$where} {$orderBy}
                 SQL
                 ,
                 $params
@@ -395,60 +405,99 @@ final readonly class SearchRepository
     }
 
     /**
-     * Same shape as {@see findIdsByClause()} but for full rows (the
-     * quick-search tag/category text lookups need the whole row, not just
-     * the id, to build `QResults::$all_tags`/`$all_cats`).
+     * `SearchService::getRegularSearchResults()`'s own final permission-
+     * filtered image id assembly -- same raw-WHERE/plugin-hook shape as
+     * {@see findImageIdsByRawWhere()}, but with an optional `image_category`
+     * join (needed only when the permission check reads `category_id`) and
+     * an unconditional `GROUP BY id` (an image can have several category
+     * memberships once joined, so `DISTINCT`/`GROUP BY` is required to keep
+     * one row per image -- `GROUP BY`, not `DISTINCT`, because
+     * `Db\DbConnection` deliberately never strips `ONLY_FULL_GROUP_BY`,
+     * under which `SELECT DISTINCT id ... ORDER BY <col not in select>` is
+     * invalid but `GROUP BY id` (functionally dependent via the primary
+     * key) is not).
      *
-     * `SELECT *` against `images`/`categories`/`tags` also picks up their
-     * Postgres-only `tsv_search`/`tsv_author` generated columns, which no
-     * real caller here ever wants. Stripped by key prefix rather than
-     * narrowing the `SELECT *` itself: this method is deliberately
-     * generic across whatever table/columns each caller's own `$fromSql`
-     * names, and no legitimate caller's real column name would ever
-     * start with `tsv_` (this schema's own naming convention -- every
-     * real column is a plain noun, `tsv_*` is reserved for the
-     * FULLTEXT-generated-column purpose specifically), so this can't
-     * drop a real, wanted column for either platform.
+     * @param  list<mixed>  $params
+     * @return list<int>
+     */
+    public function findImageIdsForRegularSearch(string $whereSql, array $params, bool $joinImageCategory, string $orderBySqlBody): array
+    {
+        $join = $joinImageCategory ? 'INNER JOIN image_category AS ic ON id = ic.image_id' : '';
+        $where = $whereSql === '' ? '' : 'WHERE ' . $whereSql;
+        $orderBy = $orderBySqlBody === '' ? '' : 'ORDER BY ' . $orderBySqlBody;
+        $ids = $this->em->getConnection()
+            ->executeQuery(
+                <<<SQL
+                SELECT id FROM images i {$join} {$where} GROUP BY id {$orderBy}
+                SQL
+                ,
+                $params
+            )->fetchFirstColumn();
+
+        return array_values(array_map(
+            static fn (mixed $id): int => (int) $id,
+            array_filter($ids, is_numeric(...))
+        ));
+    }
+
+    /**
+     * Quick-search tag text-match lookup (`SearchService::qsearchGetTags()`)
+     * -- every real `tags` column, explicitly listed rather than `SELECT *`,
+     * so the Postgres-only `tsv_search` generated column is never fetched in
+     * the first place (no key-stripping needed afterward). $whereSql is a
+     * caller-built `?`-bound REGEXP/FULLTEXT/LIKE OR-clause list
+     * ({@see \Piwigo\Search\SearchService::qsearchGetTextTokenSearchSql()}),
+     * which has no `SqlCondition` (named-parameter) equivalent here on
+     * purpose -- {@see \Piwigo\Search\Event\QsearchGetImagesSqlScopes} is a
+     * public plugin hook built on the same positional-`?` clause/params
+     * shape, so changing it would be a breaking contract change, not an
+     * internal refactor.
      *
      * @param  list<mixed>  $params
      * @return list<array<string, mixed>>
      */
-    public function findRowsByClause(string $fromSql, string $whereSql = '', array $params = []): array
+    public function findTagRowsByRawWhere(string $whereSql, array $params = []): array
     {
         $where = $whereSql === '' ? '' : 'WHERE ' . $whereSql;
-        $rows = $this->em->getConnection()
+
+        return $this->em->getConnection()
             ->executeQuery(
                 <<<SQL
-                SELECT * FROM {$fromSql} {$where}
+                SELECT id, name, url_name, lastmodified FROM tags {$where}
                 SQL
                 ,
                 $params
             )->fetchAllAssociative();
-
-        return array_map(
-            static fn (array $row): array => array_filter(
-                $row,
-                static fn (string $key): bool => ! str_starts_with($key, 'tsv_'),
-                ARRAY_FILTER_USE_KEY
-            ),
-            $rows
-        );
     }
 
     /**
-     * Safely quotes (and includes the surrounding quotes for) a value for
-     * inline embedding into a hand-built SQL fragment -- for the specific
-     * case where a free-text term has to be OR/AND-joined alongside other,
-     * already-safe raw fragments (numeric/date range clauses from
-     * QNumericRangeScope/QDateRangeScope) into a single WHERE string,
-     * where a `?`-bound parameter can't cleanly compose. Uses the real
-     * DBAL driver's own escaping -- addslashes() doesn't handle every
-     * driver's/charset's escaping rules correctly.
+     * Quick-search category text-match lookup
+     * (`SearchService::qsearchGetCategories()`) -- same shape and same
+     * plugin-hook-compatibility reasoning as
+     * {@see findTagRowsByRawWhere()}, every real `categories` column
+     * explicitly listed instead of `SELECT *`.
+     *
+     * @param  list<mixed>  $params
+     * @return list<array<string, mixed>>
      */
-    public function quote(string $value): string
+    public function findCategoryRowsByRawWhere(string $whereSql, array $params = []): array
     {
-        return $this->em->getConnection()
-            ->quote($value);
+        $where = $whereSql === '' ? '' : 'WHERE ' . $whereSql;
+        // `rank` is a reserved word on both platforms (MySQL 8.0.2+), same
+        // reasoning as Db\SortRenderer::rankColumn() -- always quoted.
+        $conn = $this->em->getConnection();
+        $rankColumn = $conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('rank');
+
+        return $conn
+            ->executeQuery(
+                <<<SQL
+                SELECT id, name, id_uppercat, comment, dir, {$rankColumn}, status, site_id, visible, representative_picture_id, uppercats, commentable, global_rank, image_order, permalink, lastmodified
+                FROM categories {$where}
+                SQL
+                ,
+                $params
+            )->fetchAllAssociative();
     }
 
     /**

@@ -23,6 +23,7 @@ use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SortRenderer;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
@@ -172,6 +173,16 @@ function searchServiceTestTagService(): TagService
     return $tagService;
 }
 
+function searchServiceTestImageService(): ImageService
+{
+    $imageService = Kernel::container()->get(ImageService::class);
+    if (! $imageService instanceof ImageService) {
+        throw new LogicException('Container returned an unexpected type for ' . ImageService::class);
+    }
+
+    return $imageService;
+}
+
 function searchServiceTestPreferencesService(): PreferencesService
 {
     $preferencesService = Kernel::container()->get(PreferencesService::class);
@@ -233,6 +244,7 @@ function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): Sea
         CurrentConfigTestFactory::get(),
         new SortRenderer($conn),
         searchServiceTestTagService(),
+        searchServiceTestImageService(),
         searchServiceTestUserService(),
         searchServiceTestPreferencesService(),
         searchServiceTestSearchResultsCachePool(),

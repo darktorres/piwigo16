@@ -28,6 +28,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Db\SortRenderer;
     use Piwigo\Group\GroupEntity;
+    use Piwigo\Image\ImageService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Permission\SqlCondition;
@@ -377,6 +378,7 @@ namespace Piwigo\Tests\Integration {
                 CurrentConfigTestFactory::get(),
                 new SortRenderer($this->conn),
                 $this->tagService(),
+                $this->imageService(),
                 $this->userService(),
                 $this->preferencesService(),
                 $this->searchResultsCachePool(),
@@ -414,6 +416,16 @@ namespace Piwigo\Tests\Integration {
             }
 
             return $tagService;
+        }
+
+        private function imageService(): ImageService
+        {
+            $imageService = Kernel::container()->get(ImageService::class);
+            if (! $imageService instanceof ImageService) {
+                throw new LogicException('Container returned an unexpected type for ' . ImageService::class);
+            }
+
+            return $imageService;
         }
 
         private function preferencesService(): PreferencesService
@@ -468,6 +480,7 @@ namespace Piwigo\Tests\Integration {
                 CurrentConfigTestFactory::get(),
                 new SortRenderer($this->conn),
                 $this->tagService(),
+                $this->imageService(),
                 $this->userService(),
                 $this->preferencesService(),
                 $this->searchResultsCachePool(),

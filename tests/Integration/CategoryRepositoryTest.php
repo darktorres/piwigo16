@@ -782,6 +782,28 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([], $this->repo->findExistingIds([]));
         }
 
+        public function testFindIdsAmongExcludingReturnsEmptyForNoIds(): void
+        {
+            self::assertSame([], $this->repo->findIdsAmongExcluding([], [2]));
+        }
+
+        public function testFindIdsAmongExcludingReturnsMatchingIdsWhenNothingIsExcluded(): void
+        {
+            $ids = $this->repo->findIdsAmongExcluding([1, 2], []);
+            sort($ids);
+            self::assertSame([1, 2], $ids);
+        }
+
+        public function testFindIdsAmongExcludingDropsExcludedIds(): void
+        {
+            self::assertSame([1], $this->repo->findIdsAmongExcluding([1, 2], [2]));
+        }
+
+        public function testFindIdsAmongExcludingDropsNonExistentIds(): void
+        {
+            self::assertSame([1], $this->repo->findIdsAmongExcluding([1, 999999], []));
+        }
+
         public function testFindSubcategoryCountsByParentReturnsEmptyForNoParentIds(): void
         {
             self::assertSame([], $this->repo->findSubcategoryCountsByParent([]));

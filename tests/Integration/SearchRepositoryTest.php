@@ -79,65 +79,67 @@ final class SearchRepositoryTest extends IntegrationTestCase
         self::assertSame('psk-20260712-abcdefghij', $row->searchUuid);
     }
 
-    public function testFindIdsByClauseReturnsAListOfInts(): void
+    public function testFindImageIdsByRawWhereReturnsAListOfInts(): void
     {
-        $ids = $this->repo->findIdsByClause('id', 'images i', 'id > ?', [0]);
+        $ids = $this->repo->findImageIdsByRawWhere('id > ?', [0]);
         sort($ids);
 
         self::assertSame([1, 2, 3, 4, 5], $ids);
     }
 
-    public function testFindIdsByClauseReturnsEmptyForNoMatch(): void
+    public function testFindImageIdsByRawWhereReturnsEmptyForNoMatch(): void
     {
-        self::assertSame([], $this->repo->findIdsByClause('id', 'images i', 'id > ?', [99999]));
+        self::assertSame([], $this->repo->findImageIdsByRawWhere('id > ?', [99999]));
     }
 
-    public function testFindRowsByClauseReturnsFullRows(): void
+    public function testFindImageIdsByRawWhereOrdersByTheGivenOrderBody(): void
     {
-        $rows = $this->repo->findRowsByClause('tags', 'name = ?', ['nature']);
+        self::assertSame([5, 4, 3, 2, 1], $this->repo->findImageIdsByRawWhere('id > ?', [0], 'id DESC'));
+    }
+
+    public function testFindTagRowsByRawWhereReturnsFullRows(): void
+    {
+        $rows = $this->repo->findTagRowsByRawWhere('name = ?', ['nature']);
 
         self::assertCount(1, $rows);
         self::assertSame(1, $rows[0]['id']);
         self::assertSame('nature', $rows[0]['name']);
     }
 
-    public function testFindRowsByClauseReturnsEmptyForNoMatch(): void
+    public function testFindTagRowsByRawWhereReturnsEmptyForNoMatch(): void
     {
-        self::assertSame([], $this->repo->findRowsByClause('tags', 'name = ?', ['no-such-tag']));
+        self::assertSame([], $this->repo->findTagRowsByRawWhere('name = ?', ['no-such-tag']));
     }
 
-    public function testFindRowsByClauseStripsTsvPrefixedColumns(): void
+    public function testFindCategoryRowsByRawWhereReturnsFullRows(): void
     {
-        // The real `tsv_search`/`tsv_author` columns this filter exists for
-        // are Postgres-only generated columns, so on any other driver the
-        // stripping code has nothing to act on and goes unverified. A
-        // derived table synthesizes a tsv_-prefixed column on every driver,
-        // exercising the real filter rather than a stand-in for it -- the
-        // method takes $fromSql as a raw fragment precisely so callers can
-        // name whatever relation they like.
-        $rows = $this->repo->findRowsByClause(
-            '(SELECT id, name, 1 AS tsv_fake FROM tags WHERE id = ?) t',
-            '',
-            [1]
-        );
+        $rows = $this->repo->findCategoryRowsByRawWhere('id = ?', [1]);
 
         self::assertCount(1, $rows);
-        self::assertArrayHasKey('name', $rows[0]);
-        self::assertArrayNotHasKey('tsv_fake', $rows[0]);
+        self::assertSame(1, $rows[0]['id']);
+        self::assertSame('Sample Album', $rows[0]['name']);
     }
 
-    public function testQuoteEscapesAValueForSafeInlineEmbedding(): void
+    public function testFindCategoryRowsByRawWhereReturnsEmptyForNoMatch(): void
     {
-        // [SEC-18] real driver escaping (Connection::quote()), not
-        // addslashes() -- the quoted value must round-trip safely when
-        // embedded directly into a WHERE fragment (not bound via ?).
-        $quoted = $this->repo->quote("o'brien\" --");
+        self::assertSame([], $this->repo->findCategoryRowsByRawWhere('id = ?', [99999]));
+    }
 
-        $row = $this->conn->executeQuery("SELECT {$quoted} AS val")
-            ->fetchAssociative();
+    public function testFindImageIdsForRegularSearchJoinsImageCategoryAndGroupsByIdWhenRequested(): void
+    {
+        // Fixture: images 1-3 belong to category 1, 4-5 to category 2 --
+        // category_id only resolves at all once the join is applied, and
+        // GROUP BY id keeps one row per image even though the join can fan
+        // out per membership.
+        $ids = $this->repo->findImageIdsForRegularSearch('category_id = ?', [1], true, '');
+        sort($ids);
 
-        self::assertIsArray($row);
-        self::assertSame("o'brien\" --", $row['val']);
+        self::assertSame([1, 2, 3], $ids);
+    }
+
+    public function testFindImageIdsForRegularSearchOmitsTheJoinWhenNotRequested(): void
+    {
+        self::assertSame([5, 4, 3, 2, 1], $this->repo->findImageIdsForRegularSearch('id > ?', [0], false, 'id DESC'));
     }
 
     public function testCountSavedSearchByUuidReturnsZeroForUnknownUuid(): void

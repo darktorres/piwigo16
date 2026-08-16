@@ -1315,6 +1315,22 @@ final readonly class ImageService
     }
 
     /**
+     * @return list<int>
+     */
+    public function getAllCategorizedIds(): array
+    {
+        return $this->repo->findAllCategorizedIds();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getIdsWithNoCategory(): array
+    {
+        return $this->repo->findIdsWithNoCategory();
+    }
+
+    /**
      * @param list<ImageDuplicateField> $fields
      * @return list<int>
      */

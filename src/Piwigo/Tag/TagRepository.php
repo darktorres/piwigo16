@@ -432,6 +432,26 @@ final class TagRepository extends EntityRepository
     }
 
     /**
+     * Every image id with at least one tag -- SearchService's own
+     * quick-search wildcard token (a bare `tag:*`), the positive
+     * counterpart of {@see \Piwigo\Image\ImageService::getIdsWithNoTag()}.
+     *
+     * @return list<int>
+     */
+    public function findAllTaggedImageIds(): array
+    {
+        return array_values(array_map(
+            static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
+            $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select('DISTINCT it.imageId')
+                ->from(ImageTagEntity::class, 'it')
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
+    }
+
+    /**
      * @param array<int, int|string> $imageIds real callers pass
      *   array_keys()'d image-id-keyed maps
      */

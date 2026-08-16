@@ -345,6 +345,14 @@ final readonly class TagService
     }
 
     /**
+     * @return list<int>
+     */
+    public function getAllTaggedImageIds(): array
+    {
+        return $this->repo->findAllTaggedImageIds();
+    }
+
+    /**
      * Return a list of tags corresponding to given items.
      *
      * Row = TagRepository::findCommonTags()'s own shape with 'name'

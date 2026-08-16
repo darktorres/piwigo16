@@ -344,6 +344,16 @@ test('findImageIdsForTagIds() matches the fixture', function (): void {
         ->toBe([1, 2, 3]);
 });
 
+test('findAllTaggedImageIds() returns every distinct image id with at least one tag', function (): void {
+    // Fixture: image_tag links images 1/2/3 (image 1 to all 3 tags, 2/3 to
+    // tag 1 only); images 4/5 have none.
+    $ids = tagTestRepo()->findAllTaggedImageIds();
+    sort($ids);
+
+    expect($ids)
+        ->toBe([1, 2, 3]);
+});
+
 test('deleteImageTagByImageIds() is a no-op for no ids', function (): void {
     // A disposable tag, not one of the fixture's own shared 1/2/3 --
     // SearchServiceTest.php's own tag-name assertions can observe a real

@@ -2369,6 +2369,16 @@ final readonly class CategoryService
     }
 
     /**
+     * @param  list<int>  $ids
+     * @param  list<int>  $excludeIds
+     * @return list<int>
+     */
+    public function getIdsAmongExcluding(array $ids, array $excludeIds): array
+    {
+        return $this->repo->findIdsAmongExcluding($ids, $excludeIds);
+    }
+
+    /**
      * @return ?array{id: int, name: string, permalink: ?string}
      */
     public function getIdNamePermalinkById(int $id): ?array

@@ -14,6 +14,7 @@ use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Category\Event\CreateVirtualCategory;
 use Piwigo\Category\Event\DeleteCategories;
 use Piwigo\Category\Event\DeleteSite;
+use Piwigo\Category\Event\GetCategoriesMenuRows;
 use Piwigo\Category\Event\GetCategoryPreferredImageOrders;
 use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Category\Projection\ActivePermalinkRow;
@@ -781,22 +782,32 @@ final readonly class CategoryService
         // condition) is expressed here as an equivalent PHP-side filter
         // applied to CategoryTreeCache's cached, permission-filtered row set
         // -- see that class's own docblock for why this can't be pushed down
-        // to SQL (it doesn't read from a DB-backed cache table). No
-        // get_categories_menu_sql_where trigger_change() handler exists
-        // anywhere in this repo, so there is no PHP-filter equivalent for it.
+        // to SQL (it doesn't read from a DB-backed cache table).
         $allRows = new CategoryTreeCache(
             $this,
             $this->repo,
             $this->categoryTreeCachePool()
         )->getForUser($user->rawAttributes);
 
+        $userExpand = (bool) $user->rawAttributes['expand'];
+        $filterEnabled = $filterState->isEnabled();
+
         $rows = self::filterMenuRows(
             $allRows,
             $categoryPage,
-            (bool) $user->rawAttributes['expand'],
-            $filterState->isEnabled(),
+            $userExpand,
+            $filterEnabled,
             $filterState->visibleCategories()
         );
+
+        // No get_categories_menu_sql_where trigger_change() handler exists
+        // anywhere in this repo (dead-but-harmless: 6 wild-corpus
+        // registrations, no listener wired here), but the real capability
+        // (customize which categories the menu shows) is preserved via
+        // GetCategoriesMenuRows -- see that class's own docblock for why
+        // it filters the row set rather than a SQL string.
+        $rows = $this->eventDispatcher->dispatch(new GetCategoriesMenuRows($rows, $userExpand, $filterEnabled))
+            ->rows;
 
         $cats = [];
         $selectedCategory = $categoryPage;

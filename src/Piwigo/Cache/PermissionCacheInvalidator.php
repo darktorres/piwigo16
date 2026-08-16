@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Cache;
 
 use LogicException;
+use Piwigo\Cache\Event\InvalidateUserCache;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
+use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * Clears the permission-related PSR-6 pools so a real access-affecting
@@ -25,6 +27,7 @@ final class PermissionCacheInvalidator
         self::permissionsCachePool()->clear();
         self::effectivePermissionsCachePool()->clear();
         self::currentConfigService()->get()->confDeleteParam('count_orphans');
+        self::eventDispatcher()->dispatch(new InvalidateUserCache());
     }
 
     /**
@@ -90,5 +93,25 @@ final class PermissionCacheInvalidator
         }
 
         return new EffectivePermissionsCachePool(CacheFactory::create(namespace: 'piwigo.effective_permissions', defaultLifetime: 30));
+    }
+
+    /**
+     * Same reasoning as permissionsCachePool() above: a pre-boot fallback
+     * stays genuinely functional (a fresh dispatcher with nothing
+     * registered yet dispatches inertly, which is correct pre-boot -- no
+     * real listener should exist that early anyway) rather than throwing.
+     */
+    private static function eventDispatcher(): EventDispatcher
+    {
+        if (Kernel::isBooted()) {
+            $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+            if (! $eventDispatcher instanceof EventDispatcher) {
+                throw new LogicException('Container returned an unexpected type for ' . EventDispatcher::class);
+            }
+
+            return $eventDispatcher;
+        }
+
+        return new EventDispatcher();
     }
 }

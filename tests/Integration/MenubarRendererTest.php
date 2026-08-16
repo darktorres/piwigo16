@@ -9,6 +9,7 @@ use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Category\Event\GetCategoriesMenuRows;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
@@ -302,5 +303,42 @@ final class MenubarRendererTest extends IntegrationTestCase
         $menubar = $this->template->getTemplateVars('MENUBAR');
         self::assertInstanceOf(Html::class, $menubar);
         self::assertStringNotContainsString('Related albums', (string) $menubar);
+    }
+
+    /**
+     * CategoryService::getCategoriesMenu() dispatches GetCategoriesMenuRows
+     * right after filterMenuRows() -- captures the real dispatched event to
+     * assert its context flags match this file's own setUp() defaults
+     * (expand=false, no active filter), that real fixture rows flow
+     * through it (not a synthetic/empty array), then mutates $rows to
+     * empty and asserts the resulting MENUBAR render drops the real
+     * fixture category name it would otherwise contain -- proving the
+     * mutation actually reaches the final rendered output, not just that
+     * dispatch fires.
+     */
+    public function testRenderDispatchesGetCategoriesMenuRowsAndAppliesItsMutation(): void
+    {
+        $originalRows = null;
+        $userExpand = null;
+        $filterEnabled = null;
+        EventDispatcherTestFactory::get()->addTypedHandler(
+            GetCategoriesMenuRows::class,
+            static function (GetCategoriesMenuRows $event) use (&$originalRows, &$userExpand, &$filterEnabled): void {
+                $originalRows = $event->rows;
+                $userExpand = $event->userExpand;
+                $filterEnabled = $event->filterEnabled;
+                $event->rows = [];
+            },
+        );
+
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
+
+        self::assertFalse($userExpand);
+        self::assertFalse($filterEnabled);
+        self::assertNotSame([], $originalRows);
+
+        $menubar = $this->template->getTemplateVars('MENUBAR');
+        self::assertInstanceOf(Html::class, $menubar);
+        self::assertStringNotContainsString('Sample Album', (string) $menubar);
     }
 }

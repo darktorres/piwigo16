@@ -7,12 +7,14 @@ namespace Piwigo\Tests\Integration;
 use LogicException;
 use Override;
 use Piwigo\Cache\EffectivePermissionsCachePool;
+use Piwigo\Cache\Event\InvalidateUserCache;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Cache\PermissionsCachePool;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
@@ -132,5 +134,46 @@ final class PermissionCacheInvalidatorTest extends IntegrationTestCase
                 PermissionCacheInvalidator::invalidate();
             },
         );
+    }
+
+    public function testInvalidateThrowsWhenTheContainerReturnsAnUnexpectedTypeForEventDispatcher(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessageIsOrContains('Container returned an unexpected type for ' . EventDispatcher::class);
+
+        $configService = $this->configService;
+        KernelContainerOverride::withWrongTypeFor(
+            EventDispatcher::class,
+            static function () use ($configService): void {
+                // The fresh override container's own CurrentConfigService
+                // instance is never primed by setUp() (that only primed the
+                // ORIGINAL container) -- without this, invalidate()'s own
+                // earlier confDeleteParam() call throws its unrelated "not
+                // initialised" error before ever reaching the dispatch line
+                // this test targets.
+                CurrentConfigServiceTestFactory::get()->set($configService);
+                PermissionCacheInvalidator::invalidate();
+            },
+        );
+    }
+
+    public function testInvalidateDispatchesInvalidateUserCache(): void
+    {
+        $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+        if (! $eventDispatcher instanceof EventDispatcher) {
+            throw new LogicException('Container returned an unexpected type for ' . EventDispatcher::class);
+        }
+
+        $dispatched = false;
+        $eventDispatcher->addTypedHandler(
+            InvalidateUserCache::class,
+            static function (InvalidateUserCache $event) use (&$dispatched): void {
+                $dispatched = true;
+            },
+        );
+
+        PermissionCacheInvalidator::invalidate();
+
+        self::assertTrue($dispatched);
     }
 }

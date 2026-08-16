@@ -26,7 +26,6 @@ use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocEndSectionInit;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
@@ -34,6 +33,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
+use Piwigo\Section\Event\SectionInitialized;
 use Piwigo\Section\Projection\SectionFavoritePageContext;
 use Piwigo\Section\Request\FavoritesActionRequest;
 use Piwigo\Session\SessionService;
@@ -746,7 +746,7 @@ final readonly class SectionPopulator
 
         $this->sectionContextRegistry->set(self::buildSectionContext($page));
 
-        $this->eventDispatcher->dispatch(new LocEndSectionInit());
+        $this->eventDispatcher->dispatch(new SectionInitialized());
     }
 
     /**

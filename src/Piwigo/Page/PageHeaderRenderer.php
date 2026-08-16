@@ -10,10 +10,10 @@ use Piwigo\Core\AdminContext;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Lifecycle\LocAfterPageHeader;
-use Piwigo\Event\Location\LocBeginPageHeader;
-use Piwigo\Event\Location\LocEndPageHeader;
 use Piwigo\Event\Template\RenderPageBanner;
+use Piwigo\Page\Event\PageHeaderContextFinalized;
+use Piwigo\Page\Event\PageHeaderRendered;
+use Piwigo\Page\Event\PageHeaderRendering;
 use Piwigo\Page\Projection\PageHeaderPageContext;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -69,7 +69,7 @@ final class PageHeaderRenderer
     {
         $template = $currentTemplate->get();
 
-        $eventDispatcher->dispatch(new LocBeginPageHeader());
+        $eventDispatcher->dispatch(new PageHeaderRendering());
 
         $show_mobile_app_banner = $currentConfig->showMobileAppBannerInGallery;
         if (self::isAdminContextActive()) {
@@ -134,12 +134,12 @@ final class PageHeaderRenderer
             headElements: $head_elements,
         ));
 
-        $eventDispatcher->dispatch(new LocEndPageHeader());
+        $eventDispatcher->dispatch(new PageHeaderContextFinalized());
 
         header('Content-Type: text/html; charset=utf-8');
         $template->parse('header.latte');
 
-        $eventDispatcher->dispatch(new LocAfterPageHeader());
+        $eventDispatcher->dispatch(new PageHeaderRendered());
     }
 
     /**

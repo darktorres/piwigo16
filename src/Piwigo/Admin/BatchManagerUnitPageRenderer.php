@@ -6,6 +6,8 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Admin\Event\BatchManagerUnitRendered;
+use Piwigo\Admin\Event\BatchManagerUnitRendering;
 use Piwigo\Admin\Projection\BatchManagerUnitPageContext;
 use Piwigo\Admin\Request\BatchManagerUnitRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -24,8 +26,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Location\LocBeginElementSetUnit;
-use Piwigo\Event\Location\LocEndElementSetUnit;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
@@ -88,7 +88,7 @@ final readonly class BatchManagerUnitPageRenderer
 
         $htmlRenderer = $this->htmlRenderer;
 
-        $this->eventDispatcher->dispatch(new LocBeginElementSetUnit());
+        $this->eventDispatcher->dispatch(new BatchManagerUnitRendering());
 
         $batchManagerUnitRequest = BatchManagerUnitRequest::fromGlobals($this->inputValidator);
 
@@ -462,7 +462,7 @@ final readonly class BatchManagerUnitPageRenderer
             elements: $elements,
         ));
 
-        $this->eventDispatcher->dispatch(new LocEndElementSetUnit());
+        $this->eventDispatcher->dispatch(new BatchManagerUnitRendered());
 
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_unit.latte');
     }

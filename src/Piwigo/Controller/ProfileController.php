@@ -15,6 +15,8 @@ use Piwigo\Bootstrap\PageTail;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Event\ProfilePageRendered;
+use Piwigo\Controller\Event\ProfilePageRendering;
 use Piwigo\Controller\Projection\ProfilePageContext;
 use Piwigo\Controller\Request\ProfileActionRequest;
 use Piwigo\Core\AccessLevel;
@@ -29,8 +31,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Event\Location\LocBeginProfile;
-use Piwigo\Event\Location\LocEndProfile;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -147,7 +147,7 @@ final readonly class ProfileController implements ControllerInterface
         $userdata = $this->currentUser->get()
             ->toUserArray();
 
-        $this->eventDispatcher->dispatch(new LocBeginProfile());
+        $this->eventDispatcher->dispatch(new ProfilePageRendering());
 
         $fields = [
             'nb_image_page', 'expand',
@@ -239,7 +239,7 @@ final readonly class ProfileController implements ControllerInterface
             helpLink: $help_link,
         ));
 
-        $this->eventDispatcher->dispatch(new LocEndProfile());
+        $this->eventDispatcher->dispatch(new ProfilePageRendered());
         $this->htmlService
             ->flushPageMessages();
         $template->parse('profile.latte', false);

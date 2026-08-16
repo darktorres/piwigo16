@@ -30,8 +30,8 @@ use Piwigo\Users\UserStatus;
  * Reflection instead, to assert on the real thrown exception/response
  * rather than its silently-emitted side effect. `runDispatch()` itself
  * registers `CoreTabs::addCoreTabs()` onto the event dispatcher and
- * fires a `LocBeginAdmin` notify (both harmless no-ops with nothing
- * downstream listening) before reaching `AccessControl::checkStatus(
+ * fires an `AdminShellDispatching` notify (both harmless no-ops with
+ * nothing downstream listening) before reaching `AccessControl::checkStatus(
  * AccessLevel::Administrator)` -- same reusable "logged-in, non-guest,
  * non-admin CurrentUser" 401 branch as `PhotoSubControllerTest.php`,
  * reached before any of the filesystem-check/direct-action/page-dispatch

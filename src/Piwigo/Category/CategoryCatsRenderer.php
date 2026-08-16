@@ -6,6 +6,8 @@ namespace Piwigo\Category;
 
 use DateTimeImmutable;
 use Piwigo\Cache\CategoryTreeCachePool;
+use Piwigo\Category\Event\IndexCategoryThumbnailsRendered;
+use Piwigo\Category\Event\IndexCategoryThumbnailsRendering;
 use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
 use Piwigo\Category\Projection\CategoryCatsPageContext;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
@@ -26,8 +28,6 @@ use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocBeginIndexCategoryThumbnails;
-use Piwigo\Event\Location\LocEndIndexCategoryThumbnails;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
@@ -336,7 +336,7 @@ final readonly class CategoryCatsRenderer
             // Update filtered data
             $this->filterUpdater->updateCatsWithFilteredData($categories);
 
-            $this->eventDispatcher->dispatch(new LocBeginIndexCategoryThumbnails($categories));
+            $this->eventDispatcher->dispatch(new IndexCategoryThumbnailsRendering($categories));
 
             $tplThumbnailsVar = [];
 
@@ -428,7 +428,7 @@ final readonly class CategoryCatsRenderer
             $tplThumbnailsVarSelection = $tplThumbnailsVar;
 
             $derivativeParams = $this->imageStdParams->getByType(ImageStdParams::THUMB);
-            $tplThumbnailsVarSelection = $this->eventDispatcher->dispatch(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))
+            $tplThumbnailsVarSelection = $this->eventDispatcher->dispatch(new IndexCategoryThumbnailsRendered($tplThumbnailsVarSelection))
                 ->tplThumbnailsVar;
             $template->assignContext(new CategoryCatsPageContext(
                 maxRequests: $this->currentConfig->maxRequests,

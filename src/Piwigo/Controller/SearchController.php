@@ -9,13 +9,13 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Event\SearchPageRendering;
 use Piwigo\Controller\Request\SearchQueryRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocBeginSearch;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
@@ -62,7 +62,7 @@ final readonly class SearchController implements ControllerInterface
 
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
-        $this->eventDispatcher->dispatch(new LocBeginSearch());
+        $this->eventDispatcher->dispatch(new SearchPageRendering());
 
         $search = [
             'mode' => 'AND',

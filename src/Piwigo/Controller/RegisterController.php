@@ -16,6 +16,8 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Event\RegisterPageRendered;
+use Piwigo\Controller\Event\RegisterPageRendering;
 use Piwigo\Controller\Projection\RegisterPageContext;
 use Piwigo\Controller\Request\RegisterSubmitRequest;
 use Piwigo\Core\AccessLevel;
@@ -27,8 +29,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocBeginRegister;
-use Piwigo\Event\Location\LocEndRegister;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -110,7 +110,7 @@ final readonly class RegisterController implements ControllerInterface
                 ->pageForbidden($this->redirectService, 'User registration closed');
         }
 
-        $this->eventDispatcher->dispatch(new LocBeginRegister());
+        $this->eventDispatcher->dispatch(new RegisterPageRendering());
 
         $registerSubmit = RegisterSubmitRequest::fromGlobals();
 
@@ -296,7 +296,7 @@ final readonly class RegisterController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatch(new LocEndRegister());
+        $this->eventDispatcher->dispatch(new RegisterPageRendered());
         $this->htmlService
             ->flushPageMessages();
         $this->htmlService

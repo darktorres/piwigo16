@@ -20,6 +20,8 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Event\PasswordPageRendered;
+use Piwigo\Controller\Event\PasswordPageRendering;
 use Piwigo\Controller\Projection\PasswordPageContext;
 use Piwigo\Controller\Request\PasswordRequest;
 use Piwigo\Core\AccessLevel;
@@ -31,8 +33,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Location\LocBeginPassword;
-use Piwigo\Event\Location\LocEndPassword;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -124,7 +124,7 @@ final class PasswordController implements ControllerInterface
 
         $this->accessControl->checkStatus(AccessLevel::Free);
 
-        $this->eventDispatcher->dispatch(new LocBeginPassword());
+        $this->eventDispatcher->dispatch(new PasswordPageRendering());
 
         $this->request = PasswordRequest::fromGlobals($this->inputValidator);
         $action_param = $this->request->action;
@@ -302,7 +302,7 @@ final class PasswordController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatch(new LocEndPassword());
+        $this->eventDispatcher->dispatch(new PasswordPageRendered());
         $this->htmlService
             ->flushPageMessages();
         $this->htmlService

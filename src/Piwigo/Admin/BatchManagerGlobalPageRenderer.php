@@ -7,6 +7,8 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Admin\Event\BatchManagerGlobalRendered;
+use Piwigo\Admin\Event\BatchManagerGlobalRendering;
 use Piwigo\Admin\Projection\BatchManagerGlobalPageContext;
 use Piwigo\Admin\Request\BatchManagerGlobalRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -27,8 +29,6 @@ use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Admin\ElementSetGlobalAction;
-use Piwigo\Event\Location\LocBeginElementSetGlobal;
-use Piwigo\Event\Location\LocEndElementSetGlobal;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
@@ -110,7 +110,7 @@ final readonly class BatchManagerGlobalPageRenderer
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
-        $this->eventDispatcher->dispatch(new LocBeginElementSetGlobal());
+        $this->eventDispatcher->dispatch(new BatchManagerGlobalRendering());
 
         $batchManagerGlobalRequest = BatchManagerGlobalRequest::fromGlobals($this->inputValidator);
 
@@ -592,7 +592,7 @@ final readonly class BatchManagerGlobalPageRenderer
             thumbnails: $thumbnails,
         ));
 
-        $this->eventDispatcher->dispatch(new LocEndElementSetGlobal());
+        $this->eventDispatcher->dispatch(new BatchManagerGlobalRendered());
 
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_global.latte');
     }

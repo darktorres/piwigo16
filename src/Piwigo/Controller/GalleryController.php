@@ -17,6 +17,8 @@ use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Event\IndexRendered;
+use Piwigo\Controller\Event\IndexRendering;
 use Piwigo\Controller\Projection\GalleryPageContext;
 use Piwigo\Controller\Projection\GalleryThumbnailsPageContext;
 use Piwigo\Controller\Request\GalleryDisplayRequest;
@@ -28,8 +30,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocBeginIndex;
-use Piwigo\Event\Location\LocEndIndex;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\History\HistoryService;
 use Piwigo\Html\HtmlService;
@@ -147,7 +147,7 @@ final readonly class GalleryController implements ControllerInterface
         $tagService = $this->tagService;
         $categoryService = $this->categoryService;
 
-        $this->eventDispatcher->dispatch(new LocBeginIndex());
+        $this->eventDispatcher->dispatch(new IndexRendering());
 
         $galleryDisplay = GalleryDisplayRequest::fromGlobals();
 
@@ -605,7 +605,7 @@ final readonly class GalleryController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatch(new LocEndIndex());
+        $this->eventDispatcher->dispatch(new IndexRendered());
         $this->htmlService
             ->flushPageMessages();
         $template->parseIndexButtons();

@@ -23,6 +23,8 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Event\PicturePageRendered;
+use Piwigo\Controller\Event\PicturePageRendering;
 use Piwigo\Controller\Projection\PictureContentPageContext;
 use Piwigo\Controller\Projection\PicturePageContext;
 use Piwigo\Controller\Request\PictureRequest;
@@ -39,8 +41,6 @@ use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\NoMatchSentinel;
-use Piwigo\Event\Location\LocBeginPicture;
-use Piwigo\Event\Location\LocEndPicture;
 use Piwigo\Event\Picture\AllowIncrementElementHitCount;
 use Piwigo\Event\Picture\GetElementMetadataAvailable;
 use Piwigo\Event\Picture\PicturePicturesData;
@@ -324,7 +324,7 @@ final readonly class PictureController implements ControllerInterface
             },
         );
 
-        $this->eventDispatcher->dispatch(new LocBeginPicture());
+        $this->eventDispatcher->dispatch(new PicturePageRendering());
 
         // caching first_rank, last_rank, current_rank in the displayed
         // section. This should also help in readability.
@@ -1256,7 +1256,7 @@ final readonly class PictureController implements ControllerInterface
         /** @var string|null $url_link */
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link);
-        $this->eventDispatcher->dispatch(new LocEndPicture());
+        $this->eventDispatcher->dispatch(new PicturePageRendered());
         $this->htmlService
             ->flushPageMessages();
         if ($slideshow and $this->currentConfig->lightSlideshow) {

@@ -16,6 +16,7 @@ use Exception;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Image\ImageProcessingException;
+use Piwigo\Admin\Upload\Event\UploadedFileAdded;
 use Piwigo\Admin\Upload\Projection\ImageDimensionsInfo;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\ImageId;
@@ -33,7 +34,6 @@ use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Event\Location\LocEndAddUploadedFile;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
@@ -636,7 +636,7 @@ final readonly class UploadService
         // matters.
         HttpClientService::fetch($derivative_url, $this->currentConfig);
 
-        $this->eventDispatcher->dispatch(new LocEndAddUploadedFile($image_infos));
+        $this->eventDispatcher->dispatch(new UploadedFileAdded($image_infos));
 
         return $image_id;
     }

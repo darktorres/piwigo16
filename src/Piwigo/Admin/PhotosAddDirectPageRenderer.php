@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Event\PhotosAddDirectPageRendered;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Projection\PhotosAddDirectPageContext;
 use Piwigo\Admin\Projection\PhotosAddDirectUploadFormPageContext;
@@ -22,7 +23,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Location\LocEndPhotoAddDirect;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
@@ -172,7 +172,7 @@ final readonly class PhotosAddDirectPageRenderer
 
         $this->prepareUploadForm($photosAddDirectRequest);
 
-        $this->eventDispatcher->dispatch(new LocEndPhotoAddDirect());
+        $this->eventDispatcher->dispatch(new PhotosAddDirectPageRendered());
 
         $conf_format_ext = $this->currentConfig->formatExtensions;
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Event\HelpPageRendered;
 use Piwigo\Admin\Projection\HelpPageContext;
 use Piwigo\Admin\Request\HelpSectionRequest;
 use Piwigo\Auth\AccessControl;
@@ -11,7 +12,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocEndHelp;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
@@ -37,7 +37,7 @@ final class HelpPageRenderer
         $tabsheet->select($selected, $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
-        $eventDispatcher->dispatch(new LocEndHelp());
+        $eventDispatcher->dispatch(new HelpPageRendered());
 
         $help_content_raw = $lang->load(
             'help/help_' . $tabsheet->selected . '.html',

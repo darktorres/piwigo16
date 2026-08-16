@@ -13,8 +13,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocBeginPageTail;
-use Piwigo\Event\Location\LocEndPageTail;
+use Piwigo\Page\Event\PageTailRendered;
+use Piwigo\Page\Event\PageTailRendering;
 use Piwigo\Page\Projection\PageTailPageContext;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -82,7 +82,7 @@ final readonly class PageTailRenderer
     {
         $template = $this->currentTemplate->get();
 
-        $this->eventDispatcher->dispatch(new LocBeginPageTail());
+        $this->eventDispatcher->dispatch(new PageTailRendering());
 
         $contactMail = null;
         if (! $this->accessLevelChecker->isAGuest()) {
@@ -139,7 +139,7 @@ final readonly class PageTailRenderer
             toggleMobileThemeUrl: $toggleMobileThemeUrl,
         ));
 
-        $this->eventDispatcher->dispatch(new LocEndPageTail());
+        $this->eventDispatcher->dispatch(new PageTailRendered());
         //
         // Generate the page
         //

@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Event\CatListPageRendering;
 use Piwigo\Admin\Projection\CatListCategoriesPageContext;
 use Piwigo\Admin\Projection\CatListHeaderPageContext;
 use Piwigo\Admin\Projection\CatListNbCatsPageContext;
@@ -19,7 +20,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Location\LocBeginCatList;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Permalink\PermalinkRepository;
@@ -71,7 +71,7 @@ final readonly class CatListPageRenderer
 
         $categoryService = $this->categoryService;
 
-        $this->eventDispatcher->dispatch(new LocBeginCatList());
+        $this->eventDispatcher->dispatch(new CatListPageRendering());
 
         $catListRequest = CatListRequest::fromGlobals($this->inputValidator);
 

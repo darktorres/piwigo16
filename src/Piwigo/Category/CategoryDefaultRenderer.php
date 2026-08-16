@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Category\Event\IndexThumbnailsRendered;
+use Piwigo\Category\Event\IndexThumbnailsRendering;
+use Piwigo\Category\Event\IndexThumbnailsSelected;
 use Piwigo\Category\Projection\CategoryDefaultThumbnailsPageContext;
 use Piwigo\Category\Request\CategorySlideshowRequest;
 use Piwigo\Common\Enum\Section;
@@ -18,9 +21,6 @@ use Piwigo\Core\StringHelper;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocBeginIndexThumbnails;
-use Piwigo\Event\Location\LocEndIndexThumbnails;
-use Piwigo\Event\Location\LocIndexThumbnailsSelection;
 use Piwigo\Image\Event\GetIndexDerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -80,7 +80,7 @@ final readonly class CategoryDefaultRenderer
 
         $selection = array_slice($items, $start, $nbImagePage);
 
-        $selection = $this->eventDispatcher->dispatch(new LocIndexThumbnailsSelection($selection))
+        $selection = $this->eventDispatcher->dispatch(new IndexThumbnailsSelected($selection))
             ->selection;
         /** @var list<int|string> $selection */
         $selection = array_values(array_filter(
@@ -131,7 +131,7 @@ final readonly class CategoryDefaultRenderer
             }
         }
 
-        $this->eventDispatcher->dispatch(new LocBeginIndexThumbnails($pictures));
+        $this->eventDispatcher->dispatch(new IndexThumbnailsRendering($pictures));
         $tplThumbnailsVar = [];
 
         foreach ($pictures as $row) {
@@ -210,7 +210,7 @@ final readonly class CategoryDefaultRenderer
 
         $indexDeriv = $this->sessionService->getIndexDeriv() ?? ImageStdParams::THUMB;
 
-        $tplThumbnailsVar = $this->eventDispatcher->dispatch(new LocEndIndexThumbnails($tplThumbnailsVar, $pictures))
+        $tplThumbnailsVar = $this->eventDispatcher->dispatch(new IndexThumbnailsRendered($tplThumbnailsVar, $pictures))
             ->tplThumbnailsVar;
         $template->assignContext(new CategoryDefaultThumbnailsPageContext(
             derivativeParams: $this->eventDispatcher->dispatch(new GetIndexDerivativeParams($this->imageStdParams->getByType($indexDeriv)))

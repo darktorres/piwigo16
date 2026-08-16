@@ -16,8 +16,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocEndNoPhotoYet;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Page\Event\NoPhotoYetRendered;
 use Piwigo\Page\Projection\NoPhotoYetAdminPageContext;
 use Piwigo\Page\Projection\NoPhotoYetGuestPageContext;
 use Piwigo\Page\Request\NoPhotoYetRequest;
@@ -129,7 +129,7 @@ final readonly class NoPhotoYetRenderer
                     ));
                 }
 
-                $this->eventDispatcher->dispatch(new LocEndNoPhotoYet());
+                $this->eventDispatcher->dispatch(new NoPhotoYetRendered());
 
                 $template->pparse('no_photo_yet.latte');
                 exit();

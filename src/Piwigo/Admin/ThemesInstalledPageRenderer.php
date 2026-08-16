@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Event\ThemesInstalledPageRendered;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
@@ -25,7 +26,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Location\LocEndThemesInstalled;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
@@ -176,7 +176,7 @@ final readonly class ThemesInstalledPageRenderer
         $pwg_token = $this->csrfService
             ->getToken();
 
-        $this->eventDispatcher->dispatch(new LocEndThemesInstalled());
+        $this->eventDispatcher->dispatch(new ThemesInstalledPageRendered());
 
         $template->assignContext(new ThemesInstalledPageContext(
             activateBaseUrl: $base_url . '&amp;action=activate&amp;pwg_token=' . $pwg_token . '&amp;theme=',

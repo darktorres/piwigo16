@@ -18,6 +18,7 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Event\CommentsPageRendered;
 use Piwigo\Controller\Projection\CommentsPageContext;
 use Piwigo\Controller\Request\CommentsRequest;
 use Piwigo\Core\AccessLevel;
@@ -34,7 +35,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Event\Location\LocEndComments;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Html\HtmlService;
@@ -627,7 +627,7 @@ final readonly class CommentsController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatch(new LocEndComments());
+        $this->eventDispatcher->dispatch(new CommentsPageRendered());
         $this->htmlService
             ->flushPageMessages();
         if (count($comments) > 0) {

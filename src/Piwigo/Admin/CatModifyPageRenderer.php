@@ -7,6 +7,8 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Event\CatModifyPageRendered;
+use Piwigo\Admin\Event\CatModifyPageRendering;
 use Piwigo\Admin\Projection\CatModifyPageContext;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
@@ -17,8 +19,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Event\Location\LocBeginCatModify;
-use Piwigo\Event\Location\LocEndCatModify;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Site\SiteEntity;
@@ -53,7 +53,7 @@ final class CatModifyPageRenderer
     {
         $template = $currentTemplate->get();
 
-        $eventDispatcher->dispatch(new LocBeginCatModify());
+        $eventDispatcher->dispatch(new CatModifyPageRendering());
 
         // 'id' is the categories table primary key (NOT NULL); AlbumSubController's
         // own fetchAssociative() call (one file over the include boundary PHPStan
@@ -333,7 +333,7 @@ final class CatModifyPageRenderer
                 ->getToken(),
         ));
 
-        $eventDispatcher->dispatch(new LocEndCatModify());
+        $eventDispatcher->dispatch(new CatModifyPageRendered());
 
         // ----------------------------------------------------------- sending html code
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_modify.latte');

@@ -14,6 +14,8 @@ use Piwigo\Bootstrap\PageTail;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Event\IdentificationPageRendered;
+use Piwigo\Controller\Event\IdentificationPageRendering;
 use Piwigo\Controller\Projection\IdentificationPageContext;
 use Piwigo\Controller\Request\IdentificationSubmitRequest;
 use Piwigo\Core\AccessLevel;
@@ -26,8 +28,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocBeginIdentification;
-use Piwigo\Event\Location\LocEndIdentification;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -100,7 +100,7 @@ final readonly class IdentificationController implements ControllerInterface
             $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
         }
 
-        $this->eventDispatcher->dispatch(new LocBeginIdentification());
+        $this->eventDispatcher->dispatch(new IdentificationPageRendering());
 
         unset($_SESSION['reset_password_code']);
 
@@ -238,7 +238,7 @@ final readonly class IdentificationController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatch(new LocEndIdentification());
+        $this->eventDispatcher->dispatch(new IdentificationPageRendered());
         $this->htmlService
             ->flushPageMessages();
         $this->htmlService

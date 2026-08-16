@@ -21,6 +21,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Event\IntroPageRendered;
 use Piwigo\Controller\Admin\Projection\IntroPageContext;
 use Piwigo\Controller\Admin\Request\IntroActionRequest;
 use Piwigo\Core\AppInfo;
@@ -34,7 +35,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Location\LocEndIntro;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
@@ -240,7 +240,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             }
         }
 
-        $this->eventDispatcher->dispatch(new LocEndIntro());
+        $this->eventDispatcher->dispatch(new IntroPageRendered());
 
         $nb_weeks = $this->currentConfig->dashboardActivityNbWeeks;
 

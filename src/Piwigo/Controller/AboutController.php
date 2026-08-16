@@ -11,6 +11,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Event\AboutPageRendering;
 use Piwigo\Controller\Projection\AboutPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -18,7 +19,6 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocBeginAbout;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -86,7 +86,7 @@ final readonly class AboutController implements ControllerInterface
         $title = $this->lang->t('About Piwigo');
         $this->pageState->setBodyId('theAboutPage');
 
-        $this->eventDispatcher->dispatch(new LocBeginAbout());
+        $this->eventDispatcher->dispatch(new AboutPageRendering());
 
         $about_message_raw = $this->lang->load('about.html', '', [
             'return' => true,

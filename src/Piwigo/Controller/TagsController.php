@@ -11,6 +11,8 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Event\TagsPageRendered;
+use Piwigo\Controller\Event\TagsPageRendering;
 use Piwigo\Controller\Projection\TagsDisplayModePageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -20,8 +22,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Event\Location\LocBeginTags;
-use Piwigo\Event\Location\LocEndTags;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -70,7 +70,7 @@ final readonly class TagsController implements ControllerInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
-        $this->eventDispatcher->dispatch(new LocBeginTags());
+        $this->eventDispatcher->dispatch(new TagsPageRendering());
 
         $displayModeParam = $request->getQueryParams()['display_mode'] ?? null;
         $urlService = $this->urlService;
@@ -211,7 +211,7 @@ final readonly class TagsController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatch(new LocEndTags());
+        $this->eventDispatcher->dispatch(new TagsPageRendered());
         $this->htmlService
             ->flushPageMessages();
         $template->parse('tags.latte', false);

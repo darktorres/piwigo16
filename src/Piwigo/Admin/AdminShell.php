@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Event\AdminPageRendering;
+use Piwigo\Admin\Event\AdminShellDispatching;
+use Piwigo\Admin\Event\AdminShellRendered;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Projection\AdminShellFramePageContext;
 use Piwigo\Admin\Projection\AdminShellPostDispatchPageContext;
@@ -35,9 +38,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
-use Piwigo\Event\Location\LocBeginAdmin;
-use Piwigo\Event\Location\LocBeginAdminPage;
-use Piwigo\Event\Location\LocEndAdmin;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
@@ -114,7 +114,7 @@ final readonly class AdminShell
 
         $this->eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
 
-        $this->eventDispatcher->dispatch(new LocBeginAdmin());
+        $this->eventDispatcher->dispatch(new AdminShellDispatching());
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
@@ -451,7 +451,7 @@ final readonly class AdminShell
             displayBell: $display_bell,
         ));
 
-        $this->eventDispatcher->dispatch(new LocBeginAdminPage());
+        $this->eventDispatcher->dispatch(new AdminPageRendering());
 
         // SEC-19: sub-controllers read input from this PSR-7 request
         // (getQueryParams()/getParsedBody()), not $_GET/$_POST directly.
@@ -466,7 +466,7 @@ final readonly class AdminShell
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
 
-        $this->eventDispatcher->dispatch(new LocEndAdmin());
+        $this->eventDispatcher->dispatch(new AdminShellRendered());
 
         $this->htmlService
             ->flushPageMessages();

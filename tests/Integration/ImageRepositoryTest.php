@@ -1449,7 +1449,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     public function testFindVirtuallyAssociatedCategoryRowsReturnsRealCategories(): void
     {
         // Every fixture image has storage_category_id NULL, so the "OR
-        // i.storageCategoryId IS NULL" branch always applies -- image 1's
+        // i.storageCategory IS NULL" branch always applies -- image 1's
         // real category_id membership (category 1) must come back, not [].
         $rows = $this->repo->findVirtuallyAssociatedCategoryRows([1]);
 

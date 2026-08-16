@@ -6,7 +6,7 @@ namespace Piwigo\Image;
 
 use Doctrine\ORM\Mapping as ORM;
 use Override;
-use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -71,6 +71,13 @@ use Piwigo\Db\HasLastModified;
  * skewed further toward "stays raw" given how much of this
  * repository's real method list is bulk id-list operations rather
  * than single-entity CRUD.
+ *
+ * `storageCategory` is a real `#[ORM\ManyToOne] ?CategoryEntity` association
+ * (`fk_images_storage_category_id`), not a scalar VO -- the schema's own
+ * `ON DELETE SET NULL` is the only referential authority (no
+ * `#[JoinColumn(onDelete: ...)]`, see `0.3`'s "No ORM cascades"). `nullable`/
+ * `referencedColumnName` are left unspecified deliberately, same reasoning
+ * as `CategoryEntity::$representativePicture`.
  */
 #[ORM\Entity(repositoryClass: ImageRepository::class)]
 #[ORM\Table(name: 'images')]
@@ -119,8 +126,9 @@ final class ImageEntity implements HasLastModified
         // MetadataService::getSyncMetadata()/ImagePathHelper::getElementPath()).
         #[ORM\Column(type: 'string', length: 255)]
         public string $path,
-        #[ORM\Column(name: 'storage_category_id', type: 'category_id', nullable: true)]
-        public ?CategoryId $storageCategoryId,
+        #[ORM\ManyToOne]
+        #[ORM\JoinColumn(name: 'storage_category_id')]
+        public ?CategoryEntity $storageCategory,
         #[ORM\Column(type: 'smallint')]
         public int $level,
         #[ORM\Column(type: 'md5sum', length: 32, nullable: true)]

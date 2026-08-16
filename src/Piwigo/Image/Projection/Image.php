@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Image\Projection;
 
 use LogicException;
-use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\UserId;
@@ -29,6 +28,16 @@ use Piwigo\Image\ImageEntity;
  * `SqlDateTime`-typed (all 3 via the strict `sql_datetime` Type -- see
  * that entity's own docblock) -- `fromEntity()` unwraps
  * `->value`/`?->value` for all 3.
+ *
+ * `storageCategoryId` stays plain `?int` even though
+ * `ImageEntity::$storageCategory` is now a real association
+ * (`?CategoryEntity`) -- this Projection is a layer past the repository
+ * where `0.3`'s "never touch a lazy-loaded property in application code"
+ * discipline can no longer be guaranteed, so `fromEntity()` unwraps
+ * `$entity->storageCategory?->id?->value` rather than propagating the
+ * entity reference (`->id` access on an uninitialized to-one proxy never
+ * triggers a query, see `CategoryEntity::$representativePicture`'s own
+ * docblock for why).
  */
 final readonly class Image
 {
@@ -49,7 +58,7 @@ final readonly class Image
         public ?string $dateMetadataUpdate,
         public ?float $ratingScore,
         public string $path,
-        public ?CategoryId $storageCategoryId,
+        public ?int $storageCategoryId,
         public int $level,
         public ?Md5Sum $md5sum,
         public ?UserId $addedBy,
@@ -78,7 +87,7 @@ final readonly class Image
             dateMetadataUpdate: $entity->dateMetadataUpdate,
             ratingScore: $entity->ratingScore,
             path: $entity->path,
-            storageCategoryId: $entity->storageCategoryId,
+            storageCategoryId: $entity->storageCategory?->id?->value,
             level: $entity->level,
             md5sum: $entity->md5sum,
             addedBy: $entity->addedBy,
@@ -111,7 +120,7 @@ final readonly class Image
             dateMetadataUpdate: is_string($row['date_metadata_update'] ?? null) ? $row['date_metadata_update'] : null,
             ratingScore: is_numeric($row['rating_score'] ?? null) ? (float) $row['rating_score'] : null,
             path: is_string($row['path'] ?? null) ? $row['path'] : '',
-            storageCategoryId: is_numeric($row['storage_category_id'] ?? null) ? CategoryId::from((int) $row['storage_category_id']) : null,
+            storageCategoryId: is_numeric($row['storage_category_id'] ?? null) ? (int) $row['storage_category_id'] : null,
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
             md5sum: is_string($row['md5sum'] ?? null) ? Md5Sum::from($row['md5sum']) : null,
             addedBy: is_numeric($row['added_by'] ?? null) ? UserId::from((int) $row['added_by']) : null,
@@ -149,7 +158,7 @@ final readonly class Image
             'date_metadata_update' => $this->dateMetadataUpdate,
             'rating_score' => $this->ratingScore,
             'path' => $this->path,
-            'storage_category_id' => $this->storageCategoryId?->value,
+            'storage_category_id' => $this->storageCategoryId,
             'level' => $this->level,
             'md5sum' => $this->md5sum?->value,
             'added_by' => $this->addedBy?->value,

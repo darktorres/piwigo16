@@ -722,11 +722,11 @@ final readonly class CategoryRepository
      * Real DQL -- `images` is owned by the Image domain (`Piwigo\Image`,
      * L2aCoreDomain, same layer as `Piwigo\Category`, so querying
      * `ImageEntity` directly here is a legal same-layer dependency per
-     * `deptrac.yaml`'s own ruleset), with no association declared on
-     * `CategoryEntity` to it -- queried directly via
-     * `$this->em->createQueryBuilder()->from(ImageEntity::class, ...)`,
-     * same "no new association required" shape as this class's own
-     * `GroupAccessEntity`/`UserAccessEntity` joins elsewhere.
+     * `deptrac.yaml`'s own ruleset), queried directly via
+     * `$this->em->createQueryBuilder()->from(ImageEntity::class, ...)` --
+     * `ImageEntity::$storageCategory`'s owning side lives on `Image`, not
+     * `CategoryEntity`, so this filters through the bare association path
+     * the same way it filtered through the plain scalar column before.
      */
     public function findStorageLinkedImageIds(array $ids): array
     {
@@ -740,7 +740,7 @@ final readonly class CategoryRepository
                 ->createQueryBuilder()
                 ->select('i.id')
                 ->from(ImageEntity::class, 'i')
-                ->where('i.storageCategoryId IN (:ids)')
+                ->where('i.storageCategory IN (:ids)')
                 ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
                 ->getQuery()
                 ->getSingleColumnResult()
@@ -1691,8 +1691,11 @@ final readonly class CategoryRepository
     /**
      * @return list<int>
      *
-     * Real DQL -- same "no association declared, queried directly" shape
-     * as {@see findStorageLinkedImageIds()} above.
+     * Real DQL -- same "queried directly, not from CategoryEntity's own
+     * side" shape as {@see findStorageLinkedImageIds()} above.
+     * `IDENTITY(i.storageCategory)` extracts the raw FK id without
+     * hydrating the associated `CategoryEntity` -- a bare path here would
+     * try to hydrate it instead, since this is a `SELECT`, not a `WHERE`.
      */
     public function findDistinctStorageCategoryIds(): array
     {
@@ -1700,9 +1703,9 @@ final readonly class CategoryRepository
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->em
                 ->createQueryBuilder()
-                ->select('DISTINCT i.storageCategoryId')
+                ->select('DISTINCT IDENTITY(i.storageCategory)')
                 ->from(ImageEntity::class, 'i')
-                ->where('i.storageCategoryId IS NOT NULL')
+                ->where('i.storageCategory IS NOT NULL')
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -1723,15 +1726,18 @@ final readonly class CategoryRepository
      */
     public function updateImagePathsForCategory(CategoryId $categoryId, string $fulldir): void
     {
-        // i.storageCategoryId is CategoryId-typed -- binds the VO
-        // directly, not ->value.
+        // i.storageCategory is an association now -- the bare path in
+        // WHERE resolves to the raw join column either way, but the bound
+        // parameter must be a raw scalar, not the CategoryId VO: binding
+        // the VO directly only worked against the old scalar-Typed column,
+        // where the field's own custom Type handled the conversion.
         $this->em
             ->createQueryBuilder()
             ->update(ImageEntity::class, 'i')
             ->set('i.path', "CONCAT(:fulldir, '/', i.file)")
-            ->where('i.storageCategoryId = :categoryId')
+            ->where('i.storageCategory = :categoryId')
             ->setParameter('fulldir', $fulldir)
-            ->setParameter('categoryId', $categoryId)
+            ->setParameter('categoryId', $categoryId->value)
             ->getQuery()
             ->execute();
     }

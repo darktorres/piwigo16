@@ -31,7 +31,7 @@ function metadataImageTestEntity(?string $representativeExt = 'jpg'): ImageEntit
         dateMetadataUpdate: null,
         ratingScore: null,
         path: 'upload/2026/08/01/photo.jpg',
-        storageCategoryId: null,
+        storageCategory: null,
         level: 0,
         md5sum: null,
         addedBy: null,

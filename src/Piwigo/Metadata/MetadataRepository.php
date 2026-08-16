@@ -100,7 +100,7 @@ final readonly class MetadataRepository
         $qb = $this->em->createQueryBuilder()
             ->select('i')
             ->from(ImageEntity::class, 'i')
-            ->where('i.storageCategoryId IN (:categoryIds)')
+            ->where('i.storageCategory IN (:categoryIds)')
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
 
         if ($onlyNew) {

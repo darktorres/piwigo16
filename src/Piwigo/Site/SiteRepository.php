@@ -178,19 +178,20 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
      */
     public function findCategoryAndImageCountsBySite(): array
     {
-        // Neither `categories` nor `images` has
-        // an ORM association between them (storage_category_id is a plain
-        // int column, not a mapped ManyToOne), so the join is expressed as
-        // an arbitrary cross-entity DQL JOIN ... WITH, same pattern already
-        // used by GroupRepository::getAccessibleCategoryIdsForUser().
-        // CategoryEntity::$siteId is SiteId-typed -- getArrayResult()
-        // hydrates 'site_id' through it (Gotcha #1), unwrapped below.
-        // ImageEntity's id/storageCategoryId stay plain scalars.
+        // `ImageEntity::$storageCategory` is the owning side of the
+        // association, but this query's FROM is CategoryEntity, not
+        // ImageEntity -- an explicit Join::WITH is still needed (a natural
+        // association join would require the join to start from the
+        // owning side), just with the bare association path on the image
+        // side instead of the old scalar column. CategoryEntity::$siteId
+        // is SiteId-typed -- getArrayResult() hydrates 'site_id' through
+        // it (Gotcha #1), unwrapped below. ImageEntity's id stays a plain
+        // scalar.
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('c.siteId AS site_id', 'COUNT(DISTINCT c.id) AS nb_categories', 'COUNT(i.id) AS nb_images')
             ->from(CategoryEntity::class, 'c')
-            ->leftJoin(ImageEntity::class, 'i', Join::WITH, 'c.id = i.storageCategoryId')
+            ->leftJoin(ImageEntity::class, 'i', Join::WITH, 'c.id = i.storageCategory')
             ->where('c.siteId IS NOT NULL')
             ->groupBy('c.siteId')
             ->getQuery()

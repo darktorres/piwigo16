@@ -893,7 +893,7 @@ final class ImageRepository extends EntityRepository
                 ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'ic.imageId = i.id')
                 ->where('ic.categoryId = :category')
                 ->andWhere('i.id IN (:images)')
-                ->andWhere('(ic.categoryId != i.storageCategoryId OR i.storageCategoryId IS NULL)')
+                ->andWhere('(ic.categoryId != i.storageCategory OR i.storageCategory IS NULL)')
                 ->setParameter('category', CategoryId::from((int) $category))
                 ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
                 ->getQuery()
@@ -969,7 +969,7 @@ final class ImageRepository extends EntityRepository
         $em = $this->getEntityManager();
 
         $rows = $em->createQueryBuilder()
-            ->select('i.id', 'i.storageCategoryId')
+            ->select('i.id', 'IDENTITY(i.storageCategory) AS storageCategoryId')
             ->from(ImageEntity::class, 'i')
             ->where('i.id IN (:images)')
             ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
@@ -994,9 +994,11 @@ final class ImageRepository extends EntityRepository
             // storage_category_id IS NULL -- every link for this image is
             // non-storage, no extra exclusion needed (matches the
             // original's own `storage_category_id IS NULL OR ...` half).
-            if (($row['storageCategoryId'] ?? null) instanceof CategoryId) {
+            // IDENTITY() above already extracts a plain scalar, so no
+            // instanceof CategoryEntity unwrap is needed here.
+            if (is_numeric($row['storageCategoryId'] ?? null)) {
                 $qb->andWhere('ic.categoryId != :storageCategoryId')
-                    ->setParameter('storageCategoryId', $row['storageCategoryId']->value, ParameterType::INTEGER);
+                    ->setParameter('storageCategoryId', (int) $row['storageCategoryId'], ParameterType::INTEGER);
             }
 
             $qb->getQuery()
@@ -1707,7 +1709,7 @@ final class ImageRepository extends EntityRepository
             ->from(ImageCategoryEntity::class, 'ic')
             ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'i.id = ic.imageId')
             ->where('ic.imageId IN (:ids)')
-            ->andWhere('(ic.categoryId != i.storageCategoryId OR i.storageCategoryId IS NULL)')
+            ->andWhere('(ic.categoryId != i.storageCategory OR i.storageCategory IS NULL)')
             ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
             ->getQuery()
             ->getArrayResult();
@@ -3039,7 +3041,7 @@ final class ImageRepository extends EntityRepository
 
         $rows = $this->createQueryBuilder('i')
             ->select('i.id', 'i.path')
-            ->where('i.storageCategoryId IN (:categoryIds)')
+            ->where('i.storageCategory IN (:categoryIds)')
             ->setParameter('categoryIds', array_map(strval(...), $categoryIds), ArrayParameterType::STRING)
             ->getQuery()
             ->getArrayResult();
@@ -3441,7 +3443,7 @@ final class ImageRepository extends EntityRepository
     {
         $value = $this->createQueryBuilder('i')
             ->select('COUNT(i.id)')
-            ->where('i.storageCategoryId IS NOT NULL')
+            ->where('i.storageCategory IS NOT NULL')
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -3460,14 +3462,16 @@ final class ImageRepository extends EntityRepository
      * admin-telemetry call, not a hot path, so scanning every image row
      * is an acceptable trade. `date_available` values are ISO
      * `Y-m-d H:i:s` strings, so a plain PHP string comparison reproduces
-     * MAX()'s ordering exactly.
+     * MAX()'s ordering exactly. `IDENTITY(i.storageCategory)` extracts the
+     * raw FK id without hydrating `CategoryEntity` -- the consumer below
+     * only ever checks it for null, so a raw scalar is all it needs.
      *
      * @return list<AddMethodBreakdown>
      */
     public function findAddMethodBreakdown(): array
     {
         $rows = $this->createQueryBuilder('i')
-            ->select('i.storageCategoryId AS storage_category_id', 'i.dateAvailable AS date_available')
+            ->select('IDENTITY(i.storageCategory) AS storage_category_id', 'i.dateAvailable AS date_available')
             ->getQuery()
             ->getArrayResult();
 

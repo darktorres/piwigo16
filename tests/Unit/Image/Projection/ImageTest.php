@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -34,7 +33,7 @@ function transientImageEntity(): ImageEntity
         dateMetadataUpdate: null,
         ratingScore: null,
         path: 'upload/2026/08/01/photo.jpg',
-        storageCategoryId: null,
+        storageCategory: null,
         level: 0,
         md5sum: null,
         addedBy: null,
@@ -128,7 +127,7 @@ test('fromRow narrows every column to its real type', function (): void {
         ->and($image->path)
         ->toBe('upload/2026/08/01/photo.jpg')
         ->and($image->storageCategoryId)
-        ->toEqual(CategoryId::from(3))
+        ->toBe(3)
         ->and($image->level)
         ->toBe(1)
         ->and($image->md5sum)
@@ -241,7 +240,7 @@ test('fromRow defaults hit and level to 0 when the row value is not numeric', fu
         ->toBe(0);
 });
 
-test('toArray unwraps storage_category_id, md5sum, and added_by to null (not a null-property-access warning) when those VOs are themselves null', function (): void {
+test('toArray reports null for storage_category_id, md5sum, and added_by (not a null-property-access warning) when the row has none of them', function (): void {
     $row = fullImageRow();
     $row['storage_category_id'] = null;
     $row['md5sum'] = null;

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Category\CategoryEntity;
+use Piwigo\Category\CategoryStatus;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -9,7 +11,37 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
 /**
- * @return array{file: string, dateAvailable: ?SqlDateTime, dateCreation: ?SqlDateTime, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: string, storageCategoryId: ?CategoryId, level: int, md5sum: ?Md5Sum, addedBy: ?UserId, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: SqlDateTime}
+ * A minimal, never-persisted `CategoryEntity` standing in for the
+ * `storageCategory` association -- safe here since this test never calls
+ * `flush()` (a real write path must use `$em->getReference()` instead, see
+ * `0.3`'s cascade-persist note).
+ */
+function storageCategoryEntity(): CategoryEntity
+{
+    $category = new CategoryEntity(
+        name: 'Storage category',
+        idUppercat: null,
+        comment: null,
+        dir: null,
+        rank: null,
+        status: CategoryStatus::Public,
+        siteId: null,
+        visible: true,
+        representativePicture: null,
+        uppercats: '9',
+        commentable: false,
+        globalRank: null,
+        imageOrder: null,
+        permalink: null,
+        lastmodified: SqlDateTime::from('2026-07-26 08:00:00'),
+    );
+    $category->id = CategoryId::from(9);
+
+    return $category;
+}
+
+/**
+ * @return array{file: string, dateAvailable: ?SqlDateTime, dateCreation: ?SqlDateTime, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: string, storageCategory: ?CategoryEntity, level: int, md5sum: ?Md5Sum, addedBy: ?UserId, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: SqlDateTime}
  */
 function baseImageArgs(): array
 {
@@ -29,7 +61,7 @@ function baseImageArgs(): array
         'dateMetadataUpdate' => '2026-07-19',
         'ratingScore' => 4.75,
         'path' => 'galleries/2026/07/sunset-beach.jpg',
-        'storageCategoryId' => CategoryId::from(9),
+        'storageCategory' => storageCategoryEntity(),
         'level' => 2,
         'md5sum' => Md5Sum::from('9e107d9d372bb6826bd81d3542a419d6'),
         'addedBy' => UserId::from(11),
@@ -75,7 +107,7 @@ test('constructs with distinct values for every property', function (): void {
         ->toBe(4.75)
         ->and($image->path)
         ->toBe('galleries/2026/07/sunset-beach.jpg')
-        ->and($image->storageCategoryId)
+        ->and($image->storageCategory?->id)
         ->toEqual(CategoryId::from(9))
         ->and($image->level)
         ->toBe(2)
@@ -222,13 +254,13 @@ test('constructs with ratingScore null', function (): void {
         ->toBeNull();
 });
 
-test('constructs with storageCategoryId null', function (): void {
+test('constructs with storageCategory null', function (): void {
     $args = baseImageArgs();
-    $args['storageCategoryId'] = null;
+    $args['storageCategory'] = null;
 
     $image = new ImageEntity(...$args);
 
-    expect($image->storageCategoryId)
+    expect($image->storageCategory)
         ->toBeNull();
 });
 

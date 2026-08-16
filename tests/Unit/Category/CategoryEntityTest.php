@@ -34,7 +34,7 @@ function representativeImage(): ImageEntity
         dateMetadataUpdate: null,
         ratingScore: null,
         path: 'representative.jpg',
-        storageCategoryId: null,
+        storageCategory: null,
         level: 0,
         md5sum: null,
         addedBy: null,

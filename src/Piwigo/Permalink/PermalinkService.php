@@ -58,17 +58,18 @@ final readonly class PermalinkService
             }
         }
 
-        $entityManager->getConnection()->transactional(function () use ($catId, $save, $oldCatId, $permalink): void {
-            $this->repo->clearCategoryPermalink($catId);
+        $entityManager->getConnection()
+            ->transactional(function () use ($catId, $save, $oldCatId, $permalink): void {
+                $this->repo->clearCategoryPermalink($catId);
 
-            if ($save) {
-                if ($oldCatId !== null) {
-                    $this->repo->markOldPermalinkDeleted($catId, $permalink);
-                } else {
-                    $this->repo->insertOldPermalinkDeleted($catId, $permalink);
+                if ($save) {
+                    if ($oldCatId !== null) {
+                        $this->repo->markOldPermalinkDeleted($catId, $permalink);
+                    } else {
+                        $this->repo->insertOldPermalinkDeleted($catId, $permalink);
+                    }
                 }
-            }
-        });
+            });
         $this->processCache->forget('cat_names'); // force regeneration
 
         return true;
@@ -129,13 +130,14 @@ final readonly class PermalinkService
             return false;
         }
 
-        $entityManager->getConnection()->transactional(function () use ($catId, $permalink, $oldCatId): void {
-            if ($oldCatId !== null) { // the new permalink must not be active and old at the same time
-                $this->repo->deleteOldPermalink($oldCatId, $permalink);
-            }
+        $entityManager->getConnection()
+            ->transactional(function () use ($catId, $permalink, $oldCatId): void {
+                if ($oldCatId !== null) { // the new permalink must not be active and old at the same time
+                    $this->repo->deleteOldPermalink($oldCatId, $permalink);
+                }
 
-            $this->repo->setCategoryPermalink($catId, $permalink);
-        });
+                $this->repo->setCategoryPermalink($catId, $permalink);
+            });
         $this->processCache->forget('cat_names'); // force regeneration
 
         return true;

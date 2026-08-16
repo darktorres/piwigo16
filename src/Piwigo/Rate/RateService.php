@@ -103,19 +103,20 @@ final readonly class RateService
             $savedAnonymousId = null;
         }
 
-        $entityManager->getConnection()->transactional(function () use ($userId, $anonymousId, $savedAnonymousId, $userAnonymous, $elementId, $rateInt): void {
-            if ($userAnonymous && $anonymousId !== $savedAnonymousId) { // client has changed IP address, or is trying to fool us
-                $existingElementIds = $this->repo->findElementIdsForUserAndAnonymousId($userId, $anonymousId);
-                if ($existingElementIds !== []) {
-                    $this->repo->deleteByUserAnonymousAndElements($userId, $savedAnonymousId, $existingElementIds);
+        $entityManager->getConnection()
+            ->transactional(function () use ($userId, $anonymousId, $savedAnonymousId, $userAnonymous, $elementId, $rateInt): void {
+                if ($userAnonymous && $anonymousId !== $savedAnonymousId) { // client has changed IP address, or is trying to fool us
+                    $existingElementIds = $this->repo->findElementIdsForUserAndAnonymousId($userId, $anonymousId);
+                    if ($existingElementIds !== []) {
+                        $this->repo->deleteByUserAnonymousAndElements($userId, $savedAnonymousId, $existingElementIds);
+                    }
+
+                    $this->repo->reassignAnonymousId($userId, $savedAnonymousId, $anonymousId);
                 }
 
-                $this->repo->reassignAnonymousId($userId, $savedAnonymousId, $anonymousId);
-            }
-
-            $this->repo->deleteExistingRate($elementId, $userId, $userAnonymous ? $anonymousId : null);
-            $this->repo->insertRate($elementId, $userId, $anonymousId, $rateInt);
-        });
+                $this->repo->deleteExistingRate($elementId, $userId, $userAnonymous ? $anonymousId : null);
+                $this->repo->insertRate($elementId, $userId, $anonymousId, $rateInt);
+            });
 
         return $this->updateRatingScore($entityManager, $imageId);
     }
@@ -174,13 +175,14 @@ final readonly class RateService
         // set to null every image with no rate at all
         $elementIdKey = $elementId === false ? 0 : $elementId;
 
-        $entityManager->getConnection()->transactional(function () use ($updates, $byItem, $elementIdKey): void {
-            $this->repo->updateRatingScores($updates);
+        $entityManager->getConnection()
+            ->transactional(function () use ($updates, $byItem, $elementIdKey): void {
+                $this->repo->updateRatingScores($updates);
 
-            if (! isset($byItem[$elementIdKey])) {
-                $this->repo->clearRatingScores($this->repo->findImageIdsWithStaleRatingScore());
-            }
-        });
+                if (! isset($byItem[$elementIdKey])) {
+                    $this->repo->clearRatingScores($this->repo->findImageIdsWithStaleRatingScore());
+                }
+            });
 
         return $return ?? [
             'score' => null,

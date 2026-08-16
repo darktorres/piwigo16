@@ -485,10 +485,11 @@ final readonly class TagService
         // we need the list of impacted images, to update their lastmodified
         $imageIds = $this->repo->findImageIdsForTagIds($tagIds);
 
-        $entityManager->getConnection()->transactional(function () use ($tagIds, $imageIds): void {
-            $this->repo->deleteByIds($tagIds);
-            $this->imageService->updateImagesLastmodified($imageIds);
-        });
+        $entityManager->getConnection()
+            ->transactional(function () use ($tagIds, $imageIds): void {
+                $this->repo->deleteByIds($tagIds);
+                $this->imageService->updateImagesLastmodified($imageIds);
+            });
 
         // EventDispatcher/ActivityLoggerInterface are cross-boundary sinks
         // (plugin events, ActivityEntity::$objectId is a plain int column)

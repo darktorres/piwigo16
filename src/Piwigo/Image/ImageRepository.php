@@ -16,6 +16,7 @@ use LogicException;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\Permalink;
@@ -190,7 +191,7 @@ final class ImageRepository extends EntityRepository
     public function findFormatById(int $formatId): ?ImageFormat
     {
         $entity = $this->getEntityManager()
-            ->find(ImageFormatEntity::class, $formatId);
+            ->find(ImageFormatEntity::class, FormatId::from($formatId));
 
         return $entity === null ? null : ImageFormat::fromEntity($entity);
     }
@@ -202,7 +203,7 @@ final class ImageRepository extends EntityRepository
     public function updateFormatFilesize(int $formatId, ?int $filesize): void
     {
         $entity = $this->getEntityManager()
-            ->find(ImageFormatEntity::class, $formatId);
+            ->find(ImageFormatEntity::class, FormatId::from($formatId));
         if ($entity === null) {
             return;
         }
@@ -225,7 +226,7 @@ final class ImageRepository extends EntityRepository
 
         assert($entity->formatId !== null);
 
-        return $entity->formatId;
+        return $entity->formatId->value;
     }
 
     /**
@@ -2785,7 +2786,7 @@ final class ImageRepository extends EntityRepository
             ->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        return is_array($row) && is_numeric($row['formatId']) ? (int) $row['formatId'] : null;
+        return is_array($row) && $row['formatId'] instanceof FormatId ? $row['formatId']->value : null;
     }
 
     /**

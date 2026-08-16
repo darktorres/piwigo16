@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image\Projection;
 
+use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Image\ImageFormatEntity;
 
@@ -33,7 +34,7 @@ final readonly class ImageFormat
     public static function fromEntity(ImageFormatEntity $entity): self
     {
         return new self(
-            formatId: $entity->formatId ?? 0,
+            formatId: $entity->formatId instanceof FormatId ? $entity->formatId->value : 0,
             imageId: $entity->imageId,
             ext: $entity->ext,
             filesize: $entity->filesize,

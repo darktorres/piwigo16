@@ -29,6 +29,7 @@ use Piwigo\Db\Type\ActivityIdType;
 use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
 use Piwigo\Db\Type\EmailType;
+use Piwigo\Db\Type\FormatIdType;
 use Piwigo\Db\Type\GracefulIpAddressType;
 use Piwigo\Db\Type\GroupIdType;
 use Piwigo\Db\Type\ImageIdType;
@@ -102,6 +103,7 @@ final class EntityManagerFactory
             'search_id' => SearchIdType::class,
             'lang_code' => LangCodeType::class,
             'email' => EmailType::class,
+            'format_id' => FormatIdType::class,
             'username' => UsernameType::class,
             'sql_date' => SqlDateType::class,
             'sql_datetime' => SqlDateTimeType::class,

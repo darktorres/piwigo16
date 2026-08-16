@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Image\ImageFormatEntity;
 use Piwigo\Image\Projection\ImageFormat;
@@ -75,7 +76,7 @@ test('fromEntity copies every field from a real ImageFormatEntity', function ():
         ext: 'jpg',
         filesize: 1024,
     );
-    $entity->formatId = 7;
+    $entity->formatId = FormatId::from(7);
 
     $format = ImageFormat::fromEntity($entity);
 

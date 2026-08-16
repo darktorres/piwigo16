@@ -6,6 +6,7 @@ namespace Piwigo\History;
 
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SearchId;
@@ -37,6 +38,10 @@ use Piwigo\Common\ValueObject\UserId;
  * `0.3`'s scope, same as `sites.id`). `HistoryRepository::search()`'s own
  * `getArrayResult()` unwraps it via `instanceof`, same Gotcha #1 shape as
  * `userId`/`categoryId`/`imageId` beside it.
+ *
+ * `formatId` is `FormatId`-typed (`fk_history_format_id`, `ON DELETE SET
+ * NULL`) -- unlike `searchId`, no `HistoryRepository` DQL site selects it,
+ * only `insert()` writes it.
  */
 #[ORM\Entity(repositoryClass: HistoryRepository::class)]
 #[ORM\Table(name: 'history')]
@@ -68,8 +73,8 @@ final class HistoryEntity
         public ?ImageId $imageId,
         #[ORM\Column(name: 'image_type', type: 'string', length: 10, nullable: true, enumType: HistoryImageType::class)]
         public ?HistoryImageType $imageType,
-        #[ORM\Column(name: 'format_id', type: 'integer', nullable: true)]
-        public ?int $formatId,
+        #[ORM\Column(name: 'format_id', type: 'format_id', nullable: true)]
+        public ?FormatId $formatId,
         #[ORM\Column(name: 'auth_key_id', type: 'integer', nullable: true)]
         public ?int $authKeyId,
     ) {}

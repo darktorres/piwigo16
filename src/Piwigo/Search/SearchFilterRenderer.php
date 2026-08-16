@@ -279,10 +279,11 @@ final readonly class SearchFilterRenderer
         }
 
         if (isset($searchFields['author']) and (bool) $displayFilters['author']['access']) {
-            $filterCondition = $this->getClauseForFilter('author', $page);
+            $filterClause = $this->getClauseForFilter('author', $page);
+            $filterCondition = $filterClause->condition;
             $groupCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.author IS NOT NULL'));
 
-            if (! str_starts_with($filterCondition->sql, 'ic.image IN')) {
+            if ($filterClause->cacheApplicable) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'author_rows_' . $userId;
@@ -375,9 +376,10 @@ final readonly class SearchFilterRenderer
         }
 
         if (isset($searchFields['added_by']) and (bool) $displayFilters['added_by']['access']) {
-            $filterCondition = $this->getClauseForFilter('added_by', $page);
+            $filterClause = $this->getClauseForFilter('added_by', $page);
+            $filterCondition = $filterClause->condition;
 
-            if (! str_starts_with($filterCondition->sql, 'ic.image IN')) {
+            if ($filterClause->cacheApplicable) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'added_by_rows_' . $userId;
@@ -507,7 +509,8 @@ final readonly class SearchFilterRenderer
         }
 
         if (isset($searchFields['filetypes']) and (bool) $displayFilters['file_type']['access']) {
-            $filterCondition = $this->getClauseForFilter('filetypes', $page);
+            $filterClause = $this->getClauseForFilter('filetypes', $page);
+            $filterCondition = $filterClause->condition;
 
             // get all file extensions for this user in the gallery,
             // whatever the current filters
@@ -545,7 +548,7 @@ final readonly class SearchFilterRenderer
                 $this->cacheSet($cacheKey, $allExts);
             }
 
-            if (str_starts_with($filterCondition->sql, 'ic.image IN')) {
+            if (! $filterClause->cacheApplicable) {
                 $filteredExts = $extToCounterMap($this->repo->countImagesGroupedBy("SUBSTRING_INDEX(i.path, '.', -1)", 'ext', $filterCondition, true));
 
                 $exts = [];
@@ -566,10 +569,11 @@ final readonly class SearchFilterRenderer
             $show_filter_ratings = true;
 
             if (isset($searchFields['ratings']) and (bool) $displayFilters['rating']['access']) {
-                $filterCondition = $this->getClauseForFilter('ratings', $page);
+                $filterClause = $this->getClauseForFilter('ratings', $page);
+                $filterCondition = $filterClause->condition;
 
                 $cacheKey = 'ratings_' . $userId;
-                $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.image IN');
+                $cacheApplicable = $filterClause->cacheApplicable;
                 $ratings = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
                 if (! is_array($ratings)) {
@@ -616,7 +620,8 @@ final readonly class SearchFilterRenderer
 
         // For filesize
         if (isset($searchFields['filesize_min']) && isset($searchFields['filesize_max']) and (bool) $displayFilters['file_size']['access']) {
-            $filterCondition = $this->getClauseForFilter('filesize', $page);
+            $filterClause = $this->getClauseForFilter('filesize', $page);
+            $filterCondition = $filterClause->condition;
 
             $filesizes = [];
 
@@ -667,10 +672,11 @@ final readonly class SearchFilterRenderer
         }
 
         if (isset($searchFields['ratios']) and (bool) $displayFilters['ratio']['access']) {
-            $filterCondition = $this->getClauseForFilter('ratios', $page);
+            $filterClause = $this->getClauseForFilter('ratios', $page);
+            $filterCondition = $filterClause->condition;
 
             $cacheKey = 'ratios_' . $userId;
-            $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.image IN');
+            $cacheApplicable = $filterClause->cacheApplicable;
             $ratios = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
             if (! is_array($ratios)) {
@@ -721,11 +727,12 @@ final readonly class SearchFilterRenderer
         }
 
         if (isset($searchFields['height_min']) and isset($searchFields['height_max']) and (bool) $displayFilters['height']['access']) {
-            $filterCondition = $this->getClauseForFilter('height', $page);
+            $filterClause = $this->getClauseForFilter('height', $page);
+            $filterCondition = $filterClause->condition;
 
             $notNullCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.height IS NOT NULL'));
 
-            if (! str_starts_with($filterCondition->sql, 'ic.image IN')) {
+            if ($filterClause->cacheApplicable) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'height_rows_' . $userId;
@@ -768,11 +775,12 @@ final readonly class SearchFilterRenderer
         }
 
         if (isset($searchFields['width_min']) and isset($searchFields['width_max']) and (bool) $displayFilters['width']['access']) {
-            $filterCondition = $this->getClauseForFilter('width', $page);
+            $filterClause = $this->getClauseForFilter('width', $page);
+            $filterCondition = $filterClause->condition;
 
             $notNullCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.width IS NOT NULL'));
 
-            if (! str_starts_with($filterCondition->sql, 'ic.image IN')) {
+            if ($filterClause->cacheApplicable) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'width_rows_' . $userId;
@@ -999,11 +1007,12 @@ final readonly class SearchFilterRenderer
         TemplateInterface $template,
         array $page
     ): void {
-        $filterCondition = $this->getClauseForFilter($filterName, $page);
+        $filterClause = $this->getClauseForFilter($filterName, $page);
+        $filterCondition = $filterClause->condition;
         $cacheKey = 'filter_' . $filterName . '_' . $userId;
         // we use the cache pool only for fetching lines filtered only by
         // permissions
-        $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.image IN');
+        $cacheApplicable = $filterClause->cacheApplicable;
         $cached = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
         if (is_array($cached)
@@ -1151,10 +1160,12 @@ final readonly class SearchFilterRenderer
      *   instead of a cache hit).
      *
      * Returns a bound `ic.image IN (:x)` DQL-shaped condition against
-     * every real caller's own DQL query -- every caller below checks
-     * `str_starts_with($condition->sql, 'ic.image IN')`.
+     * every real caller's own DQL query, alongside an explicit
+     * `cacheApplicable` discriminant every caller below reads instead of
+     * sniffing the condition's own SQL text -- see
+     * {@see SearchFilterClause}'s own docblock for why.
      */
-    private function getClauseForFilter(string $filterName, array &$page): SqlCondition
+    private function getClauseForFilter(string $filterName, array &$page): SearchFilterClause
     {
         $otherFiltersItems = $this->getItemsForFilter($filterName, $page);
         if ($otherFiltersItems === false) {
@@ -1167,7 +1178,7 @@ final readonly class SearchFilterRenderer
             $forbidden = $searchDetails['forbidden'] ?? null;
             $forbiddenCondition = $forbidden instanceof SqlCondition ? $forbidden : new SqlCondition('');
 
-            return $forbiddenCondition;
+            return new SearchFilterClause($forbiddenCondition, true);
         }
 
         // getItemsForFilter() ultimately pulls its values from
@@ -1179,14 +1190,17 @@ final readonly class SearchFilterRenderer
             $otherFiltersItems
         );
 
-        return new SqlCondition(
-            'ic.image IN (:otherFiltersItems)',
-            [
-                'otherFiltersItems' => $otherFiltersItemInts,
-            ],
-            [
-                'otherFiltersItems' => ArrayParameterType::INTEGER,
-            ],
+        return new SearchFilterClause(
+            new SqlCondition(
+                'ic.image IN (:otherFiltersItems)',
+                [
+                    'otherFiltersItems' => $otherFiltersItemInts,
+                ],
+                [
+                    'otherFiltersItems' => ArrayParameterType::INTEGER,
+                ],
+            ),
+            false,
         );
     }
 

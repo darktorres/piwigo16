@@ -65,12 +65,15 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         $now = SqlDateTime::from(Env::now()
             ->format('Y-m-d H:i:s'));
 
+        $em = $this->getEntityManager();
+        $authorId = UserId::tryFrom($data['authorId']);
+
         $entity = new CommentEntity(
             imageId: ImageId::from($data['imageId']),
             date: $now,
             author: $data['author'],
             email: $data['email'],
-            authorId: UserId::tryFrom($data['authorId']),
+            authorUser: $authorId instanceof UserId ? $em->getReference(UserEntity::class, $authorId) : null,
             anonymousId: $data['anonymousId'],
             websiteUrl: $data['websiteUrl'],
             content: $data['content'],
@@ -78,7 +81,6 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             validationDate: $data['validated'] ? $now : null,
         );
 
-        $em = $this->getEntityManager();
         $em->persist($entity);
         $em->flush();
 
@@ -110,8 +112,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->setParameter('ids', $rawIds, ArrayParameterType::INTEGER);
 
         if ($authorId !== null) {
-            $qb->andWhere('c.authorId = :authorId')
-                ->setParameter('authorId', UserId::from($authorId));
+            $qb->andWhere('c.authorUser = :authorId')
+                ->setParameter('authorId', $authorId);
         }
 
         $deleted = $qb->getQuery()
@@ -147,8 +149,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->setParameter('id', $id);
 
         if ($authorId !== null) {
-            $qb->andWhere('c.authorId = :authorId')
-                ->setParameter('authorId', UserId::from($authorId));
+            $qb->andWhere('c.authorUser = :authorId')
+                ->setParameter('authorId', $authorId);
         }
 
         $updated = $qb->getQuery()
@@ -171,7 +173,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             return false;
         }
 
-        return $entity->authorId === null ? null : (string) $entity->authorId;
+        $authorId = $entity->authorUser?->id;
+
+        return $authorId === null ? null : (string) $authorId;
     }
 
     /**
@@ -220,10 +224,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         $qb = $this->createQueryBuilder('c')
             ->select('COUNT(c.id)')
             ->where("c.date > DATE_SUB(:now, :seconds, 'second')")
-            ->andWhere('c.authorId = :authorId')
+            ->andWhere('c.authorUser = :authorId')
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('seconds', $antiFloodSeconds)
-            ->setParameter('authorId', UserId::from($authorId));
+            ->setParameter('authorId', $authorId);
 
         if ($anonymousIdPrefix !== null) {
             $qb->andWhere('c.anonymousId LIKE :anonymousIdPrefix')
@@ -411,7 +415,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         $criteriaObj = Criteria::create();
 
         if ($includeAuthorId && $criteria->authorId instanceof UserId) {
-            $criteriaObj->andWhere($expr->eq('authorId', $criteria->authorId));
+            $criteriaObj->andWhere($expr->eq('authorUser', $criteria->authorId->value));
         }
 
         if ($criteria->imageId instanceof ImageId) {
@@ -653,7 +657,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->select(
                 'com.id AS id',
                 'com.author AS author',
-                'com.authorId AS author_id',
+                'IDENTITY(com.authorUser) AS author_id',
                 'u.mailAddress AS user_email',
                 'com.date AS date',
                 'com.imageId AS image_id',
@@ -662,7 +666,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 'com.content AS content',
                 'com.validated AS validated',
             )
-            ->leftJoin(UserEntity::class, 'u', Join::WITH, 'u.id = com.authorId')
+            ->leftJoin('com.authorUser', 'u')
             ->where('com.imageId = :imageId')
             ->orderBy('com.date', $order)
             ->addOrderBy('com.id', $order)
@@ -681,14 +685,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         $result = [];
         foreach ($rows as $row) {
             if (is_array($row)) {
-                // getArrayResult() hydrates 'author_id' through
-                // CommentEntity::$authorId's own UserId Type -- unwrap
-                // before fromRow()'s is_numeric() narrowing ever sees it,
-                // the same Gotcha #1 CategoryEntity's own docblock warns
-                // about for scalar/array selects of a custom-typed column.
-                if (($row['author_id'] ?? null) instanceof UserId) {
-                    $row['author_id'] = $row['author_id']->value;
-                }
+                // IDENTITY(com.authorUser) above already extracts a plain
+                // scalar, so no instanceof UserEntity unwrap is needed
+                // here -- unlike a bare association-path select, which
+                // would have hydrated a full UserEntity instead.
                 $result[] = Comment::fromRow($row);
             }
         }
@@ -1023,8 +1023,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     public function findAuthorCounts(CommentApiCriteria $criteria): array
     {
         $qb = $this->createQueryBuilder('c')
-            ->select('MIN(c.author) AS author', 'c.authorId AS author_id', 'COUNT(c.id) AS nb_authors')
-            ->groupBy('c.authorId');
+            ->select('MIN(c.author) AS author', 'IDENTITY(c.authorUser) AS author_id', 'COUNT(c.id) AS nb_authors')
+            ->groupBy('c.authorUser');
 
         self::applyApiConditionsWithStatus($qb, $criteria, includeAuthorId: false);
 
@@ -1043,9 +1043,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
             $result[] = [
                 'author' => is_string($author) ? $author : null,
-                // getArrayResult() hydrates this through UserId (see
-                // findForImage()'s own comment on the same gotcha).
-                'author_id' => $authorId instanceof UserId ? $authorId->value : null,
+                // IDENTITY(c.authorUser) above already extracts a plain
+                // scalar (see findForImage()'s own comment on the same
+                // shape).
+                'author_id' => is_numeric($authorId) ? (int) $authorId : null,
                 'nb_authors' => is_numeric($nbAuthors) ? (int) $nbAuthors : 0,
             ];
         }

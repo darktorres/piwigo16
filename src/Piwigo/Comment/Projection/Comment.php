@@ -43,10 +43,12 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * `com.image_id` is `NOT NULL` with a real `fk_comments_image_id` FOREIGN
  * KEY onto `images.id` (`ON DELETE CASCADE`), so a real fetched row
  * can't carry a missing/invalid value either. `authorId` stays plain
- * `?int` here even though `CommentEntity::$authorId` is `UserId`-typed --
- * this Projection's own real caller (`PictureCommentRenderer`) already
- * works with a plain id, so `CommentRepository::findForImage()` unwraps
- * `->value` before `fromRow()` ever sees it.
+ * `?int` here even though `CommentEntity::$authorUser` is a real
+ * `#[ORM\ManyToOne] ?UserEntity` association -- this Projection's own real
+ * caller (`PictureCommentRenderer`) already works with a plain id, so
+ * `CommentRepository::findForImage()` selects `IDENTITY(com.authorUser)`
+ * (a plain scalar) rather than the bare association path, which would
+ * hydrate a full `UserEntity` instead.
  */
 final readonly class Comment
 {

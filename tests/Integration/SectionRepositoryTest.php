@@ -46,25 +46,6 @@ final class SectionRepositoryTest extends IntegrationTestCase
         $this->repo = new SectionRepository(EntityManagerFactory::build($this->conn));
     }
 
-    public function testEscapeTokenEscapesAValueWithoutSurroundingQuotes(): void
-    {
-        $escaped = $this->repo->escapeToken("o'brien");
-
-        // escapeToken() routes through Connection::quote() -- the real
-        // per-driver quoting mechanism, already fully portable (MySQL's
-        // own backslash-escape vs Postgres's SQL-standard doubled-quote
-        // escape); only this assertion's own expected shape needs to be
-        // driver-aware.
-        self::assertSame($this->dbDriver === 'pgsql' ? "o''brien" : "o\\'brien", $escaped);
-        self::assertStringStartsNotWith("'", $escaped);
-        self::assertStringEndsNotWith("'", $escaped);
-    }
-
-    public function testEscapeTokenLeavesAPlainValueUnchanged(): void
-    {
-        self::assertSame('plain-value', $this->repo->escapeToken('plain-value'));
-    }
-
     public function testFindVisibleSubcategoryIdsReturnsDirectSubcategories(): void
     {
         $ids = $this->repo->findVisibleSubcategoryIds('1', new SqlCondition(''));

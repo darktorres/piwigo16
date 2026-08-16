@@ -28,7 +28,6 @@ final readonly class SectionInitializer
 {
     public function __construct(
         private HtmlRenderingInterface $htmlRenderer,
-        private SectionRepository $repo,
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
         private RequestMountDepth $requestMountDepth,
@@ -59,9 +58,6 @@ final readonly class SectionInitializer
             // to the string this variable was always meant to hold (see
             // Request\SectionUrlRequest's own docblock).
             $rewritten = SectionUrlRequest::fromGlobals()->firstGetKey;
-
-            // the $_GET keys are not protected in include/common.inc.php, only the values
-            $rewritten = $this->repo->escapeToken($rewritten);
             $root_path = str_repeat('../', $this->requestMountDepth->current());
         }
 

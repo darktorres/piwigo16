@@ -9,7 +9,7 @@ use Piwigo\Section\SectionRepository;
 
 /**
  * Piwigo\Section\SectionRepository -- has its own dedicated
- * tests/Integration/SectionRepositoryTest.php; this ports its 8 tests
+ * tests/Integration/SectionRepositoryTest.php; this ports its 6 tests
  * down to the Unit suite via the real-DB-no-HTTP ImageRepositoryTest.php
  * pattern, plus a test of its own for findSectionImageIds() (the
  * raw-SQL, queryColumn()-backed path), which had no dedicated test in
@@ -25,27 +25,6 @@ function sectionTestRepo(): SectionRepository
 {
     return new SectionRepository(EntityManagerFactory::build(DbConnection::build()));
 }
-
-test('escapeToken() escapes a value without surrounding quotes', function (): void {
-    $escaped = sectionTestRepo()
-        ->escapeToken("o'brien");
-
-    // escapeToken() routes through Connection::quote() -- the real
-    // per-driver quoting mechanism. Postgres doubles an embedded quote
-    // (SQL-standard escaping); mysqli backslash-escapes it instead.
-    $expected = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? "o''brien" : "o\\'brien";
-    expect($escaped)
-        ->toBe($expected)
-        ->and($escaped)
-        ->not->toStartWith("'")
-        ->and($escaped)
-        ->not->toEndWith("'");
-});
-
-test('escapeToken() leaves a plain value unchanged', function (): void {
-    expect(sectionTestRepo()->escapeToken('plain-value'))
-        ->toBe('plain-value');
-});
 
 test('findVisibleSubcategoryIds() returns direct subcategories', function (): void {
     expect(sectionTestRepo()->findVisibleSubcategoryIds('1', new SqlCondition('')))

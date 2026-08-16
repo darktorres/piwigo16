@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\RequestMountDepth;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Section\SectionInitializer;
-use Piwigo\Section\SectionRepository;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
@@ -31,8 +28,7 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
  * `UrlService::parseSectionUrl()`'s own `'categor'`/`'tags'`/
  * `'favorites'`/etc token checks all fail against the resulting empty
  * token, so it returns its own untouched default (empty) `$page` array
- * with no further DB access beyond `SectionRepository::escapeToken()`'s
- * own trivial `quote('')` call.
+ * with no further DB access at all.
  */
 test('parse returns an empty, unrecognized-section result for an empty request', function (): void {
     unset($_GET, $_SERVER['PATH_INFO']);
@@ -40,10 +36,8 @@ test('parse returns an empty, unrecognized-section result for an empty request',
 
     $currentConfig = new CurrentConfig();
     $htmlRenderer = HtmlServiceTestFactory::build();
-    $repo = new SectionRepository(EntityManagerFactory::build(DbConnection::build()));
     $initializer = new SectionInitializer(
         $htmlRenderer,
-        $repo,
         new AccessControlTestFakeRedirectServiceNeverCalled(),
         UrlServiceTestFactory::build($htmlRenderer),
         new RequestMountDepth(),

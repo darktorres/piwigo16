@@ -19,11 +19,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Logger;
     use Piwigo\Core\RequestMountDepth;
     use Piwigo\Core\UniqueExecLock;
-    use Piwigo\Db\DbConnection;
-    use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\Section\SectionInitializer;
-    use Piwigo\Section\SectionRepository;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -38,9 +35,7 @@ namespace Piwigo\Tests\Integration {
 
     /**
      * Forces the $_SERVER['PATH_INFO'] branch (question_mark_in_urls=false)
-     * throughout -- the alternative $_GET-key branch's escaping goes through
-     * SectionRepository (a real DBAL Connection, built here same as every
-     * other repository-backed Integration test).
+     * throughout.
      *
      * The "invalid/missing picture identifier" branches call
      * HtmlRenderingInterface::badRequest(), which itself just delegates to
@@ -54,8 +49,6 @@ namespace Piwigo\Tests\Integration {
     final class SectionInitializerTest extends IntegrationTestCase
     {
         private static bool $fixtureReady = false;
-
-        private SectionRepository $repo;
 
         #[Override]
         protected function setUp(): void
@@ -80,8 +73,6 @@ namespace Piwigo\Tests\Integration {
             $currentConfig->questionMarkInUrls = false;
 
             unset($_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
-
-            $this->repo = new SectionRepository(EntityManagerFactory::build(DbConnection::build()));
         }
 
         #[Override]
@@ -133,7 +124,7 @@ namespace Piwigo\Tests\Integration {
         {
             $_SERVER['PATH_INFO'] = '/category/1';
 
-            $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
+            $context = new SectionInitializer(HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
                 ->parse();
 
             self::assertSame('../../', $context->rootPath);
@@ -145,7 +136,7 @@ namespace Piwigo\Tests\Integration {
         {
             $_SERVER['PATH_INFO'] = '/category/1/start-20';
 
-            $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
+            $context = new SectionInitializer(HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
                 ->parse();
 
             self::assertSame('../../../', $context->rootPath);
@@ -155,7 +146,7 @@ namespace Piwigo\Tests\Integration {
         {
             $_SERVER['PATH_INFO'] = '/category/1';
 
-            $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
+            $context = new SectionInitializer(HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
                 ->parse();
 
             self::assertNull($context->imageId);
@@ -167,7 +158,7 @@ namespace Piwigo\Tests\Integration {
             $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
             $_SERVER['PATH_INFO'] = '/42';
 
-            $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
+            $context = new SectionInitializer(HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
                 ->parse();
 
             self::assertSame('42', $context->imageId);
@@ -180,7 +171,7 @@ namespace Piwigo\Tests\Integration {
             $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
             $_SERVER['PATH_INFO'] = '/42-my-photo';
 
-            $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
+            $context = new SectionInitializer(HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
                 ->parse();
 
             self::assertSame('42', $context->imageId);
@@ -195,7 +186,7 @@ namespace Piwigo\Tests\Integration {
             // happened rather than this being a hardcoded default.
             $_SERVER['PATH_INFO'] = '/most_visited';
 
-            $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
+            $context = new SectionInitializer(HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
                 ->parse();
 
             self::assertSame(Section::MostVisited, $context->parsed['section'] ?? null);
@@ -214,7 +205,7 @@ namespace Piwigo\Tests\Integration {
             $body = null;
             $status = null;
             try {
-                new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
+                new SectionInitializer(HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
                     ->parse();
             } catch (ResponseReadyException $e) {
                 $response = $e->response();
@@ -248,7 +239,7 @@ namespace Piwigo\Tests\Integration {
             $body = null;
             $status = null;
             try {
-                new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
+                new SectionInitializer(HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
                     ->parse();
             } catch (ResponseReadyException $e) {
                 $response = $e->response();

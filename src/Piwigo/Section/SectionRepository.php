@@ -223,17 +223,4 @@ final readonly class SectionRepository
             , $where->parameters, $where->types);
     }
 
-    /**
-     * Real driver-escaping, without the surrounding quotes {@see
-     * \Doctrine\DBAL\Connection::quote()} adds -- SectionInitializer's own
-     * use of this (a $_GET-key character-escape) was never actually SQL, it
-     * (mis)used mysqli_real_escape_string() as a general string sanitizer
-     * for a URL path token; ported as-is rather than changed to something
-     * SQL-appropriate, since altering that escaping behavior is out of this
-     * migration's "same result" scope.
-     */
-    public function escapeToken(string $value): string
-    {
-        return substr($this->em->getConnection()->quote($value), 1, -1);
-    }
 }

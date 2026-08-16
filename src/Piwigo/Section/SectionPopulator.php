@@ -111,7 +111,7 @@ final readonly class SectionPopulator
         // of this method, once $page holds its final values -- no
         // downstream code reads SectionContextRegistry::current()
         // mid-request, so deferring the set() call to the end is safe.
-        $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo, $this->redirectService, $this->urlService, $this->requestMountDepth, $this->currentConfig)
+        $url_parse = new SectionInitializer($this->htmlRenderer, $this->redirectService, $this->urlService, $this->requestMountDepth, $this->currentConfig)
             ->parse();
 
         $page['root_path'] = $url_parse->rootPath;

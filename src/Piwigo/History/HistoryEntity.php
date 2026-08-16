@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SearchId;
 use Piwigo\Common\ValueObject\SqlDate;
 use Piwigo\Common\ValueObject\SqlTime;
 use Piwigo\Common\ValueObject\UserId;
@@ -30,6 +31,12 @@ use Piwigo\Common\ValueObject\UserId;
  * use for their own genuinely-nullable columns): `''` round-trips to/from
  * PHP `null` instead of throwing, since `REMOTE_ADDR` is legitimately
  * unavailable on some real request paths (see `IpAddress`'s own docblock).
+ *
+ * `searchId` is `SearchId`-typed -- `fk_history_search_id`, `ON DELETE SET
+ * NULL`. `search.id` itself stays a plain `?int` primary key (out of
+ * `0.3`'s scope, same as `sites.id`). `HistoryRepository::search()`'s own
+ * `getArrayResult()` unwraps it via `instanceof`, same Gotcha #1 shape as
+ * `userId`/`categoryId`/`imageId` beside it.
  */
 #[ORM\Entity(repositoryClass: HistoryRepository::class)]
 #[ORM\Table(name: 'history')]
@@ -53,8 +60,8 @@ final class HistoryEntity
         public ?string $section,
         #[ORM\Column(name: 'category_id', type: 'category_id', nullable: true)]
         public ?CategoryId $categoryId,
-        #[ORM\Column(name: 'search_id', type: 'integer', nullable: true)]
-        public ?int $searchId,
+        #[ORM\Column(name: 'search_id', type: 'search_id', nullable: true)]
+        public ?SearchId $searchId,
         #[ORM\Column(name: 'tag_ids', type: 'string', length: 50, nullable: true)]
         public ?string $tagIds,
         #[ORM\Column(name: 'image_id', type: 'image_id', nullable: true)]

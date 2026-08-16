@@ -12,6 +12,7 @@ use Piwigo\Auth\LastVisitLookupInterface;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SearchId;
 use Piwigo\Common\ValueObject\SqlDate;
 use Piwigo\Common\ValueObject\SqlTime;
 use Piwigo\Common\ValueObject\UserId;
@@ -744,7 +745,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
                 ip: ($row['ip'] ?? null) instanceof IpAddress ? $row['ip']->value : '',
                 section: is_string($row['section'] ?? null) ? $row['section'] : null,
                 categoryId: ($row['categoryId'] ?? null) instanceof CategoryId ? $row['categoryId']->value : (is_numeric($row['categoryId'] ?? null) ? (int) $row['categoryId'] : null),
-                searchId: is_numeric($row['searchId'] ?? null) ? (int) $row['searchId'] : null,
+                searchId: ($row['searchId'] ?? null) instanceof SearchId ? $row['searchId']->value : (is_numeric($row['searchId'] ?? null) ? (int) $row['searchId'] : null),
                 tagIds: is_string($row['tagIds'] ?? null) ? $row['tagIds'] : null,
                 imageId: ($row['imageId'] ?? null) instanceof ImageId ? $row['imageId']->value : (is_numeric($row['imageId'] ?? null) ? (int) $row['imageId'] : null),
                 imageType: ($row['imageType'] ?? null) instanceof HistoryImageType ? $row['imageType']->value : null,
@@ -829,7 +830,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             ip: IpAddress::tryFrom($data['ip']),
             section: $data['section'],
             categoryId: $data['categoryId'] === null ? null : CategoryId::from($data['categoryId']),
-            searchId: $data['searchId'],
+            searchId: $data['searchId'] === null ? null : SearchId::from($data['searchId']),
             tagIds: $data['tagsString'],
             imageId: $data['imageId'] === null ? null : ImageId::from($data['imageId']),
             imageType: $data['imageType'] !== null ? HistoryImageType::tryFrom($data['imageType']) : null,

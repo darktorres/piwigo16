@@ -37,6 +37,7 @@ use Piwigo\Db\Type\LangCodeType;
 use Piwigo\Db\Type\Md5SumType;
 use Piwigo\Db\Type\PermalinkType;
 use Piwigo\Db\Type\PluginIdType;
+use Piwigo\Db\Type\SearchIdType;
 use Piwigo\Db\Type\SiteIdType;
 use Piwigo\Db\Type\SqlDateTimeType;
 use Piwigo\Db\Type\SqlDateType;
@@ -98,6 +99,7 @@ final class EntityManagerFactory
             'theme_id' => ThemeIdType::class,
             'plugin_id' => PluginIdType::class,
             'site_id' => SiteIdType::class,
+            'search_id' => SearchIdType::class,
             'lang_code' => LangCodeType::class,
             'email' => EmailType::class,
             'username' => UsernameType::class,

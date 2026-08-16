@@ -123,7 +123,7 @@ function pwgImageTestMakeSpy(string $sourceFilepath, int|float $width, int|float
     try {
         $img = pwgImageTestMake($sourceFilepath);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
     }
 
     return [$img, $spy];
@@ -150,7 +150,7 @@ function pwgImageTestMakeFileControlSpy(string $sourceFilepath, int|float $width
     try {
         $img = pwgImageTestMake($sourceFilepath);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
     }
 
     return [$img, $spy];
@@ -736,7 +736,7 @@ test('constructor uses a plugin-provided image instance and skips its own librar
         expect($img->library)
             ->toBe('');
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
     }
 });
 
@@ -1532,7 +1532,7 @@ test('getResizeResult reports a real, accurately-scaled elapsed-time measurement
             ->and($reportedMs)
             ->toBeLessThan(5000.0);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
     }
 });
 
@@ -1746,7 +1746,7 @@ test('destroy falls back to true when the underlying image has no destroy method
         expect($img->destroy())
             ->toBeTrue();
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
     }
 });
 
@@ -1834,6 +1834,6 @@ test('destroy coerces and genuinely forwards the underlying image\'s own destroy
         expect($img->destroy())
             ->toBeFalse();
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
     }
 });

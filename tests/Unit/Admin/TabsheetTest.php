@@ -217,7 +217,7 @@ test('select applies a tabsheet_before_select handler that filters and appends t
         expect($tabsheet->selected)
             ->toBe('added-by-handler');
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 
@@ -245,7 +245,7 @@ test('select discards a handler-returned entry that does not match the expected 
                 'general' => new TabSheetEntry('General', '/general'),
             ]);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 
@@ -278,7 +278,7 @@ test('select discards a well-shaped sheet entry keyed by an int, not just a malf
                 'general' => new TabSheetEntry('General', '/general'),
             ]);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 

@@ -279,7 +279,7 @@ final class MailServiceTest extends IntegrationTestCase
         try {
             $this->mailer->mail($to, $args, $tpl);
         } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(BeforeSendMail::class, $handler);
+            EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $handler);
         }
 
         if (! $capturedEmail instanceof Email) {
@@ -541,7 +541,7 @@ final class MailServiceTest extends IntegrationTestCase
 
             self::assertTrue($notified);
         } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(LoadingLang::class, $handler);
+            EventDispatcherTestFactory::get()->removeTypedHandler(LoadingLang::class, $handler);
             $this->mailer->switchLangBack();
         }
     }
@@ -958,7 +958,7 @@ final class MailServiceTest extends IntegrationTestCase
                 ]
             );
         } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(BeforeParseMailTemplate::class, $handler);
+            EventDispatcherTestFactory::get()->removeTypedHandler(BeforeParseMailTemplate::class, $handler);
         }
 
         self::assertSame('text/plain--clear', $capturedCacheKey);

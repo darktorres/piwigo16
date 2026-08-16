@@ -897,7 +897,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertNull($this->repo->findById((int) $categoryId));
                 self::assertNull($siteRepo->findGalleriesUrlById($siteId));
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(DeleteSite::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(DeleteSite::class, $handler);
             }
         }
 

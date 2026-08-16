@@ -716,7 +716,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * file uploads against an empty 'upload_file' handler chain. Registers
      * just the one handler this test needs directly instead, same
      * established pattern as RateServiceTest's own
-     * EventDispatcherTestFactory::get()->addEventHandler()/EventDispatcher::reset()
+     * EventDispatcherTestFactory::get()->addTypedHandler()/EventDispatcher::reset()
      * pair.
      */
     public function testAddUploadedFileStoresTheRepresentativeExtWhenAnUploadFileHandlerMatches(): void

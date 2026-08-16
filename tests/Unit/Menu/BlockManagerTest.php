@@ -269,7 +269,7 @@ test('prepareDisplay sorts display blocks before firing blockmanager_prepare_dis
     try {
         $manager->prepareDisplay();
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(BlockManagerPrepareDisplay::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(BlockManagerPrepareDisplay::class, $handler);
     }
 
     // Also proves the event actually fires with $this as the payload
@@ -303,7 +303,7 @@ test('prepareDisplay re-sorts after blockmanager_prepare_display handlers change
     try {
         $manager->prepareDisplay();
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(BlockManagerPrepareDisplay::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(BlockManagerPrepareDisplay::class, $handler);
     }
 
     $ids = [];

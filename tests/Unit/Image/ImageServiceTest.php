@@ -1213,7 +1213,7 @@ test('deleteElements() with physical deletion removing zero files never fires de
         expect($activityService->getOccuredOnForObject($blockedId, 'photo', 'delete'))
             ->toBeNull();
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(DeleteElements::class, $deleteHandler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(DeleteElements::class, $deleteHandler);
         chmod($root . '/upload/2026/07/locked3', 0o755);
         $conn->executeStatement('DELETE FROM images WHERE id = ?', [$blockedId]);
         imageServiceTestRrmdir($root);
@@ -1267,8 +1267,8 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
         expect($activityService->getOccuredOnForObject($imageId, 'photo', 'delete'))
             ->not->toBeNull();
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(BeginDeleteElements::class, $beginHandler);
-        EventDispatcherTestFactory::get()->removeEventHandler(DeleteElements::class, $deleteHandler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(BeginDeleteElements::class, $beginHandler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(DeleteElements::class, $deleteHandler);
     }
 });
 
@@ -1289,7 +1289,7 @@ test('deleteElements() with an empty id list never fires begin_delete_elements a
         expect($fired)
             ->toBeFalse();
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(BeginDeleteElements::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(BeginDeleteElements::class, $handler);
     }
 });
 
@@ -1943,7 +1943,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             // back to the plain string it was originally encoded as.
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('count_orphans'))->toBe('3');
         } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(EmptyLounge::class, $handler);
+            EventDispatcherTestFactory::get()->removeTypedHandler(EmptyLounge::class, $handler);
             $_REQUEST = $originalRequest;
             $conn->executeStatement('DELETE FROM image_category WHERE image_id IN (?, ?)', [$imageA, $imageB]);
             $conn->executeStatement('DELETE FROM lounge WHERE image_id IN (?, ?)', [$imageA, $imageB]);

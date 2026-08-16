@@ -1170,7 +1170,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertNotEmpty($beforeResult['lines']);
 
             $this->writeFixturePlugin($pluginId, <<<PHP
-                \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addEventHandler(
+                \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
                     \\Piwigo\\Event\\Ws\\GetHistory::class,
                     static function (\\Piwigo\\Event\\Ws\\GetHistory \$event): mixed {
                         \$fields = \$event->search['fields'] ?? null;

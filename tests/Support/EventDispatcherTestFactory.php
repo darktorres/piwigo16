@@ -11,7 +11,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 /**
  * Returns the container-shared instance once Kernel has booted. Before
  * boot, returns a memoized fallback instance: EventDispatcher accumulates
- * handler registrations across separate addEventHandler() calls and
+ * handler registrations across separate addTypedHandler() calls and
  * dispatches to them from other call sites, so a fresh instance per call
  * would silently lose every handler registered since the last call.
  */

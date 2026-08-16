@@ -816,8 +816,8 @@ test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarat
 test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_notify() calls', function (): void {
     // The free-function bridge (src/Piwigo/PluginConfig/functions.php) is
     // deleted -- every real call site takes EventDispatcher via
-    // constructor injection and calls
-    // {addEventHandler,addTypedHandler,dispatch}() directly. deptrac.yaml
+    // constructor injection and calls {addTypedHandler,removeTypedHandler,
+    // dispatch}() directly. deptrac.yaml
     // places EventDispatcher in L1Infrastructure (split from its
     // namespace-mate PluginRepository) since real callers live in
     // L1Infrastructure/L2aCoreDomain. Zero-tolerance, no allowlist needed.
@@ -833,136 +833,20 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
         ->toBe([]);
 });
 
-/**
- * Ensures every event dispatch uses a typed `SomeEvent::class` object
- * instead of a bare string key. Neither existing helper fits:
- * findCallSitesOutsideComments() blanks every
- * T_CONSTANT_ENCAPSED_STRING token -- including its surrounding quote
- * characters -- before searching, so a needle containing a literal `'`
- * would never match anything; countExitCallsPerFile() allowlists by
- * per-file *count*, not by which event name a call site names, so it
- * can't distinguish an allowlisted WS call from a missed conversion
- * sharing the same file. Token-aware instead: walk tokens for a
- * T_STRING matching addEventHandler (the one remaining string-keyed
- * registration method -- triggerChange()/triggerNotify() were deleted
- * outright, Finding 3 of the post-DI-campaign shim/facade audit, not
- * just retargeted), preceded by T_OBJECT_OPERATOR (`->`), then inspect
- * its first argument token. A converted call site's first argument is
- * `SomeEvent::class` -- a T_STRING/T_CLASS pair after T_DOUBLE_COLON, an
- * entirely different token shape -- and never matches the
- * T_CONSTANT_ENCAPSED_STRING check below, so it's never flagged
- * regardless of the class name chosen.
- *
- * @return list<array{path: string, line: int}>
- */
-function findStringKeyedDispatchCallSites(string $dir): array
-{
-    $hits = [];
-    if (! is_dir($dir)) {
-        return $hits;
-    }
-    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
-
-    $methodNames = ['addEventHandler'];
-
-    foreach ($iterator as $file) {
-        /** @var SplFileInfo $file RecursiveIteratorIterator loses this over RecursiveDirectoryIterator */
-        if (! $file->isFile() || $file->getExtension() !== 'php') {
-            continue;
-        }
-
-        $source = file_get_contents($file->getPathname());
-        if ($source === false) {
-            continue;
-        }
-        $hit = array_any($methodNames, fn (string $name): bool => str_contains($source, $name));
-        if (! $hit) {
-            continue;
-        }
-
-        $tokens = token_get_all($source);
-        $n = count($tokens);
-        for ($i = 0; $i < $n; $i++) {
-            $tok = $tokens[$i];
-            if (! is_array($tok) || $tok[0] !== T_STRING || ! in_array($tok[1], $methodNames, true)) {
-                continue;
-            }
-
-            $j = $i - 1;
-            while ($j >= 0 && is_array($tokens[$j]) && $tokens[$j][0] === T_WHITESPACE) {
-                $j--;
-            }
-            $prev = $j >= 0 ? $tokens[$j] : null;
-            if (! (is_array($prev) && $prev[0] === T_OBJECT_OPERATOR)) {
-                continue;
-            }
-
-            $k = $i + 1;
-            while ($k < $n && is_array($tokens[$k]) && $tokens[$k][0] === T_WHITESPACE) {
-                $k++;
-            }
-            if (! ($k < $n && is_string($tokens[$k]) && $tokens[$k] === '(')) {
-                continue;
-            }
-
-            $m = $k + 1;
-            while ($m < $n && is_array($tokens[$m]) && in_array($tokens[$m][0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
-                $m++;
-            }
-            $arg = $m < $n ? $tokens[$m] : null;
-            if (! (is_array($arg) && $arg[0] === T_CONSTANT_ENCAPSED_STRING)) {
-                continue; // SomeEvent::class or any other non-string-literal shape -- already converted
-            }
-
-            $hits[] = [
-                'path' => $file->getPathname(),
-                'line' => $tok[2],
-            ];
-        }
-    }
-
-    return $hits;
-}
-
-test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls', function (): void {
-    // Every real event dispatches through typed SomeEvent::class objects
-    // via addTypedHandler()/dispatch() -- including the 7
-    // WS-protocol-lifecycle events (get_history,
-    // ws_users_getList, ws_invoke_allowed, ws_add_methods,
-    // ws_images_uploadCompleted, sendResponse, merge_tags).
-    //
-    // 'trigger' (EventDispatcher's own internal meta-notification channel,
-    // previously allowlisted here as a "permanent" exception) is gone too
-    // (Finding 3, post-DI-campaign shim/facade audit): nothing ever
-    // registered a handler against it, so triggerChange()/triggerNotify()
-    // and all 4 'trigger'-self-notify call sites were deleted along with
-    // it -- findStringKeyedDispatchCallSites() no longer takes an
-    // allowlist param at all, not just an empty one.
-    $repoRoot = __DIR__ . '/../..';
-
-    $hits = findStringKeyedDispatchCallSites($repoRoot . '/src/Piwigo');
-
-    expect(describeCallSites($hits))
-        ->toBe([]);
-
-    // Paired with the assertion above, not a separate concern: P27.0 gives
-    // EventDispatcher real Psr\EventDispatcher\EventDispatcherInterface
-    // conformance via dispatch(), the single verb for both value-transform
-    // and fire-and-forget dispatch. An earlier version of this comment
-    // claimed dispatch() could "never become a delegation to a separate
-    // PSR-14 implementation (Symfony's concrete dispatcher included)",
-    // reasoning from the 'trigger' meta-channel's array-payload,
-    // string-keyed traffic -- but that reasoning was already stale when
-    // written: the same paragraph above confirms 'trigger' itself was
-    // already deleted (Finding 3, post-DI-campaign shim/facade audit),
-    // which is exactly what made P32 Stage A3's real delegation to
-    // Symfony\Component\EventDispatcher\EventDispatcher safe -- every
-    // event dispatched today is a real, typed object, never a bare
-    // string/array payload, so nothing here TypeErrors against PSR-14's
-    // object-only dispatch(object $event) signature. What this assertion
-    // still guards: a future change reintroducing string-keyed,
-    // non-object dispatch traffic (a new 'trigger'-shaped channel) would
-    // break that assumption again.
+test('EventDispatcher implements real PSR-14 EventDispatcherInterface conformance', function (): void {
+    // P27.0 gives EventDispatcher real Psr\EventDispatcher\
+    // EventDispatcherInterface conformance via dispatch(), the single verb
+    // for both value-transform and fire-and-forget dispatch. This used to
+    // be paired with a token-walking scan for string-keyed
+    // ->addEventHandler(...) call sites (the one remaining string-keyed
+    // registration method, back when it still existed) -- P32 Stage A4
+    // deleted addEventHandler()/removeEventHandler()/includePath/
+    // callablesEqual() outright, once every real caller had migrated onto
+    // addTypedHandler()/removeTypedHandler(), so that scan is now
+    // redundant with what composer analyse (PHPStan, whole codebase,
+    // level 10) already guarantees for free: calling a method that no
+    // longer exists is a real static-analysis error, not something this
+    // test needs to duplicate by hand.
     expect(new ReflectionClass(EventDispatcher::class)->implementsInterface(EventDispatcherInterface::class))
         ->toBeTrue();
 });

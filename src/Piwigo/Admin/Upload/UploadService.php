@@ -66,14 +66,19 @@ use Piwigo\Users\CurrentUser;
  * The 6 upload_file_* representative-generation handlers are ordinary
  * instance methods, registered once (`RequestBootstrap.php`) against the
  * container-shared instance. This class is now resolved from the
- * container everywhere -- including its own 4 real call sites, which
- * used to each construct a fresh instance -- so
- * `EventDispatcher::callablesEqual()`'s closure-identity dedup (compares
- * a first-class-callable closure's `getClosureThis()`) always sees the
- * *same* bound object regardless of caller, the same way it already did
- * for every other instance-method event handler in this codebase.
- * `__construct()` is 100% `readonly` properties, so sharing one instance
- * carries no mutable-state risk.
+ * container everywhere -- including its own 4 real call sites, which used
+ * to each construct a fresh instance -- for the same reason every other
+ * DI-managed service is: one shared instance per request instead of
+ * several redundant ones, standard container hygiene. An earlier version
+ * of this docblock justified the sharing by `EventDispatcher::
+ * callablesEqual()`'s closure-identity dedup, deleted in P32 Stage A4
+ * along with the rest of the untyped event API (Symfony's own
+ * `addListener()` has no dedup at all -- registering the same callable
+ * twice now just runs it twice) -- that reasoning was already secondary
+ * in practice, since `RequestBootstrap::finalize()` registers this
+ * listener exactly once per request regardless. `__construct()` is 100%
+ * `readonly` properties, so sharing one instance carries no
+ * mutable-state risk either way.
  */
 final readonly class UploadService
 {

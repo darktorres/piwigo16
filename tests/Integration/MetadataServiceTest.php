@@ -472,7 +472,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertSame('plugin-override', $result);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(CleanIptcValue::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(CleanIptcValue::class, $handler);
             }
         }
 
@@ -545,7 +545,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertEqualsWithDelta(41.9027, $result['latitude'], 0.001);
                 self::assertEqualsWithDelta(12.5, $result['longitude'], 0.001);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
             }
         }
 
@@ -575,7 +575,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertArrayNotHasKey('latitude', $result);
                 self::assertArrayNotHasKey('longitude', $result);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
             }
         }
 
@@ -601,7 +601,7 @@ namespace Piwigo\Tests\Integration {
                     'multi' => ['one', 'two'],
                 ], $result);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
             }
         }
 
@@ -627,7 +627,7 @@ namespace Piwigo\Tests\Integration {
                     'author' => 'alert(1)Jane',
                 ], $result);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
             }
         }
 
@@ -748,7 +748,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertSame('2024-03-15 10:20:30', $result['date_creation']);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
             }
         }
 
@@ -775,7 +775,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertSame('2024-03-15', $result['date_creation']);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
             }
         }
 
@@ -805,7 +805,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertArrayNotHasKey('date_creation', $result);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
             }
         }
 
@@ -830,7 +830,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertArrayNotHasKey('date_creation', $result);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
             }
         }
 
@@ -855,7 +855,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertSame('nature,travel,family', $result['keywords']);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
             }
         }
 
@@ -910,7 +910,7 @@ namespace Piwigo\Tests\Integration {
                     'representative_ext' => 'jpg',
                 ]);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
                 @unlink($representativeDir . '/tiff-original.jpg');
                 @rmdir($representativeDir);
             }

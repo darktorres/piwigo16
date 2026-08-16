@@ -682,7 +682,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
             self::assertSame([[403, 'Forbidden']], $captured);
         } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
+            EventDispatcherTestFactory::get()->removeTypedHandler(SetStatusHeader::class, $handler);
             unset($_POST['content'], $_POST['key']);
         }
     }

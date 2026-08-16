@@ -483,7 +483,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertFalse($result);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(FinalizeLogin::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(FinalizeLogin::class, $handler);
                 $this->conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
             }
         }

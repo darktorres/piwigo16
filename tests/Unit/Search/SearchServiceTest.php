@@ -1860,7 +1860,7 @@ test('qsearchGetImages() dispatches the hook for an unrecognized scope and appli
 
         expect($qsr->images_iids[0])->toBe([1]);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
     }
 });
 
@@ -1886,7 +1886,7 @@ test('qsearchGetImages() merges params from multiple hook clauses', function ():
         expect($imageIds)
             ->toBe([1, 2]);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
     }
 });
 
@@ -2203,7 +2203,7 @@ test('getQuickSearchResultsNoCache() falls back when a hook returns non-array it
         $results = searchServiceTestService()
             ->getQuickSearchResultsNoCache('family', []);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(QsearchResults::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(QsearchResults::class, $handler);
     }
 
     // The hook only corrupts $searchResults['items']/['qs'] -- both
@@ -2230,7 +2230,7 @@ test('getQuickSearchResultsNoCache() merges extra numeric ids from a plugin hook
         $results = searchServiceTestService()
             ->getQuickSearchResultsNoCache('family', []);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(QsearchResults::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(QsearchResults::class, $handler);
     }
 
     $items = $results['items'];

@@ -15,10 +15,12 @@ use Piwigo\Event\Picture\UploadFile;
  * `addTypedHandler()` already supports multiple handlers per event, so
  * this is one listener with 6 methods, not 6 separate classes.
  * `UploadService` is a real constructor dependency (not a static call) --
- * `RequestBootstrap` passes its own container-resolved instance so
- * `EventDispatcher::callablesEqual()`'s closure-identity dedup sees the
- * same bound object as every other real `UploadService` consumer, see
- * that class's own docblock.
+ * `RequestBootstrap` passes its own container-resolved instance, the
+ * same one every other real `UploadService` consumer gets, standard
+ * container hygiene rather than an event-dedup concern -- see that
+ * class's own docblock (P32 Stage A4 deleted `EventDispatcher::
+ * callablesEqual()`'s closure-identity dedup, which an earlier version
+ * of this docblock cited instead).
  */
 final readonly class UploadFormatListener implements ListenerInterface
 {

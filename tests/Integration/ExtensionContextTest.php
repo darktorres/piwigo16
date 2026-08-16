@@ -350,7 +350,7 @@ final class ExtensionContextTest extends IntegrationTestCase
                 'content' => 'hello from ExtensionContext::mail()',
             ]);
         } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(BeforeSendMail::class, $handler);
+            EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $handler);
         }
 
         if (! $capturedEmail instanceof Email) {

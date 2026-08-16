@@ -1396,7 +1396,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertSame([1], $qsr->images_iids[0]);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
             }
         }
 
@@ -1421,7 +1421,7 @@ namespace Piwigo\Tests\Integration {
                 sort($imageIds);
                 self::assertSame([1, 2], $imageIds);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
             }
         }
 
@@ -1568,7 +1568,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $results = $this->service->getQuickSearchResultsNoCache('family', []);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(QsearchResults::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(QsearchResults::class, $handler);
             }
 
             // The hook only corrupts $searchResults['items']/['qs'] -- both
@@ -1595,7 +1595,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $results = $this->service->getQuickSearchResultsNoCache('family', []);
             } finally {
-                EventDispatcherTestFactory::get()->removeEventHandler(QsearchResults::class, $handler);
+                EventDispatcherTestFactory::get()->removeTypedHandler(QsearchResults::class, $handler);
             }
 
             $items = $results['items'];

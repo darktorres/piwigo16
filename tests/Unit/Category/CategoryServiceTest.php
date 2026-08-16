@@ -908,7 +908,7 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
             expect($siteRepo->findGalleriesUrlById($siteId))
                 ->toBeNull();
         } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(DeleteSite::class, $handler);
+            EventDispatcherTestFactory::get()->removeTypedHandler(DeleteSite::class, $handler);
         }
     } finally {
         if ($categoryId !== null) {

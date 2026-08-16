@@ -112,7 +112,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
         }
         expect($capturedArgs['subject'] ?? null)->toBe('Test Subject');
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $eventHandler);
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
     }

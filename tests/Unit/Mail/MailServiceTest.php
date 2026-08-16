@@ -151,7 +151,7 @@ function mail_service_capture_send(MailService $service, string|array $to, array
     try {
         $return = $service->mail($to, $args, $tpl);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $eventHandler);
     }
 
     if (! is_array($capturedArgs) || ! $capturedEmail instanceof Email) {
@@ -819,7 +819,7 @@ test('generateResetPasswordMail uses the render_lost_password_mail_content handl
     try {
         $mail = $service->generateResetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '2 hours');
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(RenderLostPasswordMailContent::class, $handler);
     }
 
     expect($mail->content)
@@ -856,7 +856,7 @@ test('generateSetPasswordMail uses the render_lost_password_mail_content handler
     try {
         $mail = $service->generateSetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '48 hours');
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(RenderLostPasswordMailContent::class, $handler);
     }
 
     expect($mail->content)
@@ -1459,7 +1459,7 @@ test('mail fires the before_parse_mail_template event with the real cache key an
             'content' => 'y',
         ]);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(BeforeParseMailTemplate::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(BeforeParseMailTemplate::class, $handler);
     }
 
     expect($capturedContentType)
@@ -1833,7 +1833,7 @@ test('switchLangTo fires the loading_lang event while reloading a language for t
     try {
         $service->switchLangTo('fr_FR');
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(LoadingLang::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(LoadingLang::class, $handler);
     }
 
     expect($fired)
@@ -1884,7 +1884,7 @@ test('switchLangTo reuses its own cache for a language already switched to once,
     try {
         $service->switchLangTo('fr_FR');
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(LoadingLang::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(LoadingLang::class, $handler);
     }
 
     expect($loadingLangCalls)

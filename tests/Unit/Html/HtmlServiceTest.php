@@ -804,7 +804,7 @@ test('renderElementDescription never triggers render_element_description for a g
             'comment' => '',
         ]))->toBe('');
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(RenderElementDescription::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(RenderElementDescription::class, $handler);
     }
 });
 
@@ -1622,7 +1622,7 @@ test('setStatusHeader resolves the exact well-known reason phrase for every know
         expect($captured)
             ->toBe($expected);
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(SetStatusHeader::class, $handler);
     }
 });
 
@@ -1644,7 +1644,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
         expect($captured)
             ->toBe('My Custom Reason');
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(SetStatusHeader::class, $handler);
     }
 });
 

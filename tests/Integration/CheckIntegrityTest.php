@@ -48,8 +48,8 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * check() overwrites $this->retrieve_list from the 'list_check_integrity'
  * event on every call (there is no other way to populate it) -- this
  * suite registers its own throwaway `[self::class, 'pushQueuedAnomalies']`
- * handler (an array callable, so EventDispatcher's own dedup-by-identity
- * removeEventHandler() call in tearDown() finds and removes exactly it,
+ * handler (an array callable, comparable by value, so the matching
+ * removeTypedHandler() call in tearDown() finds and removes exactly it,
  * never touching any other real handler this process might have
  * registered) instead of exercising the real, DB/filesystem-scanning
  * C13yInternal checks.
@@ -119,7 +119,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        EventDispatcherTestFactory::get()->removeEventHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
+        EventDispatcherTestFactory::get()->removeTypedHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
         DbConnection::build()->executeStatement('DELETE FROM integrity_ignored_anomalies');
         CurrentTemplateTestFactory::get()->reset();

@@ -167,7 +167,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn));
         } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(GetPwgThemes::class, $handler);
+            EventDispatcherTestFactory::get()->removeTypedHandler(GetPwgThemes::class, $handler);
         }
 
         // The suffix only lands if the handler actually received 'default'

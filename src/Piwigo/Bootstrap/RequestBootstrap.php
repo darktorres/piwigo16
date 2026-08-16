@@ -448,9 +448,9 @@ final class RequestBootstrap
         // self::uploadService() resolves the container-shared instance --
         // see that method's own docblock for why every real UploadService
         // consumer (this listener included) now resolves the same object
-        // instead of constructing its own, which is what makes
-        // EventDispatcher::callablesEqual()'s closure-identity dedup work
-        // correctly across repeated registrations.
+        // instead of constructing its own (standard container hygiene,
+        // not an event-dedup concern -- EventDispatcher::callablesEqual()
+        // is gone, deleted in P32 Stage A4).
         self::registerListener(new UploadFormatListener(self::uploadService()));
         self::eventDispatcher()->dispatch(new Init());
 
@@ -1107,13 +1107,14 @@ final class RequestBootstrap
 
     /**
      * bootEventHandlers()'s own sole caller -- registers its 6
-     * uploadFileXxx() handlers against this container-shared instance so
-     * EventDispatcher::callablesEqual()'s closure-identity dedup sees the
-     * same bound object as every other real UploadService consumer
+     * uploadFileXxx() handlers against this container-shared instance, the
+     * same one every other real UploadService consumer
      * (Admin\PhotosAddDirectPageRenderer, Job\Handler\BatchUploadHandler,
      * Controller\Admin\ConfigurationSubController,
-     * Controller\Admin\PhotosAddSubController), which now all resolve
-     * this same instance instead of constructing their own.
+     * Controller\Admin\PhotosAddSubController) now resolves too, instead
+     * of each constructing its own -- standard container hygiene, not an
+     * event-dedup concern (EventDispatcher::callablesEqual() is gone,
+     * deleted in P32 Stage A4).
      */
     private static function uploadService(): UploadService
     {

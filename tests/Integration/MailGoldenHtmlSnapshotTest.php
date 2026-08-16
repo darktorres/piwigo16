@@ -174,7 +174,7 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
         try {
             $this->mailer->mail($to, $args, $tpl);
         } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(BeforeSendMail::class, $handler);
+            EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $handler);
         }
 
         if (! $captured instanceof Email) {
@@ -203,7 +203,7 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
         try {
             $this->mailer->mailNotificationAdmins($subject, $content);
         } finally {
-            EventDispatcherTestFactory::get()->removeEventHandler(BeforeSendMail::class, $handler);
+            EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $handler);
         }
 
         if (! $captured instanceof Email) {

@@ -432,7 +432,7 @@ test('pwgLogin() denies the login when a FinalizeLogin handler blocks it', funct
         expect(authServiceTestPwgLoginResult(false, 'fixture_admin', 'fixture_admin', false))
             ->toBeFalse();
     } finally {
-        EventDispatcherTestFactory::get()->removeEventHandler(FinalizeLogin::class, $handler);
+        EventDispatcherTestFactory::get()->removeTypedHandler(FinalizeLogin::class, $handler);
     }
 });
 

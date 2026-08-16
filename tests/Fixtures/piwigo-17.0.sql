@@ -26,7 +26,7 @@ DROP TABLE IF EXISTS `activity`;
 CREATE TABLE `activity` (
   `activity_id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `object` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'entity type the action applies to, e.g. user, photo, album, tag, plugin',
-  `object_id` int NOT NULL COMMENT 'id of the affected object, or the target user id on a logout action',
+  `object_id` int NOT NULL COMMENT 'id of the affected object, or the target user id on a logout action -- the durable record of which row this was about, kept when the typed reference column beside it is nulled by a deletion',
   `action` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'action verb, e.g. add, delete, login, logout, autoupdate',
   `performed_by` int DEFAULT NULL COMMENT 'acting user id, null for an unresolved or system actor',
   `session_idx` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'PHP session id active during the request, or none if there was no session',
@@ -466,8 +466,8 @@ CREATE TABLE `history_summary` (
   `day` tinyint DEFAULT NULL COMMENT 'rollup day, null for a year- or month-level summary row',
   `hour` tinyint DEFAULT NULL COMMENT 'rollup hour, null for a year-, month-, or day-level summary row',
   `nb_pages` int DEFAULT NULL COMMENT 'number of history page-views folded into this summary row',
-  `history_id_from` int DEFAULT NULL COMMENT 'lowest history.id folded into this summary row',
-  `history_id_to` int DEFAULT NULL COMMENT 'highest history.id folded into this summary row, the next run resumes past this id',
+  `history_id_from` int DEFAULT NULL COMMENT 'lowest history.id folded into this summary row -- a watermark, not a reference: autopurge deliberately deletes the history rows this range covers, so no foreign key can exist here',
+  `history_id_to` int DEFAULT NULL COMMENT 'highest history.id folded into this summary row, the next run resumes past this id -- a watermark, not a reference, and autopurge cursors on it, so it must survive the purge it drives',
   PRIMARY KEY (`summary_id`),
   UNIQUE KEY `history_summary_ymdh` (`year`,`month`,`day`,`hour`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='year/month/day/hour rollup of history, one row per granularity level, letting old detail rows be purged';
@@ -589,7 +589,7 @@ CREATE TABLE `images` (
   `rating_score` float(5,2) DEFAULT NULL COMMENT 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore',
   `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'full relative filesystem path to the original file',
   `storage_category_id` int DEFAULT NULL COMMENT 'album the file is physically stored under, distinct from possibly multiple image_category memberships',
-  `level` smallint NOT NULL DEFAULT '0' COMMENT 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels',
+  `level` smallint NOT NULL DEFAULT '0' COMMENT 'minimum permission level required to view the image, see Images::setPrivacyLevel and available_permission_levels',
   `md5sum` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'MD5 checksum of the original file, computed lazily for duplicate detection',
   `added_by` int DEFAULT NULL COMMENT 'uploading user id',
   `rotation` smallint DEFAULT NULL COMMENT 'pending quarter-turn rotation to apply when rendering, 0 to 3',

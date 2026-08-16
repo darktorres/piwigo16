@@ -18,7 +18,7 @@
 CREATE TABLE `activity` (
   `activity_id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
   `object` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'entity type the action applies to, e.g. user, photo, album, tag, plugin',
-  `object_id` int NOT NULL COMMENT 'id of the affected object, or the target user id on a logout action',
+  `object_id` int NOT NULL COMMENT 'id of the affected object, or the target user id on a logout action -- the durable record of which row this was about, kept when the typed reference column beside it is nulled by a deletion',
   `action` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'action verb, e.g. add, delete, login, logout, autoupdate',
   `performed_by` int DEFAULT NULL COMMENT 'acting user id, null for an unresolved or system actor',
   `session_idx` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'PHP session id active during the request, or none if there was no session',
@@ -253,8 +253,8 @@ CREATE TABLE `history_summary` (
   `day` tinyint DEFAULT NULL COMMENT 'rollup day, null for a year- or month-level summary row',
   `hour` tinyint DEFAULT NULL COMMENT 'rollup hour, null for a year-, month-, or day-level summary row',
   `nb_pages` int DEFAULT NULL COMMENT 'number of history page-views folded into this summary row',
-  `history_id_from` int DEFAULT NULL COMMENT 'lowest history.id folded into this summary row',
-  `history_id_to` int DEFAULT NULL COMMENT 'highest history.id folded into this summary row, the next run resumes past this id',
+  `history_id_from` int DEFAULT NULL COMMENT 'lowest history.id folded into this summary row -- a watermark, not a reference: autopurge deliberately deletes the history rows this range covers, so no foreign key can exist here',
+  `history_id_to` int DEFAULT NULL COMMENT 'highest history.id folded into this summary row, the next run resumes past this id -- a watermark, not a reference, and autopurge cursors on it, so it must survive the purge it drives',
   PRIMARY KEY (`summary_id`),
   UNIQUE KEY `history_summary_ymdh` (`year`,`month`,`day`,`hour`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='year/month/day/hour rollup of history, one row per granularity level, letting old detail rows be purged';

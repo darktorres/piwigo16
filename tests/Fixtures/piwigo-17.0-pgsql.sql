@@ -228,7 +228,7 @@ COMMENT ON COLUMN public.activity.object IS 'entity type the action applies to, 
 -- Name: COLUMN activity.object_id; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
 --
 
-COMMENT ON COLUMN public.activity.object_id IS 'id of the affected object, or the target user id on a logout action';
+COMMENT ON COLUMN public.activity.object_id IS 'id of the affected object, or the target user id on a logout action -- the durable record of which row this was about, kept when the typed reference column beside it is nulled by a deletion';
 
 
 --
@@ -1283,14 +1283,14 @@ COMMENT ON COLUMN public.history_summary.nb_pages IS 'number of history page-vie
 -- Name: COLUMN history_summary.history_id_from; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
 --
 
-COMMENT ON COLUMN public.history_summary.history_id_from IS 'lowest history.id folded into this summary row';
+COMMENT ON COLUMN public.history_summary.history_id_from IS 'lowest history.id folded into this summary row -- a watermark, not a reference: autopurge deliberately deletes the history rows this range covers, so no foreign key can exist here';
 
 
 --
 -- Name: COLUMN history_summary.history_id_to; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
 --
 
-COMMENT ON COLUMN public.history_summary.history_id_to IS 'highest history.id folded into this summary row, the next run resumes past this id';
+COMMENT ON COLUMN public.history_summary.history_id_to IS 'highest history.id folded into this summary row, the next run resumes past this id -- a watermark, not a reference, and autopurge cursors on it, so it must survive the purge it drives';
 
 
 --
@@ -1610,7 +1610,7 @@ COMMENT ON COLUMN public.images.storage_category_id IS 'album the file is physic
 -- Name: COLUMN images.level; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
 --
 
-COMMENT ON COLUMN public.images.level IS 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels';
+COMMENT ON COLUMN public.images.level IS 'minimum permission level required to view the image, see Images::setPrivacyLevel and available_permission_levels';
 
 
 --

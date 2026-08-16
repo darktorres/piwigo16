@@ -68,7 +68,7 @@ COMMENT ON COLUMN public.activity.object IS 'entity type the action applies to, 
 -- Name: COLUMN activity.object_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.activity.object_id IS 'id of the affected object, or the target user id on a logout action';
+COMMENT ON COLUMN public.activity.object_id IS 'id of the affected object, or the target user id on a logout action -- the durable record of which row this was about, kept when the typed reference column beside it is nulled by a deletion';
 
 --
 -- Name: COLUMN activity.action; Type: COMMENT; Schema: public; Owner: -
@@ -971,13 +971,13 @@ COMMENT ON COLUMN public.history_summary.nb_pages IS 'number of history page-vie
 -- Name: COLUMN history_summary.history_id_from; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.history_summary.history_id_from IS 'lowest history.id folded into this summary row';
+COMMENT ON COLUMN public.history_summary.history_id_from IS 'lowest history.id folded into this summary row -- a watermark, not a reference: autopurge deliberately deletes the history rows this range covers, so no foreign key can exist here';
 
 --
 -- Name: COLUMN history_summary.history_id_to; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.history_summary.history_id_to IS 'highest history.id folded into this summary row, the next run resumes past this id';
+COMMENT ON COLUMN public.history_summary.history_id_to IS 'highest history.id folded into this summary row, the next run resumes past this id -- a watermark, not a reference, and autopurge cursors on it, so it must survive the purge it drives';
 
 --
 -- Name: history_summary_summary_id_seq; Type: SEQUENCE; Schema: public; Owner: -

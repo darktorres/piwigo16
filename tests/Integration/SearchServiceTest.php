@@ -9,6 +9,7 @@ namespace Piwigo\Tests\Integration {
     use Exception;
     use LogicException;
     use Override;
+    use Piwigo\Db\SortRenderer;
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Bootstrap\RedirectService;
     use Piwigo\Cache\SearchResultsCachePool;
@@ -41,7 +42,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Search\SearchService;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
-    use Piwigo\Sort\OrderBy;
+    use Piwigo\Common\ValueObject\PhotoSortOrder;
     use Piwigo\Tag\TagService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -348,7 +349,7 @@ namespace Piwigo\Tests\Integration {
                     'default' => false,
                 ],
             ]);
-            $currentConfig->orderBy = OrderBy::fromConfigFragment('ORDER BY id ASC');
+            $currentConfig->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY id ASC');
             $currentConfig->calendarDatefield = 'date_creation';
             $currentConfig->quickSearchIncludeSubAlbums = false;
             $currentConfig->rateEnabled = true;
@@ -374,6 +375,7 @@ namespace Piwigo\Tests\Integration {
                 EventDispatcherTestFactory::get(),
                 CurrentUserTestFactory::get(),
                 CurrentConfigTestFactory::get(),
+                new SortRenderer($this->conn),
                 $this->tagService(),
                 $this->userService(),
                 $this->preferencesService(),
@@ -464,6 +466,7 @@ namespace Piwigo\Tests\Integration {
                 EventDispatcherTestFactory::get(),
                 CurrentUserTestFactory::get(),
                 CurrentConfigTestFactory::get(),
+                new SortRenderer($this->conn),
                 $this->tagService(),
                 $this->userService(),
                 $this->preferencesService(),

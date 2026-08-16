@@ -12,6 +12,7 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
@@ -31,7 +32,6 @@ use Piwigo\Image\Projection\MissingDerivativeRow;
 use Piwigo\Image\Projection\MostRecentCategoryInfo;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
-use Piwigo\Sort\PhotoSortField;
 
 final class ImageRepositoryTest extends IntegrationTestCase
 {
@@ -1695,7 +1695,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // ranks (1,2,3) match the id order exactly, so they are inverted
         // here to make the assertion discriminate between rank-ordering and
         // id-ordering rather than passing either way.
-        $rankOrderBy = 'ORDER BY ' . PhotoSortField::Rank->column() . ' ASC';
+        $rankOrderBy = 'ORDER BY ' . new SortRenderer($this->conn)->rankColumn() . ' ASC';
 
         $this->conn->beginTransaction();
 

@@ -39,23 +39,28 @@ deptrac:
     # Storage/Audit above, so L1Infrastructure is both the lowest layer
     # that covers every real caller and the architecturally correct fit.
     # Its namespace-mate PluginRepository stays in L2bExtendedDomain (see
-    # its own comment there). Any future class added to this namespace
-    # needs the same deliberate placement, not a silent gap.
-    # Piwigo\Sort\{OrderBy,OrderByClause,PhotoSortField} is the photo
-    # sort-order vocabulary and its SQL/DQL rendering. It lives here, not in
-    # L2aCoreDomain, because it meets this layer's own criterion exactly:
-    # its only dependencies are Piwigo\Db\{SqlDialect,DbCredentials}, and
-    # what it actually produces is SQL column names, dialect-specific
-    # functions (RAND()/RANDOM()) and DQL property paths -- persistence
-    # rendering, not domain logic. It previously sat in Piwigo\Image\ purely
-    # by namespace, which made L1 Config\{CurrentConfig,ConfigService}
-    # depend upward on L2a once the order-by config properties became typed
-    # (16 violations). Moving it here fixes that at the layer level rather
-    # than exempting the edge.
+    # its own comment there). EventHandler (EventDispatcher's own
+    # handler-registration DTO, constructed only by EventDispatcher
+    # itself) rides along in the same collector -- without it, this
+    # class would have no layer at all and every dependency touching it
+    # would go unchecked. Any future class added to this namespace needs
+    # the same deliberate placement, not a silent gap.
+    # The photo sort order used to live in a Piwigo\Sort namespace collected
+    # here, because it fused two jobs: naming sort fields (vocabulary) and
+    # emitting SQL columns, dialect functions and DQL paths (rendering). The
+    # rendering half is what pinned it to this layer, and the vocabulary half
+    # is what L1 Config\{CurrentConfig,ConfigService} actually needs -- so
+    # the whole thing sat in L1 to satisfy the stricter of the two.
+    # It is now split along that seam: Piwigo\Common\ValueObject\
+    # {PhotoSortOrder,PhotoSortField} is pure vocabulary with zero
+    # dependencies (L0Data, where Config may depend on it downward), and
+    # Piwigo\Db\{SortRenderer,OrderByClause} holds the Connection and does
+    # the rendering (L1, where L2a repositories may use it). No namespace
+    # needs a special placement here any more.
     - name: L1Infrastructure
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Lang|Sort|Storage|Audit|Validation)\\.*
+          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Lang|Storage|Audit|Validation)\\.*
         - type: classLike
           value: ^Piwigo\\PluginConfig\\EventDispatcher$
     # L2a Core Domain — Piwigo\Group\GroupRepository/GroupService sits at

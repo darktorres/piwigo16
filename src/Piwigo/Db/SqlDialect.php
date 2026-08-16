@@ -66,7 +66,21 @@ final class SqlDialect
      */
     public static function randomFunction(): string
     {
-        if (self::isPostgres()) {
+        return self::randomFunctionFor(self::isPostgres());
+    }
+
+    /**
+     * {@see randomFunction()} with the platform supplied rather than read
+     * from the environment, so a caller that already holds a real
+     * `Connection` can use its platform instead
+     * ({@see SortRenderer::randomExpression()}).
+     *
+     * The seeding policy lives here, in one place, rather than being
+     * duplicated by each caller that knows its own platform.
+     */
+    public static function randomFunctionFor(bool $isPostgres): string
+    {
+        if ($isPostgres) {
             return 'RANDOM()';
         }
 

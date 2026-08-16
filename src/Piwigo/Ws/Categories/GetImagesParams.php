@@ -19,7 +19,7 @@ use Piwigo\Ws\WsParams;
  * own registration) stay in the raw `$params` array and are read
  * directly by `ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()`;
  * `order` is read directly by `GetImagesHandler` itself via
- * {@see \Piwigo\Sort\OrderBy::fromWsOrderParam()} -- no need to
+ * {@see \Piwigo\Common\ValueObject\PhotoSortOrder::fromWsOrderParam()} -- no need to
  * duplicate either shape here.
  *
  * `cat_id`: `FORCE_ARRAY` + `WsParamType::INT | WsParamType::POSITIVE`,

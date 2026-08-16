@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
+use Piwigo\Db\SortRenderer;
 use Doctrine\DBAL\ArrayParameterType;
 use Exception;
 use LogicException;
@@ -32,7 +33,7 @@ use Piwigo\Search\Event\QsearchResults;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\Projection\Search;
 use Piwigo\Session\SessionService;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Tag\Event\RenderTagName;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -78,6 +79,7 @@ final readonly class SearchService
         private EventDispatcher $eventDispatcher,
         private CurrentUser $currentUser,
         private readonly CurrentConfig $currentConfig,
+        private SortRenderer $sortRenderer,
         private TagService $tagService,
         private UserService $userService,
         private PreferencesService $preferencesService,
@@ -507,7 +509,7 @@ final readonly class SearchService
         if (count($items) > 1) {
             // CurrentConfig::orderBy() (the typed SCHEMA accessor) models a
             // structured {field,dir}[] shape that no real code writes --
-            $orderBy = $this->currentConfig->orderBy->toSql();
+            $orderBy = $this->sortRenderer->toSql($this->currentConfig->orderBy);
             $items = $this->repo->findIdsByClause('id', 'images i', 'id IN (' . implode(',', array_fill(0, count($items), '?')) . ') ' . $orderBy, $items);
         }
 
@@ -1433,7 +1435,7 @@ final readonly class SearchService
      * @param  array<string, mixed>  $options
      * @return array<string, mixed>
      */
-    public function getQuickSearchResults(string $q, array $options, ?OrderBy $orderByOverride = null): array
+    public function getQuickSearchResults(string $q, array $options, ?PhotoSortOrder $orderByOverride = null): array
     {
         $user = $this->currentUser->get();
 
@@ -1475,7 +1477,7 @@ final readonly class SearchService
      * @param  array<string, mixed>  $options
      * @return array{items: array<int, mixed>, qs: array<string, mixed>, debug: list<string>, ...<string, mixed>}
      */
-    public function getQuickSearchResultsNoCache(string $q, array $options, ?OrderBy $orderByOverride = null): array
+    public function getQuickSearchResultsNoCache(string $q, array $options, ?PhotoSortOrder $orderByOverride = null): array
     {
         $q = trim($q);
         $searchResults = [
@@ -1665,8 +1667,7 @@ final readonly class SearchService
         // its own docblock), so `GROUP BY id` (functionally dependent via
         // the primary key) replaces DISTINCT here, same fix as
         // CalendarRepository::findImageIds().
-        $orderBy = ($orderByOverride ?? $this->currentConfig->orderBy)
-            ->toSql();
+        $orderBy = $this->sortRenderer->toSql($orderByOverride ?? $this->currentConfig->orderBy);
         $whereSql = (string) $this->repo->expressionBuilder()
             ->and(...$whereClauses);
         $ids = $this->repo->findIdsByClause('id', $from, $whereSql . "\nGROUP BY id\n" . $orderBy, $params);

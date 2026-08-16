@@ -14,13 +14,13 @@ namespace Piwigo\Ws\Tags;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\Event\RenderElementDescription;
 use Piwigo\Html\Event\RenderElementName;
 use Piwigo\Image\ImageEntity;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Sort\OrderBy;
 use Piwigo\Tag\TagService;
 use Piwigo\Ws\ImageFilterCriteriaBuilder;
 use Piwigo\Ws\ImageUrlBuilder;
@@ -79,7 +79,7 @@ final readonly class GetImagesHandler implements WsAction
             return $filterCriteria;
         }
 
-        $orderBy = OrderBy::fromWsOrderParam($filterParams['order'] ?? '');
+        $orderBy = PhotoSortOrder::fromWsOrderParam($filterParams['order'] ?? '');
         $image_ids = $tagService->getImageIdsForTags(
             array_map(TagId::from(...), $tag_ids),
             $input->tagModeAnd ? 'AND' : 'OR',

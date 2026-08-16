@@ -54,8 +54,8 @@ use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
-use Piwigo\Sort\OrderByClause;
-use Piwigo\Sort\PhotoSortField;
+use Piwigo\Db\OrderByClause;
+use Piwigo\Db\SortRenderer;
 
 /**
  * Persistence layer for the category domain: tree/menu queries, permalink
@@ -111,6 +111,17 @@ final readonly class CategoryRepository
         private EntityManagerInterface $em,
         private CurrentConfig $currentConfig,
     ) {}
+
+    /**
+     * Built from the connection this repository already holds rather than
+     * constructor-injected: {@see SortRenderer} is stateless apart from that
+     * connection, and adding a parameter here would mean touching every
+     * `new CategoryRepository(...)` site (113 of them) for no behavioural gain.
+     */
+    private function sortRenderer(): SortRenderer
+    {
+        return new SortRenderer($this->em->getConnection());
+    }
 
     private function find(CategoryId $id): ?CategoryEntity
     {
@@ -411,7 +422,7 @@ final readonly class CategoryRepository
      * `level <= x` check in the old `getSqlConditionFandFAsCondition()`
      * mapping, so maxLevel applies here too, against `i.level`).
      *
-     * Runs real DQL whenever {@see \Piwigo\Sort\OrderBy::toDql()} can
+     * Runs real DQL whenever {@see \Piwigo\Db\SortRenderer::toDql()} can
      * express the configured order. The raw-DBAL query below is reached in
      * exactly one case now: a `` `rank` `` entry with more than one category
      * requested, where there is no single `ic` alias to resolve it against
@@ -433,7 +444,7 @@ final readonly class CategoryRepository
         // ONLY_FULL_GROUP_BY needs `ic.rank` explicitly in the GROUP BY
         // list too (added below) since it can't infer the functional
         // dependency on `i.id` from the WHERE clause's IN-list cardinality.
-        $dqlOrderBy = $this->currentConfig->orderBy->toDql('i', count($catIds) === 1 ? 'ic' : null);
+        $dqlOrderBy = $this->sortRenderer()->toDql($this->currentConfig->orderBy, 'i', count($catIds) === 1 ? 'ic' : null);
         if ($dqlOrderBy !== null) {
             return $this->findImageIdsForCategoriesViaDql($catIds, $mode, $criteria, $dqlOrderBy);
         }
@@ -464,7 +475,7 @@ final readonly class CategoryRepository
         // "ORDER BY " keyword, so passing a complete clause would build
         // "ORDER BY ORDER BY ..." -- a real syntax error. The body already
         // renders `RAND()` through SqlDialect::randomFunction() per platform
-        // (PhotoSortField::column()), so nothing needs translating here.
+        // (SortRenderer::randomExpression()), so nothing needs translating here.
         //
         // `rank` does need translating. It is the only reason this fallback
         // is reached at all, it lives on the join row rather than on
@@ -479,11 +490,12 @@ final readonly class CategoryRepository
         //
         // MIN() picks each image's best manual position among the requested
         // albums, which is the only reading that keeps one row per image.
-        $rankColumn = PhotoSortField::Rank->column();
+        $renderer = $this->sortRenderer();
+        $rankColumn = $renderer->rankColumn();
         $qb->orderBy(str_replace(
             $rankColumn,
             'MIN(' . $rankColumn . ')',
-            $this->currentConfig->orderBy->toSqlBody()
+            $renderer->toSqlBody($this->currentConfig->orderBy)
         ));
 
         $ids = $qb->executeQuery()

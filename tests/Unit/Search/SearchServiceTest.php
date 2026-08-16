@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Db\SortRenderer;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
@@ -37,7 +38,7 @@ use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Tag\TagService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -230,6 +231,7 @@ function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): Sea
         EventDispatcherTestFactory::get(),
         CurrentUserTestFactory::get(),
         CurrentConfigTestFactory::get(),
+        new SortRenderer($conn),
         searchServiceTestTagService(),
         searchServiceTestUserService(),
         searchServiceTestPreferencesService(),
@@ -348,7 +350,7 @@ beforeEach(function (): void {
             'default' => false,
         ],
     ]);
-    $currentConfig->orderBy = OrderBy::fromConfigFragment('ORDER BY id ASC');
+    $currentConfig->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY id ASC');
     $currentConfig->calendarDatefield = 'date_creation';
     $currentConfig->quickSearchIncludeSubAlbums = false;
     $currentConfig->rateEnabled = true;

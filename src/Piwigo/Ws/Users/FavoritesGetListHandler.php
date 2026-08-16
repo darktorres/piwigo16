@@ -13,9 +13,9 @@ namespace Piwigo\Ws\Users;
 
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Sort\OrderBy;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\ImageUrlBuilder;
@@ -61,7 +61,7 @@ final readonly class FavoritesGetListHandler implements WsAction
         /** @var array{order: string|null, ...} $orderParams */
         $orderParams = $params;
 
-        $orderBy = OrderBy::fromWsOrderParam($orderParams['order'] ?? '');
+        $orderBy = PhotoSortOrder::fromWsOrderParam($orderParams['order'] ?? '');
         $orderByOverride = $orderBy->isEmpty() ? null : $orderBy;
 
         $permission_condition = $this->permissionService->getPermissionCriteria();

@@ -15,7 +15,7 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionCriteria;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**
@@ -272,7 +272,7 @@ test('findImageIdsForCategories() orders by CurrentConfig orderBy', function ():
     // The real DQL path -- a single bounded-vocabulary field, not
     // sorted before comparing, to prove the parsed order is what
     // actually reaches the query rather than incidental id order.
-    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY id DESC');
+    CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY id DESC');
 
     $ids = categoryTestRepo()
         ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());
@@ -298,7 +298,7 @@ test('findImageIdsForCategories() orders by rank', function (): void {
         // this raw config string never round-trips through column()'s own
         // (now driver-aware) quoted output, so a bare, unquoted field name
         // parses identically on both platforms.
-        CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY rank ASC');
+        CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY rank ASC');
 
         $ids = categoryTestRepo()
             ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());
@@ -316,7 +316,7 @@ test('findImageIdsForCategories() runs a random order as DQL rather than falling
     // RAND() resolves to the registered RandFunction custom DQL function
     // now, so this stays on the DQL path -- the assertion is that it
     // executes and returns the right members, since the order is random.
-    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY RAND()');
+    CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY RAND()');
 
     $ids = categoryTestRepo()
         ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());
@@ -328,15 +328,15 @@ test('findImageIdsForCategories() runs a random order as DQL rather than falling
 
 test('findImageIdsForCategories() applies the default order for an unparseable orderBy', function (): void {
     // `comment` is not one of $sort_fields's own bounded tokens, so
-    // OrderBy::fromConfigFragment() substitutes the default rather than
+    // PhotoSortOrder::fromConfigFragment() substitutes the default rather than
     // splicing the text through. Asserted against the same call made with
     // the default set explicitly, so it stays independent of what the
     // fixture's own date_available/file values happen to be.
-    CurrentConfigTestFactory::get()->orderBy = OrderBy::default();
+    CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::default();
     $expected = categoryTestRepo()
         ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());
 
-    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY comment ASC');
+    CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY comment ASC');
     $ids = categoryTestRepo()
         ->findImageIdsForCategories([1], 'AND', categoryTestNoPermissionRestriction());
 
@@ -347,7 +347,7 @@ test('findImageIdsForCategories() applies the default order for an unparseable o
 });
 
 test('findImageIdsForCategories() still takes the raw-DBAL path for rank across several categories', function (): void {
-    // The one remaining reason OrderBy::toDql() returns null: `rank` lives
+    // The one remaining reason PhotoSortOrder::toDql() returns null: `rank` lives
     // on the image_category join row, and more than one category means no
     // single `ic` alias to resolve it against.
     //
@@ -356,7 +356,7 @@ test('findImageIdsForCategories() still takes the raw-DBAL path for rank across 
     // the sql_mode DbConnection pins, and this query raised a real
     // DriverException before that was handled. Categories 1 and 2 hold
     // images 1,2,3 and 4,5 respectively; `OR` is their union.
-    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY `rank` ASC');
+    CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY `rank` ASC');
 
     $ids = categoryTestRepo()
         ->findImageIdsForCategories([1, 2], 'OR', categoryTestNoPermissionRestriction());

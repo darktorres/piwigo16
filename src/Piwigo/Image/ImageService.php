@@ -41,7 +41,8 @@ use Piwigo\Image\Request\EmptyLoungeRequest;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
+use Piwigo\Db\SortRenderer;
 
 /**
  * Slideshow param encode/decode/correct and PDF page counting -- pure
@@ -115,6 +116,23 @@ final readonly class ImageService
         }
 
         return new CurrentConfigService();
+    }
+
+    /**
+     * Same "container resolve, not a constructor param" reasoning as
+     * self::logger()/self::currentConfigService() above -- constructor-
+     * injecting SortRenderer would ripple across every one of this class's
+     * own real construction sites for the sake of
+     * getWithConditionsPaginated()'s one call.
+     */
+    private function sortRenderer(): SortRenderer
+    {
+        $sortRenderer = Kernel::container()->get(SortRenderer::class);
+        if (! $sortRenderer instanceof SortRenderer) {
+            throw new LogicException('Container returned an unexpected type for ' . SortRenderer::class);
+        }
+
+        return $sortRenderer;
     }
 
     public function getDefaultSlideshowParams(): SlideshowParams
@@ -1215,11 +1233,11 @@ final readonly class ImageService
     /**
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function getWithConditionsPaginated(CategoryImagesCriteria $criteria, ?OrderBy $orderBy, int $limit, int $offset): PaginatedResult
+    public function getWithConditionsPaginated(CategoryImagesCriteria $criteria, ?PhotoSortOrder $orderBy, int $limit, int $offset): PaginatedResult
     {
         $order = $orderBy ?? $this->currentConfig->orderBy;
 
-        return $this->repo->findWithConditionsPaginated($criteria, $order->toSql('i'), $limit, $offset);
+        return $this->repo->findWithConditionsPaginated($criteria, $this->sortRenderer()->toSql($order, 'i'), $limit, $offset);
     }
 
     /**

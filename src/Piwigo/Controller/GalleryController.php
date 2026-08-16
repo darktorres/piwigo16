@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Db\SortRenderer;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Auth\AccessControl;
@@ -459,7 +460,7 @@ final readonly class GalleryController implements ControllerInterface
             $order_idx = $this->sessionService->getImageOrder() ?? 0;
 
             // get first order field and direction
-            $order_by = $this->currentConfig->orderBy->toSql();
+            $order_by = new SortRenderer($this->entityManager->getConnection())->toSql($this->currentConfig->orderBy);
             $first_order = substr($order_by, 9);
             if (($pos = strpos($first_order, ',')) !== false) {
                 $first_order = substr($first_order, 0, $pos);

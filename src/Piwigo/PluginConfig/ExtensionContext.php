@@ -26,7 +26,7 @@ use Piwigo\PluginConfig\Facade\ImageReadFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\Session\SessionService;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
@@ -212,7 +212,7 @@ final readonly class ExtensionContext
 
         // VO-typed config values have no plain-scalar form to hand a plugin,
         // so they read back as the caller's own default.
-        return $value instanceof NotificationConfig || $value instanceof OrderBy ? $default : $value;
+        return $value instanceof NotificationConfig || $value instanceof PhotoSortOrder ? $default : $value;
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
+use Piwigo\Db\SortRenderer;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
@@ -100,7 +101,7 @@ final readonly class SectionPopulator
         // this method's section-specific branches below and read back by
         // several others -- a single local variable threaded through the
         // whole method, seeded from CurrentConfig::orderBy().
-        $order_by = $this->currentConfig->orderBy->toSql();
+        $order_by = new SortRenderer($this->entityManager->getConnection())->toSql($this->currentConfig->orderBy);
 
         $page['items'] = [];
         $page['start'] = $page['startcat'] = 0;
@@ -190,7 +191,7 @@ final readonly class SectionPopulator
         // and not as a category set because we can't use the #image_category.rank :
         // displayed images are not directly linked to the displayed category
         if ($section === Section::Categories and ! isset($page['flat'])) {
-            $order_by = $this->currentConfig->orderByInsideCategory->toSql();
+            $order_by = new SortRenderer($this->entityManager->getConnection())->toSql($this->currentConfig->orderByInsideCategory);
         }
 
         $image_order_id = $this->sessionService->getImageOrder() ?? 0;

@@ -7,7 +7,7 @@ namespace Piwigo\Config;
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use ReflectionClass;
 
 /**
@@ -2174,7 +2174,7 @@ final class CurrentConfig
 
     // === order_by ===
     /**
-     * The active photo sort order, as an {@see OrderBy} value rather than
+     * The active photo sort order, as an {@see PhotoSortOrder} value rather than
      * the raw "ORDER BY ..." text the DB stores -- consumers ask it for SQL
      * or DQL instead of parsing it back themselves.
      *
@@ -2184,11 +2184,11 @@ final class CurrentConfig
      * "fully hooked" properties ConfigService's own reset path lists, since
      * Reflection can report no usable default for it.
      */
-    private ?OrderBy $orderByStorage = null;
+    private ?PhotoSortOrder $orderByStorage = null;
 
-    public OrderBy $orderBy {
-        get => $this->orderByStorage ??= OrderBy::default();
-        set(OrderBy $value) {
+    public PhotoSortOrder $orderBy {
+        get => $this->orderByStorage ??= PhotoSortOrder::default();
+        set(PhotoSortOrder $value) {
             $this->orderByStorage = $value;
         }
     }
@@ -2199,11 +2199,11 @@ final class CurrentConfig
      * order_by this one may legitimately sort on `rank`, which lives on the
      * image_category join row rather than on images.
      */
-    private ?OrderBy $orderByInsideCategoryStorage = null;
+    private ?PhotoSortOrder $orderByInsideCategoryStorage = null;
 
-    public OrderBy $orderByInsideCategory {
-        get => $this->orderByInsideCategoryStorage ??= OrderBy::default();
-        set(OrderBy $value) {
+    public PhotoSortOrder $orderByInsideCategory {
+        get => $this->orderByInsideCategoryStorage ??= PhotoSortOrder::default();
+        set(PhotoSortOrder $value) {
             $this->orderByInsideCategoryStorage = $value;
         }
     }
@@ -2596,7 +2596,7 @@ final class CurrentConfig
             // chmodValue/recentPostDates/defaultFiltersViews/filterPages/
             // orderBy/orderByInsideCategory themselves: already reset via
             // their own backing field above -- their `set` hook only accepts
-            // a real int/NotificationConfig/array/OrderBy, not the null
+            // a real int/NotificationConfig/array/PhotoSortOrder, not the null
             // getDefaultValue() would otherwise try to pass it (a fully
             // get+set hooked property reports no usable default).
             // themesPath/combinedDir/derivativeDir have no backing state of

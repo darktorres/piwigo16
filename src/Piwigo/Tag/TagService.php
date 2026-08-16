@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use Piwigo\Db\SortRenderer;
 use LogicException;
 use Piwigo\Cache\TagCloudCachePool;
 use Piwigo\Common\ValueObject\ImageId;
@@ -18,7 +19,7 @@ use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Tag\Event\DeleteTags;
 use Piwigo\Tag\Event\GetTagAltNames;
 use Piwigo\Tag\Event\GetTagNameLikeWhere;
@@ -67,6 +68,21 @@ final readonly class TagService
         private ImageService $imageService,
     ) {
         $this->tagIdFromTagNameCache = new TagIdCache();
+    }
+
+    /**
+     * Container resolve, same reasoning as tagCloudCachePool() below: a
+     * required constructor param would ripple to every manual
+     * `new TagService(...)` site for one caller.
+     */
+    private function sortRenderer(): SortRenderer
+    {
+        $sortRenderer = Kernel::container()->get(SortRenderer::class);
+        if (! $sortRenderer instanceof SortRenderer) {
+            throw new LogicException('Container returned an unexpected type for ' . SortRenderer::class);
+        }
+
+        return $sortRenderer;
     }
 
     /**
@@ -303,12 +319,12 @@ final readonly class TagService
      * {@see ImageFilterCriteria}'s own docblock.
      *
      * @param list<TagId> $tagIds
-     * @param OrderBy|null $orderBy optionally overwrite default photo order;
+     * @param PhotoSortOrder|null $orderBy optionally overwrite default photo order;
      *   null falls back to CurrentConfig::orderBy, the same reason
      *   BatchManagerSubController passes null explicitly
      * @return list<int>
      */
-    public function getImageIdsForTags(array $tagIds, string $mode = 'AND', ?ImageFilterCriteria $filterCriteria = null, ?OrderBy $orderBy = null, bool $usePermissions = true): array
+    public function getImageIdsForTags(array $tagIds, string $mode = 'AND', ?ImageFilterCriteria $filterCriteria = null, ?PhotoSortOrder $orderBy = null, bool $usePermissions = true): array
     {
 
         if ($tagIds === []) {
@@ -323,7 +339,7 @@ final readonly class TagService
             $usePermissions,
             $this->permissionService->getPermissionCriteria(),
             $filterCriteria,
-            $order->toSql('i')
+            $this->sortRenderer()->toSql($order, 'i')
         );
     }
 

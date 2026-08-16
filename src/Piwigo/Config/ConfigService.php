@@ -9,7 +9,9 @@ use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\Projection\ConfigParamValue;
 use Piwigo\Core\Kernel;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Event\Lifecycle\LoadConf;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use ReflectionNamedType;
 use ReflectionProperty;
 use RuntimeException;
@@ -377,14 +379,14 @@ final readonly class ConfigService
      * (reads the live property), just isn't the preferred surface.
      *
      * @param array<mixed>|string|int|float|bool|null $defaultValue
-     * @return array<mixed>|string|int|float|bool|NotificationConfig|OrderBy|null
+     * @return array<mixed>|string|int|float|bool|NotificationConfig|PhotoSortOrder|null
      */
-    public function confGetParam(string $param, array|string|int|float|bool|null $defaultValue = null): array|string|int|float|bool|NotificationConfig|OrderBy|null
+    public function confGetParam(string $param, array|string|int|float|bool|null $defaultValue = null): array|string|int|float|bool|NotificationConfig|PhotoSortOrder|null
     {
         $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
         if ($propertyName !== null) {
             $value = new ReflectionProperty(CurrentConfig::class, $propertyName)->getValue($this->currentConfig);
-            /** @var array<mixed>|string|int|float|bool|NotificationConfig|OrderBy|null $value every mapped property's declared type */
+            /** @var array<mixed>|string|int|float|bool|NotificationConfig|PhotoSortOrder|null $value every mapped property's declared type */
 
             return $value ?? $defaultValue;
         }
@@ -500,9 +502,9 @@ final readonly class ConfigService
                     'filtersViews' => $value === null ? null : FilterViewsSelection::fromArray(is_array($value) ? $value : []),
                     'updateNotifyLastNotification' => $value === null ? null : UpdateNotification::fromArray(is_array($value) ? $value : []),
                     'cacheSizes' => $value === null ? null : CacheSizesSnapshot::fromArray(is_array($value) ? $value : []),
-                    // The order-by pair is OrderBy-typed but stored (and
+                    // The order-by pair is PhotoSortOrder-typed but stored (and
                     // written here) as the raw "ORDER BY ..." text.
-                    'orderBy', 'orderByInsideCategory' => OrderBy::fromConfigFragment(is_string($value) ? $value : ''),
+                    'orderBy', 'orderByInsideCategory' => PhotoSortOrder::fromConfigFragment(is_string($value) ? $value : ''),
                     default => $value,
                 });
             }
@@ -612,7 +614,7 @@ final readonly class ConfigService
         // it coerces through fromConfigFragment() rather than the
         // fromArray() the VO properties below use.
         if (in_array($propertyName, ['orderBy', 'orderByInsideCategory'], true)) {
-            $property->setValue($this->currentConfig, OrderBy::fromConfigFragment(is_string($decoded) ? $decoded : ''));
+            $property->setValue($this->currentConfig, PhotoSortOrder::fromConfigFragment(is_string($decoded) ? $decoded : ''));
 
             return;
         }

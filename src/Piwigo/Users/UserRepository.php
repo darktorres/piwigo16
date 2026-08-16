@@ -25,6 +25,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\ThemeEntity;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\BatchWriter;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
@@ -32,7 +33,6 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Sort\PhotoSortField;
 use Piwigo\Users\Event\GetWebmasterMailAddress;
 use Piwigo\Users\Projection\ActivationKeyRow;
 use Piwigo\Users\Projection\BasicUserRow;
@@ -89,6 +89,17 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
     ) {}
+
+    /**
+     * Built from the connection this repository already holds rather than
+     * constructor-injected: {@see SortRenderer} is stateless apart from that
+     * connection, and adding a parameter here would mean touching every
+     * `new UserRepository(...)` site (78 of them) for no behavioural gain.
+     */
+    private function sortRenderer(): SortRenderer
+    {
+        return new SortRenderer($this->em->getConnection());
+    }
 
     private function find(UserId $userId): ?UserInfoEntity
     {
@@ -1010,7 +1021,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      */
     public function findVisibleFavoriteImageIds(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
-        $dqlOrderBy = PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
+        $dqlOrderBy = $this->sortRenderer()->resolveDqlOrderBy($orderBySql, 'i');
         if ($dqlOrderBy !== null) {
             $qb = $this->em
                 ->createQueryBuilder()

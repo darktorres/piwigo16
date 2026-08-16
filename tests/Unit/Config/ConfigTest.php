@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Config\NotificationConfig;
 use Piwigo\Config\UpdateNotification;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 beforeEach(function (): void {
@@ -60,15 +60,17 @@ test('the recentPostDates custom accessor returns a NotificationConfig VO', func
         ->toBe(9);
 });
 
-test('orderBy is an OrderBy value that renders back to its SQL fragment', function (): void {
+test('orderBy is a PhotoSortOrder value carrying the stored order', function (): void {
     // Hooked property: the default materializes on first read, since PHP
-    // can't give a property an object default.
-    expect(CurrentConfigTestFactory::get()->orderBy->toSql())
-        ->toBe('ORDER BY date_available DESC, file ASC, id ASC');
+    // can't give a property an object default. The value is vocabulary
+    // only -- rendering it as SQL is Piwigo\Db\SortRenderer's job, which is
+    // what lets this L1 config hold an L0 value.
+    expect(CurrentConfigTestFactory::get()->orderBy->toSortFieldTokens())
+        ->toBe(['date_available DESC', 'file ASC', 'id ASC']);
 
-    CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY id ASC');
-    expect(CurrentConfigTestFactory::get()->orderBy->toSql())
-        ->toBe('ORDER BY id ASC');
+    CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY id ASC');
+    expect(CurrentConfigTestFactory::get()->orderBy->toSortFieldTokens())
+        ->toBe(['id ASC']);
 });
 
 test('dumpForLog redacts sensitive properties', function (): void {

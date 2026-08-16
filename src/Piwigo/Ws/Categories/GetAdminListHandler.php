@@ -92,7 +92,10 @@ final readonly class GetAdminListHandler implements WsAction
             $row['comment'] = $adminDescriptionEvent->categoryDescription;
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = $this->currentConfig->orderBy->toSqlBody();
+                // The stored format, not executable SQL: the branch above
+                // returns the album's own stored image_order string, so
+                // the fallback has to be the same shape.
+                $row['image_order'] = $this->currentConfig->orderBy->toStoredBody();
             }
 
             if (in_array('full_name_with_admin_links', $additional_output, true)) {

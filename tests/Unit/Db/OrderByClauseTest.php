@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Sort\OrderByClause;
+use Piwigo\Db\OrderByClause;
 
 test('constructs with distinct values for every property', function (): void {
     $clause = new OrderByClause('i.dateAvailable', 'DESC');

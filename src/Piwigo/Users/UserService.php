@@ -52,7 +52,8 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Users\Event\DeleteUser;
 use Piwigo\Users\Event\RegisterUser;
 use Piwigo\Users\Event\RegisterUserCheck;
@@ -137,6 +138,23 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         return $pool;
+    }
+
+    /**
+     * Same "container resolve, not a constructor param" reasoning as
+     * self::effectivePermissionsCachePool() above -- constructor-injecting
+     * SortRenderer would ripple across every one of this class's own real
+     * construction sites for the sake of getVisibleFavoriteImages()'s one
+     * call.
+     */
+    private function sortRenderer(): SortRenderer
+    {
+        $sortRenderer = Kernel::container()->get(SortRenderer::class);
+        if (! $sortRenderer instanceof SortRenderer) {
+            throw new LogicException('Container returned an unexpected type for ' . SortRenderer::class);
+        }
+
+        return $sortRenderer;
     }
 
     /**
@@ -868,11 +886,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * @return list<array<string, mixed>>
      */
-    public function getVisibleFavoriteImages(UserId $userId, PermissionCriteria $criteria, ?OrderBy $orderBy): array
+    public function getVisibleFavoriteImages(UserId $userId, PermissionCriteria $criteria, ?PhotoSortOrder $orderBy): array
     {
         $orderBy ??= $this->currentConfig->orderBy;
 
-        return $this->repo->findVisibleFavoriteImages($userId, $criteria, $orderBy->toSql('i'));
+        return $this->repo->findVisibleFavoriteImages($userId, $criteria, $this->sortRenderer()->toSql($orderBy, 'i'));
     }
 
     /**

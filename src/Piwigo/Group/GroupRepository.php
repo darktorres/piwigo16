@@ -137,7 +137,12 @@ final class GroupRepository extends EntityRepository
      * fragment; DQL's orderBy() takes a fixed field path, not a
      * caller-supplied string, and `NbUsers` orders by a `COUNT(...)`
      * select alias this method builds itself, which DQL's own orderBy()
-     * can't reference either.
+     * can't reference either. {@see \Piwigo\Core\ValidationPattern::ORDER}'s
+     * real regex (`/^(rand(om)?|[a-z_]+(\s+(asc|desc))?)(\s*,\s*...)*$/i`)
+     * matches any `[a-z_]+` token, not a small fixed vocabulary --
+     * genuinely open-ended, same "caller composes trusted ORDER BY text"
+     * architecture as {@see \Piwigo\Common\ValueObject\PhotoSortField}'s own documented
+     * exception, so no enum can replace it here.
      *
      * @param list<GroupId> $groupIds when non-empty, restricts to these ids
      * @return list<GroupListing>

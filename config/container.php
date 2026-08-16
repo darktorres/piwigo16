@@ -62,6 +62,7 @@ use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedRepository;
@@ -349,6 +350,14 @@ return [
     // injection at all (a static L1Infrastructure method, a self-managed
     // singleton's fallback branch) -- see that factory's own docblock.
     EntityManagerInterface::class => factory(static fn (Connection $conn): EntityManagerInterface => EntityManagerFactory::build($conn)),
+
+    // Stateless apart from the Connection it renders against. An explicit
+    // entry rather than plain autowiring so the one shared instance is
+    // reused: TagService resolves it from the container per call (it is
+    // constructed manually at ~10 sites, so a constructor param would
+    // ripple to all of them), and autowiring would build a fresh renderer
+    // each time.
+    SortRenderer::class => factory(static fn (Connection $conn): SortRenderer => new SortRenderer($conn)),
 
     // Not constructor-autowired -- EntityRepository's real constructor
     // takes ClassMetadata, which PHP-DI can't autowire. Resolved the

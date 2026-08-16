@@ -18,7 +18,7 @@ use Piwigo\Html\Event\RenderElementName;
 use Piwigo\Image\ImageRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
-use Piwigo\Sort\OrderBy;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Ws\ImageFilterCriteriaBuilder;
 use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
@@ -68,7 +68,7 @@ final readonly class SearchHandler implements WsAction
         }
         $filterCondition = $filterCriteria->toSqlCondition('i.');
         $order = $filterParams['order'];
-        $orderBy = OrderBy::fromWsOrderParam($order ?? '');
+        $orderBy = PhotoSortOrder::fromWsOrderParam($order ?? '');
 
         $super_order_by = false;
         $orderByOverride = null;

@@ -25,7 +25,7 @@ enum ImageDuplicateField
      * string (e.g. {@see \Piwigo\Admin\BatchManagerGlobalPageRenderer}'s
      * duplicates-mode thumbnail ordering, which also splices in
      * `CurrentConfig::orderBy()`'s own free-form text -- see
-     * {@see \Piwigo\Sort\PhotoSortField}'s own docblock for why that
+     * {@see \Piwigo\Common\ValueObject\PhotoSortField}'s own docblock for why that
      * wider ORDER BY string itself deliberately stays untyped).
      */
     public function column(): string

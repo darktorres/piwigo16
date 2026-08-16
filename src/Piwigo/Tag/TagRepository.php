@@ -250,7 +250,7 @@ final class TagRepository extends EntityRepository
      * getImageIdsForTags()}) falls back to `CurrentConfig::orderBy()`
      * (free-form admin-configurable text) whenever the caller-supplied
      * `$orderBy` is null/empty, the same "caller composes trusted ORDER
-     * BY text" architecture as {@see \Piwigo\Sort\PhotoSortField},
+     * BY text" architecture as {@see \Piwigo\Common\ValueObject\PhotoSortField},
      * {@see \Piwigo\Group\GroupRepository::findWithMemberCounts()}, and
      * {@see \Piwigo\Image\ImageRepository::findBatchManagerThumbnails()}.
      * `ImageFilterCriteria::toSqlCondition()` also hardcodes raw

@@ -13,6 +13,7 @@ namespace Piwigo\Ws\Categories;
 
 use Override;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\Event\RenderElementDescription;
 use Piwigo\Html\Event\RenderElementName;
@@ -21,7 +22,6 @@ use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Sort\OrderBy;
 use Piwigo\Ws\ImageFilterCriteriaBuilder;
 use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
@@ -133,12 +133,19 @@ final readonly class GetImagesHandler implements WsAction
                 ),
             );
 
-            $orderBy = OrderBy::fromWsOrderParam($filterParams['order'] ?? '');
+            $orderBy = PhotoSortOrder::fromWsOrderParam($filterParams['order'] ?? '');
             if ($orderBy->isEmpty()
                   and count($cat_ids) === 1
                   and ($cats[$cat_ids[0]]->imageOrder ?? null) !== null
             ) {
-                $orderBy = OrderBy::raw($cats[$cat_ids[0]]->imageOrder);
+                // categories.image_order is validated the same way as
+                // order_by/order_by_inside_category (per-index against
+                // $sort_fields at the admin form, see
+                // ElementSetRanksRequest's own docblock), so it's stored
+                // config data, not caller-composed raw text --
+                // fromConfigFragment() is the correct parse, not a raw()
+                // escape hatch.
+                $orderBy = PhotoSortOrder::fromConfigFragment($cats[$cat_ids[0]]->imageOrder);
             }
             $favorite_ids = $urlService->getUserFavorites();
 

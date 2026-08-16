@@ -22,7 +22,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Permission\PermissionCriteria;
-    use Piwigo\Sort\OrderBy;
+    use Piwigo\Common\ValueObject\PhotoSortOrder;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
     /**
@@ -246,7 +246,7 @@ namespace Piwigo\Tests\Integration {
             // The real DQL path -- a single bounded-vocabulary field, not
             // sorted before comparing, to prove the parsed order is what
             // actually reaches the query rather than incidental id order.
-            CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY id DESC');
+            CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY id DESC');
 
             $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
 
@@ -268,7 +268,7 @@ namespace Piwigo\Tests\Integration {
             // this raw config string never round-trips through column()'s own
             // (now driver-aware) quoted output, so a bare, unquoted field name
             // parses identically on both platforms.
-            CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY rank ASC');
+            CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY rank ASC');
 
             $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
 
@@ -282,7 +282,7 @@ namespace Piwigo\Tests\Integration {
             // server, which is what proves the generated SQL is valid on this
             // provider. The order itself is random, so only membership can be
             // asserted.
-            CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY RAND()');
+            CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY RAND()');
 
             $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
             sort($ids);
@@ -293,14 +293,14 @@ namespace Piwigo\Tests\Integration {
         public function testFindImageIdsForCategoriesAppliesTheDefaultOrderForUnparseableOrderBy(): void
         {
             // `comment` is not one of $sort_fields's own bounded tokens, so
-            // OrderBy::fromConfigFragment() substitutes the default rather
+            // PhotoSortOrder::fromConfigFragment() substitutes the default rather
             // than splicing the text through. Compared against the same call
             // with the default set explicitly, so it stays independent of the
             // fixture's own date_available/file values.
-            CurrentConfigTestFactory::get()->orderBy = OrderBy::default();
+            CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::default();
             $expected = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
 
-            CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY comment ASC');
+            CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY comment ASC');
             $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
 
             self::assertSame($expected, $ids);
@@ -309,7 +309,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindImageIdsForCategoriesStillUsesRawDbalForRankAcrossSeveralCategories(): void
         {
-            // The one remaining reason OrderBy::toDql() returns null: `rank`
+            // The one remaining reason PhotoSortOrder::toDql() returns null: `rank`
             // lives on the image_category join row, and more than one
             // category means no single `ic` alias to resolve it against.
             //
@@ -319,7 +319,7 @@ namespace Piwigo\Tests\Integration {
             // raised a real DriverException before that was handled.
             // Categories 1 and 2 hold images 1,2,3 and 4,5; `OR` is their
             // union.
-            CurrentConfigTestFactory::get()->orderBy = OrderBy::fromConfigFragment('ORDER BY `rank` ASC');
+            CurrentConfigTestFactory::get()->orderBy = PhotoSortOrder::fromConfigFragment('ORDER BY `rank` ASC');
 
             $ids = $this->repo->findImageIdsForCategories([1, 2], 'OR', self::noPermissionRestriction());
             sort($ids);

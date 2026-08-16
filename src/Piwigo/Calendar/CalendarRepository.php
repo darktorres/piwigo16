@@ -10,11 +10,11 @@ use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Piwigo\Calendar\Projection\RandomImageForDay;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
-use Piwigo\Sort\PhotoSortField;
 
 /**
  * Persistence layer for `CalendarRenderer::render()`'s own final "list of
@@ -34,6 +34,17 @@ final readonly class CalendarRepository
     public function __construct(
         private EntityManagerInterface $em,
     ) {}
+
+    /**
+     * Built from the connection this repository already holds rather than
+     * constructor-injected: {@see SortRenderer} is stateless apart from that
+     * connection, and adding a parameter here would mean touching every
+     * `new CalendarRepository(...)` site (15 of them) for no behavioural gain.
+     */
+    private function sortRenderer(): SortRenderer
+    {
+        return new SortRenderer($this->em->getConnection());
+    }
 
     /**
      * $fromWhereSql ({@see CalendarService::buildInnerSql()}'s own
@@ -61,7 +72,7 @@ final readonly class CalendarRepository
      * `CurrentConfig::orderBy()`, but {@see \Piwigo\Calendar\
      * CalendarRenderer::render()}'s own call site dynamically prepends
      * `$calendar->date_field` (always `date_available`/`date_creation`)
-     * ahead of it -- {@see \Piwigo\Sort\PhotoSortField::
+     * ahead of it -- {@see \Piwigo\Db\SortRenderer::
      * resolveDqlOrderBy()} doesn't care about that, it just parses
      * whatever string it's handed. $dqlScope/$dqlDateWhere are the
      * DQL-shaped counterparts of $fromWhere/$dateWhere (already computed
@@ -87,7 +98,7 @@ final readonly class CalendarRepository
             // and a calendar view has no single category context the way
             // CategoryRepository::findImageIdsForCategories() does, so
             // there's no query-independent way to express it here.
-            $dqlOrderBy = PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
+            $dqlOrderBy = $this->sortRenderer()->resolveDqlOrderBy($orderBySql, 'i');
             if ($dqlOrderBy !== null) {
                 $qb = $this->baseQueryBuilder($dqlScope)
                     ->select('i.id')

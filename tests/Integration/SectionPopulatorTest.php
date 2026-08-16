@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
@@ -167,7 +168,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         if (! $searchResultsCachePool instanceof SearchResultsCachePool) {
             throw new LogicException('Container returned an unexpected type for ' . SearchResultsCachePool::class);
         }
-        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $this->tagService, $this->userService, new PreferencesService(new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()), $searchResultsCachePool);
+        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new SortRenderer($this->conn), $this->tagService, $this->userService, new PreferencesService(new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()), $searchResultsCachePool);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger([

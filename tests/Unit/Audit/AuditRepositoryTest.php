@@ -154,13 +154,23 @@ test('findLatestRowHash() really does bypass the identity map (HINT_REFRESH), no
     }
 });
 
-test('findLatestRowHash() returns null only when the table is genuinely empty', function (): void {
-    // Can't truncate the shared table here -- just prove the method
-    // returns a real, non-null 64-char hash when rows exist (the
-    // null-when-empty branch is exercised by tests/Integration/
-    // AuditRepositoryTest.php against its own isolated fixture DB).
-    expect(auditTestRepo()->findLatestRowHash())
-        ->not->toBeNull();
+test('findLatestRowHash() returns a real hash whenever any row exists', function (): void {
+    // Owns its row rather than relying on the fixture's seeded one:
+    // tests/Integration/AuditServiceTest's teardown empties audit_log, so a
+    // fixture-dependent assertion here passes or fails purely on suite
+    // order. The null-when-empty branch is exercised by
+    // tests/Integration/AuditRepositoryTest against its own isolated DB.
+    $conn = DbConnection::build();
+    $marker = 'ut_audit_' . bin2hex(random_bytes(6));
+
+    try {
+        auditTestRepo()->insert(null, 'create', $marker, null, null, null, null, SqlDateTime::from('2026-08-01 12:00:00'), null, str_repeat('d', 64));
+
+        expect(auditTestRepo()->findLatestRowHash())
+            ->not->toBeNull();
+    } finally {
+        auditTestPurge($conn, $marker);
+    }
 });
 
 test('findAllInOrder() returns every row as an AuditLogEntry, in ascending id order', function (): void {

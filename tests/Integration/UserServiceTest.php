@@ -141,7 +141,7 @@ namespace Piwigo\Tests\Integration {
             // CurrentConfigServiceTestFactory::get()->get() -- without this,
             // that throws a bare "CurrentConfigService not initialised"
             // LogicException.
-            CurrentConfigServiceTestFactory::get()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new EventDispatcher(), $currentConfig));
+            CurrentConfigServiceTestFactory::get()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), $currentConfig));
         }
 
         /**

@@ -12,7 +12,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
 use Piwigo\Db\DbConnection;
 use Piwigo\Lang\Translator;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -212,7 +211,7 @@ test('bootConfigOnly reuses an already-set CurrentConfigService instead of resol
     $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 3) . '/src/Piwigo'], isDevMode: true);
     $ormConfig->enableNativeLazyObjects(true);
     $em = new EntityManager($conn, $ormConfig);
-    $preSetService = new ConfigService($em->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfigTestFactory::get());
+    $preSetService = new ConfigService($em->getRepository(ConfigEntry::class), CurrentConfigTestFactory::get());
     CurrentConfigServiceTestFactory::get()->set($preSetService);
 
     RequestBootstrap::bootConfigOnly($paths);

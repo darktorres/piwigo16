@@ -7,8 +7,6 @@ namespace Piwigo\Core;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Projection\ThemeListing;
-use Piwigo\Event\Lifecycle\GetPwgThemes;
-use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * Lives in `Piwigo\Core` (L1Infrastructure) rather than `Piwigo\Admin`
@@ -27,7 +25,7 @@ final class ThemeCatalog
      *
      * @return array<int|string, string>
      */
-    public static function getPwgThemes(EventDispatcher $eventDispatcher, Paths $paths, CurrentConfig $currentConfig, Lang $lang, EntityManagerInterface $entityManager, bool $showMobile = false): array
+    public static function getPwgThemes(Paths $paths, CurrentConfig $currentConfig, Lang $lang, EntityManagerInterface $entityManager, bool $showMobile = false): array
     {
 
         $themes = [];
@@ -74,18 +72,7 @@ final class ThemeCatalog
             }
         }
 
-        // plugins want remove some themes based on user status maybe?
-        $themes = $eventDispatcher->dispatch(new GetPwgThemes($themes))
-            ->themes;
-
-        $filtered_themes = [];
-        foreach ($themes as $key => $value) {
-            if (is_string($value)) {
-                $filtered_themes[$key] = $value;
-            }
-        }
-
-        return $filtered_themes;
+        return $themes;
     }
 
     /**

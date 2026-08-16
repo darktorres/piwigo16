@@ -151,7 +151,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
 
-        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
+        $configService = new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get());
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->loadFromDb();
 

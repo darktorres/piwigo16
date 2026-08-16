@@ -27,7 +27,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Mail\MailService;
@@ -44,14 +43,14 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\MailServiceTestSpyTransport;
+use Piwigo\Tests\Support\MailServiceTestTransportSwap;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 use RuntimeException;
-use Symfony\Component\Mime\Email;
 
 /**
  * Test-only typed event -- ExtensionContext::dispatch() is a thin
@@ -138,7 +137,7 @@ final class ExtensionContextTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         $configRepo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
-        $configService = new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get());
+        $configService = new ConfigService($configRepo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();
 
@@ -157,7 +156,7 @@ final class ExtensionContextTest extends IntegrationTestCase
         $this->context = $this->buildContext(PluginId::from('test-plugin'));
     }
 
-    private function buildContext(PluginId $extensionId, ?AdminContext $adminContext = null): ExtensionContext
+    private function buildContext(PluginId $extensionId, ?AdminContext $adminContext = null, ?MailService $mailService = null): ExtensionContext
     {
         $currentUser = Kernel::container()->get(CurrentUser::class);
         if (! $currentUser instanceof CurrentUser) {
@@ -185,7 +184,7 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->containerGet(Paths::class),
             $this->containerGet(ConfigService::class),
             $this->containerGet(EntityManagerInterface::class),
-            $this->containerGet(MailService::class),
+            $mailService ?? $this->containerGet(MailService::class),
             new UserReadFacade($this->containerGet(UserRepository::class)),
             new ThemeReadFacade($this->containerGet(ThemeRepository::class)),
             $this->containerGet(CsrfService::class),
@@ -327,35 +326,30 @@ final class ExtensionContextTest extends IntegrationTestCase
     /**
      * mail() (P27.13) -- proves the passthrough to `MailService::mail()`
      * genuinely reaches the real send pipeline, not just that it doesn't
-     * throw. Intercepts `BeforeSendMail` (`MailService::mail()`'s own
-     * dispatch right before the real Transport call) and aborts the send
-     * via `shouldSend: false`, the same lighter technique
-     * `Integration\MailServiceTest::mailCaptureBeforeSend()` already
-     * established -- no real network attempt, no
+     * throw. A MailServiceTestSpyTransport (swapped in via
+     * MailServiceTestTransportSwap on a context built just for this test)
+     * captures the fully-built Email one step before a real
+     * Transport::send() would run -- replaces the old `BeforeSendMail`
+     * event-hook interception (P32 Stage A5 found that event had zero
+     * production listeners) -- no real network attempt, no
      * `MailServiceTestFakeSmtpServer` subprocess needed for a passthrough
      * check this narrow.
      */
     public function testMailReachesMailServiceWithTheGivenArguments(): void
     {
-        $capturedEmail = null;
-        $handler = function (BeforeSendMail $event) use (&$capturedEmail): void {
-            $capturedEmail = $event->email;
-            $event->shouldSend = false;
-        };
-        EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $handler);
+        $spy = new MailServiceTestSpyTransport();
+        $spyMailService = MailServiceTestTransportSwap::with($this->containerGet(MailService::class), $spy);
+        $context = $this->buildContext(PluginId::from('test-plugin'), mailService: $spyMailService);
 
-        try {
-            $this->context->mail('someone@example.test', [
-                'subject' => 'P27.13 test',
-                'content' => 'hello from ExtensionContext::mail()',
-            ]);
-        } finally {
-            EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $handler);
-        }
+        $context->mail('someone@example.test', [
+            'subject' => 'P27.13 test',
+            'content' => 'hello from ExtensionContext::mail()',
+        ]);
 
-        if (! $capturedEmail instanceof Email) {
-            throw new RuntimeException('expected the before_send_mail handler to have captured a real Email');
+        if ($spy->sent === []) {
+            throw new RuntimeException('expected mail() to have sent through the spy transport');
         }
+        $capturedEmail = $spy->sent[0];
 
         self::assertSame('P27.13 test', $capturedEmail->getSubject());
         self::assertStringContainsString('hello from ExtensionContext::mail()', (string) $capturedEmail->getTextBody());

@@ -214,7 +214,6 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
     $currentConfig = new CurrentConfig();
     $configService = new ConfigService(
         EntityManagerFactory::build()->getRepository(ConfigEntry::class),
-        new EventDispatcher(),
         $currentConfig,
     );
 

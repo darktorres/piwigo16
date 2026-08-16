@@ -227,8 +227,7 @@ function userActivityTestGroupService(ActivityService $activityService): GroupSe
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         $activityService,
         new AuditService(EntityManagerFactory::build($conn)->getRepository(AuditLogEntity::class)),
-        new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), new EventDispatcher(), $currentConfig),
-        new EventDispatcher(),
+        new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), $currentConfig),
         new CurrentUser($currentConfig),
         $currentConfig,
     );

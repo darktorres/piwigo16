@@ -106,7 +106,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         $configRepo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
-        $configService = new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get());
+        $configService = new ConfigService($configRepo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();
 

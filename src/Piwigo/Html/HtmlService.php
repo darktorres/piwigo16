@@ -15,6 +15,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
@@ -24,13 +25,11 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\GetElementUrl;
-use Piwigo\Event\Picture\GetThumbnailTitle;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Event\Template\RenderCommentContent;
-use Piwigo\Event\Template\SetStatusHeader;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Html\Projection\PageMessagesContext;
 use Piwigo\Http\ResponseFactory;
@@ -703,10 +702,16 @@ final readonly class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Sets the http status header (200,401,...).
+     * Sets the http status header (200,401,...). Returns the resolved
+     * HttpStatusLine (code + the reason phrase actually sent) rather than
+     * void -- header() itself is a no-op under CLI SAPI with no way to
+     * inspect what it received after the fact, and callers/tests wanting
+     * to observe the computed line have this instead of the old
+     * `SetStatusHeader` plugin event (P32 Stage A5 -- zero production
+     * listeners).
      */
     #[Override]
-    public function setStatusHeader(int $code, string $text = ''): void
+    public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
     {
         if ($text === '') {
             $text = match ($code) {
@@ -731,7 +736,8 @@ final readonly class HtmlService implements HtmlRenderingInterface
         }
 
         header("{$protocol} {$code} {$text}", true, $code);
-        $this->eventDispatcher->dispatch(new SetStatusHeader($code, $text));
+
+        return new HttpStatusLine($code, $text);
     }
 
     /**
@@ -852,9 +858,8 @@ final readonly class HtmlService implements HtmlRenderingInterface
         }
 
         $title = htmlspecialchars(strip_tags($title));
-        $titleEvent = $this->eventDispatcher->dispatch(new GetThumbnailTitle($title, $info));
 
-        return $titleEvent->title;
+        return $title;
     }
 
     /**

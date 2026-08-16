@@ -33,7 +33,6 @@ use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Event\Location\LocEndAddFormat;
 use Piwigo\Event\Location\LocEndAddUploadedFile;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Http\HttpClientService;
@@ -510,7 +509,7 @@ final readonly class UploadService
                     $need_resize = $this->needResize($file_path, $original_resize_maxwidth, $original_resize_maxheight);
 
                     if ($need_resize) {
-                        $img = new ImageBackend($file_path, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
+                        $img = new ImageBackend($file_path, $this->currentLogger, $this->currentConfig);
 
                         $original_resize_quality = $this->currentConfig->originalResizeQuality;
 
@@ -832,11 +831,6 @@ final readonly class UploadService
                 'format_ext' => $format_ext,
                 'format_id' => $format_id,
             ]);
-
-        $format_infos = $insert;
-        $format_infos['format_id'] = $format_id;
-
-        $this->eventDispatcher->dispatch(new LocEndAddFormat($format_infos));
 
         return $add_status;
     }

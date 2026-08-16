@@ -32,7 +32,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Mail\BeforeParseMailTemplate;
-use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailRecipientRepository;
@@ -48,6 +47,8 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\MailServiceTestSpyTransport;
+use Piwigo\Tests\Support\MailServiceTestTransportSwap;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -135,7 +136,7 @@ final class MailServiceTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $repo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
-        $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get());
+        $configService = new ConfigService($repo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();
 
@@ -252,15 +253,18 @@ final class MailServiceTest extends IntegrationTestCase
     }
 
     /**
-     * Same real-event-hook-interception technique as this class's own
+     * Same real-injectable-transport technique as this class's own
      * Unit-suite sibling (Unit/Mail/MailServiceTest.php's own
-     * mail_service_capture_send()) -- captures the fully-built Email one
-     * line before the real Transport::send() and aborts the send (via
-     * BeforeSendMail's own $shouldSend flag), so these assertions read
-     * the real Symfony\Component\Mime\Email's own decoded
-     * getHtmlBody()/getTextBody() (MIME-transfer-encoding-safe) rather
-     * than needing suppressMailerWarning()'s closed-port trick or
-     * sendMailTest()'s own raw dumped-file content.
+     * mail_service_capture_send()) -- a MailServiceTestSpyTransport,
+     * swapped in via MailServiceTestTransportSwap on $this->mailer,
+     * captures the fully-built Email one step before a real
+     * Transport::send() would run, so these assertions read the real
+     * Symfony\Component\Mime\Email's own decoded getHtmlBody()/
+     * getTextBody() (MIME-transfer-encoding-safe) rather than needing
+     * suppressMailerWarning()'s closed-port trick or sendMailTest()'s own
+     * raw dumped-file content. Replaces the old `BeforeSendMail` event-hook
+     * interception -- P32 Stage A5 found that event had zero production
+     * listeners and was only ever this project's own test infrastructure.
      *
      * @param string|array<int|string, mixed> $to
      * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
@@ -269,25 +273,17 @@ final class MailServiceTest extends IntegrationTestCase
      */
     private function mailCaptureBeforeSend(string|array $to, array $args = [], array $tpl = []): array
     {
-        $capturedEmail = null;
-        $handler = function (BeforeSendMail $event) use (&$capturedEmail): void {
-            $capturedEmail = $event->email;
-            $event->shouldSend = false;
-        };
-        EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $handler);
+        $spy = new MailServiceTestSpyTransport();
+        $spyMailer = MailServiceTestTransportSwap::with($this->mailer, $spy);
 
-        try {
-            $this->mailer->mail($to, $args, $tpl);
-        } finally {
-            EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $handler);
-        }
+        $spyMailer->mail($to, $args, $tpl);
 
-        if (! $capturedEmail instanceof Email) {
-            throw new RuntimeException('expected the before_send_mail handler to have captured a real Email');
+        if ($spy->sent === []) {
+            throw new RuntimeException('expected mail() to have sent through the spy transport');
         }
 
         return [
-            'email' => $capturedEmail,
+            'email' => $spy->sent[0],
         ];
     }
 

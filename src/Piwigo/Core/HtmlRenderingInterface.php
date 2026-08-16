@@ -82,7 +82,7 @@ interface HtmlRenderingInterface
      */
     public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string;
 
-    public function setStatusHeader(int $code, string $text = ''): void;
+    public function setStatusHeader(int $code, string $text = ''): HttpStatusLine;
 
     /**
      * @param array<string, mixed> $info

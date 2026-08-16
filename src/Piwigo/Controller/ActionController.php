@@ -15,7 +15,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Lifecycle\LocActionBeforeHttpHeaders;
 use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -26,7 +25,6 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionService;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
@@ -64,7 +62,6 @@ final readonly class ActionController implements ControllerInterface
     public function __construct(
         private AccessControl $accessControl,
         private UrlServiceInterface $urlService,
-        private EventDispatcher $eventDispatcher,
         private CurrentUser $currentUser,
         private HistoryService $historyService,
         private PermissionService $permissionService,
@@ -192,8 +189,6 @@ final readonly class ActionController implements ControllerInterface
             $this->historyService
                 ->logVisit($image_id_val, 'high', $format_row->formatId);
         }
-
-        $this->eventDispatcher->dispatch(new LocActionBeforeHttpHeaders());
 
         $http_headers = [];
 

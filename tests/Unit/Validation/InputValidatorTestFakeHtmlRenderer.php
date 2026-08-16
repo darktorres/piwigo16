@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Unit\Validation;
 use LogicException;
 use Override;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\RedirectServiceInterface;
 use RuntimeException;
 
@@ -93,7 +94,7 @@ final class InputValidatorTestFakeHtmlRenderer implements HtmlRenderingInterface
     }
 
     #[Override]
-    public function setStatusHeader(int $code, string $text = ''): void
+    public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
     {
         throw new LogicException('not used by InputValidator::fatalError()');
     }

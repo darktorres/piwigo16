@@ -81,7 +81,7 @@ function noPhotoYetTestRenderer(AdminContext $adminContext): NoPhotoYetRenderer
         LangTestFactory::get(),
         new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
         EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
-        new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfigTestFactory::get()),
+        new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), CurrentConfigTestFactory::get()),
         new AccessControlTestFakeRedirectServiceNeverCalled(),
         UrlServiceTestFactory::build(),
         Paths::fromRoot(sys_get_temp_dir()),

@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Url;
 
 use Override;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\RedirectServiceInterface;
 use RuntimeException;
 
@@ -72,7 +73,10 @@ final class UrlServiceTestHtmlRenderer implements HtmlRenderingInterface
     }
 
     #[Override]
-    public function setStatusHeader(int $code, string $text = ''): void {}
+    public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
+    {
+        return new HttpStatusLine($code, $text);
+    }
 
     #[Override]
     public function renderElementName(array $info): string

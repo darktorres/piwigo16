@@ -36,7 +36,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Admin\BatchManagerPerformFilters;
 use Piwigo\Event\Admin\BatchManagerRegisterFilters;
-use Piwigo\Event\Admin\BatchManagerUrlFilter;
 use Piwigo\Event\Admin\PerformBatchManagerPrefilters;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageDuplicateField;
@@ -490,11 +489,6 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
                             ];
                         }
 
-                        break;
-
-                    default:
-                        $urlFilterEvent = $this->eventDispatcher->dispatch(new BatchManagerUrlFilter($url_filter, $filter));
-                        $url_filter = $urlFilterEvent->bulkManagerFilter;
                         break;
                 }
             }

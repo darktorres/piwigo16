@@ -12,10 +12,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Event\Lifecycle\GetPwgThemes;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 
@@ -84,7 +82,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         );
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn));
+            $themes = ThemeCatalog::getPwgThemes(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn));
         } finally {
             $this->conn->executeStatement("DELETE FROM themes WHERE id = 'broken-theme'");
         }
@@ -112,7 +110,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->mobileTheme = 'mobile-candidate';
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn), showMobile: false);
+            $themes = ThemeCatalog::getPwgThemes(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn), showMobile: false);
         } finally {
             $this->conn->executeStatement("DELETE FROM themes WHERE id = 'mobile-candidate'");
         }
@@ -138,7 +136,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->mobileTheme = 'default';
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn), showMobile: true);
+            $themes = ThemeCatalog::getPwgThemes(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn), showMobile: true);
         } finally {
             $this->conn->executeStatement("DELETE FROM themes WHERE id = 'default'");
         }
@@ -152,31 +150,20 @@ final class ThemeCatalogTest extends IntegrationTestCase
             ]);
     }
 
-    public function testGetPwgThemesSynthesizesTheDefaultThemeAndStillExposesItToTheGetPwgThemesEvent(): void
+    public function testGetPwgThemesStillSynthesizesTheDefaultThemeWithNoRealRowAtAll(): void
     {
         // No themes row at all (this file's own fixture starts and stays
         // empty) -- confirms 'default' is present even with nothing in
-        // the DB, not just when a real row happens to exist.
-        $handler = static function (GetPwgThemes $event): void {
-            if (isset($event->themes['default']) && is_string($event->themes['default'])) {
-                $event->themes['default'] .= ' (filtered)';
-            }
-        };
-        EventDispatcherTestFactory::get()->addTypedHandler(GetPwgThemes::class, $handler);
+        // the DB, not just when a real row happens to exist. Was also
+        // this class's own coverage of the `GetPwgThemes` plugin event
+        // (P32 Stage A5 -- deleted, zero production listeners, and this
+        // was its only test-suite use, testing the filter mechanism
+        // itself rather than isolating something else).
+        $themes = ThemeCatalog::getPwgThemes(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn));
 
-        try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn));
-        } finally {
-            EventDispatcherTestFactory::get()->removeTypedHandler(GetPwgThemes::class, $handler);
-        }
-
-        // The suffix only lands if the handler actually received 'default'
-        // in $event->themes -- proves the synthetic entry flows through
-        // the real GetPwgThemes event like any other row, not as a
-        // special-cased bypass of the plugin filter hook.
         expect($themes)
             ->toBe([
-                'default' => 'Default (filtered)',
+                'default' => 'Default',
             ]);
     }
 }

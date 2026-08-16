@@ -21,7 +21,6 @@ use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Group\GroupService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageService;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -115,7 +114,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // flow reaches CurrentConfigServiceTestFactory::get()->get() -- same wiring every
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
         $_GET = [];

@@ -148,7 +148,7 @@ final readonly class ProfileFormHandler
                     ->fatalError('Unrecognized value for parameter "language"');
             }
 
-            if (! in_array($post['theme'] ?? null, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang, $this->entityManager)), true)) {
+            if (! in_array($post['theme'] ?? null, array_keys(ThemeCatalog::getPwgThemes($this->paths, $this->currentConfig, $this->lang, $this->entityManager)), true)) {
                 $this->htmlRenderer
                     ->fatalError('Unrecognized value for parameter "theme"');
             }
@@ -333,7 +333,7 @@ final readonly class ProfileFormHandler
         ];
 
         $template_selection = ThemeId::tryFrom($userdata['theme'] ?? null) ?? ThemeId::from(AppInfo::DEFAULT_TEMPLATE);
-        $template_options = ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang, $this->entityManager);
+        $template_options = ThemeCatalog::getPwgThemes($this->paths, $this->currentConfig, $this->lang, $this->entityManager);
 
         $profileFormSubmitRequest = ProfileFormSubmitRequest::fromGlobals();
 

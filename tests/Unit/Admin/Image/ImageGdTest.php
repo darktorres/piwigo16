@@ -8,7 +8,6 @@ use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * __construct()'s 2 real failure branches (unsupported extension,
@@ -733,7 +732,7 @@ test('compose throws when the overlay uses a different image backend', function 
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
 
-    $overlay = new ImageBackend($path, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+    $overlay = new ImageBackend($path, new CurrentLogger(), new CurrentConfig(), 'gd');
     // Swap in a fake, non-ImageGd backend to force the mismatch --
     // ImageImagick/ImageExtImagick both need a real ext_imagick/imagick
     // setup this suite doesn't otherwise depend on, and this class's own
@@ -882,7 +881,7 @@ test('compose merges a same-backend overlay onto the base image', function (): v
     imagepng($overlayImg, $overlayPath);
 
     $img = new ImageGd($basePath);
-    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new CurrentConfig(), 'gd');
 
     expect($img->compose($overlay, 2, 2, 100))
         ->toBeTrue();
@@ -922,7 +921,7 @@ test('compose accepts real float x/y/opacity without a TypeError', function (): 
     imagepng($overlayImg, $overlayPath);
 
     $img = new ImageGd($basePath);
-    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new CurrentConfig(), 'gd');
 
     $result = $img->compose($overlay, 2.0, 2.0, 100.0);
 
@@ -967,7 +966,7 @@ test('compose samples the cut region and the overlay from the correct offsets, n
     imagepng($overlayImg, $overlayPath);
 
     $img = new ImageGd($basePath);
-    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new CurrentConfig(), 'gd');
 
     expect($img->compose($overlay, 2, 2, 100))
         ->toBeTrue();

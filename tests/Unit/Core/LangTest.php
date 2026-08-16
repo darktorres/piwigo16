@@ -9,6 +9,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -175,7 +176,10 @@ function langTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
             return '';
         }
 
-        public function setStatusHeader(int $code, string $text = ''): void {}
+        public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
+        {
+            return new HttpStatusLine($code, $text);
+        }
 
         public function renderElementName(array $info): string
         {

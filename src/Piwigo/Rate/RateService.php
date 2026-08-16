@@ -11,8 +11,6 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Event\Picture\UpdateRatingScore;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\Projection\RateSummaryForElement;
 use Piwigo\Users\CurrentUser;
 
@@ -35,7 +33,6 @@ final readonly class RateService
         private AccessControl $accessControl,
         private RateRepository $repo,
         private CookieService $cookies,
-        private EventDispatcher $eventDispatcher,
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
     ) {}
@@ -47,7 +44,7 @@ final readonly class RateService
      * @param int|string|null $rate raw $_POST value (string) from
      *   picture.php, an (int)-cast value from the WS layer, or null when
      *   absent
-     * @return array<string, mixed>|false
+     * @return array{score: float|null, average: float|null, count: int}|false
      */
     public function rate(int $imageId, int|string|null $rate): array|false
     {
@@ -116,23 +113,11 @@ final readonly class RateService
      * rate), and clears rating_score for images that no longer have any
      * rate at all.
      *
-     * Stays a generic bag by design: the update_rating_score plugin hook
-     * can widen/replace the whole return value with arbitrary plugin data
-     * (same "not narrowable further" rationale as
-     * SearchService::getQuickSearchResultsNoCache()'s own qsearch_results
-     * hook).
-     *
-     * @return array<string, mixed> (score, average, count); values are
-     *   null/0 if $elementId is false or has no rates of its own
+     * @return array{score: float|null, average: float|null, count: int} values
+     *   are null/0 if $elementId is false or has no rates of its own
      */
     public function updateRatingScore(int|false $elementId = false): array
     {
-        $altResult = $this->eventDispatcher->dispatch(new UpdateRatingScore(false, $elementId))
-            ->result;
-        if (is_array($altResult)) {
-            return $altResult;
-        }
-
         $byItem = $this->repo->findRateSummaries();
 
         $allRatesCount = 0;

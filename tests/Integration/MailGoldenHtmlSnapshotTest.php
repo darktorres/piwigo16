@@ -13,14 +13,13 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Mail\MailService;
 use Piwigo\Mail\Projection\NbmMailContentPageContext;
 use Piwigo\Mail\Projection\NbmSubscribeActionMailContext;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\MailServiceTestSpyTransport;
+use Piwigo\Tests\Support\MailServiceTestTransportSwap;
 use RuntimeException;
 use Symfony\Component\Mime\Email;
 
@@ -33,19 +32,20 @@ use Symfony\Component\Mime\Email;
  * GoldenHtmlSnapshotTest.php's curl-a-route mechanism can't reach them.
  *
  * Interception/bootstrap pattern copied directly from this suite's own
- * MailServiceTest.php (mailCaptureBeforeSend()): the BeforeSendMail event,
- * dispatched by mail() itself right before the real Symfony Mailer
- * transport call, carries the fully-rendered Symfony Mime\Email (real
- * subject/HTML body/text body already set -- header, footer, and (for
- * text/html) the global/theme CSS partials all already spliced in). A
- * handler returning shouldSend: false short-circuits only the actual
- * network send; every step before it (all real template rendering) still
- * runs for real. Deliberately NOT the MailerInterface-swap technique
- * ApiKeyServiceLifecycleTestSpyMailer/CommentServiceFakeMailerRecordsNotifications
- * use elsewhere in this suite -- those spies REPLACE MailService::mail()
- * outright (its own rendering never runs), which is right for verifying
- * "was mail() called with the right args" but wrong here, where the
- * rendered content itself is what's under test.
+ * MailServiceTest.php (mailCaptureBeforeSend()): a MailServiceTestSpyTransport,
+ * swapped into $this->mailer's own MailService::$transportOverride via
+ * MailServiceTestTransportSwap, sits one level below Symfony's own Mailer
+ * and captures the fully-rendered Symfony Mime\Email (real subject/HTML
+ * body/text body already set -- header, footer, and (for text/html) the
+ * global/theme CSS partials all already spliced in) instead of a real
+ * Transport::send() call. Every step before it (all real template
+ * rendering) still runs for real. Deliberately NOT the MailerInterface-swap
+ * technique ApiKeyServiceLifecycleTestSpyMailer/
+ * CommentServiceFakeMailerRecordsNotifications use elsewhere in this suite
+ * -- those spies REPLACE MailService::mail() outright (its own rendering
+ * never runs), which is right for verifying "was mail() called with the
+ * right args" but wrong here, where the rendered content itself is what's
+ * under test.
  *
  * 3 real content templates exist (cat_group_info, notification_admin,
  * notification_by_mail -- each with an html+plain pair), plus mail_header/
@@ -76,6 +76,8 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
     private Connection $conn;
 
     private MailService $mailer;
+
+    private MailServiceTestSpyTransport $mailerSpy;
 
     private string $rootUrl;
 
@@ -117,13 +119,21 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $repo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
-        $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get());
+        $configService = new ConfigService($repo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();
 
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $this->mailer = $mailer;
+        // Every real send in this file goes through the two
+        // *CaptureBeforeSend() helpers below -- wiring the spy once here,
+        // rather than per-call, matches this class's own docblock claim
+        // that all 4 sends are deliberate golden-content coverage, never a
+        // genuine network attempt. Replaces the old `BeforeSendMail`
+        // event-hook interception (P32 Stage A5 found that event had zero
+        // production listeners).
+        $this->mailerSpy = new MailServiceTestSpyTransport();
+        $this->mailer = MailServiceTestTransportSwap::with($mailer, $this->mailerSpy);
 
         $urlService = Kernel::container()->get(UrlServiceInterface::class);
         self::assertInstanceOf(UrlServiceInterface::class, $urlService);
@@ -156,7 +166,9 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
     }
 
     /**
-     * Same technique as MailServiceTest::mailCaptureBeforeSend().
+     * Same technique as MailServiceTest::mailCaptureBeforeSend() --
+     * $this->mailer was already built with $this->mailerSpy in setUp(), so
+     * this just reads the newest captured Email back off it.
      *
      * @param string|array<int|string, mixed> $to
      * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
@@ -164,24 +176,15 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
      */
     private function mailCaptureBeforeSend(string|array $to, array $args = [], array $tpl = []): Email
     {
-        $captured = null;
-        $handler = function (BeforeSendMail $event) use (&$captured): void {
-            $captured = $event->email;
-            $event->shouldSend = false;
-        };
-        EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $handler);
+        $countBefore = count($this->mailerSpy->sent);
 
-        try {
-            $this->mailer->mail($to, $args, $tpl);
-        } finally {
-            EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $handler);
+        $this->mailer->mail($to, $args, $tpl);
+
+        if (! array_key_exists($countBefore, $this->mailerSpy->sent)) {
+            throw new RuntimeException('expected mail() to have sent through the spy transport');
         }
 
-        if (! $captured instanceof Email) {
-            throw new RuntimeException('expected the before_send_mail handler to have captured a real Email');
-        }
-
-        return $captured;
+        return $this->mailerSpy->sent[$countBefore];
     }
 
     /**
@@ -193,24 +196,15 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
      */
     private function mailNotificationAdminsCaptureBeforeSend(string|array $subject, string|array $content): Email
     {
-        $captured = null;
-        $handler = function (BeforeSendMail $event) use (&$captured): void {
-            $captured = $event->email;
-            $event->shouldSend = false;
-        };
-        EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $handler);
+        $countBefore = count($this->mailerSpy->sent);
 
-        try {
-            $this->mailer->mailNotificationAdmins($subject, $content);
-        } finally {
-            EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $handler);
+        $this->mailer->mailNotificationAdmins($subject, $content);
+
+        if (! array_key_exists($countBefore, $this->mailerSpy->sent)) {
+            throw new RuntimeException('expected mailNotificationAdmins() to have sent through the spy transport (no admin/webmaster recipient in the fixture?)');
         }
 
-        if (! $captured instanceof Email) {
-            throw new RuntimeException('expected the before_send_mail handler to have captured a real Email (no admin/webmaster recipient in the fixture?)');
-        }
-
-        return $captured;
+        return $this->mailerSpy->sent[$countBefore];
     }
 
     public function testCapturesEveryMailTemplate(): void

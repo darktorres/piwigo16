@@ -22,7 +22,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Http\ResponseReadyException;
-    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Section\SectionInitializer;
     use Piwigo\Section\SectionRepository;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -121,7 +120,7 @@ namespace Piwigo\Tests\Integration {
         private function bootRedirectPreconditions(): void
         {
             Kernel::boot();
-            CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+            CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
             LangTestFactory::get()->setLangInfo([
                 'code' => 'en_UK',
                 'direction' => 'ltr',

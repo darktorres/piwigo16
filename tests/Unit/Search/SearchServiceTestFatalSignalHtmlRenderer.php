@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Search;
 
 use LogicException;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\RedirectServiceInterface;
 use RuntimeException;
 
@@ -97,7 +98,7 @@ final class SearchServiceTestFatalSignalHtmlRenderer implements HtmlRenderingInt
         throw new LogicException('not implemented in this fake');
     }
 
-    public function setStatusHeader(int $code, string $text = ''): void
+    public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
     {
         throw new LogicException('not implemented in this fake');
     }

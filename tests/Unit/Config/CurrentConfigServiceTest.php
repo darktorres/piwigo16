@@ -9,7 +9,6 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 
 /**
@@ -25,7 +24,7 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
  */
 function current_config_service_test_config_service(): ConfigService
 {
-    return new ConfigService(EntityManagerFactory::build()->getRepository(ConfigEntry::class), new EventDispatcher(), new CurrentConfig());
+    return new ConfigService(EntityManagerFactory::build()->getRepository(ConfigEntry::class), new CurrentConfig());
 }
 
 afterEach(function (): void {

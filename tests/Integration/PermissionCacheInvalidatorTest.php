@@ -13,7 +13,6 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
@@ -48,7 +47,7 @@ final class PermissionCacheInvalidatorTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig);
+        $this->configService = new ConfigService($this->buildConfigRepository(), $currentConfig);
         CurrentConfigServiceTestFactory::get()->set($this->configService);
     }
 

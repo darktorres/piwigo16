@@ -31,7 +31,6 @@ use Piwigo\Event\Location\LocEndIndexCategoryThumbnails;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
-use Piwigo\Image\Event\GetIndexAlbumDerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -428,7 +427,7 @@ final readonly class CategoryCatsRenderer
             // pagination
             $tplThumbnailsVarSelection = $tplThumbnailsVar;
 
-            $derivativeParams = $this->eventDispatcher->dispatch(new GetIndexAlbumDerivativeParams($this->imageStdParams->getByType(ImageStdParams::THUMB)))->params;
+            $derivativeParams = $this->imageStdParams->getByType(ImageStdParams::THUMB);
             $tplThumbnailsVarSelection = $this->eventDispatcher->dispatch(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))
                 ->tplThumbnailsVar;
             $template->assignContext(new CategoryCatsPageContext(

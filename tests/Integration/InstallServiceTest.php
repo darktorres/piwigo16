@@ -14,7 +14,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -303,7 +302,7 @@ final class InstallServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
     }
 
     /**

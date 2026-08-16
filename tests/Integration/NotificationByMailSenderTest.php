@@ -17,7 +17,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Notification\Projection\UserMailNotification;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -113,7 +112,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get());
+        $configService = new ConfigService($repo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         // sendMailNotifications()'s recent-post-dates block builds real
         // thumbnail URLs (NotificationService::getHtmlDescriptionRecentPostDate()

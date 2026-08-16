@@ -15,7 +15,6 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
@@ -77,7 +76,6 @@ test('invoke renders the real about page for a guest visitor, with menubar/updat
         $conn = DbConnection::build();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService(
             EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class),
-            new EventDispatcher(),
             CurrentConfigTestFactory::get(),
         ));
 

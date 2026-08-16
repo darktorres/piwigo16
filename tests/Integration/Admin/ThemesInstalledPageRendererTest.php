@@ -98,7 +98,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         EventDispatcherTestFactory::get()->reset();
 
-        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
+        $this->configService = new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get());
         // Template::__construct()'s own data_dir_checked first-time-setup
         // flow reaches CurrentConfigServiceTestFactory::get()->get() -- same wiring every
         // other Integration test constructing a real Template directly

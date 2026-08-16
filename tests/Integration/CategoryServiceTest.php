@@ -19,6 +19,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\ActivityLoggerInterface;
     use Piwigo\Core\FilterState;
     use Piwigo\Core\HtmlRenderingInterface;
+    use Piwigo\Core\HttpStatusLine;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
@@ -29,7 +30,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permalink\PermalinkRepository;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
-    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
     use Piwigo\Site\SiteEntity;
@@ -148,7 +148,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         #[Override]
-        public function setStatusHeader(int $code, string $text = ''): void
+        public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
         {
             throw new LogicException('not used by checkRestrictions()');
         }
@@ -263,7 +263,7 @@ namespace Piwigo\Tests\Integration {
             // is via parent::setUp() -- no explicit wiring needed here, same
             // reasoning as NotificationByMailSenderTest's own identical setUp.
             // ImageStdParams::loadFromDb() itself needs CurrentConfigService.
-            CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+            CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
             ImageStdParamsTestFactory::get()->loadFromDb();
         }
 

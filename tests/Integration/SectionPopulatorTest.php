@@ -144,7 +144,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
         LangTestFactory::get()->setLangInfo([
             'code' => 'en_UK',
             'direction' => 'ltr',

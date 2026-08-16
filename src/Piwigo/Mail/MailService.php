@@ -29,7 +29,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Mail\BeforeParseMailTemplate;
-use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\Projection\EmailRecipient;
@@ -46,6 +45,7 @@ use Piwigo\Users\UserService;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
@@ -91,6 +91,17 @@ use Symfony\Component\Mime\Email;
  * `UserService` itself (see this constructor's own `$userService`
  * property) -- a constructor cycle either direction would otherwise
  * result.
+ *
+ * `$transportOverride` is the real test seam for isolating mail() from a
+ * genuine network/sendmail send (P32 Stage A5 -- the old `BeforeSendMail`
+ * plugin event had zero production listeners and was only ever used by
+ * this project's own tests as a side channel to intercept the send one
+ * line early). Mirrors `Sentry\Transport\TransportInterface`'s own
+ * spy-transport precedent in this exact codebase
+ * (`SentryMiddlewareTest.php`) -- production code never sets it (always
+ * `null`, so buildMailer() resolves a real transport from the DSN as
+ * before); tests inject a `MailServiceTestSpyTransport` instead of
+ * registering an event handler.
  */
 final class MailService implements MailerInterface
 {
@@ -115,6 +126,7 @@ final class MailService implements MailerInterface
         private readonly MailRecipientRepositoryInterface $mailRecipientRepo,
         private readonly AuthService $authService,
         private readonly UserService $userService,
+        private readonly ?TransportInterface $transportOverride = null,
     ) {}
 
     /**
@@ -212,6 +224,41 @@ final class MailService implements MailerInterface
     {
         return $value === null || $value === '' || $value === [] || $value === false
             || $value === 0 || $value === 0.0 || $value === '0';
+    }
+
+    /**
+     * Resolves mail()'s own $args['theme'] normalization: an unset,
+     * empty, or unrecognized theme falls back to the configured
+     * mail_theme; a valid explicit 'clear'/'dark' is kept as-is. Extracted
+     * to a pure, directly Reflection-testable method (same
+     * `ReflectionMethod(MailService::class, ...)` pattern this class's
+     * own emptyValue() is already tested through) -- mail()'s own
+     * `$to`/$email pipeline has no external seam left able to observe an
+     * internal $args value that never surfaces in the final Email itself
+     * (mailAllowHtml=false skips the theme-specific CSS entirely).
+     *
+     * @param array{theme?: string, ...} $args
+     * @param array{mail_theme?: mixed, ...} $confMail
+     */
+    private static function resolveMailTheme(array $args, array $confMail): string
+    {
+        if (! isset($args['theme']) || self::emptyValue($args['theme']) || ! in_array($args['theme'], ['clear', 'dark'], true)) {
+            return is_string($confMail['mail_theme'] ?? null) ? $confMail['mail_theme'] : 'clear';
+        }
+
+        return $args['theme'];
+    }
+
+    /**
+     * Resolves mail()'s own $args['content'] default -- same
+     * directly-Reflection-testable extraction rationale as
+     * resolveMailTheme() above.
+     *
+     * @param array{content?: string, ...} $args
+     */
+    private static function resolveMailContent(array $args): string
+    {
+        return $args['content'] ?? '';
     }
 
     public function getMailSenderName(): string
@@ -775,14 +822,10 @@ final class MailService implements MailerInterface
             }
 
             // Theme.
-            if (! isset($args['theme']) || self::emptyValue($args['theme']) || ! in_array($args['theme'], ['clear', 'dark'], true)) {
-                $args['theme'] = is_string($confMail['mail_theme']) ? $confMail['mail_theme'] : 'clear';
-            }
+            $args['theme'] = self::resolveMailTheme($args, $confMail);
 
             // Content.
-            if (! isset($args['content'])) {
-                $args['content'] = '';
-            }
+            $args['content'] = self::resolveMailContent($args);
 
             // Try to decompose subject like "[....] ....".
             if (! isset($args['mail_title']) && ! isset($args['mail_subtitle'])) {
@@ -973,22 +1016,19 @@ final class MailService implements MailerInterface
 
         $ret = true;
         $errorMessage = null;
-        $beforeSendMailEvent = $this->eventDispatcher->dispatch(new BeforeSendMail(true, $to, $args, $email));
 
-        if ($beforeSendMailEvent->shouldSend) {
-            try {
-                $mailer->send($email);
-            } catch (TransportExceptionInterface $e) {
-                $ret = false;
-                $errorMessage = $e->getMessage();
-            }
+        try {
+            $mailer->send($email);
+        } catch (TransportExceptionInterface $e) {
+            $ret = false;
+            $errorMessage = $e->getMessage();
+        }
 
-            if (! $ret && (! (bool) ini_get('display_errors') || $this->accessLevelChecker()->isAdmin())) {
-                trigger_error('Mailer Error: ' . $errorMessage, \E_USER_WARNING);
-            }
-            if ($this->currentConfig->debugMail) {
-                $this->sendMailTest($ret, $email, $args, $errorMessage);
-            }
+        if (! $ret && (! (bool) ini_get('display_errors') || $this->accessLevelChecker()->isAdmin())) {
+            trigger_error('Mailer Error: ' . $errorMessage, \E_USER_WARNING);
+        }
+        if ($this->currentConfig->debugMail) {
+            $this->sendMailTest($ret, $email, $args, $errorMessage);
         }
 
         return $ret;
@@ -1009,9 +1049,18 @@ final class MailService implements MailerInterface
      * implicit connect/read timeout (`default_socket_timeout`) and, unlike
      * SendmailTransport, is `@internal` upstream with no supported way to
      * tighten that bound from outside the Mailer component.
+     *
+     * $dsn is still computed by the caller and passed in even when
+     * $transportOverride is set -- deliberately not skipped, so this
+     * method's own DSN-parsing branch stays exercised the same way
+     * regardless of which transport is actually used.
      */
     private function buildMailer(string $dsn): Mailer
     {
+        if ($this->transportOverride instanceof TransportInterface) {
+            return new Mailer($this->transportOverride);
+        }
+
         if ($dsn === 'native://default') {
             $sendmailPath = (string) ini_get('sendmail_path');
             if ($sendmailPath !== '') {

@@ -17,6 +17,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Core\HtmlRenderingInterface;
+    use Piwigo\Core\HttpStatusLine;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\MailerInterface;
     use Piwigo\Core\RedirectServiceInterface;
@@ -144,7 +145,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         #[Override]
-        public function setStatusHeader(int $code, string $text = ''): void
+        public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
         {
             throw new LogicException('not used by getCommentAuthorId()');
         }

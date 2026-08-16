@@ -38,7 +38,6 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\Request\TemplateExtentsRequest;
@@ -892,9 +891,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             if ($combi->version !== false) {
                 $href .= '?v' . ((bool) $combi->version ? $combi->version : AppInfo::VERSION);
             }
-            // trigger the event for eventual use of a cdn
-            $combinedCssEvent = $this->eventDispatcher->dispatch(new CombinedCss($href, $combi));
-            $href = $combinedCssEvent->href;
             $content[] = '<link rel="stylesheet" type="text/css" href="' . $href . '">';
         }
         $this->output = str_replace(

@@ -12,7 +12,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Mail\BeforeParseMailTemplate;
-use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\BoundedSendmailTransport;
@@ -25,6 +24,8 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\MailServiceTestSpyTransport;
+use Piwigo\Tests\Support\MailServiceTestTransportSwap;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -112,20 +113,27 @@ function mail_service_with_fake_webmaster(): MailService
 }
 
 /**
- * Calls MailService::mail() behind a real 'before_send_mail' hook that
- * captures the fully-built $to/$args/$email and aborts one line before the
- * real Transport::send() -- same real-event-hook-interception technique as
- * SendNotificationEmailHandlerTest, avoids a genuine send attempt against
- * this environment's real sendmail_path. Every caller of this helper
- * expects the hook to actually fire (mail()'s own empty-$to early return is
- * tested separately, directly, without this helper) -- throws rather than
- * returning nullable captures, so every call site can assert against a
- * real, non-null Email/args without its own null-narrowing boilerplate.
+ * Calls MailService::mail() through a MailServiceTestSpyTransport instead
+ * of $service's own real DSN-resolved transport, capturing the
+ * fully-built Email one step before a real Transport::send() would run --
+ * avoids a genuine send attempt against this environment's real
+ * sendmail_path. Same real-injectable-transport technique as
+ * SendNotificationEmailHandlerTest (replaces the old 'before_send_mail'
+ * event-hook interception -- P32 Stage A5 found that event had zero
+ * production listeners and was only ever this project's own test
+ * infrastructure). $service is rebuilt with the spy via
+ * MailServiceTestTransportSwap rather than requiring every call site to
+ * thread a transport override through its own mail_service_test_build()
+ * call. Every caller of this helper expects the send to actually be
+ * reached (mail()'s own empty-$to early return is tested separately,
+ * directly, without this helper) -- throws rather than returning a
+ * nullable capture, so every call site can assert against a real,
+ * non-null Email without its own null-narrowing boilerplate.
  *
  * @param string|array<int|string, mixed> $to
  * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
  * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
- * @return array{return: bool, to: mixed, args: array<array-key, mixed>, email: Email}
+ * @return array{return: bool, email: Email}
  */
 function mail_service_capture_send(MailService $service, string|array $to, array $args = [], array $tpl = []): array
 {
@@ -136,33 +144,18 @@ function mail_service_capture_send(MailService $service, string|array $to, array
     }
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $capturedTo = null;
-    $capturedArgs = null;
-    $capturedEmail = null;
-    $eventHandler = function (BeforeSendMail $event) use (&$capturedTo, &$capturedArgs, &$capturedEmail): void {
-        $capturedTo = $event->to;
-        $capturedArgs = $event->args;
-        $capturedEmail = $event->email;
+    $spy = new MailServiceTestSpyTransport();
+    $spyService = MailServiceTestTransportSwap::with($service, $spy);
 
-        $event->shouldSend = false;
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
+    $return = $spyService->mail($to, $args, $tpl);
 
-    try {
-        $return = $service->mail($to, $args, $tpl);
-    } finally {
-        EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $eventHandler);
-    }
-
-    if (! is_array($capturedArgs) || ! $capturedEmail instanceof Email) {
-        throw new RuntimeException('expected the before_send_mail handler to have captured a real args array and Email');
+    if ($spy->sent === []) {
+        throw new RuntimeException('expected mail() to have sent through the spy transport');
     }
 
     return [
         'return' => $return,
-        'to' => $capturedTo,
-        'args' => $capturedArgs,
-        'email' => $capturedEmail,
+        'email' => $spy->sent[0],
     ];
 }
 
@@ -1163,78 +1156,82 @@ test('mail Bcc\'s the webmaster address when send_bcc_mail_webmaster is true, ev
         ->toBe(['webmaster@example.test']);
 });
 
-test('mail replaces an unset theme with the configured mail_theme', function (): void {
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
-    CurrentConfigTestFactory::get()->mailAllowHtml = false;
-    CurrentConfigTestFactory::get()->mailTheme = 'dark';
-    $service = mail_service_test_build();
+// The 4 theme tests and the content-default test below assert on
+// mail()'s own internal $args normalization, which (unlike subject/to/Cc/
+// Bcc) never surfaces on the resulting Email itself when mailAllowHtml is
+// false (every existing test in this area sets it false) -- the
+// theme-specific CSS partial only gets assigned for a text/html content
+// type. Tested directly via Reflection against the extracted pure
+// resolveMailTheme()/resolveMailContent() methods instead, same
+// established pattern as this file's own emptyValue() test above.
+test('resolveMailTheme replaces an unset theme with the configured mail_theme', function (): void {
+    $resolveMailTheme = new ReflectionMethod(MailService::class, 'resolveMailTheme');
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
-
-    expect($result['args']['theme'])->toBe('dark');
+    expect($resolveMailTheme->invoke(null, [], [
+        'mail_theme' => 'dark',
+    ]))
+        ->toBe('dark');
 });
 
-test('mail replaces an invalid theme with the configured mail_theme instead of leaving it as-is', function (): void {
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
-    CurrentConfigTestFactory::get()->mailAllowHtml = false;
-    CurrentConfigTestFactory::get()->mailTheme = 'dark';
-    $service = mail_service_test_build();
+test('resolveMailTheme replaces an invalid theme with the configured mail_theme instead of leaving it as-is', function (): void {
+    $resolveMailTheme = new ReflectionMethod(MailService::class, 'resolveMailTheme');
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
+    expect($resolveMailTheme->invoke(null, [
         'theme' => 'bogus',
-    ]);
-
-    expect($result['args']['theme'])->toBe('dark');
+    ], [
+        'mail_theme' => 'dark',
+    ]))
+        ->toBe('dark');
 });
 
-test('mail preserves an explicit, valid theme ("clear")', function (): void {
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
-    CurrentConfigTestFactory::get()->mailAllowHtml = false;
-    $service = mail_service_test_build();
+test('resolveMailTheme preserves an explicit, valid theme ("clear")', function (): void {
+    $resolveMailTheme = new ReflectionMethod(MailService::class, 'resolveMailTheme');
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
+    expect($resolveMailTheme->invoke(null, [
         'theme' => 'clear',
-    ]);
-
-    expect($result['args']['theme'])->toBe('clear');
+    ], [
+        'mail_theme' => 'dark',
+    ]))
+        ->toBe('clear');
 });
 
-test('mail preserves an explicit, valid theme ("dark")', function (): void {
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
-    CurrentConfigTestFactory::get()->mailAllowHtml = false;
-    $service = mail_service_test_build();
+test('resolveMailTheme preserves an explicit, valid theme ("dark")', function (): void {
+    $resolveMailTheme = new ReflectionMethod(MailService::class, 'resolveMailTheme');
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
+    expect($resolveMailTheme->invoke(null, [
         'theme' => 'dark',
-    ]);
-
-    expect($result['args']['theme'])->toBe('dark');
+    ], [
+        'mail_theme' => 'clear',
+    ]))
+        ->toBe('dark');
 });
 
-test('mail defaults args[content] to an empty string when the key is entirely absent', function (): void {
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
-    CurrentConfigTestFactory::get()->mailAllowHtml = false;
-    $service = mail_service_test_build();
+test('resolveMailTheme falls back to "clear" when mail_theme itself is not a real string', function (): void {
+    // is_string($confMail['mail_theme'] ?? null) ? ... : 'clear' -- every
+    // sibling test above always supplies a real string mail_theme, so this
+    // final defensive fallback (mail_theme absent or a non-string, which
+    // getMailConfiguration() itself never actually produces, but this
+    // method has no way to know that) was never exercised.
+    $resolveMailTheme = new ReflectionMethod(MailService::class, 'resolveMailTheme');
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-    ]);
+    expect($resolveMailTheme->invoke(null, [], []))
+        ->toBe('clear');
+});
 
-    expect($result['args']['content'])->toBe('');
+test('resolveMailContent defaults to an empty string when the key is entirely absent', function (): void {
+    $resolveMailContent = new ReflectionMethod(MailService::class, 'resolveMailContent');
+
+    expect($resolveMailContent->invoke(null, []))
+        ->toBe('');
+});
+
+test('resolveMailContent preserves an explicit, non-empty content value', function (): void {
+    $resolveMailContent = new ReflectionMethod(MailService::class, 'resolveMailContent');
+
+    expect($resolveMailContent->invoke(null, [
+        'content' => 'hello',
+    ]))
+        ->toBe('hello');
 });
 
 test('mail decomposes a "[Title] Subtitle" subject into mail_title/mail_subtitle when neither was preset', function (): void {

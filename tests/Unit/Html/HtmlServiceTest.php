@@ -23,7 +23,6 @@ use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Event\Template\RenderCommentContent;
-use Piwigo\Event\Template\SetStatusHeader;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\Event\GetSrcImageUrl;
@@ -1591,39 +1590,33 @@ test('setStatusHeader resolves the exact well-known reason phrase for every know
     // Kills lines 597-607's 22 DecrementInteger/IncrementInteger
     // mutations (one pair per status code literal) -- header() itself
     // is a genuine no-op under CLI SAPI with no way to inspect what
-    // string it received after the fact, but the computed $text is also
-    // passed, unmodified, to the real 'set_status_header' trigger_notify
-    // event, giving a real side channel to observe it through.
-    $captured = [];
-    $handler = static function (SetStatusHeader $event) use (&$captured): void {
-        $captured[$event->code] = $event->text;
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
+    // string it received after the fact, but setStatusHeader() also
+    // returns the computed HttpStatusLine directly (P32 Stage A5 -- this
+    // used to be a real side channel via the 'set_status_header'
+    // trigger_notify event; the event had zero production listeners, so
+    // returning the computed value is a real seam, not test-only surface).
     $service = HtmlServiceTestFactory::build();
 
-    try {
-        $expected = [
-            200 => 'OK',
-            301 => 'Moved permanently',
-            302 => 'Moved temporarily',
-            304 => 'Not modified',
-            400 => 'Bad request',
-            401 => 'Authorization required',
-            403 => 'Forbidden',
-            404 => 'Not found',
-            500 => 'Server error',
-            501 => 'Not implemented',
-            503 => 'Service unavailable',
-        ];
-        foreach ($expected as $code => $text) {
-            $service->setStatusHeader($code);
-        }
-
-        expect($captured)
-            ->toBe($expected);
-    } finally {
-        EventDispatcherTestFactory::get()->removeTypedHandler(SetStatusHeader::class, $handler);
+    $expected = [
+        200 => 'OK',
+        301 => 'Moved permanently',
+        302 => 'Moved temporarily',
+        304 => 'Not modified',
+        400 => 'Bad request',
+        401 => 'Authorization required',
+        403 => 'Forbidden',
+        404 => 'Not found',
+        500 => 'Server error',
+        501 => 'Not implemented',
+        503 => 'Service unavailable',
+    ];
+    $captured = [];
+    foreach ($expected as $code => $text) {
+        $captured[$code] = $service->setStatusHeader($code)->text;
     }
+
+    expect($captured)
+        ->toBe($expected);
 });
 
 test('setStatusHeader keeps the given text unchanged when it is genuinely non-empty', function (): void {
@@ -1631,21 +1624,12 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
     // IfNegated ($text === '' guard) -- without this, a caller-supplied
     // reason phrase for a well-known code would be silently overwritten
     // by the default table lookup instead of being kept as given.
-    $captured = null;
-    $handler = static function (SetStatusHeader $event) use (&$captured): void {
-        $captured = $event->text;
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
     $service = HtmlServiceTestFactory::build();
 
-    try {
-        $service->setStatusHeader(200, 'My Custom Reason');
+    $result = $service->setStatusHeader(200, 'My Custom Reason');
 
-        expect($captured)
-            ->toBe('My Custom Reason');
-    } finally {
-        EventDispatcherTestFactory::get()->removeTypedHandler(SetStatusHeader::class, $handler);
-    }
+    expect($result->text)
+        ->toBe('My Custom Reason');
 });
 
 test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is not "menubar"', function (): void {

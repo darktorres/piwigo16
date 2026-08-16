@@ -142,7 +142,6 @@ namespace Piwigo\Tests\Integration {
                 ),
                 EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class),
                 new CookieService(),
-                new EventDispatcher(),
                 new CurrentUser(new CurrentConfig()),
                 new CurrentConfig(),
             );
@@ -282,8 +281,8 @@ namespace Piwigo\Tests\Integration {
             LangTestFactory::get()->load('admin.lang');
 
             $this->conn = DbConnection::build();
-            CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
-            $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
+            CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
+            $configService = new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get());
             $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn)), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), LangTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn));
         }
 
@@ -671,7 +670,7 @@ namespace Piwigo\Tests\Integration {
             // setUp() with no persistent cache) -- constructor injection means
             // this test just passes the fixture it wants directly, no static
             // set()/reset() ceremony needed.
-            $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
+            $configService = new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get());
             $dispatcher = new MaintenanceActionDispatcher(
                 new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()),
                 UrlServiceTestFactory::build(),

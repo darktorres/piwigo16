@@ -18,7 +18,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -131,7 +130,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // setUp().
         LangTestFactory::get()->load('admin.lang');
 
-        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
+        $this->configService = new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($this->configService);
 
         // themes_standard_pages.latte's own {combine_script}/{footer_script}

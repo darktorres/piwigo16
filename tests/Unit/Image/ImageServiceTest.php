@@ -31,7 +31,6 @@ use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
 use Piwigo\Group\GroupEntity;
@@ -43,7 +42,6 @@ use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
@@ -110,11 +108,11 @@ use RuntimeException;
 //   `$idx + 2`): associateImagesToCategories() re-queries
 //   findMaxRanksByCategory()
 //   fresh on every call and assigns ranks sequentially regardless of
-//   batch size, and the EmptyLounge event's own row payload comes from
+//   batch size, and emptyLounge()'s own returned row list comes from
 //   the ORIGINAL, ungrouped lounge rows, not the internal per-category
 //   batching -- splitting one grouped call into two separate ones for
 //   the same category produces the identical final image_category rows,
-//   ranks, and event payload, just more DB round trips (not a publicly
+//   ranks, and return value, just more DB round trips (not a publicly
 //   observable difference).
 // - emptyLounge()'s own lock-value write, `tryAcquireLoungeLock($execId .
 //   '-' . time())` (ConcatRemoveRight, dropping the timestamp): the
@@ -228,7 +226,7 @@ test('countOrphans computes the real difference (not sum) between all images and
 
     Kernel::boot();
     $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-    CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
+    CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, CurrentConfigTestFactory::get()));
 
     try {
         expect(CurrentConfigTestFactory::get()->countOrphans)->toBeNull();
@@ -1824,7 +1822,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // not an unrelated string.
         CurrentConfigTestFactory::get()->emptyLoungeRunning = 'staleexecid-' . (time() - 100);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, CurrentConfigTestFactory::get()));
         // invalidateUserCache: false below -- this must survive untouched,
         // proving line 383's IfNegated does not wrongly invoke
         // PermissionCacheInvalidator::invalidate() (whose own real,
@@ -1863,21 +1861,11 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         $originalRequest = $_REQUEST;
         $_REQUEST['method'] = 'pwg.images.upload';
 
-        $capturedEventRows = null;
-        $handler = function (EmptyLounge $event) use (&$capturedEventRows): void {
-            $capturedEventRows = $event->rows;
-        };
-        EventDispatcherTestFactory::get()->addTypedHandler(EmptyLounge::class, $handler);
-
         try {
             $service = imageServiceTestNewService($repo, $conn);
 
             $result = $service->emptyLounge(invalidateUserCache: false);
 
-            // Kills line 391's RemoveMethodCall -- dispatch(new EmptyLounge($rows))
-            // fires with the exact same rows this call itself returns.
-            expect($capturedEventRows)
-                ->toBe($result);
             expect($result)
                 ->toBe([
                     [
@@ -1943,7 +1931,6 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             // back to the plain string it was originally encoded as.
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('count_orphans'))->toBe('3');
         } finally {
-            EventDispatcherTestFactory::get()->removeTypedHandler(EmptyLounge::class, $handler);
             $_REQUEST = $originalRequest;
             $conn->executeStatement('DELETE FROM image_category WHERE image_id IN (?, ?)', [$imageA, $imageB]);
             $conn->executeStatement('DELETE FROM lounge WHERE image_id IN (?, ?)', [$imageA, $imageB]);
@@ -1978,7 +1965,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
         ]));
         $conn->executeStatement("DELETE FROM config WHERE param IN ('empty_lounge_running', 'count_orphans')");
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, CurrentConfigTestFactory::get()));
         $conn->executeStatement(
             "INSERT INTO config (param, value) VALUES ('count_orphans', ?)",
             [json_encode(3)]
@@ -2028,7 +2015,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $staleValue;
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, CurrentConfigTestFactory::get()));
 
         try {
             $service = imageServiceTestNewService($repo, $conn);
@@ -2086,7 +2073,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $freshLockValue;
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, CurrentConfigTestFactory::get()));
 
         $originalRequest = $_REQUEST;
         unset($_REQUEST['method']);
@@ -2200,7 +2187,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $lockValue;
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, CurrentConfigTestFactory::get()));
 
         try {
             $service = imageServiceTestNewService($repo, $conn);
@@ -2261,7 +2248,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $staleValue;
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, CurrentConfigTestFactory::get()));
 
         try {
             $service = imageServiceTestNewService($repo, $conn);

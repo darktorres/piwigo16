@@ -141,7 +141,7 @@ test('handle() delegates to ExtendForTemplatesPageRenderer::render() with nothin
             LangTestFactory::get(),
             extendForTemplatesSubControllerTestAccessControl(),
             UrlServiceTestFactory::build(),
-            new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), new EventDispatcher(), new CurrentConfig()),
+            new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), new CurrentConfig()),
             new PageState(),
             CurrentTemplateTestFactory::get(),
             extendForTemplatesSubControllerTestCategoryService(),

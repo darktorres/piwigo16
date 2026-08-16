@@ -6,7 +6,6 @@ use Doctrine\DBAL\DriverManager;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 // confGetParam() for a property-backed key reads via reflection on
@@ -51,7 +50,7 @@ function unconnectedConfigService(): ConfigService
     ]);
     $repo = EntityManagerFactory::build($connection)->getRepository(ConfigEntry::class);
 
-    return new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get());
+    return new ConfigService($repo, CurrentConfigTestFactory::get());
 }
 
 beforeEach(function (): void {

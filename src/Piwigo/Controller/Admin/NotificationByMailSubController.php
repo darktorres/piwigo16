@@ -26,7 +26,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Event\Lifecycle\NbmEventHandlerAdded;
 use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\NotificationByMailSender;
@@ -116,7 +115,6 @@ final readonly class NotificationByMailSubController implements AdminSubControll
         $this->accessControl->checkStatus(self::getTabStatus($page_mode));
 
         $this->eventDispatcher->addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, $this->renderGlobalCustomizeMailContent(...));
-        $this->eventDispatcher->dispatch(new NbmEventHandlerAdded());
 
         if (count($post) === 0) {
             // No insert data in post mode

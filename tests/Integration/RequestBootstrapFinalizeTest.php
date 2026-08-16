@@ -18,7 +18,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
@@ -78,7 +77,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
         // footer.latte (reached via CurrentTemplate's parse()) needs this --
         // same as PageTailTest/RedirectServiceTest's own identical setup.
 

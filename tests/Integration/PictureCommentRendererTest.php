@@ -22,11 +22,13 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Event\Template\SetStatusHeader;
 use Piwigo\Event\User\UserCommentInsertion;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Mail\MailService;
@@ -40,7 +42,6 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
@@ -49,6 +50,132 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
+
+/**
+ * Delegates every real HtmlRenderingInterface call to the real,
+ * container-shared HtmlService (render() genuinely needs many of them --
+ * category/element name rendering, thumbnail titles -- for the rest of
+ * the page around a rejected submission, not just setStatusHeader()) and
+ * only intercepts setStatusHeader() itself, capturing what render()
+ * passed instead of letting a real header() call fire. Replaces the old
+ * `SetStatusHeader` event-hook interception (P32 Stage A5 -- that event
+ * had zero production listeners); a real header() call is also
+ * unreliable to observe directly here since PHP's own
+ * "headers already sent" bookkeeping is shared process-wide under CLI
+ * SAPI (confirmed empirically: a prior header('HTTP/...') call anywhere
+ * earlier in this same PHPUnit worker process makes a later
+ * http_response_code() read/reset unreliable).
+ */
+final readonly class PictureCommentRendererTestSpyHtmlRenderer implements HtmlRenderingInterface
+{
+    public function __construct(
+        private HtmlRenderingInterface $inner,
+        private HttpStatusLineCapture $capture,
+    ) {}
+
+    #[Override]
+    public function getCatDisplayName(array $catInformations, ?string $url = ''): string
+    {
+        return $this->inner->getCatDisplayName($catInformations, $url);
+    }
+
+    #[Override]
+    public function getCatDisplayNameCache(
+        string $uppercats,
+        ?string $url = '',
+        bool $singleLink = false,
+        ?string $linkClass = null,
+        ?string $authKey = null,
+    ): string {
+        return $this->inner->getCatDisplayNameCache($uppercats, $url, $singleLink, $linkClass, $authKey);
+    }
+
+    #[Override]
+    public function nameCompare(array $a, array $b): int
+    {
+        return $this->inner->nameCompare($a, $b);
+    }
+
+    #[Override]
+    public function tagAlphaCompare(array $a, array $b): int
+    {
+        return $this->inner->tagAlphaCompare($a, $b);
+    }
+
+    #[Override]
+    public function accessDenied(RedirectServiceInterface $redirectService): never
+    {
+        $this->inner->accessDenied($redirectService);
+    }
+
+    #[Override]
+    public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
+    {
+        $this->inner->badRequest($redirectService, $msg, $alternateUrl);
+    }
+
+    #[Override]
+    public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
+    {
+        $this->inner->pageNotFound($redirectService, $msg, $alternateUrl);
+    }
+
+    #[Override]
+    public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
+    {
+        $this->inner->fatalError($msg, $title, $showTrace);
+    }
+
+    #[Override]
+    public function getTagsContentTitle(array $tags): string
+    {
+        return $this->inner->getTagsContentTitle($tags);
+    }
+
+    #[Override]
+    public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
+    {
+        return $this->inner->getCombinedCategoriesContentTitle($category, $combinedCategories);
+    }
+
+    #[Override]
+    public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
+    {
+        $status = $this->inner->setStatusHeader($code, $text);
+        $this->capture->line = $status;
+
+        return $status;
+    }
+
+    #[Override]
+    public function renderElementName(array $info): string
+    {
+        return $this->inner->renderElementName($info);
+    }
+
+    #[Override]
+    public function renderElementDescription(array $info, string $param = ''): string
+    {
+        return $this->inner->renderElementDescription($info, $param);
+    }
+
+    #[Override]
+    public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
+    {
+        return $this->inner->getThumbnailTitle($info, $title, $comment);
+    }
+}
+
+/**
+ * Plain mutable holder -- PictureCommentRendererTestSpyHtmlRenderer is
+ * itself readonly (matching every other test-double's shape in this
+ * codebase), so the one field a test needs to read back after render()
+ * returns lives in a separate, deliberately mutable object instead.
+ */
+final class HttpStatusLineCapture
+{
+    public ?HttpStatusLine $line = null;
+}
 
 /**
  * Covers the branches past `$nbComments > 0`, which need a real
@@ -663,26 +790,24 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['content'] = 'Rejected for status header check.';
         $_POST['key'] = 'totally-invalid-key';
 
-        // header() is a real no-op under CLI SAPI -- setStatusHeader()'s
-        // own SetStatusHeader notify event is the real side channel
-        // (same technique as HtmlServiceTest's own setStatusHeader
-        // coverage). HtmlService (PresentationAccessor::htmlService())
-        // dispatches through the container-shared EventDispatcher, not
-        // the throwaway instance passed as render()'s own $eventDispatcher
-        // param.
-        $captured = [];
-        $handler = static function (SetStatusHeader $event) use (&$captured): void {
-            $captured[] = [$event->code, $event->text];
-        };
-        EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
+        // PictureCommentRendererTestSpyHtmlRenderer delegates every other
+        // real HtmlRenderingInterface call to the real, container-shared
+        // HtmlService (render() genuinely needs several of them for the
+        // rest of the page) and only captures setStatusHeader()'s own
+        // return value -- P32 Stage A5 replaced the old `SetStatusHeader`
+        // plugin event (zero production listeners) with a real return
+        // value from setStatusHeader() itself.
+        $capture = new HttpStatusLineCapture();
+        $spyHtmlRenderer = new PictureCommentRendererTestSpyHtmlRenderer(PresentationAccessor::htmlService(), $capture);
 
         try {
             $this->renderer()
-                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), $this->mailService(), PresentationAccessor::htmlService(), $this->entityManager());
+                ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), $this->mailService(), $spyHtmlRenderer, $this->entityManager());
 
-            self::assertSame([[403, 'Forbidden']], $captured);
+            self::assertNotNull($capture->line);
+            self::assertSame(403, $capture->line->code);
+            self::assertSame('Forbidden', $capture->line->text);
         } finally {
-            EventDispatcherTestFactory::get()->removeTypedHandler(SetStatusHeader::class, $handler);
             unset($_POST['content'], $_POST['key']);
         }
     }

@@ -11,6 +11,7 @@ use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -99,7 +100,10 @@ final class UrlServiceParseSectionUrlTestHtmlRenderer implements HtmlRenderingIn
     }
 
     #[Override]
-    public function setStatusHeader(int $code, string $text = ''): void {}
+    public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
+    {
+        return new HttpStatusLine($code, $text);
+    }
 
     #[Override]
     public function renderElementName(array $info): string

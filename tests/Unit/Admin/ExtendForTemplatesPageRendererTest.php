@@ -148,7 +148,7 @@ test('render() has nothing to show when no extents are configured, no theme temp
                 LangTestFactory::get(),
                 extendForTemplatesTestAccessControl(),
                 UrlServiceTestFactory::build(),
-                new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), new EventDispatcher(), new CurrentConfig()),
+                new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), new CurrentConfig()),
                 new PageState(),
                 CurrentTemplateTestFactory::get(),
                 extendForTemplatesTestCategoryService(),

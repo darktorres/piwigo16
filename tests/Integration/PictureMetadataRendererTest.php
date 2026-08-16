@@ -60,7 +60,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), $currentConfig));
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 
         $this->scratchDir = dirname(__DIR__, 2) . '/_data/picture-metadata-renderer-test-scratch';

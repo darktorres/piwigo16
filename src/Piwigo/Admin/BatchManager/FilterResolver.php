@@ -39,8 +39,8 @@ use Piwigo\Users\UserService;
  * (`BatchManagerSubController::computeCurrentSet()`) from the raw,
  * still-untyped `$_SESSION['bulk_manager_filter']` session bag -- that bag
  * itself stays a raw array (it's genuinely plugin-extensible, via
- * BatchManagerRegisterFilters/BatchManagerUrlFilter), this class just no
- * longer needs to see more of it than these 3 fixed shapes.
+ * BatchManagerRegisterFilters), this class just no longer needs to see
+ * more of it than these 3 fixed shapes.
  */
 final readonly class FilterResolver
 {

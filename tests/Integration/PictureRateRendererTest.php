@@ -19,7 +19,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Picture\PictureRateRenderer;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -72,7 +71,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 
         // The fixture itself seeds rate rows for element_id=1 (real

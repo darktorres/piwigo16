@@ -20,12 +20,10 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Event\Picture\UpdateRatingScore;
     use Piwigo\Rate\RateEntity;
     use Piwigo\Rate\RateService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
-    use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Users\User;
 
     final class RateServiceTest extends IntegrationTestCase
@@ -72,7 +70,7 @@ namespace Piwigo\Tests\Integration {
             if (! $accessControl instanceof AccessControl) {
                 throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
             }
-            $this->service = new RateService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
+            $this->service = new RateService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         }
 
         public function testRateReturnsFalseForANullRate(): void
@@ -213,27 +211,6 @@ namespace Piwigo\Tests\Integration {
                 ],
                 $this->service->updateRatingScore(5)
             );
-        }
-
-        public function testUpdateRatingScoreReturnsAPluginHandlersReplacementVerbatim(): void
-        {
-            $override = [
-                'score' => 999,
-                'average' => 9.9,
-                'count' => 42,
-            ];
-            EventDispatcherTestFactory::get()->addTypedHandler(
-                UpdateRatingScore::class,
-                static function (UpdateRatingScore $event) use ($override): void {
-                    $event->result = $override;
-                }
-            );
-
-            try {
-                self::assertSame($override, $this->service->updateRatingScore(5));
-            } finally {
-                EventDispatcherTestFactory::get()->reset();
-            }
         }
 
         /**

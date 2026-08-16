@@ -14,13 +14,15 @@ use Piwigo\Db\DbConnection;
  * lounge should be emptied and returns the target category's fresh photo
  * count.
  *
- * uploadCompleted()'s own preg_split() failure guard (image_id, the same
- * `/[\s,;\|]/` pattern used by several other Ws\Images methods) is
- * unreachable from a black-box Contract test in this environment -- see
- * WsImagesTest's exist() section for the full writeup (a plain
- * non-backtracking pattern can't be made to exceed PCRE's default
- * backtrack/recursion budget, and this test process can't reach the
- * separate Apache process's php.ini to lower that budget either).
+ * image_id is still registered and accepted at the wire level
+ * (ImagesMethodRegistrar) for client-SDK back-compat, but
+ * UploadCompletedParams no longer carries it -- its only real reader, the
+ * `WsImagesUploadCompleted` event, had zero production listeners and was
+ * deleted (P32 Stage A5). testUploadCompletedAcceptsACommaSeparatedImageIdString()/
+ * testUploadCompletedAcceptsAnImageIdArray() below still prove the param
+ * is accepted without erroring -- the ACCEPT_ARRAY-flagged wire-level
+ * coercion Server::invoke() itself does, independent of whether the
+ * handler's own DTO reads the result.
  */
 final class WsImagesUploadCompletedTest extends ContractTestCase
 {

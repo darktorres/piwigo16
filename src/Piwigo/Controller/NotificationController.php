@@ -18,8 +18,6 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Event\Location\LocBeginNotification;
-use Piwigo\Event\Location\LocEndNotification;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Html\HtmlService;
@@ -71,8 +69,6 @@ final readonly class NotificationController implements ControllerInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
-        $this->eventDispatcher->dispatch(new LocBeginNotification());
-
         $feedRepo = $this->entityManager->getRepository(FeedEntity::class);
         $feedId = $this->findAvailableFeedId($feedRepo);
         $urlService = $this->urlService;
@@ -117,7 +113,6 @@ final readonly class NotificationController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatch(new LocEndNotification());
         $this->htmlService
             ->flushPageMessages();
         $template->parse('notification.latte', false);

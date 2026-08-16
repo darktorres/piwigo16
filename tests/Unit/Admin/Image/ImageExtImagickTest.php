@@ -11,7 +11,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**
@@ -613,7 +612,7 @@ test('compose throws a LogicException when the overlay uses a different image ba
     imageExtImagickTestMakeJpeg($basePath, 20, 14, 10, 10, 10);
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
     $base = imageExtImagickTestMake($basePath);
-    $overlay = new ImageBackend($overlayPath, imageExtImagickTestCurrentLogger(), new EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
+    $overlay = new ImageBackend($overlayPath, imageExtImagickTestCurrentLogger(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
     // Swap in a fake, non-ImageExtImagick backend to force the mismatch --
     // same idea as ImageGdTest's own compose()-mismatch test, this class's
     // guard only cares that it's genuinely not `self` (ImageExtImagick).
@@ -681,7 +680,7 @@ test('compose throws when the overlay source path cannot be resolved', function 
     imageExtImagickTestMakeJpeg($basePath, 20, 14, 10, 10, 10);
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
     $base = imageExtImagickTestMake($basePath);
-    $overlay = new ImageBackend($overlayPath, imageExtImagickTestCurrentLogger(), new EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
+    $overlay = new ImageBackend($overlayPath, imageExtImagickTestCurrentLogger(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
     expect($overlay->image)
         ->toBeInstanceOf(ImageExtImagick::class);
     // The overlay backend was legitimately constructed from a real file,

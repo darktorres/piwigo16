@@ -107,7 +107,6 @@ test('send returns immediately without touching the DB or network when telemetry
     // constructs objects, it never opens a real connection) is enough.
     $configService = new ConfigService(
         EntityManagerFactory::build()->getRepository(ConfigEntry::class),
-        new EventDispatcher(),
         new CurrentConfig(),
     );
     // Never actually read either -- same "send() returns before touching
@@ -120,7 +119,6 @@ test('send returns immediately without touching the DB or network when telemetry
         ),
         EntityManagerFactory::build()->getRepository(RateEntity::class),
         new CookieService(),
-        new EventDispatcher(),
         new CurrentUser(new CurrentConfig()),
         new CurrentConfig(),
     );
@@ -209,7 +207,6 @@ test('send returns immediately without touching the DB or network when telemetry
         $activityService,
         new AuditService(EntityManagerFactory::build()->getRepository(AuditLogEntity::class)),
         $configService,
-        new EventDispatcher(),
         new CurrentUser(new CurrentConfig()),
         new CurrentConfig(),
     );

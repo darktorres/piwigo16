@@ -17,7 +17,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\ServerTiming;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
@@ -59,7 +58,7 @@ final class FinalizeBridgeMiddlewareTest extends IntegrationTestCase
 
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(3),

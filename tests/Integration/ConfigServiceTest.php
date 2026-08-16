@@ -10,7 +10,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use RuntimeException;
 
@@ -51,7 +50,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->service = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig);
+        $this->service = new ConfigService($this->buildConfigRepository(), $currentConfig);
     }
 
     public function testLoadConfFromDbMergesEveryRowWithJsonDecoding(): void

@@ -179,7 +179,7 @@ final class UserListPageRenderer
                 ->getToken(),
             nbImagePage: $default_user->nbImagePage,
             recentPeriod: $default_user->recentPeriod,
-            themeOptions: ThemeCatalog::getPwgThemes($eventDispatcher, $paths, $currentConfig, $lang, $entityManager),
+            themeOptions: ThemeCatalog::getPwgThemes($paths, $currentConfig, $lang, $entityManager),
             themeSelected: $userService->getDefaultTheme(),
             languageOptions: LangService::getLanguages($paths, $entityManager),
             languageSelected: $userService->getDefaultLanguage(),

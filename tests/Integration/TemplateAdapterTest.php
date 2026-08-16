@@ -12,7 +12,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\TemplateAdapter;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -50,7 +49,7 @@ final class TemplateAdapterTest extends IntegrationTestCase
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get());
+        $configService = new ConfigService($repo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->loadFromDb();

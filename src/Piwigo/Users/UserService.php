@@ -890,7 +890,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         // let's find the first available theme
-        $active_themes = array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang, $this->entityManager));
+        $active_themes = array_keys(ThemeCatalog::getPwgThemes($this->paths, $this->currentConfig, $this->lang, $this->entityManager));
         return isset($active_themes[0]) ? (string) $active_themes[0] : 'default';
     }
 
@@ -1263,7 +1263,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($input->theme)) {
             $theme_param = $input->theme;
-            if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang, $this->entityManager)), true)) {
+            if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->paths, $this->currentConfig, $this->lang, $this->entityManager)), true)) {
                 return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, 'Invalid theme');
             }
             $updates_infos['theme'] = $theme_param;

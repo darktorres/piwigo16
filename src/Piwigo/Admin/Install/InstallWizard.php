@@ -254,7 +254,6 @@ final class InstallWizard
         // method already is.
         $configService = new ConfigService(
             EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class),
-            $this->eventDispatcher,
             $this->currentConfig,
         );
         $this->currentConfigService->set($configService);

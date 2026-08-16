@@ -18,7 +18,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
@@ -105,7 +104,6 @@ test('invoke returns a real 403 forbidden page when web services are disabled', 
         $conn = DbConnection::build();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService(
             EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class),
-            new EventDispatcher(),
             CurrentConfigTestFactory::get(),
         ));
 

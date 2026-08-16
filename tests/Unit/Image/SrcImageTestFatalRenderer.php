@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Image;
 
 use Override;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\RedirectServiceInterface;
 
 final class SrcImageTestFatalRenderer implements HtmlRenderingInterface
@@ -80,7 +81,10 @@ final class SrcImageTestFatalRenderer implements HtmlRenderingInterface
     }
 
     #[Override]
-    public function setStatusHeader(int $code, string $text = ''): void {}
+    public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
+    {
+        return new HttpStatusLine($code, $text);
+    }
 
     #[Override]
     public function renderElementName(array $info): string

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Job\Handler\SendNotificationEmailHandler;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\MailServiceTestSpyTransport;
+use Piwigo\Tests\Support\MailServiceTestTransportSwap;
+use Symfony\Component\Mime\Address;
 
 // MailService reaches the webmaster address through its
 // WebmasterMailProviderInterface constructor collaborator. No fake is
@@ -53,12 +54,13 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     // gets past its own first guard, which makes it indistinguishable
     // from the call being removed outright (both produce zero
     // observable side effects). A non-empty $to pushes mail() past that
-    // guard for real; the 'before_send_mail' hook fires with the exact
-    // job arguments right before the real Transport would be touched,
-    // and returning false from it here stops mail() one line short of
-    // that real send -- this environment's own real sendmail_path
-    // config means letting it proceed further would attempt a genuine
-    // delivery, not a test double.
+    // guard for real; a MailServiceTestSpyTransport (swapped in via
+    // MailServiceTestTransportSwap, replacing the old 'before_send_mail'
+    // event-hook interception -- P32 Stage A5 found that event had zero
+    // production listeners) captures the fully-built Email one step
+    // before a real Transport::send() would run -- this environment's
+    // own real sendmail_path config means letting it proceed further
+    // would attempt a genuine delivery, not a test double.
     // The real project root, not a throwaway temp dir -- getMailTemplate()
     // needs the real themes/default/template/mail/text/plain/*.latte files
     // to actually render (Latte fatal-errors otherwise), and fabricating
@@ -89,30 +91,26 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     // should need just to prove delegation).
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
-    $capturedTo = null;
-    $capturedArgs = null;
-    $eventHandler = function (BeforeSendMail $event) use (&$capturedTo, &$capturedArgs): void {
-        $capturedTo = $event->to;
-        $capturedArgs = $event->args;
-        $event->shouldSend = false;
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
-
     try {
-        $handler = new SendNotificationEmailHandler(send_notification_email_handler_test_mail_service());
+        $spy = new MailServiceTestSpyTransport();
+        $mailService = MailServiceTestTransportSwap::with(send_notification_email_handler_test_mail_service(), $spy);
+        $handler = new SendNotificationEmailHandler($mailService);
 
         $handler(new SendNotificationEmailJob(to: 'someone@example.test', args: [
             'subject' => 'Test Subject',
         ]));
 
-        expect($capturedTo)
-            ->toBe('someone@example.test');
-        if ($capturedArgs === null) {
-            throw new RuntimeException('expected the before_send_mail handler to have captured real args');
+        if ($spy->sent === []) {
+            throw new RuntimeException('expected mail() to have sent through the spy transport');
         }
-        expect($capturedArgs['subject'] ?? null)->toBe('Test Subject');
+        $email = $spy->sent[0];
+
+        $toAddresses = array_map(static fn (Address $a): string => $a->getAddress(), $email->getTo());
+        expect($toAddresses)
+            ->toBe(['someone@example.test']);
+        expect($email->getSubject())
+            ->toBe('Test Subject');
     } finally {
-        EventDispatcherTestFactory::get()->removeTypedHandler(BeforeSendMail::class, $eventHandler);
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();
     }

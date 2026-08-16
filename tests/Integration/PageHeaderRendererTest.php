@@ -60,7 +60,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
         // header.latte's own {get_combined_css}/{get_combined_scripts
         // load='header'} tags reach ScriptLoader::urlService() -- unset by
         // default, real RequestBootstrap-only wiring this test never boots.

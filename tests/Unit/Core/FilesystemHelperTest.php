@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
@@ -124,7 +125,10 @@ function filesystemHelperTestMakeFatalRenderer(stdClass $capture): HtmlRendering
             return '';
         }
 
-        public function setStatusHeader(int $code, string $text = ''): void {}
+        public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
+        {
+            return new HttpStatusLine($code, $text);
+        }
 
         public function renderElementName(array $info): string
         {

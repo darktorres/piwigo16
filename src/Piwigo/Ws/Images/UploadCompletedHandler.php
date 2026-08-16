@@ -13,10 +13,8 @@ namespace Piwigo\Ws\Images;
 
 use Override;
 use Piwigo\Common\ValueObject\CategoryId;
-use Piwigo\Event\Picture\WsImagesUploadCompleted;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageService;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsCsrfGuard;
 use Piwigo\Ws\WsErrorResponse;
@@ -32,7 +30,6 @@ final readonly class UploadCompletedHandler implements WsAction
     public function __construct(
         private ImageService $imageService,
         private HtmlService $htmlService,
-        private EventDispatcher $eventDispatcher,
         private WsCsrfGuard $wsCsrfGuard,
     ) {}
 
@@ -58,12 +55,6 @@ final readonly class UploadCompletedHandler implements WsAction
         $nb_photos = $this->imageService->countImagesInCategory(CategoryId::from($input->categoryId));
         $category_name = $this->htmlService
             ->getCatDisplayNameFromId($input->categoryId, null);
-
-        $this->eventDispatcher->dispatch(new WsImagesUploadCompleted([
-            'image_ids' => $input->imageIds,
-            'category_id' => $input->categoryId,
-            'moved_from_lounge' => $moved_from_lounge,
-        ]));
 
         return [
             'moved_from_lounge' => $moved_from_lounge,

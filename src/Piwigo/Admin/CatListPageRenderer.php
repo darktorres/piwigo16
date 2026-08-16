@@ -20,7 +20,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Location\LocBeginCatList;
-use Piwigo\Event\Location\LocEndCatList;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Permalink\PermalinkRepository;
@@ -271,8 +270,6 @@ final readonly class CatListPageRenderer
             parentEditUrl: $parent_id !== null ? $base_url . 'album-' . $parent_id : null,
             categories: $tpl_categories,
         ));
-
-        $this->eventDispatcher->dispatch(new LocEndCatList());
 
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_list.latte');
     }

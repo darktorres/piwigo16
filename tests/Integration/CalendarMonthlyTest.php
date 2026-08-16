@@ -21,7 +21,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Image\ImageStdParams;
     use Piwigo\Image\SrcImage;
     use Piwigo\Permission\SqlCondition;
-    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\ImageStdParamsTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
@@ -108,7 +107,7 @@ namespace Piwigo\Tests\Integration {
 
             $this->urlService = new CalendarMonthlyTestFakeUrlService();
 
-            $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
+            $configService = new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get());
             $configService->loadConfFromDb();
             ImageStdParamsTestFactory::get()->loadFromDb();
         }

@@ -25,7 +25,6 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Permission\ImageVisibilityChecker;
-use Piwigo\PluginConfig\EventDispatcher;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -95,7 +94,6 @@ final class ImageDerivativeController implements ControllerInterface
     public function __construct(
         private readonly Paths $paths,
         private readonly CurrentLogger $currentLogger,
-        private readonly EventDispatcher $eventDispatcher,
         private readonly ImageStdParams $imageStdParams,
         private readonly ImageVisibilityChecker $imageVisibilityChecker,
         private readonly UrlServiceInterface $urlService,
@@ -255,7 +253,7 @@ final class ImageDerivativeController implements ControllerInterface
         ignore_user_abort(true);
         @set_time_limit(0);
 
-        $image = new ImageBackend($this->srcPath, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
+        $image = new ImageBackend($this->srcPath, $this->currentLogger, $this->currentConfig);
         $timing['load'] = $this->timeStep($step);
 
         $changes = 0;
@@ -297,7 +295,7 @@ final class ImageDerivativeController implements ControllerInterface
 
         if ($params->willWatermark($d_size, $this->imageStdParams)) {
             $wm = $this->imageStdParams->getWatermark();
-            $wm_image = new ImageBackend($this->paths->root . $wm->file, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
+            $wm_image = new ImageBackend($this->paths->root . $wm->file, $this->currentLogger, $this->currentConfig);
             $wm_size = [(int) $wm_image->getWidth(), (int) $wm_image->getHeight()];
             if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
                 $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);

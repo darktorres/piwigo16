@@ -97,7 +97,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->service = new HistoryService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), $currentConfig);
+        $this->service = new HistoryService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository(), $currentConfig), $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), $currentConfig);
     }
 
     #[Override]
@@ -419,7 +419,7 @@ final class HistoryServiceTest extends IntegrationTestCase
             );
             $repo->alterSectionEnum($originalOptions);
             $currentConfig = CurrentConfigTestFactory::get();
-            $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig);
+            $configService = new ConfigService($this->buildConfigRepository(), $currentConfig);
             $configService->confDeleteParam('history_sections_cache');
             $currentConfig->historySectionsCache = null;
         }

@@ -261,7 +261,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         // Deliberately not followed by $configService->loadConfFromDb() --
         // see this class's own docblock.
-        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
+        $configService = new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $this->configService = $configService;
         // Needed for DerivativeImage::url()'s own ImageStdParams::

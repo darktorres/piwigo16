@@ -19,7 +19,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
@@ -92,7 +91,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // loadConfFromDb() below is unrelated to ImageStdParams -- it's
         // this test's own way of seeding every other real config-backed
         // display flag CategoryDefaultRenderer/thumbnails.latte reads.
-        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
+        $configService = new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get());
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->loadFromDb();
 

@@ -24,16 +24,20 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\TimingHelper;
-use Piwigo\Event\Lifecycle\LoadImageLibrary;
-use Piwigo\PluginConfig\EventDispatcher;
 
 final class ImageBackend implements ImageInterface
 {
     /**
-     * @var ImageInterface|null null until either a 'load_image_library'
-     *   event listener sets it (see the trigger_notify() call in
-     *   __construct()) or __construct() itself instantiates the chosen
-     *   library class
+     * @var ImageInterface|null null until __construct() sets it -- either
+     *   to the caller-provided $image override, or to the library class it
+     *   instantiates itself. The 'load_image_library' event that used to
+     *   let a plugin pre-set this and short-circuit __construct() is gone
+     *   (P32 Stage A5 -- zero production listeners, zero wild-plugin
+     *   hooks against it across the entire surveyed 433-plugin/188-theme
+     *   corpus); the one real use the event survey missed -- tests
+     *   injecting a spy/fake ImageInterface to isolate pwgResize()/
+     *   destroy() from a real GD/Imagick/ext_imagick backend -- is served
+     *   directly by the $image constructor param instead.
      */
     public ?ImageInterface $image = null;
 
@@ -50,15 +54,16 @@ final class ImageBackend implements ImageInterface
     public function __construct(
         public string $source_filepath,
         private readonly CurrentLogger $currentLogger,
-        EventDispatcher $eventDispatcher,
         private readonly CurrentConfig $currentConfig,
-        ?string $library = null
+        ?string $library = null,
+        ?ImageInterface $image = null,
     ) {
-
-        $eventDispatcher->dispatch(new LoadImageLibrary($this));
-
-        if (is_object($this->image)) {
-            return; // A plugin may have load its own library
+        if ($image instanceof ImageInterface) {
+            // Mirrors the old event-short-circuit's own observable
+            // behavior exactly: $this->library stays at its '' property
+            // default, real library resolution never runs.
+            $this->image = $image;
+            return;
         }
 
         $extension = strtolower(StringHelper::getExtension($this->source_filepath));
@@ -159,9 +164,8 @@ final class ImageBackend implements ImageInterface
     /**
      * Narrows $image from ImageInterface|null to ImageInterface. By the
      * time any method other than __construct() runs, $image is always
-     * set — either by a 'load_image_library' listener or by
-     * __construct() itself (which throws ImageProcessingException if no
-     * library is available).
+     * set — __construct() itself always sets it, throwing
+     * ImageProcessingException instead if no library is available.
      */
     private function getImage(): ImageInterface
     {
@@ -612,9 +616,9 @@ final class ImageBackend implements ImageInterface
         $image = $this->getImage();
         if (method_exists($image, 'destroy')) {
             // $image's static type is ImageInterface, which doesn't declare
-            // destroy() (only ImageGd implements it; a plugin-provided
-            // backend loaded via the 'load_image_library' event may also
-            // implement it, per __construct()'s comment) — method_exists()
+            // destroy() (only ImageGd implements it; a caller-provided
+            // backend passed via __construct()'s $image param may also
+            // implement it) — method_exists()
             // proves the call is safe but its return stays mixed to PHPStan.
             return (bool) $image->destroy();
         }

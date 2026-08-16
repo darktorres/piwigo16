@@ -21,7 +21,6 @@ use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\User\UserCommentCheck;
-use Piwigo\Event\User\UserCommentDeletion;
 use Piwigo\Event\User\UserCommentValidation;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -397,8 +396,6 @@ final readonly class CommentService
             'author' => $username,
             'comment_id' => $rawCommentId,
         ]);
-
-        $this->eventDispatcher->dispatch(new UserCommentDeletion($rawCommentId));
 
         return true;
     }

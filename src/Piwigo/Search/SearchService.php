@@ -26,7 +26,6 @@ use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Search\Event\QsearchBeforeEval;
 use Piwigo\Search\Event\QsearchExpressionParsed;
 use Piwigo\Search\Event\QsearchGetImagesSqlScopes;
 use Piwigo\Search\Event\QsearchResults;
@@ -1556,8 +1555,6 @@ final readonly class SearchService
         $this->qsearchGetTags($expression, $qsr);
         $this->qsearchGetCategories($expression, $qsr);
         $this->qsearchGetImages($expression, $qsr);
-
-        $this->eventDispatcher->dispatch(new QsearchBeforeEval($expression, $qsr));
 
         $tmp = false;
         $unmatchedTerms = [];

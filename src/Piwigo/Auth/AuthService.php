@@ -26,10 +26,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\User\LoginFailure;
-use Piwigo\Event\User\LoginFailureBeforeLogUser;
 use Piwigo\Event\User\LoginSuccess;
 use Piwigo\Event\User\TryLogUser;
-use Piwigo\Event\User\UserLogin;
 use Piwigo\Event\User\UserLogout;
 use Piwigo\Lang\LangService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -216,16 +214,7 @@ final readonly class AuthService
             session_start();
         }
         $_SESSION['pwg_uid'] = (int) $userId;
-        // Captured into a local before dispatch()'s own impure call --
-        // PHPStan can't keep a narrowed type for a superglobal offset read
-        // after an intervening impure call (matches the same root cause
-        // Controller\Admin\BatchManagerSubController's own resolveSessionFilter()
-        // and Admin\Extensions\ExtensionUpdateChecker::checkExtensions()
-        // already document).
-        $pwgUid = $_SESSION['pwg_uid'];
-
-        $this->eventDispatcher->dispatch(new UserLogin(UserId::from($pwgUid)));
-        $this->activityLogger->record('user', $pwgUid, 'login');
+        $this->activityLogger->record('user', $_SESSION['pwg_uid'], 'login');
     }
 
     /**
@@ -454,7 +443,6 @@ final readonly class AuthService
         if (! $can_login) {
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
             $this->activityLogger->record('user', $user_found->id, $reason ?? 'login_failure_before_log_user');
-            $this->eventDispatcher->dispatch(new LoginFailureBeforeLogUser(Username::tryFrom($username)));
             return $event;
         }
 

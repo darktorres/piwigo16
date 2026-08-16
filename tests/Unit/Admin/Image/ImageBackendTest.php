@@ -16,9 +16,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Event\Lifecycle\LoadImageLibrary;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use ReflectionClass;
 use RuntimeException;
@@ -94,37 +92,25 @@ function pwgImageTestMarker(): string
  * uses 'gd' or lets getLibrary() fall back to it (this environment has no
  * ext_imagick/imagick binary available, see this file's own docblock).
  */
-function pwgImageTestMake(string $sourceFilepath, ?string $library = null): ImageBackend
+function pwgImageTestMake(string $sourceFilepath, ?string $library = null, ?ImageInterface $image = null): ImageBackend
 {
-    return new ImageBackend($sourceFilepath, new CurrentLogger(), EventDispatcherTestFactory::get(), new CurrentConfig(), $library);
+    return new ImageBackend($sourceFilepath, new CurrentLogger(), new CurrentConfig(), $library, $image);
 }
 
 /**
  * Builds a ImageBackend whose underlying ImageInterface is a ImageBackendSpyImage
- * reporting the given (fake) width/height -- via the same 'load_image_library'
- * event short-circuit as the "plugin-provided image instance" test below, so
- * no real image decode ever happens. $sourceFilepath only needs a real file
- * on disk when getRotationAngle() will read its EXIF data (automatic
- * rotation tests) -- pwgResize() never reads pixels through this double.
+ * reporting the given (fake) width/height -- via __construct()'s own
+ * $image override, so no real image decode ever happens. $sourceFilepath
+ * only needs a real file on disk when getRotationAngle() will read its
+ * EXIF data (automatic rotation tests) -- pwgResize() never reads pixels
+ * through this double.
  *
  * @return array{0: ImageBackend, 1: ImageBackendSpyImage}
  */
 function pwgImageTestMakeSpy(string $sourceFilepath, int|float $width, int|float $height): array
 {
     $spy = new ImageBackendSpyImage($width, $height);
-    $handler = function (LoadImageLibrary $event) use ($spy): void {
-        $target = $event->value;
-        if (! $target instanceof ImageBackend) {
-            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
-        }
-        $target->image = $spy;
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
-    try {
-        $img = pwgImageTestMake($sourceFilepath);
-    } finally {
-        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
-    }
+    $img = pwgImageTestMake($sourceFilepath, image: $spy);
 
     return [$img, $spy];
 }
@@ -139,19 +125,7 @@ function pwgImageTestMakeSpy(string $sourceFilepath, int|float $width, int|float
 function pwgImageTestMakeFileControlSpy(string $sourceFilepath, int|float $width, int|float $height, ?int $writeBytes): array
 {
     $spy = new ImageBackendSpyImageFileControl($width, $height, $writeBytes);
-    $handler = function (LoadImageLibrary $event) use ($spy): void {
-        $target = $event->value;
-        if (! $target instanceof ImageBackend) {
-            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
-        }
-        $target->image = $spy;
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
-    try {
-        $img = pwgImageTestMake($sourceFilepath);
-    } finally {
-        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
-    }
+    $img = pwgImageTestMake($sourceFilepath, image: $spy);
 
     return [$img, $spy];
 }
@@ -662,7 +636,7 @@ test('getGraphicsLibraryLabel formats the resolved library and version', functio
         ->toMatch('/^External ImageMagick \d+\.\d+\.\d+/');
 });
 
-test('constructor uses a plugin-provided image instance and skips its own library resolution entirely', function (): void {
+test('constructor uses a caller-provided image instance and skips its own library resolution entirely', function (): void {
     $fake = new class() implements ImageInterface {
         public function getWidth(): int
         {
@@ -715,29 +689,16 @@ test('constructor uses a plugin-provided image instance and skips its own librar
         }
     };
 
-    $handler = function (LoadImageLibrary $event) use ($fake): void {
-        $target = $event->value;
-        if (! $target instanceof ImageBackend) {
-            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
-        }
-        $target->image = $fake;
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
+    // A path this class's own real library resolution would reject
+    // outright (unsupported extension) -- proving the caller-provided
+    // $image really did short-circuit __construct() before that check
+    // ever ran, not merely that it happened to also pass.
+    $img = pwgImageTestMake(pwgImageTestMarker() . '/whatever.totally-unsupported-ext', image: $fake);
 
-    try {
-        // A path this class's own real library resolution would reject
-        // outright (unsupported extension) -- proving the plugin-provided
-        // $image really did short-circuit __construct() before that check
-        // ever ran, not merely that it happened to also pass.
-        $img = pwgImageTestMake(pwgImageTestMarker() . '/whatever.totally-unsupported-ext');
-
-        expect($img->getWidth())
-            ->toBe(123);
-        expect($img->library)
-            ->toBe('');
-    } finally {
-        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
-    }
+    expect($img->getWidth())
+        ->toBe(123);
+    expect($img->library)
+        ->toBe('');
 });
 
 test('an instance built without going through the constructor throws LogicException on first real method call', function (): void {
@@ -1509,31 +1470,18 @@ test('getResizeResult reports a real, accurately-scaled elapsed-time measurement
             return true;
         }
     };
-    $handler = function (LoadImageLibrary $event) use ($slowImage): void {
-        $target = $event->value;
-        if (! $target instanceof ImageBackend) {
-            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
-        }
-        $target->image = $slowImage;
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
+    $img = pwgImageTestMake(pwgImageTestMarker() . '/slow-source.jpg', image: $slowImage);
+    $dest = pwgImageTestMarker() . '/slow-dest.jpg';
 
-    try {
-        $img = pwgImageTestMake(pwgImageTestMarker() . '/slow-source.jpg');
-        $dest = pwgImageTestMarker() . '/slow-dest.jpg';
+    $result = $img->pwgResize($dest, 100, 50, 77, automatic_rotation: false);
 
-        $result = $img->pwgResize($dest, 100, 50, 77, automatic_rotation: false);
-
-        expect($result->time)
-            ->toMatch('/^\d+\.\d{2} ms$/');
-        $reportedMs = (float) $result->time;
-        expect($reportedMs)
-            ->toBeGreaterThanOrEqual(35.0)
-            ->and($reportedMs)
-            ->toBeLessThan(5000.0);
-    } finally {
-        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
-    }
+    expect($result->time)
+        ->toMatch('/^\d+\.\d{2} ms$/');
+    $reportedMs = (float) $result->time;
+    expect($reportedMs)
+        ->toBeGreaterThanOrEqual(35.0)
+        ->and($reportedMs)
+        ->toBeLessThan(5000.0);
 });
 
 test('currentConfig throws LogicException when the container returns an unexpected type', function (): void {
@@ -1731,23 +1679,10 @@ test('destroy falls back to true when the underlying image has no destroy method
             return true;
         }
     };
-    $handler = function (LoadImageLibrary $event) use ($fake): void {
-        $target = $event->value;
-        if (! $target instanceof ImageBackend) {
-            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
-        }
-        $target->image = $fake;
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
+    $img = pwgImageTestMake(pwgImageTestMarker() . '/no-destroy.whatever-unsupported-ext', image: $fake);
 
-    try {
-        $img = pwgImageTestMake(pwgImageTestMarker() . '/no-destroy.whatever-unsupported-ext');
-
-        expect($img->destroy())
-            ->toBeTrue();
-    } finally {
-        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
-    }
+    expect($img->destroy())
+        ->toBeTrue();
 });
 
 test('destroy coerces and genuinely forwards the underlying image\'s own destroy() return value', function (): void {
@@ -1819,21 +1754,8 @@ test('destroy coerces and genuinely forwards the underlying image\'s own destroy
             return 0;
         }
     };
-    $handler = function (LoadImageLibrary $event) use ($fake): void {
-        $target = $event->value;
-        if (! $target instanceof ImageBackend) {
-            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
-        }
-        $target->image = $fake;
-    };
-    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
+    $img = pwgImageTestMake(pwgImageTestMarker() . '/coerce-destroy.whatever-unsupported-ext', image: $fake);
 
-    try {
-        $img = pwgImageTestMake(pwgImageTestMarker() . '/coerce-destroy.whatever-unsupported-ext');
-
-        expect($img->destroy())
-            ->toBeFalse();
-    } finally {
-        EventDispatcherTestFactory::get()->removeTypedHandler(LoadImageLibrary::class, $handler);
-    }
+    expect($img->destroy())
+        ->toBeFalse();
 });

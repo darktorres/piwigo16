@@ -34,14 +34,12 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Event\Location\LocBeginComments;
 use Piwigo\Event\Location\LocEndComments;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Image\Event\GetCommentsDerivativeParams;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\Image;
@@ -184,8 +182,6 @@ final readonly class CommentsController implements ControllerInterface
                 'clause' => '',
             ],
         ];
-
-        $this->eventDispatcher->dispatch(new LocBeginComments());
 
         $commentsRequest = CommentsRequest::fromGlobals($comments_page_nb_comments, $this->inputValidator);
 
@@ -601,7 +597,7 @@ final readonly class CommentsController implements ControllerInterface
             }
         }
 
-        $derivative_params = $this->eventDispatcher->dispatch(new GetCommentsDerivativeParams($this->imageStdParams->getByType(ImageStdParams::THUMB)))->params;
+        $derivative_params = $this->imageStdParams->getByType(ImageStdParams::THUMB);
 
         $template->assignContext(new CommentsPageContext(
             fAction: $this->urlService->getRootUrl() . 'comments.php',

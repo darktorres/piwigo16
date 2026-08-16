@@ -32,7 +32,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\User\TryLogUser;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -122,7 +121,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
 
         $this->conn = DbConnection::build();
 

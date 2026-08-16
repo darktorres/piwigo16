@@ -13,10 +13,8 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
-use Piwigo\Event\User\DeleteGroup;
 use Piwigo\Group\Projection\Group;
 use Piwigo\Group\Projection\GroupListing;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -34,9 +32,9 @@ use Piwigo\Users\CurrentUser;
  * email_admin_on_new_user consistency write.
  *
  * Ids are typed VOs throughout this class's own public surface, matching
- * GroupRepository. `ActivityLoggerInterface`/`AuditService`/`EventDispatcher`
- * take plain values, not VOs, so every call into them unwraps `->value`
- * right before the call.
+ * GroupRepository. `ActivityLoggerInterface`/`AuditService` take plain
+ * values, not VOs, so every call into them unwraps `->value` right before
+ * the call.
  */
 final readonly class GroupService
 {
@@ -45,7 +43,6 @@ final readonly class GroupService
         private ActivityLoggerInterface $activityLogger,
         private AuditService $auditService,
         private ConfigService $configService,
-        private EventDispatcher $eventDispatcher,
         private CurrentUser $currentUser,
         private readonly CurrentConfig $currentConfig,
     ) {}
@@ -330,7 +327,6 @@ final readonly class GroupService
         }
 
         $ids = array_keys($deleted);
-        $this->eventDispatcher->dispatch(new DeleteGroup($ids));
         $this->activityLogger->record('group', $ids, 'delete');
 
         // [SEC-57] one row per group actually deleted

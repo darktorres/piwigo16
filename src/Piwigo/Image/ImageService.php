@@ -20,7 +20,6 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
 use Piwigo\Image\Projection\AddMethodBreakdown;
@@ -445,8 +444,6 @@ final readonly class ImageService
         $logger->debug(__FUNCTION__ . ', exec=' . $execId . ', ends');
 
         $rowArrays = array_map(static fn (ImageCategoryLink $row): array => $row->toArray(), $rows);
-
-        $this->eventDispatcher->dispatch(new EmptyLounge($rowArrays));
 
         return $rowArrays;
     }

@@ -19,6 +19,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\FilterViewsSelection;
     use Piwigo\Core\FilterState;
     use Piwigo\Core\HtmlRenderingInterface;
+    use Piwigo\Core\HttpStatusLine;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\ProcessCache;
     use Piwigo\Core\RedirectServiceInterface;
@@ -151,7 +152,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         #[Override]
-        public function setStatusHeader(int $code, string $text = ''): void
+        public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
         {
             throw new LogicException('not implemented in this fake');
         }

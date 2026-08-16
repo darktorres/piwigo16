@@ -14,7 +14,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -71,7 +70,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         // Kernel is already booted by parent::setUp() with this exact same
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
 
         // footer.latte's {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real

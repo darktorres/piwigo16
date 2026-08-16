@@ -9,8 +9,6 @@ use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\Projection\ConfigParamValue;
 use Piwigo\Core\Kernel;
-use Piwigo\Event\Lifecycle\LoadConf;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Sort\OrderBy;
 use ReflectionNamedType;
 use ReflectionProperty;
@@ -348,7 +346,6 @@ final readonly class ConfigService
 
     public function __construct(
         private ConfigRepository $repo,
-        private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
     ) {}
 
@@ -442,8 +439,6 @@ final readonly class ConfigService
             }
             $this->hydrate($entry->param, $entry->value);
         }
-
-        $this->eventDispatcher->dispatch(new LoadConf($param));
     }
 
     /**

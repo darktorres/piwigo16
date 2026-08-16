@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Unit\Auth;
 use LogicException;
 use Override;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\RedirectServiceInterface;
 use RuntimeException;
 
@@ -81,7 +82,7 @@ final class AccessControlTestFakeHtmlRendererDeniesAccess implements HtmlRenderi
     }
 
     #[Override]
-    public function setStatusHeader(int $code, string $text = ''): void
+    public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
     {
         throw new LogicException('not used by checkStatus()');
     }

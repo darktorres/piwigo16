@@ -6,13 +6,11 @@ namespace Piwigo\Calendar;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
-use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Piwigo\Calendar\Projection\RandomImageForDay;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\SortRenderer;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
 
@@ -152,7 +150,7 @@ final readonly class CalendarRepository
             ->from(ImageEntity::class, 'i');
 
         if ($scope->joinImageCategory) {
-            $qb->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id');
+            $qb->innerJoin('i.imageCategories', 'ic');
         }
 
         $scope->dqlWhere->applyTo($qb);

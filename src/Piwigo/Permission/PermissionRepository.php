@@ -273,8 +273,8 @@ final readonly class PermissionRepository
         $ids = $this->em->createQueryBuilder()
             ->select('DISTINCT i.id')
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
-            ->where('ic.categoryId NOT IN (:forbidden)')
+            ->innerJoin('i.imageCategories', 'ic')
+            ->where('ic.category NOT IN (:forbidden)')
             ->andWhere('i.level > :level')
             ->setParameter('forbidden', self::csvToIntList($structuralForbidden), ArrayParameterType::INTEGER)
             ->setParameter('level', is_numeric($level) ? (int) $level : 0, ParameterType::INTEGER)
@@ -302,10 +302,10 @@ final readonly class PermissionRepository
         }
 
         $total = $this->em->createQueryBuilder()
-            ->select('COUNT(DISTINCT ic.imageId) AS total')
+            ->select('COUNT(DISTINCT IDENTITY(ic.image)) AS total')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId NOT IN (:forbidden)')
-            ->andWhere('ic.imageId ' . $imageAccessType . ' (:accessList)')
+            ->where('ic.category NOT IN (:forbidden)')
+            ->andWhere('ic.image ' . $imageAccessType . ' (:accessList)')
             ->setParameter('forbidden', self::csvToIntList($structuralForbidden), ArrayParameterType::INTEGER)
             ->setParameter('accessList', self::csvToIntList($imageAccessList), ArrayParameterType::INTEGER)
             ->getQuery()
@@ -340,11 +340,11 @@ final readonly class PermissionRepository
     public function isImageOutsideForbiddenCategories(ImageId $imageId, array $forbiddenCategoryIds): bool
     {
         $nb = $this->em->createQueryBuilder()
-            ->select('COUNT(ic.imageId) AS nb')
+            ->select('COUNT(IDENTITY(ic.image)) AS nb')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.imageId = :imageId')
-            ->andWhere('ic.categoryId NOT IN (:forbidden)')
-            ->setParameter('imageId', $imageId)
+            ->where('ic.image = :imageId')
+            ->andWhere('ic.category NOT IN (:forbidden)')
+            ->setParameter('imageId', $imageId->value)
             ->setParameter('forbidden', $forbiddenCategoryIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleScalarResult();

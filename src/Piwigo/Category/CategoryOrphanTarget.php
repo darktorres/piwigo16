@@ -21,7 +21,11 @@ use Piwigo\Image\ImageCategoryEntity;
  * regardless of the underlying column's mapped type (a VO-typed `catId`
  * column still comes back as a plain int through it), and a DQL
  * `IN (:values)` delete bound with `ArrayParameterType::INTEGER` against a
- * VO-typed field works correctly.
+ * VO-typed field works correctly. `ImageCategory`'s `category` property is
+ * a real owning-side association, not a scalar column, since the
+ * association-modeling item's final wave -- {@see DqlPropertyTarget
+ * ::$isAssociation} marks it so the `SELECT`-context consumer wraps it in
+ * `IDENTITY()`.
  *
  * `OldPermalinks` stays on `tableAndColumn()`'s own raw DBAL path:
  * `old_permalinks` is owned by `Piwigo\Permalink\OldPermalinkEntity`
@@ -52,7 +56,7 @@ enum CategoryOrphanTarget
     public function entityClassAndProperty(): ?DqlPropertyTarget
     {
         return match ($this) {
-            self::ImageCategory => new DqlPropertyTarget(ImageCategoryEntity::class, 'categoryId'),
+            self::ImageCategory => new DqlPropertyTarget(ImageCategoryEntity::class, 'category', isAssociation: true),
             self::UserAccess => new DqlPropertyTarget(UserAccessEntity::class, 'catId'),
             self::GroupAccess => new DqlPropertyTarget(GroupAccessEntity::class, 'catId'),
             self::OldPermalinks => null,

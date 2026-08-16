@@ -692,7 +692,7 @@ final class ImageRepository extends EntityRepository
     {
         $subQuery = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('ic.imageId')
+            ->select('IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
             ->getDQL();
 
@@ -796,9 +796,10 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * The selected `ic.categoryId` hydrates as a real {@see CategoryId}
-     * under array hydration, so it's unwrapped below rather than treated
-     * as a raw int.
+     * `ic.image`/`ic.category` are real associations -- `IDENTITY()` is
+     * needed in the `SELECT` regardless of hydration mode, so both come
+     * back as plain scalars under array hydration, not as
+     * {@see ImageId}/{@see CategoryId} instances.
      *
      * @param array<int|string> $images real callers don't guarantee a list
      * @param array<int|string> $categories
@@ -810,10 +811,10 @@ final class ImageRepository extends EntityRepository
 
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('ic.imageId', 'ic.categoryId')
+            ->select('IDENTITY(ic.image) AS imageId', 'IDENTITY(ic.category) AS categoryId')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.imageId IN (:images)')
-            ->andWhere('ic.categoryId IN (:categories)')
+            ->where('ic.image IN (:images)')
+            ->andWhere('ic.category IN (:categories)')
             ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
             ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING)
             ->getQuery()
@@ -826,20 +827,20 @@ final class ImageRepository extends EntityRepository
 
             $categoryId = $row['categoryId'];
             $imageId = $row['imageId'];
-            if (! $categoryId instanceof CategoryId || ! $imageId instanceof ImageId) {
+            if (! is_numeric($categoryId) || ! is_numeric($imageId)) {
                 continue;
             }
 
-            $existing[$categoryId->value][] = $imageId->value;
+            $existing[(int) $categoryId][] = (int) $imageId;
         }
 
         return $existing;
     }
 
     /**
-     * The selected `ic.categoryId` hydrates as a real {@see CategoryId}
-     * under array hydration, so it's unwrapped below rather than treated
-     * as a raw int.
+     * `ic.category` is a real association -- `IDENTITY()` is needed in the
+     * `SELECT` regardless of hydration mode, so it comes back as a plain
+     * scalar under array hydration, not a {@see CategoryId} instance.
      *
      * @param array<int|string> $categories real callers don't guarantee a list
      * @return array<int|string, int> category_id => max rank
@@ -848,11 +849,11 @@ final class ImageRepository extends EntityRepository
     {
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('ic.categoryId', 'MAX(ic.rank) AS maxRank')
+            ->select('IDENTITY(ic.category) AS categoryId', 'MAX(ic.rank) AS maxRank')
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.rank IS NOT NULL')
-            ->andWhere('ic.categoryId IN (:categories)')
-            ->groupBy('ic.categoryId')
+            ->andWhere('ic.category IN (:categories)')
+            ->groupBy('ic.category')
             ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING)
             ->getQuery()
             ->getArrayResult();
@@ -865,11 +866,11 @@ final class ImageRepository extends EntityRepository
 
             $categoryId = $row['categoryId'];
             $maxRank = $row['maxRank'];
-            if (! $categoryId instanceof CategoryId || ! is_numeric($maxRank)) {
+            if (! is_numeric($categoryId) || ! is_numeric($maxRank)) {
                 continue;
             }
 
-            $result[$categoryId->value] = (int) $maxRank;
+            $result[(int) $categoryId] = (int) $maxRank;
         }
 
         return $result;
@@ -890,11 +891,11 @@ final class ImageRepository extends EntityRepository
                 ->createQueryBuilder()
                 ->select('i.id')
                 ->from(ImageCategoryEntity::class, 'ic')
-                ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'ic.imageId = i.id')
-                ->where('ic.categoryId = :category')
+                ->innerJoin('ic.image', 'i')
+                ->where('ic.category = :category')
                 ->andWhere('i.id IN (:images)')
-                ->andWhere('(ic.categoryId != i.storageCategory OR i.storageCategory IS NULL)')
-                ->setParameter('category', CategoryId::from((int) $category))
+                ->andWhere('(ic.category != i.storageCategory OR i.storageCategory IS NULL)')
+                ->setParameter('category', (int) $category)
                 ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
                 ->getQuery()
                 ->getSingleColumnResult()
@@ -909,9 +910,9 @@ final class ImageRepository extends EntityRepository
         $em = $this->getEntityManager();
         $em->createQueryBuilder()
             ->delete(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId = :category')
-            ->andWhere('ic.imageId IN (:images)')
-            ->setParameter('category', CategoryId::from((int) $category))
+            ->where('ic.category = :category')
+            ->andWhere('ic.image IN (:images)')
+            ->setParameter('category', (int) $category)
             ->setParameter('images', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
             ->getQuery()
             ->execute();
@@ -937,9 +938,9 @@ final class ImageRepository extends EntityRepository
         $this->getEntityManager()
             ->createQueryBuilder()
             ->delete(ImageCategoryEntity::class, 'ic')
-            ->where('ic.imageId = :imageId')
-            ->andWhere('ic.categoryId IN (:categoryIds)')
-            ->setParameter('imageId', $imageId)
+            ->where('ic.image = :imageId')
+            ->andWhere('ic.category IN (:categoryIds)')
+            ->setParameter('imageId', $imageId->value)
             ->setParameter('categoryIds', array_map(strval(...), $categoryIds), ArrayParameterType::STRING)
             ->getQuery()
             ->execute();
@@ -983,11 +984,11 @@ final class ImageRepository extends EntityRepository
 
             $qb = $em->createQueryBuilder()
                 ->delete(ImageCategoryEntity::class, 'ic')
-                ->where('ic.imageId = :imageId')
+                ->where('ic.image = :imageId')
                 ->setParameter('imageId', $row['id']->value, ParameterType::INTEGER);
 
             if ($categories !== []) {
-                $qb->andWhere('ic.categoryId NOT IN (:categories)')
+                $qb->andWhere('ic.category NOT IN (:categories)')
                     ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING);
             }
 
@@ -997,7 +998,7 @@ final class ImageRepository extends EntityRepository
             // IDENTITY() above already extracts a plain scalar, so no
             // instanceof CategoryEntity unwrap is needed here.
             if (is_numeric($row['storageCategoryId'] ?? null)) {
-                $qb->andWhere('ic.categoryId != :storageCategoryId')
+                $qb->andWhere('ic.category != :storageCategoryId')
                     ->setParameter('storageCategoryId', (int) $row['storageCategoryId'], ParameterType::INTEGER);
             }
 
@@ -1234,7 +1235,7 @@ final class ImageRepository extends EntityRepository
     {
         $count = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('COUNT(DISTINCT ic.imageId)')
+            ->select('COUNT(DISTINCT IDENTITY(ic.image))')
             ->from(ImageCategoryEntity::class, 'ic')
             ->getQuery()
             ->getSingleScalarResult();
@@ -1252,7 +1253,7 @@ final class ImageRepository extends EntityRepository
     {
         $count = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('COUNT(ic.imageId)')
+            ->select('COUNT(IDENTITY(ic.image))')
             ->from(ImageCategoryEntity::class, 'ic')
             ->getQuery()
             ->getSingleScalarResult();
@@ -1492,8 +1493,8 @@ final class ImageRepository extends EntityRepository
     {
         $qb = $this->createQueryBuilder('i')
             ->select('i.id')
-            ->leftJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
-            ->where('ic.categoryId IS NULL')
+            ->leftJoin('i.imageCategories', 'ic')
+            ->where('ic.category IS NULL')
             ->orderBy('i.id', 'ASC');
 
         if (count($loungedIds) > 0) {
@@ -1694,9 +1695,9 @@ final class ImageRepository extends EntityRepository
      * list) since the caller's own `array_column(..., 'id', 'id')`
      * membership-set idiom is preserved unchanged at the call site.
      *
-     * The selected `ic.categoryId` hydrates as a real {@see CategoryId}
-     * under array hydration, so it's unwrapped below rather than treated
-     * as a raw int.
+     * `ic.category` is a real association -- `IDENTITY()` is needed in the
+     * `SELECT` regardless of hydration mode, so it comes back as a plain
+     * scalar under array hydration, not a {@see CategoryId} instance.
      *
      * @param array<array-key, int|string|float|bool> $imageIds
      * @return list<array<string, mixed>>
@@ -1705,11 +1706,11 @@ final class ImageRepository extends EntityRepository
     {
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('DISTINCT ic.categoryId AS id')
+            ->select('DISTINCT IDENTITY(ic.category) AS id')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'i.id = ic.imageId')
-            ->where('ic.imageId IN (:ids)')
-            ->andWhere('(ic.categoryId != i.storageCategory OR i.storageCategory IS NULL)')
+            ->innerJoin('ic.image', 'i')
+            ->where('ic.image IN (:ids)')
+            ->andWhere('(ic.category != i.storageCategory OR i.storageCategory IS NULL)')
             ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
             ->getQuery()
             ->getArrayResult();
@@ -1720,9 +1721,8 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
-            $id = $row['id'];
             $result[] = [
-                'id' => $id instanceof CategoryId ? $id->value : $id,
+                'id' => $row['id'],
             ];
         }
 
@@ -1742,10 +1742,10 @@ final class ImageRepository extends EntityRepository
     {
         $rows = $this->createQueryBuilder('i')
             ->select('i.id', 'i.file', 'i.path', 'i.representativeExt AS representative_ext', 'i.width', 'i.height', 'i.rotation', 'i.name', 'ic.rank')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
-            ->where('ic.categoryId = :categoryId')
+            ->innerJoin('i.imageCategories', 'ic')
+            ->where('ic.category = :categoryId')
             ->orderBy('ic.rank')
-            ->setParameter('categoryId', $categoryId)
+            ->setParameter('categoryId', $categoryId->value)
             ->getQuery()
             ->getArrayResult();
 
@@ -1781,11 +1781,11 @@ final class ImageRepository extends EntityRepository
         return array_values(array_filter(
             $this->getEntityManager()
                 ->createQueryBuilder()
-                ->select('ic.imageId')
+                ->select('IDENTITY(ic.image)')
                 ->from(ImageCategoryEntity::class, 'ic')
-                ->where('ic.categoryId = :categoryId')
+                ->where('ic.category = :categoryId')
                 ->orderBy('ic.rank', 'ASC')
-                ->setParameter('categoryId', $categoryId)
+                ->setParameter('categoryId', $categoryId->value)
                 ->getQuery()
                 ->getSingleColumnResult(),
             static fn (mixed $v): bool => is_int($v) || is_string($v)
@@ -1800,12 +1800,12 @@ final class ImageRepository extends EntityRepository
     {
         $value = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('COUNT(ic.imageId)')
+            ->select('COUNT(IDENTITY(ic.image))')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.imageId = :imageId')
-            ->andWhere('ic.categoryId = :categoryId')
-            ->setParameter('imageId', $imageId)
-            ->setParameter('categoryId', $categoryId)
+            ->where('ic.image = :imageId')
+            ->andWhere('ic.category = :categoryId')
+            ->setParameter('imageId', $imageId->value)
+            ->setParameter('categoryId', $categoryId->value)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -1828,8 +1828,8 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('MAX(ic.rank)')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId = :categoryId')
-            ->setParameter('categoryId', $categoryId)
+            ->where('ic.category = :categoryId')
+            ->setParameter('categoryId', $categoryId->value)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -1847,10 +1847,10 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->update(ImageCategoryEntity::class, 'ic')
             ->set('ic.rank', 'ic.rank + 1')
-            ->where('ic.categoryId = :categoryId')
+            ->where('ic.category = :categoryId')
             ->andWhere('ic.rank IS NOT NULL')
             ->andWhere('ic.rank >= :rank')
-            ->setParameter('categoryId', $categoryId)
+            ->setParameter('categoryId', $categoryId->value)
             ->setParameter('rank', $rank, ParameterType::INTEGER)
             ->getQuery()
             ->execute();
@@ -1866,11 +1866,11 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->update(ImageCategoryEntity::class, 'ic')
             ->set('ic.rank', ':rank')
-            ->where('ic.imageId = :imageId')
-            ->andWhere('ic.categoryId = :categoryId')
+            ->where('ic.image = :imageId')
+            ->andWhere('ic.category = :categoryId')
             ->setParameter('rank', $rank, ParameterType::INTEGER)
-            ->setParameter('imageId', $imageId)
-            ->setParameter('categoryId', $categoryId)
+            ->setParameter('imageId', $imageId->value)
+            ->setParameter('categoryId', $categoryId->value)
             ->getQuery()
             ->execute();
     }
@@ -1880,15 +1880,16 @@ final class ImageRepository extends EntityRepository
      * placed into -- Admin\PhotosAddDirectPageRenderer's own "default the
      * upload form to whichever album the last photo went into" lookup.
      *
-     * The selected `ic.categoryId` hydrates as a real {@see CategoryId}
-     * under array hydration.
+     * `ic.category` is a real association -- `IDENTITY()` is needed in the
+     * `SELECT` regardless of hydration mode, so it comes back as a plain
+     * scalar under array hydration, not a {@see CategoryId} instance.
      */
     public function findMostRecentImageCategoryInfo(): ?MostRecentCategoryInfo
     {
         $row = $this->createQueryBuilder('i')
-            ->select('ic.categoryId', 'c.uppercats')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
-            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
+            ->select('IDENTITY(ic.category) AS categoryId', 'c.uppercats')
+            ->innerJoin('i.imageCategories', 'ic')
+            ->innerJoin('ic.category', 'c')
             ->orderBy('i.id', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
@@ -1900,11 +1901,11 @@ final class ImageRepository extends EntityRepository
 
         $categoryId = $row['categoryId'];
         $uppercats = $row['uppercats'];
-        if (! $categoryId instanceof CategoryId || ! is_string($uppercats)) {
+        if (! is_numeric($categoryId) || ! is_string($uppercats)) {
             return null;
         }
 
-        return new MostRecentCategoryInfo($categoryId->value, $uppercats);
+        return new MostRecentCategoryInfo((int) $categoryId, $uppercats);
     }
 
     /**
@@ -2139,10 +2140,11 @@ final class ImageRepository extends EntityRepository
      * and dir -- Admin\BatchManagerUnitPageRenderer's own per-image
      * "related albums" display.
      *
-     * The aliased `ic.categoryId AS category_id` still hydrates as a real
-     * {@see CategoryId} under array hydration despite the alias, so it's
-     * unwrapped explicitly below. `uppercats` is a non-nullable column;
-     * `dir` is nullable (see CategoryEntity's own property types).
+     * `ic.category` is a real association -- `IDENTITY()` is needed in the
+     * `SELECT` regardless of hydration mode, so `category_id` comes back
+     * as a plain scalar under array hydration, not a {@see CategoryId}
+     * instance. `uppercats` is a non-nullable column; `dir` is nullable
+     * (see CategoryEntity's own property types).
      *
      * @return list<array{category_id: int, uppercats: string, dir: ?string}>
      */
@@ -2150,11 +2152,11 @@ final class ImageRepository extends EntityRepository
     {
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('ic.categoryId AS category_id', 'c.uppercats', 'c.dir')
+            ->select('IDENTITY(ic.category) AS category_id', 'c.uppercats', 'c.dir')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'c.id = ic.categoryId')
-            ->where('ic.imageId = :imageId')
-            ->setParameter('imageId', $imageId)
+            ->innerJoin('ic.category', 'c')
+            ->where('ic.image = :imageId')
+            ->setParameter('imageId', $imageId->value)
             ->getQuery()
             ->getArrayResult();
 
@@ -2167,12 +2169,12 @@ final class ImageRepository extends EntityRepository
             $categoryId = $row['category_id'];
             $uppercats = $row['uppercats'] ?? null;
             $dir = $row['dir'] ?? null;
-            if (! $categoryId instanceof CategoryId || ! is_string($uppercats)) {
+            if (! is_numeric($categoryId) || ! is_string($uppercats)) {
                 continue;
             }
 
             $result[] = [
-                'category_id' => $categoryId->value,
+                'category_id' => (int) $categoryId,
                 'uppercats' => $uppercats,
                 'dir' => is_string($dir) ? $dir : null,
             ];
@@ -2187,12 +2189,12 @@ final class ImageRepository extends EntityRepository
      * check, a separate query from findCategoryLinksForImage() above (same
      * image_id, no uppercats/dir needed here).
      *
-     * `getSingleColumnResult()` uses `HYDRATE_SCALAR_COLUMN`, which does
-     * NOT apply the `category_id` custom Type -- the selected
-     * `ic.categoryId` comes back as a raw scalar here, exactly what this
-     * method's own `list<int>` contract wants, so no VO-unwrap is needed
-     * (unlike the array/object-hydrated conversions elsewhere in this
-     * file).
+     * `ic.category` is a real association -- `IDENTITY()` is needed in the
+     * `SELECT` regardless of hydration mode (a bare association path there
+     * changes the generated SQL itself, not just how the result is read),
+     * so `getSingleColumnResult()`'s own "never applies a custom Type"
+     * safety (Gotcha #4) isn't the relevant reasoning here anymore; this
+     * still returns a plain `list<int>` either way.
      *
      * @return list<int>
      */
@@ -2202,17 +2204,17 @@ final class ImageRepository extends EntityRepository
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->createQueryBuilder()
-                ->select('ic.categoryId')
+                ->select('IDENTITY(ic.category)')
                 ->from(ImageCategoryEntity::class, 'ic')
-                ->where('ic.imageId = :imageId')
-                ->setParameter('imageId', $imageId)
+                ->where('ic.image = :imageId')
+                ->setParameter('imageId', $imageId->value)
                 // Explicit order: row order is otherwise unguaranteed and
                 // MySQL/PostgreSQL differ, which real consumers notice --
                 // Admin\BatchManagerUnitPageRenderer picks the *first*
                 // authorized category out of this list to build a photo's
                 // "see out" link, so an unordered result makes that link's
                 // target album platform-dependent.
-                ->orderBy('ic.categoryId', 'ASC')
+                ->orderBy('ic.category', 'ASC')
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -2293,9 +2295,9 @@ final class ImageRepository extends EntityRepository
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->createQueryBuilder()
-                ->select('ic.imageId')
+                ->select('IDENTITY(ic.image)')
                 ->from(ImageCategoryEntity::class, 'ic')
-                ->leftJoin(ImageEntity::class, 'i', Join::WITH, 'i.id = ic.imageId')
+                ->leftJoin('ic.image', 'i')
                 ->where('i.id IS NULL')
                 ->getQuery()
                 ->getSingleColumnResult()
@@ -2319,7 +2321,7 @@ final class ImageRepository extends EntityRepository
         $this->getEntityManager()
             ->createQueryBuilder()
             ->delete(ImageCategoryEntity::class, 'ic')
-            ->where('ic.imageId IN (:ids)')
+            ->where('ic.image IN (:ids)')
             ->setParameter('ids', $imageIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
@@ -2378,11 +2380,11 @@ final class ImageRepository extends EntityRepository
             static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
             $this->createQueryBuilder('i')
                 ->select('i.id')
-                ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
+                ->innerJoin('i.imageCategories', 'ic')
                 ->where('i.file = :filename')
-                ->andWhere('ic.categoryId = :categoryId')
+                ->andWhere('ic.category = :categoryId')
                 ->setParameter('filename', $filename)
-                ->setParameter('categoryId', $categoryId)
+                ->setParameter('categoryId', $categoryId->value)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -2443,10 +2445,10 @@ final class ImageRepository extends EntityRepository
     {
         $value = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('COUNT(ic.imageId)')
+            ->select('COUNT(IDENTITY(ic.image))')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId = :categoryId')
-            ->setParameter('categoryId', $categoryId)
+            ->where('ic.category = :categoryId')
+            ->setParameter('categoryId', $categoryId->value)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -2470,14 +2472,14 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('i.id')
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
+            ->innerJoin('i.imageCategories', 'ic')
             ->where('i.id = :imageId')
             ->setMaxResults(1)
             ->setParameter('imageId', $imageId);
 
         SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
+            $criteria->forbiddenCategoriesCondition('ic.category'),
             $criteria->maxLevelCondition('i.level'),
         )->applyTo($qb);
 
@@ -2547,11 +2549,11 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('c.id', 'c.name', 'c.permalink', 'c.uppercats', 'c.globalRank AS global_rank', 'c.commentable')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
-            ->where('ic.imageId = :imageId')
-            ->setParameter('imageId', $imageId);
+            ->innerJoin('ic.category', 'c')
+            ->where('ic.image = :imageId')
+            ->setParameter('imageId', $imageId->value);
 
-        $criteria->forbiddenCategoriesCondition('ic.categoryId')
+        $criteria->forbiddenCategoriesCondition('ic.category')
             ->applyTo($qb);
 
         $result = [];
@@ -2579,27 +2581,27 @@ final class ImageRepository extends EntityRepository
      * Whether $imageId belongs to at least one commentable category
      * satisfying $criteria -- Ws\Images::addComment()'s own "can this
      * image receive a comment" check. $criteria->visibleImageIds and
-     * $criteria->imageAccessIds both apply here, against `ic.imageId`
+     * $criteria->imageAccessIds both apply here, against `ic.image`
      * (not maxLevel).
      */
     public function isImageCommentableWithCondition(ImageId $imageId, PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('DISTINCT ic.imageId')
+            ->select('DISTINCT IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
+            ->innerJoin('ic.category', 'c')
             ->where('c.commentable = :true')
-            ->andWhere('ic.imageId = :imageId')
+            ->andWhere('ic.image = :imageId')
             ->setParameter('true', true)
-            ->setParameter('imageId', $imageId);
+            ->setParameter('imageId', $imageId->value);
 
         SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('c.id'),
             $criteria->visibleCategoriesCondition('c.id'),
-            $criteria->visibleImagesCondition('ic.imageId'),
-            $criteria->imageAccessCondition('ic.imageId'),
+            $criteria->visibleImagesCondition('ic.image'),
+            $criteria->imageAccessCondition('ic.image'),
         )->applyTo($qb);
 
         return $qb->getQuery()
@@ -2629,9 +2631,9 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('c.id', 'c.uppercats', 'c.commentable', 'c.visible', 'c.status', 'c.globalRank AS global_rank')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
-            ->where('ic.imageId = :imageId')
-            ->setParameter('imageId', $imageId);
+            ->innerJoin('ic.category', 'c')
+            ->where('ic.image = :imageId')
+            ->setParameter('imageId', $imageId->value);
 
         SqlCondition::combine(
             'AND',
@@ -2676,9 +2678,9 @@ final class ImageRepository extends EntityRepository
                 ->createQueryBuilder()
                 ->select('c.id')
                 ->from(CategoryEntity::class, 'c')
-                ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'c.id = ic.categoryId')
-                ->where('ic.imageId = :imageId')
-                ->setParameter('imageId', $imageId)
+                ->innerJoin('c.imageCategories', 'ic')
+                ->where('ic.image = :imageId')
+                ->setParameter('imageId', $imageId->value)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -2799,7 +2801,7 @@ final class ImageRepository extends EntityRepository
      * non-null author -- Controller\SearchController's own "does this
      * gallery even have authors, for this user" check.
      * $criteria->forbiddenCategoryIds/visibleCategoryIds apply against
-     * `ic.categoryId`, visibleImageIds and maxLevel apply against `i.id`/
+     * `ic.category`, visibleImageIds and maxLevel apply against `i.id`/
      * `i.level`.
      */
     public function hasAccessibleImageWithAuthor(PermissionCriteria $criteria): bool
@@ -2808,14 +2810,14 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('i.id')
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
+            ->innerJoin('i.imageCategories', 'ic')
             ->andWhere('i.author IS NOT NULL')
             ->setMaxResults(1);
 
         SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
-            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->forbiddenCategoriesCondition('ic.category'),
+            $criteria->visibleCategoriesCondition('ic.category'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
         )->applyTo($qb);
@@ -2831,8 +2833,8 @@ final class ImageRepository extends EntityRepository
      * isImageAccessibleWithCondition() above (this one starts from
      * `categories`, joined onto `image_category` by category_id, filtered
      * by image_id -- that one starts from `images`).
-     * $criteria->forbiddenCategoryIds applies against `ic.categoryId` and
-     * imageAccessIds against `ic.imageId`, not maxLevel.
+     * $criteria->forbiddenCategoryIds applies against `ic.category` and
+     * imageAccessIds against `ic.image`, not maxLevel.
      */
     public function isImageAccessibleViaCategoryWithCondition(ImageId $imageId, PermissionCriteria $criteria): bool
     {
@@ -2840,15 +2842,15 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('c.id')
             ->from(CategoryEntity::class, 'c')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.categoryId = c.id')
-            ->where('ic.imageId = :imageId')
+            ->innerJoin('c.imageCategories', 'ic')
+            ->where('ic.image = :imageId')
             ->setMaxResults(1)
-            ->setParameter('imageId', $imageId);
+            ->setParameter('imageId', $imageId->value);
 
         SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
-            $criteria->imageAccessCondition('ic.imageId'),
+            $criteria->forbiddenCategoriesCondition('ic.category'),
+            $criteria->imageAccessCondition('ic.image'),
         )->applyTo($qb);
 
         return $qb->getQuery()
@@ -2971,9 +2973,10 @@ final class ImageRepository extends EntityRepository
      * image_id/category_id link rows for $imageIds matching $condition --
      * Ws\Categories::getImages()'s own "which albums (that the caller
      * may see) is each returned photo linked to" step. The one real
-     * caller only ever applies forbiddenCategoryIds, against the
-     * unqualified `category_id`. `categoryId` hydrates as a
-     * {@see CategoryId} VO, unwrapped below.
+     * caller only ever applies forbiddenCategoryIds. `ic.image`/
+     * `ic.category` are real associations -- `IDENTITY()` is needed in the
+     * `SELECT` regardless of hydration mode, so both come back as plain
+     * scalars, not {@see ImageId}/{@see CategoryId} instances.
      *
      * @param  list<int>  $imageIds
      * @return list<ImageCategoryLink>
@@ -2986,12 +2989,12 @@ final class ImageRepository extends EntityRepository
 
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('ic.imageId', 'ic.categoryId')
+            ->select('IDENTITY(ic.image) AS imageId', 'IDENTITY(ic.category) AS categoryId')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.imageId IN (:imageIds)')
+            ->where('ic.image IN (:imageIds)')
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
 
-        $criteria->forbiddenCategoriesCondition('ic.categoryId')
+        $criteria->forbiddenCategoriesCondition('ic.category')
             ->applyTo($qb);
 
         $result = [];
@@ -3001,8 +3004,8 @@ final class ImageRepository extends EntityRepository
             }
 
             $result[] = new ImageCategoryLink(
-                imageId: $row['imageId'] instanceof ImageId ? $row['imageId']->value : (is_numeric($row['imageId']) ? (int) $row['imageId'] : 0),
-                categoryId: $row['categoryId'] instanceof CategoryId ? $row['categoryId']->value : (is_numeric($row['categoryId']) ? (int) $row['categoryId'] : 0),
+                imageId: is_numeric($row['imageId']) ? (int) $row['imageId'] : 0,
+                categoryId: is_numeric($row['categoryId']) ? (int) $row['categoryId'] : 0,
             );
         }
 
@@ -3081,9 +3084,9 @@ final class ImageRepository extends EntityRepository
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->createQueryBuilder()
-                ->select('DISTINCT ic.imageId')
+                ->select('DISTINCT IDENTITY(ic.image)')
                 ->from(ImageCategoryEntity::class, 'ic')
-                ->where('ic.categoryId IN (:ids)')
+                ->where('ic.category IN (:ids)')
                 ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER)
                 ->getQuery()
                 ->getSingleColumnResult()
@@ -3114,9 +3117,9 @@ final class ImageRepository extends EntityRepository
 
         $subQuery = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('DISTINCT ic.imageId')
+            ->select('DISTINCT IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId IN (:ids)')
+            ->where('ic.category IN (:ids)')
             ->getDQL();
 
         return array_values(array_map(

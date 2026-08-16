@@ -7,13 +7,11 @@ namespace Piwigo\Search;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\CategoryIdUppercats;
@@ -226,8 +224,8 @@ final readonly class SearchRepository
      * Shared "images matching this WHERE fragment" executor for every
      * `SearchService::getRegularSearchResults()` advanced-search criterion
      * and `searchAllwords()` -- all of them share the exact same `FROM
-     * ImageEntity i INNER JOIN ImageCategoryEntity ic WITH ic.imageId =
-     * i.id WHERE <criterion>` shape (the caller already AND-combines its
+     * ImageEntity i INNER JOIN i.imageCategories ic WHERE <criterion>`
+     * shape (the caller already AND-combines its
      * own criterion condition with `PermissionCriteria`'s forbidden/
      * visible conditions into $whereDql before calling this).
      *
@@ -238,7 +236,7 @@ final readonly class SearchRepository
         $qb = $this->em->createQueryBuilder()
             ->select('DISTINCT i.id')
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id');
+            ->innerJoin('i.imageCategories', 'ic');
         $whereDql->applyTo($qb);
 
         return array_values(array_map(
@@ -265,7 +263,7 @@ final readonly class SearchRepository
         $qb = $this->em->createQueryBuilder()
             ->select($groupByExpr . ' AS ' . $groupAlias, 'COUNT(DISTINCT i.id) AS counter')
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
+            ->innerJoin('i.imageCategories', 'ic')
             ->groupBy($groupAlias);
         $condition->applyTo($qb);
         if ($orderByCounterDesc) {
@@ -292,7 +290,7 @@ final readonly class SearchRepository
         $qb = $this->em->createQueryBuilder()
             ->select('DISTINCT i.id', ...$selectExprs)
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id');
+            ->innerJoin('i.imageCategories', 'ic');
         $condition->applyTo($qb);
 
         return self::castRows($qb->getQuery()->getArrayResult());
@@ -314,7 +312,7 @@ final readonly class SearchRepository
         $qb = $this->em->createQueryBuilder()
             ->select($dqlPath)
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
+            ->innerJoin('i.imageCategories', 'ic')
             ->groupBy($dqlPath)
             ->orderBy($dqlPath, 'ASC');
         $condition->applyTo($qb);

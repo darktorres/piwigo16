@@ -162,9 +162,9 @@ final class NotificationRepositoryTest extends IntegrationTestCase
     {
         // A restrict fragment that excludes every image_category row --
         // proves it's actually appended to the query, not ignored. DQL
-        // property path (ic.categoryId), not the raw SQL column name --
+        // association path (ic.category), not the raw SQL column name --
         // see NotificationRepository's own docblock.
-        $count = $this->repo->countByType('new_elements', null, null, new SqlCondition('ic.categoryId = -1'));
+        $count = $this->repo->countByType('new_elements', null, null, new SqlCondition('ic.category = -1'));
 
         self::assertSame(0, $count);
     }

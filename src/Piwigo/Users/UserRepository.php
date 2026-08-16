@@ -892,7 +892,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * Favorite image ids for $userId restricted to $criteria --
      * UserService::checkUserFavorites()'s own "images still in an
      * authorized category" half of the comparison. The one real caller
-     * only ever applies forbiddenCategoryIds, against `ic.category_id`.
+     * only ever applies forbiddenCategoryIds, against `ic.category`.
      *
      * @return list<int>
      */
@@ -902,11 +902,11 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->createQueryBuilder()
             ->select('DISTINCT f.imageId')
             ->from(FavoriteEntity::class, 'f')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'f.imageId = ic.imageId')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'f.imageId = ic.image')
             ->where('f.userId = :userId')
             ->setParameter('userId', $userId);
 
-        $criteria->forbiddenCategoriesCondition('ic.categoryId')
+        $criteria->forbiddenCategoriesCondition('ic.category')
             ->applyTo($qb);
 
         return self::toIntList(array_values($qb->getQuery()->getSingleColumnResult()));

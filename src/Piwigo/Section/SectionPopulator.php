@@ -240,8 +240,8 @@ final readonly class SectionPopulator
         // follows.
         $forbiddenConditionDql = SqlCondition::combine(
             'AND',
-            $permissionCriteria->forbiddenCategoriesCondition('ic.categoryId'),
-            $permissionCriteria->visibleCategoriesCondition('ic.categoryId'),
+            $permissionCriteria->forbiddenCategoriesCondition('ic.category'),
+            $permissionCriteria->visibleCategoriesCondition('ic.category'),
             $permissionCriteria->visibleImagesCondition('i.id'),
             $permissionCriteria->maxLevelCondition('i.level'),
         );

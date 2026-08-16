@@ -42,7 +42,7 @@ final readonly class NotificationService
      *
      * Applies imageAccessCondition rather than maxLevel: images are gated
      * here by the image_category access list, not by category level. The
-     * field names are DQL property paths (`ic.categoryId`/`ic.imageId`),
+     * field names are DQL property paths (`ic.category`/`ic.image`),
      * not raw SQL column names.
      */
     public function getCommentsRestrictCondition(): SqlCondition
@@ -51,10 +51,10 @@ final readonly class NotificationService
 
         return SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
-            $criteria->visibleCategoriesCondition('ic.categoryId'),
-            $criteria->visibleImagesCondition('ic.imageId'),
-            $criteria->imageAccessCondition('ic.imageId'),
+            $criteria->forbiddenCategoriesCondition('ic.category'),
+            $criteria->visibleCategoriesCondition('ic.category'),
+            $criteria->visibleImagesCondition('ic.image'),
+            $criteria->imageAccessCondition('ic.image'),
         );
     }
 
@@ -66,7 +66,7 @@ final readonly class NotificationService
      * findRecentCategoriesForDate() below.
      *
      * Applies maxLevel against `i.level` rather than imageAccessCondition.
-     * The field names are DQL property paths (`ic.categoryId`/`ic.imageId`);
+     * The field names are DQL property paths (`ic.category`/`ic.image`);
      * `i.id`/`i.level` match ImageEntity's own property names directly.
      * findRecentElementsForDate() stays on a raw-SQL query (see that
      * method's own docblock), which this same condition applies to fine
@@ -78,8 +78,8 @@ final readonly class NotificationService
 
         return SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
-            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->forbiddenCategoriesCondition('ic.category'),
+            $criteria->visibleCategoriesCondition('ic.category'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
         );

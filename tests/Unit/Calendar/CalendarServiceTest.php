@@ -302,7 +302,7 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
 
     expect($scope->dqlWhere->sql)
         ->toBe(
-            "ic.categoryId NOT IN (:{$dqlForbidKey}) AND ic.categoryId IN (:{$dqlVisCatKey}) AND i.id IN (:{$dqlVisImgKey}) AND i.level <= :{$dqlLevelKey}"
+            "ic.category NOT IN (:{$dqlForbidKey}) AND ic.category IN (:{$dqlVisCatKey}) AND i.id IN (:{$dqlVisImgKey}) AND i.level <= :{$dqlLevelKey}"
         )->and($scope->dqlWhere->parameters)
         ->toBe([
             $dqlForbidKey => [5, 6],

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Piwigo\Category\CategoryEntity;
@@ -93,6 +95,17 @@ final class ImageEntity implements HasLastModified
     #[ORM\Column(type: 'image_id')]
     public ?ImageId $id = null;
 
+    /**
+     * Inverse `#[ORM\OneToMany]` side of {@see ImageCategoryEntity::
+     * $image} -- same "collection-valued inverse sides stay genuinely
+     * lazy" reasoning as {@see \Piwigo\Category\CategoryEntity::
+     * $imageCategories}'s own docblock.
+     *
+     * @var Collection<int, ImageCategoryEntity>
+     */
+    #[ORM\OneToMany(mappedBy: 'image', targetEntity: ImageCategoryEntity::class)]
+    public Collection $imageCategories;
+
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]
         public string $file,
@@ -149,7 +162,9 @@ final class ImageEntity implements HasLastModified
         public ?float $longitude,
         #[ORM\Column(type: 'sql_datetime', length: 19)]
         public SqlDateTime $lastmodified,
-    ) {}
+    ) {
+        $this->imageCategories = new ArrayCollection();
+    }
 
     #[Override]
     public function touchLastModified(SqlDateTime $now): void

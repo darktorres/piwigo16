@@ -7,9 +7,7 @@ namespace Piwigo\Section;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\CategoryEntity;
-use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
 
@@ -153,7 +151,7 @@ final readonly class SectionRepository
         $qb = $this->em->createQueryBuilder()
             ->select('i.id')
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
+            ->innerJoin('i.imageCategories', 'ic')
             ->andWhere('i.hit > 0')
             ->groupBy('i.id')
             ->orderBy('i.hit', 'DESC')
@@ -180,7 +178,7 @@ final readonly class SectionRepository
         $qb = $this->em->createQueryBuilder()
             ->select('i.id')
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
+            ->innerJoin('i.imageCategories', 'ic')
             ->andWhere('i.ratingScore IS NOT NULL')
             ->groupBy('i.id')
             ->orderBy('i.ratingScore', 'DESC')

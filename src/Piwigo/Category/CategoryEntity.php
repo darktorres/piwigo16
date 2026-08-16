@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Db\HasLastModified;
+use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Site\SiteEntity;
 
@@ -90,6 +93,20 @@ final class CategoryEntity implements HasLastModified
     #[ORM\Column(type: 'category_id')]
     public ?CategoryId $id = null;
 
+    /**
+     * Inverse `#[ORM\OneToMany]` side of {@see ImageCategoryEntity::
+     * $category} -- collection-valued, so (unlike a to-one inverse) it
+     * stays a genuinely uninitialized `PersistentCollection` until
+     * iterated. Exists only so DQL joining *from* `CategoryEntity` *into*
+     * `image_category` has an association path to join through; never
+     * touched as a bare property in application code (see `0.3`'s "keep
+     * joins explicit").
+     *
+     * @var Collection<int, ImageCategoryEntity>
+     */
+    #[ORM\OneToMany(mappedBy: 'category', targetEntity: ImageCategoryEntity::class)]
+    public Collection $imageCategories;
+
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]
         public string $name,
@@ -123,7 +140,9 @@ final class CategoryEntity implements HasLastModified
         public ?Permalink $permalink,
         #[ORM\Column(type: 'sql_datetime', length: 19)]
         public SqlDateTime $lastmodified,
-    ) {}
+    ) {
+        $this->imageCategories = new ArrayCollection();
+    }
 
     #[Override]
     public function touchLastModified(SqlDateTime $now): void

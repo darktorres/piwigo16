@@ -1266,7 +1266,7 @@ namespace Piwigo\Tests\Integration {
         {
             // countAvailableWithConditions() is exercised here through
             // this real caller's own condition fragments
-            // (com.validated/ic.categoryId/ic.imageId, wired up in
+            // (com.validated/ic.category/ic.image, wired up in
             // CommentService itself) -- CommentRepositoryTest's own
             // countAvailableWithConditions() tests exercise the same
             // repository mechanism, but never through this exact caller.

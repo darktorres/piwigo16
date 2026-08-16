@@ -13,7 +13,6 @@ use Piwigo\Common\ValueObject\SqlDate;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Env;
-use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Rate\Projection\ImageThumbInfo;
 use Piwigo\Rate\Projection\Rate;
@@ -291,8 +290,8 @@ final class RateRepository extends EntityRepository
 
         if ($categoryIds !== []) {
             $qb->innerJoin(ImageEntity::class, 'i', Join::WITH, 'r.elementId = i.id')
-                ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
-                ->andWhere('ic.categoryId IN (:categoryIds)')
+                ->innerJoin('i.imageCategories', 'ic')
+                ->andWhere('ic.category IN (:categoryIds)')
                 ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
         }
 
@@ -375,8 +374,8 @@ final class RateRepository extends EntityRepository
         $qb->addOrderBy('i.id', 'DESC');
 
         if ($categoryIds !== []) {
-            $qb->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
-                ->andWhere('ic.categoryId IN (:categoryIds)')
+            $qb->innerJoin('i.imageCategories', 'ic')
+                ->andWhere('ic.category IN (:categoryIds)')
                 ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
         }
 

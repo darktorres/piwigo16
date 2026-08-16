@@ -31,7 +31,9 @@ test('entityClassAndProperty maps every DQL-backed case to its real entity/prope
     if ($imageCategory instanceof DqlPropertyTarget) {
         expect($imageCategory->entityClass)->toBe(ImageCategoryEntity::class)
             ->and($imageCategory->property)
-            ->toBe('categoryId');
+            ->toBe('category')
+            ->and($imageCategory->isAssociation)
+            ->toBeTrue();
     }
 
     $userAccess = CategoryOrphanTarget::UserAccess->entityClassAndProperty();
@@ -40,7 +42,9 @@ test('entityClassAndProperty maps every DQL-backed case to its real entity/prope
     if ($userAccess instanceof DqlPropertyTarget) {
         expect($userAccess->entityClass)->toBe(UserAccessEntity::class)
             ->and($userAccess->property)
-            ->toBe('catId');
+            ->toBe('catId')
+            ->and($userAccess->isAssociation)
+            ->toBeFalse();
     }
 
     $groupAccess = CategoryOrphanTarget::GroupAccess->entityClassAndProperty();
@@ -49,7 +53,9 @@ test('entityClassAndProperty maps every DQL-backed case to its real entity/prope
     if ($groupAccess instanceof DqlPropertyTarget) {
         expect($groupAccess->entityClass)->toBe(GroupAccessEntity::class)
             ->and($groupAccess->property)
-            ->toBe('catId');
+            ->toBe('catId')
+            ->and($groupAccess->isAssociation)
+            ->toBeFalse();
     }
 
     expect(CategoryOrphanTarget::OldPermalinks->entityClassAndProperty())->toBeNull();

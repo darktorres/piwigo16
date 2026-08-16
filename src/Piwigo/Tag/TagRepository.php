@@ -107,8 +107,9 @@ final class TagRepository extends EntityRepository
      * no formal association between them.
      *
      * {@see PermissionCriteria} applies forbiddenCategoryIds/
-     * visibleCategoryIds against `ic.category_id` and imageAccessIds
-     * against `ic.image_id`. `it.tagId` hydrates as a `TagId` VO under
+     * visibleCategoryIds against `ic.category` and imageAccessIds
+     * against `ic.image` -- bare owning-side association paths, not the
+     * old scalar `categoryId`/`imageId` columns. `it.tagId` hydrates as a `TagId` VO under
      * `getArrayResult()`, the same gotcha documented on
      * {@see findTagsForImage()}. $tagIds is bound as a parameter, not
      * spliced.
@@ -122,15 +123,15 @@ final class TagRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('it.tagId', 'COUNT(DISTINCT it.imageId) AS counter')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(ImageTagEntity::class, 'it', Join::WITH, 'ic.imageId = it.imageId')
+            ->innerJoin(ImageTagEntity::class, 'it', Join::WITH, 'ic.image = it.imageId')
             ->groupBy('it.tagId');
 
         SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
-            $criteria->visibleCategoriesCondition('ic.categoryId'),
-            $criteria->visibleImagesCondition('ic.imageId'),
-            $criteria->imageAccessCondition('ic.imageId'),
+            $criteria->forbiddenCategoriesCondition('ic.category'),
+            $criteria->visibleCategoriesCondition('ic.category'),
+            $criteria->visibleImagesCondition('ic.image'),
+            $criteria->imageAccessCondition('ic.image'),
         )->applyTo($qb);
 
         if ($tagIds !== []) {

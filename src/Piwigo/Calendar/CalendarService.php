@@ -105,7 +105,7 @@ final readonly class CalendarService
                 );
                 $dqlWhere = SqlCondition::combine(
                     'AND',
-                    new SqlCondition('ic.categoryId IN (:innerSubIds)', [
+                    new SqlCondition('ic.category IN (:innerSubIds)', [
                         'innerSubIds' => $subIdsInt,
                     ], [
                         'innerSubIds' => ArrayParameterType::INTEGER,
@@ -129,8 +129,8 @@ final readonly class CalendarService
 
                 $dqlWhere = SqlCondition::combine(
                     'AND',
-                    $criteria->forbiddenCategoriesCondition('ic.categoryId'),
-                    $criteria->visibleCategoriesCondition('ic.categoryId'),
+                    $criteria->forbiddenCategoriesCondition('ic.category'),
+                    $criteria->visibleCategoriesCondition('ic.category'),
                     $criteria->visibleImagesCondition('i.id'),
                     $criteria->maxLevelCondition('i.level'),
                 );

@@ -293,10 +293,10 @@ final readonly class CategoryRepository
     /**
      * Uses a typed {@see PermissionCriteria} -- the one real caller applies
      * forbiddenCategoryIds/visibleCategoryIds against `c.id` and
-     * visibleImageIds against `ic.image_id` (via `image_access_list`, since
+     * visibleImageIds against `ic.image` (via `image_access_list`, since
      * `visible_images` falls through to it in the old
      * `getSqlConditionFandFAsCondition()` mapping, so imageAccessIds
-     * applies here too, against `ic.image_id`).
+     * applies here too, against `ic.image`).
      *
      * Real DQL -- `image_category` is mapped
      * ({@see \Piwigo\Image\ImageCategoryEntity}), {@see PermissionCriteria}'s
@@ -313,9 +313,9 @@ final readonly class CategoryRepository
 
         $qb = $this->em
             ->createQueryBuilder()
-            ->select('ic.imageId')
+            ->select('IDENTITY(ic.image)')
             ->from(CategoryEntity::class, 'c')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.categoryId = c.id')
+            ->innerJoin('c.imageCategories', 'ic')
             ->where($scope)
             ->orderBy('RAND()')
             ->setMaxResults(1)
@@ -324,8 +324,8 @@ final readonly class CategoryRepository
             'AND',
             $criteria->forbiddenCategoriesCondition('c.id'),
             $criteria->visibleCategoriesCondition('c.id'),
-            $criteria->visibleImagesCondition('ic.imageId'),
-            $criteria->imageAccessCondition('ic.imageId'),
+            $criteria->visibleImagesCondition('ic.image'),
+            $criteria->imageAccessCondition('ic.image'),
         )->applyTo($qb);
 
         if ($recursive) {
@@ -523,20 +523,20 @@ final readonly class CategoryRepository
             ->createQueryBuilder()
             ->select('i.id')
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
-            ->where('ic.categoryId IN (:catIds)')
+            ->innerJoin('i.imageCategories', 'ic')
+            ->where('ic.category IN (:catIds)')
             ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
             ->groupBy('i.id');
         SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
-            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->forbiddenCategoriesCondition('ic.category'),
+            $criteria->visibleCategoriesCondition('ic.category'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
         )->applyTo($qb);
 
         if ($mode === 'AND' && count($catIds) > 1) {
-            $qb->having('COUNT(DISTINCT ic.categoryId) = :catCount')
+            $qb->having('COUNT(DISTINCT ic.category) = :catCount')
                 ->setParameter('catCount', count($catIds));
         }
 
@@ -569,7 +569,7 @@ final readonly class CategoryRepository
      * @return array<int, CategoryUppercatsCounter> keyed by id
      *
      * Uses a typed {@see PermissionCriteria} -- the one real caller applies
-     * forbiddenCategoryIds/visibleCategoryIds against `ic.categoryId`.
+     * forbiddenCategoryIds/visibleCategoryIds against `ic.category`.
      * Real DQL -- `image_category` is mapped
      * ({@see \Piwigo\Image\ImageCategoryEntity}), and
      * {@see PermissionCriteria}'s `*Condition()` methods work identically
@@ -583,20 +583,20 @@ final readonly class CategoryRepository
 
         $qb = $this->em
             ->createQueryBuilder()
-            ->select('c.id', 'c.uppercats', 'COUNT(ic.imageId) AS counter')
+            ->select('c.id', 'c.uppercats', 'COUNT(IDENTITY(ic.image)) AS counter')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
-            ->where('ic.imageId IN (:itemIds)')
+            ->innerJoin('ic.category', 'c')
+            ->where('ic.image IN (:itemIds)')
             ->setParameter('itemIds', $itemIds, ArrayParameterType::INTEGER)
             ->groupBy('c.id');
         SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
-            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->forbiddenCategoriesCondition('ic.category'),
+            $criteria->visibleCategoriesCondition('ic.category'),
         )->applyTo($qb);
 
         if ($excludedCatIds !== []) {
-            $qb->andWhere('ic.categoryId NOT IN (:excludedCatIds)')
+            $qb->andWhere('ic.category NOT IN (:excludedCatIds)')
                 ->setParameter('excludedCatIds', $excludedCatIds, ArrayParameterType::INTEGER);
         }
 
@@ -791,11 +791,13 @@ final readonly class CategoryRepository
      * @return list<int>
      *
      * Real DQL -- single-table; `image_category` is mapped
-     * ({@see ImageCategoryEntity}). `ic.imageId` uses the `image_id`
-     * custom Doctrine Type, but
-     * `getSingleColumnResult()` uses `HYDRATE_SCALAR_COLUMN`, which never
-     * applies a field's custom Type regardless (Gotcha #4) -- so this
-     * still returns ordinary ints/numeric strings.
+     * ({@see ImageCategoryEntity}). `ic.image` is a real association
+     * (owning side) since the association-modeling item's final wave --
+     * `IDENTITY()` is needed in the `SELECT` regardless of hydration mode
+     * (a bare association path there changes the generated SQL itself,
+     * not just how the result is read), so `getSingleColumnResult()`'s own
+     * "never applies a custom Type" safety (Gotcha #4) is no longer the
+     * relevant reasoning here.
      */
     public function findDistinctLinkedImageIds(array $ids): array
     {
@@ -805,9 +807,9 @@ final readonly class CategoryRepository
 
         $rows = $this->em
             ->createQueryBuilder()
-            ->select('DISTINCT ic.imageId')
+            ->select('DISTINCT IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId IN (:ids)')
+            ->where('ic.category IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleColumnResult();
@@ -841,10 +843,10 @@ final readonly class CategoryRepository
 
         $rows = $this->em
             ->createQueryBuilder()
-            ->select('DISTINCT ic.imageId')
+            ->select('DISTINCT IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.imageId IN (:imageIds)')
-            ->andWhere('ic.categoryId NOT IN (:excludeIds)')
+            ->where('ic.image IN (:imageIds)')
+            ->andWhere('ic.category NOT IN (:excludeIds)')
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
             ->setParameter('excludeIds', $excludeIds, ArrayParameterType::INTEGER)
             ->getQuery()
@@ -875,9 +877,9 @@ final readonly class CategoryRepository
     {
         $rows = $this->em
             ->createQueryBuilder()
-            ->select('ic.imageId')
+            ->select('IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId NOT IN (:excludeIds)')
+            ->where('ic.category NOT IN (:excludeIds)')
             ->setParameter('excludeIds', $excludeIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleColumnResult();
@@ -1071,8 +1073,8 @@ final readonly class CategoryRepository
      * @param 'all'|int|string|array<int|string> $ids
      * @return list<int>
      *
-     * Real DQL -- same no-association Join::WITH shape as
-     * findWrongRepresentativeCategoryIds() above. Scoping on `c.id` rather
+     * Real DQL -- natural join through `c.imageCategories` (the inverse
+     * side of `ImageCategoryEntity::$category`). Scoping on `c.id` rather
      * than the original's `image_category.category_id` is equivalent: the
      * join equates them for every matched row.
      */
@@ -1082,7 +1084,7 @@ final readonly class CategoryRepository
             ->select('c.id')
             ->distinct()
             ->from(CategoryEntity::class, 'c')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'c.id = ic.categoryId')
+            ->innerJoin('c.imageCategories', 'ic')
             ->where('c.representativePicture IS NULL');
 
         if (! self::restrictToCategoryIds($qb, $ids)) {
@@ -1125,10 +1127,19 @@ final readonly class CategoryRepository
 
         $entityClass = $entityClassAndProperty->entityClass;
         $property = $entityClassAndProperty->property;
+        // A bare association path in a SELECT clause changes the
+        // generated SQL itself (it would hydrate the associated entity,
+        // not just extract the FK id), so an association-shaped $property
+        // (see DqlPropertyTarget::$isAssociation) needs IDENTITY() here --
+        // the join condition and every other consumer of $property stay
+        // on the bare path.
+        $selectExpr = $entityClassAndProperty->isAssociation
+            ? "DISTINCT IDENTITY(t.{$property})"
+            : "DISTINCT t.{$property}";
 
         $values = $this->em
             ->createQueryBuilder()
-            ->select("DISTINCT t.{$property}")
+            ->select($selectExpr)
             ->from($entityClass, 't')
             ->leftJoin(CategoryEntity::class, 'c', Join::WITH, "c.id = t.{$property}")
             ->where('c.id IS NULL')
@@ -1534,12 +1545,12 @@ final readonly class CategoryRepository
 
         $rows = $this->em
             ->createQueryBuilder()
-            ->select('ic.categoryId AS category_id', "{$aggregateExpr} AS ref_date")
+            ->select('IDENTITY(ic.category) AS category_id', "{$aggregateExpr} AS ref_date")
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'ic.imageId = i.id')
-            ->where('ic.categoryId IN (:categoryIds)')
+            ->innerJoin('ic.image', 'i')
+            ->where('ic.category IN (:categoryIds)')
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
-            ->groupBy('ic.categoryId')
+            ->groupBy('ic.category')
             ->getQuery()
             ->getArrayResult();
 
@@ -1550,7 +1561,6 @@ final readonly class CategoryRepository
             }
 
             $categoryId = $row['category_id'] ?? null;
-            $categoryId = $categoryId instanceof CategoryId ? $categoryId->value : $categoryId;
             if (is_numeric($categoryId)) {
                 $byCategoryId[(int) $categoryId] = $row['ref_date'] ?? null;
             }
@@ -1593,19 +1603,21 @@ final readonly class CategoryRepository
      * a portable custom DQL function
      * ({@see \Piwigo\Db\DqlFunction\RandFunction}, per-platform dispatch,
      * MySQL/MariaDB verified, PostgreSQL/SQLite unverified against a real
-     * install -- see that class's own docblock). `imageId` uses the
-     * `image_id` custom Doctrine Type, but `getSingleColumnResult()` +
-     * `setMaxResults(1)` stays safe regardless -- `HYDRATE_SCALAR_COLUMN`
-     * never applies a field's custom Type (Gotcha #4).
+     * install -- see that class's own docblock). `ic.image` is a real
+     * association -- `IDENTITY()` is needed in the `SELECT` regardless of
+     * hydration mode, so `getSingleColumnResult()`'s own "never applies a
+     * custom Type" safety (Gotcha #4) isn't the relevant reasoning here
+     * anymore. `$categoryId` binds as the raw scalar the association
+     * comparison expects, not wrapped in `CategoryId`.
      */
     public function findRandomImageIdInCategory(int $categoryId): ?int
     {
         $values = $this->em
             ->createQueryBuilder()
-            ->select('ic.imageId')
+            ->select('IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId = :categoryId')
-            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->where('ic.category = :categoryId')
+            ->setParameter('categoryId', $categoryId)
             ->orderBy('RAND()')
             ->setMaxResults(1)
             ->getQuery()
@@ -2005,10 +2017,9 @@ final readonly class CategoryRepository
      * @return list<CategoryIdNameUppercatsRank>
      *
      * `image_category` is mapped ({@see \Piwigo\Image\ImageCategoryEntity});
-     * both branches use real DQL. The false branch's join has no declared
-     * association from CategoryEntity, so it goes through an explicit
-     * `Join::WITH` condition, same precedent as
-     * {@see findPrivateCategoriesGrantedToUser()} elsewhere in this class.
+     * both branches use real DQL. The false branch's join goes through
+     * `c.imageCategories` (the inverse side of `ImageCategoryEntity::
+     * $category`).
      */
     public function findByRepresentativePresence(bool $hasRepresentative): array
     {
@@ -2019,7 +2030,7 @@ final readonly class CategoryRepository
             $qb->where('c.representativePicture IS NOT NULL');
         } else {
             $qb->distinct()
-                ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.categoryId = c.id')
+                ->innerJoin('c.imageCategories', 'ic')
                 ->where('c.representativePicture IS NULL');
         }
 
@@ -2525,16 +2536,16 @@ final readonly class CategoryRepository
 
         $qb = $this->em
             ->createQueryBuilder()
-            ->select('ic.categoryId', 'MIN(i.dateCreation) AS from_date', 'MAX(i.dateCreation) AS to_date')
+            ->select('IDENTITY(ic.category) AS category_id', 'MIN(i.dateCreation) AS from_date', 'MAX(i.dateCreation) AS to_date')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'ic.imageId = i.id')
-            ->where('ic.categoryId IN (:categoryIds)')
+            ->innerJoin('ic.image', 'i')
+            ->where('ic.category IN (:categoryIds)')
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
-            ->groupBy('ic.categoryId');
+            ->groupBy('ic.category');
 
         SqlCondition::combine(
             'AND',
-            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->visibleCategoriesCondition('ic.category'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
         )->applyTo($qb);
@@ -2548,8 +2559,8 @@ final readonly class CategoryRepository
                 continue;
             }
 
-            $categoryId = $row['categoryId'] ?? null;
-            $categoryIdInt = $categoryId instanceof CategoryId ? $categoryId->value : (is_numeric($categoryId) ? (int) $categoryId : null);
+            $categoryId = $row['category_id'] ?? null;
+            $categoryIdInt = is_numeric($categoryId) ? (int) $categoryId : null;
             if ($categoryIdInt !== null) {
                 $byId[$categoryIdInt] = new CategoryDateRange(
                     from: is_scalar($row['from_date'] ?? null) ? (string) $row['from_date'] : null,
@@ -2882,18 +2893,20 @@ final readonly class CategoryRepository
      * @return array<int, int> keyed by category_id
      *
      * Single-table GROUP BY COUNT; `image_category` is mapped
-     * ({@see ImageCategoryEntity}). `ic.categoryId` hydrates as a
-     * CategoryId VO under getArrayResult() (Gotcha #1 shape), read via
-     * instanceof, same precedent as {@see \Piwigo\Tag\TagRepository::
-     * countImagesPerTagUnrestricted()}'s own `it.tagId`/TagId shape.
+     * ({@see ImageCategoryEntity}). `ic.category` is a real association
+     * (owning side) -- `IDENTITY()` is needed in the `SELECT` regardless of
+     * hydration mode, so this reads a plain scalar via `is_numeric()`, not
+     * the old `instanceof CategoryId` Gotcha #1 pattern
+     * {@see \Piwigo\Tag\TagRepository::countImagesPerTagUnrestricted()}'s
+     * own `it.tagId`/TagId shape still uses.
      */
     public function findPhotoCountsByCategory(): array
     {
         $rows = $this->em
             ->createQueryBuilder()
-            ->select('ic.categoryId', 'COUNT(ic.imageId) AS counter')
+            ->select('IDENTITY(ic.category) AS category_id', 'COUNT(IDENTITY(ic.image)) AS counter')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->groupBy('ic.categoryId')
+            ->groupBy('ic.category')
             ->getQuery()
             ->getArrayResult();
 
@@ -2903,12 +2916,12 @@ final readonly class CategoryRepository
                 continue;
             }
 
-            $categoryId = $row['categoryId'] ?? null;
-            if (! $categoryId instanceof CategoryId) {
+            $categoryId = $row['category_id'] ?? null;
+            if (! is_numeric($categoryId)) {
                 continue;
             }
 
-            $countByCategory[$categoryId->value] = is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0;
+            $countByCategory[(int) $categoryId] = is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0;
         }
 
         return $countByCategory;
@@ -3051,19 +3064,21 @@ final readonly class CategoryRepository
      *
      * `image_category` is mapped ({@see ImageCategoryEntity}). A COUNT
      * aggregate always returns exactly one row, so there's no LIMIT to
-     * preserve. `categoryId` is a custom-typed field, so the single-value
-     * bind wraps it in the {@see CategoryId} VO -- `convertToDatabaseValue()`
-     * is strict VO-only (see {@see \Piwigo\Db\Type\AbstractNumericIdType}'s
-     * own docblock), unlike an IN-clause array bind.
+     * preserve. `ic.category` is a real association -- `IDENTITY()` is
+     * needed inside the `COUNT()` regardless of hydration mode, and the
+     * bound `$categoryId` is the raw scalar an association comparison
+     * expects, not wrapped in {@see CategoryId} (that VO-wrapping
+     * convention was for the old scalar-Typed column; an association has
+     * no field-level custom Type to consult during binding).
      */
     public function hasImages(int $categoryId): bool
     {
         $count = $this->em
             ->createQueryBuilder()
-            ->select('COUNT(ic.imageId)')
+            ->select('COUNT(IDENTITY(ic.image))')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId = :categoryId')
-            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->where('ic.category = :categoryId')
+            ->setParameter('categoryId', $categoryId)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -3092,9 +3107,9 @@ final readonly class CategoryRepository
             ->createQueryBuilder()
             ->select('i.dateAvailable AS date_available')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'i.id = ic.imageId')
-            ->where('ic.categoryId = :categoryId')
-            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->innerJoin('ic.image', 'i')
+            ->where('ic.category = :categoryId')
+            ->setParameter('categoryId', $categoryId)
             ->getQuery()
             ->getArrayResult();
 
@@ -3145,9 +3160,9 @@ final readonly class CategoryRepository
     {
         $rows = $this->em
             ->createQueryBuilder()
-            ->select('DISTINCT ic.imageId')
+            ->select('DISTINCT IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.categoryId IN (:categoryIds)')
+            ->where('ic.category IN (:categoryIds)')
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleColumnResult();

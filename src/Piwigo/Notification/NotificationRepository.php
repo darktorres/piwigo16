@@ -10,7 +10,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use InvalidArgumentException;
-use Piwigo\Category\CategoryEntity;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Common\ValueObject\NumericId;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -99,7 +98,7 @@ final readonly class NotificationRepository
         switch ($type) {
             case 'new_comments':
                 $qb->from(CommentEntity::class, 'c')
-                    ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'c.imageId = ic.imageId');
+                    ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'c.imageId = ic.image');
                 $dateColumn = 'c.validationDate';
                 $fieldId = 'c.id';
 
@@ -113,9 +112,13 @@ final readonly class NotificationRepository
             case 'new_elements':
             case 'updated_categories':
                 $qb->from(ImageEntity::class, 'i')
-                    ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId');
+                    ->innerJoin('i.imageCategories', 'ic');
                 $dateColumn = 'i.dateAvailable';
-                $fieldId = $type === 'new_elements' ? 'ic.imageId' : 'ic.categoryId';
+                // Bare 'ic.image'/'ic.category' would hydrate the
+                // associated entity in a SELECT clause -- IDENTITY()
+                // extracts the raw FK id directly instead, same reasoning
+                // as the 'new_users' case above.
+                $fieldId = $type === 'new_elements' ? 'IDENTITY(ic.image)' : 'IDENTITY(ic.category)';
 
                 break;
             case 'new_users':
@@ -168,9 +171,9 @@ final readonly class NotificationRepository
     public function findRecentPostDates(SqlCondition $restrictCondition, int $maxDates): array
     {
         $qb = $this->em->createQueryBuilder()
-            ->select('i.dateAvailable', 'COUNT(DISTINCT i.id) AS nb_elements', 'COUNT(DISTINCT ic.categoryId) AS nb_cats')
+            ->select('i.dateAvailable', 'COUNT(DISTINCT i.id) AS nb_elements', 'COUNT(DISTINCT IDENTITY(ic.category)) AS nb_cats')
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
+            ->innerJoin('i.imageCategories', 'ic')
             ->groupBy('i.dateAvailable')
             ->orderBy('i.dateAvailable', 'DESC')
             ->setMaxResults($maxDates);
@@ -230,7 +233,7 @@ final readonly class NotificationRepository
         $qb = $this->em->createQueryBuilder()
             ->select('i.id')
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
+            ->innerJoin('i.imageCategories', 'ic')
             ->andWhere('i.dateAvailable = :dateAvailable')
             ->groupBy('i.id')
             ->orderBy('RAND()')
@@ -278,10 +281,10 @@ final readonly class NotificationRepository
             ->select('c.uppercats', 'COUNT(DISTINCT i.id) AS img_count')
             ->distinct()
             ->from(ImageEntity::class, 'i')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
-            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'c.id = ic.categoryId')
+            ->innerJoin('i.imageCategories', 'ic')
+            ->innerJoin('ic.category', 'c')
             ->andWhere('i.dateAvailable = :dateAvailable')
-            ->groupBy('ic.categoryId', 'c.uppercats')
+            ->groupBy('ic.category', 'c.uppercats')
             ->orderBy('img_count', 'DESC')
             ->setMaxResults($maxCats)
             ->setParameter('dateAvailable', $dateAvailable);

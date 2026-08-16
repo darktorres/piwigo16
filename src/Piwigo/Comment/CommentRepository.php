@@ -461,8 +461,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * SqlCondition fragments, each with its own bound parameters.
      *
      * `image_category` is mapped ({@see \Piwigo\Image\ImageCategoryEntity}).
-     * The caller ({@see \Piwigo\Comment\CommentService::getNbAvailableComments()})
-     * passes DQL property paths (`ic.categoryId`/`ic.imageId`) instead of
+     * The caller ({@see \Piwigo\Comment\AvailableCommentsCounter})
+     * passes DQL property paths (`ic.category`/`ic.image`) instead of
      * raw column names.
      *
      * @param  list<SqlCondition>  $whereClauses
@@ -473,7 +473,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->createQueryBuilder()
             ->select('COUNT(DISTINCT com.id)')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(CommentEntity::class, 'com', Join::WITH, 'ic.imageId = com.imageId');
+            ->innerJoin(CommentEntity::class, 'com', Join::WITH, 'ic.image = com.imageId');
 
         self::applyConditions($qb, $whereClauses);
 

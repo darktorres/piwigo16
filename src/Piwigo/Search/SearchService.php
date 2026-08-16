@@ -315,7 +315,7 @@ final readonly class SearchService
 
             if ($catIds !== []) {
                 $imageIdsForFilter['cat'] = $this->queryImageIdsFor(
-                    new SqlCondition('ic.categoryId IN (:catIds)', [
+                    new SqlCondition('ic.category IN (:catIds)', [
                         'catIds' => $catIds,
                     ], [
                         'catIds' => ArrayParameterType::INTEGER,
@@ -566,7 +566,7 @@ final readonly class SearchService
     /**
      * `PermissionCriteria`'s own 5 `*Condition(string): SqlCondition`
      * methods work unchanged against a DQL `QueryBuilder` -- a caller
-     * just passes a DQL property path (`ic.categoryId`) instead of a raw
+     * just passes a DQL property path (`ic.category`) instead of a raw
      * column name.
      * {@see positionalCondition()} itself stays -- the quicksearch token
      * evaluator's own `getQuickSearchResultsNoCache()` still builds its
@@ -586,8 +586,8 @@ final readonly class SearchService
         // PermissionCriteria's own docblock.
         return SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
-            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->forbiddenCategoriesCondition('ic.category'),
+            $criteria->visibleCategoriesCondition('ic.category'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
         );
@@ -597,7 +597,7 @@ final readonly class SearchService
      * Shared "images matching this WHERE fragment, filtered by the current
      * user's permissions" executor for every advanced-search criterion --
      * all 12 share the exact same `FROM ImageEntity i INNER JOIN
-     * ImageCategoryEntity ic WITH ic.imageId = i.id WHERE <criterion>
+     * i.imageCategories ic WHERE <criterion>
      * <forbidden>` shape. $criterion is AND-combined with $forbidden
      * unparenthesized -- every real criterion built above already wraps
      * its own internal OR-joined clauses in parens itself when it has any,

@@ -36,17 +36,21 @@ final readonly class AvailableCommentsCounter
         if (! isset($currentUser->rawAttributes['nb_available_comments'])) {
             // countAvailableWithConditions() is real DQL -- condition
             // fragments reference DQL property paths
-            // (com.validated/ic.categoryId/ic.imageId), not raw column
-            // names, same convention already established throughout the
-            // codebase (e.g. Tag\TagRepository's own PermissionCriteria
-            // consumers).
+            // (com.validated/ic.category/ic.image), not raw column names,
+            // same convention already established throughout the codebase
+            // (e.g. Tag\TagRepository's own PermissionCriteria consumers).
+            // ic.category/ic.image are bare owning-side association paths
+            // (ImageCategoryEntity), not the old scalar categoryId/imageId
+            // columns -- resolve straight to the join column in a WHERE
+            // fragment, same as everywhere else in the association-
+            // modeling item.
             $where = [];
             if (! $this->accessLevelChecker->isAdmin()) {
                 $where[] = new SqlCondition('com.validated = true');
             }
             $permissionCriteria = $permissionService->getPermissionCriteria();
-            $where[] = $permissionCriteria->forbiddenCategoriesCondition('ic.categoryId');
-            $where[] = $permissionCriteria->imageAccessCondition('ic.imageId');
+            $where[] = $permissionCriteria->forbiddenCategoriesCondition('ic.category');
+            $where[] = $permissionCriteria->imageAccessCondition('ic.image');
 
             $nbAvailableComments = $entityManager->getRepository(CommentEntity::class)->countAvailableWithConditions($where);
             $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);

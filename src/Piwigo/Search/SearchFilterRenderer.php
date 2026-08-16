@@ -282,7 +282,7 @@ final readonly class SearchFilterRenderer
             $filterCondition = $this->getClauseForFilter('author', $page);
             $groupCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.author IS NOT NULL'));
 
-            if (! str_starts_with($filterCondition->sql, 'ic.imageId IN')) {
+            if (! str_starts_with($filterCondition->sql, 'ic.image IN')) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'author_rows_' . $userId;
@@ -377,7 +377,7 @@ final readonly class SearchFilterRenderer
         if (isset($searchFields['added_by']) and (bool) $displayFilters['added_by']['access']) {
             $filterCondition = $this->getClauseForFilter('added_by', $page);
 
-            if (! str_starts_with($filterCondition->sql, 'ic.imageId IN')) {
+            if (! str_starts_with($filterCondition->sql, 'ic.image IN')) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'added_by_rows_' . $userId;
@@ -545,7 +545,7 @@ final readonly class SearchFilterRenderer
                 $this->cacheSet($cacheKey, $allExts);
             }
 
-            if (str_starts_with($filterCondition->sql, 'ic.imageId IN')) {
+            if (str_starts_with($filterCondition->sql, 'ic.image IN')) {
                 $filteredExts = $extToCounterMap($this->repo->countImagesGroupedBy("SUBSTRING_INDEX(i.path, '.', -1)", 'ext', $filterCondition, true));
 
                 $exts = [];
@@ -569,7 +569,7 @@ final readonly class SearchFilterRenderer
                 $filterCondition = $this->getClauseForFilter('ratings', $page);
 
                 $cacheKey = 'ratings_' . $userId;
-                $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.imageId IN');
+                $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.image IN');
                 $ratings = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
                 if (! is_array($ratings)) {
@@ -670,7 +670,7 @@ final readonly class SearchFilterRenderer
             $filterCondition = $this->getClauseForFilter('ratios', $page);
 
             $cacheKey = 'ratios_' . $userId;
-            $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.imageId IN');
+            $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.image IN');
             $ratios = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
             if (! is_array($ratios)) {
@@ -725,7 +725,7 @@ final readonly class SearchFilterRenderer
 
             $notNullCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.height IS NOT NULL'));
 
-            if (! str_starts_with($filterCondition->sql, 'ic.imageId IN')) {
+            if (! str_starts_with($filterCondition->sql, 'ic.image IN')) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'height_rows_' . $userId;
@@ -772,7 +772,7 @@ final readonly class SearchFilterRenderer
 
             $notNullCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.width IS NOT NULL'));
 
-            if (! str_starts_with($filterCondition->sql, 'ic.imageId IN')) {
+            if (! str_starts_with($filterCondition->sql, 'ic.image IN')) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'width_rows_' . $userId;
@@ -1003,7 +1003,7 @@ final readonly class SearchFilterRenderer
         $cacheKey = 'filter_' . $filterName . '_' . $userId;
         // we use the cache pool only for fetching lines filtered only by
         // permissions
-        $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.imageId IN');
+        $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.image IN');
         $cached = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
         if (is_array($cached)
@@ -1150,9 +1150,9 @@ final readonly class SearchFilterRenderer
      *   correct, just slower (a fresh array_intersect() per filter
      *   instead of a cache hit).
      *
-     * Returns a bound `ic.imageId IN (:x)` DQL-shaped condition against
+     * Returns a bound `ic.image IN (:x)` DQL-shaped condition against
      * every real caller's own DQL query -- every caller below checks
-     * `str_starts_with($condition->sql, 'ic.imageId IN')`.
+     * `str_starts_with($condition->sql, 'ic.image IN')`.
      */
     private function getClauseForFilter(string $filterName, array &$page): SqlCondition
     {
@@ -1180,7 +1180,7 @@ final readonly class SearchFilterRenderer
         );
 
         return new SqlCondition(
-            'ic.imageId IN (:otherFiltersItems)',
+            'ic.image IN (:otherFiltersItems)',
             [
                 'otherFiltersItems' => $otherFiltersItemInts,
             ],

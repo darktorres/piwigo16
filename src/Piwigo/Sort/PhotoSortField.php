@@ -58,11 +58,12 @@ enum PhotoSortField
     case Rank;
 
     /**
-     * Matches `stdImageSqlOrder()`'s own field-name aliases: `date_created`/
-     * `date_posted` are legacy WS-facing names for `date_creation`/
-     * `date_available`, and `rand`/`random` both select the DB's random
-     * function. Returns null for any other token (silently dropped by the
-     * caller, matching the original's own `in_array()` allowlist).
+     * Matches the legacy WS order-builder's own field-name aliases:
+     * `date_created`/`date_posted` are legacy WS-facing names for
+     * `date_creation`/`date_available`, and `rand`/`random` both select the
+     * DB's random function. Returns null for any other token (silently
+     * dropped by the caller, matching the original's own `in_array()`
+     * allowlist).
      */
     public static function fromToken(string $token): ?self
     {
@@ -82,8 +83,8 @@ enum PhotoSortField
     /**
      * The real column/function name this field sorts on. `Random` is a
      * function call, not a column -- callers must not prefix it with a
-     * table alias (same exception `stdImageSqlOrder()`'s own $tbl_name
-     * handling already carved out).
+     * table alias (same exception the legacy order-builder's own
+     * $tbl_name handling already carved out).
      *
      * `Rank` is quoted because `rank` is a genuine reserved word on both
      * platforms (a bare `SELECT rank FROM ...` fails
@@ -118,8 +119,8 @@ enum PhotoSortField
      * own `$sort_fields` vocabulary -- the exact 8 field slugs it validates
      * `order_by`/`order_by_inside_category` entries against.
      * Deliberately separate from {@see fromToken()}: that one carries
-     * `ImageSqlOrderBuilder::stdImageSqlOrder()`'s own legacy WS-param aliases
-     * (`date_created`/`date_posted`/`rand`/`random`), none of which are
+     * the legacy WS-param aliases (`date_created`/`date_posted`/`rand`/
+     * `random`), none of which are
      * valid `$sort_fields` entries, and `$sort_fields` has `rank`, which
      * isn't a valid WS `order` token either -- the two vocabularies
      * overlap but aren't identical, so conflating them would silently

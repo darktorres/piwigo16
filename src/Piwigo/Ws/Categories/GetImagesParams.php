@@ -16,11 +16,11 @@ use Piwigo\Ws\WsParams;
 /**
  * `pwg.categories.getImages` input DTO -- the category-specific fields
  * only. The shared `f_*` image-filter params (merged into this method's
- * own registration) plus `order` stay in the raw `$params` array and
- * are read directly by
- * `ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()`/`stdImageSqlOrder()`, same as
- * the god-class method this replaces -- no need to duplicate their
- * shape here.
+ * own registration) stay in the raw `$params` array and are read
+ * directly by `ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()`;
+ * `order` is read directly by `GetImagesHandler` itself via
+ * {@see \Piwigo\Sort\OrderBy::fromWsOrderParam()} -- no need to
+ * duplicate either shape here.
  *
  * `cat_id`: `FORCE_ARRAY` + `WsParamType::INT | WsParamType::POSITIVE`,
  * null default -- `makeArrayParam()` converts the null default to `[]`,

@@ -23,6 +23,7 @@ use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Sort\OrderBy;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
 use Piwigo\Tag\Projection\TagCreateOutcome;
@@ -297,24 +298,24 @@ final readonly class TagService
      * Return the list of image ids corresponding to given tags. AND & OR
      * mode supported.
      *
-     * $filterCriteria is only ever populated by Ws\Tags::getImages()'s
+     * $filterCriteria is only ever populated by Ws\Tags\GetImagesHandler's
      * own `ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()` output -- see
      * {@see ImageFilterCriteria}'s own docblock.
      *
      * @param list<TagId> $tagIds
-     * @param string|null $orderBy optionally overwrite default photo order;
-     *   null is treated the same as '' for the same reason
+     * @param OrderBy|null $orderBy optionally overwrite default photo order;
+     *   null falls back to CurrentConfig::orderBy, the same reason
      *   BatchManagerSubController passes null explicitly
      * @return list<int>
      */
-    public function getImageIdsForTags(array $tagIds, string $mode = 'AND', ?ImageFilterCriteria $filterCriteria = null, ?string $orderBy = '', bool $usePermissions = true): array
+    public function getImageIdsForTags(array $tagIds, string $mode = 'AND', ?ImageFilterCriteria $filterCriteria = null, ?OrderBy $orderBy = null, bool $usePermissions = true): array
     {
 
         if ($tagIds === []) {
             return [];
         }
 
-        $orderBySql = in_array($orderBy, [null, ''], true) ? $this->currentConfig->orderBy->toSql() : $orderBy;
+        $order = $orderBy ?? $this->currentConfig->orderBy;
 
         return $this->repo->findImageIdsForTags(
             array_map(static fn (TagId $id): int => $id->value, $tagIds),
@@ -322,7 +323,7 @@ final readonly class TagService
             $usePermissions,
             $this->permissionService->getPermissionCriteria(),
             $filterCriteria,
-            $orderBySql
+            $order->toSql('i')
         );
     }
 

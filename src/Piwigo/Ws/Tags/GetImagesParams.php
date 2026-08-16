@@ -17,9 +17,8 @@ use Piwigo\Ws\WsParams;
  * `pwg.tags.getImages` input DTO -- the tag-specific fields only. The
  * shared `f_*` image-filter params (merged into this method's own
  * registration) stay in the raw `$params` array and are read directly
- * by `ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()`/`stdImageSqlOrder()`, same
- * as the god-class method this replaces -- no need to duplicate their
- * shape here.
+ * by `ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()` -- no need
+ * to duplicate their shape here.
  *
  * `tag_id`/`tag_url_name`/`tag_name`: `FORCE_ARRAY` with a null default
  * -- `makeArrayParam()` converts the null default to `[]`, always a

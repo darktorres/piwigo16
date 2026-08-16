@@ -8,10 +8,9 @@ use Piwigo\Sort\OrderByClause;
 use Piwigo\Sort\PhotoSortField;
 
 /**
- * Piwigo\Sort\PhotoSortField -- the typed replacement for
- * Ws\ImageSqlOrderBuilder::stdImageSqlOrder()'s own per-token field allowlist. Every
- * one of the 8 real WS `order` tokens, its 2 aliases, and one invalid
- * token.
+ * Piwigo\Sort\PhotoSortField -- the typed field vocabulary backing
+ * OrderBy::fromWsOrderParam()'s per-token WS order parse. Every one of
+ * the 8 real WS `order` tokens, its 2 aliases, and one invalid token.
  */
 test('fromToken recognizes every real sortable field', function (string $token, PhotoSortField $expected): void {
     expect(PhotoSortField::fromToken($token))->toBe($expected);

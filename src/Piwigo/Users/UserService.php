@@ -55,6 +55,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Sort\OrderBy;
 use Piwigo\Users\Projection\ActivationKeyRow;
 use Piwigo\Users\Projection\DefaultUserInfo;
 use Piwigo\Users\Projection\NotificationRecipient;
@@ -867,9 +868,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * @return list<array<string, mixed>>
      */
-    public function getVisibleFavoriteImages(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
+    public function getVisibleFavoriteImages(UserId $userId, PermissionCriteria $criteria, ?OrderBy $orderBy): array
     {
-        return $this->repo->findVisibleFavoriteImages($userId, $criteria, $orderBySql);
+        $orderBy ??= $this->currentConfig->orderBy;
+
+        return $this->repo->findVisibleFavoriteImages($userId, $criteria, $orderBy->toSql('i'));
     }
 
     /**

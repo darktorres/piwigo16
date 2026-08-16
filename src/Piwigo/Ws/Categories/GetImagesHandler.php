@@ -13,7 +13,6 @@ namespace Piwigo\Ws\Categories;
 
 use Override;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
@@ -22,8 +21,8 @@ use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Sort\OrderBy;
 use Piwigo\Ws\ImageFilterCriteriaBuilder;
-use Piwigo\Ws\ImageSqlOrderBuilder;
 use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
@@ -42,9 +41,7 @@ final readonly class GetImagesHandler implements WsAction
         private ImageService $imageService,
         private UrlServiceInterface $urlService,
         private EventDispatcher $eventDispatcher,
-        private CurrentConfig $currentConfig,
         private ImageFilterCriteriaBuilder $imageFilterCriteriaBuilder,
-        private ImageSqlOrderBuilder $imageSqlOrderBuilder,
         private ImageUrlBuilder $imageUrlBuilder,
         private XmlAttributeLists $xmlAttributeLists,
     ) {}
@@ -136,19 +133,18 @@ final readonly class GetImagesHandler implements WsAction
                 ),
             );
 
-            $order_by = $this->imageSqlOrderBuilder->stdImageSqlOrder($filterParams, 'i.');
-            if ($order_by === ''
+            $orderBy = OrderBy::fromWsOrderParam($filterParams['order'] ?? '');
+            if ($orderBy->isEmpty()
                   and count($cat_ids) === 1
                   and ($cats[$cat_ids[0]]->imageOrder ?? null) !== null
             ) {
-                $order_by = $cats[$cat_ids[0]]->imageOrder;
+                $orderBy = OrderBy::raw($cats[$cat_ids[0]]->imageOrder);
             }
-            $order_by = $order_by === '' ? $this->currentConfig->orderBy->toSql() : 'ORDER BY ' . $order_by;
             $favorite_ids = $urlService->getUserFavorites();
 
             $paginated_images = $this->imageService->getWithConditionsPaginated(
                 $imagesCriteria,
-                $order_by,
+                $orderBy->isEmpty() ? null : $orderBy,
                 $input->perPage,
                 $input->perPage * $input->page
             );

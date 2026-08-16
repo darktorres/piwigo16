@@ -42,6 +42,7 @@ use Piwigo\Image\Request\EmptyLoungeRequest;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Sort\OrderBy;
 
 /**
  * Slideshow param encode/decode/correct and PDF page counting -- pure
@@ -1217,9 +1218,11 @@ final readonly class ImageService
     /**
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function getWithConditionsPaginated(CategoryImagesCriteria $criteria, string $orderByClause, int $limit, int $offset): PaginatedResult
+    public function getWithConditionsPaginated(CategoryImagesCriteria $criteria, ?OrderBy $orderBy, int $limit, int $offset): PaginatedResult
     {
-        return $this->repo->findWithConditionsPaginated($criteria, $orderByClause, $limit, $offset);
+        $order = $orderBy ?? $this->currentConfig->orderBy;
+
+        return $this->repo->findWithConditionsPaginated($criteria, $order->toSql('i'), $limit, $offset);
     }
 
     /**

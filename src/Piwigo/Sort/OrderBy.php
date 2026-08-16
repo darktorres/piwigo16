@@ -12,7 +12,7 @@ use Piwigo\Db\SqlDialect;
  *
  * The vocabulary is closed: `Controller\Admin\ConfigurationSubController`
  * builds `order_by`/`order_by_inside_category` out of its own `$sort_fields`
- * allow-list, and `Ws\ImageSqlOrderBuilder::stdImageSqlOrder()` maps the WS `order`
+ * allow-list, and {@see fromWsOrderParam()} maps the WS `order`
  * parameter through {@see PhotoSortField}. Both used to flatten that
  * structure into text immediately, leaving every consumer to parse it back
  * -- which is why the `RAND()` portability rewrite and the platform-specific
@@ -69,8 +69,8 @@ final readonly class OrderBy
     /**
      * The WS `order` parameter vocabulary, which unlike the config one also
      * accepts the `rand`/`random` and legacy `date_created`/`date_posted`
-     * aliases. Unknown tokens are dropped, matching the original
-     * `stdImageSqlOrder()` allow-list behaviour.
+     * aliases. Unknown tokens are dropped, matching the legacy per-request
+     * SQL builder this replaced.
      */
     public static function fromWsOrderParam(string $order): self
     {
@@ -119,7 +119,8 @@ final readonly class OrderBy
     /**
      * A complete `ORDER BY ...` clause, or `''` when there is nothing to
      * order by. $tableAlias prefixes every real column (never `RAND()`,
-     * which is a function call, matching stdImageSqlOrder()'s own carve-out).
+     * which is a function call, matching the legacy order-builder's own
+     * carve-out).
      *
      * Raw fragments still get the `RAND()` rewrite: PostgreSQL has no such
      * function, and this is the one place that rewrite now lives -- it used

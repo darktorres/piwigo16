@@ -13,12 +13,11 @@ namespace Piwigo\Ws\Users;
 
 use Override;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Sort\OrderBy;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\ImageSqlOrderBuilder;
 use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
@@ -36,8 +35,6 @@ final readonly class FavoritesGetListHandler implements WsAction
         private CurrentUser $currentUser,
         private PermissionService $permissionService,
         private UrlServiceInterface $urlService,
-        private CurrentConfig $currentConfig,
-        private ImageSqlOrderBuilder $imageSqlOrderBuilder,
         private ImageUrlBuilder $imageUrlBuilder,
         private XmlAttributeLists $xmlAttributeLists,
     ) {}
@@ -64,13 +61,13 @@ final readonly class FavoritesGetListHandler implements WsAction
         /** @var array{order: string|null, ...} $orderParams */
         $orderParams = $params;
 
-        $order_by = $this->imageSqlOrderBuilder->stdImageSqlOrder($orderParams, 'i.');
-        $order_by = $order_by === '' ? $this->currentConfig->orderBy->toSql() : 'ORDER BY ' . $order_by;
+        $orderBy = OrderBy::fromWsOrderParam($orderParams['order'] ?? '');
+        $orderByOverride = $orderBy->isEmpty() ? null : $orderBy;
 
         $permission_condition = $this->permissionService->getPermissionCriteria();
 
         $images = [];
-        foreach ($this->userService->getVisibleFavoriteImages($this->currentUser->get()->id, $permission_condition, $order_by) as $row) {
+        foreach ($this->userService->getVisibleFavoriteImages($this->currentUser->get()->id, $permission_condition, $orderByOverride) as $row) {
             $image = [];
 
             foreach (['id', 'width', 'height', 'hit'] as $k) {

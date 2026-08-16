@@ -20,9 +20,9 @@ use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Image\ImageEntity;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Sort\OrderBy;
 use Piwigo\Tag\TagService;
 use Piwigo\Ws\ImageFilterCriteriaBuilder;
-use Piwigo\Ws\ImageSqlOrderBuilder;
 use Piwigo\Ws\ImageUrlBuilder;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
@@ -41,7 +41,6 @@ final readonly class GetImagesHandler implements WsAction
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
         private ImageFilterCriteriaBuilder $imageFilterCriteriaBuilder,
-        private ImageSqlOrderBuilder $imageSqlOrderBuilder,
         private ImageUrlBuilder $imageUrlBuilder,
         private XmlAttributeLists $xmlAttributeLists,
     ) {}
@@ -80,15 +79,12 @@ final readonly class GetImagesHandler implements WsAction
             return $filterCriteria;
         }
 
-        $order_by = $this->imageSqlOrderBuilder->stdImageSqlOrder($filterParams, 'i.');
-        if ($order_by !== '') {
-            $order_by = 'ORDER BY ' . $order_by;
-        }
+        $orderBy = OrderBy::fromWsOrderParam($filterParams['order'] ?? '');
         $image_ids = $tagService->getImageIdsForTags(
             array_map(TagId::from(...), $tag_ids),
             $input->tagModeAnd ? 'AND' : 'OR',
             $filterCriteria,
-            $order_by,
+            $orderBy->isEmpty() ? null : $orderBy,
         );
         // Cast to int at the source (not just at each read site) so
         // array_flip($image_ids) below produces int keys matching $row_id's

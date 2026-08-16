@@ -40,6 +40,25 @@ test('categoriesFlatlistToTree attaches a child under its real parent, root-leve
     }
 });
 
+test('categoriesFlatlistToTree attaches a node at top level when its id_uppercat is absent from the flat list', function (): void {
+    $builder = new CategoryTreeBuilder(new XmlAttributeLists());
+    $categories = [
+        [
+            'id' => 2,
+            'name' => 'Orphan',
+            // id_uppercat 1 was filtered out of this flat list upstream
+            // (e.g. permission scope) -- never appears as its own row.
+            'id_uppercat' => 1,
+        ],
+    ];
+
+    $tree = $builder->categoriesFlatlistToTree($categories);
+
+    expect($tree)
+        ->toHaveCount(1)
+        ->and($tree[0]['name'])->toBe('Orphan');
+});
+
 test('categoriesFlatlistToTree skips a row with a non-scalar id', function (): void {
     $builder = new CategoryTreeBuilder(new XmlAttributeLists());
     $categories = [

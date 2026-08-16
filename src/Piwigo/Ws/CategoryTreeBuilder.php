@@ -51,6 +51,13 @@ final readonly class CategoryTreeBuilder
                 if (! is_int($uppercat_id) && ! is_string($uppercat_id)) {
                     continue;
                 }
+                if (! isset($key_of_cat[$uppercat_id])) {
+                    // the parent isn't in this flat list (e.g. filtered out
+                    // of scope upstream) -- attach at top level instead of
+                    // indexing an undefined key.
+                    $tree[] = &$node;
+                    continue;
+                }
                 $uppercat_key = $key_of_cat[$uppercat_id];
                 if (! isset($categories[$uppercat_key]['sub_categories'])) {
                     $categories[$uppercat_key]['sub_categories'] =

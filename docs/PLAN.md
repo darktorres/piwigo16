@@ -6,8 +6,8 @@ two planning documents, deliberately — an earlier structure of 18
 per-phase files drifted against each other and was consolidated into
 these two.
 
-`17.x-rewrite` replays `16.x-rewrite`'s modernization as 53 sequential
-backbone phases (P0–P52, in 10 epochs A–J), rebuilt from `origin/16.x`
+`17.x-rewrite` replays `16.x-rewrite`'s modernization as 55 sequential
+backbone phases (P0–P54, in 10 epochs A–J), rebuilt from `origin/16.x`
 rather than upgraded in place. Every backend phase is sequenced before
 every frontend phase. The work is dual-purpose: a *replay* of work that
 has a reference implementation on `16.x-rewrite`, plus *greenfield*
@@ -52,16 +52,16 @@ phase from a tag — use the table below.
 | --- | --- | --- |
 | `(p24)`, `(p27)`, `(sql)`, `(di)`, `(lang)` | Post-P23 remediation & hardening | P24 |
 | `(p25)` | PHP `mixed`-type elimination, phases 1–2 | P24 |
-| `(p31.x)`, `P31.n` | Smarty → Latte conversion | P29 |
-| `(p32)` in `style(templates)` | Latte reformat across the tree | P30 |
-| `(p33a)`–`(p33h)` | Latte idiomatic sub-items A–H | P31A–H |
+| `(p31.x)`, `P31.n` | Smarty → Latte conversion | P31 |
+| `(p32)` in `style(templates)` | Latte reformat across the tree | P32 |
+| `(p33a)`–`(p33h)` | Latte idiomatic sub-items A–H | P33A–H |
 | `chore(p32): delete doc/` | A one-off cleanup that borrowed the tag | — |
-| `(P25/G19)`, `(P19.n)` | WS layer decomposition into typed handlers | Epoch G |
-| Original plan's "P24 Vite + TypeScript" | Frontend track | P34 / P43 |
+| `(P25/G19)`, `(P19.n)` | WS layer decomposition into typed handlers | Epoch G / P25 |
+| Original plan's "P24 Vite + TypeScript" | Frontend track | P36 / P45 |
 | Original plan's "P27 Type correctness" | Merged into remediation | P24 |
-| Original plan's "P32 CSS modernization" | CSS architecture | P49 |
+| Original plan's "P32 CSS modernization" | CSS architecture | P51 |
 
-Two structural changes produced that drift:
+Three structural changes produced that drift:
 
 - **The original P27 ("Type correctness + mixed elimination") merged into
   P24.** It is the same class of work as P24's own remediation sub-tracks
@@ -74,6 +74,16 @@ Two structural changes produced that drift:
   is immediately after asset-pipeline and inline-JS/CSS extraction, and
   the three completed Latte phases carried higher numbers than
   not-started work that must precede them.
+- **P25 split into three phases on 2026-08-15/16, cascading +2 through
+  everything after it.** A review found the old P25 ("REST resource
+  layer + OpenAPI") bundled two different jobs — modernizing the legacy
+  WS API's internals and replacing it with REST — which is why it had sat
+  at "not started" as a monolith. Split into **P25** (WS layer
+  modernization — typed internals + PSR-7 lifecycle, no wire-format
+  change), **P26** (admin fragment surface — the UI-facing WS methods
+  move off the JSON/XML envelope), and **P27** (public API v1 — REST +
+  OpenAPI 3.1 + tus, WS deleted here). Old P26–P52 shift to new P28–P54
+  unchanged in scope and order — only the numbers move.
 
 ## Status
 
@@ -104,34 +114,36 @@ Two structural changes produced that drift:
 | P22 | Frontend controller migration | Done | 7 |
 | P23 | Legacy deletion & cleanup | Done — later-audit gaps all closed | 123 |
 | P24 | Post-P23 remediation & hardening | In progress — see Epoch F | 646 |
-| P25 | REST resource layer + OpenAPI | Not started — WS prerequisite done | 0 |
-| P26 | Security hardening | Not started | 0 |
-| P27 | Plugin / Theme contracts + bundled extensions | In progress — P27.6 unstarted | 22 |
-| P28 | Layer decoupling + repository restructure | Not started — web-root half done | 1 |
-| P29 | Smarty → Latte template migration | Done | 80 |
-| P30 | Latte lint/format tooling | Done — enforcement is P42 | 11 |
-| P31 | Latte idiomatic modernization | Done — all 8 sub-items | 8 |
-| P32 | Event system rewrite | Not started | 0 |
-| P33 | Browserslist decision + IE back-compat removal | Not started | 0 |
-| P34 | Asset-pipeline foundation (ViteManifest) | Not started | 0 |
-| P35 | Typed page-data exposure (PHP half) | Not started | 0 |
-| P36 | Inline JS extraction | Not started | 0 |
-| P37 | Inline CSS extraction | Not started | 0 |
-| P38 | Typed view objects + `Template` split | Not started | 0 |
-| P39 | Shell-last rendering + `PageState` split | Not started | 0 |
-| P40 | Typed contributions + plugin-owned routes | Not started | 0 |
-| P41 | Escaping campaign | Not started | 0 |
-| P42 | Latte lint/format enforcement | Not started | 0 |
-| P43 | JS → TS mechanical conversion | Not started | 0 |
-| P44 | `getPageData<T>()` typing + `any` reduction | Not started | 0 |
-| P45 | Refactor TS into modules | Not started | 0 |
-| P46 | Remove jQuery | Not started | 0 |
-| P47 | Lit component catalog (conditional on P46) | Not started | 0 |
-| P48 | TS modernization | Not started | 0 |
-| P49 | CSS architecture modernization | Not started — Tailwind call due before P38 | 0 |
-| P50 | Picture pipeline (new feature) | Not started | 0 |
-| P51 | Dark mode (new feature) | Not started | 0 |
-| P52 | Real quality gates | Not started | 0 |
+| P25 | WS layer modernization — typed internals + PSR-7 lifecycle | Mostly done — Stage 1/2 landed, Stage 3 tests/docs partial; see Epoch G | ~50 |
+| P26 | Admin fragment surface — UI-facing WS methods off the envelope | Not started | 0 |
+| P27 | Public API v1 (REST + OpenAPI 3.1 + tus) — WS deleted here | Not started | 0 |
+| P28 | Security hardening | Not started | 0 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 unstarted | 22 |
+| P30 | Layer decoupling + repository restructure | Not started — web-root half done | 1 |
+| P31 | Smarty → Latte template migration | Done | 80 |
+| P32 | Latte lint/format tooling | Done — enforcement is P44 | 11 |
+| P33 | Latte idiomatic modernization | Done — all 8 sub-items | 8 |
+| P34 | Event system rewrite | Not started | 0 |
+| P35 | Browserslist decision + IE back-compat removal | Not started | 0 |
+| P36 | Asset-pipeline foundation (ViteManifest) | Not started | 0 |
+| P37 | Typed page-data exposure (PHP half) | Not started | 0 |
+| P38 | Inline JS extraction | Not started | 0 |
+| P39 | Inline CSS extraction | Not started | 0 |
+| P40 | Typed view objects + `Template` split | Not started | 0 |
+| P41 | Shell-last rendering + `PageState` split | Not started | 0 |
+| P42 | Typed contributions + plugin-owned routes | Not started | 0 |
+| P43 | Escaping campaign | Not started | 0 |
+| P44 | Latte lint/format enforcement | Not started | 0 |
+| P45 | JS → TS mechanical conversion | Not started | 0 |
+| P46 | `getPageData<T>()` typing + `any` reduction | Not started | 0 |
+| P47 | Refactor TS into modules | Not started | 0 |
+| P48 | Remove jQuery | Not started | 0 |
+| P49 | Lit component catalog (conditional on P48) | Not started | 0 |
+| P50 | TS modernization | Not started | 0 |
+| P51 | CSS architecture modernization | Not started — Tailwind call due before P40 | 0 |
+| P52 | Picture pipeline (new feature) | Not started | 0 |
+| P53 | Dark mode (new feature) | Not started | 0 |
+| P54 | Real quality gates | Not started | 0 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -299,15 +311,20 @@ arch-test coverage *was* closed (31 classes today, up from 13).
 **P8 — DI container.** `Container`, `config/container.php`, PHP-DI
 autowire-by-default.
 
-**P9 — PSR-15 middleware + routing.** A 7-stage pipeline, per
-`RequestPipeline.php`'s own registration list: `ExceptionHandler`,
-`SecurityHeaders`, `Session`, `ServerTiming`, `Sentry`, `Routing`,
-`ControllerInvoker`. Routes, an extensible `SecurityHeadersMiddleware`,
-cross-server SEC-01 deny rules. SEC-11/SEC-12 were closed here:
-`CsrfService` used `hash_hmac('md5', …)` + `===` long after the
-identical pattern was fixed in the sibling
+**P9 — PSR-15 middleware + routing.** Originally a 7-stage pipeline
+(`ExceptionHandler`, `SecurityHeaders`, `Session`, `ServerTiming`,
+`Sentry`, `Routing`, `ControllerInvoker`); grew to 13 stages under
+workstream C3 Phase 1 (see below) — `ConfigBootstrap`,
+`PluginBootstrap`, `Admin\LoadedPlugins`, `UserResolution`, `Language`
+and `FinalizeBridge` now sit between `Sentry` and `Routing`, per
+`RequestPipeline::DEFAULT_MIDDLEWARE`'s own current list. Routes, an
+extensible `SecurityHeadersMiddleware`, cross-server SEC-01 deny rules.
+SEC-11/SEC-12 were closed here: `CsrfService` used `hash_hmac('md5', …)`
+plus `===` long after the identical pattern was fixed in the sibling
 `AuthService`/`EphemeralKeyService`; it now uses `sha256` and
-`hash_equals()`.
+`hash_equals()`. (SEC-12's own claim of "closed here" held for
+`CsrfService` itself but not for the WS layer's independent copy of the
+same check — see the SEC-12 checklist row below.)
 
 **Open question — pipeline composition.** The reference implementation's
 own pipeline (in its `Core\Kernel.php`) has eight stages:
@@ -329,7 +346,7 @@ OpenTelemetry-first (OTLP → Sentry/Tempo/Jaeger). Greenfield.
 named-pool design (`config`, `permissions`, `category_tree`, `tag_cloud`,
 `rate_limiter`, `general`, each with its own TTL) was initially never
 built — `CacheFactory` produced one generic pool with no real consumers.
-Closed with `CachePools`; `rate_limiter` stays unbuilt as genuine P26
+Closed with `CachePools`; `rate_limiter` stays unbuilt as genuine P28
 scope. Messenger itself is real and wired (`config/messenger.php`, five
 `Piwigo\Job\*` classes plus handlers).
 
@@ -522,18 +539,48 @@ wiring; `die()`/`exit()` elimination in the image-processing paths;
 legacy constants plus a real `PWG_CHARSET` bug; and a repo-wide legacy
 sweep round 2.
 
-**Open — the request-lifecycle architecture (workstream C3).** Eight real
-`die()`/`exit()` call sites remain project-wide, across eight files. At
-least one is correct by design (`ShutdownHandler::install()`'s
-`exit(143)`, the conventional 128+SIGTERM code). The rest belong to a
-deeper unresolved question than a cleanup pass: the
-`header()`+`echo`+`exit()` / `: never`-return contract that
-`RedirectServiceInterface` and the bootstrap-phase short-circuits are
-built on. Changing that contract from `: never` to `: ResponseInterface`
-is designed in outline only. `RedirectServiceInterface` already throws
-`ResponseReadyException` internally rather than a raw `exit()`, so this
-is about the wider bootstrap-short-circuit contract, not an unconverted
-caller.
+**Partially closed — the request-lifecycle architecture (workstream
+C3).** 11 real `die()`/`exit()` call sites remain project-wide, across 9
+files (`tests/Arch/StructuralTest.php`'s own count-based allowlist is the
+live, machine-checked source of truth for this number). One is correct
+by design (`Core\ShutdownHandler`'s `exit(143)`, the conventional
+128+SIGTERM code). The `header()`+`echo`+`exit()` / `: never`-return
+contract question this workstream exists to answer is no longer
+"designed in outline only" — Phases 0 and 1 landed real code:
+
+- **Phase 0 (done).** `Http\MiddlewarePipeline::handle()` now catches
+  `Http\ResponseReadyException` at every nesting level, not just the
+  innermost middleware — a real, previously-untested gap where a
+  short-circuit thrown by an outer-ish middleware would have been logged
+  as an unhandled error, Sentry-reported, and answered with a generic
+  500 instead of the real response, silently losing security headers
+  and the `Server-Timing` header along the way.
+- **Phase 1 (done).** `Bootstrap\RequestBootstrap::connect()` (~180
+  lines) is deleted outright and the first half of `finalize()` (~220
+  lines) decomposed into 6 real PSR-15 middleware
+  (`Http\Middleware\ConfigBootstrapMiddleware`/`SessionMiddleware`/
+  `PluginBootstrapMiddleware`, `Admin\LoadedPluginsMiddleware`,
+  `Bootstrap\UserResolutionMiddleware`, `Http\Middleware\
+  LanguageMiddleware`) plus a `Bootstrap\FinalizeBridgeMiddleware`
+  bridging into `finalize()`'s still-Template-dependent remainder,
+  wired into `RequestPipeline::DEFAULT_MIDDLEWARE` (P9, above).
+  `bootEntryPoint()` shrinks to just `configure()` +
+  `InstallationFlag::mark()`. Caught and fixed along the way: `public/
+  admin.php` never called `RequestPipeline::handle()` at all (a
+  pre-existing bypass — see item 1 below, now closed) and would have
+  silently lost the entire admin panel's DB/config/session/plugin/user/
+  language bootstrap once `bootEntryPoint()` stopped doing that work
+  directly; fixed with a new `RequestPipeline::runBootstrapPhase()`
+  entry point `admin.php` calls explicitly.
+- **Phase 2 (not started, gated).** The still-legacy theme/`Template`
+  construction remainder of `finalize()` needs P40/P41's own `Renderer`/
+  typed-view-object shape to land first — building middleware around the
+  current `Template` class would mean redoing the work once that class
+  is deleted.
+- **Phase 3 (not started, investigation only).** Whether `Admin\
+  AdminShell`/`admin.php` become real `ControllerInterface`s routed
+  through the unified pipeline, or stay a deliberately separate
+  dispatcher, is not yet decided.
 
 **Open question — site-local config overrides.** A real bug was found and
 fixed on 2026-07-21 (`338217f48`): nothing in `src/Piwigo/` ever read a
@@ -634,19 +681,19 @@ against `'trigger'` in the first place. A token-aware arch test now
 enforces zero string-keyed dispatch call sites at all, with no
 exception.
 
-**Superseded by P32.** P27.11 recommended keeping the hand-rolled
+**Superseded by P34.** P29.11 recommended keeping the hand-rolled
 `EventDispatcher` and closing its gaps in place rather than swapping to
 Symfony's, on the reasoning that `addEventHandler()`'s string-keyed
 legacy handlers, `includePath`-based lazy inclusion and
 `callablesEqual()`'s closure-identity dedup are Piwigo-specific mechanics
 Symfony does not provide, so adopting it would mean rebuilding all of
-that on top of rather than instead of Symfony's class. **P32 reverses
+that on top of rather than instead of Symfony's class. **P34 reverses
 that**, because it deletes those three mechanics rather than preserving
-them — none has a production caller. The gaps P27.11 did close stand:
+them — none has a production caller. The gaps P29.11 did close stand:
 PSR-14 conformance, descending priority order matching Symfony's
 convention, and `StoppableEventInterface` support.
 
-One P27.11 finding is still open and unrelated to the swap: three of 23
+One P29.11 finding is still open and unrelated to the swap: three of 23
 registrations in `RequestBootstrap.php` eagerly construct a one-off
 service regardless of whether the event ever fires. That is a call-site
 problem, not a dispatcher-class limitation.
@@ -808,16 +855,22 @@ unexplained. Worth a single-file look.
 **Open — superglobal access beyond the request superglobals.** Three
 pockets remain, same "typed accessor over raw offset access" discipline:
 
-1. **Prerequisite: wire `admin.php` through the shared PSR-7 pipeline.**
-   `public/index.php` calls `RequestPipeline::handle()`;
-   `public/admin.php` calls `RequestBootstrap::bootEntryPoint()` and then
-   instantiates `AdminShell` directly, with no pipeline —
-   `AdminShell::run()`'s own docblock says so. Independently corroborated
-   by SEC-42, from the CSRF angle. Everything this needs already exists
-   (`Http\ControllerInterface`, the `ResponseReadyException` pattern, the
+1. **Prerequisite: wire `admin.php` through the shared PSR-7 pipeline —
+   bootstrap half done (C3 Phase 1), routing half still open (C3 Phase
+   3).** `public/index.php` calls `RequestPipeline::handle()` in full;
+   `public/admin.php` calls `RequestBootstrap::bootEntryPoint()`, then
+   `RequestPipeline::runBootstrapPhase()` (new in C3 Phase 1 — runs the
+   same DB/config/session/plugin/user/language bootstrap middleware
+   `index.php` gets, without which admin.php lost that work entirely once
+   `bootEntryPoint()` stopped doing it directly), then still instantiates
+   `AdminShell` directly rather than reaching `RoutingMiddleware`/
+   `ControllerInvokerMiddleware` — `AdminShell::run()`'s own docblock still
+   says so. Independently corroborated by SEC-42, from the CSRF angle.
+   Everything the full wiring needs already exists (`Http\
+   ControllerInterface`, the `ResponseReadyException` pattern, the
    string-returning `Template::parse()`/`PageTail::renderToString()`
-   siblings), so this is scoped and tractable, not a rediscovery of C3's
-   full scope.
+   siblings), so this is scoped and tractable — C3 Phase 3's own job, not
+   a rediscovery of its scope.
 2. **`$_SESSION`/`$_SERVER`/`$_COOKIE`** — 168/68/18 direct-access sites
    across 40/30/8 files outside any designated typed home. The
    `$_SESSION` count has grown, not shrunk, since first scoped.
@@ -917,17 +970,106 @@ are resolved by later work above. Genuinely still open:
 <!-- markdownlint-disable-next-line MD013 -->
 <!-- doc-drift-check: cmd='grep -rn "@todo" src --include="*.php" | wc -l' expect="6" -->
 
-### Epoch G — WS layer & REST (P25)
+### Epoch G — WS layer & REST (P25–P27)
 
-**P25 — REST resource layer + OpenAPI, legacy WS API removed.** Not
-started: `/api/v1` as the sole API, ETag/304, `Link` pagination, a
-generated typed TS client. The 39 `Ws*Test` Contract tests and the whole
-`Ws/` namespace are still waiting on it.
+**P25 — WS layer modernization (typed internals + PSR-7 lifecycle).**
+Mostly done. A review found the WS layer serves two audiences through one
+surface — 71 of 94 methods are `requiresAuth: true` admin plumbing
+exposed as a public contract, and 61 of 93 are reachable from the
+first-party UI while 32 are the real machine surface (auth, browse, the
+9-method upload protocol, image metadata, favorites) — which is why the
+old plan's single P25 ("REST resource layer + OpenAPI, WS removed") had
+sat at "not started" as a monolith. Split into three phases, execution
+order: **P25** modernizes the legacy layer's internals without changing
+one wire byte (verified by the Contract suite passing *unmodified*
+throughout); **P26** (not started) moves the ~15 UI-facing methods off
+the JSON/XML envelope onto server-rendered fragments; **P27** (not
+started) ships `/api/v1` — REST + OpenAPI 3.1 + a generated typed TS
+client, tus replacing the 9-method chunk-upload protocol — and deletes
+the entire `Ws/` layer (`Server`, all 94 handlers, the encoders,
+`NamedArray`/`NamedStruct`, `public/ws.php`) in the same phase. The 39
+`Ws*Test` Contract tests get rewritten against the new surface there,
+not before.
 
-**But the WS layer got a real refactor first, and that is done.** P25 was
-never going to be a straight deletion — the legacy RPC layer had to
-become analyzable before it could be replaced. Landed 2026-08-13/14 under
-`feat(P25/G19)` and `feat(P19.n)` tags:
+**Ship-first: seven security findings, all fixed 2026-08-15**, found
+during the P25 review and landed ahead of the modernization work itself
+— four contradicted this file's own SEC checklist (see SEC-10/SEC-12/
+SEC-16 below, corrected):
+
+1. Global `addslashes()` on every superglobal, every request — data
+   corruption repo-wide, contradicted the SEC-10 "Done" claim. Fixed.
+2. API-key session laundered into an unrestricted session via
+   `pwg.images.uploadAsync` — `UserBootstrap.php` unconditionally
+   overwrote a correctly-marked `ws_session_login_api_key` connection
+   type with `'pwg.images.uploadAsync'`, making all 8
+   `apiKeyForbiddenMethods` callable. Fixed.
+3. `pwg.images.addChunk` wrote a file from unvalidated `original_sum`/
+   `type` params — an authenticated arbitrary-directory write. Fixed.
+4. `pwg.themes.performAction` bypassed the UI's own `isWebmaster()` gate
+   its `plugins` sibling already had. Fixed.
+5. CSRF was optional on three mutating methods (the token doubled as an
+   unrelated "allow HTML" flag), one of them GET-reachable. Fixed by
+   separating the two concerns.
+6. WS compared CSRF tokens with `!==`, not `hash_equals()` — contradicted
+   the SEC-12 "Done (confirmed)" claim. Fixed.
+7. Four `exec()` sites escaped nothing — contradicted the SEC-16
+   "Done (confirmed — 46 call sites)" claim. Fixed.
+
+**Stage 1 — typed internals.** The registration god-method
+(`WsDefaultMethods::register()`, 1,322 lines) split into 13 per-domain
+registrars. The recursive `$server->invoke()` dispatch pattern deleted
+(12 call sites now call the sibling handler directly), removing all 9
+copies of a duplicated `narrowGetListResult()` helper. `WsParamType`/
+`WsParamFlag` moved `Piwigo\Core` → `Piwigo\Ws`; `WsError` became a
+backed enum (89 call sites updated, wire-visible codes unchanged).
+`WsHelper` (an event listener + CSRF guard + SQL builder + URL builder +
+tree builder in one class) split into 7 single-purpose classes.
+`Server`'s reference-parameter setters and per-request `uksort()` on its
+method list removed. **Two items were investigated and deliberately
+descoped, not attempted**: making `WsAction`'s `array $params` typed end
+to end, and building `Ws\Request\*` DTOs from the PSR-7 request — both
+would touch only code P27 deletes outright, so building either now is
+pure throwaway work against P27's own timeline. **Three items are real
+but incomplete**: dropping the `Server $server` parameter from every
+handler signature (blocked — `Images/UploadAsyncHandler` still threads
+it into `UploadService`, resolved by a Stage 2 item below, not yet
+revisited); a typed sort-spec replacement for `WsHelper`'s raw-SQL
+`stdImageSqlOrder()`; retyping `Server::$methods` (blocked on a decision
+for its 2 remaining legacy-callback registrations).
+
+**Stage 2 — lifecycle (deleted the `exit()`s).** `Server::run()` returns
+a real `ResponseInterface`; `WsController` returns it directly, deleting
+its own `exit()`. `WsErrorResponse` is now a pure value object — the
+status-code decision moved into `Server::sendResponse()`, the only place
+building a real response. `UploadService` throws a new
+`UnsupportedMediaTypeException` instead of reaching into a `Server` to
+`sendResponse()`+`exit`. `UserBootstrap`'s 2 `exit()` sites (invalid
+api_key, failed `uploadAsync` login) now throw
+`Http\ResponseReadyException` — closing a real, previously-documented
+test gap (both branches were "genuinely unsafe to invoke" per
+`UserBootstrapTest.php`'s own prior docblock) and setting up workstream
+C3 Phase 1's `Bootstrap\UserResolutionMiddleware` to wrap this logic as
+real middleware. `connected_with` (5 string literals + one
+variable-valued write) became a typed `Core\ConnectedWith` enum.
+`WsInitializer`'s memoized `Server` had a real worker-mode-readiness
+leak — `responseFormat`/`responseEncoder` were computed once per
+`Server` lifetime instead of once per request — fixed. `pwg.extensions.
+checkUpdates`'s session-keyed cache moved onto a real PSR-6 cache pool.
+Two wire-compatible bugs fixed: `json_encode()` could silently emit an
+empty body on failure (now `JSON_THROW_ON_ERROR`), and
+`categoriesFlatlistToTree()` could hit an undefined array key for a
+category whose parent was filtered out of scope.
+
+**Stage 3 — tests and docs.** The Contract suite (604 tests, all 94
+methods covered) stayed unmodified throughout, the real gate for a
+phase that changes no wire byte. Still open: 39 of 94 handlers lack a
+dedicated Unit test (`Ws/Users/` has none at all); 18 dangling
+`{@see \Piwigo\Ws\...}`-style docblock references to deleted
+god-classes.
+
+**Landed 2026-08-13/14, before the Stage 1–3 work above** (under
+`feat(P25/G19)` and `feat(P19.n)` tags — kept here for the historical
+record, since these were the foundation Stage 1/2 built on):
 
 - **94 `WsAction` handlers** replace the `*Endpoints` god-classes. Each
   is a constructor-injected class with an `__invoke()`, not a
@@ -960,43 +1102,43 @@ file: the `Pwg` prefix was dropped repo-wide on 2026-08-11
 (`PwgTags.php` → `Tags.php`, `PwgError` → `WsErrorResponse`, `PwgServer`
 → `Server`).
 
-### Epoch H — Security (P26)
+### Epoch H — Security (P28)
 
-**P26 — Security hardening.** Not started: WebAuthn/passkeys, OIDC SSO,
+**P28 — Security hardening.** Not started: WebAuthn/passkeys, OIDC SSO,
 nonce-based CSP, COOP/COEP, CSP reporting. Depends on P24. The clearest
 concrete marker that it has not begun is `rate_limiter`, the one P11
-cache pool deliberately left unbuilt as P26 scope.
+cache pool deliberately left unbuilt as P28 scope.
 
 One pattern to borrow when CSP work is scoped: the reference
 implementation has `composer lint:no-inline-scripts` →
 `tools/check-no-executable-inline-scripts.php`, scanning `.latte` and
 `.php` for `<script>` tags missing `type=` or carrying one outside a
 CSP3-safe allow-list. It exists there *because of* its own
-`script-src 'self'` hardening. It was deliberately not pulled into P30
+`script-src 'self'` hardening. It was deliberately not pulled into P32
 just because it is Latte-shaped — reference repos are a pattern source,
 not a scope target.
 
-### Epoch I — Plugins/Layering/Repo-restructure (P27–P28)
+### Epoch I — Plugins/Layering/Repo-restructure (P29–P30)
 
-**P27 — Plugin / Theme contracts + bundled extensions.** In progress.
-P27.0–P27.5 and P27.7–P27.15 are done and landed on this branch. **P27.6,
+**P29 — Plugin / Theme contracts + bundled extensions.** In progress.
+P29.0–P29.5 and P29.7–P29.15 are done and landed on this branch. **P29.6,
 porting the 7 bundled extensions onto the new contract, has not started
 here**: `plugins/` holds nothing but `index.php` and `trash`, and
-`themes/` holds no bundled third-party theme. Ownership of P27.6 moved to
-this session on 2026-08-14. Do not treat P27 as done until it lands.
+`themes/` holds no bundled third-party theme. Ownership of P29.6 moved to
+this session on 2026-08-14. Do not treat P29 as done until it lands.
 
-Sub-item tags: P27.0 EventDispatcher PSR-14 conformance +
-`Piwigo\Listener\*`; P27.1/P27.2 `ExtensionInterface` + manifests + JSON
-schemas + the `ExtensionContext` SDK; P27.3 `PluginRegistry`/
-`ThemeRegistry`; P27.4 request-time boot retarget; P27.5 admin lifecycle
-retarget + page-renderer listing merge; P27.7 SEC-49, `eval_visible`
-replaced by a typed `CheckMenuLinkVisibility` event; P27.8 dead
-`PluginMaintain`/`ThemeMaintain`/`insertPlugin()` removal; P27.9
-`AppInfo::VERSION` bump to `17.0.0` plus a local PEM mirror; P27.10 full
+Sub-item tags: P29.0 EventDispatcher PSR-14 conformance +
+`Piwigo\Listener\*`; P29.1/P29.2 `ExtensionInterface` + manifests + JSON
+schemas + the `ExtensionContext` SDK; P29.3 `PluginRegistry`/
+`ThemeRegistry`; P29.4 request-time boot retarget; P29.5 admin lifecycle
+retarget + page-renderer listing merge; P29.7 SEC-49, `eval_visible`
+replaced by a typed `CheckMenuLinkVisibility` event; P29.8 dead
+`PluginMaintain`/`ThemeMaintain`/`insertPlugin()` removal; P29.9
+`AppInfo::VERSION` bump to `17.0.0` plus a local PEM mirror; P29.10 full
 legacy plugin/theme file-support retirement (unplanned, prompted by a
-live `elegant` theme rendering bug); P27.11 stoppable events + priority
-direction; P27.12 `deleteSetting()`; P27.13 `mail()`; P27.14
-`users()`/`themes()` facades; P27.15 the settings-page rendering
+live `elegant` theme rendering bug); P29.11 stoppable events + priority
+direction; P29.12 `deleteSetting()`; P29.13 `mail()`; P29.14
+`users()`/`themes()` facades; P29.15 the settings-page rendering
 mechanism.
 
 *Survey grounding.* Every real plugin in `../piwigo16-plugins` (~400
@@ -1054,16 +1196,21 @@ The JSON manifest format is kept from the reference design.
 `composer.lock` as transitive dependencies, so nothing new has to be
 introduced to validate manifests or compare versions.
 
-**P28 — Layer decoupling + repository restructure.** The web-root
+**P30 — Layer decoupling + repository restructure.** The web-root
 isolation half is done — `public/` is the real document root today. Layer
-decoupling itself is not started. Deptrac reports 0 violations, but
-whether that is this phase's ratchet reaching zero or simply no
-violations having accumulated has not been separately verified.
+decoupling itself is not started. Deptrac reports 0 violations today, and
+that number is now known to be a live ratchet, not just "no violations
+having accumulated": a 2026-08-15 P25 review found it had actually
+regressed to 16 real violations (`Config\ConfigService`/`CurrentConfig`
+in L1Infrastructure depending on `Image\OrderBy` in L2aCoreDomain,
+introduced by `7c281ee97c`, which left `OrderBy` unplaced in
+`deptrac.yaml`) — fixed the same day, confirmed back to 0 by a live
+re-run, not by trusting the prior claim.
 
 The one commit tagged `chore(p32): delete doc/` is an unrelated narrow
 cleanup that borrowed a pre-consolidation number for this same phase.
 
-### Epoch J — Presentation, templating & extension surface (P29–P52)
+### Epoch J — Presentation, templating & extension surface (P31–P54)
 
 Sequenced after every backend phase. Order within the epoch: the
 completed Latte foundation, then refactor and modernization (same
@@ -1074,7 +1221,7 @@ The tree is 135 templates and 119,752 lines, of which **93,420 lines
 (78%) are auto-generated `{varType}` boilerplate** — every template
 carries the same 692-line block while referencing 11.5 distinct
 variables on average. That is forced by `Template::$vars` being one
-request-global bag, and P38 is what removes it.
+request-global bag, and P40 is what removes it.
 
 <!-- markdownlint-disable-next-line MD013 -->
 <!-- doc-drift-check: cmd='find themes template-extension -name "*.latte" | wc -l' expect="135" -->
@@ -1083,21 +1230,21 @@ request-global bag, and P38 is what removes it.
 
 #### Completed Latte foundation
 
-**P29 — Smarty → Latte template migration.** Done, 80 commits. All 139
-real templates at the time converted (P29.1–P29.6), then the Smarty
-engine fully retired (P29.7): `Template.php` has no Smarty dependency at
+**P31 — Smarty → Latte template migration.** Done, 80 commits. All 139
+real templates at the time converted (P31.1–P31.6), then the Smarty
+engine fully retired (P31.7): `Template.php` has no Smarty dependency at
 all, the `smarty/smarty` package and its three patches are gone, and the
 Smarty-reach-around arch test was retired because PHP's own private-method
 visibility on `Template::assign()`/`append()` now enforces the same
 invariant.
 
 Scope was narrowed from the original plan: the "+ asset pipeline" clause
-is split out to P34 and P50. Every `p31.x` commit is a `.tpl` → `.latte`
+is split out to P36 and P52. Every `p31.x` commit is a `.tpl` → `.latte`
 conversion or Smarty cleanup, nothing manifest-, combiner- or
 image-format-related.
 
-**P30 — Latte lint/format tooling.** Done. Both halves exist; **only
-enforcement is missing, and that is P42's job**, not a gap here.
+**P32 — Latte lint/format tooling.** Done. Both halves exist; **only
+enforcement is missing, and that is P44's job**, not a gap here.
 
 *Lint half*: `tools/latte-lint.php` + `composer lint:latte`, a thin
 wrapper around Latte's own bundled `Latte\Tools\Linter` registering
@@ -1149,21 +1296,21 @@ the mail templates, which are joined by raw PHP string concatenation in
 three content-template combinations and the concatenated output validated
 with a real HTML parser.
 
-**P31 — Latte idiomatic modernization.** Done, all eight sub-items. A
+**P33 — Latte idiomatic modernization.** Done, all eight sub-items. A
 content pass over the templates for idiomatic Latte constructs, cleaning
-up Smarty-era patterns that survived P29's mechanical conversion, with
+up Smarty-era patterns that survived P31's mechanical conversion, with
 the same rendered output.
 
-- **P31A** — `Feature::Dedent` and `Feature::ScopedLoopVariables` enabled
+- **P33A** — `Feature::Dedent` and `Feature::ScopedLoopVariables` enabled
   on the reformatted tree.
-- **P31B** — `{varType}` blocks generated from the live `VariableMap` via
+- **P33B** — `{varType}` blocks generated from the live `VariableMap` via
   `composer lint:vartype:fix`, plus a drift check. Not a hand pass.
-- **P31C** — n:if/n:foreach sweep, 451 conversions across 91 templates,
+- **P33C** — n:if/n:foreach sweep, 451 conversions across 91 templates,
   AST-based. Four templates skipped for a real structural edge case.
-- **P31D** — verification only: `{spaceless}`'s runtime whitespace
+- **P33D** — verification only: `{spaceless}`'s runtime whitespace
   collapse confirmed unaffected by the Dedent and n:attribute work,
   inspected directly against the golden-html baselines.
-- **P31E** — `|noescape` classified across all 1009 sites by an AST walk
+- **P33E** — `|noescape` classified across all 1009 sites by an AST walk
   cross-checked against a raw-text count. 11 provably-redundant sites
   removed (bare var, plain-HTML-text position, PHPStan type exactly
   `\Latte\Runtime\Html`, confirmed against
@@ -1175,16 +1322,16 @@ the same rendered output.
   `<script>`/`<style>` body, which is a different JS-string escape path
   and invisible to the parser's AST walk by design; and the broader
   ~2,380-site `|translate` rollout beyond the noescape overlap.
-- **P31F** — native `{_ …}`/`{translate …}` tags added to
+- **P33F** — native `{_ …}`/`{translate …}` tags added to
   `PiwigoExtension::getTags()`, wired to the existing mechanism.
-- **P31G** — `Engine::setLocale()` wired from `Lang::currentUserLanguage()`,
+- **P33G** — `Engine::setLocale()` wired from `Lang::currentUserLanguage()`,
   and all four `|number_format[:N]` sites converted to `|number[:N]`.
   Original research found only one; three more in `rating_user.latte`
   used a `:N`-argument form a substring grep missed. Verified by a unit
   test proving `fr_FR`'s ICU output genuinely diverges from
   `number_format()` (narrow no-break-space separator, round-half-to-even),
   not just "renders without crashing."
-- **P31H** — dev-only Tracy debug bar. `tracy/tracy` is a real
+- **P33H** — dev-only Tracy debug bar. `tracy/tracy` is a real
   `require-dev` dependency now, previously an unresolved transitive
   reference. `Piwigo\Bootstrap\TracyBootstrap` mirrors `SentryBootstrap`'s
   no-op-unless-opted-in shape behind `PIWIGO_TRACY_ENABLED`.
@@ -1196,7 +1343,7 @@ the same rendered output.
 
 #### Refactor/modernization track — lands first
 
-**P32 — Event system rewrite.** Independent of the rest of Epoch J: it
+**P34 — Event system rewrite.** Independent of the rest of Epoch J: it
 touches no template, asset or JS file, and can run immediately.
 
 Today there are 157 event classes but only 21 with a production listener,
@@ -1234,7 +1381,7 @@ goes up for review before anything is deleted: 27% of `loc_*` handlers do
 non-contribution work, so a payload-less marker can still be
 load-bearing.
 
-**P33 — Browserslist decision + IE back-compat removal.** One phase, not
+**P35 — Browserslist decision + IE back-compat removal.** One phase, not
 two — the removal is the decision's mechanical consequence. Commit a
 `browserslist` config (none exists today, in neither `.browserslistrc`
 nor `package.json`), setting Vite's build target and confirming
@@ -1245,21 +1392,21 @@ obsoletes: `themes/default/js/pngfix.js` (an IE6 PNG-alpha shim) and its
 `-ms-filter`/`zoom:1`/`\9` rules across 11 files. Proven via
 `composer test:visual`.
 
-**P34 — Asset-pipeline foundation.** Retires `ScriptLoader`, `CssLoader`,
+**P36 — Asset-pipeline foundation.** Retires `ScriptLoader`, `CssLoader`,
 `FileCombiner`, `Combinable`, `Script` and `Css` (~1,038 lines — the
 legacy PHP combiner that `vite.config.ts`'s own comment flags as still
 driving everything except the `vitals` entry) for real `ViteManifest`
 resolution against `dist/manifest.json`. No template content moves; this
-only builds the delivery mechanism P36 and P37 need.
+only builds the delivery mechanism P38 and P39 need.
 
-**P34 owns one decision that determines P39's shape.** Do templates keep
+**P36 owns one decision that determines P41's shape.** Do templates keep
 declaring their own assets mid-body (`{do combineScript(…)}` — 178 sites,
 plus 87 `combineCss` and 80 `footerScript`, across 76 of 135 templates),
 or do assets become view-declared per-page Vite entries?
 
 - *Template-declared (status quo).* Runtime collection is unavoidable,
   because a `<head>` rendered before the body cannot see what the body
-  registered. P39 must then render **shell-last** (content → layout).
+  registered. P41 must then render **shell-last** (content → layout).
 - *View-declared.* No runtime collection at all, so `<head>` can render
   first and Latte's own `{layout}`/`{block}` inheritance becomes usable
   immediately.
@@ -1273,20 +1420,20 @@ async), which bounds the problem. Counter-consideration: 76 templates
 register assets today and themes must keep that ability, so moving all of
 it into PHP removes a real capability from theme authors.
 
-P38 and P39 must therefore treat any `Assets` abstraction as a **thin
-seam P34 deletes**, not a design worth polishing.
+P40 and P41 must therefore treat any `Assets` abstraction as a **thin
+seam P36 deletes**, not a design worth polishing.
 
-**P35 — Typed page-data exposure (PHP half).** One typed payload per
+**P37 — Typed page-data exposure (PHP half).** One typed payload per
 page, emitted as a JSON island, replacing the ad-hoc PHP → JS smuggling:
 68 in-template `json_encode` uses, `PageState::$bodyData`/`BODY_DATA`,
 and the string-into-JS-literal pattern the 210 `escapeJavascript` sites
-represent. This has to exist *before* P36, or P36 must invent an interim
-mechanism that P44 then replaces. It is also the PHP counterpart to P38's
+represent. This has to exist *before* P38, or P38 must invent an interim
+mechanism that P46 then replaces. It is also the PHP counterpart to P40's
 typed view objects — the same typed source feeds the template and the
-JSON island, so design the two together even though P38 lands later.
+JSON island, so design the two together even though P40 lands later.
 
-**P36 — Inline JS extraction.** Every `<script>` block in a template
-moves to a plain `.js` file loaded through P34's manifest. Same behavior,
+**P38 — Inline JS extraction.** Every `<script>` block in a template
+moves to a plain `.js` file loaded through P36's manifest. Same behavior,
 proven via `composer test:visual`. No TypeScript, no modularization, no
 jQuery changes.
 
@@ -1294,20 +1441,20 @@ Inline JS is not only literal `<script>` blocks: 16 templates carry one,
 but **80 `footerScript(` captures across 61 templates** carry the rest.
 Critically, **all 210 `escapeJavascript` call sites are inside that
 scope** — verified, none outside a `{capture}` or `<script>` region. Any
-escaping or filter cleanup done before P36 is therefore discarded work,
-which is why P36 and P37 must run ahead of P38–P41 and ahead of any
+escaping or filter cleanup done before P38 is therefore discarded work,
+which is why P38 and P39 must run ahead of P40–P43 and ahead of any
 further template-content pass.
 
-**P37 — Inline CSS extraction.** Every `<style>` block and `style="…"`
+**P39 — Inline CSS extraction.** Every `<style>` block and `style="…"`
 attribute moves to a real `.css` file: 20 templates with `<style>`, 243
-`style="` attributes. Independent of P36 — different files, different
-linter — so parallelizable with it. P37 also settles whether
+`style="` attributes. Independent of P38 — different files, different
+linter — so parallelizable with it. P39 also settles whether
 `Template::htmlStyle()` (15 call sites, accumulating runtime inline CSS)
 survives at all, or is superseded by real stylesheets plus the existing
-`local/css/*-rules.css` mechanism. P39 should not carry it forward by
+`local/css/*-rules.css` mechanism. P41 should not carry it forward by
 default.
 
-**P38 — Typed view objects + `Template` split.** The largest single diff
+**P40 — Typed view objects + `Template` split.** The largest single diff
 in the epoch. Mitigate by converting one page-family at a time, after
 proving the pattern end to end on a thin slice (`index.latte` + a new
 `@layout.latte` + `GalleryController`) gated on golden-HTML and VR.
@@ -1326,7 +1473,7 @@ must **return** typed fragments for their caller to compose, and the 18
 Then split `Template` (1,370 lines, 36 public methods) into `Renderer`
 (one method, `render(View): Html`), `TemplateLocator`, `ThemeChain` (a
 typed `ThemeConf` replacing the Smarty `append(…, merge: true)`
-parent-theme emulation), a thin `Assets` seam that P34 owns, a
+parent-theme emulation), a thin `Assets` seam that P36 owns, a
 contribution registry, and a trimmed `PiwigoExtension`. Delete
 `TemplateAdapter` (`$pwg` — 0 template uses), the `defineDerivative`
 Latte registration (0 template uses), and `Core\TemplateInterface`.
@@ -1350,9 +1497,9 @@ declared `{templateType}`". Keep `LatteTemplateCompiler`. **Add a
 round-trip check**: every template's `{templateType}` class must declare
 that template back via `#[Template]`.
 
-Depends on P34, P35, P36 and P37.
+Depends on P36, P37, P38 and P39.
 
-**P39 — Shell-last rendering + `PageState` split.** `header.latte` (834
+**P41 — Shell-last rendering + `PageState` split.** `header.latte` (834
 lines) and `footer.latte` (744 lines) merge into `@layout.latte`; admin's
 61 `assignVarFromTemplate('ADMIN_CONTENT', …)` calls become the same
 composition. Deletes `Template::$output`, both `COMBINED_*` placeholders,
@@ -1365,11 +1512,11 @@ Splits `PageState` (25+ public mutable properties, 225 mutation sites) by
 concern: a `PageMessages` collector, page chrome into `LayoutView`, debug
 counters into `RequestMetrics`, loose domain facts back to their owners.
 
-**Shape depends on P34's fork** — if assets become view-declared,
+**Shape depends on P36's fork** — if assets become view-declared,
 `{layout}`/`{block}` inheritance replaces shell-last composition
 entirely.
 
-**P40 — Typed contributions + plugin-owned routes.**
+**P42 — Typed contributions + plugin-owned routes.**
 
 *The problem.* Core ships **two** mechanisms for one need, on the same
 page: `Template::addIndexButton()`/`parseIndexButtons()` (a ranked
@@ -1429,105 +1576,105 @@ optional** — making `Bootstrap\RouteDefinitions` extensible is the only
 remaining answer for page ownership (`tag_groups`,
 `piwigo_masonry_grid`, `PWG_Stuffs`).
 
-**P41 — Escaping campaign.** The residue after P36 removes the JS-context
-cases and P38 turns rendered-sub-template vars into `Html`-typed
+**P43 — Escaping campaign.** The residue after P38 removes the JS-context
+cases and P40 turns rendered-sub-template vars into `Html`-typed
 properties: the pre-escaped-URL population (`{$U_HOME|noescape}`,
 `{$F_ACTION|noescape}`, `{$ROOT_URL|noescape}`), not the full 988. **Size
-it after P38, not before.** Kept as its own phase so an escaping
+it after P40, not before.** Kept as its own phase so an escaping
 regression stays bisectable from a structural one; gated by golden-HTML
 and VR.
 
-**P42 — Latte lint/format enforcement.** P30 built the tooling and gated
+**P44 — Latte lint/format enforcement.** P32 built the tooling and gated
 almost none of it: `composer lint:latte`, `composer precompile:templates`
 and the `tools/latte-prettier/` formatter are invoked by neither
 `.github/workflows/ci.yml` nor `lefthook.yml` — only
 `composer analyse:phpstan` runs today, via the CI `phpstan` job and a
 `lefthook` pre-push hook. Wire the survivors into CI and pre-commit.
 
-Deliberately last in the refactor track: P40 changes `PiwigoExtension`'s
+Deliberately last in the refactor track: P42 changes `PiwigoExtension`'s
 filter set and `lint:latte` registers that extension, so gating earlier
-only churns the config. `lint:vartype` is **never** wired — P38 deletes
+only churns the config. `lint:vartype` is **never** wired — P40 deletes
 it along with the `{varType}` blocks it generates.
 
-**P43 — JS → TS mechanical conversion.** `.js` → `.ts` renames, minimal
+**P45 — JS → TS mechanical conversion.** `.js` → `.ts` renames, minimal
 types to satisfy the existing strict `tsconfig.json`, real Vite entries
 replacing the `noop` placeholder (the 68 entries `vite.config.ts` already
 earmarks). Same code, same behavior. Vendored third-party files
 (`jquery.js`/`.min.js`/`.cookie.js`, `themes/default/js/ui/**`,
 `themes/default/js/plugins/**`, `jquery.geoip.js`) stay out of scope —
-already ESLint-ignore-listed, decided in P46. Depends on P36.
+already ESLint-ignore-listed, decided in P48. Depends on P38.
 
-**P44 — `getPageData<T>()` typing + `any` reduction (TS half).**
-`getPageData<T>()` consumes P35's island; TypeScript `any` driven to zero
-across P43's output. Real type-design work, not a mechanical rename.
+**P46 — `getPageData<T>()` typing + `any` reduction (TS half).**
+`getPageData<T>()` consumes P37's island; TypeScript `any` driven to zero
+across P45's output. Real type-design work, not a mechanical rename.
 
-**P45 — Refactor TS into modules.** Breaks up monolithic per-page scripts
+**P47 — Refactor TS into modules.** Breaks up monolithic per-page scripts
 into proper ES modules (shared utils, per-feature entry points), one Vite
 entry per real page bundle.
 
-**P46 — Remove jQuery.** An explicit per-surface decision, not a blanket
+**P48 — Remove jQuery.** An explicit per-surface decision, not a blanket
 removal: first-party call sites (native DOM/fetch), the vendored bundle
 itself (delete once nothing references it), `themes/default/js/ui/**` and
 `themes/default/js/plugins/**` (selectize, jqtree — replace or keep
 vendored per widget), `jquery.geoip.js`, and the installer's own separate
 `jquery.packed.js` load, which is a third easy-to-miss surface with
 thinner coverage (`composer test:install` only). `pngfix.js` is not in
-scope — it is an IE shim, not a jQuery plugin, already removed in P33.
+scope — it is an IE shim, not a jQuery plugin, already removed in P35.
 
-**P47 — Lit component catalog.** Conditional on P46's findings, and still
-parity-only. Just for widgets P46 finds no reasonable vanilla replacement
+**P49 — Lit component catalog.** Conditional on P48's findings, and still
+parity-only. Just for widgets P48 finds no reasonable vanilla replacement
 for — tag autocomplete and tree picker are the likely candidates. Skipped
-entirely if P46 turns up nothing that needs it.
+entirely if P48 turns up nothing that needs it.
 
-**P48 — TS modernization.** An idiomatic pass over the now-modular,
-jQuery-free, fully-typed codebase from P43–P47. Same behavior.
+**P50 — TS modernization.** An idiomatic pass over the now-modular,
+jQuery-free, fully-typed codebase from P45–P49. Same behavior.
 
-**P49 — CSS architecture modernization.** `@container` queries, `@layer`
+**P51 — CSS architecture modernization.** `@container` queries, `@layer`
 cascade, Tailwind evaluated (`@source` scanning needs Latte templates,
 already satisfied). Same visual output, proven via VR baselines. Depends
-on P37, not on the JS track, so parallelizable with all of P43–P48.
+on P39, not on the JS track, so parallelizable with all of P45–P50.
 Includes confirming that nothing in the vendored plugin RTL rules
 (`selectize.dark.css`, `jqtree.css` — the only RTL handling anywhere in
-this repo) regresses if P46 touched those files.
+this repo) regresses if P48 touched those files.
 
 **The Tailwind *decision* is pulled forward, though the work stays
 here.** If Tailwind is adopted it rewrites `class=` across all 135
-templates, and P38/P39 restructure those same templates. Deciding late
+templates, and P40/P41 restructure those same templates. Deciding late
 means touching every template a third time, so the adopt/don't-adopt call
-must be made **before P38 starts**.
+must be made **before P40 starts**.
 
 #### New-feature track — lands last
 
-**P50 — Picture pipeline.** `<picture>` AVIF/WebP variants plus ThumbHash
+**P52 — Picture pipeline.** `<picture>` AVIF/WebP variants plus ThumbHash
 blur-up placeholders: new image formats and a new loading-placeholder UX.
 Independent of the refactor track; kept last per the modernize-first
-ordering rather than for a technical dependency. Soft-depends on P34 if
+ordering rather than for a technical dependency. Soft-depends on P36 if
 generated variants should be served through the Vite manifest.
 
-**P51 — Dark mode.** A new user-facing capability (theme toggle,
-`prefers-color-scheme`). Depends on P49 — it needs the modernized cascade
+**P53 — Dark mode.** A new user-facing capability (theme toggle,
+`prefers-color-scheme`). Depends on P51 — it needs the modernized cascade
 layers and custom properties to add a theme dimension onto cleanly.
 
 #### Closing gate
 
-**P52 — Real quality gates.** `lighthouserc.json` has no `assert` block
+**P54 — Real quality gates.** `lighthouserc.json` has no `assert` block
 today and is collect-only; `.size-limit.json` has one 1 KB placeholder
 budget, whose own name still cites a pre-renumbering phase. Wires real
 Lighthouse perf, a11y and best-practices thresholds and real per-entry
 `size-limit` budgets, and decides whether the risk register's claimed
-"a11y gate" becomes a real automated check. Needs P33–P51's real bundles,
+"a11y gate" becomes a real automated check. Needs P35–P53's real bundles,
 templates and features to measure against.
 
-## Greenfield tracks (T3, cuttable — outside the P0–P52 backbone)
+## Greenfield tracks (T3, cuttable — outside the P0–P54 backbone)
 
 All entirely cuttable, never gating a backbone commit, dropped first on
 overrun. None have started; each depends on backbone phases that have not
 landed.
 
 - **T3·WEB** — PWA, View Transitions, Speculation Rules, JSON-LD, SRI,
-  resource hints. Depends on P34 (asset pipeline), P29/P31 (Latte
-  templates) and P49 (CSS architecture).
-- **T3·AI** — depends on P19 and P25.
+  resource hints. Depends on P36 (asset pipeline), P31/P33 (Latte
+  templates) and P51 (CSS architecture).
+- **T3·AI** — depends on P19 and P27.
 - **T3·RIDERS** — CQRS, libvips/HEIC, vector/CLIP search, tus uploads,
   webhooks, Fibers, Mercure, passkeys, OIDC, soft delete. Each is hosted
   on its own backbone phase.
@@ -1561,30 +1708,37 @@ phase only if T1/T2 alone is still oversized.
 
 ## Risk register
 
-- **P38 is the largest single diff remaining.** Mitigated by the thin
+- **P40 is the largest single diff remaining.** Mitigated by the thin
   slice and by converting one page-family at a time; two rendering models
   coexist during the transition.
-- **P40's no-escape-hatch decision means core must be extended for novel
+- **P42's no-escape-hatch decision means core must be extended for novel
   needs.** Accepted explicitly; the consequence already absorbed is
   plugin-owned routes.
-- **P40's built-in filter swaps have real semantic differences.** Check
+- **P42's built-in filter swaps have real semantic differences.** Check
   each; golden-HTML catches the rest.
-- **P34's fork can flip P39 entirely.** If assets become view-declared,
+- **P36's fork can flip P41 entirely.** If assets become view-declared,
   shell-last composition may be unnecessary.
-- **P32's catalogue prune is judgement, not a script.** Review the derived
+- **P34's catalogue prune is judgement, not a script.** Review the derived
   list before deleting anything.
-- **P49's Tailwind decision is due before P38 starts.**
-- **P27 breaks external extensions by design** — an accepted product
+- **P51's Tailwind decision is due before P40 starts.**
+- **P29 breaks external extensions by design** — an accepted product
   decision, not an oversight. In-tree callers migrate in the same phase.
+- **Skipping workstream C3 Phase 0 breaks Phase 1 silently, not
+  loudly.** A bootstrap-phase middleware that short-circuits without
+  Phase 0's `ResponseReadyException`-at-every-nesting-level fix would
+  still "work" (the request completes) while quietly losing security
+  headers and Server-Timing and spamming Sentry with false errors —
+  exactly the kind of regression a happy-path test suite would not
+  catch. Both landed together for this reason.
 - **MySQL 9.x is a non-LTS line.** Pin the exact server version; hedge via
   the MariaDB/PostgreSQL provider matrix.
 
 **On the "a11y gate."** There isn't one. No automated accessibility
 tooling — `axe-core`, `pa11y`, or a Lighthouse `assert` block scoped to
 the a11y category — exists anywhere in this repo. What actually ran
-during P29's 139-template conversion was the VR baseline plus manual
-per-template review, and both stay in place for whatever templates P36
-and later still touch. Making it real is P52's call.
+during P31's 139-template conversion was the VR baseline plus manual
+per-template review, and both stay in place for whatever templates P38
+and later still touch. Making it real is P54's call.
 
 ## MySQL infrastructure notes
 
@@ -1658,7 +1812,7 @@ checking entirely.
 **Deliberately not in this list**: `vendor/bin/psalm`, a real working
 dependency again since 2026-08-11 but with no CI job and no composer
 script; and `composer lint:latte`/`precompile:templates`, which exist and
-work but are gated nowhere until P42.
+work but are gated nowhere until P44.
 
 **SEC traceability has no automated cross-check.** The original design
 had every `SEC-NN` reachable from threat model → phase checklist →
@@ -1687,13 +1841,13 @@ not a guarantee.
 | SEC-07 | P5 | Replace `mt_rand()` with `random_int()` | Done for security-sensitive uses — see below |
 | SEC-08 | P5/P17–P23 | Replace loose `==` with `===` | Done |
 | SEC-09 | P5 | `#[\SensitiveParameter]` on secret-carrying params | Done (confirmed) — see below |
-| SEC-10 | P9→P17–P23 | Remove `addslashes()` superglobal sanitization | Done |
+| SEC-10 | P9→P17–P23 | Remove `addslashes()` superglobal sanitization | Done (confirmed) — this row was wrong: global `addslashes()` on every superglobal was still live in `RequestBootstrap::bootEntryPoint()` as of 2026-08-15, corrupting data (`O'Brien` stored as `O\'Brien`), with 71 compensating `stripslashes()` calls masking it; fixed `aba74c9129` |
 | SEC-11 | P9 | CSRF token md5→sha256 HMAC | Done (confirmed) |
-| SEC-12 | P9 | CSRF verification via `hash_equals()` | Done (confirmed) |
+| SEC-12 | P9 | CSRF verification via `hash_equals()` | Done (confirmed) — this row was wrong for the WS layer: `Ws\WsHelper`/`WsCsrfGuard::checkSecurityToken()` used `!==`, not `hash_equals()`, across all 41 real call sites; fixed `b38c5f0877` |
 | SEC-13 | P9 | `CookieService` HttpOnly + Secure flags | Done |
 | SEC-14 | P9 | Cookie deletion calls include all flags | Done |
 | SEC-15 | P20 | Eliminate 2 of 3 `eval()` calls (3rd = SEC-49) | Done |
-| SEC-16 | P19 | Wrap `exec()` calls with `escapeshellarg()` | Done (confirmed — 46 call sites) |
+| SEC-16 | P19 | Wrap `exec()` calls with `escapeshellarg()` | Done (confirmed) — this row was wrong: 4 of 16 real `exec()` sites escaped nothing (`Admin/Image/ImageBackend.php`, `Admin/MaintenanceActionsPageRenderer.php`, `Ws/Core/GetCacheSizeHandler.php` ×2), admin-to-shell via DB-settable config; fixed `c6a63c8143` |
 | SEC-17 | P17 | URL validation in redirect responder | Done |
 | SEC-18 | P19 | Replace `addslashes()` in `SearchService` with prepared statements | Done |
 | SEC-19 | P21–P22 | Controllers use PSR-7 request, not superglobals | Done |
@@ -1702,7 +1856,7 @@ not a guarantee.
 | SEC-22 | P21 | Replace `phpinfo()` with curated server info | Done |
 | SEC-23 | P17 | SSRF hardening for the HTTP client | Done |
 | SEC-24 | P17 | Remove local-file read fallback in the HTTP client | Done |
-| SEC-25 | P18 | Session fixation: regenerate on privilege escalation | Done — P26 was meant to verify further |
+| SEC-25 | P18 | Session fixation: regenerate on privilege escalation | Done — P28 was meant to verify further |
 | SEC-26 | P16 | Validate locale before `include` in `LangService` | Done (confirmed) |
 | SEC-27 | P18 | Auto-login key HMAC sha1→sha256 + `hash_equals()` | Done |
 | SEC-28 | P18 | `EphemeralKeyService` HMAC md5→sha256 + `hash_equals()` | Done |
@@ -1713,36 +1867,36 @@ not a guarantee.
 | SEC-33 | P19 | Derivative serving leaks file existence | Partial — permission check is real, but runs through the full pipeline, not the designed fast path, so the item's scope shifted |
 | SEC-34 | P22 | Install sentinel DB-flag secondary check | Done |
 | SEC-35 | P19 | Remove non-standard headers from derivative pipeline | Done |
-| SEC-36 | P25 | REST error responses never leak internals | Not started |
-| SEC-37 | P25 | No object dumps in the REST error path | Not started |
-| SEC-38 | P25 | REST route authorization middleware | Not started |
-| SEC-39 | P25 | Validate `Content-Type: application/json` on REST bodies | Not started |
+| SEC-36 | P27 | REST error responses never leak internals | Not started |
+| SEC-37 | P27 | No object dumps in the REST error path | Not started |
+| SEC-38 | P27 | REST route authorization middleware | Not started |
+| SEC-39 | P27 | Validate `Content-Type: application/json` on REST bodies | Not started |
 | SEC-40 | P24 | Request DTOs as a hard input-validation gate | Real progress — arch test live; no "0 remaining" verified |
-| SEC-41 | P26 | Password hashing → Argon2id | Not started |
-| SEC-42 | P26 | CSRF middleware: remove `/admin*` exemption | Not started |
-| SEC-43 | P26 | No `Access-Control-Allow-Origin: *` on the OpenAPI spec endpoint | Not started (depends on P25) |
-| SEC-44 | P26 | API rate limiting + rate-limit headers | Not started — `rate_limiter` pool deliberately unbuilt pending this |
-| SEC-45 | P26 | CSP violation reporting | Not started |
-| SEC-46 | P26 | Cross-Origin Isolation (COOP/COEP) | Not started |
-| SEC-47 | P26 | `Vary: Cookie` on permission-dependent responses | Not started |
-| SEC-48 | P26 | Default `allow_html_descriptions` to `false` | Not started — still `true` (confirmed); remapped from a pre-renumbering phase |
-| SEC-49 | P27 | Remove `eval_visible` (plugin-facing half of SEC-15) | Done |
+| SEC-41 | P28 | Password hashing → Argon2id | Not started |
+| SEC-42 | P28 | CSRF middleware: remove `/admin*` exemption | Not started |
+| SEC-43 | P28 | No `Access-Control-Allow-Origin: *` on the OpenAPI spec endpoint | Not started (depends on P27) |
+| SEC-44 | P28 | API rate limiting + rate-limit headers | Not started — `rate_limiter` pool deliberately unbuilt pending this |
+| SEC-45 | P28 | CSP violation reporting | Not started |
+| SEC-46 | P28 | Cross-Origin Isolation (COOP/COEP) | Not started |
+| SEC-47 | P28 | `Vary: Cookie` on permission-dependent responses | Not started |
+| SEC-48 | P28 | Default `allow_html_descriptions` to `false` | Not started — still `true` (confirmed); remapped from a pre-renumbering phase |
+| SEC-49 | P29 | Remove `eval_visible` (plugin-facing half of SEC-15) | Done |
 | SEC-50 | P3 | CycloneDX SBOM generated as a CI artifact | Done (confirmed) |
 | SEC-51 | P3 | Pin GitHub Actions to commit SHAs | Done |
 | SEC-52 | P3 | OSV-Scanner over lockfiles in CI | Done |
 | SEC-53 | P3 | SLSA build provenance + attestations | Done |
 | SEC-54 | P4 | Sign container images + release artifacts | Done (confirmed) |
-| SEC-55 | P26 | OIDC SSO: PKCE + state/nonce + ID-token validation | Not started |
-| SEC-56 | P18 | GDPR data-subject endpoints behind re-auth + rate limit | Not started — `PrivacyService` doesn't exist; the backend was P18 scope, its REST exposure P25 |
+| SEC-55 | P28 | OIDC SSO: PKCE + state/nonce + ID-token validation | Not started |
+| SEC-56 | P18 | GDPR data-subject endpoints behind re-auth + rate limit | Not started — `PrivacyService` doesn't exist; the backend was P18 scope, its REST exposure P27 |
 | SEC-57 | P15 | Append-only / tamper-evident audit log | Done — `Piwigo\Audit\*` is real |
 | SEC-58 | P11 | Feature-flag changes authz-gated + audited | Partial — `FeatureFlag` is read-only by design, no mutation path exists yet to protect |
 | SEC-59 | T3·AI | MCP server: scoped read-only tokens | Not started (cuttable) |
-| SEC-60 | P7 | Worker-mode request isolation | Not started — the FrankenPHP worker-mode gap |
+| SEC-60 | P7 | Worker-mode request isolation | Not started — the FrankenPHP worker-mode gap; workstream C3 Phases 0–1 (unified PSR-15 bootstrap pipeline) are a real prerequisite now landed, Phase 2/3 still open |
 | SEC-61 | P11 | Mercure topic authorization | Not started (T3 rider) |
-| SEC-62 | P26 | Trusted Types | Not started |
-| SEC-63 | P26 | Fetch Metadata isolation | Not started |
+| SEC-62 | P28 | Trusted Types | Not started |
+| SEC-63 | P28 | Fetch Metadata isolation | Not started |
 | SEC-64 | P3 | OpenSSF Scorecard | Done |
-| SEC-65 | P25 | API `Idempotency-Key` replay store | Not started |
+| SEC-65 | P27 | API `Idempotency-Key` replay store | Not started |
 
 ### Notes on the partial items
 
@@ -1785,7 +1939,7 @@ it is not reproduced row by row here. Two items (SEC-05 Brotli, SEC-06
 `Cache-Control: immutable`) are performance items, not mitigations, and
 intentionally appear in no threat row. Mitigations that are not numbered
 items at all — nonce-based CSP, the PSR-18 SSRF guard, DB-level account
-locking, dual passwords — belong to P26 the same as their numbered
+locking, dual passwords — belong to P28 the same as their numbered
 siblings.
 
 ### Secrets & key management
@@ -1797,6 +1951,6 @@ rotating it invalidates all three at once, forcing re-login repo-wide.
 See `docs/REFERENCE.md`'s Secret rotation section.
 
 DB password rotation via MySQL dual passwords
-(`ALTER USER … RETAIN CURRENT PASSWORD`) is P26 scope, not built. Today's
+(`ALTER USER … RETAIN CURRENT PASSWORD`) is P28 scope, not built. Today's
 path is the simpler "update env, roll deployment" sequence
 `docs/REFERENCE.md` documents.

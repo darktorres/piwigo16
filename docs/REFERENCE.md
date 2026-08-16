@@ -637,11 +637,13 @@ pristine DB before running — none depend on run order or on
 
 **Contract tests**: `tests/Contract/ContractTestCase` drives the WS API
 over curl, validating against JSON Schema files in `tests/Contract/schemas/`.
-39 `Ws*Test` classes lock the legacy WS response shapes for as long as the
-WS API exists — a later phase (not yet started) removes it in favor of a
-REST `/api/v1` and retires these in favor of REST contract tests.
+38 `Ws*Test` classes (`WsHelperTest.php` split into 7 single-responsibility
+test files during P25's own `WsHelper` decomposition, `08eee7350d`) lock
+the legacy WS response shapes for as long as the WS API exists — P27
+removes it in favor of a REST `/api/v1` and retires these in favor of REST
+contract tests.
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find tests/Contract -maxdepth 1 -iname "Ws*Test.php" | wc -l' expect="39" -->
+<!-- doc-drift-check: cmd='find tests/Contract -maxdepth 1 -iname "Ws*Test.php" | wc -l' expect="38" -->
 
 **Browser tests**: 95 files in `tests/Browser/` (93 E2E flows, plus the
 two special-purpose files below) via `pestphp/pest-plugin-browser`.

@@ -18,7 +18,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\SqlDialect;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Site\SiteEntity;
@@ -154,7 +153,7 @@ final class CatModifyPageRenderer
 
         $cat_commentable = null;
         if ($currentConfig->activateComments) {
-            $cat_commentable = SqlDialect::booleanToString((bool) $category['commentable']);
+            $cat_commentable = (bool) $category['commentable'];
         }
 
         // manage album elements link
@@ -300,7 +299,7 @@ final class CatModifyPageRenderer
             catId: $category_id,
             catName: htmlspecialchars(is_string($category['name']) ? $category['name'] : ''),
             catComment: htmlspecialchars(is_string($category['comment']) ? $category['comment'] : ''),
-            isVisible: SqlDialect::booleanToString((bool) $category['visible']),
+            isVisible: (bool) $category['visible'],
             catAdminAccess: $categoryService->catAdminAccess($category_id, $currentUser),
             uDelete: $base_url . 'albums',
             uJumpto: $u_jumpto,

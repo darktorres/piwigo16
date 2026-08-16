@@ -19,7 +19,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\SqlDialect;
 use Piwigo\Image\Event\BeginDeleteElements;
 use Piwigo\Image\Event\DeleteElements;
 use Piwigo\Image\Projection\AddMethodBreakdown;
@@ -191,7 +190,7 @@ final readonly class ImageService
             if ((bool) preg_match_all('/([a-z]+)-(true|false)/', (string) $encodeParams, $matches)) {
                 $matchCount = count($matches[1]);
                 for ($i = 0; $i < $matchCount; $i++) {
-                    $result[$matches[1][$i]] = SqlDialect::getBoolean($matches[2][$i]);
+                    $result[$matches[1][$i]] = $matches[2][$i] === 'true';
                 }
             }
         }
@@ -216,9 +215,8 @@ final readonly class ImageService
         // $params' keys are always string: correctSlideshowParams() and
         // getDefaultSlideshowParams() both declare array<string, mixed>.
         foreach ($params as $name => $value) {
-            $value = SqlDialect::booleanToString($value);
-            if (! is_scalar($value)) {
-                continue;
+            if (is_bool($value)) {
+                $value = $value ? 'true' : 'false';
             }
 
             $result .= '+' . $name . '-' . (string) $value;

@@ -12,7 +12,7 @@ test('toArray flattens every fixed property, and omits every optional key when n
         catId: 5,
         catName: 'Holidays',
         catComment: '',
-        isVisible: 'true',
+        isVisible: true,
         catAdminAccess: true,
         uDelete: '/admin.php?page=albums',
         uJumpto: '/index.php?/category/5',
@@ -63,7 +63,7 @@ test('toArray includes every optional key when set', function (): void {
         catId: 5,
         catName: 'Holidays',
         catComment: 'Summer 2026',
-        isVisible: 'true',
+        isVisible: true,
         catAdminAccess: true,
         uDelete: '/admin.php?page=albums',
         uJumpto: '/index.php?/category/5',
@@ -71,7 +71,7 @@ test('toArray includes every optional key when set', function (): void {
         uChildren: '/admin.php?page=albums&parent_id=5',
         uMove: '/admin.php?page=albums&parent_id=5',
         uActivity: '/admin.php?page=user_activity&album=5',
-        catCommentable: 'true',
+        catCommentable: true,
         uManageElements: '/admin.php?page=batch_manager&filter=album-5',
         infoPhoto: '10 photos',
         infoTitle: 'This album contains 10 photos',
@@ -99,7 +99,7 @@ test('toArray includes every optional key when set', function (): void {
 
     $result = $context->toArray();
 
-    expect($result['CAT_COMMENTABLE'])->toBe('true')
+    expect($result['CAT_COMMENTABLE'])->toBe(true)
         ->and($result['U_MANAGE_ELEMENTS'])->toBe('/admin.php?page=batch_manager&filter=album-5')
         ->and($result['CAT_FULL_DIR'])->toBe('galleries/holidays')
         ->and($result['representant'])->toBe([

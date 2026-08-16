@@ -41,7 +41,7 @@
 {varType string $CATEGORIES_PARENT_NAV}
 {varType bool $CAT_ADMIN_ACCESS}
 {varType string $CAT_COMMENT}
-{varType ?string $CAT_COMMENTABLE}
+{varType ?bool $CAT_COMMENTABLE}
 {varType ?string $CAT_DIR_NAME}
 {varType ?string $CAT_FULL_DIR}
 {varType int $CAT_ID}
@@ -157,7 +157,7 @@
 {varType bool $IN_CADDIE}
 {varType string $IP}
 {varType bool $IS_HOME}
-{varType string $IS_VISIBLE}
+{varType bool $IS_VISIBLE}
 {varType string $LEVEL_SEPARATOR}
 {varType ?int $LOUNGE_COUNTER}
 {varType string $L_CAT_OPTIONS_FALSE}
@@ -710,7 +710,7 @@ const album_name = "{$CAT_NAME}"
 const nb_sub_albums = {$NB_SUBCATS}
 const pwg_token = '{$CSRF_TOKEN}'
 const u_delete = '{$U_DELETE|noescape}'
-var is_visible = '{$IS_VISIBLE}'
+var is_visible = '{if $IS_VISIBLE}true{else}false{/if}'
 let related_categories_ids = ["{$CAT_ID}", "{$PARENT_CAT_ID}"];
 
 const str_cancel = '{_ 'No, I have changed my mind'|htmlspecialchars|noescape}'
@@ -907,7 +907,7 @@ const str_modal_ab = '{_ 'New parent album'|noescape}';
               name="commentable"
               id="cat-commentable"
               value="true"
-              {if $CAT_COMMENTABLE == "true"}
+              {if $CAT_COMMENTABLE}
               checked
               {/if}
             >
@@ -932,7 +932,7 @@ const str_modal_ab = '{_ 'New parent album'|noescape}';
               name="locked"
               id="cat-locked"
               value="true"
-              {if $IS_VISIBLE == 'false'}
+              {if !$IS_VISIBLE}
               checked
               {/if}
             >

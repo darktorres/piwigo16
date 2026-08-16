@@ -34,7 +34,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
-use Piwigo\Db\SqlDialect;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImagePathHelper;
@@ -182,7 +181,7 @@ final readonly class UploadService
 
                 $updates[] = [
                     'param' => $field,
-                    'value' => SqlDialect::booleanToString($value),
+                    'value' => $value ? 'true' : 'false',
                 ];
             } elseif (
                 // Every getUploadFormConfig() entry currently has

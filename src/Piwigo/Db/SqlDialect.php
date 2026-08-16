@@ -109,6 +109,18 @@ final class SqlDialect
      * passthrough for any non-bool BatchWriter column value (int, string,
      * float, null), so the return type mirrors the param type by design.
      *
+     * §15 removed every other caller (the entities involved already map
+     * real booleans; the string round trip only ever existed for a
+     * `enum('true','false')` schema shape this project no longer has) --
+     * one real caller remains, {@see \Piwigo\Admin\AlbumsPageRenderer}'s
+     * `visible` field, kept as a string on purpose:
+     * `themes/admin/default/js/albums.js`'s `node.visible == 'false'`
+     * check is a loose JS string comparison against the JSON tree this
+     * renderer builds, and a real JSON boolean there would silently break
+     * it (`true == 'false'` is `true` under JS's own loose-equality string
+     * coercion) unless that JS file changed too, which is out of scope for
+     * a PHP-side SQL-modernization pass.
+     *
      * @phpstan-return ($var is bool ? string : mixed)
      */
     public static function booleanToString(mixed $var): mixed

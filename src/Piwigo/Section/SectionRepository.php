@@ -222,5 +222,4 @@ final readonly class SectionRepository
             SQL
             , $where->parameters, $where->types);
     }
-
 }

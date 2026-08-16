@@ -1047,21 +1047,29 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * queries into the same $page['items'] slot.
      *
      * Uses a typed {@see PermissionCriteria} -- the one real caller only
-     * ever applies visibleImageIds against the unqualified `id` (only
-     * `images` has a bare `id` column in this join, no alias needed), via
+     * ever applies visibleImageIds against `i.id` (the raw-DBAL fallback's
+     * own `QueryBuilder` aliases `images` as `i`, matching the DQL
+     * branch's own alias so both branches share the same
+     * `visibleImagesCondition()`/`maxLevelCondition()` call shape), via
      * `image_access_list` (since `visible_images` falls through to the
      * images-table's own `level <= x` check in the old
      * `getSqlConditionFandFAsCondition()` mapping, so maxLevel applies
-     * here too, against the unqualified `level`). $orderBySql stays a raw
-     * fragment (CurrentConfig::orderBy(), trusted internal config, same
-     * "caller composes trusted fragments" contract used throughout this
-     * codebase).
+     * here too, against `i.level`). $orderBySql stays a raw fragment
+     * (CurrentConfig::orderBy(), trusted internal config, same "caller
+     * composes trusted fragments" contract used throughout this
+     * codebase) -- always carries its own leading `ORDER BY ` keyword
+     * (every real caller's own construction guarantees this), stripped
+     * before `QueryBuilder::orderBy()`, which adds it back itself.
      *
      * `favorites` is mapped ({@see FavoriteEntity}), and this method runs
      * real DQL whenever $orderBySql parses against the bounded
-     * `$sort_fields` vocabulary, falling back to the raw DBAL query below
-     * otherwise. Never offers an `image_category` alias for `Rank`:
-     * unlike {@see \Piwigo\Category\
+     * `$sort_fields` vocabulary, falling back to the raw-DBAL
+     * `QueryBuilder` below otherwise -- `applyTo()` needs a real
+     * `QueryBuilder` to apply the permission condition onto, which is why
+     * this fallback builds one via `Connection::createQueryBuilder()`
+     * rather than splicing `$condition->sql` into a heredoc directly.
+     * Never offers an `image_category` alias for `Rank`: unlike
+     * {@see \Piwigo\Category\
      * CategoryRepository::findImageIdsForCategories()}, a favorites
      * listing has no single-category context to make "the" rank
      * well-defined.
@@ -1098,38 +1106,28 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ));
         }
 
-        $condition = SqlCondition::combine(
-            'AND',
-            $criteria->visibleImagesCondition('id'),
-            $criteria->maxLevelCondition('level'),
-        );
+        $qb = $this->em
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('f.image_id')
+            ->from('favorites', 'f')
+            ->innerJoin('f', 'images', 'i', 'f.image_id = i.id')
+            ->where('f.user_id = :userId')
+            ->setParameter('userId', $userId->value);
 
-        $whereSql = 'WHERE user_id = :userId';
-        $params = [
-            'userId' => $userId->value,
-        ];
-        $types = [];
-        if (! $condition->isEmpty()) {
-            $whereSql .= ' AND ' . $condition->sql;
-            $params = array_merge($params, $condition->parameters);
-            $types = $condition->types;
+        SqlCondition::combine(
+            'AND',
+            $criteria->visibleImagesCondition('i.id'),
+            $criteria->maxLevelCondition('i.level'),
+        )->applyTo($qb);
+
+        $orderBySqlBody = str_replace('ORDER BY ', '', self::normalizeOrderBySql($orderBySql));
+        if ($orderBySqlBody !== '') {
+            $qb->orderBy($orderBySqlBody);
         }
 
-        $orderBySql = self::normalizeOrderBySql($orderBySql);
-        $rows = $this->em
-            ->getConnection()
-            ->executeQuery(
-                <<<SQL
-                SELECT image_id
-                FROM favorites
-                    INNER JOIN images ON image_id = id
-                {$whereSql}
-                {$orderBySql}
-                SQL
-                ,
-                $params,
-                $types
-            )->fetchFirstColumn();
+        $rows = $qb->executeQuery()
+            ->fetchFirstColumn();
 
         return array_map(
             static fn (mixed $v): ?string => is_scalar($v) ? (string) $v : null,
@@ -1165,49 +1163,43 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * $orderBySql stays a raw fragment, same reasoning as
      * findVisibleFavoriteImageIds() above.
      *
-     * Stays on DBAL: $orderBySql concatenates a caller-composed raw
-     * fragment, and it selects `i.*` (a whole-row shape, not a fixed DQL
-     * property list).
+     * Stays on DBAL: $orderBySql is a caller-composed raw fragment, and it
+     * selects `i.*` (a whole-row shape, not a fixed DQL property list).
+     * Builds its own `Connection::createQueryBuilder()` (rather than
+     * splicing `$condition->sql` into a heredoc directly) because
+     * `SqlCondition::applyTo()` needs a real `QueryBuilder` to apply the
+     * permission condition onto, same reasoning as
+     * {@see findVisibleFavoriteImageIds()} above; $orderBySql always
+     * carries its own leading `ORDER BY ` keyword (every real caller's
+     * own construction guarantees this), stripped before
+     * `QueryBuilder::orderBy()`, which adds it back itself.
      *
      * @return list<array<string, mixed>>
      */
     public function findVisibleFavoriteImages(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
+        $qb = $this->em
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('i.*')
+            ->from('favorites')
+            ->innerJoin('favorites', 'images', 'i', 'image_id = i.id')
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId->value);
 
-        $condition = SqlCondition::combine(
+        SqlCondition::combine(
             'AND',
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
-        );
+        )->applyTo($qb);
 
-        $whereSql = 'WHERE user_id = :userId';
-        $params = [
-            'userId' => $userId->value,
-        ];
-        $types = [];
-        if (! $condition->isEmpty()) {
-            $whereSql .= ' AND ' . $condition->sql;
-            $params = array_merge($params, $condition->parameters);
-            $types = $condition->types;
+        $orderBySqlBody = str_replace('ORDER BY ', '', self::normalizeOrderBySql($orderBySql));
+        if ($orderBySqlBody !== '') {
+            $qb->orderBy($orderBySqlBody);
         }
 
-        $orderBySql = self::normalizeOrderBySql($orderBySql);
-
-        return $this->em
-            ->getConnection()
-            ->executeQuery(
-                <<<SQL
-                SELECT
-                    i.*
-                FROM favorites
-                    INNER JOIN images i ON image_id = i.id
-                {$whereSql}
-                {$orderBySql}
-                SQL
-                ,
-                $params,
-                $types
-            )->fetchAllAssociative();
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**

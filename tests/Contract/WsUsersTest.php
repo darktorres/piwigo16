@@ -65,6 +65,27 @@ final class WsUsersTest extends ContractTestCase
         self::assertFalse($response['result'], 'a guest gets a bare `false` result, not an error envelope');
     }
 
+    public function testFavoritesGetListOrderByIdDescSortsResultsDescending(): void
+    {
+        // Fixture seeds 3 favorites for fixture_admin (images 1, 3, 5 --
+        // see tests/Fixtures/piwigo-17.0.sql's `INSERT INTO favorites`).
+        $response = $this->wsAdmin('pwg.users.favorites.getList', [
+            'order' => 'id desc',
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $images = $result['images'];
+        self::assertIsArray($images);
+
+        $ids = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($images, 'id'));
+        self::assertGreaterThanOrEqual(2, count($ids), 'need at least 2 favorites to prove a sort order');
+        $sortedDesc = $ids;
+        rsort($sortedDesc, SORT_NUMERIC);
+        self::assertSame($sortedDesc, $ids);
+    }
+
     // -------------------------------------------------------------- getList
 
     public function testGetListInvalidOrderReturnsError(): void

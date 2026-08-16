@@ -1580,8 +1580,9 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * `u.<idColumn> => id`), matching the WS method's client-controlled
      * `display` param -- still caller-composed, since it shapes SELECT
      * columns, not a WHERE condition. $orderBy concatenates directly into
-     * ORDER BY -- caller must validate this first (the WS method's own
-     * ValidationPattern::ORDER check), same contract as
+     * ORDER BY -- caller must resolve this to real column names first
+     * (the WS method's own {@see \Piwigo\Sort\UserSortField::
+     * parseOrderClause()} call), same contract as
      * {@see \Piwigo\Comment\CommentRepository::findForImage()}'s own
      * $order. The total count is only fetched when $includeTotalCount.
      * LIMIT/OFFSET are only applied when $limit !== null.

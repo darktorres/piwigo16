@@ -401,6 +401,53 @@ final class WsGroupsMutationTest extends ContractTestCase
         self::assertSame('Invalid input parameter order', $response['message']);
     }
 
+    public function testGetListOrderByNameDescSortsResultsDescending(): void
+    {
+        $token = $this->getPwgToken();
+        $prefix = 'ct_order_' . uniqid();
+        $nameA = $prefix . '_a';
+        $nameB = $prefix . '_b';
+
+        $addA = $this->callWs('pwg.groups.add', [
+            'name' => $nameA,
+            'pwg_token' => $token,
+        ]);
+        $groupIdA = self::firstItemId($addA, 'groups');
+
+        $addB = $this->callWs('pwg.groups.add', [
+            'name' => $nameB,
+            'pwg_token' => $this->getPwgToken(),
+        ]);
+        $groupIdB = self::firstItemId($addB, 'groups');
+
+        try {
+            $response = $this->callWs('pwg.groups.getList', [
+                'order' => 'name desc',
+            ]);
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            $groups = $result['groups'];
+            self::assertIsArray($groups);
+
+            $names = array_map(
+                static fn (mixed $g): string => is_array($g) && is_string($g['name'] ?? null) ? $g['name'] : '',
+                $groups
+            );
+            $posA = array_search($nameA, $names, true);
+            $posB = array_search($nameB, $names, true);
+            self::assertIsInt($posA);
+            self::assertIsInt($posB);
+            self::assertLessThan($posA, $posB, 'order=name desc must place "' . $nameB . '" before "' . $nameA . '"');
+        } finally {
+            $this->callWs('pwg.groups.delete', [
+                'group_id' => [$groupIdA, $groupIdB],
+                'pwg_token' => $this->getPwgToken(),
+            ]);
+        }
+    }
+
     public function testSetInfoOnANonexistentGroupReturnsError(): void
     {
         $token = $this->getPwgToken();

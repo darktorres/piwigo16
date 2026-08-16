@@ -124,11 +124,10 @@ final class GroupRepository extends EntityRepository
 
     /**
      * Groups matching the given filters, each augmented with its member
-     * count (`nb_users`). $order is a pre-validated raw SQL fragment (see
-     * ValidationPattern::ORDER at the ws_groups_getList call site) -- not
-     * user-controlled free text, but genuinely dynamic, same shape as
-     * Search/Calendar/Section's own documented DQL exceptions -- stays
-     * plain DBAL via the entity manager's own connection rather than DQL.
+     * count (`nb_users`). $order is a pre-validated `ORDER BY` body string,
+     * built from {@see \Piwigo\Sort\GroupSortField::parseOrderClause()}'s
+     * own fixed 4-field vocabulary at the `ws_groups_getList` call site --
+     * not user-controlled free text.
      * Plain DBAL never sees the `group_id` custom Type, so `$groupIds`
      * unwraps to raw ints before binding regardless of the IN-clause rule
      * above being about DQL specifically -- this was already true before
@@ -136,12 +135,9 @@ final class GroupRepository extends EntityRepository
      *
      * Stays on DBAL -- $order is a genuinely dynamic runtime ORDER BY
      * fragment; DQL's orderBy() takes a fixed field path, not a
-     * caller-supplied string. {@see \Piwigo\Core\ValidationPattern::ORDER}'s
-     * real regex (`/^(rand(om)?|[a-z_]+(\s+(asc|desc))?)(\s*,\s*...)*$/i`)
-     * matches any `[a-z_]+` token, not a small fixed vocabulary --
-     * genuinely open-ended, same "caller composes trusted ORDER BY text"
-     * architecture as {@see \Piwigo\Sort\PhotoSortField}'s own documented
-     * exception, so no enum can replace it here.
+     * caller-supplied string, and `NbUsers` orders by a `COUNT(...)`
+     * select alias this method builds itself, which DQL's own orderBy()
+     * can't reference either.
      *
      * @param list<GroupId> $groupIds when non-empty, restricts to these ids
      * @return list<GroupListing>

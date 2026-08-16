@@ -19,12 +19,12 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\User\WsUsersGetList;
 use Piwigo\Group\GroupService;
 use Piwigo\History\HistoryEntity;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Sort\UserSortField;
 use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
@@ -77,14 +77,9 @@ final readonly class GetListHandler implements WsAction
         $input = GetListParams::fromArray($params);
         $available_permission_levels = $this->currentConfig->availablePermissionLevels;
 
-        if (! (bool) preg_match(ValidationPattern::ORDER, $input->order)) {
+        $order = UserSortField::parseOrderClause($input->order);
+        if ($order === null) {
             return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid input parameter order');
-        }
-
-        // Insensitive case sort order
-        $order = $input->order;
-        if (str_contains($order, 'username')) {
-            $order = str_ireplace('username', 'LOWER(username)', $order);
         }
 
         // Every field below is bound, not spliced into a raw SQL

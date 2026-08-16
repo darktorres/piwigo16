@@ -14,9 +14,9 @@ namespace Piwigo\Ws\Groups;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Common\ValueObject\GroupId;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\Projection\GroupListing;
+use Piwigo\Sort\GroupSortField;
 use Piwigo\Ws\NamedArray;
 use Piwigo\Ws\NamedStruct;
 use Piwigo\Ws\WsAction;
@@ -58,7 +58,8 @@ final readonly class GetListHandler implements WsAction
     {
         $input = GetListParams::fromArray($params);
 
-        if (! (bool) preg_match(ValidationPattern::ORDER, $input->order)) {
+        $order = GroupSortField::parseOrderClause($input->order);
+        if ($order === null) {
             return new WsErrorResponse(WsError::InvalidParam->value, 'Invalid input parameter order');
         }
 
@@ -66,7 +67,7 @@ final readonly class GetListHandler implements WsAction
             ->findWithMemberCounts(
                 array_map(GroupId::from(...), $input->groupIds),
                 $input->name,
-                $input->order,
+                $order,
                 $input->perPage,
                 $input->page
             );
